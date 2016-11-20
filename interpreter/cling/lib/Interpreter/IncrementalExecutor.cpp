@@ -16,7 +16,8 @@
 #include "cling/Utils/AST.h"
 
 #include "clang/Basic/Diagnostic.h"
-#include <clang/Frontend/CodeGenOptions.h>
+#include "clang/Frontend/CodeGenOptions.h"
+#include "clang/Frontend/CompilerInstance.h"
 
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
@@ -26,7 +27,6 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetMachine.h"
@@ -45,7 +45,7 @@ using namespace llvm;
 namespace cling {
 
 IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
-                                         const clang::CodeGenOptions& CGOpt):
+                                         const clang::CompilerInstance& CI):
   m_externalIncrementalExecutor(nullptr),
   m_CurrentAtExitModule(0)
 #if 0
@@ -60,7 +60,13 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
   // can use this object yet.
   m_AtExitFuncs.reserve(256);
 
-  m_JIT.reset(new IncrementalJIT(*this, CreateHostTargetMachine(CGOpt)));
+  std::unique_ptr<TargetMachine>
+    TM(CreateHostTargetMachine(CI.getCodeGenOpts()));
+  m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(),
+                                          CI.getTargetOpts(),
+                                          CI.getLangOpts(),
+                                          *TM));
+  m_JIT.reset(new IncrementalJIT(*this, std::move(TM)));
 }
 
 // Keep in source: ~unique_ptr<ClingJIT> needs ClingJIT
@@ -90,7 +96,13 @@ std::unique_ptr<TargetMachine>
   std::string FeaturesStr;
 
   TargetOptions Options = TargetOptions();
+// We have to use large code model for PowerPC64 because TOC and text sections
+// can be more than 2GB apart.
+#if defined(__powerpc64__) || defined(__PPC64__)
+  CodeModel::Model CMModel = CodeModel::Large;
+#else
   CodeModel::Model CMModel = CodeModel::JITDefault;
+#endif
   CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
   switch (CGOpt.OptimizationLevel) {
     case 0: OptLevel = CodeGenOpt::None; break;
@@ -158,10 +170,9 @@ void* IncrementalExecutor::NotifyLazyFunctionCreators(const std::string& mangled
     if (ret)
       return ret;
   }
-  llvm::StringRef name(mangled_name);
   void *address = nullptr;
   if (m_externalIncrementalExecutor)
-   address = m_externalIncrementalExecutor->getAddressOfGlobal(name);
+   address = m_externalIncrementalExecutor->getAddressOfGlobal(mangled_name);
 
   return (address ? address : HandleMissingFunction(mangled_name));
 }
@@ -331,20 +342,13 @@ IncrementalExecutor::installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp)
 
 bool
 IncrementalExecutor::addSymbol(const char* symbolName,  void* symbolAddress) {
-  void* actualAddress
-    = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName);
-  if (actualAddress)
-    return false;
-
-  llvm::sys::DynamicLibrary::AddSymbol(symbolName, symbolAddress);
-  return true;
+  return IncrementalJIT::searchLibraries(symbolName, symbolAddress).second;
 }
 
 void* IncrementalExecutor::getAddressOfGlobal(llvm::StringRef symbolName,
                                               bool* fromJIT /*=0*/) {
   // Return a symbol's address, and whether it was jitted.
-  void* address
-    = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName);
+  void* address = IncrementalJIT::searchLibraries(symbolName).first;
 
   // It's not from the JIT if it's in a dylib.
   if (fromJIT)

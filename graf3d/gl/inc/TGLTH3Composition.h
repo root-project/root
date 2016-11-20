@@ -57,7 +57,7 @@ private:
    typedef std::pair<const TH3 *, ETH3BinShape> TH3Pair_t;
 
    std::vector<TH3Pair_t>        fHists;
-   std::auto_ptr<TGLHistPainter> fPainter;
+   std::unique_ptr<TGLHistPainter> fPainter;
 
    TGLTH3Composition(const TGLTH3Composition &rhs);
    TGLTH3Composition &operator = (const TGLTH3Composition &);

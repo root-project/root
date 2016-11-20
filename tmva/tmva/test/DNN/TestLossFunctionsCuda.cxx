@@ -32,13 +32,13 @@ int main()
     //
 
     error = testMeanSquaredError<TCuda<Scalar_t>>(10);
-    std::cout << "Testing mean squared error loss:     ";
+    std::cout << "Testing mean squared error loss:        ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-3)
         return 1;
 
     error = testMeanSquaredErrorGradients<TCuda<Scalar_t>>(10);
-    std::cout << "Testing mean squared error gradient: ";
+    std::cout << "Testing mean squared error gradient:    ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-3)
         return 1;
@@ -48,13 +48,29 @@ int main()
     //
 
     error = testCrossEntropy<TCuda<Scalar_t>>(10);
-    std::cout << "Testing cross entropy loss:          ";
+    std::cout << "Testing cross entropy loss:             ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-3)
         return 1;
 
     error = testCrossEntropyGradients<TCuda<Scalar_t>>(10);
-    std::cout << "Testing mean squared error gradient: ";
+    std::cout << "Testing mean squared error gradient:    ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    if (error > 1e-3)
+        return 1;
+
+    //
+    // Softmax Cross Entropy.
+    //
+
+    error = testSoftmaxCrossEntropy<TCuda<Scalar_t>>(10);
+    std::cout << "Testing softmax cross entropy loss:     ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    if (error > 1e-3)
+        return 1;
+
+    error = testSoftmaxCrossEntropyGradients<TCuda<Scalar_t>>(10);
+    std::cout << "Testing softmax cross entropy gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-3)
         return 1;

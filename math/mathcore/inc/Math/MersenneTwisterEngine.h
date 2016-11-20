@@ -55,7 +55,7 @@ namespace ROOT {
       public:
 
          typedef  TRandomEngine BaseType;
-         typedef  uint32_t result_t;
+         typedef  uint32_t Result_t;
          typedef  uint32_t StateInt_t;
 
 
@@ -65,7 +65,7 @@ namespace ROOT {
 
          virtual ~MersenneTwisterEngine() {}
 
-         void SetSeed(result_t seed);
+         void SetSeed(Result_t seed);
 
          virtual double Rndm() {
             return Rndm_impl();

@@ -19,7 +19,6 @@
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
-#include "TInterpreter.h"
 #include "Math/MinimizerOptions.h"
 #include "ThreadLocalStorage.h"
 
@@ -271,25 +270,6 @@ void TVirtualFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function called when SetFCN is called in interactive mode
-
-void InteractiveFCN(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
-{
-   TMethodCall *m = TVirtualFitter::GetFitter()->GetMethodCall();
-   if (!m) return;
-
-   Long_t args[5];
-   args[0] = (Long_t)&npar;
-   args[1] = (Long_t)gin;
-   args[2] = (Long_t)&f;
-   args[3] = (Long_t)u;
-   args[4] = (Long_t)flag;
-   m->SetParamPtrs(args);
-   Double_t result;
-   m->Execute(result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cache array
 /// npoints is the number of points to be stored (or already stored) in the cache
 /// psize is the number of elements per point
@@ -308,24 +288,6 @@ Double_t *TVirtualFitter::SetCache(Int_t npoints, Int_t psize)
    fNpoints = npoints;
    fPointSize = psize;
    return fCache;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///  To set the address of the minimization objective function
-///
-///     this function is called by CINT instead of the function above
-
-void TVirtualFitter::SetFCN(void *fcn)
-{
-   if (!fcn) return;
-
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      delete fMethodCall;
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
-   fFCN = InteractiveFCN;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

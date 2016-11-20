@@ -41,6 +41,9 @@ endif()
 include_directories(${GSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
 add_definitions(-DUSE_ROOT_ERROR -DHAVE_ROOTLIBS)
 
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # bind1st
+
+
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestMathMoreSource})
   get_filename_component(testname ${file} NAME_WE)

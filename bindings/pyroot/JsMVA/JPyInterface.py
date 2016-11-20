@@ -185,11 +185,14 @@ class functions:
 
 ## Class for creating the output scripts and inserting them to cell output
 class JsDraw:
+    ## Base repository
+    __jsMVARepo = "https://root.cern.ch/js/jsmva/latest"
+ 
     ## String containing the link to JavaScript files
-    __jsMVASourceDir = "https://rawgit.com/qati/GSOC16/master/src/js"
+    __jsMVASourceDir = __jsMVARepo + "/js"
 
     ## String containing the link to CSS files
-    __jsMVACSSDir = "https://rawgit.com/qati/GSOC16/master/src/css"
+    __jsMVACSSDir = __jsMVARepo + "/css"
 
     ## Drawing are sizes
     jsCanvasWidth   = 800

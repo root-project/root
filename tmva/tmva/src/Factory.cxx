@@ -821,6 +821,7 @@ TCanvas * TMVA::Factory::GetROCCurve(TString datasetname)
 
 void TMVA::Factory::TrainAllMethods() 
 {  
+    Log() << kHEADER << gTools().Color("bold") << "Train all methods" << gTools().Color("reset") << Endl;
    // iterates over all MVAs that have been booked, and calls their training methods
 
 
@@ -956,7 +957,7 @@ void TMVA::Factory::TrainAllMethods()
 
 void TMVA::Factory::TestAllMethods()
 {
-   Log() << kDEBUG << "Test all methods..." << Endl;
+   Log() << kHEADER << gTools().Color("bold") << "Test all methods" << gTools().Color("reset") << Endl;
 
    // don't do anything if no method booked
    if (fMethodsMap.empty()) {
@@ -1057,7 +1058,7 @@ void TMVA::Factory::EvaluateAllVariables(DataLoader *loader, TString options )
 
 void TMVA::Factory::EvaluateAllMethods( void )
 {
-   Log() << kDEBUG << "Evaluate all methods..." << Endl;
+   Log() << kHEADER << gTools().Color("bold") << "Evaluate all methods" << gTools().Color("reset") << Endl;
 
    // don't do anything if no method booked
    if (fMethodsMap.empty()) {

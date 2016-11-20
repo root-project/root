@@ -227,7 +227,7 @@ namespace TMVA {
       
       Types::EAnalysisType                      fAnalysisType;    // the training type
 
-      Bool_t                                    fMakeFoldDataSet;
+      Bool_t                                    fMakeFoldDataSet; // flag telling if the DataSet folds have been done
 
    protected:
 

@@ -190,9 +190,11 @@ namespace cling {
    std::string printValue(ROOT::TSeq<T> *val)
    {
       std::ostringstream ret;
-      ret << "Sequence of values. Begin: " << *val->begin()
-          << " - End: " << *val->end()
-          << " - Step: " <<  val->step();
+      ret << "A sequence of values: " << *val->begin()
+          << " <= i < " << *val->end();
+      auto step = val->step();
+      if (1 != step)
+          ret << " in steps of " <<  step;
       return ret.str();
    }
 }

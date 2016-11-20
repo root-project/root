@@ -130,9 +130,6 @@ MODULES += core/utils
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
-ifeq ($(BUILDVDT),yes)
-MODULES      += math/vdt
-endif
 ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
@@ -336,7 +333,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd graf2d/ios \
-                graf2d/quartz graf2d/cocoa core/macosx math/vdt \
+                graf2d/quartz graf2d/cocoa core/macosx \
                 net/http bindings/r main/python
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
@@ -607,6 +604,12 @@ endif # not macos
 
 CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
 CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
+endif
+
+ifneq ($(GCCTOOLCHAIN),)
+CXXFLAGS += --gcc-toolchain=$(GCCTOOLCHAIN)
+CFLAGS   += --gcc-toolchain=$(GCCTOOLCHAIN)
+LDFLAGS  += --gcc-toolchain=$(GCCTOOLCHAIN)
 endif
 
 
@@ -1074,6 +1077,7 @@ endif
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root tutorials/tmva/data/toy_sigbkg_categ_offset.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root tutorials/tmva/data/toy_sigbkg_categ_varoff.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/tmva_logo.gif tutorials/tmva/tmva_logo.gif- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/spectrum/TSpectrum.root tutorials/spectrum/TSpectrum.root- >/dev/null 2>&1;true)
 	@(find tutorials -name "files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
@@ -1091,6 +1095,7 @@ endif
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root- tutorials/tmva/data/toy_sigbkg_categ_offset.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root- tutorials/tmva/data/toy_sigbkg_categ_varoff.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/tmva_logo.gif- tutorials/tmva/tmva_logo.gif >/dev/null 2>&1;true)
+	-@(mv -f tutorials/spectrum/TSpectrum.root- tutorials/spectrum/TSpectrum.root >/dev/null 2>&1;true)
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -f etc/gitinfo.txt

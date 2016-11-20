@@ -16,7 +16,7 @@ Int_t mtbb201_parallelHistoFill()
 {
    ROOT::EnableThreadSafety();
    TH1::AddDirectory(false);
-   TThreadExecutor pool(poolSize);
+   ROOT::TThreadExecutor pool(poolSize);
    auto fillRandomHisto = [](int seed = 0) {
       TRandom3 rndm(seed);
       auto h = new TH1F("myHist", "Filled in parallel", 128, -8, 8);
@@ -27,7 +27,7 @@ Int_t mtbb201_parallelHistoFill()
    };
 
    auto seeds = ROOT::TSeqI(23);
-   PoolUtils::ReduceObjects<TH1F *> redfunc;
+   ROOT::ExecutorUtils::ReduceObjects<TH1F *> redfunc;
    auto sumRandomHisto = pool.MapReduce(fillRandomHisto, seeds, redfunc);
 
    auto c = new TCanvas();

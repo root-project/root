@@ -91,7 +91,7 @@ namespace ROOT {
 #else
          typedef unsigned long long StateInt_t;
 #endif
-         typedef uint64_t result_t;
+         typedef uint64_t Result_t;
 
 
          MixMaxEngine(uint64_t seed=1);
@@ -109,7 +109,7 @@ namespace ROOT {
          static uint64_t MinInt();
 
          /// set the generator seed
-         void  SetSeed(result_t seed);
+         void  SetSeed(Result_t seed);
 
          // generate a random number (virtual interface)
          virtual double Rndm() { return Rndm_impl(); }
@@ -121,10 +121,10 @@ namespace ROOT {
          void RndmArray (int n, double * array);
 
          /// generate a 64  bit integer number
-         result_t IntRndm();
+         Result_t IntRndm();
 
          /// get name of the generator
-         static std::string Name(); 
+         static std::string Name();
 
       protected:
          // protected functions used for tesing the generator
@@ -132,7 +132,8 @@ namespace ROOT {
          /// get the state of the generator
          void GetState(std::vector<StateInt_t> & state) const;
 
-         ///set the full initial generator state 
+
+         ///set the full initial generator state
          void SetState(const std::vector<StateInt_t> & state);
 
          /// Get the counter (between 0 and Size-1)
@@ -153,11 +154,14 @@ namespace ROOT {
       typedef MixMaxEngine<240,0> MixMaxEngine240;
       typedef MixMaxEngine<256,2> MixMaxEngine256;
       typedef MixMaxEngine<17,0> MixMaxEngine17;
-
+      
       extern template class MixMaxEngine<240,0>;
+      extern template class MixMaxEngine<256,0>;
       extern template class MixMaxEngine<256,2>;
+      extern template class MixMaxEngine<256,4>;
       extern template class MixMaxEngine<17,0>;
       extern template class MixMaxEngine<17,1>;
+      extern template class MixMaxEngine<17,2>;
 
    } // end namespace Math
 

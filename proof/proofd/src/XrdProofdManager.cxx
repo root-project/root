@@ -274,6 +274,7 @@ XrdProofdManager::XrdProofdManager(char *parms, XrdProtocol_Config *pi, XrdSysEr
 
    // Tools to enable xrootd file serving
    fXrootdLibPath = "<>";
+   fXrootdPlugin = 0;
 
    // Proof admin path
    fAdminPath = pi->AdmPath;
@@ -330,6 +331,7 @@ XrdProofdManager::~XrdProofdManager()
    SafeDelete(fROOTMgr);
    SafeDelete(fSessionMgr);
    SafeDelArray(fRootdArgsPtrs);
+   SafeDelete(fXrootdPlugin);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -342,14 +344,14 @@ XrdProtocol *XrdProofdManager::LoadXrootd(char *parms, XrdProtocol_Config *pi, X
    XrdProtocol *xrp = 0;
 
    // Create the plug-in instance
-   XrdSysPlugin *xplg = new XrdSysPlugin((edest ? edest : (XrdSysError *)0), fXrootdLibPath.c_str());
-   if (!xplg) {
+   fXrootdPlugin = new XrdSysPlugin((edest ? edest : (XrdSysError *)0), fXrootdLibPath.c_str());
+   if (!fXrootdPlugin) {
       TRACE(XERR, "could not create plugin instance for "<<fXrootdLibPath.c_str());
       return xrp;
    }
 
    // Get the function
-   XrdProtocolLoader_t ep = (XrdProtocolLoader_t) xplg->getPlugin("XrdgetProtocol");
+   XrdProtocolLoader_t ep = (XrdProtocolLoader_t) fXrootdPlugin->getPlugin("XrdgetProtocol");
    if (!ep) {
       TRACE(XERR, "could not find 'XrdgetProtocol()' in "<<fXrootdLibPath.c_str());
       return xrp;
@@ -358,7 +360,7 @@ XrdProtocol *XrdProofdManager::LoadXrootd(char *parms, XrdProtocol_Config *pi, X
    // Get the server object
    if (!(xrp = (*ep)("xrootd", parms, pi))) {
       TRACE(XERR, "Unable to create xrootd protocol service object via " << fXrootdLibPath.c_str());
-      SafeDelete(xplg);
+      SafeDelete(fXrootdPlugin);
    } else {
       // Notify
       TRACE(ALL, "xrootd protocol service created");

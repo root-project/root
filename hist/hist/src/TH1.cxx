@@ -2863,7 +2863,7 @@ void TH1::Draw(Option_t *option)
       }
    }
 
-   // If there is no pad or an empty pad the the "same" is ignored.
+   // If there is no pad or an empty pad the "same" option is ignored.
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (index>=0) {
@@ -2876,6 +2876,7 @@ void TH1::Draw(Option_t *option)
          if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
          gPad->Clear();
       }
+      gPad->IncrementPaletteColor(1, opt1);
    } else {
       if (index>=0) opt2.Remove(index,4);
    }
@@ -5540,8 +5541,8 @@ void TH1::Paint(Option_t *option)
 /// ~~~ {.cpp}
 ///     h1->Rebin();  //merges two bins in one in h1: previous contents of h1 are lost
 ///     h1->Rebin(5); //merges five bins in one in h1
-///     TH1F *hnew = h1->Rebin(5,"hnew"); // creates a new histogram hnew
-///                                       // merging 5 bins of h1 in one bin
+///     TH1F *hnew = dynamic_cast<TH1F*>(h1->Rebin(5,"hnew")); // creates a new histogram hnew
+///                                                            // merging 5 bins of h1 in one bin
 /// ~~~
 ///
 /// NOTE:  If ngroup is not an exact divider of the number of bins,
@@ -5877,9 +5878,9 @@ void TH1::RecursiveRemove(TObject *obj)
 /// Note that both contents and errors(if any) are scaled.
 /// This function uses the services of TH1::Add
 ///
-/// IMPORTANT NOTE: If you intend to use the errors of this histogram later
-/// you should call Sumw2 before making this operation.
-/// This is particularly important if you fit the histogram after TH1::Scale
+/// IMPORTANT NOTE: Sumw2() is called automatically when scaling
+/// If you are not interested in the histogram statistics you can call
+/// Sumw2(off) or use the option "nosw2"
 ///
 /// One can scale an histogram such that the bins integral is equal to
 /// the normalization parameter via TH1::Scale(Double_t norm), where norm
@@ -5892,6 +5893,8 @@ void TH1::Scale(Double_t c1, Option_t *option)
 {
 
    TString opt = option; opt.ToLower();
+   // store bin errors when scaling since cannot anymore be computed as sqrt(N)
+   if (!opt.Contains("nosw2") && GetSumw2N() == 0) Sumw2();
    if (opt.Contains("width")) Add(this, this, c1, -1);
    else {
       if (fBuffer) BufferEmpty(1);
@@ -7807,8 +7810,8 @@ void TH1::GetMinimumAndMaximum(Double_t& min, Double_t& max) const
    Int_t ylast   = fYaxis.GetLast();
    Int_t zfirst  = fZaxis.GetFirst();
    Int_t zlast   = fZaxis.GetLast();
-   min=FLT_MAX;
-   max=FLT_MIN;
+   min=TMath::Infinity();
+   max=-TMath::Infinity();
    Double_t value;
    for (binz=zfirst;binz<=zlast;binz++) {
       for (biny=yfirst;biny<=ylast;biny++) {

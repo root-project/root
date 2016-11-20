@@ -107,34 +107,30 @@ namespace cling {
 
   Interpreter::StateDebuggerRAII::StateDebuggerRAII(const Interpreter* i)
     : m_Interpreter(i) {
-    if (!i->isPrintingDebug())
-      return;
-    const CompilerInstance& CI = *m_Interpreter->getCI();
-    CodeGenerator* CG = i->m_IncrParser->getCodeGenerator();
+    if (m_Interpreter->isPrintingDebug()) {
+      const CompilerInstance& CI = *m_Interpreter->getCI();
+      CodeGenerator* CG = i->m_IncrParser->getCodeGenerator();
 
-    // The ClangInternalState constructor can provoke deserialization,
-    // we need a transaction.
-    PushTransactionRAII pushedT(i);
+      // The ClangInternalState constructor can provoke deserialization,
+      // we need a transaction.
+      PushTransactionRAII pushedT(i);
 
-    m_State.reset(new ClangInternalState(CI.getASTContext(),
-                                         CI.getPreprocessor(),
-                                         CG ? CG->GetModule() : 0,
-                                         CG,
-                                         "aName"));
+      m_State.reset(new ClangInternalState(CI.getASTContext(),
+                                           CI.getPreprocessor(),
+                                           CG ? CG->GetModule() : 0,
+                                           CG,
+                                           "aName"));
+    }
   }
 
   Interpreter::StateDebuggerRAII::~StateDebuggerRAII() {
-    // The ClangInternalState destructor can provoke deserialization,
-    // we need a transaction.
-    PushTransactionRAII pushedT(m_Interpreter);
-
-    pop();
-  }
-
-  void Interpreter::StateDebuggerRAII::pop() const {
-    if (!m_Interpreter->isPrintingDebug())
-      return;
-    m_State->compare("aName");
+    if (m_State) {
+      // The ClangInternalState destructor can provoke deserialization,
+      // we need a transaction.
+      PushTransactionRAII pushedT(m_Interpreter);
+      m_State->compare("aName");
+      m_State.reset();
+    }
   }
 
   const Parser& Interpreter::getParser() const {
@@ -178,8 +174,7 @@ namespace cling {
                                                      /*isTemp*/true), this));
 
     if (!isInSyntaxOnlyMode())
-      m_Executor.reset(new IncrementalExecutor(SemaRef.Diags,
-                                               getCI()->getCodeGenOpts()));
+      m_Executor.reset(new IncrementalExecutor(SemaRef.Diags, *getCI()));
 
     // Tell the diagnostic client that we are entering file parsing mode.
     DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
@@ -641,7 +636,6 @@ namespace cling {
     assert(!isInSyntaxOnlyMode() && "No CodeGenerator?");
     m_IncrParser->emitTransaction(T);
     m_IncrParser->addTransaction(T);
-    m_IncrParser->markWholeTransactionAsUsed(T);
     T->setState(Transaction::kCollecting);
     auto PRT = m_IncrParser->endTransaction(T);
     m_IncrParser->commitTransaction(PRT);
@@ -691,7 +685,7 @@ namespace cling {
     std::string mangledNameIfNeeded;
     utils::Analyze::maybeMangleDeclName(FD, mangledNameIfNeeded);
     IncrementalExecutor::ExecutionResult ExeRes =
-       m_Executor->executeWrapper(mangledNameIfNeeded.c_str(), res);
+       m_Executor->executeWrapper(mangledNameIfNeeded, res);
     return ConvertExecutionResult(ExeRes);
   }
 
@@ -1114,7 +1108,8 @@ namespace cling {
   }
 
   void Interpreter::installLazyFunctionCreator(void* (*fp)(const std::string&)) {
-    m_Executor->installLazyFunctionCreator(fp);
+    if (m_Executor)
+      m_Executor->installLazyFunctionCreator(fp);
   }
 
   Value Interpreter::Evaluate(const char* expr, DeclContext* DC,
@@ -1214,7 +1209,7 @@ namespace cling {
     // Return a symbol's address, and whether it was jitted.
     std::string mangledName;
     utils::Analyze::maybeMangleDeclName(GD, mangledName);
-    return getAddressOfGlobal(mangledName.c_str(), fromJIT);
+    return getAddressOfGlobal(mangledName, fromJIT);
   }
 
   void* Interpreter::getAddressOfGlobal(llvm::StringRef SymName,
@@ -1272,11 +1267,13 @@ namespace cling {
     llvm::raw_fd_ostream log((outFile + ".skipped").str().c_str(),
                              EC, llvm::sys::fs::OpenFlags::F_None);
     log << "Generated for :" << inFile << "\n";
-    forwardDeclare(*T, fwdGen.getCI()->getSema(), out, enableMacros,
+    forwardDeclare(*T, fwdGenPP, fwdGen.getCI()->getSema().getASTContext(),
+                   out, enableMacros,
                    &log);
   }
 
-  void Interpreter::forwardDeclare(Transaction& T, Sema& S,
+  void Interpreter::forwardDeclare(Transaction& T, Preprocessor& P,
+                                   clang::ASTContext& Ctx,
                                    llvm::raw_ostream& out,
                                    bool enableMacros /*=false*/,
                                    llvm::raw_ostream* logs /*=0*/,
@@ -1285,7 +1282,7 @@ namespace cling {
     if (!logs)
       logs = &null;
 
-    ForwardDeclPrinter visitor(out, *logs, S, T, 0, false, ignoreFiles);
+    ForwardDeclPrinter visitor(out, *logs, P, Ctx, T, 0, false, ignoreFiles);
     visitor.printStats();
 
     // Avoid assertion in the ~IncrementalParser.

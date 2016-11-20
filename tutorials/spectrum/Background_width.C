@@ -7,7 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Miroslav Morhac
+/// \authors Miroslav Morhac, Olivier Couet
 
 void Background_width() {
    Int_t i;
@@ -17,7 +17,9 @@ void Background_width() {
    Double_t source[nbins];
    gROOT->ForceStyle();
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back1");
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);

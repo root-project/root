@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 // CLING - the C++ LLVM-based InterpreterG :)
-// author:  Lukasz Janyst <ljanyst@cern.ch>
+// author:  Axel Naumann <Axel.Naumann@cern.ch>
 //
 // This file is dual-licensed: you can choose to license it under the University
 // of Illinois Open Source License or the GNU Lesser General Public License. See
@@ -382,7 +382,10 @@ size_t cling::utils::getWrapPoint(std::string& source,
         }
         // There is "more" - let's assume this input consists of a using
         // declaration or definition plus some code that should be wrapped.
-        return getFileOffset(Tok);
+        //
+        // We need to include the ';' in the offset as this will be a
+        // non-wrapped statement.
+        return getFileOffset(Tok) + 1;
       }
       if (keyword.equals("extern"))
         return std::string::npos;

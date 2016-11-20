@@ -35,7 +35,7 @@ namespace ROOT {
       public:
 
          typedef  TRandomEngine BaseType;
-         typedef  uint32_t result_t;
+         typedef  uint32_t Result_t;
          typedef  uint32_t StateInt_t;
 
          LCGEngine() : fSeed(65539) { }

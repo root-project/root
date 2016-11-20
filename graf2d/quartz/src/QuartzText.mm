@@ -76,8 +76,6 @@ TextLine::TextLine(const char *textLine, CTFontRef font)
              : fCTLine(0),
                fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
@@ -91,8 +89,6 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
                fCTFont(font)
 
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
@@ -105,8 +101,6 @@ TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
             : fCTLine(0),
               fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with font and color.
    using MacOSX::Util::CFScopeGuard;
 
@@ -132,8 +126,6 @@ TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
             : fCTLine(0),
               fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with font and color.
    using ROOT::MacOSX::Util::CFScopeGuard;
    CFScopeGuard<CGColorSpaceRef> rgbColorSpace(CGColorSpaceCreateDeviceRGB());
@@ -155,10 +147,7 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font, Color_t
             : fCTLine(0),
               fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with font and color.
-   //TODO: Make code more general, this constructor is copy&paste.
    using MacOSX::Util::CFScopeGuard;
 
    const CFScopeGuard<CGColorSpaceRef> rgbColorSpace(CGColorSpaceCreateDeviceRGB());

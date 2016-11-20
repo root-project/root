@@ -7,7 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Miroslav Morhac
+/// \authors Miroslav Morhac, Olivier Couet
 
 void Background_width2() {
    Int_t i;
@@ -22,7 +22,9 @@ void Background_width2() {
    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back2");
 
    back->SetTitle("Influence of clipping window width on the estimated background");

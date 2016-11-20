@@ -67,7 +67,7 @@ private:
 
 
    TH1 * fH0;  //! histogram on which the list is merged
-   TH1 * fHClone;  //! copy of fH0 - managed bby this class
+   TH1 * fHClone;  //! copy of fH0 - managed by this class
    TList fInputList; // input histogram List
    TAxis fNewXAxis; 
    TAxis fNewYAxis; 

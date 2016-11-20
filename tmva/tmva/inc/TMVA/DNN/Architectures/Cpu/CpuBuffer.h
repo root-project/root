@@ -77,6 +77,8 @@ public:
     /** Copy data to another buffer. No real copying is performed, only the
      *  data pointers are swapped. */
     void CopyTo(TCpuBuffer &);
+
+    size_t GetSize() const {return fSize;}
 };
 
 } // namespace DNN

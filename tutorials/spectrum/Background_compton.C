@@ -7,7 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Miroslav Morhac
+/// \authors Miroslav Morhac, Olivier Couet
 
 void Background_compton() {
    Int_t i;
@@ -19,7 +19,9 @@ void Background_compton() {
 
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
 
-   TFile *f   = new TFile("../../tutorials/spectrum/TSpectrum.root");
+   TString dir  = gROOT->GetTutorialsDir();
+   TString file = dir+"/spectrum/TSpectrum.root";
+   TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back3");
    back->SetTitle("Estimation of background with Compton edges under peaks");
    back->GetXaxis()->SetRange(1,nbins);

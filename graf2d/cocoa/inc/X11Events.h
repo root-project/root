@@ -62,7 +62,6 @@ public:
    void GenerateCrossingEvent(NSEvent *theEvent);
    void GeneratePointerMotionEvent(NSEvent *theEvent);
 
-   //TODO: instead of passing EMouseButton, use info from NSEvent???
    void GenerateButtonPressEvent(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEvent(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
 

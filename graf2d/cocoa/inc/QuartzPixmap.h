@@ -91,8 +91,6 @@
 //                                                     //
 /////////////////////////////////////////////////////////
 
-//TODO: split image and mask image?
-
 @interface QuartzImage : NSObject<X11Drawable> {
 @private
    //32-bit Obj-C requires i-var to be declared (for a synthesized prop.).

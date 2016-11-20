@@ -10,16 +10,16 @@
 /// \authors Rene Brun, Valeriy Onuchin
 
 void hsumanim() {
-   c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
+   auto c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
    c1->SetGrid();
 
    gBenchmark->Start("hsum");
 
    // Create some histograms.
-   total  = new TH1F("total","This is the total distribution",100,-4,4);
-   main   = new TH1F("main","Main contributor",100,-4,4);
-   s1     = new TH1F("s1","This is the first signal",100,-4,4);
-   s2     = new TH1F("s2","This is the second signal",100,-4,4);
+   auto total  = new TH1F("total","This is the total distribution",100,-4,4);
+   auto main   = new TH1F("main","Main contributor",100,-4,4);
+   auto s1     = new TH1F("s1","This is the first signal",100,-4,4);
+   auto s2     = new TH1F("s2","This is the second signal",100,-4,4);
    total->Sumw2();   // this makes sure that the sum of squares of weights will be stored
    total->SetMarkerStyle(21);
    total->SetMarkerSize(0.7);
@@ -60,6 +60,9 @@ void hsumanim() {
          if (gROOT->IsBatch()) {
             c1->Print("hsumanim.gif+");
             printf("i = %d\n", i);
+         } else {
+            if (gSystem->ProcessEvents())
+               break;
          }
       }
    }

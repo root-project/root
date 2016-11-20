@@ -15,6 +15,7 @@
 #include "Buttons.h"
 #include "TString.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TClass.h"
 #include "TColor.h"
 #include "TStyle.h"
@@ -415,7 +416,7 @@ void TGLBoxPainter::DrawPlot()const
       for(Int_t jr = jrInit, j = jInit; addJ > 0 ? j < nY : j >= 0; jr += addJ, j += addJ) {
          for(Int_t kr = krInit, k = kInit; addK > 0 ? k < nZ : k >= 0; kr += addK, k += addK) {
             const Double_t binContent = fHist->GetBinContent(ir, jr, kr);
-            const Double_t w = TMath::Abs(binContent) / maxContent;
+            const Double_t w = TMath::Power(TMath::Abs(binContent) / maxContent,1./3.);
             if (!w)
                continue;
 
@@ -468,7 +469,8 @@ void TGLBoxPainter::DrawPlot()const
       for(Int_t ir = irInit, i = iInit; addI > 0 ? i < nX : i >= 0; ir += addI, i += addI) {
          for(Int_t jr = jrInit, j = jInit; addJ > 0 ? j < nY : j >= 0; jr += addJ, j += addJ) {
             for(Int_t kr = krInit, k = kInit; addK > 0 ? k < nZ : k >= 0; kr += addK, k += addK) {
-               const Double_t w = TMath::Abs(fHist->GetBinContent(ir, jr, kr)) / maxContent;
+               const Double_t w = TMath::Power(TMath::Abs(fHist->GetBinContent(ir, jr, kr)) / maxContent,1./3.);
+
                if (!w)
                   continue;
 

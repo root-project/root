@@ -23,7 +23,7 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TRWLock.h $(MODDIRI)/TSemaphore.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
                 $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
-                $(MODDIRI)/ThreadLocalStorage.h \
+                $(MODDIRI)/TThreadPool.h $(MODDIRI)/ThreadLocalStorage.h \
                 $(MODDIRI)/ROOT/TExecutor.hxx $(MODDIRI)/ROOT/TThreadedObject.hxx \
                 $(MODDIRI)/ROOT/TSpinMutex.hxx
 

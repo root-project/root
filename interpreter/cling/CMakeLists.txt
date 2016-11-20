@@ -185,6 +185,15 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
 "`CMakeFiles'. Please delete them.")
 endif()
 
+# From ROOT:
+function(cling_add_cxx_flag var flag)
+  string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
+  CHECK_CXX_COMPILER_FLAG("${flag}" CXX_HAS${flag_esc})
+  if(CXX_HAS${flag_esc})
+    set(${var} "${${var}} ${flag}" PARENT_SCOPE)
+  endif()
+endfunction()
+
 # Add appropriate flags for GCC
 if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-common -Woverloaded-virtual")
@@ -193,10 +202,7 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   endif ()
 
   foreach (check_flag "-Wno-nested-anon-types" "-Wno-covered-switch-default" "-Wno-unused-local-typedef")
-    check_cxx_compiler_flag(${check_flag} CXX_SUPPORTS_SOME_FLAG)
-    if (CXX_SUPPORTS_SOME_FLAG)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${check_flag}")
-    endif ()
+    cling_add_cxx_flag(CMAKE_CXX_FLAGS ${check_flag})
   endforeach ()
 endif ()
 
@@ -321,13 +327,15 @@ endmacro(add_cling_executable)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+option(ROOT_CLASSIC "Building as part of the ROOT (classic)." OFF)
+
 if(DEFINED ROOT_BINARY_DIR)
   # Building as part of ROOT (CMake)
   include_directories(BEFORE
     ${CMAKE_CURRENT_BINARY_DIR}/../llvm/src/tools/clang/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/tools/clang/include
     )
-elseif(DEFINED ROOT_CLASSIC)
+elseif(ROOT_CLASSIC)
   # Building as part of ROOT (classic)
   include_directories(BEFORE
     ${CMAKE_CURRENT_BINARY_DIR}/../llvm/obj/tools/clang/include

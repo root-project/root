@@ -212,8 +212,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
 
    // create a TTreeReader that reads this range of entries
    TTreeReader reader(tree);
-   //Set first entry to start-1 so that the next call to TTreeReader::Next() sets the entry to the right value
-   TTreeReader::EEntryStatus status = reader.SetEntriesRange(start-1, finish);
+   TTreeReader::EEntryStatus status = reader.SetEntriesRange(start, finish);
    if(status != TTreeReader::kEntryValid) {
       std::string reply = "S" + std::to_string(GetNWorker());
       reply += ": could not set TTreeReader to range " + std::to_string(start) + " " + std::to_string(finish);

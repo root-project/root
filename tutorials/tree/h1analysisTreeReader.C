@@ -94,15 +94,14 @@ void h1analysisTreeReader::Begin(TTree* /*myTree*/) {
          // This is needed to avoid warnings from output-to-members mapping
          elist = 0;
       }
+      Info("Begin", "creating an entry-list");
    }
-   if (fillList) Info("Begin", "creating an entry-list");
    // case when one uses the entry list generated in a previous call
    if (option.Contains("useList")) {
       useList  = kTRUE;
       if (fInput) {
-         // Option "useList" not supported in PROOF directly
-         Warning("Begin", "option 'useList' not supported in PROOF - ignoring");
-         Warning("Begin", "the entry list must be set on the chain *before* calling Process");
+         // In PROOF option "useList" is processed in SlaveBegin and we do not need
+         // to do anything here
       } else {
          TFile f("elist.root");
          elist = (TEntryList*)f.Get("elist");
@@ -147,6 +146,7 @@ void h1analysisTreeReader::SlaveBegin(TTree *myTree){
       }
    }
    if (fillList) Info("SlaveBegin", "creating an entry-list");
+   if (option.Contains("useList")) useList  = kTRUE;
 }
 
 void h1analysisTreeReader::Terminate() {

@@ -971,7 +971,8 @@ Bool_t TGenCollectionProxy::HasPointers() const
    // The content of a map and multimap is always a 'pair' and hence
    // fPointers means "Flag to indicate if containee has pointers (key or value)"
    // so we need to ignore its value for map and multimap;
-   return fPointers && !(fSTL_type == ROOT::kSTLmap || fSTL_type == ROOT::kSTLmultimap);
+   return fPointers && !(fSTL_type == ROOT::kSTLmap || fSTL_type == ROOT::kSTLmultimap ||
+                         fSTL_type == ROOT::kSTLunorderedmap || fSTL_type == ROOT::kSTLunorderedmultimap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1275,7 +1276,9 @@ void TGenCollectionProxy::DeleteItem(Bool_t force, void* ptr) const
    if ( force && ptr ) {
       switch (fSTL_type) {
          case ROOT::kSTLmap:
-         case ROOT::kSTLmultimap: {
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmultimap:{
             if ( fKey->fCase&kIsPointer ) {
                if (fKey->fProperties&kNeedDelete) {
                   TVirtualCollectionProxy *proxy = fKey->fType->GetCollectionProxy();

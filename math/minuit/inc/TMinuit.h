@@ -263,7 +263,6 @@ public:
    virtual void   mnwerr();
    virtual Int_t  Release( Int_t parNo );
    virtual Int_t  SetErrorDef( Double_t up );
-   virtual void   SetFCN(void *fcn);
    virtual void   SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
    virtual void   SetGraphicsMode(Bool_t mode=kTRUE) {fGraphicsMode = mode;}
    virtual void   SetMaxIterations(Int_t maxiter=500) {fMaxIterations = maxiter;}

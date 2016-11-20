@@ -219,6 +219,7 @@ namespace TMVA {
       public:
          Int_t    nTrainingEventsRequested;
          Int_t    nTestingEventsRequested;
+         Float_t  TrainTestSplitRequested;
          Int_t    nInitialEvents;
          Int_t    nEvBeforeCut;
          Int_t    nEvAfterCut;
@@ -229,6 +230,7 @@ namespace TMVA {
       EventStats():
          nTrainingEventsRequested(0),
             nTestingEventsRequested(0),
+            TrainTestSplitRequested(0),
             nInitialEvents(0),
             nEvBeforeCut(0),
             nEvAfterCut(0),
@@ -317,7 +319,7 @@ namespace TMVA {
       std::vector<TTreeFormula*> fWeightFormula;   // weights
       std::vector<TTreeFormula*> fSpectatorFormulas; // spectators
 
-      MsgLogger*                 fLogger;          // message logger
+      MsgLogger*                 fLogger;          //! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
        

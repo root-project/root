@@ -25,7 +25,7 @@ CXX           = g++
 CC            = gcc
 CXXFLAGS      = $(CXX11FLAGS) -pipe -mx32 -Wshadow -Wall -W -Woverloaded-virtual \
                 -fPIC -msse -mfpmath=sse $(EXTRA_CXXFLAGS) \
-                -Wno-deprecated-declarations $(USERCONF_CXXFLAGS)
+                $(USERCONF_CXXFLAGS)
 CFLAGS        = -pipe -mx32 -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 

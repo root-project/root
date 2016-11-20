@@ -194,7 +194,7 @@ solaris64CC5)
    ;;
 linux)
    # Linux with gcc >= 3.x
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m32 -msse -mfpmath=sse "
+   auxcflags="${cxxversionflag} -m32 -msse -mfpmath=sse "
    auxldflags="-m32 -msse -mfpmath=sse "
    auxlibs="-lm -ldl -rdynamic"
    ;;
@@ -205,31 +205,19 @@ linuxicc)
    ;;
 linuxppcgcc)
    # PPC Linux with gcc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m32 -fsigned-char"
+   auxcflags="${cxxversionflag} -m32 -fsigned-char"
    auxldflags="-m32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxppc64gcc)
    # PPC64/PPC64LE (64 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m64 -fsigned-char"
-   auxldflags="-m64"
-   auxlibs="-lm -ldl -rdynamic"
-   ;;
-linuxs390gcc)
-   # s390 (31 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m31 -fsigned-char"
-   auxldflags="-m31"
-   auxlibs="-lm -ldl -rdynamic"
-   ;;
-linuxs390xgcc)
-   # s390x (64 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m64 -fsigned-char"
+   auxcflags="${cxxversionflag} -m64 -fsigned-char"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m64"
+   auxcflags="${cxxversionflag} -m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
@@ -245,7 +233,7 @@ linuxx8664k1omicc)
    ;;
 linuxx32gcc)
    # x32 ABI (64 bit mode with 32 bit pointers) Linux with gcc > 4.7
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -mx32"
+   auxcflags="${cxxversionflag} -mx32"
    auxldflags="-mx32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
@@ -261,22 +249,22 @@ linuxarm64)
    ;;
 freebsd)
    # FreeBSD with libc5
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations"
+   auxcflags="${cxxversionflag}"
    auxlibs="-lm -lg++"
    ;;
 freebsd4)
    # FreeBSD 4 with glibc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations"
+   auxcflags="${cxxversionflag}"
    auxlibs="-lm -lstdc++"
    ;;
 freebsd5|freebsd7)
    # FreeBSD 5/7 with glibc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations"
+   auxcflags="${cxxversionflag}"
    auxlibs="-lm -lstdc++"
    ;;
 openbsd)
    # OpenBSD with libc
-   auxcflags="${cxxversionflag} -Wno-deprecated-declarations"
+   auxcflags="${cxxversionflag}"
    auxlibs="-lm -lstdc++"
    ;;
 macosx)
@@ -435,6 +423,7 @@ auxcflags="$auxcflags @usercflags@"
 
 ### end of machine and compiler dependent settings ###
 
+srcdir=@top_srcdir@
 prefix=@prefix@
 if test "$platform" = "win32" && test "$prefix" != ""; then
    prefix=`cygpath -u $prefix`
@@ -450,8 +439,8 @@ noldflags=no
 
 usage="\
 Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
- [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
- [--glibs] [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir]\
+ [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs]\
+ [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--srcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
  [--platform] [--config] [--features] [--ncpu] [--git-revision]\
  [--python-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
@@ -748,6 +737,10 @@ while test $# -gt 0; do
       ### output the etc directory
       out="$out $etcdir"
       ;;
+    --srcdir)
+      ### output the src directory
+      out="$out $srcdir"
+      ;;
     --config)
       ### output the configure arguments
       out="$out $configargs"
@@ -812,6 +805,7 @@ while test $# -gt 0; do
       echo "  --libdir              Print the library directory"
       echo "  --incdir              Print the header directory"
       echo "  --etcdir              Print the configuration directory"
+      echo "  --srcdir              Print the top of the original source directory"
       echo "  --auxlibs             Print auxiliary libraries"
       echo "  --auxcflags           Print auxiliary compiler flags"
       echo "  --[no]new             Turn on[off] use of libNew.so"

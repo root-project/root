@@ -642,6 +642,7 @@ int exportsock(rpdunix *conn)
       while (natt > 0 && (fd = dup(d)) <= 2) { natt--; }
       if (natt <= 0 && fd <= 2) {
          Info("exportsock: ERROR: no free filedescriptor!");
+         close(d);
          return -1;
       }
       close(d);

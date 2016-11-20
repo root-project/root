@@ -11,6 +11,12 @@
 # this easily.
 #
 ######################################################################
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
+
 #
 ### echo %%% Some global variables
 #
@@ -116,7 +122,6 @@ options="                    \
    enable_tmva               \
    enable_unuran             \
    enable_vc                 \
-   enable_vdt                \
    enable_werror             \
    enable_winrtdebug         \
    enable_x11                \
@@ -209,7 +214,6 @@ if test "x$ENABLEALL" = "xyes"; then
     enable_table=yes
     enable_unuran=yes
     enable_vc=yes
-    enable_vdt=yes
     enable_r=yes
 fi
 
@@ -1089,8 +1093,13 @@ include ${ac_srcdir}/config/Makefile.${arch}
 CC  = ${altcc}
 CXX = ${altcxx}
 LD  = ${altld}
+GCCTOOLCHAIN_OPT =
+ifneq (${gcctoolchain},)
+GCCTOOLCHAIN_OPT = --gcc-toolchain=${gcctoolchain}
+endif
+
 conftest: conftest.cxx
-	\$(CXX) \$(CFLAGS) $cxxopt \$(LDFLAGS) \$< -o \$@
+	\$(CXX) \$(CFLAGS) \$(GCCTOOLCHAIN_OPT) $cxxopt \$(LDFLAGS) \$< -o \$@
 
 conftest.cxx:
 	echo "int main() { return 0; }" > \$@
@@ -2055,7 +2064,6 @@ ios*)
    export IOSVERS=$iosvers
    enable_genvector="no"
    enable_tmva="no"
-   enable_vdt="no"
    ;;
 win32)
    logmsg "Will use by default builtin versions of libraries on Win32"
@@ -7097,20 +7105,6 @@ else
     result "no"
     hasvc="undef"
 fi
-######################################################################
-#
-### echo %%% VDT Library - Contributed library
-#
-message "Checking whether to install VDT"
-if test "x$enable_vdt" = "xyes" || test ! "x$VC" = "x"; then
-    enable_vdt="yes"
-    result "yes"
-    hasvdt="define"
-else
-    enable_vdt=""
-    result "no"
-    hasvdt="undef"
-fi
 
 ######################################################################
 #
@@ -7257,7 +7251,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_mathmore" = "xyes" && pl="$pl libroot-math-mathmore"
     test "x$enable_unuran"   = "xyes" && pl="$pl libroot-math-unuran"
     test "x$enable_vc"       = "xyes" && pl="$pl libroot-math-vc"
-    test "x$enable_vdt"      = "xyes" && pl="$pl libroot-math-vdt"
     test "x$enable_table"    = "xyes" && pl="$pl libroot-misc-table"
     test "x$enable_ldap"     = "xyes" && pl="$pl libroot-net-ldap"
     test "x$enable_roofit"   = "xyes" && pl="$pl libroot-roofit"
@@ -7775,6 +7768,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@ftgllibdir@|$ftgllibdir|"            \
     -e "s|@ftgllibs@|$ftgllibs|"                \
     -e "s|@builtingl2ps@|$enable_builtin_gl2ps|" \
+    -e "s|@gcctoolchain@|$gcctoolchain|"        \
     -e "s|@gl2psincdir@|$gl2psincdir|"          \
     -e "s|@gl2pslib@|$gl2pslib|"                \
     -e "s|@gl2pslibdir@|$gl2pslibdir|"          \
@@ -7797,7 +7791,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildunuran@|$enable_unuran|"        \
     -e "s|@buildvc@|$enable_vc|"                \
-    -e "s|@buildvdt@|$enable_vdt|"              \
     -e "s|@buildgdml@|$enable_gdml|"            \
     -e "s|@buildgeocad@|$enable_geocad|"        \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
@@ -8195,6 +8188,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@etcdir@|$etcdir2|"              \
+    -e "s|@top_srcdir@|$top_srcdir|"       \
     -e "s|@features@|$features|"           \
     -e "s|@winrtdebug@|$enable_winrtdebug|"\
     -e "s|@configargs@|$configargs|"       \
@@ -8473,5 +8467,10 @@ if [ "x$run_maintainer_clean" = "xyes" ]; then
    $gnumake maintainer-clean
    $0 `cat config.status 2>/dev/null`
 fi
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
 
 exit 0

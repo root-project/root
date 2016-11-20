@@ -153,7 +153,6 @@ public:
                                       TString tokenDelim);
    void Train();
    void TrainGpu();
-   template <typename AFloat>
    void TrainCpu();
 
    virtual Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper=0 );

@@ -19,11 +19,11 @@ const UInt_t poolSize = 4U;
 
 Int_t mt201_parallelHistoFill()
 {
-   TH1::AddDirectory(false);
+   ROOT::EnableThreadSafety();
 
    // The concrete histogram instances are created in each thread
    // lazily, i.e. only if a method is invoked.
-   auto ts_h = ROOT::MakeThreaded<TH1F>("myHist", "Filled in parallel", 128, -8, 8);
+   ROOT::TThreadedObject<TH1F> ts_h("myHist", "Filled in parallel", 128, -8, 8);
 
    // The function used to fill the histograms in each thread.
    auto fillRandomHisto = [&](int seed = 0) {

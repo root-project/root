@@ -20,12 +20,6 @@ set(LIBS
   clingUtils
 )
 
-find_library(DL_LIBRARY_PATH dl)
-if (DL_LIBRARY_PATH)
-  list(APPEND LIBS dl)
-endif()
-
-
 set( LLVM_LINK_COMPONENTS
   analysis
   core
@@ -38,8 +32,10 @@ set( LLVM_LINK_COMPONENTS
   option
   orcjit
   runtimedyld
+  scalaropts
   support
   target
+  transformutils
 )
 
 add_cling_library(clingInterpreter OBJECT
@@ -77,6 +73,9 @@ add_cling_library(clingInterpreter OBJECT
   Value.cpp
   ValuePrinter.cpp
   ValuePrinterSynthesizer.cpp
+
+  DEPENDS
+  ClangDriverOptions
 
   LINK_LIBS
   ${LIBS}
@@ -194,20 +193,37 @@ if (UNIX)
         set(_path "__THISREALLYBETTERNOTBEINPATH_THANKS__")
       endif()
     else()
-      get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
+      # FIXME: In some ccache setups we can have a soft link pointing to ccache
+      # binary. Eg. /usr/local/gcc -> /usr/bin/ccache. Resolving the realpath
+      # we will get to the ccache and not the intended compiler binary. This
+      # could be fixed if we run 'gcc -###' which will give us the correct info.
+      get_filename_component(_realpath ${CMAKE_CXX_COMPILER} REALPATH)
+      get_filename_component(_name ${_realpath} NAME)
+      get_filename_component(_path ${_realpath} PATH)
     endif()
 
-    if("$ENV{PATH}" MATCHES ${_path})
-      # This adds a lot of unneccessary flags, but may be useful if we're missing something
-      #set(CLING_CXX_RLTV "${_name} ${CMAKE_CXX_FLAGS}")
-      set(CLING_CXX_RLTV ${_name})
-    elseif(NOT CLING_CXX_PATH)
+    # Test if path compiler is on PATH.
+    string(REPLACE ":" ";" _pathlist $ENV{PATH})
+    foreach (_pathcomp ${_pathlist})
+      get_filename_component(_pathcomp ${_pathcomp} REALPATH)
+      if (_path STREQUAL _pathcomp)
+        # This adds a lot of unneccessary flags, but may be useful if there's
+        # a flag that should be passed to cling.
+        set(CLING_CXX_RLTV ${_name})
+        break()
+      endif()
+    endforeach()
+
+    # FIXME: Perhaps CLING_CXX_RLTV should have a better name?
+    if(NOT CLING_CXX_RLTV AND NOT CLING_CXX_PATH)
+      # We got nothing, just use whatever CMake is using.
       set(CLING_CXX_PATH ${CMAKE_CXX_COMPILER})
     endif()
 
     # If CMAKE_CXX_FLAGS contains --gcc-toolchain= then that should be passed on
     string(FIND "${CMAKE_CXX_FLAGS}" "--gcc-toolchain=" cling_gcc_toolchain)
     if ("${cling_gcc_toolchain}" GREATER -1)
+      # TODO Refactor these two into common function
       if (CLING_CXX_PATH)
         string(FIND "${CLING_CXX_PATH}" "--gcc-toolchain=" cling_gcc_toolchain)
         if ("${cling_gcc_toolchain}" EQUAL -1)
@@ -298,6 +314,7 @@ else()
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h.in
       "
       #define CLING_INCLUDE_PATHS \"${CLING_INCLUDE_PATHS}\"
+      #define CLING_UCRT_VERSION  \"$ENV{UCRTVersion}\"
     ")
 endif()
 

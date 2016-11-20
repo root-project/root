@@ -181,7 +181,7 @@ private:
     return MangledName;
   }
 
-  llvm::orc::JITSymbol getInjectedSymbols(llvm::StringRef Name) const;
+  llvm::orc::JITSymbol getInjectedSymbols(const std::string& Name) const;
 
 public:
   IncrementalJIT(IncrementalExecutor& exe,
@@ -194,14 +194,14 @@ public:
   ///   (prefixed by '_') to make IR versus symbol names.
   /// \param AlsoInProcess - Sometimes you only care about JITed symbols. If so,
   ///   pass `false` here to not resolve the symbol through dlsym().
-  uint64_t getSymbolAddress(llvm::StringRef Name, bool AlsoInProcess) {
+  uint64_t getSymbolAddress(const std::string& Name, bool AlsoInProcess) {
     return getSymbolAddressWithoutMangling(Mangle(Name), AlsoInProcess)
       .getAddress();
   }
 
   ///\brief Get the address of a symbol from the JIT or the memory manager.
   /// Use this to resolve symbols of known, target-specific names.
-  llvm::orc::JITSymbol getSymbolAddressWithoutMangling(llvm::StringRef Name,
+  llvm::orc::JITSymbol getSymbolAddressWithoutMangling(const std::string& Name,
                                                        bool AlsoInProcess);
 
   size_t addModules(std::vector<llvm::Module*>&& modules);
@@ -213,6 +213,13 @@ public:
   RemoveUnfinalizedSection(llvm::orc::ObjectLinkingLayerBase::ObjSetHandleT H) {
     m_UnfinalizedSections.erase(H);
   }
+
+  ///\brief Get the address of a symbol from the process' loaded libraries.
+  /// \param Name - symbol to look for
+  /// \param Addr - known address of the symbol that can be cached later use
+  /// \returns The address of the symbol and whether it was cached
+  static std::pair<void*, bool>
+  searchLibraries(llvm::StringRef Name, void* Addr = nullptr);
 };
 } // end cling
 #endif // CLING_INCREMENTAL_EXECUTOR_H

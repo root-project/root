@@ -431,7 +431,6 @@ QuartzWindow *FindWindowUnderPointer()
 //______________________________________________________________________________
 NSView<X11Window> *FindViewUnderPointer()
 {
-   //TODO: call FindViewInPoint using cursor screen coordiantes.
    const Util::AutoreleasePool pool;
 
    if (QuartzWindow *topLevel = FindWindowUnderPointer()) {
@@ -528,12 +527,10 @@ std::vector<unsigned char> DownscaledImageData(unsigned w, unsigned h, CGImageRe
    try {
       result.resize(w * h * 4);
    } catch (const std::bad_alloc &) {
-      //TODO: check that 'resize' has no side effects in case of exception.
       NSLog(@"DownscaledImageData, memory allocation failed");
       return result;
    }
 
-   //TODO: device RGB? should it be generic?
    const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());//[1]
    if (!colorSpace.Get()) {
       NSLog(@"DownscaledImageData, CGColorSpaceCreateDeviceRGB failed");
@@ -649,11 +646,7 @@ void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> 
    if (mask & kWAWinGravity)
       window.fWinGravity = attr->fWinGravity;
 
-   //TODO: More attributes to set -
-   //cursor for example, etc.
    if (mask & kWAOverrideRedirect) {
-      //This is quite a special case.
-      //TODO: Must be checked yet, if I understand this correctly!
       if ([(NSObject *)window isKindOfClass : [QuartzWindow class]]) {
          QuartzWindow * const qw = (QuartzWindow *)window;
          [qw setStyleMask : Details::kBorderlessWindowMask];
@@ -897,10 +890,6 @@ NSCursor *CreateCursor(ECursor currentCursor)
 //inside a TGViewFrame. This does not work with default
 //QuartzView -drawRect/TGCocoa. So I need a trick to identify
 //this special window.
-
-//TODO: possibly refactor these functions in a more generic way - not
-//to have two separate versions for text and html.
-
 
 #pragma mark - Workarounds for a text view and its descendants.
 
@@ -1147,8 +1136,6 @@ void print_mask_info(ULong_t mask)
       contentViewRect.origin.x = 0.f;
       contentViewRect.origin.y = 0.f;
 
-      //TODO: OpenGL view can not be content of our QuartzWindow, check if
-      //this is a problem for ROOT.
       fContentView = [[QuartzView alloc] initWithFrame : contentViewRect windowAttributes : 0];
 
       [self setContentView : fContentView];
@@ -1314,7 +1301,6 @@ void print_mask_info(ULong_t mask)
       [fShapeCombineMask release];
       if (mask) {
          fShapeCombineMask = [mask retain];
-
          //TODO: Check window's shadow???
       }
    }
@@ -1651,11 +1637,6 @@ void print_mask_info(ULong_t mask)
    if (!fContentView)
       return NO;
 
-   //TODO: check this!!! Children are
-   //transient windows and ROOT does not handle
-   //such a deletion properly, noop then:
-   //you can not close some window, if there is a
-   //modal dialog above.
    if ([[self childWindows] count])
       return NO;
 
@@ -2088,8 +2069,6 @@ void print_mask_info(ULong_t mask)
    //To copy one "window" to another "window", I have to ask source QuartzView to draw intself into
    //bitmap, and copy this bitmap into the destination view.
 
-   //TODO: this code must be tested, with all possible cases.
-
    assert(srcView != nil && "-copyView:area:toPoint:, parameter 'srcView' is nil");
 
    const NSRect frame = [srcView frame];
@@ -2290,7 +2269,7 @@ void print_mask_info(ULong_t mask)
    self.fContext = ctx; //Restore old context.
    //
    const NSInteger bitsPerPixel = [imageRep bitsPerPixel];
-   //TODO: ohhh :(((
+
    assert(bitsPerPixel == 32 && "-readColorBits:, no alpha channel???");
    const NSInteger bytesPerRow = [imageRep bytesPerRow];
    unsigned dataWidth = bytesPerRow / (bitsPerPixel / 8);//assume an octet :(
@@ -2594,7 +2573,6 @@ void print_mask_info(ULong_t mask)
       if (sibling == self)
          continue;
 
-      //TODO: equal test is not good :) I have a baaad feeling about this ;)
       if (NSEqualRects(sibling.frame, self.frame)) {
          [sibling setOverlapped : NO];
          //
@@ -2947,7 +2925,7 @@ void print_mask_info(ULong_t mask)
    assert(fID != 0 && "-mouseMoved:, fID is 0");
 
    if (fParentView)//Suppress events in all views, except the top-level one.
-      return;      //TODO: check, that it does not create additional problems.
+      return;
 
    assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
           "-mouseMoved:, gVirtualX is null or not of TGCocoa type");

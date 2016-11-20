@@ -40,8 +40,8 @@ foreach(component ${CASTOR_FIND_COMPONENTS})
   if (CASTOR_${component}_LIBRARY)
     set(CASTOR_${component}_FOUND 1)
     list(APPEND CASTOR_LIBRARIES ${CASTOR_${component}_LIBRARY})
-    mark_as_advanced(CASTOR_${component}_LIBRARY)
   endif()
+  mark_as_advanced(CASTOR_${component}_LIBRARY)
 endforeach()
 
 # Handle the QUIETLY and REQUIRED arguments and set CASTOR_FOUND to TRUE if all listed variables are TRUE

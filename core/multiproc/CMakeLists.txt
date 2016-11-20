@@ -9,5 +9,5 @@ set(sources TMPClient.cxx MPSendRecv.cxx TProcessExecutor.cxx TMPWorker.cxx TPoo
 ROOT_GENERATE_DICTIONARY(G__MultiProc ${headers} MODULE MultiProc LINKDEF LinkDef.h)
 
 ROOT_OBJECT_LIBRARY(MultiProcObjs ${sources} G__MultiProc.cxx)
-ROOT_LINKER_LIBRARY(MultiProc $<TARGET_OBJECTS:MultiProcObjs> DEPENDENCIES Core Net TreePlayer)
+ROOT_LINKER_LIBRARY(MultiProc $<TARGET_OBJECTS:MultiProcObjs> DEPENDENCIES Core Net TreePlayer dl)
 ROOT_INSTALL_HEADERS(${installoptions})

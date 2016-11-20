@@ -16,6 +16,16 @@ set( LLVM_LINK_COMPONENTS
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/textinput)
   set(TEXTINPUTSRC ${CMAKE_SOURCE_DIR}/core/textinput/src/)
   include_directories(${TEXTINPUTSRC})
+else()
+  # For cling, install textinput *.h in include/cling/UserInterface/textinput.
+  install(DIRECTORY ${TEXTINPUTSRC}textinput
+    DESTINATION include/cling/UserInterface
+    FILES_MATCHING
+    PATTERN "CMakeFiles" EXCLUDE
+    PATTERN "*.cpp" EXCLUDE
+    PATTERN "doc" EXCLUDE
+    PATTERN "*.h"
+    )
 endif()
 
 add_cling_library(clingUserInterface

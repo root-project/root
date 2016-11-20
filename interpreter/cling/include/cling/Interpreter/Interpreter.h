@@ -39,6 +39,7 @@ namespace clang {
   class GlobalDecl;
   class NamedDecl;
   class Parser;
+  class Preprocessor;
   class QualType;
   class RecordDecl;
   class Sema;
@@ -95,7 +96,6 @@ namespace cling {
     public:
       StateDebuggerRAII(const Interpreter* i);
       ~StateDebuggerRAII();
-      void pop() const;
     };
 
     ///\brief Describes the return result of the different routines that do the
@@ -701,7 +701,8 @@ namespace cling {
     void GenerateAutoloadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
                                 bool enableMacros = false, bool enableLogs = true);
 
-    void forwardDeclare(Transaction& T, clang::Sema& S,
+    void forwardDeclare(Transaction& T, clang::Preprocessor& P,
+                        clang::ASTContext& Ctx,
                         llvm::raw_ostream& out,
                         bool enableMacros = false,
                         llvm::raw_ostream* logs = 0,

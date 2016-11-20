@@ -62,6 +62,8 @@ TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
       }
    }
    ResetBit(kOwnsChain);
+   fEntryList = (chain) ? chain->GetEntryList() : 0;
+   fEventList = (chain) ? chain->GetEventList() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +92,14 @@ TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
       SetBit(kOwnsChain);
       if (TestBit(kProofLite))
          fTree = fChain;
+   }
+   TObject *en = (dset) ? dset->GetEntryList() : 0;
+   if (en) {
+      if (en->InheritsFrom("TEntryList")) {
+         fEntryList = (TEntryList *) en;
+      }  else {
+         fEventList = (TEventList *) en;
+      }
    }
 }
 
@@ -188,6 +198,9 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
       fSet->SetEntryList(fEntryList);
    } else if (fEventList) {
       fSet->SetEntryList(fEventList);
+   } else {
+      // Disable previous settings, if any
+      fSet->SetEntryList(0);
    }
 
    // Fill drawing attributes
@@ -334,13 +347,14 @@ Long64_t TProofChain::Process(const char *filename, Option_t *option,
                               Long64_t nentries, Long64_t firstentry)
 {
    // Set either the entry-list (priority) or the event-list
+   TObject *enl = 0;
    if (fEntryList) {
-      fSet->SetEntryList(fEntryList);
+      enl = fEntryList;
    } else if (fEventList) {
-      fSet->SetEntryList(fEventList);
+      enl = fEventList;
    }
 
-   return fSet->Process(filename, option, nentries, firstentry);
+   return fSet->Process(filename, option, nentries, firstentry, enl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,13 +365,14 @@ Long64_t TProofChain::Process(TSelector *selector, Option_t *option,
                               Long64_t nentries, Long64_t firstentry)
 {
    // Set either the entry-list (priority) or the event-list
+   TObject *enl = 0;
    if (fEntryList) {
-      fSet->SetEntryList(fEntryList);
+      enl = fEntryList;
    } else if (fEventList) {
-      fSet->SetEntryList(fEventList);
+      enl = fEventList;
    }
 
-   return fSet->Process(selector, option, nentries, firstentry);
+   return fSet->Process(selector, option, nentries, firstentry, enl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

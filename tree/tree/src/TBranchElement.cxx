@@ -2272,7 +2272,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       SetBit(kDeleteObject);
       SetAddress(fAddress);
    } else {
-      if (R__unlikely(!fAddress && !fTree->GetMakeClass())) {
+      if (R__unlikely(!fAddress && !TestBit(kDecomposedObj))) {
          R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
          SetupAddressesImpl();
       }
@@ -2513,7 +2513,7 @@ T TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const
       }
    }
 
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (!fAddress) {
          return 0;
       }
@@ -2598,7 +2598,7 @@ void* TBranchElement::GetValuePointer() const
       fBranchCount->TBranch::GetEntry(entry);
       if (fBranchCount2) fBranchCount2->TBranch::GetEntry(entry);
    }
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (!fAddress) {
          return 0;
       }
@@ -3407,7 +3407,7 @@ void TBranchElement::PrintValue(Int_t lenmax) const
       }
    }
 
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (!fAddress) {
          return;
       }
@@ -4484,7 +4484,7 @@ void TBranchElement::SetAddress(void* addr)
    //  Allow sub-branches to have independently set addresses.
    //
 
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (fID > -1) {
          // We are *not* a top-level branch.
          if (!info) {
@@ -5176,7 +5176,7 @@ void TBranchElement::SetFillActionSequence()
 
 void TBranchElement::SetFillLeavesPtr()
 {
-   if (fTree->GetMakeClass() && ((fType==3)||(fType==31))) {
+   if (TestBit(kDecomposedObj) && ((fType==3)||(fType==31))) {
       fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesMakeClass;
    } else if (fType == 4) {
       fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesCollection;
@@ -5260,8 +5260,8 @@ void TBranchElement::SetupAddresses()
    // Check to see if the user changed the branch address on us.
    ValidateAddress();
 
-   if (fAddress || fTree->GetMakeClass()) {
-      // -- Do nothing if already setup or if we are a MakeClass tree.
+   if (fAddress || TestBit(kDecomposedObj)) {
+      // -- Do nothing if already setup or if we are a MakeClass branch.
       return;
    }
    SetupAddressesImpl();

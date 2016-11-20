@@ -1086,24 +1086,6 @@ void TFoam::ResetRho(TFoamIntegrand *fun)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// User may use this to set pointer to the global function (not descending
-/// from TFoamIntegrand) serving as a distribution for FOAM.
-/// It is useful for simple interactive applications.
-/// Note that persistency for FOAM object will not work in the case of such
-/// a distribution.
-
-void TFoam::SetRhoInt( void * fun)
-{
-
-   const char *namefcn = gCling->Getp2f2funcname(fun); //name of integrand function
-   if(namefcn) {
-      fMethodCall=new TMethodCall();
-      fMethodCall->InitWithPrototype(namefcn, "Int_t, Double_t *");
-   }
-   fRho=0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Internal subprogram.
 /// Evaluates distribution to be generated.
 

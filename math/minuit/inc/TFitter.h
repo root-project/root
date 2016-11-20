@@ -66,7 +66,6 @@ public:
    virtual Bool_t     IsFixed(Int_t ipar) const;
    virtual void       PrintResults(Int_t level, Double_t amin) const;
    virtual void       ReleaseParameter(Int_t ipar);
-   virtual void       SetFCN(void *fcn);
    virtual void       SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
    virtual void       SetFitMethod(const char *name);
    virtual Int_t      SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh);

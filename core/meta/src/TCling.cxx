@@ -99,6 +99,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/ParserStateRAII.h"
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
@@ -451,11 +452,7 @@ TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
       return 0;
    }
    const char* name = buf.c_str();
-   if (cl) {
-      enumType = new TEnum(name, VD, cl);
-   } else {
-      enumType = new TEnum(name, VD, cl);
-   }
+   enumType = new TEnum(name, VD, cl);
    UpdateEnumConstants(enumType, cl);
 
    return enumType;
@@ -1063,8 +1060,20 @@ TCling::TCling(const char *name, const char *title)
    if (!fromRootCling) {
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
 
-      interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
+      // Add -I early so ASTReader can find the headers.
+      std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
       clingArgsStorage.push_back(interpInclude);
+
+      // Add include path to etc/cling. FIXME: This is a short term solution. The
+      // llvm/clang header files shouldn't be there at all. We have to get rid of
+      // that dependency and avoid copying the header files.
+      clingArgsStorage.push_back(interpInclude + "/cling");
+
+      // Add the root include directory and etc/ to list searched by default.
+      clingArgsStorage.push_back(std::string("-I") + ROOT::TMetaUtils::GetROOTIncludeDir(false));
+
+      // Add the current path to the include path
+      // TCling::AddIncludePath(".");
 
       std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
       if (gSystem->Getenv("ROOT_PCH")) {
@@ -1103,18 +1112,6 @@ TCling::TCling(const char *name, const char *title)
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
-
-      // Add include path to etc/cling. FIXME: This is a short term solution. The
-      // llvm/clang header files shouldn't be there at all. We have to get rid of
-      // that dependency and avoid copying the header files.
-      // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
-      TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
-
-      // Add the current path to the include path
-      // TCling::AddIncludePath(".");
-
-      // Add the root include directory and etc/ to list searched by default.
-      TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
    }
 
    // Don't check whether modules' files exist.
@@ -3678,14 +3675,15 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
    if (m->fMethodArgs) {
       return;
    }
-   m->fMethodArgs = new TList;
+   TList *arglist = new TList;
    TClingMethodArgInfo t(fInterpreter, (TClingMethodInfo*)m->fInfo);
    while (t.Next()) {
       if (t.IsValid()) {
          TClingMethodArgInfo* a = new TClingMethodArgInfo(t);
-         m->fMethodArgs->Add(new TMethodArg((MethodArgInfo_t*)a, m));
+         arglist->Add(new TMethodArg((MethodArgInfo_t*)a, m));
       }
    }
+   m->fMethodArgs = arglist;
 }
 
 
@@ -5295,6 +5293,49 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    return status;
 }
 
+namespace {
+////////////////////////////////////////////////////////////////////////////////
+/// RAII used to store Parser, Sema, Preprocessor state for recursive parsing.
+   struct ParsingStateRAII_t {
+      Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
+      Parser::ParserCurTokRestoreRAII fSavedCurToken;
+      cling::ParserStateRAII fParserRAII;
+
+      // We can't PushDeclContext, because we go up and the routine that pops
+      // the DeclContext assumes that we drill down always.
+      // We have to be on the global context. At that point we are in a
+      // wrapper function so the parent context must be the global.
+      Sema::ContextAndScopeRAII fPushedDCAndS;
+
+      struct SemaParsingInitForAutoVarsRAII_t {
+         using PIFAV_t = decltype(Sema::ParsingInitForAutoVars);
+         PIFAV_t& fSemaPIFAV;
+         PIFAV_t fSavedPIFAV;
+         SemaParsingInitForAutoVarsRAII_t(PIFAV_t& PIFAV): fSemaPIFAV(PIFAV) {
+            fSavedPIFAV.swap(PIFAV);
+         }
+         ~SemaParsingInitForAutoVarsRAII_t() {
+            fSavedPIFAV.swap(fSemaPIFAV);
+         }
+      };
+      SemaParsingInitForAutoVarsRAII_t fSemaParsingInitForAutoVarsRAII;
+
+      ParsingStateRAII_t(Parser& parser, Sema& sema):
+         fCleanupRAII(sema.getPreprocessor()),
+         fSavedCurToken(parser),
+         fParserRAII(parser, false /*skipToEOF*/),
+         fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
+                       sema.TUScope),
+         fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
+      {
+         // After we have saved the token reset the current one to something which
+         // is safe (semi colon usually means empty decl)
+         Token& Tok = const_cast<Token&>(parser.getCurToken());
+         Tok.setKind(tok::semi);
+      }
+   };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse the payload or header.
 
@@ -5302,24 +5343,6 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
                                                            Bool_t header,
                                                            cling::Interpreter *interpreter)
 {
-   // Save state of the PP
-   Sema &SemaR = interpreter->getSema();
-   ASTContext& C = SemaR.getASTContext();
-   Preprocessor &PP = SemaR.getPreprocessor();
-   Parser& P = const_cast<Parser&>(interpreter->getParser());
-   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-   Parser::ParserCurTokRestoreRAII savedCurToken(P);
-   // After we have saved the token reset the current one to something which
-   // is safe (semi colon usually means empty decl)
-   Token& Tok = const_cast<Token&>(P.getCurToken());
-   Tok.setKind(tok::semi);
-
-   // We can't PushDeclContext, because we go up and the routine that pops
-   // the DeclContext assumes that we drill down always.
-   // We have to be on the global context. At that point we are in a
-   // wrapper function so the parent context must be the global.
-   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
-                                          SemaR.TUScope);
    std::string code = gNonInterpreterClassDef ;
    if (!header) {
       // This is the complete header file content and not the
@@ -5342,6 +5365,8 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
       // For now we disable diagnostics because we saw them already at
       // dictionary generation time. That won't be an issue with the PCMs.
 
+      Sema &SemaR = interpreter->getSema();
+      ParsingStateRAII_t parsingStateRAII(interpreter->getParser(), SemaR);
       clangDiagSuppr diagSuppr(SemaR.getDiagnostics());
 
       #if defined(R__MUST_REVISIT)
@@ -5513,8 +5538,12 @@ Int_t TCling::AutoParse(const char *cls)
    }
 
    // The catalogue of headers is in the dictionary
-   if (fClingCallbacks->IsAutoloadingEnabled()) {
-      AutoLoad(cls);
+   if (fClingCallbacks->IsAutoloadingEnabled()
+         && !gClassTable->GetDictNorm(cls)) {
+      // Need RAII against recursive (dictionary payload) parsing (ROOT-8445).
+      ParsingStateRAII_t parsingStateRAII(fInterpreter->getParser(),
+         fInterpreter->getSema());
+      AutoLoad(cls, true /*knowDictNotLoaded*/);
    }
 
    // Prevent the recursion when the library dictionary are loaded.
@@ -6272,26 +6301,6 @@ Long_t TCling::GetExecByteCode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface to the CINT global object pointer which was controlling the
-/// behavior of the wrapper around the calls to operator new and the constructor
-/// and operator delete and the destructor.
-
-Long_t TCling::Getgvp() const
-{
-   Error("Getgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const char* TCling::Getp2f2funcname(void*) const
-{
-   Error("Getp2f2funcname", "Will not be implemented: "
-         "all function pointers are compiled!");
-   return NULL;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Interface to cling function
 
 int TCling::GetSecurityError() const
@@ -6406,30 +6415,6 @@ void TCling::SetErrmsgcallback(void* p) const
 #endif
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to the cling global object pointer which was controlling the
-/// behavior of the wrapper around the calls to operator new and the constructor
-/// and operator delete and the destructor.
-
-void TCling::Setgvp(Long_t gvp) const
-{
-   Error("Setgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TCling::SetRTLD_NOW() const
-{
-   Error("SetRTLD_NOW()", "Will never be implemented! Don't use!");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TCling::SetRTLD_LAZY() const
-{
-   Error("SetRTLD_LAZY()", "Will never be implemented! Don't use!");
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create / close a scope for temporaries. No-op for cling; use
@@ -6471,6 +6456,16 @@ void TCling::CodeComplete(const std::string& line, size_t& cursor,
                           std::vector<std::string>& completions)
 {
    fInterpreter->codeComplete(line, cursor, completions);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the interpreter value corresponding to the statement.
+int TCling::Evaluate(const char* code, TInterpreterValue& value)
+{
+   auto V = reinterpret_cast<cling::Value*>(value.GetValAddr());
+   auto interpreter = this->GetInterpreter();
+   auto compRes = interpreter->evaluate(code, *V);
+   return compRes!=cling::Interpreter::kSuccess ? 0 : 1 ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

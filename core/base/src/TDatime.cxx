@@ -444,6 +444,71 @@ void TDatime::GetDateTime(UInt_t datetime, Int_t &date, Int_t &time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static function that returns the global day number from date. The input is
+/// in TDatime format yyyymmdd (as obtained via TDatime::GetDate()).
+/// This algorithm is only accurate for dates later than October 1582
+/// (earliest date on Gregorian calendar).
+
+Int_t TDatime::GetGlobalDayFromDate(Int_t date)
+{
+   // date is in form yyyymmdd
+   Int_t dy = date / 10000;
+   Int_t dm = (date - dy*10000)/100;
+   Int_t dd = (date - dy*10000 - dm*100);
+
+   Int_t m = (dm + 9)%12;                   // mar=0, feb=11
+   Int_t y = dy - m/10;                     // if Jan/Feb, year--
+   return y*365 + y/4 - y/100 + y/400 + (m*306 + 5)/10 + (dd - 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function that returns the date from the global day number.
+/// The output is in TDatime yyyymmdd format (as obtained via
+/// TDatime::GetDate()).
+
+Int_t TDatime::GetDateFromGlobalDay(Int_t day)
+{
+   Long_t ld = day;
+   Int_t y = int((10000*ld + 14780)/3652425);
+   Int_t ddd = day - (y*365 + y/4 - y/100 + y/400);
+   if (ddd < 0) {
+      y--;
+      ddd = day - (y*365 + y/4 - y/100 + y/400);
+   }
+   Int_t mi = (52 + 100*ddd)/3060;
+   Int_t dy = y + (mi + 2)/12;
+   Int_t dm = (mi + 2)%12 + 1;
+   Int_t dd = ddd - (mi*306 + 5)/10 + 1;
+
+   return dy*10000 + dm*100 + dd;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function that returns the global day number from date. The input is
+/// in TDatime format yyyymmdd (as obtained via TDatime::GetDate()).
+/// This algorithm is only accurate for dates later than October 1582
+/// (earliest date on Gregorian calendar) and it is checked that the date
+/// is larger than 15821001 and conversion is correct.
+/// In case of conversion failure 0 is returned.
+/// No need to use when you know dates are larger than October 1582.
+
+Int_t TDatime::GetLegalGlobalDayFromDate(Int_t date)
+{
+   static Int_t calstart = 0;
+   if (!calstart)
+      calstart = TDatime::GetGlobalDayFromDate(15821001);
+   Int_t d = TDatime::GetGlobalDayFromDate(date);
+   if (d < calstart)
+      ::Warning("TDatime::GetLegalGlobalDayFromDate", "dates before Oct. 1582 are inaccurate.");
+   Int_t dte = TDatime::GetDateFromGlobalDay(d);
+   if (dte != date) {
+      ::Error("TDatime::GetLegalGlobalDayFromDate", "illegal date %d", dte);
+      return 0;
+   }
+   return d;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Print a TDatime at the prompt.
 
 std::string cling::printValue(const TDatime* val) {

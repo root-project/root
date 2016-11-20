@@ -51,6 +51,8 @@ class XrdProtocol;
 class XrdROOT;
 class XrdROOTMgr;
 
+class XrdSysPlugin;
+
 class XrdProofdManager : public XrdProofdConfig {
 
  public:
@@ -158,8 +160,9 @@ class XrdProofdManager : public XrdProofdConfig {
    rpdunixsrv       *fRootdUnixSrv;   // Unix socket for rootd callbacks
    bool              fRootdFork;      // If true use fork to start rootd
 
-   XrdProtocol           *fXrootd;    // Reference instance of XrdXrootdProtocol 
+   XrdProtocol      *fXrootd;         // Reference instance of XrdXrootdProtocol 
    XrdOucString      fXrootdLibPath;  // Path to 'xrootd' plug-in
+   XrdSysPlugin     *fXrootdPlugin;   // 'xrootd' plug-in handler
 
    // Services
    XrdProofdClientMgr    *fClientMgr;  // Client manager

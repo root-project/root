@@ -66,14 +66,17 @@ public:
   /// Outline the implementation in sources.
   ~TCanvas();
 
-  /// Add something to be painted. The pad claims shared ownership.
+  // TODO: Draw() should return the Drawable&.
+  /// Add something to be painted.
+  /// The pad observes what's lifetime through a weak pointer.
   template<class T>
   void Draw(const std::shared_ptr<T>& what) {
     // Requires GetDrawable(what, options) to be known!
     fPrimitives.emplace_back(GetDrawable(what));
   }
 
-  /// Add something to be painted, with options. The pad claims shared ownership.
+  /// Add something to be painted, with options.
+  /// The pad observes what's lifetime through a weak pointer.
   template<class T, class OPTIONS>
   void Draw(const std::shared_ptr<T>& what, const OPTIONS &options) {
     // Requires GetDrawable(what, options) to be known!
@@ -101,7 +104,7 @@ public:
      fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what)));
    }
 
-   /// Add a copy of something to be painted, with options. The pad claims ownership.
+   /// Add a copy of something to be painted, with options.
    template<class T, class OPTIONS>
    void Draw(const T& what, const OPTIONS &options) {
      // Requires GetDrawable(what, options) to be known!

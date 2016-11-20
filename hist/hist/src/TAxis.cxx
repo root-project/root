@@ -587,13 +587,14 @@ Bool_t TAxis::HasBinWithoutLabel() const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Set option(s) to draw axis with labels
-///  option = "a" sort by alphabetic order
-///         = ">" sort by decreasing values
-///         = "<" sort by increasing values
-///         = "h" draw labels horizonthal
-///         = "v" draw labels vertical
-///         = "u" draw labels up (end of label right adjusted)
-///         = "d" draw labels down (start of label left adjusted)
+///  option can be:
+///   - "a" sort by alphabetic order
+///   - ">" sort by decreasing values
+///   - "<" sort by increasing values
+///   - "h" draw labels horizontal
+///   - "v" draw labels vertical
+///   - "u" draw labels up (end of label right adjusted)
+///   - "d" draw labels down (start of label left adjusted)
 
 void TAxis::LabelsOption(Option_t *option)
 {

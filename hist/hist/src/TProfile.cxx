@@ -27,7 +27,7 @@ ClassImp(TProfile)
 
 /** \class TProfile
     \ingroup Hist
- Profile Historam.
+ Profile Histogram.
  Profile histograms are used to display the mean
  value of Y and its error for each bin in X. The displayed error is by default the
  standard error on the mean (i.e. the standard deviation divided by the sqrt(n) )
@@ -87,19 +87,19 @@ TProfile::TProfile() : TH1D()
 ////////////////////////////////////////////////////////////////////////////////
 /// Default destructor for Profile histograms
 
-
 TProfile::~TProfile()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal Constructor for Profile histograms
+/// Normal Constructor for Profile histograms.
+///
 /// The first five parameters are similar to TH1D::TH1D.
 /// All values of y are accepted at filling time.
 /// To fill a profile histogram, one must use TProfile::Fill function.
 ///
 /// Note that when filling the profile histogram the function Fill
-/// checks if the variable y is betyween fYmin and fYmax.
+/// checks if the variable y is between fYmin and fYmax.
 /// If a minimum or maximum value is set for the Y scale before filling,
 /// then all values below ymin or above ymax will be discarded.
 /// Setting the minimum or maximum value for the Y scale before filling
@@ -120,7 +120,8 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for Profile histograms with variable bin size
+/// Constructor for Profile histograms with variable bin size.
+///
 /// See TProfile::BuildOptions for more explanations on errors
 /// see also comments in the TH1 base class constructors
 
@@ -131,7 +132,8 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Float_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for Profile histograms with variable bin size
+/// Constructor for Profile histograms with variable bin size.
+///
 /// See TProfile::BuildOptions for more explanations on errors
 /// see also comments in the TH1 base class constructors
 
@@ -142,7 +144,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for Profile histograms with variable bin size
+/// Constructor for Profile histograms with variable bin size.
 /// See TProfile::BuildOptions for more explanations on errors
 ///
 /// see also comments in the TH1 base class constructors
@@ -154,7 +156,8 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for Profile histograms with range in y
+/// Constructor for Profile histograms with range in y.
+///
 /// The first five parameters are similar to TH1D::TH1D.
 /// Only the values of Y between ylow and yup will be considered at filling time.
 /// ylow and yup will also be the maximum and minimum values
@@ -172,7 +175,8 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Profile histogram structure and options
+/// Set Profile histogram structure and options.
+///
 /// \param[in] ymin  minimum value allowed for y
 /// \param[in] ymax  maximum value allowed for y
 ///            if (ymin = ymax = 0) there are no limits on the allowed y values (ymin = -inf, ymax = +inf)
@@ -196,27 +200,25 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,
 ///           measurement Y is uncorrelated and has an error sigma, which is expressed in the
 ///           weight used to fill the Profile:  w = 1/sigma^2
 ///           The resulting  error in TProfile is then 1./SQRT( Sum(1./sigma^2) )
+///
+///   In the case of Profile filled weights and with TProfile::Sumw2() called,
+///   STD(Y) is the standard deviation of the weighted sample Y and N is in this case the
+///   number of effective entries (TProfile::GetBinEffectiveEntries(ibin) )
+///
+///   If a bin has N data points all with the same value Y (especially
+///   possible when dealing with integers), the spread in Y for that bin
+///   is zero, and the uncertainty assigned is also zero, and the bin is
+///   ignored in making subsequent fits.
+///   To avoid this problem one can use an approximation for the standard deviation S(Y),
+///   by using the average of all the S(Y) of the other Profile bins. To use this approximation
+///   one must call before TProfile::Approximate
+///   This approximation applies only for the default and  the 's' options
 
 void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 {
-   //
-   //   In the case of Profile filled weights and with TProfile::Sumw2() called,
-   //   STD(Y) is the standard deviation of the weighted sample Y and N is in this case the
-   //   number of effective entries (TProfile::GetBinEffectiveEntries(ibin) )
-   //
-   //   If a bin has N data points all with the same value Y (especially
-   //   possible when dealing with integers), the spread in Y for that bin
-   //   is zero, and the uncertainty assigned is also zero, and the bin is
-   //   ignored in making subsequent fits.
-   //   To avoid this problem one can use an approximation for the standard deviation S(Y),
-   //   by using the average of all the S(Y) of the other Profile bins. To use this approximation
-   //   one must call before TProfile::Approximate
-   //   This approximayion applies only for the default and  the 's' options
-   //
-
    SetErrorOption(option);
 
-   // create extra profile data structire (bin entries/ y^2 and sum of weight square)
+   // create extra profile data structure (bin entries/ y^2 and sum of weight square)
    TProfileHelper::BuildArray(this);
 
    fYmin = ymin;
@@ -233,7 +235,6 @@ TProfile::TProfile(const TProfile &profile) : TH1D()
 {
    ((TProfile&)profile).Copy(*this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this + c1*f1
@@ -263,8 +264,9 @@ Bool_t TProfile::Add(const TH1 *h1, Double_t c1)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this profile by the addition of h1 and h2
-///  this = c1*h1 + c2*h2
+/// Replace contents of this profile by the addition of h1 and h2.
+///
+/// `this = c1*h1 + c2*h2`
 ///
 ///  c1 and c2 are considered as weights applied to the two summed profiles.
 ///  The operation acts therefore like merging the two profiles with a weight c1 and c2
@@ -288,14 +290,16 @@ Bool_t TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function
-/// set the fgApproximate flag. When the flag is true, the function GetBinError
+/// Static function to set the fgApproximate flag.
+///
+///When the flag is true, the function GetBinError
 /// will approximate the bin error with the average profile error on all bins
 /// in the following situation only
-/// - the number of bins in the profile is less than 1002
-/// - the bin number of entries is small ( <5)
-/// - the estimated bin error is extremely small compared to the bin content
-///   (see TProfile::GetBinError)
+///
+///  - the number of bins in the profile is less than 1002
+///  - the bin number of entries is small ( <5)
+///  - the estimated bin error is extremely small compared to the bin content
+///    (see TProfile::GetBinError)
 
 void TProfile::Approximate(Bool_t approx)
 {
@@ -304,6 +308,7 @@ void TProfile::Approximate(Bool_t approx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
+///
 /// - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
 /// - action =  0 histogram is filled from the buffer
 /// - action =  1 histogram is filled and buffer is deleted
@@ -361,11 +366,12 @@ Int_t TProfile::BufferEmpty(Int_t action)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// accumulate arguments in buffer. When buffer is full, empty the buffer
-/// - fBuffer[0] = number of entries in buffer
-/// - fBuffer[1] = w of first entry
-/// - fBuffer[2] = x of first entry
-/// - fBuffer[3] = y of first entry
+/// accumulate arguments in buffer. When buffer is full, empty the buffer.
+///
+///  - fBuffer[0] = number of entries in buffer
+///  - fBuffer[1] = w of first entry
+///  - fBuffer[2] = x of first entry
+///  - fBuffer[3] = y of first entry
 
 Int_t TProfile::BufferFill(Double_t x, Double_t y, Double_t w)
 {
@@ -392,7 +398,7 @@ Int_t TProfile::BufferFill(Double_t x, Double_t y, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy a Profile histogram to a new profile histogram
+/// Copy a Profile histogram to a new profile histogram.
 
 void TProfile::Copy(TObject &obj) const
 {
@@ -419,9 +425,9 @@ void TProfile::Copy(TObject &obj) const
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this/(c1*f1)
+/// Performs the operation: `this = this/(c1*f1)`.
+///
 /// This function is not implemented for the TProfile
 
 Bool_t TProfile::Divide(TF1 *, Double_t )
@@ -431,8 +437,10 @@ Bool_t TProfile::Divide(TF1 *, Double_t )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Divide this profile by h1
-///  this = this/h1
+/// Divide this profile by h1.
+///
+/// `this = this/h1`
+///
 /// This function accepts to divide a TProfile by a histogram
 ///
 /// The function return kFALSE if the divide operation failed
@@ -499,7 +507,7 @@ Bool_t TProfile::Divide(const TH1 *h1)
       if (!en1[bin]) fBinEntries.fArray[bin] = 0;
       else           fBinEntries.fArray[bin] /= en1[bin];
    }
-   // mantaining the correct sum of weights square is not supported when dividing
+   // maintaining the correct sum of weights square is not supported when dividing
    // bin error resulting from division of profile needs to be checked
    if (fBinSumw2.fN) {
       Warning("Divide","Cannot preserve during the division of profiles the sum of bin weight square");
@@ -509,10 +517,10 @@ Bool_t TProfile::Divide(const TH1 *h1)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this profile by the division of h1 by h2
-///  this = c1*h1/(c2*h2)
+/// Replace contents of this profile by the division of h1 by h2.
+///
+/// `this = c1*h1/(c2*h2)`
 ///
 /// The function return kFALSE if the divide operation failed
 
@@ -606,7 +614,7 @@ Bool_t TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
       else          fBinEntries.fArray[bin] = 0;
    }
 
-   // mantaining the correct sum of weights square is not supported when dividing
+   // maintaining the correct sum of weights square is not supported when dividing
    // bin error resulting from division of profile needs to be checked
    if (fBinSumw2.fN) {
       Warning("Divide","Cannot preserve during the division of profiles the sum of bin weight square");
@@ -617,7 +625,7 @@ Bool_t TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile histogram (no weights)
+/// Fill a Profile histogram (no weights).
 
 Int_t TProfile::Fill(Double_t x, Double_t y)
 {
@@ -647,8 +655,7 @@ Int_t TProfile::Fill(Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile histogram (no weights)
-///
+/// Fill a Profile histogram (no weights).
 
 Int_t TProfile::Fill(const char *namex, Double_t y)
 {
@@ -677,7 +684,7 @@ Int_t TProfile::Fill(const char *namex, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile histogram with weights
+/// Fill a Profile histogram with weights.
 
 Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
 {
@@ -709,8 +716,7 @@ Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile histogram with weights
-///
+/// Fill a Profile histogram with weights.
 
 Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
 {
@@ -741,15 +747,14 @@ Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
    return bin;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile histogram with weights
+/// Fill a Profile histogram with weights.
 
 void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride)
 {
    Int_t bin,i;
    ntimes *= stride;
-   Int_t ifirst = 0; 
+   Int_t ifirst = 0;
    //If a buffer is activated, fill buffer
    // (note that this function must not be called from TH2::BufferEmpty)
    if (fBuffer) {
@@ -758,9 +763,9 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
          if (w) BufferFill(x[i],y[i],w[i]);
          else BufferFill(x[i], y[i], 1.);
       }
-      // fill the remaining entries if the buffer has been deleted 
-      if (i < ntimes && fBuffer==0) 
-         ifirst = i;  // start from i 
+      // fill the remaining entries if the buffer has been deleted
+      if (i < ntimes && fBuffer==0)
+         ifirst = i;  // start from i
       else
          return;
    }
@@ -791,7 +796,7 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return bin content of a Profile histogram
+/// Return bin content of a Profile histogram.
 
 Double_t TProfile::GetBinContent(Int_t bin) const
 {
@@ -804,7 +809,7 @@ Double_t TProfile::GetBinContent(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return bin entries of a Profile histogram
+/// Return bin entries of a Profile histogram.
 
 Double_t TProfile::GetBinEntries(Int_t bin) const
 {
@@ -815,14 +820,12 @@ Double_t TProfile::GetBinEntries(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///           Return bin effective entries for a weighted filled Profile histogram.
-///           In case of an unweighted profile, it is equivalent to the number of entries per bin
-///           The effective entries is defined as the square of the sum of the weights divided by the
-///           sum of the weights square.
-///           TProfile::Sumw2() must be called before filling the profile with weights.
-///           Only by calling this method the  sum of the square of the weights per bin is stored.
-///
-///          =========================================
+/// Return bin effective entries for a weighted filled Profile histogram.
+/// In case of an unweighted profile, it is equivalent to the number of entries per bin
+/// The effective entries is defined as the square of the sum of the weights divided by the
+/// sum of the weights square.
+/// TProfile::Sumw2() must be called before filling the profile with weights.
+/// Only by calling this method the  sum of the square of the weights per bin is stored.
 
 Double_t TProfile::GetBinEffectiveEntries(Int_t bin) const
 {
@@ -836,25 +839,26 @@ Double_t TProfile::GetBinEffectiveEntries(Int_t bin) const
 ///
 /// The computation of errors for a TProfile has evolved with the versions
 /// of ROOT. The difficulty is in computing errors for bins with low statistics.
-/// - prior to version 3.00, we had no special treatment of low statistic bins.
-///  As a result, these bins had huge errors. The reason is that the
-///  expression eprim2 is very close to 0 (rounding problems) or 0.
-/// - in version 3.00 (18 Dec 2000), the algorithm is protected for values of
-///  eprim2 very small and the bin errors set to the average bin errors, following
-///  recommendations from a group of users.
-/// - in version 3.01 (19 Apr 2001), it is realized that the algorithm above
-///  should be applied only to low statistic bins.
-/// - in version 3.02 (26 Sep 2001), the same group of users recommend instead
-///  to take two times the average error on all bins for these low
-///  statistics bins giving a very small value for eprim2.
-/// - in version 3.04 (Nov 2002), the algorithm is modified/protected for the case
-///  when a TProfile is projected (ProjectionX). The previous algorithm
-///  generated a N^2 problem when projecting a TProfile with a large number of
-///  bins (eg 100000).
-/// - in version 3.05/06, a new static function TProfile::Approximate
-///  is introduced to enable or disable (default) the approximation.
 ///
-/// Ideas for improvements of this algorithm are welcome. No suggestions
+///  - prior to version 3.00, we had no special treatment of low statistic bins.
+///   As a result, these bins had huge errors. The reason is that the
+///   expression eprim2 is very close to 0 (rounding problems) or 0.
+///  - in version 3.00 (18 Dec 2000), the algorithm is protected for values of
+///   eprim2 very small and the bin errors set to the average bin errors, following
+///   recommendations from a group of users.
+///  - in version 3.01 (19 Apr 2001), it is realized that the algorithm above
+///   should be applied only to low statistic bins.
+///  - in version 3.02 (26 Sep 2001), the same group of users recommend instead
+///   to take two times the average error on all bins for these low
+///   statistics bins giving a very small value for eprim2.
+///  - in version 3.04 (Nov 2002), the algorithm is modified/protected for the case
+///   when a TProfile is projected (ProjectionX). The previous algorithm
+///   generated a N^2 problem when projecting a TProfile with a large number of
+///   bins (eg 100000).
+///  - in version 3.05/06, a new static function TProfile::Approximate
+///   is introduced to enable or disable (default) the approximation.
+///
+///  Ideas for improvements of this algorithm are welcome. No suggestions
 /// received since our call for advice to roottalk in Jul 2002.
 /// see for instance: http://root.cern.ch/root/roottalk/roottalk02/2916.html
 
@@ -875,14 +879,16 @@ Option_t *TProfile::GetErrorOption() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// fill the array stats from the contents of this profile
-/// The array stats must be correctly dimensionned in the calling program.
-/// stats[0] = sumw
-/// stats[1] = sumw2
-/// stats[2] = sumwx
-/// stats[3] = sumwx2
-/// stats[4] = sumwy
-/// stats[5] = sumwy2
+/// fill the array stats from the contents of this profile.
+///
+/// The array stats must be correctly dimensioned in the calling program.
+///
+///  - stats[0] = sumw
+///  - stats[1] = sumw2
+///  - stats[2] = sumwx
+///  - stats[3] = sumwx2
+///  - stats[4] = sumwy
+///  - stats[5] = sumwy2
 ///
 /// If no axis-subrange is specified (via TAxis::SetRange), the array stats
 /// is simply a copy of the statistics quantities computed at filling time.
@@ -919,7 +925,7 @@ void TProfile::GetStats(Double_t *stats) const
    } else {
       if (fTsumwy == 0 && fTsumwy2 == 0) {
          //this case may happen when processing TProfiles with version <=3
-         TProfile *p = (TProfile*)this; // chheting with const
+         TProfile *p = (TProfile*)this; // cheating with const
          for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
             p->fTsumwy  += fArray[binx];
             p->fTsumwy2 += fSumw2.fArray[binx];
@@ -953,14 +959,17 @@ void TProfile::LabelsInflate(Option_t *options)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set option(s) to draw axis with labels
-/// option = "a" sort by alphabetic order
-///        = ">" sort by decreasing values
-///        = "<" sort by increasing values
-///        = "h" draw labels horizonthal
-///        = "v" draw labels vertical
-///        = "u" draw labels up (end of label right adjusted)
-///        = "d" draw labels down (start of label left adjusted)
+/// Set option(s) to draw axis with labels.
+///
+/// option might have the following values:
+///
+///  - "a" sort by alphabetic order
+///  - ">" sort by decreasing values
+///  - "<" sort by increasing values
+///  - "h" draw labels horizontal
+///  - "v" draw labels vertical
+///  - "u" draw labels up (end of label right adjusted)
+///  - "d" draw labels down (start of label left adjusted)
 
 void TProfile::LabelsOption(Option_t *option, Option_t * /*ax */)
 {
@@ -1087,23 +1096,23 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax */)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Merge all histograms in the collection in this histogram.
-///This function computes the min/max for the x axis,
-///compute a new number of bins, if necessary,
-///add bin contents, errors and statistics.
-///If overflows are present and limits are different the function will fail.
-///The function returns the total number of entries in the result histogram
-///if the merge is successfull, -1 otherwise.
 ///
-///IMPORTANT remark. The axis x may have different number
-///of bins and different limits, BUT the largest bin width must be
-///a multiple of the smallest bin width and the upper limit must also
-///be a multiple of the bin width.
+/// This function computes the min/max for the x axis,
+/// compute a new number of bins, if necessary,
+/// add bin contents, errors and statistics.
+/// If overflows are present and limits are different the function will fail.
+/// The function returns the total number of entries in the result histogram
+/// if the merge is successfull, -1 otherwise.
+///
+/// IMPORTANT remark. The axis x may have different number
+/// of bins and different limits, BUT the largest bin width must be
+/// a multiple of the smallest bin width and the upper limit must also
+/// be a multiple of the bin width.
 
 Long64_t TProfile::Merge(TCollection *li)
 {
    return TProfileHelper::Merge(this, li);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this*c1*f1
@@ -1148,9 +1157,9 @@ Bool_t TProfile::Multiply(TF1 *f1, Double_t c1)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Multiply this profile by h1
+/// Multiply this profile by h1.
 ///
-///  this = this*h1
+/// `this = this*h1`
 
 Bool_t TProfile::Multiply(const TH1 *)
 {
@@ -1160,9 +1169,9 @@ Bool_t TProfile::Multiply(const TH1 *)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this profile by multiplication of h1 by h2
+/// Replace contents of this profile by multiplication of h1 by h2.
 ///
-///  this = (c1*h1)*(c2*h2)
+/// `this = (c1*h1)*(c2*h2)`
 
 Bool_t TProfile::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
@@ -1264,7 +1273,7 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace current statistics with the values in array stats
+/// Replace current statistics with the values in array stats.
 
 void TProfile::PutStats(Double_t *stats)
 {
@@ -1277,7 +1286,8 @@ void TProfile::PutStats(Double_t *stats)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Rebin this profile grouping ngroup bins together
+/// Rebin this profile grouping ngroup bins together.
+///
 /// ## case 1  xbins=0
 ///  if newname is not blank a new temporary profile hnew is created.
 ///  else the current profile is modified (default)
@@ -1287,10 +1297,13 @@ void TProfile::PutStats(Double_t *stats)
 ///  profile has new errors correctly calculated.
 ///
 ///  examples: if hp is an existing TProfile histogram with 100 bins
+///
+/// ~~~ {.cpp}
 ///    hp->Rebin();  //merges two bins in one in hp: previous contents of hp are lost
 ///    hp->Rebin(5); //merges five bins in one in hp
 ///    TProfile *hnew = hp->Rebin(5,"hnew"); // creates a new profile hnew
 ///                                      //merging 5 bins of hp in one bin
+/// ~~~
 ///
 ///  NOTE:  If ngroup is not an exact divider of the number of bins,
 ///         the top limit of the rebinned profile is changed
@@ -1309,8 +1322,10 @@ void TProfile::PutStats(Double_t *stats)
 ///
 ///  examples: if hp is an existing TProfile with 100 bins
 ///
+/// ~~~ {.cpp}
 ///      Double_t xbins[25] = {...} array of low-edges (xbins[25] is the upper edge of last bin
 ///      hp->Rebin(24,"hpnew",xbins);  //creates a new variable bin size profile hpnew
+/// ~~~
 
 TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 {
@@ -1482,7 +1497,8 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 /// of the old histogram to fill the extended histogram.
 /// Takes into account errors (Sumw2) if any.
 /// The axis must be extendable before invoking this function.
-/// Ex: h->GetXaxis()->SetCanExtend(kTRUE)
+///
+/// Ex: `h->GetXaxis()->SetCanExtend(kTRUE)`
 
 void TProfile::ExtendAxis(Double_t x, TAxis *axis)
 {
@@ -1496,7 +1512,7 @@ void TProfile::ExtendAxis(Double_t x, TAxis *axis)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset contents of a Profile histogram
+/// Reset contents of a Profile histogram.
 
 void TProfile::Reset(Option_t *option)
 {
@@ -1511,7 +1527,7 @@ void TProfile::Reset(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -1587,12 +1603,11 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Multiply this profile by a constant c1
+/// Multiply this profile by a constant c1.
 ///
-///  this = c1*this
+/// `this = c1*this`
 ///
 /// This function uses the services of TProfile::Add
-///
 
 void TProfile::Scale(Double_t c1, Option_t * option)
 {
@@ -1600,7 +1615,7 @@ void TProfile::Scale(Double_t c1, Option_t * option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the number of entries in bin
+/// Set the number of entries in bin.
 
 void TProfile::SetBinEntries(Int_t bin, Double_t w)
 {
@@ -1608,7 +1623,7 @@ void TProfile::SetBinEntries(Int_t bin, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Redefine  x axis parameters
+/// Redefine x axis parameters.
 
 void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 {
@@ -1618,7 +1633,7 @@ void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Redefine  x axis parameters
+/// Redefine  x axis parameters.
 
 void TProfile::SetBins(Int_t nx, const Double_t *xbins)
 {
@@ -1628,7 +1643,7 @@ void TProfile::SetBins(Int_t nx, const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set total number of bins including under/overflow
+/// Set total number of bins including under/overflow.
 /// Reallocate bin contents array
 
 void TProfile::SetBinsLength(Int_t n)
@@ -1638,7 +1653,7 @@ void TProfile::SetBinsLength(Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the buffer size in units of 8 bytes (double)
+/// Set the buffer size in units of 8 bytes (double).
 
 void TProfile::SetBuffer(Int_t buffersize, Option_t *)
 {
@@ -1658,10 +1673,10 @@ void TProfile::SetBuffer(Int_t buffersize, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set option to compute profile errors
+/// Set option to compute profile errors.
 ///
-///   The computation of the bin errors is based on the parameter option:
-///   option:
+/// The computation of the bin errors is based on the parameter option:
+///
 ///    -' '  (Default) The bin errors are the standard error on the mean of the bin profiled values (Y),
 ///                   i.e. the standard error of the bin contents.
 ///                   Note that if TProfile::Approximate()  is called, an approximation is used when
@@ -1718,10 +1733,10 @@ void TProfile::Streamer(TBuffer &R__b)
    }
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Create/delete structure to store sum of squares of weights per bin  ---
-///  This is needed to compute  the correct statistical quantities
-///   of a profile filled with weights
+/// Create/delete structure to store sum of squares of weights per bin.
 ///
+/// This is needed to compute  the correct statistical quantities
+/// of a profile filled with weights
 ///
 /// This function is automatically called when the histogram is created
 /// if the static function TH1::SetDefaultSumw2 has been called before.

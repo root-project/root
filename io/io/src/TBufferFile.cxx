@@ -295,9 +295,12 @@ void TBufferFile::WriteTString(const TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read std::string from TBuffer.
 
-void TBufferFile::ReadStdString(std::string &s)
+void TBufferFile::ReadStdString(std::string *obj)
 {
-   std::string *obj = &s;
+   if (obj == 0) {
+      Error("TBufferFile::ReadStdString","The std::string address is nullptr but should not");
+      return;
+   }
    Int_t   nbig;
    UChar_t nwh;
    *this >> nwh;
@@ -323,10 +326,14 @@ void TBufferFile::ReadStdString(std::string &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write std::string to TBuffer.
 
-void TBufferFile::WriteStdString(const std::string &s)
+void TBufferFile::WriteStdString(const std::string *obj)
 {
-   if (s==0) return;
-   const std::string *obj = &s;
+   if (obj==0) {
+      *this << (UChar_t)0;
+      WriteFastArray("",0);
+      return;
+   }
+
    UChar_t nwh;
    Int_t nbig = obj->length();
    if (nbig > 254) {

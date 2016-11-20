@@ -1,5 +1,33 @@
 # JSROOT changelog
 
+## Changes in 4.7.1
+1. Workaround for MathJax output - scaling not always works in Firefox
+2. Fix - bin scaling for box draw option for TH2 and TH3 histograms 
+3. Fix - increase points limits for contour plots
+4. Fix - position of 3D canvas in webkit browsers
+5. Fix - use abs bin content in RMS calculations
+6. Fix - support char star* and object arrays in I/O
+7. Fix - correct decoding of TAxis time offset
+8. Fix - checksum reading for foreign classes
+
+
+## Changes in 4.7.0
+1. Implement simple TTree::Draw over single leaf (#80)
+   Support basic types, fixed-size arrays and several vector types 
+2. Display of TEveTrack(s) and TEvePointSet(s) over drawn geometry (drag and drop)
+   Also browsing, toggling, highlight of tracks and hits are done.
+3. Let set default geo colors as TGeoManager::DefaultColors() does  
+4. Let use original ROOT macros to configure visibility of geometry volumes. Like:
+     &file=files/alice2.root&item=Geometry;1&opt=macro:macros/geomAlice.C   
+   One can set default colors or colors/transperency for selected volumes.
+   Also volume, selected for drawing in the macro, will be used in the JSROOT
+5. Support drawing of TH2Poly class with 'col' and 'lego' options
+6. Implement 'CONT', 'ARR' and 'SURF' draw options for TH2 class 
+7. Support basic drawing of TPolyLine class 
+8. Interactive axis zooming in 3D with mouse, very much like to 2D
+9. Zooming and tool buttons via keyboards  
+
+
 ## Changes in 4.6.0
 1. Improvements in TGeo drawings
    - support of large (~10M volumes) models, only most significant volumes are shown

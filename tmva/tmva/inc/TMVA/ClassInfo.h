@@ -81,7 +81,7 @@ namespace TMVA {
 
       TMatrixD*          fCorrMatrix;       // Correlation matrix for this class
 
-      mutable MsgLogger* fLogger;   // message logger
+      mutable MsgLogger* fLogger;           //! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
        

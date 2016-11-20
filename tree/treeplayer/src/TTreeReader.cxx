@@ -199,6 +199,7 @@ TTreeReader::TTreeReader(TTree* tree):
    fTree(tree),
    fDirectory(0),
    fEntryStatus(kEntryNotLoaded),
+   fMostRecentTreeNumber(-1),
    fDirector(0),
    fLastEntry(-1),
    fProxiesSet(kFALSE)
@@ -219,6 +220,7 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
    fTree(0),
    fDirectory(dir),
    fEntryStatus(kEntryNotLoaded),
+   fMostRecentTreeNumber(-1),
    fDirector(0),
    fLastEntry(-1),
    fProxiesSet(kFALSE)
@@ -249,17 +251,24 @@ void TTreeReader::Initialize()
    if (!fTree) {
       MakeZombie();
       fEntryStatus = kEntryNoTree;
+      fMostRecentTreeNumber = -1;
    } else {
+      ResetBit(kZombie);
+      if (fTree->InheritsFrom(TChain::Class())) {
+         SetBit(kBitIsChain);
+      }
       fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the range of entries to be processed.
+/// Set the range of entries to be processed. This call is usually followed by
+/// an iteration of the range using TTreeReader::Next(), which will visit the
+/// the entries from `first` to `last - 1`.
 /// If last > first, this call is equivalent to
-/// `SetEntry(first); SetLastEntry(last);`. Otherwise `last` is ignored and
+/// `SetEntry(first - 1); SetLastEntry(last);`. Otherwise `last` is ignored and
 /// only `first` is set.
-/// \return the EEntryStatus that would be returned by SetEntry(first)
+/// \return the EEntryStatus that would be returned by SetEntry(first - 1)
 
 TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t last)
 {
@@ -267,16 +276,16 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t 
       fLastEntry = last;
    else
       fLastEntry = -1;
-   return SetEntry(first);
+   return SetEntry(first - 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the index of the current entry being read
+/// Returns the index of the current entry being read
 
 Long64_t TTreeReader::GetCurrentEntry() const {
    if (!fDirector) return 0;
    Long64_t currentTreeEntry = fDirector->GetReadEntry();
-   if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
+   if (TestBit(kBitIsChain) && currentTreeEntry >= 0) {
       return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
    }
    return currentTreeEntry;
@@ -295,20 +304,39 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   TTree* prevTree = fDirector->GetTree();
+   Int_t treeNumberBeforeLoadTree = fTree->GetTreeNumber();
 
-   Int_t treeNumInChainBeforeLoad = fTree->GetTreeNumber();
+   TTree* prevTree = fDirector->GetTree();
 
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
    Long64_t loadResult = treeToCallLoadOn->LoadTree(entry);
 
    if (loadResult == -2) {
+      fDirector->SetTree(nullptr);
       fEntryStatus = kEntryNotFound;
       return fEntryStatus;
    }
 
-   if (treeNumInChainBeforeLoad != fTree->GetTreeNumber()) {
+   if (fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
+      // This can happen if someone switched trees behind us.
+      // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
+      // This means that "local" should be set!
+
+      if (fTree->GetTreeNumber() != treeNumberBeforeLoadTree) {
+         // we have switched trees again, which means that "local" was not set!
+         // There are two entities switching trees which is bad.
+         R__ASSERT(!local && "Logic error - !local but tree number changed?");
+         Warning("SetEntryBase()",
+                 "The current tree in the TChain %s has changed (e.g. by TTree::Process) "
+                 "even though TTreeReader::SetEntry() was called, which switched the tree "
+                 "again. Did you mean to call TTreeReader::SetLocalEntry()?",
+                 fTree->GetName());
+      }
+   }
+
+   if (fMostRecentTreeNumber != fTree->GetTreeNumber()) {
       fDirector->SetTree(fTree->GetTree());
+      fMostRecentTreeNumber = fTree->GetTreeNumber();
    }
 
    if (!prevTree || fDirector->GetReadEntry() == -1 || !fProxiesSet) {
@@ -325,7 +353,8 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       // If at least one proxy was there and no error occurred, we assume the proxies to be set.
       fProxiesSet = !fValues.empty();
    }
-   if (fLastEntry >= 0 && loadResult >= fLastEntry) {
+
+   if (fLastEntry >= 0 && entry >= fLastEntry) {
       fEntryStatus = kEntryLast;
       return fEntryStatus;
    }

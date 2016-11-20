@@ -9,17 +9,31 @@ set( LLVM_LINK_COMPONENTS
   support
 )
 
-add_cling_library(clingUtils OBJECT
-  AST.cpp
-  Paths.cpp
-  SourceNormalization.cpp
-  Validation.cpp
-
-  LINK_LIBS
+set( LIBS
   clangSema
   clangAST
   clangLex
   clangBasic
+  clangParse
+)
+
+find_library(DL_LIBRARY_PATH dl)
+if (DL_LIBRARY_PATH)
+  list(APPEND LIBS dl)
+endif()
+
+add_cling_library(clingUtils OBJECT
+  AST.cpp
+  ParserStateRAII.cpp
+  Paths.cpp
+  PlatformMac.cpp
+  PlatformPosix.cpp
+  PlatformWin.cpp
+  SourceNormalization.cpp
+  Validation.cpp
+
+  LINK_LIBS
+  ${LIBS}
 )
 
 if ( MSVC )

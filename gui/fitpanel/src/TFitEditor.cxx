@@ -1216,6 +1216,8 @@ void TFitEditor::Hide()
    if (fParentPad) {
       fParentPad->Disconnect("RangeAxisChanged()");
       DoReset();
+      TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)",
+                           this, "SetFitObject(TVirtualPad *, TObject *, Int_t)");
    }
    fParentPad = 0;
    fFitObject = 0;

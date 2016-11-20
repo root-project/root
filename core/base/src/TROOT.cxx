@@ -373,7 +373,7 @@ namespace Internal {
 
    static Func_t GetSymInLibThread(const char *funcname)
    {
-      const static bool loadSuccess = 0 <= gSystem->Load("libThread");
+      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libThread");
       if (loadSuccess) {
          if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
             return sym;

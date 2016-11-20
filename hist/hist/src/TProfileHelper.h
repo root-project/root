@@ -171,7 +171,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    //add bin contents, errors and statistics.
    //If overflows are present and limits are different the function will fail.
    //The function returns the total number of entries in the result histogram
-   //if the merge is successfull, -1 otherwise.
+   //if the merge is successful, -1 otherwise.
    //
    //IMPORTANT remark. The 2 axis x and y may have different number
    //of bins and different limits, BUT the largest bin width must be
@@ -377,12 +377,12 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
             if (!allSameLimits) {
                // histogram have different limits:
                // find global bin number in p given the x,y,z axis bin numbers in h
-               // in case of nont equal axes
+               // in case of non equal axes
                // we can use FindBin on p axes because SetCanExtend(TH1::kNoAxis) has been called
                if ( h->GetW()[hbin] != 0 && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
                   // reject cases where underflow/overflow are there and bin content is not zero
                   Error("TProfileHelper::Merge", "Cannot merge profiles - they have"
-                        " different limits and undeflows/overflows are present."
+                        " different limits and underflows/overflows are present."
                         " The initial profile is now broken!");
                   return -1;
                }
@@ -440,7 +440,7 @@ T* TProfileHelper::ExtendAxis(T* p, Double_t x, TAxis *axis)
 
    //save a copy of this histogram
    T* hold = (T*)p->IsA()->New();
-   R__ASSERT(hold); 
+   R__ASSERT(hold);
    hold->SetDirectory(0);
    p->Copy(*hold);
    //set new axis limits
@@ -688,7 +688,7 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
    Double_t test = 1;
    if (err2 != 0 && neff < 5) test = eprim2*sum/err2;
    //Int_t cellLimit = (p->GetDimension() == 3)?1000404:10404;
-   if (p->fgApproximate && (test < 1.e-4 || eprim2 <= 0)) { 
+   if (p->fgApproximate && (test < 1.e-4 || eprim2 <= 0)) {
       Double_t stats[TH1::kNstat];
       p->GetStats(stats);
       Double_t ssum = stats[0];
