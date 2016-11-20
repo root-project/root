@@ -204,8 +204,8 @@ size_t mystrlen(const wchar_t* s) { return wcslen(s); }
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()
 {
-auto progName = ::Py_GetProgramName();
-return std::string(progName, progName + mystrlen(progName));
+   auto progName = ::Py_GetProgramName();
+   return std::string(progName, progName + mystrlen(progName));
 }
 //_______________________________________________________________________
 int  PyMethodBase::PyIsInitialized()
@@ -220,29 +220,35 @@ int  PyMethodBase::PyIsInitialized()
 
 void PyMethodBase::Serialize(TString path,PyObject *obj)
 {
- if(!PyIsInitialized()) PyInitialize();
- PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"wb");
- PyObject *file = PyObject_CallObject(fOpen,file_arg);
- PyObject *model_arg = Py_BuildValue("(OO)", obj,file);
- PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
+   if(!PyIsInitialized()) PyInitialize();
+   PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"wb");
+   PyObject *file = PyObject_CallObject(fOpen,file_arg);
+   PyObject *model_arg = Py_BuildValue("(OO)", obj,file);
+   PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
 
- Py_DECREF(file_arg);
- Py_DECREF(file);
- Py_DECREF(model_arg);
- Py_DECREF(model_data);
+   Py_DECREF(file_arg);
+   Py_DECREF(file);
+   Py_DECREF(model_arg);
+   Py_DECREF(model_data);
 }
 
-void PyMethodBase::UnSerialize(TString path,PyObject **obj)
+Int_t PyMethodBase::UnSerialize(TString path,PyObject **obj)
 {
- PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"rb");
- PyObject *file = PyObject_CallObject(fOpen,file_arg);
+   // Load file
+   PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"rb");
+   PyObject *file = PyObject_CallObject(fOpen,file_arg);
+   if(!file) return 1;
 
- PyObject *model_arg = Py_BuildValue("(O)", file);
- *obj = PyObject_CallObject(fPickleLoads , model_arg);
+   // Load object from file using pickle
+   PyObject *model_arg = Py_BuildValue("(O)", file);
+   *obj = PyObject_CallObject(fPickleLoads , model_arg);
+   if(!obj) return 2;
 
- Py_DECREF(file_arg);
- Py_DECREF(file);
- Py_DECREF(model_arg);
+   Py_DECREF(file_arg);
+   Py_DECREF(file);
+   Py_DECREF(model_arg);
+
+   return 0;
 }
 
 
