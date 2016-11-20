@@ -5505,7 +5505,7 @@ bool testMergeProf3DDiff()
    return ret;
 }
 
-bool testMerge1DRebin()
+bool testMerge1DExtend()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
@@ -5541,10 +5541,10 @@ bool testMerge1DRebin()
    return ret;
 }
 
-bool testMerge2DRebin()
+bool testMerge2DExtend(UInt_t extendType = TH1::kAllAxes)
 {
    // Tests the merge method for diferent 1D Histograms
-   // when axis can rebin (e.g. for time histograms)
+   // when axis can be extended (e.g. for time histograms)
 
    TH2D* h1 = new TH2D("merge2D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
@@ -5558,10 +5558,11 @@ bool testMerge2DRebin()
 
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
-   h1->SetCanExtend(TH1::kAllAxes);
-   h2->SetCanExtend(TH1::kAllAxes);
-   h4->SetCanExtend(TH1::kAllAxes);
-
+   
+   h1->SetCanExtend(extendType);
+   h2->SetCanExtend(extendType);
+   h4->SetCanExtend(extendType);
+     
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
       Double_t y = r.Uniform( minRange,  maxRange);
@@ -5586,10 +5587,21 @@ bool testMerge2DRebin()
    return ret;
 }
 
-bool testMerge3DRebin()
+bool testMerge2DExtendAll() {
+   return testMerge2DExtend(TH1::kAllAxes);
+}
+
+bool testMerge2DExtendX() {
+   return testMerge2DExtend(TH1::kXaxis);
+}
+bool testMerge2DExtendY() {
+   return testMerge2DExtend(TH1::kYaxis);
+}
+
+bool testMerge3DExtend(UInt_t extendType = TH1::kAllAxes)
 {
    // Tests the merge method for diferent 1D Histograms
-   // when axis can rebin (e.g. for time histograms)
+   // when axis can be extended (e.g. for time histograms)
 
    TH3D* h1 = new TH3D("merge3D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
@@ -5604,9 +5616,9 @@ bool testMerge3DRebin()
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   h1->SetCanExtend(TH1::kAllAxes);
-   h2->SetCanExtend(TH1::kAllAxes);
-   h4->SetCanExtend(TH1::kAllAxes);
+   h1->SetCanExtend(extendType);
+   h2->SetCanExtend(extendType);
+   h4->SetCanExtend(extendType);
 
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
@@ -5617,8 +5629,9 @@ bool testMerge3DRebin()
    }
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       Double_t x = r.Uniform(0.9*maxRange, 2.1 * maxRange);
-      Double_t y = r.Uniform(maxRange, 3 * maxRange);
-      Double_t z = r.Uniform(0.8*maxRange, 4.1 * maxRange);
+      //Double_t x = r.Uniform(minRange,  maxRange);
+      Double_t y = r.Uniform(minRange, 3 * maxRange);
+      Double_t z = r.Uniform(0.8*minRange, 4.1 * maxRange);
       h2->Fill(x,y,z,1.);
       h4->Fill(x,y,z,1.);
    }
@@ -5634,7 +5647,17 @@ bool testMerge3DRebin()
    return ret;
 }
 
-bool testMerge1DRebinProf()
+bool testMerge3DExtendAll() {
+   return testMerge3DExtend(TH1::kAllAxes); 
+}
+bool testMerge3DExtendX() {
+   return testMerge3DExtend(TH1::kXaxis); 
+}
+bool testMerge3DExtendZ() {
+   return testMerge3DExtend(TH1::kZaxis); 
+}
+
+bool testMerge1DExtendProf()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
@@ -9993,37 +10016,57 @@ int stressHistogram()
 
    // Test 10
    // Merge Tests
-   const unsigned int numberOfMerge = 49;
-   pointer2Test mergeTestPointer[numberOfMerge] = { testMerge1D,                 testMergeProf1D,
-                                                    testMergeVar1D,              testMergeProfVar1D,
-                                                    testMerge2D,                 testMergeProf2D,
-                                                    testMerge3D,                 testMergeProf3D,
-                                                    testMergeHn<THnD>,           testMergeHn<THnSparseD>,
-                                                    testMerge1DLabelSame,        testMergeProf1DLabelSame,
-                                                    testMerge2DLabelSame,        testMergeProf2DLabelSame,
-                                                    testMerge3DLabelSame,        testMergeProf3DLabelSame,
-
-                                                    testMerge1DLabelDiff,        testMergeProf1DLabelDiff,
-                                                    testMerge2DLabelDiff,        testMergeProf2DLabelDiff,
-                                                    testMerge3DLabelDiff,        testMergeProf3DLabelDiff,
-                                                    testMerge1DLabelAll,         testMergeProf1DLabelAll,
-                                                    testMerge2DLabelAll,         testMergeProf2DLabelAll,
-                                                    testMerge3DLabelAll,         testMergeProf3DLabelAll,
-                                                    testMerge1DLabelAllDiff,     testMergeProf1DLabelAllDiff,
-                                                    testMerge2DLabelAllDiff,     testMergeProf2DLabelAllDiff,
-                                                    testMerge3DLabelAllDiff,     testMergeProf3DLabelAllDiff,
-                                                    testMerge1DDiff,             testMergeProf1DDiff,
-                                                    testMerge2DDiff,             testMergeProf2DDiff,
-                                                    testMerge3DDiff,             testMergeProf3DDiff,
-                                                    testMerge1DDiffEmpty,        testMerge2DDiffEmpty,
-                                                    testMerge3DDiffEmpty,        testMergeProf1DDiffEmpty,
-                                                    testMerge1DRebin,            testMerge2DRebin,
-                                                    testMerge3DRebin,            testMerge1DRebinProf,
-                                                    testMerge1DNoLimits
+   std::vector<pointer2Test> mergeSameTestPointer = { testMerge1D,                 testMergeProf1D,
+                                                      testMergeVar1D,              testMergeProfVar1D,
+                                                      testMerge2D,                 testMergeProf2D,
+                                                      testMerge3D,                 testMergeProf3D,
+                                                      testMergeHn<THnD>,           testMergeHn<THnSparseD>
    };
-   struct TTestSuite mergeTestSuite = { numberOfMerge,
-                                        "Merge tests for 1D, 2D and 3D Histograms and Profiles............",
-                                        mergeTestPointer };
+
+
+   std::vector<pointer2Test> mergeLabelTestPointer = {  testMerge1DLabelSame,        testMergeProf1DLabelSame,
+                                                        testMerge2DLabelSame,        testMergeProf2DLabelSame,
+                                                        testMerge3DLabelSame,        testMergeProf3DLabelSame,
+                                                        testMerge1DLabelDiff,        testMergeProf1DLabelDiff,
+                                                        testMerge2DLabelDiff,        testMergeProf2DLabelDiff,
+                                                        testMerge3DLabelDiff,        testMergeProf3DLabelDiff,
+                                                        testMerge1DLabelAll,         testMergeProf1DLabelAll,
+                                                        testMerge2DLabelAll,         testMergeProf2DLabelAll,
+                                                        testMerge3DLabelAll,         testMergeProf3DLabelAll,
+                                                        testMerge1DLabelAllDiff,     testMergeProf1DLabelAllDiff,
+                                                        testMerge2DLabelAllDiff,     testMergeProf2DLabelAllDiff,
+                                                        testMerge3DLabelAllDiff,     testMergeProf3DLabelAllDiff
+   };
+   std::vector<pointer2Test> mergeDiffTestPointer = {   testMerge1DDiff,             testMergeProf1DDiff,
+                                                        testMerge2DDiff,             testMergeProf2DDiff,
+                                                        testMerge3DDiff,             testMergeProf3DDiff,
+                                                        testMerge1DDiffEmpty,        testMerge2DDiffEmpty,
+                                                        testMerge3DDiffEmpty,        testMergeProf1DDiffEmpty
+   };
+   std::vector<pointer2Test> mergeExtTestPointer =  {   testMerge1DExtend,           testMerge2DExtendAll,
+                                                        testMerge2DExtendX,          testMerge2DExtendY,
+                                                        testMerge3DExtendAll,
+                                                        testMerge1DExtendProf,
+                                                        testMerge1DNoLimits
+   };
+   // tests failing                                                     testMerge3DExtendX,  testMerge3DExtendZ,
+
+   unsigned int numberOfMergeSame = mergeSameTestPointer.size();
+   unsigned int numberOfMergeLabel = mergeLabelTestPointer.size();
+   unsigned int numberOfMergeDiff = mergeDiffTestPointer.size();
+   unsigned int numberOfMergeExt = mergeExtTestPointer.size();
+   struct TTestSuite mergeSameTestSuite = { numberOfMergeSame,
+                                        "Merge tests for Histograms and Profiles with same axes ..........",
+                                            mergeSameTestPointer.data() };
+   struct TTestSuite mergeLabelTestSuite = { numberOfMergeLabel,
+                                        "Merge tests for Histograms and Profiles with labels  ............",
+                                             mergeLabelTestPointer.data() };
+   struct TTestSuite mergeDiffTestSuite = { numberOfMergeDiff,
+                                        "Merge tests for Histograms and Profiles with different axes .....",
+                                            mergeDiffTestPointer.data() };
+   struct TTestSuite mergeExtTestSuite = { numberOfMergeExt,
+                                        "Merge tests for Histograms and Profiles with extendable axes ....",
+                                           mergeExtTestPointer.data() };
    // Test 11
    // Label Tests
    const unsigned int numberOfLabel = 4;
@@ -10118,24 +10161,29 @@ int stressHistogram()
 
 
    // Combination of tests
-   const unsigned int numberOfSuits = 16;
-   struct TTestSuite* testSuite[numberOfSuits];
-   testSuite[ 0] = &rangeTestSuite;
-   testSuite[ 1] = &rebinTestSuite;
-   testSuite[ 2] = &addTestSuite;
-   testSuite[ 3] = &multiplyTestSuite;
-   testSuite[ 4] = &divideTestSuite;
-   testSuite[ 5] = &copyTestSuite;
-   testSuite[ 6] = &readwriteTestSuite;
-   testSuite[ 7] = &mergeTestSuite;
-   testSuite[ 8] = &labelTestSuite;
-   testSuite[ 9] = &interpolationTestSuite;
-   testSuite[10] = &scaleTestSuite;
-   testSuite[11] = &integralTestSuite;
-   testSuite[12] = &bufferTestSuite;
-   testSuite[13] = &extendTestSuite;
-   testSuite[14] = &conversionsTestSuite;
-   testSuite[15] = &fillDataTestSuite;
+   std::vector<TTestSuite*> testSuite;
+   testSuite.reserve(20);
+   testSuite.push_back( &rangeTestSuite);
+   testSuite.push_back( &rebinTestSuite);
+   testSuite.push_back( &addTestSuite);
+   testSuite.push_back( &multiplyTestSuite);
+   testSuite.push_back( &divideTestSuite);
+   testSuite.push_back( &copyTestSuite);
+   testSuite.push_back( &readwriteTestSuite);
+   testSuite.push_back( &mergeSameTestSuite);
+   testSuite.push_back( &mergeLabelTestSuite);
+   testSuite.push_back( &mergeDiffTestSuite);
+   testSuite.push_back( &mergeExtTestSuite);
+   testSuite.push_back( &labelTestSuite);
+   testSuite.push_back( &interpolationTestSuite);
+   testSuite.push_back( &scaleTestSuite);
+   testSuite.push_back( &integralTestSuite);
+   testSuite.push_back( &bufferTestSuite);
+   testSuite.push_back( &extendTestSuite);
+   testSuite.push_back( &conversionsTestSuite);
+   testSuite.push_back( &fillDataTestSuite);
+
+   unsigned int numberOfSuits = testSuite.size(); 
 
    status = 0;
    for ( unsigned int i = 0; i < numberOfSuits; ++i ) {
