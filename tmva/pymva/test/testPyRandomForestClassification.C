@@ -43,7 +43,7 @@ int testPyRandomForestClassification(){
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyRandomForest, "PyRandomForest",
       "H:V:NEstimators=10");
-   std::cout << "Train model..." << std::endl;
+   std::cout << "Train classifier..." << std::endl;
    factory->TrainAllMethods();
 
    // Clean-up
