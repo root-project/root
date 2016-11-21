@@ -55,6 +55,8 @@ int assertIntroTut()
    hPosX->Draw();
 
 
+   // This would enable the loop below:
+   // myReader.Restart();
    TTreeReaderValue<Int_t> eventSize(myReader, "fEventSize");
    // Variables used to store the data
    Int_t totalSize = 0; // Sum of data size (in bytes) of all events
