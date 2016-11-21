@@ -183,7 +183,7 @@ protected:
       return (ROOT::Internal::TNamedBranchProxy*) fProxies.FindObject(branchname); }
    TCollection* GetProxies() { return &fProxies; }
 
-   void RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
+   Bool_t RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
