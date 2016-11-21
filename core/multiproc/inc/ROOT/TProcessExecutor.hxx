@@ -72,8 +72,7 @@ public:
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
-   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc)-> decltype(redfunc(objs.front(), objs.front())) = delete;
-   using TExecutor<TProcessExecutor>::Reduce;
+   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
@@ -201,6 +200,13 @@ auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<type
 // tell doxygen to stop ignoring code
 /// \endcond
 
+template<class T, class R>
+T TProcessExecutor::Reduce(const std::vector<T> &objs, R redfunc)
+{
+   // check we can apply reduce to objs
+   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
+   return redfunc(objs);
+}
 
 template<class F>
 auto TProcessExecutor::ProcTree(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type

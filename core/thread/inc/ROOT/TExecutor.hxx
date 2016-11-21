@@ -13,6 +13,7 @@
 #define ROOT_TExecutor
 
 #include "ROOT/TSeq.hxx"
+#include "TList.h"
 #include <vector>
 
 namespace ROOT {
@@ -55,9 +56,7 @@ public:
    auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
    // /// \endcond
 
-protected:
-   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
-   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
+   template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
 
 private:
   inline subc & Derived()
@@ -119,7 +118,7 @@ auto TExecutor<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename 
 template<class subc> template<class F, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
 {
-   return Reduce(Map(func, nTimes), redfunc);
+   return Derived().Reduce(Map(func, nTimes), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -133,40 +132,21 @@ auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename 
 template<class subc> template<class F, class INTEGER, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
-  return Reduce(Map(func, args), redfunc);
+  return Derived().Reduce(Map(func, args), redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Reduce(Map(func, args), redfunc);
+   return Derived().Reduce(Map(func, args), redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Reduce(Derived().Map(func, args), redfunc);
+   return Derived().Reduce(Map(func, args), redfunc);
 }
 
-/// \endcond
-
-/// Check that redfunc has the right signature and call it on objs
-template<class subc> template<class T, class BINARYOP>
-auto TExecutor<subc>::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
-{
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
-   return Derived().Reduce(objs, redfunc);
-}
-
-template<class subc> template<class T, class R>
-auto TExecutor<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
-{
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-   return redfunc(objs);
-}
-
-}
+} // end namespace ROOT
 
 #endif
