@@ -20,6 +20,7 @@
 // for building TGeo geometry.
 //
 
+#include "Rtypes.h"
 #include "TVirtualMCGeometry.h"
 
 class TGeoManager;

@@ -21,6 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Rtypes.h"
 #ifndef ROOT_TEllipse
 #include "TEllipse.h"
 #endif
