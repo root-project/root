@@ -65,6 +65,9 @@ For general multiprocessing in ROOT, please refer to the TProcPool class.
 
 #include "TSystem.h"
 
+#include <chrono>
+#include <fstream>
+
 RooMPSentinel RooRealMPFE::_sentinel ;
 
 using namespace std;
@@ -422,6 +425,10 @@ void RooRealMPFE::calculate() const
 #ifndef _WIN32
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
+    // timing stuff
+    ofstream outfile("RRMPFE_timings.json", ios::app);
+    auto begin = std::chrono::high_resolution_clock::now();
+
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << endl ;
     Int_t i(0) ;
     RooFIter viter = _vars.fwdIterator() ;
@@ -488,6 +495,20 @@ void RooRealMPFE::calculate() const
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
 			     << ") IPC toServer> Retrieve " << endl ;
     _retrieveDispatched = kTRUE ;
+
+    // end timing
+    auto end = std::chrono::high_resolution_clock::now();
+
+    float timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+                      (end-begin).count();
+    std::cout << "calculate dispatch timing: " << timing_ns / 1e9  << "s" << std::endl;
+
+    outfile << "{\"calculate_dispatch_timing_ns\": \"" << timing_ns
+            << "\", \"pid:\": \"" << getpid()
+            << "\", \"tid:\": \"" << gettid()
+            << "\"}," << std::endl;
+
+    outfile.close();
 
   } else if (_state!=Inline) {
     cout << "RooRealMPFE::calculate(" << GetName()

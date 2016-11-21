@@ -53,6 +53,8 @@ combined in the main thread.
 #include "RooRealSumPdf.h"
 
 #include <string>
+#include <chrono>
+#include <fstream>
 
 using namespace std;
 
@@ -275,8 +277,11 @@ Double_t RooAbsTestStatistic::evaluate() const
     // Start calculations in parallel
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
 
+    ofstream outfile("RATS_timings.json", ios::app);
 
     Double_t sum(0), carry = 0.;
+
+    auto begin = std::chrono::high_resolution_clock::now();
     for (Int_t i = 0; i < _nCPU; ++i) {
       Double_t y = _mpfeArray[i]->getValV();
       carry += _mpfeArray[i]->getCarry();
@@ -285,6 +290,17 @@ Double_t RooAbsTestStatistic::evaluate() const
       carry = (t - sum) - y;
       sum = t;
     }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    float timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+                      (end-begin).count();
+    std::cout << "evaluate mpmaster collect timing: " << timing_ns / 1e9  << "s" << std::endl;
+
+    outfile << "{\"evaluate_mpmaster_collect_timing_ns\": \"" << timing_ns
+            << "\", \"pid:\": \"" << getpid()
+            << "\"}," << std::endl;
+
+    outfile.close();
 
     Double_t ret = sum ;
     _evalCarry = carry;
