@@ -280,6 +280,15 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Restart a Next() loop from the first entry.
+
+void TTreeReader::Restart() {
+   fDirector->SetTree(nullptr);
+   fDirector->SetReadEntry(-1);
+   fProxiesSet = false; // we might get more value readers, meaning new proxies.
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns the index of the current entry being read
 
 Long64_t TTreeReader::GetCurrentEntry() const {
