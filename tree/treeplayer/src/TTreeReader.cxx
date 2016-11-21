@@ -313,9 +313,16 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   Int_t treeNumberBeforeLoadTree = fTree->GetTreeNumber();
+   if (fProxiesSet && fDirector && fDirector->GetReadEntry() == -1) {
+      // Passed the end of the chain, Restart() was not called:
+      // don't try to load entries anymore. Can happen in these cases:
+      // while (tr.Next()) {something()};
+      // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
+      fEntryStatus = kEntryNotFound;
+      return fEntryStatus;
+   }
 
-   TTree* prevTree = fDirector->GetTree();
+   Int_t treeNumberBeforeLoadTree = fTree->GetTreeNumber();
 
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
    Long64_t loadResult = treeToCallLoadOn->LoadTree(entry);
@@ -343,12 +350,12 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       }
    }
 
-   if (fMostRecentTreeNumber != fTree->GetTreeNumber()) {
+   if (fDirector->GetTree() != fTree->GetTree())
       fDirector->SetTree(fTree->GetTree());
-      fMostRecentTreeNumber = fTree->GetTreeNumber();
-   }
 
-   if (!prevTree || fDirector->GetReadEntry() == -1 || !fProxiesSet) {
+   fMostRecentTreeNumber = fTree->GetTreeNumber();
+
+   if (!fProxiesSet) {
       // Tell readers we now have a tree
       for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
               i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
