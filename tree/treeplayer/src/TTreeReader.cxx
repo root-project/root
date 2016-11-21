@@ -398,9 +398,15 @@ void TTreeReader::SetTree(TTree* tree)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a value reader for this tree.
 
-void TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
+Bool_t TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
 {
+   if (fProxiesSet) {
+      Error("RegisterValueReader",
+            "TTreeReaders must be created before the call to Next() / SetEntry() / SetLocalEntry()!");
+      return false;
+   }
    fValues.push_back(reader);
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
