@@ -292,7 +292,7 @@ void TTreeReader::Restart() {
 /// Returns the index of the current entry being read
 
 Long64_t TTreeReader::GetCurrentEntry() const {
-   if (!fDirector) return 0;
+   if (!fDirector) return -1;
    Long64_t currentTreeEntry = fDirector->GetReadEntry();
    if (TestBit(kBitIsChain) && currentTreeEntry >= 0) {
       return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
