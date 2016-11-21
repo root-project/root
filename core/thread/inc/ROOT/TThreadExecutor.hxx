@@ -22,6 +22,8 @@
 # endif
 #else
 #include "ROOT/TExecutor.hxx"
+
+#include <memory>
 #include <numeric>
 #include <functional>
 
@@ -54,37 +56,15 @@ public:
    using TExecutor<TThreadExecutor>::Map;
    
    template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
-   using TExecutor<TThreadExecutor>::Reduce;
+   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
 private:
-    void ParallelFor(unsigned start, unsigned end, const std::function<void(unsigned int i)> &f);
-    double ParallelReduceDoubles(const std::vector<double> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
-    float ParallelReduceFloats(const std::vector<float> &objs, const std::function<float(unsigned int a, float b)> &redfunc);
-    tbb::task_scheduler_init *fInitTBB;
-};
-
-template<class T>
-class ParallelReductionResolver{
-  public:
-  static inline T Reduce(TThreadExecutor *, const std::vector<T> &objs, const std::function<T(T a, T b)> &redfunc){
-    return std::accumulate(objs.begin(), objs.end(), T{}, redfunc);
-  } 
-};
-
-template<>
-class ParallelReductionResolver<double>{
-  public:
-  static inline double Reduce(TThreadExecutor *threadExecutor, const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc){
-    return threadExecutor->ParallelReduceDoubles(objs, redfunc);
-  }
-};
-
-template<>
-class ParallelReductionResolver<float>{
-  public:
-  static inline float Reduce(TThreadExecutor *threadExecutor, const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc){
-    return threadExecutor->ParallelReduceFloats(objs, redfunc);
-  }
+    void   ParallelFor(unsigned start, unsigned end, const std::function<void(unsigned int i)> &f);
+    double ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc);
+    float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
+    template<class T, class R> 
+    auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
+    std::unique_ptr<tbb::task_scheduler_init> fInitTBB;
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
@@ -146,9 +126,23 @@ auto TThreadExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename 
 template<class T, class BINARYOP>
 auto TThreadExecutor::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
 {
+    // check we can apply reduce to objs
+   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");
+   return ParallelReduce(objs, redfunc);
+}
+
+template<class T, class R>
+auto TThreadExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+{
    // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs.front(), objs.front())), T>::value, "redfunc does not have the correct signature");   
-   return ParallelReductionResolver<T>::Reduce(this, objs, redfunc);
+   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
+   return SeqReduce(objs, redfunc);
+}
+
+template<class T, class R>
+auto TThreadExecutor::SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+{
+   return redfunc(objs);
 }
 
 } // namespace ROOT
