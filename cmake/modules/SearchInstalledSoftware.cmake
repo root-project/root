@@ -1309,9 +1309,9 @@ if(tmva AND cuda)
   endif()
 endif()
 
-if(tmva)
+if(tmva AND imt)
   message(STATUS "Looking for BLAS for optional parts of TMVA")
-  find_package(BLAS QUIET)
+  find_package(BLAS)
 endif()
 
 #---Report non implemented options---------------------------------------------------
