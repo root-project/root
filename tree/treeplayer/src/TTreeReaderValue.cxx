@@ -49,7 +49,7 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
    fSetupStatus(kSetupNotSetup),
    fReadStatus(kReadNothingYet)
 {
-   if (fTreeReader) fTreeReader->RegisterValueReader(this);
+   RegisterWithTreeReader();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(const TTreeReaderValu
    fReadStatus(rhs.fReadStatus),
    fStaticClassOffsets(rhs.fStaticClassOffsets)
 {
-   if (fTreeReader) fTreeReader->RegisterValueReader(this);
+   RegisterWithTreeReader();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,8 +82,7 @@ ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs)
          if (fTreeReader)
             fTreeReader->DeregisterValueReader(this);
          fTreeReader = rhs.fTreeReader;
-         if (fTreeReader)
-            fTreeReader->RegisterValueReader(this);
+         RegisterWithTreeReader();
       }
       fDict = rhs.fDict;
       fProxy = rhs.fProxy;
@@ -102,6 +101,17 @@ ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs)
 ROOT::Internal::TTreeReaderValueBase::~TTreeReaderValueBase()
 {
    if (fTreeReader) fTreeReader->DeregisterValueReader(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register with tree reader.
+
+void ROOT::Internal::TTreeReaderValueBase::RegisterWithTreeReader() {
+   if (fTreeReader) {
+      if (!fTreeReader->RegisterValueReader(this)) {
+         fTreeReader = nullptr;
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

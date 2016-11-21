@@ -90,6 +90,8 @@ namespace Internal {
 
       virtual ~TTreeReaderValueBase();
 
+      void RegisterWithTreeReader();
+
       virtual void CreateProxy();
       const char* GetBranchDataType(TBranch* branch,
                                     TDictionary* &dict) const;
