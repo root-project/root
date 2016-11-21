@@ -163,6 +163,7 @@ public:
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
    void SetLastEntry(Long64_t entry) { fLastEntry = entry; }
    EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
+   void Restart();
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
