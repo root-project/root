@@ -18,7 +18,7 @@ find_python_module(sklearn QUIET)
 
 # Enable tests based on available python modules
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
-   # Test PyKeras: Classification
+   # Test PyKeras: Binary classification
    ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Keras-Classification COMMAND testPyKerasClassification)
@@ -27,6 +27,11 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
    ROOT_EXECUTABLE(testPyKerasRegression testPyKerasRegression.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Keras-Regression COMMAND testPyKerasRegression)
+
+   # Test PyKeras: Multi-class classification
+   ROOT_EXECUTABLE(testPyKerasMulticlass testPyKerasMulticlass.C
+      LIBRARIES ${Libraries})
+   ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass)
 endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
 
 if(PY_SKLEARN_FOUND)
@@ -34,4 +39,9 @@ if(PY_SKLEARN_FOUND)
    ROOT_EXECUTABLE(testPyRandomForestClassification testPyRandomForestClassification.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-RandomForest-Classification COMMAND testPyRandomForestClassification)
+
+   # Test PyRandomForest: Multi-class classification
+   ROOT_EXECUTABLE(testPyRandomForestMulticlass testPyRandomForestMulticlass.C
+      LIBRARIES ${Libraries})
+   ROOT_ADD_TEST(PyMVA-RandomForest-Multiclass COMMAND testPyRandomForestMulticlass)
 endif(PY_SKLEARN_FOUND)

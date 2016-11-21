@@ -286,7 +286,7 @@ void MethodPyRandomForest::ProcessOptions()
    pWarmStart = Eval(Form("%i", UInt_t(fWarmStart)));
    PyDict_SetItemString(fLocalNS, "warmStart", pWarmStart);
 
-   // If no filename
+   // If no filename is given, set default
    if(fFilenameClassifier.IsNull())
    {
       fFilenameClassifier = GetWeightFileDir() + "/PyRFModel_" + GetName() + ".PyData";
@@ -304,8 +304,15 @@ void MethodPyRandomForest::Init()
    // Import module for random forest classifier
    PyRunString("import sklearn.ensemble");
 
+   // Get data properties
+   fNvars = GetNVariables();
+   fNoutputs = DataInfo().GetNClasses();
+}
+
+//_______________________________________________________________________
+void MethodPyRandomForest::Train()
+{
    // Load training data (data, classes, weights) to python arrays
-   fNvars = Data()->GetNVariables();
    int fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
    int dims[2];
    dims[0] = fNrowsTraining;
@@ -314,7 +321,6 @@ void MethodPyRandomForest::Init()
    PyDict_SetItemString(fLocalNS, "trainData", (PyObject*)fTrainData);
    float *TrainData = (float *)(PyArray_DATA(fTrainData));
 
-   fNoutputs = DataInfo().GetNClasses();
    fTrainDataClasses = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainDataClasses", (PyObject*)fTrainDataClasses);
    float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
@@ -336,11 +342,7 @@ void MethodPyRandomForest::Init()
       // Get event weight
       TrainDataWeights[i] = e->GetWeight();
    }
-}
 
-//_______________________________________________________________________
-void MethodPyRandomForest::Train()
-{
    // Create classifier object
    PyRunString("classifier = sklearn.ensemble.RandomForestClassifier(bootstrap=bootstrap, class_weight=classWeight, criterion=criterion, max_depth=maxDepth, max_features=maxFeatures, max_leaf_nodes=maxLeafNodes, min_samples_leaf=minSamplesLeaf, min_samples_split=minSamplesSplit, min_weight_fraction_leaf=minWeightFractionLeaf, n_estimators=nEstimators, n_jobs=nJobs, oob_score=oobScore, random_state=randomState, verbose=verbose, warm_start=warmStart)",
       "Failed to setup classifier");
@@ -488,6 +490,11 @@ void MethodPyRandomForest::ReadModelFromFile()
 
    // Book classifier object in python dict
    PyDict_SetItemString(fLocalNS, "classifier", fClassifier);
+
+   // Load data properties
+   // NOTE: This has to be repeated here for the reader application
+   fNvars = GetNVariables();
+   fNoutputs = DataInfo().GetNClasses();
 }
 
 //_______________________________________________________________________
