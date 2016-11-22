@@ -188,7 +188,8 @@ public:
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTRow<Element> *)this)(i); }
    inline       Element &operator[](Int_t i)       { return (*(      TMatrixTRow<Element> *)this)(i); }
 
-   void operator= (Element val);
+   void Assign (Element  val);
+   void operator= (std::initializer_list<Element>  l);
    void operator+=(Element val);
    void operator*=(Element val);
 
@@ -287,7 +288,10 @@ public:
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTColumn<Element> *)this)(i); }
    inline       Element &operator[](Int_t i)       { return (*(      TMatrixTColumn<Element> *)this)(i); }
 
-   void operator= (Element val);
+   void Assign (Element val);
+   // keep it for backward compatibility (but it has been removed for TMatrixTRow)
+   void operator= (Element val) { return Assign(val); }
+   void operator= (std::initializer_list<Element>  l);
    void operator+=(Element val);
    void operator*=(Element val);
 

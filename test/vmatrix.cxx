@@ -974,7 +974,7 @@ void stress_determinant(Int_t msize)
     if (gVerbose)
       std::cout << "\nswap two rows/cols of a matrix through method 1 and watch det's sign";
     m.UnitMatrix();
-    TMatrixDRow(m,3) = pattern;
+    TMatrixDRow(m,3).Assign(pattern);
     const double det1 = m.Determinant();
     TMatrixDRow row1(m,1);
     TVectorD vrow1(m.GetRowLwb(),m.GetRowUpb()); vrow1 = row1;
@@ -992,7 +992,7 @@ void stress_determinant(Int_t msize)
     if (gVerbose)
       std::cout << "\nswap two rows/cols of a matrix through method 2 and watch det's sign";
     m.UnitMatrix();
-    TMatrixDRow(m,3) = pattern;
+    TMatrixDRow(m,3).Assign(pattern);
     const double det1 = m.Determinant();
 
     TMatrixD m_save( m);

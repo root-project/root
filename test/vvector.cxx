@@ -578,7 +578,7 @@ void stress_matrix_slices(Int_t vsize)
   m = pattern;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
-    TMatrixDRow(m,i) = pattern+2;
+     TMatrixDRow(m,i).Assign(pattern+2);
     ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
     vr = TMatrixDRow(m,i);
     ok &= VerifyVectorValue(vr,pattern+2,gVerbose,EPSILON);
@@ -642,7 +642,7 @@ void stress_matrix_slices(Int_t vsize)
               m.GetColLwb(),TMath::Max(m.GetRowUpb(),m.GetColUpb()));
   TVectorD vc1(vc),vc2(vc);
   for (i = m.GetRowLwb(); i < m.GetRowUpb(); i++)
-    TMatrixDRow(m,i) = pattern+i;      // Make a multiplicand
+     TMatrixDRow(m,i).Assign(pattern+i);      // Make a multiplicand
   mm = m;                          // Save it
 
   m1 = pattern+10;
