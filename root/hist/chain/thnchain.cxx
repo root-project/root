@@ -14,7 +14,8 @@
 #include <vector>
 
 struct TestFile : public TFile {
-   TestFile(std::string file_name) : fFile_name(file_name), TFile(file_name.c_str(), "RECREATE") {}
+   TestFile(std::string file_name) :
+      TFile(file_name.c_str(), "RECREATE"), fFile_name(file_name) {}
 
    ~TestFile()
    {
