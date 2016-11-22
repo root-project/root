@@ -12044,10 +12044,11 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       // Check if the entry list is valid. If it has spaces, commas, or pipes,
       // it is not considered as valid and we revert to the "multiple datasets"
       // case
-      Bool_t validEnl = ((enl.Index("|") == kNPOS) &&
-        (enl.Index(",") == kNPOS) && (enl.Index(" ") == kNPOS));
+      TRegexp rg("[, |]");
+      Bool_t validEnl = (enl.Index(rg) == kNPOS) ? kTRUE : kFALSE;
+      Bool_t validSdsn = (dsns.Index(rg) == kNPOS) ? kTRUE : kFALSE;
 
-      if (validEnl && (( fc = mgr->GetDataSet(dsns) ))) {
+      if (validEnl && validSdsn && (( fc = mgr->GetDataSet(dsns) ))) {
 
          //
          // String corresponds to ONE dataset only
@@ -12063,8 +12064,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
          // Adds the entry list (or empty string if not specified)
          datasets->Add( new TPair(dataset, new TObjString( enl.Data() )) );
 
-      }
-      else {
+      } else {
 
          //
          // String does NOT correspond to one dataset: check if many datasets
