@@ -2396,12 +2396,19 @@ void TFile::WriteFree()
 
    next.Reset();
    while ((afree = (TFree*) next())) {
+      // We could 'waste' time here and double check that
+      //   (buffer+afree->Sizeof() < (start+nbytes)
       afree->FillBuffer(buffer);
    }
-   if ( (buffer-start)!=nbytes ) {
-      // Most likely one of the 'free' segment was used to store this
-      // TKey, so we had one less TFree to store than we planned.
-      memset(buffer,0,nbytes-(buffer-start));
+   auto actualBytes = buffer-start;
+   if ( actualBytes != nbytes ) {
+      if (actualBytes < nbytes) {
+         // Most likely one of the 'free' segment was used to store this
+         // TKey, so we had one less TFree to store than we planned.
+         memset(buffer,0,nbytes-actualBytes);
+      } else {
+         Error("WriteFree","The free block list TKey wrote more data than expected (%d vs %ld). Most likely there has been an out-of-bound write.",nbytes,actualBytes);
+      }
    }
    fNbytesFree = key->GetNbytes();
    fSeekFree   = key->GetSeekKey();
