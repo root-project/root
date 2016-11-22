@@ -57,6 +57,10 @@ N: Paul Balm
 E: p.balm@nikhef.nl
 D: implemented TDatabasePDG::ConvertGeant3ToPDG
 
+N: Benjamin Bannier
+E: bbannier@gmail.com
+D: implemented THnChain
+
 N: Daniel Barna
 E: daniel.barna@cern.ch
 D: CINT install target
