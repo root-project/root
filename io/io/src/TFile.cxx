@@ -2378,23 +2378,47 @@ void TFile::WriteFree()
       MakeFree(fSeekFree, fSeekFree + fNbytesFree -1);
    }
 
-   Int_t nbytes = 0;
-   TFree *afree;
-   TIter next (fFree);
-   while ((afree = (TFree*) next())) {
-      nbytes += afree->Sizeof();
-   }
-   if (!nbytes) return;
+   Bool_t largeFile = (fEND > TFile::kStartBigFile);
 
-   TKey *key    = new TKey(fName,fTitle,IsA(),nbytes,this);
-   if (key->GetSeekKey() == 0) {
+   auto createKey = [this]() {
+      Int_t nbytes = 0;
+      TFree *afree;
+      TIter next (fFree);
+      while ((afree = (TFree*) next())) {
+         nbytes += afree->Sizeof();
+      }
+      if (!nbytes) return (TKey*)nullptr;
+
+      TKey *key = new TKey(fName,fTitle,IsA(),nbytes,this);
+
+      if (key->GetSeekKey() == 0) {
+         delete key;
+         return (TKey*)nullptr;
+      }
+      return key;
+   };
+
+   TKey *key = createKey();
+   if (!key) return;
+
+   if (!largeFile && (fEND > TFile::kStartBigFile)) {
+      // The free block list is large enough to bring the file to larger
+      // than 2Gb, the references/offsets are now 64bits in the output
+      // so we need to redo the calculattion since the list of free block
+      // information will not fit in the original size.
+      key->Delete();
       delete key;
-      return;
+
+      key = createKey();
+      if (!key) return;
    }
+
+   Int_t nbytes = key->GetObjlen();
    char *buffer = key->GetBuffer();
    char *start = buffer;
 
-   next.Reset();
+   TIter next (fFree);
+   TFree *afree;
    while ((afree = (TFree*) next())) {
       // We could 'waste' time here and double check that
       //   (buffer+afree->Sizeof() < (start+nbytes)
