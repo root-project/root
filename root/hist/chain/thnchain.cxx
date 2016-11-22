@@ -30,7 +30,7 @@ class THnChainTest : public ::testing::Test {
    THnChainTest()
    {
       // Create histograms spread over a number of files.
-      for (int i = 0; i < files.size(); ++i) {
+      for (int i = 0; i < (int)files.size(); ++i) {
          TString file_name;
          file_name.Form("f%d.root", i);
 
