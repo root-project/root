@@ -308,7 +308,7 @@ Long64_t TTreeReader::GetCurrentEntry() const {
 
 TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
-   if (!fTree) {
+   if (!fTree || !fDirector) {
       fEntryStatus = kEntryNoTree;
       return fEntryStatus;
    }
