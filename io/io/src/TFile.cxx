@@ -2374,7 +2374,7 @@ Int_t TFile::WriteBufferViaCache(const char *buf, Int_t len)
 void TFile::WriteFree()
 {
    //*-* Delete old record if it exists
-   if (fSeekFree != 0){
+   if (fSeekFree != 0) {
       MakeFree(fSeekFree, fSeekFree + fNbytesFree -1);
    }
 
