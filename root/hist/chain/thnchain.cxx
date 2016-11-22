@@ -14,14 +14,14 @@
 #include <vector>
 
 struct TestFile : public TFile {
-   TestFile(std::string file_name) : file_name(file_name), TFile(file_name.c_str(), "RECREATE") {}
+   TestFile(std::string file_name) : fFile_name(file_name), TFile(file_name.c_str(), "RECREATE") {}
 
    ~TestFile()
    {
-      gSystem->Unlink(file_name.c_str());
+      gSystem->Unlink(fFile_name.c_str());
    }
 
-   const std::string file_name;
+   const std::string fFile_name;
 };
 
 class THnChainTest : public ::testing::Test {
