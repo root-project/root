@@ -1943,17 +1943,17 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
    gROOT->SetLineIsProcessing();
 
-   struct InterpreterFlagsRAII_t {
+   struct InterpreterFlagsRAII {
       cling::Interpreter* fInterpreter;
       bool fWasDynamicLookupEnabled;
 
-      InterpreterFlagsRAII_t(cling::Interpreter* interp):
+      InterpreterFlagsRAII(cling::Interpreter* interp):
          fInterpreter(interp),
          fWasDynamicLookupEnabled(interp->isDynamicLookupEnabled())
       {
          fInterpreter->enableDynamicLookup(true);
       }
-      ~InterpreterFlagsRAII_t() {
+      ~InterpreterFlagsRAII() {
          fInterpreter->enableDynamicLookup(fWasDynamicLookupEnabled);
          gROOT->SetLineHasBeenProcessed();
       }
@@ -2695,29 +2695,29 @@ void TCling::UpdateListOfLoadedSharedLibraries()
    }
    fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
 #elif defined(R__LINUX)
-   struct PointerNo4_t {
+   struct PointerNo4 {
       void* fSkip[3];
       void* fPtr;
    };
-   struct LinkMap_t {
+   struct LinkMap {
       void* fAddr;
       const char* fName;
       void* fLd;
-      LinkMap_t* fNext;
-      LinkMap_t* fPrev;
+      LinkMap* fNext;
+      LinkMap* fPrev;
    };
    if (!fPrevLoadedDynLibInfo || fPrevLoadedDynLibInfo == (void*)(size_t)-1) {
-      PointerNo4_t* procLinkMap = (PointerNo4_t*)dlopen(0,  RTLD_LAZY | RTLD_GLOBAL);
+      PointerNo4* procLinkMap = (PointerNo4*)dlopen(0,  RTLD_LAZY | RTLD_GLOBAL);
       // 4th pointer of 4th pointer is the linkmap.
       // See http://syprog.blogspot.fr/2011/12/listing-loaded-shared-objects-in-linux.html
-      LinkMap_t* linkMap = (LinkMap_t*) ((PointerNo4_t*)procLinkMap->fPtr)->fPtr;
+      LinkMap* linkMap = (LinkMap*) ((PointerNo4*)procLinkMap->fPtr)->fPtr;
       RegisterLoadedSharedLibrary(linkMap->fName);
       fPrevLoadedDynLibInfo = linkMap;
       // reduce use count of link map structure:
       dlclose(procLinkMap);
    }
 
-   LinkMap_t* iDyLib = (LinkMap_t*)fPrevLoadedDynLibInfo;
+   LinkMap* iDyLib = (LinkMap*)fPrevLoadedDynLibInfo;
    while (iDyLib->fNext) {
       iDyLib = iDyLib->fNext;
       RegisterLoadedSharedLibrary(iDyLib->fName);
@@ -5303,7 +5303,7 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// RAII used to store Parser, Sema, Preprocessor state for recursive parsing.
-   struct ParsingStateRAII_t {
+   struct ParsingStateRAII {
       Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
       Parser::ParserCurTokRestoreRAII fSavedCurToken;
       cling::ParserStateRAII fParserRAII;
@@ -5314,20 +5314,20 @@ namespace {
       // wrapper function so the parent context must be the global.
       Sema::ContextAndScopeRAII fPushedDCAndS;
 
-      struct SemaParsingInitForAutoVarsRAII_t {
+      struct SemaParsingInitForAutoVarsRAII {
          using PIFAV_t = decltype(Sema::ParsingInitForAutoVars);
          PIFAV_t& fSemaPIFAV;
          PIFAV_t fSavedPIFAV;
-         SemaParsingInitForAutoVarsRAII_t(PIFAV_t& PIFAV): fSemaPIFAV(PIFAV) {
+         SemaParsingInitForAutoVarsRAII(PIFAV_t& PIFAV): fSemaPIFAV(PIFAV) {
             fSavedPIFAV.swap(PIFAV);
          }
-         ~SemaParsingInitForAutoVarsRAII_t() {
+         ~SemaParsingInitForAutoVarsRAII() {
             fSavedPIFAV.swap(fSemaPIFAV);
          }
       };
-      SemaParsingInitForAutoVarsRAII_t fSemaParsingInitForAutoVarsRAII;
+      SemaParsingInitForAutoVarsRAII fSemaParsingInitForAutoVarsRAII;
 
-      ParsingStateRAII_t(Parser& parser, Sema& sema):
+      ParsingStateRAII(Parser& parser, Sema& sema):
          fCleanupRAII(sema.getPreprocessor()),
          fSavedCurToken(parser),
          fParserRAII(parser, false /*skipToEOF*/),
@@ -5373,7 +5373,7 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
       // dictionary generation time. That won't be an issue with the PCMs.
 
       Sema &SemaR = interpreter->getSema();
-      ParsingStateRAII_t parsingStateRAII(interpreter->getParser(), SemaR);
+      ParsingStateRAII parsingStateRAII(interpreter->getParser(), SemaR);
       clangDiagSuppr diagSuppr(SemaR.getDiagnostics());
 
       #if defined(R__MUST_REVISIT)
@@ -5548,7 +5548,7 @@ Int_t TCling::AutoParse(const char *cls)
    if (fClingCallbacks->IsAutoloadingEnabled()
          && !gClassTable->GetDictNorm(cls)) {
       // Need RAII against recursive (dictionary payload) parsing (ROOT-8445).
-      ParsingStateRAII_t parsingStateRAII(fInterpreter->getParser(),
+      ParsingStateRAII parsingStateRAII(fInterpreter->getParser(),
          fInterpreter->getSema());
       AutoLoad(cls, true /*knowDictNotLoaded*/);
    }
