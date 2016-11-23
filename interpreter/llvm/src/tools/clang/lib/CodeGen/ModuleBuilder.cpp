@@ -25,23 +25,34 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include <memory>
+
 using namespace clang;
+using namespace CodeGen;
 
 namespace clang {
   class CodeGeneratorImpl : public CodeGenerator {
     DiagnosticsEngine &Diags;
-    std::unique_ptr<const llvm::DataLayout> TD;
     ASTContext *Ctx;
+    const HeaderSearchOptions &HeaderSearchOpts; // Only used for debug info.
+    const PreprocessorOptions &PreprocessorOpts; // Only used for debug info.
     CodeGenOptions CodeGenOpts;  // Intentionally copied in.
 
     unsigned HandlingTopLevelDecls;
+
+    /// Use this when emitting decls to block re-entrant decl emission. It will
+    /// emit all deferred decls on scope exit. Set EmitDeferred to false if decl
+    /// emission must be deferred longer, like at the end of a tag definition.
     struct HandlingTopLevelDeclRAII {
       CodeGeneratorImpl &Self;
-      HandlingTopLevelDeclRAII(CodeGeneratorImpl &Self) : Self(Self) {
+      bool EmitDeferred;
+      HandlingTopLevelDeclRAII(CodeGeneratorImpl &Self,
+                               bool EmitDeferred = true)
+          : Self(Self), EmitDeferred(EmitDeferred) {
         ++Self.HandlingTopLevelDecls;
       }
       ~HandlingTopLevelDeclRAII() {
-        if (--Self.HandlingTopLevelDecls == 0)
+        unsigned Level = --Self.HandlingTopLevelDecls;
+        if (Level == 0 && EmitDeferred)
           Self.EmitDeferredDecls();
       }
     };
@@ -56,24 +67,41 @@ namespace clang {
     SmallVector<CXXMethodDecl *, 8> DeferredInlineMethodDefinitions;
 
   public:
-    CodeGeneratorImpl(DiagnosticsEngine &diags, const std::string& ModuleName,
-                      const CodeGenOptions &CGO, llvm::LLVMContext& C,
+    CodeGeneratorImpl(DiagnosticsEngine &diags, llvm::StringRef ModuleName,
+                      const HeaderSearchOptions &HSO,
+                      const PreprocessorOptions &PPO, const CodeGenOptions &CGO,
+                      llvm::LLVMContext &C,
                       CoverageSourceInfo *CoverageInfo = nullptr)
-      : Diags(diags), Ctx(nullptr), CodeGenOpts(CGO), HandlingTopLevelDecls(0),
-        CoverageInfo(CoverageInfo),
-        M(new llvm::Module(ModuleName, C)) {}
+        : Diags(diags), Ctx(nullptr), HeaderSearchOpts(HSO),
+          PreprocessorOpts(PPO), CodeGenOpts(CGO), HandlingTopLevelDecls(0),
+          CoverageInfo(CoverageInfo), M(new llvm::Module(ModuleName, C)) {
+      C.setDiscardValueNames(CGO.DiscardValueNames);
+    }
 
-    virtual ~CodeGeneratorImpl() {
+    ~CodeGeneratorImpl() override {
       // There should normally not be any leftover inline method definitions.
       assert(DeferredInlineMethodDefinitions.empty() ||
              Diags.hasErrorOccurred());
     }
 
-    llvm::Module* GetModule() override {
+    CodeGenModule &CGM() {
+      return *Builder;
+    }
+
+    llvm::Module *GetModule() {
       return M.get();
     }
 
-    const Decl *GetDeclForMangledName(StringRef MangledName) override {
+    llvm::Module *ReleaseModule() {
+      // Remove pending etc decls in case of error; the asserts in StartModule()
+      // will rightfully be confused otherwise, as none of the decls were
+      // emitted.
+      if (Diags.hasErrorOccurred())
+        Builder->clear();
+      return M.release();
+    }
+
+    const Decl *GetDeclForMangledName(StringRef MangledName) {
       GlobalDecl Result;
       if (!Builder->lookupRepresentativeDecl(MangledName, Result))
         return nullptr;
@@ -88,18 +116,13 @@ namespace clang {
       return D;
     }
 
-    llvm::Module *ReleaseModule() override {
-      // Remove pending etc decls in case of error; the asserts in StartModule()
-      // will rightfully be confused otherwise, as none of the decls were
-      // emitted.
-      if (Diags.hasErrorOccurred())
-        Builder->clear();
-      return M.release();
+    llvm::Constant *GetAddrOfGlobal(GlobalDecl global, bool isForDefinition) {
+      return Builder->GetAddrOfGlobal(global, isForDefinition);
     }
 
     llvm::Module *StartModule(const std::string& ModuleName,
                               llvm::LLVMContext& C,
-                              const CodeGenOptions& CGO) override {
+                              const CodeGenOptions& CGO) {
       assert(!M && "Replacing existing Module?");
 
       std::unique_ptr<CodeGen::CodeGenModule> OldBuilder;
@@ -128,11 +151,12 @@ namespace clang {
              && "Newly created module should not have weakRefRefs");
       Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
 
+      Builder->EmittedDeferredDecls.swap(OldBuilder->EmittedDeferredDecls);
 
       return M.get();
     }
 
-    void print(llvm::raw_ostream& out) override {
+    void print(llvm::raw_ostream& out) {
       out << "\n\nCodeGen:\n";
       //llvm::SmallPtrSet<llvm::GlobalValue*, 10> WeakRefReferences;
       out << " WeakRefReferences (llvm::SmallPtrSet<llvm::GlobalValue*, 10>)\n";
@@ -246,8 +270,8 @@ namespace clang {
       out.flush();
     }
 
-    virtual void forgetGlobal(llvm::GlobalValue* GV) override {
-      for(auto I = Builder->ConstantStringMap.begin(),
+    void forgetGlobal(llvm::GlobalValue* GV) {
+      for (auto I = Builder->ConstantStringMap.begin(),
             E = Builder->ConstantStringMap.end(); I != E; ++I) {
         if (I->second == GV) {
           Builder->ConstantStringMap.erase(I);
@@ -255,12 +279,55 @@ namespace clang {
         }
       }
 
-      for(auto I = Builder->DeferredDeclsToEmit.begin(),
+      for (auto I = Builder->DeferredDeclsToEmit.begin(),
              E = Builder->DeferredDeclsToEmit.end(); I != E; ++I) {
          if (I->GV == GV) {
           Builder->DeferredDeclsToEmit.erase(I);
           break;
         }
+      }
+
+      if (GV->isWeakForLinker()) {
+        if (!GV->isDeclaration()) {
+          // This is a definition. If if was emitted as deferred, move it
+          // back into deferred state.
+          auto IEmittedDeferredDecl
+            = Builder->EmittedDeferredDecls.find(GV);
+          if (IEmittedDeferredDecl != Builder->EmittedDeferredDecls.end()) {
+            // Use the name of the original GV, not that of our definition
+            // that's soon to be erased.
+            Builder->DeferredDecls[IEmittedDeferredDecl->second.first]
+              = IEmittedDeferredDecl->second.second;
+            Builder->EmittedDeferredDecls.erase(IEmittedDeferredDecl);
+          }
+        } else {
+          // might be an entry in the deferred decls, if so: remove!
+          auto IDeferredDecl = Builder->DeferredDecls.find(GV->getName());
+          if (IDeferredDecl != Builder->DeferredDecls.end()) {
+            // yes, pointer comparison.
+            if (IDeferredDecl->first.data() == GV->getName().data())
+              Builder->DeferredDecls.erase(IDeferredDecl);
+          }
+        }
+      }
+    }
+
+    void forgetDecl(const GlobalDecl& GD) {
+      if (const auto VD = dyn_cast<VarDecl>(GD.getDecl())) {
+        if (!VD->isWeak() || !VD->isThisDeclarationADefinition())
+          return;
+      } else if (const auto FD = dyn_cast<FunctionDecl>(GD.getDecl())) {
+        if (!FD->isWeak() || !FD->isThisDeclarationADefinition())
+          return;
+      } else {
+        return;
+      }
+      // It's a weak, defined var or function decl.
+      StringRef MangledName = Builder->getMangledName(GD);
+      auto IDeferredDecl = Builder->DeferredDecls.find(MangledName);
+      if (IDeferredDecl != Builder->DeferredDecls.end()) {
+        if (IDeferredDecl->second == GD)
+          Builder->DeferredDecls.erase(IDeferredDecl);
       }
     }
 
@@ -268,14 +335,15 @@ namespace clang {
       Ctx = &Context;
 
       M->setTargetTriple(Ctx->getTargetInfo().getTriple().getTriple());
-      M->setDataLayout(Ctx->getTargetInfo().getTargetDescription());
-      TD.reset(
-          new llvm::DataLayout(Ctx->getTargetInfo().getTargetDescription()));
-      Builder.reset(new CodeGen::CodeGenModule(Context, CodeGenOpts, *M, *TD,
-                                               Diags, CoverageInfo));
+      M->setDataLayout(Ctx->getTargetInfo().getDataLayout());
+      Builder.reset(new CodeGen::CodeGenModule(Context, HeaderSearchOpts,
+                                               PreprocessorOpts, CodeGenOpts,
+                                               *M, Diags, CoverageInfo));
 
-      for (size_t i = 0, e = CodeGenOpts.DependentLibraries.size(); i < e; ++i)
-        HandleDependentLibrary(CodeGenOpts.DependentLibraries[i]);
+      for (auto &&Lib : CodeGenOpts.DependentLibraries)
+        Builder->AddDependentLib(Lib);
+      for (auto &&Opt : CodeGenOpts.LinkerOptions)
+        Builder->AppendLinkerOptions(Opt);
     }
 
     void HandleCXXStaticMemberVarInstantiation(VarDecl *VD) override {
@@ -311,11 +379,22 @@ namespace clang {
       DeferredInlineMethodDefinitions.clear();
     }
 
-    void HandleInlineMethodDefinition(CXXMethodDecl *D) override {
+    void HandleInlineFunctionDefinition(FunctionDecl *D) override {
       if (Diags.hasErrorOccurred())
         return;
 
       assert(D->doesThisDeclarationHaveABody());
+
+      // Handle friend functions.
+      if (D->isInIdentifierNamespace(Decl::IDNS_OrdinaryFriend)) {
+        if (Ctx->getTargetInfo().getCXXABI().isMicrosoft()
+            && !D->getLexicalDeclContext()->isDependentContext())
+          Builder->EmitTopLevelDecl(D);
+        return;
+      }
+
+      // Otherwise, must be a method.
+      auto MD = cast<CXXMethodDecl>(D);
 
       // We may want to emit this definition. However, that decision might be
       // based on computing the linkage, and we have to defer that in case we
@@ -325,13 +404,13 @@ namespace clang {
       //     void bar();
       //     void foo() { bar(); }
       //   } A;
-      DeferredInlineMethodDefinitions.push_back(D);
+      DeferredInlineMethodDefinitions.push_back(MD);
 
       // Provide some coverage mapping even for methods that aren't emitted.
       // Don't do this for templated classes though, as they may not be
       // instantiable.
-      if (!D->getParent()->getDescribedClassTemplate())
-        Builder->AddDeferredUnusedCoverageMapping(D);
+      if (!MD->getParent()->getDescribedClassTemplate())
+        Builder->AddDeferredUnusedCoverageMapping(MD);
     }
 
     /// HandleTagDeclDefinition - This callback is invoked each time a TagDecl
@@ -342,11 +421,15 @@ namespace clang {
       if (Diags.hasErrorOccurred())
         return;
 
+      // Don't allow re-entrant calls to CodeGen triggered by PCH
+      // deserialization to emit deferred decls.
+      HandlingTopLevelDeclRAII HandlingDecl(*this, /*EmitDeferred=*/false);
+
       Builder->UpdateCompletedType(D);
 
       // For MSVC compatibility, treat declarations of static data members with
       // inline initializers as definitions.
-      if (Ctx->getLangOpts().MSVCCompat) {
+      if (Ctx->getTargetInfo().getCXXABI().isMicrosoft()) {
         for (Decl *Member : D->decls()) {
           if (VarDecl *VD = dyn_cast<VarDecl>(Member)) {
             if (Ctx->isMSStaticDataMemberInlineDefinition(VD) &&
@@ -356,11 +439,24 @@ namespace clang {
           }
         }
       }
+      // For OpenMP emit declare reduction functions, if required.
+      if (Ctx->getLangOpts().OpenMP) {
+        for (Decl *Member : D->decls()) {
+          if (auto *DRD = dyn_cast<OMPDeclareReductionDecl>(Member)) {
+            if (Ctx->DeclMustBeEmitted(DRD))
+              Builder->EmitGlobal(DRD);
+          }
+        }
+      }
     }
 
     void HandleTagDeclRequiredDefinition(const TagDecl *D) override {
       if (Diags.hasErrorOccurred())
         return;
+
+      // Don't allow re-entrant calls to CodeGen triggered by PCH
+      // deserialization to emit deferred decls.
+      HandlingTopLevelDeclRAII HandlingDecl(*this, /*EmitDeferred=*/false);
 
       if (CodeGen::CGDebugInfo *DI = Builder->getModuleDebugInfo())
         if (const RecordDecl *RD = dyn_cast<RecordDecl>(D))
@@ -368,15 +464,25 @@ namespace clang {
     }
 
     void HandleTranslationUnit(ASTContext &Ctx) override {
+      // Release the Builder when there is no error.
+      if (!Diags.hasErrorOccurred() && Builder)
+        Builder->Release();
+
+      // If there are errors before or when releasing the Builder, reset
+      // the module to stop here before invoking the backend.
       if (Diags.hasErrorOccurred()) {
         if (Builder)
           Builder->clear();
         M.reset();
         return;
       }
+    }
 
-      if (Builder)
-        Builder->Release();
+    void AssignInheritanceModel(CXXRecordDecl *RD) override {
+      if (Diags.hasErrorOccurred())
+        return;
+
+      Builder->RefreshTypeCacheForClass(RD);
     }
 
     void CompleteTentativeDefinition(VarDecl *D) override {
@@ -392,28 +498,57 @@ namespace clang {
 
       Builder->EmitVTable(RD);
     }
-
-    void HandleLinkerOptionPragma(llvm::StringRef Opts) override {
-      Builder->AppendLinkerOptions(Opts);
-    }
-
-    void HandleDetectMismatch(llvm::StringRef Name,
-                              llvm::StringRef Value) override {
-      Builder->AddDetectMismatch(Name, Value);
-    }
-
-    void HandleDependentLibrary(llvm::StringRef Lib) override {
-      Builder->AddDependentLib(Lib);
-    }
   };
 }
 
 void CodeGenerator::anchor() { }
 
-CodeGenerator *clang::CreateLLVMCodeGen(DiagnosticsEngine &Diags,
-                                        const std::string& ModuleName,
-                                        const CodeGenOptions &CGO,
-                                        llvm::LLVMContext& C,
-                                        CoverageSourceInfo *CoverageInfo) {
-  return new CodeGeneratorImpl(Diags, ModuleName, CGO, C, CoverageInfo);
+CodeGenModule &CodeGenerator::CGM() {
+  return static_cast<CodeGeneratorImpl*>(this)->CGM();
+}
+
+llvm::Module *CodeGenerator::GetModule() {
+  return static_cast<CodeGeneratorImpl*>(this)->GetModule();
+}
+
+llvm::Module *CodeGenerator::ReleaseModule() {
+  return static_cast<CodeGeneratorImpl*>(this)->ReleaseModule();
+}
+
+const Decl *CodeGenerator::GetDeclForMangledName(llvm::StringRef name) {
+  return static_cast<CodeGeneratorImpl*>(this)->GetDeclForMangledName(name);
+}
+
+llvm::Constant *CodeGenerator::GetAddrOfGlobal(GlobalDecl global,
+                                               bool isForDefinition) {
+  return static_cast<CodeGeneratorImpl*>(this)
+           ->GetAddrOfGlobal(global, isForDefinition);
+}
+
+void CodeGenerator::print(llvm::raw_ostream& out) {
+  static_cast<CodeGeneratorImpl*>(this)->print(out);
+}
+
+void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
+}
+
+void CodeGenerator::forgetDecl(const GlobalDecl& GD) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetDecl(GD);
+}
+
+
+llvm::Module *CodeGenerator::StartModule(const std::string& ModuleName,
+                                         llvm::LLVMContext& C,
+                                         const CodeGenOptions& CGO) {
+  return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C, CGO);
+}
+
+CodeGenerator *clang::CreateLLVMCodeGen(
+    DiagnosticsEngine &Diags, llvm::StringRef ModuleName,
+    const HeaderSearchOptions &HeaderSearchOpts,
+    const PreprocessorOptions &PreprocessorOpts, const CodeGenOptions &CGO,
+    llvm::LLVMContext &C, CoverageSourceInfo *CoverageInfo) {
+  return new CodeGeneratorImpl(Diags, ModuleName, HeaderSearchOpts,
+                               PreprocessorOpts, CGO, C, CoverageInfo);
 }

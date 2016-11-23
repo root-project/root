@@ -79,13 +79,6 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
                  const char *opt = "ask", Bool_t dyn = kFALSE, Bool_t tutords = kFALSE)
 {
 
-#ifdef __CINT__
-   Printf("getProof: this script can only be executed via ACliC:");
-   Printf("getProof:      root [] .x <path>/getProof.C+");
-   Printf("getProof: or   root [] .L <path>/getProof.C+");
-   Printf("getProof:      root [] getProof(...)");
-   return;
-#endif
 
    TProof *p = 0;
 
@@ -295,10 +288,11 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
    }
 
    if (restart) {
+
       // Try to start something locally; make sure that everything is there
-      char *xrootd = gSystem->Which(gSystem->Getenv("PATH"), "xrootd", kExecutePermission);
-      if (!xrootd) {
-         Printf("getProof: xrootd not found: please check the environment!");
+      char *xpd = gSystem->Which(gSystem->Getenv("PATH"), "xproofd", kExecutePermission);
+      if (!xpd) {
+         Printf("getProof: xproofd not found: please check the environment!");
          return p;
       }
 
@@ -307,7 +301,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
                                                  xpdcf.Data(), xpdpid.Data(), proofsessions.Data());
       gSystem->Exec(cmd);
 
-      // Try to start something locally; create the xrootd config file
+      // Try to start something locally; create the xproofd config file
       FILE *fcf = fopen(xpdcf.Data(), "w");
       if (!fcf) {
          Printf("getProof: could not create config file for XPD (%s)", xpdcf.Data());
@@ -319,8 +313,6 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
       fprintf(fcf,"### Use dedicated socket path under /tmp to avoid length problems\n");
       fprintf(fcf,"xpd.sockpathdir /tmp/xpd-sock\n");
 #endif
-      fprintf(fcf,"### Run data serving on port %d\n", lportp+1);
-      fprintf(fcf,"xrd.port %d\n", lportp+1);
       fprintf(fcf,"### Load the XrdProofd protocol on port %d\n", lportp);
       fprintf(fcf,"xrd.protocol xproofd libXrdProofd.so\n");
       fprintf(fcf,"xpd.port %d\n", lportp);
@@ -333,7 +325,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
       fprintf(fcf,"### Allow different users to connect\n");
       fprintf(fcf,"xpd.multiuser 1\n");
       fprintf(fcf,"### Limit the number of query results kept in the master sandbox\n");
-      fprintf(fcf,"xpd.putrc ProofServ.UserQuotas: maxquerykept=10\n");
+      fprintf(fcf,"xpd.putrc ProofServ.UserQuotas: maxquerykept=2\n");
       fprintf(fcf,"### Limit the number of sessions kept in the sandbox\n");
       fprintf(fcf,"xpd.putrc Proof.MaxOldSessions: 1\n");
       if (tutords) {
@@ -344,28 +336,30 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
          fprintf(fcf,"### Use dynamic, per-job scheduling\n");
          fprintf(fcf,"xpd.putrc Proof.DynamicStartup 1\n");
       }
-      fprintf(fcf,"### Local data server for the temporary output files\n");
-      fprintf(fcf,"xpd.putenv LOCALDATASERVER=root://%s:%d\n", gSystem->HostName(), lportx);
+      fprintf(fcf,"### For internal file serving use the xrootd protocol on the same port\n");
+      fprintf(fcf,"xpd.xrootd libXrdXrootd-4.so\n");
+      fprintf(fcf,"### Set the local data server for the temporary output files accordingly\n");
+      fprintf(fcf,"xpd.putenv LOCALDATASERVER=root://%s:%d\n", gSystem->HostName(), lportp);
       fclose(fcf);
-      Printf("getProof: xrootd config file at %s", xpdcf.Data());
+      Printf("getProof: xproofd config file at %s", xpdcf.Data());
 
       // Start xrootd in the background
-      Printf("getProof: xrootd log file at %s", xpdlogprt.Data());
+      Printf("getProof: xproofd log file at %s", xpdlogprt.Data());
       cmd = Form("%s -c %s -b -l %s -n xpdtut -p %d",
-               xrootd, xpdcf.Data(), xpdlog.Data(), lportx);
+               xpd, xpdcf.Data(), xpdlog.Data(), lportp);
       Printf("(NB: any error line from XrdClientSock::RecvRaw and XrdClientMessage::ReadRaw should be ignored)");
       if ((rc = gSystem->Exec(cmd)) != 0) {
-         Printf("getProof: problems starting xrootd (%d)", rc);
+         Printf("getProof: problems starting xproofd (%d)", rc);
          return p;
       }
-      delete[] xrootd;
+      delete[] xpd;
 
       // Wait a bit
-      Printf("getProof: waiting for xrootd to start ...");
+      Printf("getProof: waiting for xproofd to start ...");
       gSystem->Sleep(2000);
 
-      pid = getXrootdPid(lportx);
-      Printf("getProof: xrootd pid: %d", pid);
+      pid = getXrootdPid(lportp);
+      Printf("getProof: xproofd pid: %d", pid);
 
       // Save it in the PID file
       FILE *fpid = fopen(xpdpid.Data(), "w");

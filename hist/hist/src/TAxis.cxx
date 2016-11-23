@@ -15,6 +15,8 @@
 #include "TStyle.h"
 #include "TError.h"
 #include "THashList.h"
+#include "TList.h"
+#include "TAxisModLab.h"
 #include "TH1.h"
 #include "TObjString.h"
 #include "TDatime.h"
@@ -51,6 +53,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fLast    = 0;
    fParent  = 0;
    fLabels  = 0;
+   fModLabs = 0;
    fBits2   = 0;
    fTimeDisplay = 0;
 }
@@ -62,6 +65,7 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 {
    fParent  = 0;
    fLabels  = 0;
+   fModLabs = 0;
    Set(nbins,xlow,xup);
 }
 
@@ -72,6 +76,7 @@ TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 {
    fParent  = 0;
    fLabels  = 0;
+   fModLabs = 0;
    Set(nbins,xbins);
 }
 
@@ -85,12 +90,17 @@ TAxis::~TAxis()
       delete fLabels;
       fLabels = 0;
    }
+   if (fModLabs) {
+      fModLabs->Delete();
+      delete fModLabs;
+      fModLabs = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0), fModLabs(0)
 {
    axis.Copy(*this);
 }
@@ -228,6 +238,11 @@ void TAxis::Copy(TObject &obj) const
          copyLabel->SetUniqueID(label->GetUniqueID());
       }
    }
+   if (axis.fModLabs) {
+      axis.fModLabs->Delete();
+      delete axis.fModLabs;
+      axis.fModLabs = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,12 +281,12 @@ Int_t TAxis::FindBin(Double_t x)
    Int_t bin;
    // NOTE: This should not be allowed for Alphanumeric histograms,
    // but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
-   // but in case of alphanumeric do-not extend the axis. It makes no sense 
+   // but in case of alphanumeric do-not extend the axis. It makes no sense
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
       if (fParent == 0) return bin;
-      if (!CanExtend() || IsAlphanumeric() ) return bin;   
+      if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
@@ -315,7 +330,7 @@ Int_t TAxis::FindBin(const char *label)
       // we set the axis alphanumeric
       // when list of labels does not exist
       // do we want to do this also when histogram is not empty ?????
-      if (CanBeAlphanumeric() ) { 
+      if (CanBeAlphanumeric() ) {
          SetCanExtend(kTRUE);
          SetAlphanumeric(kTRUE);
          if (fXmax <= fXmin) {
@@ -333,7 +348,7 @@ Int_t TAxis::FindBin(const char *label)
    // if labels is not in the list and we have already labels
    if (!IsAlphanumeric()) {
       // if bins without labels exist or if the axis cannot be set to alphanumeric
-      if (HasBinWithoutLabel() || !CanBeAlphanumeric() ) {         
+      if (HasBinWithoutLabel() || !CanBeAlphanumeric() ) {
          Info("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
          return -1;
       }
@@ -372,13 +387,13 @@ Int_t TAxis::FindBin(const char *label)
 Int_t TAxis::FindFixBin(const char *label) const
 {
    //create list of labels if it does not exist yet
-   if (!fLabels) return -1; 
- 
+   if (!fLabels) return -1;
+
    // search for label in the existing list and return it if it exists
    TObjString *obj = (TObjString*)fLabels->FindObject(label);
    if (obj) return (Int_t)obj->GetUniqueID();
    return -1;
-}   
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -572,13 +587,14 @@ Bool_t TAxis::HasBinWithoutLabel() const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Set option(s) to draw axis with labels
-///  option = "a" sort by alphabetic order
-///         = ">" sort by decreasing values
-///         = "<" sort by increasing values
-///         = "h" draw labels horizonthal
-///         = "v" draw labels vertical
-///         = "u" draw labels up (end of label right adjusted)
-///         = "d" draw labels down (start of label left adjusted)
+///  option can be:
+///   - "a" sort by alphabetic order
+///   - ">" sort by decreasing values
+///   - "<" sort by increasing values
+///   - "h" draw labels horizontal
+///   - "v" draw labels vertical
+///   - "u" draw labels up (end of label right adjusted)
+///   - "d" draw labels down (start of label left adjusted)
 
 void TAxis::LabelsOption(Option_t *option)
 {
@@ -817,10 +833,51 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
    obj->SetUniqueID((UInt_t)bin);
 
    // check for Alphanumeric case (labels for each bin)
-   if (CanBeAlphanumeric() && fLabels->GetSize() == fNbins) {      
+   if (CanBeAlphanumeric() && fLabels->GetSize() == fNbins) {
       SetAlphanumeric(kTRUE);
       SetCanExtend(kTRUE);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label number "labNum". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed and even the
+/// label text itself.
+///
+/// \param[in] labNum           Number of the label to be changed, negative numbers start from the end
+/// \param[in] labAngle         New angle value
+/// \param[in] labSize          New size (0 erase the label)
+/// \param[in] labAlign         New alignment value
+/// \param[in] labColor         New label color
+/// \param[in] labText          New label text
+///
+/// If an attribute should not be changed just give the value "-1".
+///
+/// If labnum=0 the list of modified labels is reset.
+
+void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
+                               Int_t labAlign, Int_t labColor, Int_t labFont,
+                               TString labText)
+{
+   if (!fModLabs) fModLabs = new TList();
+
+   // Reset the list of modified labels.
+   if (labNum == 0) {
+      delete fModLabs;
+      fModLabs  = 0;
+      return;
+   }
+
+   TAxisModLab *ml = new TAxisModLab();
+   ml->SetLabNum(labNum);
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
+
+   fModLabs->Add((TObject*)ml);
 }
 
 
@@ -1114,6 +1171,8 @@ void TAxis::UnZoom()
          hobj->GetXaxis()->SetRange(0,0);
       }
    }
+
+   gPad->UnZoomed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

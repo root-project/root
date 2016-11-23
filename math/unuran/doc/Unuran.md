@@ -29,17 +29,17 @@ It can then be used in two distinct ways:
 ~~~
 
 
-- Using a distribution object. We have then the following cases depending on the dimension and the distribution object. 
+- Using a distribution object. We have then the following cases depending on the dimension and the distribution object.
 
 - For 1D distribution the class **TUnuranContDist** must be used.
     - A **TUnuranContDist** object can be created from a function
     providing the pdf (probability density function) and optionally one providing the derivative of the pdf.
-	- If the derivative is not provided and the generation method requires it, then it is estimated numerically.
+   - If the derivative is not provided and the generation method requires it, then it is estimated numerically.
     - The user can optionally provide the
-	  - cdf (cumulative distribution function) via the **TUnuranContDist::SetCdf** function,
-	  - the mode via **TUnuranContDist::SetMode**,
-      - the domain via **TUnuranContDist::SetDomain** for generating numbers in a restricted region,
-	  - the area below the pdf via **TUnuranContDist::SetPdfArea**.
+     - cdf (cumulative distribution function) via the **TUnuranContDist::SetCdf** function,
+     - the mode via **TUnuranContDist::SetMode**,
+     - the domain via **TUnuranContDist::SetDomain** for generating numbers in a restricted region,
+     - the area below the pdf via **TUnuranContDist::SetPdfArea**.
 
 Some of this information is required depending on the chosen UNURAN generation method.
 
@@ -52,7 +52,7 @@ Some of this information is required depending on the chosen UNURAN generation m
        for (int i = 0; i &lt; N; ++i)
           double x = unr.Sample();
 ~~~~
-		  
+
 - For multi-dimensional distribution the class **TUnuranMultiContDist** must be used.
 In this case only the multi-dimensional pdf is required
 
@@ -111,7 +111,7 @@ In this case only the multi-dimensional pdf is required
       for (int i = 0; i &lt; N; ++i)
          double x = unr.Sample();
 ~~~
-		 
+
 - This is equivalent to TH1::GetRandom(), but sampling is faster, therefore, since it requires some initialization time,
   it becomes convenient when generating a large sample of random numbers.
 
@@ -120,7 +120,5 @@ TRandom pointer when constructing the TUnuran class (by default the ROOT gRandom
 
 The (UNU.RAN documentation)[http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#Top] provides a detailed
 description of all the available methods and the possible options which one can pass to UNU.RAN for the various distributions.
-
-
 */
 

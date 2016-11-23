@@ -27,15 +27,15 @@ is a simple example how to run FOAM in interactive
 mode. To run this macro issue the  following simple command from the
 Linux shell:
 
-~~~ {.cpp}
+```cpp
   root foam_kanwa.C
-~~~
+```
 
 or from CINT:
 
-~~~ {.cpp}
+```cpp
   root [0] .x foam_kanwa.C
-~~~
+```
 
 Simulation will start and graphical canvas with plot
 of the distribution function appear. In this example
@@ -52,10 +52,10 @@ always remember to define Density  method which provides the
 density distribution.
 Enter CINT interpreter and type:
 
-~~~ {.cpp}
+```cpp
   root [0] gSystem->Load("libFoam.so")
   root [1] .x foam_demo.C+
-~~~
+```
 
 to load FOAM library, compile and execute macro foam_demo.C.
 A shared object foam_demo_C.so is created in the current
@@ -66,9 +66,9 @@ including distribution function will be written to disk.
 demonstrates persistency of FOAM classes.
 To run this macro type:
 
-~~~ {.cpp}
+```cpp
   root [0] .x foam_demopers.C
-~~~
+```
 
 Program reads the FOAM object from disk, checks its
 consistency and prints geometry of cells. Next starts the

@@ -12,9 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/GCMetadata.h"
+#include "llvm/CodeGen/GCStrategy.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/Passes.h"
-#include "llvm/CodeGen/GCStrategy.h"
 #include "llvm/IR/Function.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/Pass.h"
@@ -99,10 +99,6 @@ void Printer::getAnalysisUsage(AnalysisUsage &AU) const {
 
 static const char *DescKind(GC::PointKind Kind) {
   switch (Kind) {
-  case GC::Loop:
-    return "loop";
-  case GC::Return:
-    return "return";
   case GC::PreCall:
     return "pre-call";
   case GC::PostCall:
@@ -152,7 +148,6 @@ bool Printer::doFinalization(Module &M) {
   return false;
 }
 
-
 GCStrategy *GCModuleInfo::getGCStrategy(const StringRef Name) {
   // TODO: Arguably, just doing a linear search would be faster for small N
   auto NMI = GCStrategyMap.find(Name);
@@ -169,5 +164,14 @@ GCStrategy *GCModuleInfo::getGCStrategy(const StringRef Name) {
     }
   }
 
-  report_fatal_error(std::string("unsupported GC: ") + Name);
+  if (GCRegistry::begin() == GCRegistry::end()) {
+    // In normal operation, the registry should not be empty.  There should 
+    // be the builtin GCs if nothing else.  The most likely scenario here is
+    // that we got here without running the initializers used by the Registry 
+    // itself and it's registration mechanism.
+    const std::string error = ("unsupported GC: " + Name).str() + 
+      " (did you remember to link and initialize the CodeGen library?)";
+    report_fatal_error(error);
+  } else
+    report_fatal_error(std::string("unsupported GC: ") + Name);
 }

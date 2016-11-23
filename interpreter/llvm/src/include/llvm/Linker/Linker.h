@@ -10,10 +10,7 @@
 #ifndef LLVM_LINKER_LINKER_H
 #define LLVM_LINKER_LINKER_H
 
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/DenseSet.h"
-#include "llvm/IR/DiagnosticInfo.h"
+#include "llvm/Linker/IRMover.h"
 
 namespace llvm {
 class Module;
@@ -25,63 +22,35 @@ class Type;
 /// module since it is assumed that the user of this class will want to do
 /// something with it after the linking.
 class Linker {
+  IRMover Mover;
+
 public:
-  struct StructTypeKeyInfo {
-    struct KeyTy {
-      ArrayRef<Type *> ETypes;
-      bool IsPacked;
-      KeyTy(ArrayRef<Type *> E, bool P);
-      KeyTy(const StructType *ST);
-      bool operator==(const KeyTy &that) const;
-      bool operator!=(const KeyTy &that) const;
-    };
-    static StructType *getEmptyKey();
-    static StructType *getTombstoneKey();
-    static unsigned getHashValue(const KeyTy &Key);
-    static unsigned getHashValue(const StructType *ST);
-    static bool isEqual(const KeyTy &LHS, const StructType *RHS);
-    static bool isEqual(const StructType *LHS, const StructType *RHS);
+  enum Flags {
+    None = 0,
+    OverrideFromSrc = (1 << 0),
+    LinkOnlyNeeded = (1 << 1),
+    InternalizeLinkedSymbols = (1 << 2),
+    /// Don't force link referenced linkonce definitions, import declaration.
+    DontForceLinkLinkonceODR = (1 << 3)
+
   };
 
-  typedef DenseSet<StructType *, StructTypeKeyInfo> NonOpaqueStructTypeSet;
-  typedef DenseSet<StructType *> OpaqueStructTypeSet;
+  Linker(Module &M);
 
-  struct IdentifiedStructTypeSet {
-    // The set of opaque types is the composite module.
-    OpaqueStructTypeSet OpaqueStructTypes;
-
-    // The set of identified but non opaque structures in the composite module.
-    NonOpaqueStructTypeSet NonOpaqueStructTypes;
-
-    void addNonOpaque(StructType *Ty);
-    void addOpaque(StructType *Ty);
-    StructType *findNonOpaque(ArrayRef<Type *> ETypes, bool IsPacked);
-    bool hasType(StructType *Ty);
-  };
-
-  Linker(Module *M, DiagnosticHandlerFunction DiagnosticHandler);
-  Linker(Module *M);
-  ~Linker();
-
-  Module *getModule() const { return Composite; }
-  void deleteModule();
-
-  /// \brief Link \p Src into the composite. The source is destroyed.
+  /// \brief Link \p Src into the composite.
+  ///
+  /// Passing OverrideSymbols as true will have symbols from Src
+  /// shadow those in the Dest.
+  /// For ThinLTO function importing/exporting the \p ModuleSummaryIndex
+  /// is passed. If \p GlobalsToImport is provided, only the globals that
+  /// are part of the set will be imported from the source module.
+  ///
   /// Returns true on error.
-  bool linkInModule(Module *Src);
+  bool linkInModule(std::unique_ptr<Module> Src, unsigned Flags = Flags::None,
+                    DenseSet<const GlobalValue *> *GlobalsToImport = nullptr);
 
-  static bool LinkModules(Module *Dest, Module *Src,
-                          DiagnosticHandlerFunction DiagnosticHandler);
-
-  static bool LinkModules(Module *Dest, Module *Src);
-
-private:
-  void init(Module *M, DiagnosticHandlerFunction DiagnosticHandler);
-  Module *Composite;
-
-  IdentifiedStructTypeSet IdentifiedStructTypes;
-
-  DiagnosticHandlerFunction DiagnosticHandler;
+  static bool linkModules(Module &Dest, std::unique_ptr<Module> Src,
+                          unsigned Flags = Flags::None);
 };
 
 } // End llvm namespace

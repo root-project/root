@@ -133,8 +133,8 @@ class SparseSet {
 
   // Disable copy construction and assignment.
   // This data structure is not meant to be used that way.
-  SparseSet(const SparseSet&) LLVM_DELETED_FUNCTION;
-  SparseSet &operator=(const SparseSet&) LLVM_DELETED_FUNCTION;
+  SparseSet(const SparseSet&) = delete;
+  SparseSet &operator=(const SparseSet&) = delete;
 
 public:
   typedef ValueT value_type;
@@ -261,6 +261,11 @@ public:
   /// and return the newly inserted element.
   ValueT &operator[](const KeyT &Key) {
     return *insert(ValueT(Key)).first;
+  }
+
+  ValueT pop_back_val() {
+    // Sparse does not need to be cleared, see find().
+    return Dense.pop_back_val();
   }
 
   /// erase - Erases an existing element identified by a valid iterator.

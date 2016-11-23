@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Tutorial illustrating the use of TMath::Permute
 /// can be run with:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root > .x permute.C
 /// root > .x permute.C+ with ACLIC
-///~~~
+/// ~~~
 ///
 /// \macro_output
 /// \macro_code

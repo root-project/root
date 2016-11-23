@@ -1,52 +1,8 @@
-#
-# Try to capture the initial set of cmake command line args passed by
-# the user for configuration.
-# Original Recipe taken from http://stackoverflow.com/questions/10205986/how-to-capture-cmake-command-line-arguments
-#
-# Note: The entries will live on CMakeCache.txt, so re-configuring with
-# a command line that doesn't include an option won't remove it. You need
-# to remove the CMakeCache.txt file, or override the value via the command line.
-#
-#
-GET_CMAKE_PROPERTY(CACHE_VARS CACHE_VARIABLES)
-FOREACH(CACHE_VAR ${CACHE_VARS})
-    GET_PROPERTY(CACHE_VAR_HELPSTRING CACHE ${CACHE_VAR} PROPERTY HELPSTRING)
-    IF(CACHE_VAR_HELPSTRING STREQUAL "No help, variable specified on the command line.")
-        GET_PROPERTY(CACHE_VAR_TYPE CACHE ${CACHE_VAR} PROPERTY TYPE)
-        IF(CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
-            SET(CACHE_VAR_TYPE)
-        ELSE(CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
-            SET(CACHE_VAR_TYPE :${CACHE_VAR_TYPE})
-        ENDIF()
-        SET(CMAKE_INVOKE_ARGS "${CMAKE_INVOKE_ARGS} -D${CACHE_VAR}${CACHE_VAR_TYPE}=\"${${CACHE_VAR}}\"")
-    ENDIF()
-ENDFOREACH(CACHE_VAR ${CACHE_VARS})
-# Record the full command line invocation.
-SET(CMAKE_INVOKE "${CMAKE_COMMAND} ${CMAKE_INVOKE_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}" CACHE STRING "Command used to invoke cmake" FORCE)
-# Create a simple shell script that allows us to reinvoke cmake with the captured command line.
-IF (NOT WIN32)
-    if (NOT ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
-        set(RECMAKE_GENERATOR "-G ${CMAKE_GENERATOR}")
-    endif()
-    SET(RECMAKE_REPLAY_FILE ${CMAKE_BINARY_DIR}/recmake_replay.sh)
-    SET(RECMAKE_INITIAL_FILE ${CMAKE_BINARY_DIR}/recmake_initial.sh)
-    if (NOT EXISTS ${RECMAKE_INITIAL_FILE})
-        FILE(WRITE ${RECMAKE_INITIAL_FILE} "#!/bin/sh\n"
-                "rm -f CMakeCache.txt\n"
-                "${CMAKE_INVOKE} ${RECMAKE_GENERATOR}\n")
-    endif()
-    if (EXISTS ${RECMAKE_REPLAY_FILE})
-        FILE(APPEND ${RECMAKE_REPLAY_FILE} "${CMAKE_INVOKE}\n")
-    else()
-        FILE(WRITE ${RECMAKE_REPLAY_FILE} "#!/bin/sh\n"
-            "rm -f CMakeCache.txt\n"
-            "${CMAKE_INVOKE} ${RECMAKE_GENERATOR}\n")
-    endif()
-ENDIF (NOT WIN32)
-
 #---Check if cmake has the required version-----------------------------------------------------
-cmake_minimum_required(VERSION 2.8.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
 cmake_policy(SET CMP0005 NEW)
+include(cmake/modules/CaptureCommandLine.cmake)
+
 #---Set name of the project to "ROOT". Has to be done after check of cmake version--------------
 project(ROOT)
 set(IntegratedBuild ON)
@@ -142,12 +98,28 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
-                   COMMENT "Moving directories such as etc, icons, fonts, etc. to build area")
-add_custom_target(move_headers DEPENDS ${stamp_file}
+                   COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
+
+#---Copy the the tutorials to the build area, with dependency---------------------------------
+file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/*)
+set(tutorial_files_builddir "")
+foreach(tutorial_file ${tutorial_files})
+  # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
+  # target below will interfere.
+  if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
+    # Works, but triggers re-config for every change in tutorials/
+    #configure_file(${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file} COPYONLY)
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${tutorial_file}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file}
+      DEPENDS ${CMAKE_SOURCE_DIR}/${tutorial_file})
+    set(tutorial_files_builddir "${CMAKE_BINARY_DIR}/${tutorial_file};${tutorial_files_builddir}")
+  endif()
+endforeach()
+
+add_custom_target(move_headers DEPENDS ${stamp_file} ${tutorial_files_builddir}
                                COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
                                                         -DCOMPONENTS="headers"
                                                         -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
@@ -194,8 +166,11 @@ get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS})
 if(cxxmodules)
-  # rootcling doesn't know what to do with these flags.
-  # FIXME: Disable until until somebody teaches it.
+  # rootcling uses our internal version of clang. Passing the modules flags here
+  # would allow rootcling to find module files built by the external compiler
+  # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
+  # different clang version (even different commit revision) as the modules files
+  # are not guaranteed to be compatible among clang revisions.
   string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
 endif(cxxmodules)
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
@@ -219,10 +194,11 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SY
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
-  add_custom_target(copymodulemap ALL DEPENDS build/unix/module.modulemap)
-  add_custom_command(TARGET copymodulemap PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
-  )
+  add_custom_target(copymodulemap
+                    DEPENDS build/unix/module.modulemap
+                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
+                    )
+  add_dependencies(copymodulemap move_headers)
 endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
@@ -249,7 +225,8 @@ add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh 
 #add_dependencies(version root.exe)
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh ${CMAKE_SOURCE_DIR})
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh ${CMAKE_SOURCE_DIR}
+                  DEPENDS ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------
@@ -265,7 +242,14 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
                          REGEX system.rootrc EXCLUDE
-                         REGEX root.mimes EXCLUDE)
+                         REGEX system.rootauthrc EXCLUDE
+                         REGEX system.rootdaemonrc EXCLUDE
+                         REGEX rootd.rc.d EXCLUDE
+                         REGEX proofd.rc.d EXCLUDE
+                         REGEX rootd.xinetd EXCLUDE
+                         REGEX proofd.xinetd EXCLUDE
+                         REGEX root.mimes EXCLUDE
+                         REGEX cmake EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})

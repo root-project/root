@@ -31,6 +31,11 @@
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
+#ifdef R__USE_IMT
+#ifndef ROOT_TRWSpinLock
+#include "ROOT/TRWSpinLock.hxx"
+#endif
+#endif
 
 class TFree;
 class TArrayC;
@@ -98,6 +103,10 @@ protected:
 
    TList           *fInfoCache;      ///<!Cached list of the streamer infos in this file
    TList           *fOpenPhases;     ///<!Time info about open phases
+
+#ifdef R__USE_IMT
+   static ROOT::TRWSpinLock fgRwLock;    ///<!Read-write lock to protect global PID list
+#endif
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 

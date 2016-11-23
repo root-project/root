@@ -36,16 +36,21 @@
 // (background-enhanced) and a right (signal-enhanced) sample.
 //_______________________________________________________________________
 
+#include "TMVA/DecisionTreeNode.h"
+
+#include "TMVA/Types.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Event.h"
+
+#include "ThreadLocalStorage.h"
+#include "TString.h"
+
 #include <algorithm>
 #include <exception>
 #include <iomanip>
 #include <limits>
-
-#include "TMVA/Types.h"
-#include "TMVA/MsgLogger.h"
-#include "TMVA/DecisionTreeNode.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Event.h"
+#include <sstream>
 
 using std::string;
 
@@ -188,7 +193,9 @@ void TMVA::DecisionTreeNode::SetPurity( void )
    }
    else {
       Log() << kINFO << "Zero events in purity calcuation , return purity=0.5" << Endl;
-      this->Print(Log());
+      std::ostringstream oss;
+      this->Print(oss);
+      Log() <<oss.str();
       fPurity = 0.5;
    }
    return;

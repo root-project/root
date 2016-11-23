@@ -56,7 +56,8 @@
 //  I   -> Required to constant fold to an integer constant expression.
 //
 // Types may be postfixed with the following modifiers:
-// * -> pointer (optionally followed by an address space number)
+// * -> pointer (optionally followed by an address space number, if no address
+//               space is specified than any address space will be accepted)
 // & -> reference (optionally followed by an address space number)
 // C -> const
 // D -> volatile
@@ -66,6 +67,7 @@
 // Builtin::Context class.  Currently we have:
 //  n -> nothrow
 //  r -> noreturn
+//  U -> pure
 //  c -> const
 //  t -> signature is meaningless, use custom typechecking
 //  F -> this is a libc/libm function with a '__builtin_' prefix added.
@@ -356,25 +358,30 @@ BUILTIN(__builtin_ctanhf, "XfXf", "Fnc")
 BUILTIN(__builtin_ctanhl, "XLdXLd", "Fnc")
 
 // FP Comparisons.
-BUILTIN(__builtin_isgreater     , "i.", "nc")
-BUILTIN(__builtin_isgreaterequal, "i.", "nc")
-BUILTIN(__builtin_isless        , "i.", "nc")
-BUILTIN(__builtin_islessequal   , "i.", "nc")
-BUILTIN(__builtin_islessgreater , "i.", "nc")
-BUILTIN(__builtin_isunordered   , "i.", "nc")
+BUILTIN(__builtin_isgreater     , "i.", "Fnc")
+BUILTIN(__builtin_isgreaterequal, "i.", "Fnc")
+BUILTIN(__builtin_isless        , "i.", "Fnc")
+BUILTIN(__builtin_islessequal   , "i.", "Fnc")
+BUILTIN(__builtin_islessgreater , "i.", "Fnc")
+BUILTIN(__builtin_isunordered   , "i.", "Fnc")
 
 // Unary FP classification
-BUILTIN(__builtin_fpclassify, "iiiii.", "nc")
-BUILTIN(__builtin_isfinite,   "i.", "nc")
-BUILTIN(__builtin_isinf,      "i.", "nc")
-BUILTIN(__builtin_isinf_sign, "i.", "nc")
-BUILTIN(__builtin_isnan,      "i.", "nc")
-BUILTIN(__builtin_isnormal,   "i.", "nc")
+BUILTIN(__builtin_fpclassify, "iiiii.", "Fnc")
+BUILTIN(__builtin_isfinite,   "i.", "Fnc")
+BUILTIN(__builtin_isinf,      "i.", "Fnc")
+BUILTIN(__builtin_isinf_sign, "i.", "Fnc")
+BUILTIN(__builtin_isnan,      "i.", "Fnc")
+BUILTIN(__builtin_isnormal,   "i.", "Fnc")
 
 // FP signbit builtins
-BUILTIN(__builtin_signbit, "id", "nc")
-BUILTIN(__builtin_signbitf, "if", "nc")
-BUILTIN(__builtin_signbitl, "iLd", "nc")
+BUILTIN(__builtin_signbit, "i.", "Fnc")
+BUILTIN(__builtin_signbitf, "if", "Fnc")
+BUILTIN(__builtin_signbitl, "iLd", "Fnc")
+
+// Special FP builtins.
+BUILTIN(__builtin_canonicalize, "dd", "nc")
+BUILTIN(__builtin_canonicalizef, "ff", "nc")
+BUILTIN(__builtin_canonicalizel, "LdLd", "nc")
 
 // Builtins for arithmetic.
 BUILTIN(__builtin_clzs , "iUs"  , "nc")
@@ -387,9 +394,9 @@ BUILTIN(__builtin_ctz  , "iUi"  , "nc")
 BUILTIN(__builtin_ctzl , "iULi" , "nc")
 BUILTIN(__builtin_ctzll, "iULLi", "nc")
 // TODO: int ctzimax(uintmax_t)
-BUILTIN(__builtin_ffs  , "ii"  , "nc")
-BUILTIN(__builtin_ffsl , "iLi" , "nc")
-BUILTIN(__builtin_ffsll, "iLLi", "nc")
+BUILTIN(__builtin_ffs  , "ii"  , "Fnc")
+BUILTIN(__builtin_ffsl , "iLi" , "Fnc")
+BUILTIN(__builtin_ffsll, "iLLi", "Fnc")
 BUILTIN(__builtin_parity  , "iUi"  , "nc")
 BUILTIN(__builtin_parityl , "iULi" , "nc")
 BUILTIN(__builtin_parityll, "iULLi", "nc")
@@ -403,6 +410,11 @@ BUILTIN(__builtin_bswap16, "UsUs", "nc")
 BUILTIN(__builtin_bswap32, "UiUi", "nc")
 BUILTIN(__builtin_bswap64, "ULLiULLi", "nc")
 
+BUILTIN(__builtin_bitreverse8, "UcUc", "nc")
+BUILTIN(__builtin_bitreverse16, "UsUs", "nc")
+BUILTIN(__builtin_bitreverse32, "UiUi", "nc")
+BUILTIN(__builtin_bitreverse64, "ULLiULLi", "nc")
+
 // Random GCC builtins
 BUILTIN(__builtin_constant_p, "i.", "nctu")
 BUILTIN(__builtin_classify_type, "i.", "nctu")
@@ -413,7 +425,7 @@ BUILTIN(__builtin_va_end, "vA", "n")
 BUILTIN(__builtin_va_copy, "vAA", "n")
 BUILTIN(__builtin_stdarg_start, "vA.", "n")
 BUILTIN(__builtin_assume_aligned, "v*vC*z.", "nc")
-BUILTIN(__builtin_bcmp, "iv*v*z", "n")
+BUILTIN(__builtin_bcmp, "iv*v*z", "Fn")
 BUILTIN(__builtin_bcopy, "vv*v*z", "n")
 BUILTIN(__builtin_bzero, "vv*z", "nF")
 BUILTIN(__builtin_fprintf, "iP*cC*.", "Fp:1:")
@@ -455,6 +467,7 @@ BUILTIN(__builtin_eh_return_data_regno, "iIi", "nc")
 BUILTIN(__builtin_snprintf, "ic*zcC*.", "nFp:2:")
 BUILTIN(__builtin_vsprintf, "ic*cC*a", "nFP:1:")
 BUILTIN(__builtin_vsnprintf, "ic*zcC*a", "nFP:2:")
+BUILTIN(__builtin_thread_pointer, "v*", "nc")
 
 // GCC exception builtins
 BUILTIN(__builtin_eh_return, "vzv*", "r") // FIXME: Takes intptr_t, not size_t!
@@ -488,6 +501,7 @@ BUILTIN(__builtin___printf_chk, "iicC*.", "Fp:1:")
 BUILTIN(__builtin___vfprintf_chk, "iP*icC*a", "FP:2:")
 BUILTIN(__builtin___vprintf_chk, "iicC*a", "FP:1:")
 
+BUILTIN(__builtin_unpredictable, "LiLi"   , "nc")
 BUILTIN(__builtin_expect, "LiLiLi"   , "nc")
 BUILTIN(__builtin_prefetch, "vvC*.", "nc")
 BUILTIN(__builtin_readcyclecounter, "ULLi", "n")
@@ -496,7 +510,7 @@ BUILTIN(__builtin_debugtrap, "v", "n")
 BUILTIN(__builtin_unreachable, "v", "nr")
 BUILTIN(__builtin_shufflevector, "v."   , "nc")
 BUILTIN(__builtin_convertvector, "v."   , "nct")
-BUILTIN(__builtin_alloca, "v*z"   , "n")
+BUILTIN(__builtin_alloca, "v*z"   , "Fn")
 BUILTIN(__builtin_call_with_static_chain, "v.", "nt")
 
 // "Overloaded" Atomic operator builtins.  These are overloaded to support data
@@ -699,6 +713,9 @@ LANGBUILTIN(__exception_code, "ULi", "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(_exception_code,  "ULi", "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(__exception_info, "v*",  "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(_exception_info,  "v*",  "n", ALL_MS_LANGUAGES)
+LANGBUILTIN(__abnormal_termination, "i", "n", ALL_MS_LANGUAGES)
+LANGBUILTIN(_abnormal_termination,  "i", "n", ALL_MS_LANGUAGES)
+LANGBUILTIN(__GetExceptionInfo, "v*.", "ntu", ALL_MS_LANGUAGES)
 LANGBUILTIN(_InterlockedCompareExchange, "LiLiD*LiLi", "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(_InterlockedCompareExchangePointer, "v*v*D*v*v*", "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(_InterlockedDecrement,       "LiLiD*",     "n", ALL_MS_LANGUAGES)
@@ -758,6 +775,22 @@ LIBBUILTIN(sscanf, "icC*RcC*R.",  "fs:1:", "stdio.h", ALL_LANGUAGES)
 LIBBUILTIN(vscanf, "icC*Ra",      "fS:0:", "stdio.h", ALL_LANGUAGES)
 LIBBUILTIN(vfscanf, "iP*RcC*Ra",  "fS:1:", "stdio.h", ALL_LANGUAGES)
 LIBBUILTIN(vsscanf, "icC*RcC*Ra", "fS:1:", "stdio.h", ALL_LANGUAGES)
+// C99 ctype.h
+LIBBUILTIN(isalnum, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isalpha, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isblank, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(iscntrl, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isdigit, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isgraph, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(islower, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isprint, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(ispunct, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isspace, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isupper, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(isxdigit, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(tolower, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+LIBBUILTIN(toupper, "ii", "fnU", "ctype.h", ALL_LANGUAGES)
+
 // C99
 // In some systems setjmp is a macro that expands to _setjmp. We undefine
 // it here to avoid having two identical LIBBUILTIN entries.
@@ -1212,6 +1245,9 @@ BUILTIN(__builtin_subcl, "ULiULiCULiCULiCULi*", "n")
 BUILTIN(__builtin_subcll, "ULLiULLiCULLiCULLiCULLi*", "n")
 
 // Checked Arithmetic Builtins for Security.
+BUILTIN(__builtin_add_overflow, "v.", "nt")
+BUILTIN(__builtin_sub_overflow, "v.", "nt")
+BUILTIN(__builtin_mul_overflow, "v.", "nt")
 BUILTIN(__builtin_uadd_overflow, "bUiCUiCUi*", "n")
 BUILTIN(__builtin_uaddl_overflow, "bULiCULiCULi*", "n")
 BUILTIN(__builtin_uaddll_overflow, "bULLiCULLiCULLi*", "n")
@@ -1235,6 +1271,51 @@ BUILTIN(__builtin_smulll_overflow, "bSLLiCSLLiCSLLi*", "n")
 BUILTIN(__builtin_addressof, "v*v&", "nct")
 BUILTIN(__builtin_operator_new, "v*z", "c")
 BUILTIN(__builtin_operator_delete, "vv*", "n")
+
+// Safestack builtins
+BUILTIN(__builtin___get_unsafe_stack_start, "v*", "Fn")
+BUILTIN(__builtin___get_unsafe_stack_ptr, "v*", "Fn")
+
+// Nontemporal loads/stores builtins
+BUILTIN(__builtin_nontemporal_store, "v.", "t")
+BUILTIN(__builtin_nontemporal_load, "v.", "t")
+
+// OpenCL v2.0 s6.13.16, s9.17.3.5 - Pipe functions.
+// We need the generic prototype, since the packet type could be anything.
+LANGBUILTIN(read_pipe, "i.", "tn", OCLC20_LANG)
+LANGBUILTIN(write_pipe, "i.", "tn", OCLC20_LANG)
+
+LANGBUILTIN(reserve_read_pipe, "i.", "tn", OCLC20_LANG)
+LANGBUILTIN(reserve_write_pipe, "i.", "tn", OCLC20_LANG)
+
+LANGBUILTIN(commit_write_pipe, "v.", "tn", OCLC20_LANG)
+LANGBUILTIN(commit_read_pipe, "v.", "tn", OCLC20_LANG)
+
+LANGBUILTIN(sub_group_reserve_read_pipe, "i.", "tn", OCLC20_LANG)
+LANGBUILTIN(sub_group_reserve_write_pipe, "i.", "tn", OCLC20_LANG)
+
+LANGBUILTIN(sub_group_commit_read_pipe, "v.", "tn", OCLC20_LANG)
+LANGBUILTIN(sub_group_commit_write_pipe, "v.", "tn", OCLC20_LANG)
+
+LANGBUILTIN(work_group_reserve_read_pipe, "i.", "tn", OCLC20_LANG)
+LANGBUILTIN(work_group_reserve_write_pipe, "i.", "tn", OCLC20_LANG)
+
+LANGBUILTIN(work_group_commit_read_pipe, "v.", "tn", OCLC20_LANG)
+LANGBUILTIN(work_group_commit_write_pipe, "v.", "tn", OCLC20_LANG)
+
+LANGBUILTIN(get_pipe_num_packets, "Ui.", "tn", OCLC20_LANG)
+LANGBUILTIN(get_pipe_max_packets, "Ui.", "tn", OCLC20_LANG)
+
+// OpenCL v2.0 s6.13.17 - Enqueue kernel functions.
+// Custom builtin check allows to perform special check of passed block arguments.
+LANGBUILTIN(enqueue_kernel, "i.", "tn", OCLC20_LANG)
+LANGBUILTIN(get_kernel_work_group_size, "i.", "tn", OCLC20_LANG)
+LANGBUILTIN(get_kernel_preferred_work_group_size_multiple, "i.", "tn", OCLC20_LANG)
+
+// OpenCL v2.0 s6.13.9 - Address space qualifier functions.
+LANGBUILTIN(to_global, "v*v*", "tn", OCLC20_LANG)
+LANGBUILTIN(to_local, "v*v*", "tn", OCLC20_LANG)
+LANGBUILTIN(to_private, "v*v*", "tn", OCLC20_LANG)
 
 #undef BUILTIN
 #undef LIBBUILTIN

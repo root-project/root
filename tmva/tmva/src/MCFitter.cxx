@@ -36,6 +36,8 @@
 
 
 #include "TMVA/MCFitter.h"
+
+#include "TMVA/Configurable.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/GeneticRange.h"
 #include "TMVA/Interval.h"
@@ -86,7 +88,7 @@ void TMVA::MCFitter::SetParameters( Int_t samples )
 
 Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 {
-   Log() << kINFO << "<MCFitter> Sampling, please be patient ..." << Endl;
+   Log() << kHEADER << "<MCFitter> Sampling, please be patient ..." << Endl;
    
    // sanity check
    if ((Int_t)pars.size() != GetNpars())
@@ -95,6 +97,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 
    // timing of MC
    Timer timer( fSamples, GetName() ); 
+   if (fIPyMaxIter) *fIPyMaxIter = fSamples;
    
    std::vector<Double_t> parameters;
    std::vector<Double_t> bestParameters;
@@ -122,6 +125,8 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 
    // loop over all MC samples
    for (Int_t sample = 0; sample < fSamples; sample++) {
+     if (fIPyCurrentIter) *fIPyCurrentIter = sample;
+     if (fExitFromTraining && *fExitFromTraining) break;
 
       // dice the parameters
       parIt = parameters.begin();

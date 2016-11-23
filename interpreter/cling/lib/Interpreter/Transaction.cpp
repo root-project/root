@@ -59,18 +59,31 @@ namespace cling {
                && "All nested transactions must be committed!");
         delete (*m_NestedTransactions)[i];
       }
-    if (getExecutor())
-      getExecutor()->unloadFromJIT(m_Module.get(), getExeUnloadHandle());
   }
 
   NamedDecl* Transaction::containsNamedDecl(llvm::StringRef name) const {
-    for (auto I = decls_begin(), E = decls_end(); I < E; ++I)
+    for (auto I = decls_begin(), E = decls_end(); I != E; ++I) {
       for (auto DI : I->m_DGR) {
-        if (NamedDecl* ND = dyn_cast<NamedDecl>(DI))
+        if (NamedDecl* ND = dyn_cast<NamedDecl>(DI)) {
           if (name.equals(ND->getNameAsString()))
             return ND;
+        }
       }
-    return 0;
+    }
+    // Not found yet, peek inside extern "C" declarations
+    for (auto I = decls_begin(), E = decls_end(); I != E; ++I) {
+      for (auto DI : I->m_DGR) {
+        if (LinkageSpecDecl* LSD = dyn_cast<LinkageSpecDecl>(DI)) {
+          for (Decl* DI : LSD->decls()) {
+            if (NamedDecl* ND = dyn_cast<NamedDecl>(DI)) {
+              if (name.equals(ND->getNameAsString()))
+                return ND;
+            }
+          }
+        }
+      }
+    }
+    return nullptr;
   }
 
   void Transaction::addNestedTransaction(Transaction* nested) {
@@ -146,7 +159,8 @@ namespace cling {
       // declaration, because each time Sema believes a vtable is used it emits
       // that callback.
       // For reference (clang::CodeGen::CodeGenModule::EmitVTable).
-      if (oldDCI.m_Call != kCCIHandleVTable)
+      if (oldDCI.m_Call != kCCIHandleVTable
+          && oldDCI.m_Call != kCCIHandleCXXImplicitFunctionInstantiation)
         assert(oldDCI != DCI && "Duplicates?!");
     }
     // We want to assert there is only one wrapper per transaction.

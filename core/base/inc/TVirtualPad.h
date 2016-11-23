@@ -86,6 +86,7 @@ public:
    virtual void     DrawClassObject(const TObject *obj, Option_t *option="") = 0;
    virtual TH1F    *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") = 0;
    virtual void     ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) = 0;
+   virtual void     UnZoomed() { Emit("UnZoomed()"); } // *SIGNAL*
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
@@ -242,6 +243,9 @@ public:
    virtual Double_t YtoPad(Double_t y) const = 0;
    virtual Int_t    XtoPixel(Double_t x) const = 0;
    virtual Int_t    YtoPixel(Double_t y) const = 0;
+
+   virtual Int_t    IncrementPaletteColor(Int_t i, TString opt) = 0;
+   virtual Int_t    NextPaletteColor() = 0;
 
    virtual TObject *CreateToolTip(const TBox *b, const char *text, Long_t delayms) = 0;
    virtual void     DeleteToolTip(TObject *tip) = 0;

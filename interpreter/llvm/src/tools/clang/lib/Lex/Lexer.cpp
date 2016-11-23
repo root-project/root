@@ -143,14 +143,8 @@ Lexer::Lexer(SourceLocation fileloc, const LangOptions &langOpts,
 /// range will outlive it, so it doesn't take ownership of it.
 Lexer::Lexer(FileID FID, const llvm::MemoryBuffer *FromFile,
              const SourceManager &SM, const LangOptions &langOpts)
-  : FileLoc(SM.getLocForStartOfFile(FID)), LangOpts(langOpts) {
-
-  InitLexer(FromFile->getBufferStart(), FromFile->getBufferStart(),
-            FromFile->getBufferEnd());
-
-  // We *are* in raw mode.
-  LexingRawMode = true;
-}
+    : Lexer(SM.getLocForStartOfFile(FID), langOpts, FromFile->getBufferStart(),
+            FromFile->getBufferStart(), FromFile->getBufferEnd()) {}
 
 /// Create_PragmaLexer: Lexer constructor - Create a new lexer object for
 /// _Pragma expansion.  This has a variety of magic semantics that this method
@@ -205,7 +199,7 @@ Lexer *Lexer::Create_PragmaLexer(SourceLocation SpellingLoc,
 
 /// Stringify - Convert the specified string into a C string, with surrounding
 /// ""'s, and with escaped \ and " characters.
-std::string Lexer::Stringify(const std::string &Str, bool Charify) {
+std::string Lexer::Stringify(StringRef Str, bool Charify) {
   std::string Result = Str;
   char Quote = Charify ? '\'' : '"';
   for (unsigned i = 0, e = Result.size(); i != e; ++i) {
@@ -241,7 +235,7 @@ static size_t getSpellingSlow(const Token &Tok, const char *BufPtr,
   size_t Length = 0;
   const char *BufEnd = BufPtr + Tok.getLength();
 
-  if (Tok.is(tok::string_literal)) {
+  if (tok::isStringLiteral(Tok.getKind())) {
     // Munch the encoding-prefix and opening double-quote.
     while (BufPtr < BufEnd) {
       unsigned Size;
@@ -725,7 +719,9 @@ SourceLocation Lexer::AdvanceToTokenCharacter(SourceLocation TokStart,
   while (Lexer::isObviouslySimpleCharacter(*TokPtr)) {
     if (CharNo == 0)
       return TokStart.getLocWithOffset(PhysOffset);
-    ++TokPtr, --CharNo, ++PhysOffset;
+    ++TokPtr;
+    --CharNo;
+    ++PhysOffset;
   }
   
   // If we have a character that may be a trigraph or escaped newline, use a
@@ -1001,6 +997,31 @@ StringRef Lexer::getImmediateMacroName(SourceLocation Loc,
   // range. This is where the macro name was spelled in order to begin
   // expanding this macro.
   Loc = SM.getSpellingLoc(Loc);
+
+  // Dig out the buffer where the macro name was spelled and the extents of the
+  // name so that we can render it into the expansion note.
+  std::pair<FileID, unsigned> ExpansionInfo = SM.getDecomposedLoc(Loc);
+  unsigned MacroTokenLength = Lexer::MeasureTokenLength(Loc, SM, LangOpts);
+  StringRef ExpansionBuffer = SM.getBufferData(ExpansionInfo.first);
+  return ExpansionBuffer.substr(ExpansionInfo.second, MacroTokenLength);
+}
+
+StringRef Lexer::getImmediateMacroNameForDiagnostics(
+    SourceLocation Loc, const SourceManager &SM, const LangOptions &LangOpts) {
+  assert(Loc.isMacroID() && "Only reasonble to call this on macros");
+  // Walk past macro argument expanions.
+  while (SM.isMacroArgExpansion(Loc))
+    Loc = SM.getImmediateExpansionRange(Loc).first;
+
+  // If the macro's spelling has no FileID, then it's actually a token paste
+  // or stringization (or similar) and not a macro at all.
+  if (!SM.getFileEntryForID(SM.getFileID(SM.getSpellingLoc(Loc))))
+    return StringRef();
+
+  // Find the spelling location of the start of the non-argument expansion
+  // range. This is where the macro name was spelled in order to begin
+  // expanding this macro.
+  Loc = SM.getSpellingLoc(SM.getImmediateExpansionRange(Loc).first);
 
   // Dig out the buffer where the macro name was spelled and the extents of the
   // name so that we can render it into the expansion note.
@@ -1364,7 +1385,9 @@ void Lexer::SkipBytes(unsigned Bytes, bool StartOfLine) {
 }
 
 static bool isAllowedIDChar(uint32_t C, const LangOptions &LangOpts) {
-  if (LangOpts.CPlusPlus11 || LangOpts.C11) {
+  if (LangOpts.AsmPreprocessor) {
+    return false;
+  } else if (LangOpts.CPlusPlus11 || LangOpts.C11) {
     static const llvm::sys::UnicodeCharSet C11AllowedIDChars(
         C11AllowedIDCharRanges);
     return C11AllowedIDChars.contains(C);
@@ -1381,7 +1404,9 @@ static bool isAllowedIDChar(uint32_t C, const LangOptions &LangOpts) {
 
 static bool isAllowedInitiallyIDChar(uint32_t C, const LangOptions &LangOpts) {
   assert(isAllowedIDChar(C, LangOpts));
-  if (LangOpts.CPlusPlus11 || LangOpts.C11) {
+  if (LangOpts.AsmPreprocessor) {
+    return false;
+  } else if (LangOpts.CPlusPlus11 || LangOpts.C11) {
     static const llvm::sys::UnicodeCharSet C11DisallowedInitialIDChars(
         C11DisallowedInitialIDCharRanges);
     return !C11DisallowedInitialIDChars.contains(C);
@@ -1512,7 +1537,15 @@ FinishIdentifier:
     // preprocessor, which may macro expand it or something.
     if (II->isHandleIdentifierCase())
       return PP->HandleIdentifier(Result);
-    
+
+    if (II->getTokenID() == tok::identifier && isCodeCompletionPoint(CurPtr)
+        && II->getPPKeywordID() == tok::pp_not_keyword
+        && II->getObjCKeywordID() == tok::objc_not_keyword) {
+      // Return the code-completion token.
+      Result.setKind(tok::code_completion);
+      cutOffLexing();
+      return true;
+    }
     return true;
   }
 
@@ -1586,14 +1619,15 @@ bool Lexer::LexNumericConstant(Token &Result, const char *CurPtr) {
 
   // If we have a hex FP constant, continue.
   if ((C == '-' || C == '+') && (PrevCh == 'P' || PrevCh == 'p')) {
-    // Outside C99, we accept hexadecimal floating point numbers as a
+    // Outside C99 and C++17, we accept hexadecimal floating point numbers as a
     // not-quite-conforming extension. Only do so if this looks like it's
     // actually meant to be a hexfloat, and not if it has a ud-suffix.
     bool IsHexFloat = true;
     if (!LangOpts.C99) {
       if (!isHexaLiteral(BufferPtr, LangOpts))
         IsHexFloat = false;
-      else if (std::find(BufferPtr, CurPtr, '_') != CurPtr)
+      else if (!getLangOpts().CPlusPlus1z &&
+               std::find(BufferPtr, CurPtr, '_') != CurPtr)
         IsHexFloat = false;
     }
     if (IsHexFloat)
@@ -1742,7 +1776,7 @@ bool Lexer::LexStringLiteral(Token &Result, const char *CurPtr,
     if (C == '\n' || C == '\r' ||             // Newline.
         (C == 0 && CurPtr-1 == BufferEnd)) {  // End of file.
       if (!isLexingRawMode() && !LangOpts.AsmPreprocessor)
-        Diag(BufferPtr, diag::ext_unterminated_string);
+        Diag(BufferPtr, diag::ext_unterminated_char_or_string) << 1;
       FormTokenWithChars(Result, CurPtr-1, tok::unknown);
       return true;
     }
@@ -1766,7 +1800,7 @@ bool Lexer::LexStringLiteral(Token &Result, const char *CurPtr,
 
   // If a nul character existed in the string, warn about it.
   if (NulCharacter && !isLexingRawMode())
-    Diag(NulCharacter, diag::null_in_string);
+    Diag(NulCharacter, diag::null_in_char_or_string) << 1;
 
   // Update the location of the token as well as the BufferPtr instance var.
   const char *TokStart = BufferPtr;
@@ -1864,7 +1898,7 @@ bool Lexer::LexAngledStringLiteral(Token &Result, const char *CurPtr) {
   char C = getAndAdvanceChar(CurPtr, Result);
   while (C != '>') {
     // Skip escaped characters.
-    if (C == '\\') {
+    if (C == '\\' && CurPtr < BufferEnd) {
       // Skip the escaped character.
       getAndAdvanceChar(CurPtr, Result);
     } else if (C == '\n' || C == '\r' ||             // Newline.
@@ -1882,7 +1916,7 @@ bool Lexer::LexAngledStringLiteral(Token &Result, const char *CurPtr) {
 
   // If a nul character existed in the string, warn about it.
   if (NulCharacter && !isLexingRawMode())
-    Diag(NulCharacter, diag::null_in_string);
+    Diag(NulCharacter, diag::null_in_char_or_string) << 1;
 
   // Update the location of token as well as BufferPtr.
   const char *TokStart = BufferPtr;
@@ -1924,7 +1958,7 @@ bool Lexer::LexCharConstant(Token &Result, const char *CurPtr,
     if (C == '\n' || C == '\r' ||             // Newline.
         (C == 0 && CurPtr-1 == BufferEnd)) {  // End of file.
       if (!isLexingRawMode() && !LangOpts.AsmPreprocessor)
-        Diag(BufferPtr, diag::ext_unterminated_char);
+        Diag(BufferPtr, diag::ext_unterminated_char_or_string) << 0;
       FormTokenWithChars(Result, CurPtr-1, tok::unknown);
       return true;
     }
@@ -1948,7 +1982,7 @@ bool Lexer::LexCharConstant(Token &Result, const char *CurPtr,
 
   // If a nul character existed in the character, warn about it.
   if (NulCharacter && !isLexingRawMode())
-    Diag(NulCharacter, diag::null_in_char);
+    Diag(NulCharacter, diag::null_in_char_or_string) << 0;
 
   // Update the location of token as well as BufferPtr.
   const char *TokStart = BufferPtr;
@@ -2588,7 +2622,7 @@ static const char *FindConflictEnd(const char *CurPtr, const char *BufferEnd,
                                    ConflictMarkerKind CMK) {
   const char *Terminator = CMK == CMK_Perforce ? "<<<<\n" : ">>>>>>>";
   size_t TermLen = CMK == CMK_Perforce ? 5 : 7;
-  StringRef RestOfBuffer(CurPtr+TermLen, BufferEnd-CurPtr-TermLen);
+  auto RestOfBuffer = StringRef(CurPtr, BufferEnd - CurPtr).substr(TermLen);
   size_t Pos = RestOfBuffer.find(Terminator);
   while (Pos != StringRef::npos) {
     // Must occur at start of line.
@@ -2614,8 +2648,8 @@ bool Lexer::IsStartOfConflictMarker(const char *CurPtr) {
     return false;
   
   // Check to see if we have <<<<<<< or >>>>.
-  if ((BufferEnd-CurPtr < 8 || StringRef(CurPtr, 7) != "<<<<<<<") &&
-      (BufferEnd-CurPtr < 6 || StringRef(CurPtr, 5) != ">>>> "))
+  if (!StringRef(CurPtr, BufferEnd - CurPtr).startswith("<<<<<<<") &&
+      !StringRef(CurPtr, BufferEnd - CurPtr).startswith(">>>> "))
     return false;
 
   // If we have a situation where we don't care about conflict markers, ignore
@@ -2966,8 +3000,11 @@ LexNextToken:
       
   case 26:  // DOS & CP/M EOF: "^Z".
     // If we're in Microsoft extensions mode, treat this as end of file.
-    if (LangOpts.MicrosoftExt)
+    if (LangOpts.MicrosoftExt) {
+      if (!isLexingRawMode())
+        Diag(CurPtr-1, diag::ext_ctrl_z_eof_microsoft);
       return LexEndOfFile(Result, CurPtr-1);
+    }
 
     // If Microsoft extensions are disabled, this is just random garbage.
     Kind = tok::unknown;
@@ -3483,6 +3520,9 @@ LexNextToken:
     if (Char == '=') {
       CurPtr = ConsumeChar(CurPtr, SizeTmp, Result);
       Kind = tok::caretequal;
+    } else if (LangOpts.OpenCL && Char == '^') {
+      CurPtr = ConsumeChar(CurPtr, SizeTmp, Result);
+      Kind = tok::caretcaret;
     } else {
       Kind = tok::caret;
     }

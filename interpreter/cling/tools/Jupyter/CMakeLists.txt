@@ -13,6 +13,32 @@ set(SOURCES
     Kernel.cpp
     )
 
+#Solve unresolved symbols bug in unix
+#See https://github.com/vgvassilev/cling/issues/114
+if(WIN32)
+   #FIXME: I don't know what flags are used in windows
+   #to include all symbols from a static library
+   #Maybe the bug is not present in windows and we leave it 
+   #as it is
+   set(INTERPRETER
+      clingInterpreter
+      )
+else()
+   #Force all interpreter symbols to be present in the shared library
+   #this will prevent missing symbol errors because we don't know at
+   #link time what function calls will be made by the user of 
+   #the shared library
+   if (APPLE)
+      set(INTERPRETER
+         -Wl,-all_load clingInterpreter -Wl,-noall_load 
+         )
+   else()
+      set(INTERPRETER
+         -Wl,--whole-archive clingInterpreter -Wl,--no-whole-archive
+         )
+   endif()
+endif()
+
 set(LIBS
         clangAST
         clangBasic
@@ -26,7 +52,7 @@ set(LIBS
 
         clingUserInterface
         clingMetaProcessor
-        clingInterpreter
+        ${INTERPRETER}
         clingUtils
     )
 

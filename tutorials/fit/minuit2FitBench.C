@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
-/// Fitting 1-D histograms with minuit2
+/// \notebook
+/// Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits.
 ///
 /// \macro_image
 /// \macro_output
@@ -20,8 +21,7 @@
 #include "TMath.h"
 #include "TROOT.h"
 #include "TFrame.h"
-
-//#include "Fit/FitConfig.h"
+/*#include "Fit/FitConfig.h"*/
 
 
 TF1 *fitFcn;

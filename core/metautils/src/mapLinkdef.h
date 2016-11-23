@@ -1,8 +1,5 @@
 #include <map>
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass map<char*,int>;
 #pragma create TClass map<char*,long>;

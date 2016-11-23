@@ -1,0 +1,87 @@
+
+1) Fisher and LD
+-----------------
+"Bugfix" in Fisher's linear discriminant:
+ The "Within-Class" matrix was before calculated as: 
+       
+  (*fWith)(x, y) = (sumSig[k] + sumBgd[k])/(fSumOfWeightsS + fSumOfWeightsB);
+ while according to Fisher it should (and now is) be:
+  (*fWith)(x, y) = sumSig[k]/fSumOfWeightsS + sumBgd[k]/fSumOfWeightsB;    
+
+Both results are the same if the number of (weighted) training events for signal
+and background are the same, and as this is the recommended setting, the "bug" 
+had very litte impact. However in order to be a "correct" Fisher discriminant, 
+the correct calculation has now been adopted. Fisher and LD are the same, ONCE
+the events are weighted such that signal and background have the same weight. 
+Hence, the LD classifier still gives exactly the same result as the "old" Fisher
+implementation, while the corrected Fisher implementation allows to "play" with
+different event weights to perhaps find better discrimination power in certain
+regions of the ROC curve.
+
+ 
+2) BDT
+
+ a) Changes to some tuning options 
+
+     nEventsMin          --> MinNodeSize
+     UseNTrainEvents     --> BaggedSampleFraction
+
+   have been replaced by options that are now given in terms of the relative
+   size of the training sample rather than in absulut numbers of events. This
+   is in order to facilitate the parameter tuning on different sample sizes
+   (i.e when starting on a smaller data sample to tune the parameter in order
+    to speed up the training)
+    Furthermore, this option here has been changed name
+
+     GradBaggingFraction --> BaggedSampleFraction
+
+    in an attempt to consolidate  and avoid idential duplicate code
+   
+    The option UseWeightedTrees has been removed and set to "true", as was default
+    anyway, as a measure of further consolidation
+
+    Removed the option NNodesMax --> This should be replaced by specifying MaxDepth
+     instead (limiting the maximum tree depth also limits the number of possible nodes!)
+
+ b) Added a trial version of a new "cost sensitive" boosting algorithem according to
+    Wei Fan and Salvatore J. Stolfo, {\em AdaCost: misclassification cost-sensitive boosting}, Proceedings of the 16th International conference on machine learning (ICML 1999)}. With the currently
+chosen DEFAULT settings (all costs equal and set to "one"), it is equivalent to the "real-AdaBoost" (i.e. using the option !UseYesNoLeaf (which uses the leave node purity rather than a signal or background attribute in the leaf node of each individual tree). Unfortunatly, no reasonable performance has been achieved yet when choosing different cost parameters.
+
+ c) BDT's with little tree depth (as favoured for good performance) do not *like* it if
+    there are very clean signal and background separation cuts available, which however 
+    have NOT been applied yet as preselection. Now there is a possibility to choose the option
+    "DoPreselection" that looks for suitable preselection cuts and applies them prior to 
+    the Decision Tree training. While that works fine, this clearly gives "sharp" peaks at +1 (-1)
+    for the MVA output distribution and therefore the "smoothing" of this distribution used to
+    produce the ROC curve and efficiency estimates are somewhat thwarted.
+   
+    --> It's better if you do these preselection cuts YOURSELF when defining training and test
+    sample!
+
+ d) Removed completely the (hopefully never used) option of treating negative events weights
+    via: PairNegWeightsInNode
+
+ e) Renamed option: IgnoreNegEvents --> IgnoreNegEventsInTraining
+    and removed the IDENTICAL option NoNegeventsInTraining
+
+6) SVM
+   All but the Gauss kernel options have been "removed" (guess that was done already some
+   time ago, probably with the introduction of "regression", but was not properly announced
+   so far
+
+5) minor bug fixes 
+
+   a) fix calculation of mean values of the MVA distribution
+      for signal and background samples, which is used to
+      decide if a cut on the MVA variable selects signal or
+      background. Due to the bug it sometimes was swapped.
+
+   b) equalize the interpolation of the PDF-class that is used to
+      smooth the Gauss-Transformation, between the .xml weights and
+      the Standalone class. Now they give the same results even for
+      large data samples where numerical difference previously 
+      resulted in substantial differences.
+      
+
+
+

@@ -74,14 +74,13 @@ using std::endl;
 
 ClassImp(TMVA::MethodCFMlpANN_Utils)
    
-Int_t             TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
-Int_t             TMVA::MethodCFMlpANN_Utils::fg_0           = 0;
 const Int_t       TMVA::MethodCFMlpANN_Utils::fg_max_nVar_   = max_nVar_;
 const Int_t       TMVA::MethodCFMlpANN_Utils::fg_max_nNodes_ = max_nNodes_;
-Int_t             TMVA::MethodCFMlpANN_Utils::fg_999         = 999;
 const char* const TMVA::MethodCFMlpANN_Utils::fg_MethodName  = "--- CFMlpANN                 ";
 
-TMVA::MethodCFMlpANN_Utils::MethodCFMlpANN_Utils()
+TMVA::MethodCFMlpANN_Utils::MethodCFMlpANN_Utils():fg_100(100),
+fg_0(0),
+fg_999(999)
 {
    // default constructor
    Int_t i(0);

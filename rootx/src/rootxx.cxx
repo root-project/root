@@ -30,6 +30,7 @@
 #include <X11/extensions/shape.h>
 
 #include "Rtypes.h"
+#include "RConfigure.h"
 
 #include "rootcoreteam.h"
 

@@ -12,16 +12,6 @@ RUBYROOTDIR    := $(MODDIR)
 RUBYROOTDIRS   := $(RUBYROOTDIR)/src
 RUBYROOTDIRI   := $(RUBYROOTDIR)/inc
 
-##### ruby64 #####
-ifeq ($(ARCH),macosx64)
-ifeq ($(MACOSX_MINOR),5)
-RUBY64S        := $(MODDIRS)/ruby64.c
-RUBY64O        := $(call stripsrc,$(RUBY64S:.c=.o))
-RUBY64         := bin/ruby64
-RUBY64DEP      := $(RUBY64O:.o=.d)
-endif
-endif
-
 ##### libRuby #####
 RUBYROOTL      := $(MODDIRI)/LinkDef.h
 RUBYROOTDS     := $(call stripsrc,$(MODDIRS)/G__Ruby.cxx)
@@ -41,9 +31,6 @@ RUBYROOTMAP    := $(RUBYROOTLIB:.$(SOEXT)=.rootmap)
 ALLHDRS        += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RUBYROOTH))
 ALLLIBS        += $(RUBYROOTLIB)
 ALLMAPS        += $(RUBYROOTMAP)
-
-ALLEXECS       += $(RUBY64)
-INCLUDEFILES   += $(RUBY64DEP)
 
 # include all dependency files
 INCLUDEFILES   += $(RUBYROOTDEP)
@@ -73,23 +60,18 @@ $(RUBYROOTMAP): $(RUBYROOTH) $(RUBYROOTL) $(ROOTCLINGEXE) $(call pcmdep,RUBYROOT
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE2) -r $(RUBYROOTDS) $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)
 
-$(RUBY64):      $(RUBY64O)
-		$(CC) $(LDFLAGS) -o $@ $(RUBY64O) \
-		   $(RUBYLIBDIR) $(RUBYLIB)
-
-all-$(MODNAME): $(RUBYROOTLIB) $(RUBY64)
+all-$(MODNAME): $(RUBYROOTLIB)
 
 clean-$(MODNAME):
-		@rm -f $(RUBYROOTO) $(RUBYROOTDO) $(RUBY64O)
+		@rm -f $(RUBYROOTO) $(RUBYROOTDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RUBYROOTDEP) $(RUBYROOTDS) $(RUBYROOTDH) \
-		   $(RUBYROOTLIB) $(RUBYROOTMAP) $(RUBY64DEP) $(RUBY64)
+		   $(RUBYROOTLIB) $(RUBYROOTMAP)
 
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(RUBYROOTO): CXXFLAGS += $(RUBYINCDIR:%=-I%)
-$(RUBY64O): CFLAGS += $(RUBYINCDIR:%=-I%)

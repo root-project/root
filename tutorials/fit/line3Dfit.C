@@ -1,10 +1,11 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook
 /// Fitting of a TGraph2D with a 3D straight line
 ///
 /// run this macro by doing:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root>.x line3Dfit.C+
 /// ~~~
 ///
@@ -39,31 +40,31 @@ void line(double t, const double *p, double &x, double &y, double &z) {
    z = t;
 }
 
-// calculate distance line-point
-double distance2(double x,double y,double z, const double *p) {
-   // distance line point is D= | (xp-x0) cross  ux |
-   // where ux is direction of line and x0 is a point in the line (like t = 0)
-   XYZVector xp(x,y,z);
-   XYZVector x0(p[0], p[2], 0. );
-   XYZVector x1(p[0] + p[1], p[2] + p[3], 1. );
-   XYZVector u = (x1-x0).Unit();
-   double d2 = ((xp-x0).Cross(u)) .Mag2();
-   return d2;
-}
-bool first = true;
 
+bool first = true;
 
 // function Object to be minimized
 struct SumDistance2 {
    // the TGraph is a data member of the object
-   TGraph2D * fGraph;
+   TGraph2D *fGraph;
 
-   SumDistance2(TGraph2D * g) : fGraph(g) {}
+   SumDistance2(TGraph2D *g) : fGraph(g) {}
+
+   // calculate distance line-point
+   double distance2(double x,double y,double z, const double *p) {
+      // distance line point is D= | (xp-x0) cross  ux |
+      // where ux is direction of line and x0 is a point in the line (like t = 0)
+      XYZVector xp(x,y,z);
+      XYZVector x0(p[0], p[2], 0. );
+      XYZVector x1(p[0] + p[1], p[2] + p[3], 1. );
+      XYZVector u = (x1-x0).Unit();
+      double d2 = ((xp-x0).Cross(u)).Mag2();
+      return d2;
+   }
 
    // implementation of the function to be minimized
-   double operator() (const double * par) {
-
-      assert(fGraph    != 0);
+   double operator() (const double *par) {
+      assert(fGraph != 0);
       double * x = fGraph->GetX();
       double * y = fGraph->GetY();
       double * z = fGraph->GetZ();
@@ -72,16 +73,10 @@ struct SumDistance2 {
       for (int i  = 0; i < npoints; ++i) {
          double d = distance2(x[i],y[i],z[i],par);
          sum += d;
-#ifdef DEBUG
-         if (first) std::cout << "point " << i << "\t"
-            << x[i] << "\t"
-            << y[i] << "\t"
-            << z[i] << "\t"
-            << std::sqrt(d) << std::endl;
-#endif
       }
-      if (first)
+      if (first) {
          std::cout << "Total Initial distance square = " << sum << std::endl;
+      }
       first = false;
       return sum;
    }
@@ -98,8 +93,8 @@ Int_t line3Dfit()
    Int_t nd = 10000;
 
 
-//    double xmin = 0; double ymin = 0;
-//    double xmax = 10; double ymax = 10;
+   // double xmin = 0; double ymin = 0;
+   // double xmax = 10; double ymax = 10;
 
    TGraph2D * gr = new TGraph2D();
 
@@ -113,7 +108,7 @@ Int_t line3Dfit()
       double t = gRandom->Uniform(0,10);
       line(t,p0,x,y,z);
       double err = 1;
-    // do a gaussian smearing around the points in all coordinates
+      // do a gaussian smearing around the points in all coordinates
       x += gRandom->Gaus(0,err);
       y += gRandom->Gaus(0,err);
       z += gRandom->Gaus(0,err);
@@ -127,11 +122,7 @@ Int_t line3Dfit()
 
    // make the functor objet
    SumDistance2 sdist(gr);
-#ifdef __CINT__
-   ROOT::Math::Functor fcn(&sdist,4,"SumDistance2");
-#else
    ROOT::Math::Functor fcn(sdist,4);
-#endif
    // set the function and the initial parameter values
    double pStart[4] = {1,1,1,1};
    fitter.SetFCN(fcn,pStart);
@@ -154,7 +145,6 @@ Int_t line3Dfit()
 
    // get fit parameters
    const double * parFit = result.GetParams();
-
 
    // draw the fitted line
    int n = 1000;

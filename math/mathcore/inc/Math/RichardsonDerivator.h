@@ -46,7 +46,7 @@ namespace Math {
    <a href=http://www.nrbook.com/a/bookcpdf/c5-7.pdf>Chapter 5.7</a>  of Numerical Recipes in C.
    By default a value of 0.001 is uses, acceptable in many cases.
 
-   This class is implemented using code previosuly in  TF1::Derivate{,2,3}(). Now TF1 uses this class.
+   This class is implemented using code previously in  TF1::Derivate{,2,3}(). Now TF1 uses this class.
 
    @ingroup Deriv
 
@@ -60,7 +60,7 @@ public:
 
    /** Default Constructor.
        Give optionally the step size for derivation. By default is 0.001, which is fine for x ~ 1
-       Increase if x is in averga larger or decrease if x is smaller
+       Increase if x is in average larger or decrease if x is smaller
     */
    RichardsonDerivator(double h = 0.001);
 
@@ -88,10 +88,13 @@ public:
       computed by Richardson's extrapolation method (use 2 derivative estimates
       to compute a third, more accurate estimation)
       first, derivatives with steps h and h/2 are computed by central difference formulas
-     Begin_Latex
-      D(h) = #frac{f(x+h) - f(x-h)}{2h}
-     End_Latex
-      the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
+     \f[
+      D(h) = \frac{f(x+h) - f(x-h)}{2h}
+     \f]
+      the final estimate
+     \f[
+      D = \frac{4D(h/2) - D(h)}{3}
+     \f]
        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
 
       the argument eps may be specified to control the step size (precision).
@@ -103,9 +106,9 @@ public:
       Getting the error via TF1::DerivativeError:
         (total error = roundoff error + interpolation error)
       the estimate of the roundoff error is taken as follows:
-     Begin_Latex
-         err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
-     End_Latex
+     \f[
+         err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
+     \f]
       where k is the double precision, ai are coefficients used in
       central difference formulas
       interpolation error is decreased by making the step size h smaller.
@@ -120,20 +123,20 @@ public:
 
    /// Computation of the first derivative using a forward formula
    double DerivativeForward(double x) {
-      return DerivativeForward(*fFunction, x, fStepSize); 
+      return DerivativeForward(*fFunction, x, fStepSize);
    }
 
    /// Computation of the first derivative using a forward formula
-   double DerivativeForward(const IGenFunction &f, double x, double h); 
+   double DerivativeForward(const IGenFunction &f, double x, double h);
 
-      /// Computation of the first derivative using a bacward formula
+      /// Computation of the first derivative using a backward formula
    double DerivativeBackward(double x) {
-      return DerivativeBackward(*fFunction, x, fStepSize); 
+      return DerivativeBackward(*fFunction, x, fStepSize);
    }
 
    /// Computation of the first derivative using a forward formula
    double DerivativeBackward(const IGenFunction &f, double x, double h) {
-      return DerivativeForward(f, x, -h); 
+      return DerivativeForward(f, x, -h);
    }
 
    /**
@@ -141,10 +144,13 @@ public:
       computed by Richardson's extrapolation method (use 2 derivative estimates
       to compute a third, more accurate estimation)
       first, derivatives with steps h and h/2 are computed by central difference formulas
-     Begin_Latex
-         D(h) = #frac{f(x+h) - 2f(x) + f(x-h)}{h^{2}}
-     End_Latex
-      the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
+     \f[
+         D(h) = \frac{f(x+h) - 2f(x) + f(x-h)}{h^{2}}
+     \f]
+      the final estimate
+     \f[
+         D = \frac{4D(h/2) - D(h)}{3}
+     \f]
        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
 
       the argument eps may be specified to control the step size (precision).
@@ -156,15 +162,15 @@ public:
       Getting the error via TF1::DerivativeError:
         (total error = roundoff error + interpolation error)
       the estimate of the roundoff error is taken as follows:
-     Begin_Latex
-         err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
-     End_Latex
+     \f[
+         err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
+     \f]
       where k is the double precision, ai are coefficients used in
       central difference formulas
       interpolation error is decreased by making the step size h smaller.
    */
    double Derivative2 (double x) {
-      return Derivative2( *fFunction, x, fStepSize); 
+      return Derivative2( *fFunction, x, fStepSize);
    }
 
    /**
@@ -177,10 +183,13 @@ public:
       computed by Richardson's extrapolation method (use 2 derivative estimates
       to compute a third, more accurate estimation)
       first, derivatives with steps h and h/2 are computed by central difference formulas
-     Begin_Latex
-         D(h) = #frac{f(x+2h) - 2f(x+h) + 2f(x-h) - f(x-2h)}{2h^{3}}
-     End_Latex
-      the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
+     \f[
+         D(h) = \frac{f(x+2h) - 2f(x+h) + 2f(x-h) - f(x-2h)}{2h^{3}}
+     \f]
+      the final estimate
+     \f[
+         D = \frac{4D(h/2) - D(h)}{3}
+     \f]
        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
 
       the argument eps may be specified to control the step size (precision).
@@ -192,15 +201,15 @@ public:
       Getting the error via TF1::DerivativeError:
         (total error = roundoff error + interpolation error)
       the estimate of the roundoff error is taken as follows:
-     Begin_Latex
-         err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
-     End_Latex
+     \f[
+         err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
+     \f]
       where k is the double precision, ai are coefficients used in
       central difference formulas
       interpolation error is decreased by making the step size h smaller.
    */
    double Derivative3 (double x) {
-      return Derivative3(*fFunction, x, fStepSize); 
+      return Derivative3(*fFunction, x, fStepSize);
    }
 
    /**

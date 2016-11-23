@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -nodraw
 /// Benchmark comparing row-wise and column-wise storage performance
 ///
 /// The test consists in writing/reading to/from keys or trees
@@ -138,11 +138,11 @@ void bill() {
    gSystem->Unlink(bill);
    gSystem->Unlink(billt);
    totaltimer.Stop();
-   Double_t rtime = totaltimer.RealTime();
-   Double_t ctime = totaltimer.CpuTime();
-   printf("billtot : RT=%7.3f s, Cpu=%7.3f s\n",rtime,ctime);
+   Double_t realtime = totaltimer.RealTime();
+   Double_t cputime = totaltimer.CpuTime();
+   printf("billtot : RT=%7.3f s, Cpu=%7.3f s\n",realtime,cputime);
    //reference is a P IV 2.4 GHz
-   Float_t rootmarks = 600*(16.98 + 14.40)/(rtime + ctime);
+   Float_t rootmarks = 600*(16.98 + 14.40)/(realtime + cputime);
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example of CrystalBall Function and its distribution (pdf and cdf)
 ///
 /// \macro_image

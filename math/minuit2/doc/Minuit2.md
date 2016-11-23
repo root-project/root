@@ -9,12 +9,12 @@ Minuit2, originally developed in the SEAL project, is now distributed within %RO
 
 A new class has been introduced, ROOT::Minuit2::Minuit2Minimizer, which implements the interface ROOT::Math::Minimizer. Within %ROOT, it can be instantiates also using the %ROOT plug-in manager. This class provides a convenient entry point for using Minuit2\. An example of using this interface is the %ROOT tutorial _tutorials/fit/NumericalMinimization.C_ or the Minuit2 test program [<tt>testMinimize.cxx</tt>](http://root.cern.ch/viewvc/trunk/math/minuit2/test/testMinimize.cxx?view=markup).
 
-A standalone version of Minuit2 (indipendent of %ROOT) can be downloaded from [here](../Minuit2.tar.gz). It does not contain the %ROOT interface and it is therefore totally independent of external packages and can be simply build using the _configure_ script and then _make_. Example tests are provided in the directory _test/MnSim_ and _test/MnTutorial_ and they can be built with the _make check_ command.   
+A standalone version of Minuit2 (independent of %ROOT) can be downloaded from [here](../Minuit2.tar.gz). It does not contain the %ROOT interface and it is therefore totally independent of external packages and can be simply build using the _configure_ script and then _make_. Example tests are provided in the directory _test/MnSim_ and _test/MnTutorial_ and they can be built with the _make check_ command.
 The [Minuit2 User Guide](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.html) provides all the information needed for using directly (without add-on packages like %ROOT) Minuit2.
 
 ## References
 
-1.  F. James, _Fortran MINUIT Reference Manual_ ([html](http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/minmain.html));
+1.  F. James, _Fortran MINUIT Reference Manual_ ([html](https://cern-tex.web.cern.ch/cern-tex/minuit/minmain.html));
 2.  F. James and M. Winkler, _C++ MINUIT User's Guide_ ([html](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.html) and [pdf](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.pdf));
 3.  F. James, _Minuit Tutorial on Function Minimization_ ([pdf](http://seal.cern.ch/documents/minuit/mntutorial.pdf));
 4.  F. James, _The Interpretation of Errors in Minuit_ ([pdf](http://seal.cern.ch/documents/minuit/mnerror.pdf));

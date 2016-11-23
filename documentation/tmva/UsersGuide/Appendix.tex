@@ -1,0 +1,159 @@
+\begin{appendix}
+
+\section{More Classifier Booking Examples}
+\label{sec:appendix:booking}
+
+The Code Examples~\ref{codeex:factoryBookingAll1} and \ref{codeex:factoryBookingAll2}
+give a (non-exhaustive) collection of classifier bookings with appropriate 
+default options. They correspond to the example training job \code{TMVAClassification.C}.
+\begin{codeexample}
+\begin{tmvacode}
+// Cut optimisation using Monte Carlo sampling
+factory->BookMethod( TMVA::Types::kCuts, "Cuts", 
+    "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" );
+
+// Cut optmisation using Genetic Algorithm
+factory->BookMethod( TMVA::Types::kCuts, "CutsGA",
+    "H:!V:FitMethod=GA:CutRangeMin=-10:CutRangeMax=10:VarProp[1]=FMax:EffSel:\
+     Steps=30:Cycles=3:PopSize=400:SC_steps=10:SC_rate=5:SC_factor=0.95" );
+
+// Cut optmisation using Simulated Annealing algorithm
+factory->BookMethod( TMVA::Types::kCuts, "CutsSA",
+    "!H:!V:FitMethod=SA:EffSel:MaxCalls=150000:KernelTemp=IncAdaptive:\
+     InitialTemp=1e+6:MinTemp=1e-6:Eps=1e-10:UseDefaultScale" );
+
+// Likelihood classification (naive Bayes) with Spline PDF parametrisation
+factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood", 
+    "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:\
+     NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
+
+// Likelihood with decorrelation of input variables
+factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodD", 
+    "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:\
+     NSmoothBkg[0]=20:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" ); 
+
+// Likelihood with unbinned kernel estimator for PDF parametrisation
+factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodKDE", 
+    "!H:!V:!TransformOutput:PDFInterpol=KDE:KDEtype=Gauss:KDEiter=Adaptive:\
+     KDEFineFactor=0.3:KDEborder=None:NAvEvtPerBin=50" ); 
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Examples for booking MVA methods in TMVA for
+            application to classification and -- where available -- to regression problems. 
+            The first argument is 
+            a unique type enumerator (the avaliable types can be looked up in \code{src/Types.h}),
+            the second is a user-defined name (must be unique among all booked classifiers),
+            and the third a configuration option string that is specific to the 
+            classifier. For options that are not set in the 
+            string default values are used. The syntax of the options should become
+            clear from the above examples. Individual options are separated by a 
+            ':'. Boolean variables can be set either explicitly as 
+            \code{MyBoolVar=True/False}, or just via \code{MyBoolVar/!MyBoolVar}.
+            All concrete option variables are explained in the tools and classifier sections
+            of this Users Guide. The list is continued in Code Example~\ref{codeex:factoryBookingAll2}.}
+\label{codeex:factoryBookingAll1}
+\end{codeexample}
+\begin{codeexample}
+\begin{tmvacode}
+// Probability density estimator range search method (multi-dimensional)
+factory->BookMethod( TMVA::Types::kPDERS, "PDERS", 
+    "!H:V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:\
+     GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
+
+// Multi-dimensional PDE using self-adapting phase-space binning
+factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", 
+    "H:V:SigBgSeparate=F:TailCut=0.001:VolFrac=0.0333:nActiveCells=500:\
+     nSampl=2000:nBin=5:CutNmin=T:Nmin=100:Kernel=None:Compress=T" );
+
+// k-Nearest Neighbour method (similar to PDE-RS)
+factory->BookMethod( TMVA::Types::kKNN, "KNN", 
+    "H:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:\
+     UseWeight=T:!Trim" );
+
+// H-matrix (chi-squared) method
+factory->BookMethod( TMVA::Types::kHMatrix, "HMatrix", "!H:!V" ); 
+
+// Fisher discriminant (also creating Rarity distribution of MVA output)
+factory->BookMethod( TMVA::Types::kFisher, "Fisher", 
+    "H:!V:Fisher:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=60:\
+     NsmoothMVAPdf=10" );
+
+// Fisher discriminant with Gauss-transformed input variables
+factory->BookMethod( TMVA::Types::kFisher, "FisherG", "VarTransform=Gauss" );
+
+// Fisher discriminant with principle-value-transformed input variables
+factory->BookMethod( TMVA::Types::kFisher, "FisherG", "VarTransform=PCA" );
+
+// Boosted Fisher discriminant
+factory->BookMethod( TMVA::Types::kFisher, "BoostedFisher", 
+    "Boost_Num=20:Boost_Transform=log:\
+     Boost_Type=AdaBoost:Boost_AdaBoostBeta=0.2");
+
+// Linear discriminant (same as Fisher, but also performing regression)
+factory->BookMethod( TMVA::Types::kLD, "LD", "H:!V:VarTransform=None" );
+
+// Function discrimination analysis (FDA), fitting user-defined function
+factory->BookMethod( TMVA::Types::kFDA, "FDA_MT",
+    "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:\
+     ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=MINUIT:\
+     ErrorLevel=1:PrintLevel=-1:FitStrategy=2:UseImprove:UseMinos:SetBatch" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Continuation from Code Example~\ref{codeex:factoryBookingAll1}.
+            Continued in Code Example~\ref{codeex:factoryBookingAll2}.}
+\label{codeex:factoryBookingAll2}
+\end{codeexample}
+\begin{codeexample}
+\begin{tmvacode}
+// Artificial Neural Network (Multilayer perceptron) - TMVA version
+factory->BookMethod( TMVA::Types::kMLP, "MLP", 
+    "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:\
+     TestRate=5" );
+
+// NN with BFGS quadratic minimisation
+factory->BookMethod( TMVA::Types::kMLP, "MLPBFGS", 
+    "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:\
+     TestRate=5:TrainingMethod=BFGS" );
+
+// NN (Multilayer perceptron) - ROOT version
+factory->BookMethod( TMVA::Types::kTMlpANN, "TMlpANN", 
+    "!H:!V:NCycles=200:HiddenLayers=N+1,N:LearningMethod=BFGS:
+     ValidationFraction=0.3"  ); 
+
+// NN (Multilayer perceptron) - ALEPH version (depreciated)
+factory->BookMethod( TMVA::Types::kCFMlpANN, "CFMlpANN", 
+    "!H:!V:NCycles=2000:HiddenLayers=N+1,N"  ); 
+
+// Support Vector Machine
+factory->BookMethod( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001" );
+
+// Boosted Decision Trees with adaptive boosting 
+factory->BookMethod( TMVA::Types::kBDT, "BDT", 
+    "!H:!V:NTrees=400:nEventsMin=400:MaxDepth=3:BoostType=AdaBoost:\
+     SeparationType=GiniIndex:nCuts=20:PruneMethod=NoPruning" );
+
+// Boosted Decision Trees with gradient boosting 
+factory->BookMethod( TMVA::Types::kBDT, "BDTG", 
+    "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.30:UseBaggedGrad:\
+     GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:\
+     PruneMethod=CostComplexity:PruneStrength=50:NNodesMax=5" );
+
+// Boosted Decision Trees with bagging
+factory->BookMethod( TMVA::Types::kBDT, "BDTB", 
+    "!H:!V:NTrees=400:BoostType=Bagging:SeparationType=GiniIndex:\
+     nCuts=20:PruneMethod=NoPruning" );
+
+// Predictive learning via rule ensembles (RuleFit)
+factory->BookMethod( TMVA::Types::kRuleFit, "RuleFit",
+    "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:\
+     RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:\
+     GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Continuation from Code Example~\ref{codeex:factoryBookingAll2}.}
+\label{codeex:factoryBookingAll3}
+\end{codeexample}
+
+\end{appendix}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "TMVAUsersGuide"
+%%% End: 

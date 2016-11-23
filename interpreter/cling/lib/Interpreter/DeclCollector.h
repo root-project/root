@@ -11,7 +11,6 @@
 #define CLING_DECL_COLLECTOR_H
 
 #include "clang/AST/ASTConsumer.h"
-#include "clang/AST/ASTMutationListener.h"
 #include "clang/Lex/PPCallbacks.h"
 
 #include "ASTTransformer.h"
@@ -57,8 +56,7 @@ namespace cling {
   /// cling::DeclCollector is responsible for appending all the declarations
   /// seen by clang.
   ///
-  class DeclCollector: public clang::ASTMutationListener,
-                       public clang::ASTConsumer  {
+  class DeclCollector: public clang::ASTConsumer  {
   private:
     ///\brief Contains the transaction AST transformers.
     ///
@@ -72,13 +70,16 @@ namespace cling {
     clang::ASTConsumer* m_Consumer;
     Transaction* m_CurTransaction;
 
+    /// Whether Transform() is active; prevents recursion.
+    bool m_Transforming = false;
+
     ///\brief Test whether the first decl of the DeclGroupRef comes from an AST
     /// file.
     ///
     bool comesFromASTReader(clang::DeclGroupRef DGR) const;
     bool comesFromASTReader(const clang::Decl* D) const;
 
-    bool Transform(clang::DeclGroupRef& DGR) const;
+    bool Transform(clang::DeclGroupRef& DGR);
 
     ///\brief Runs AST transformers on a transaction.
     ///
@@ -97,10 +98,10 @@ namespace cling {
         (new DeclCollectorPPAdapter(this));
     }
 
-    void SetTransformers(std::vector<std::unique_ptr<ASTTransformer>>&& TT,
-                         std::vector<std::unique_ptr<WrapperTransformer>>&& WT){
-      m_TransactionTransformers.swap(TT);
-      m_WrapperTransformers.swap(WT);
+    void SetTransformers(std::vector<std::unique_ptr<ASTTransformer>>&& allTT,
+                      std::vector<std::unique_ptr<WrapperTransformer>>&& allWT){
+      m_TransactionTransformers.swap(allTT);
+      m_WrapperTransformers.swap(allWT);
       for (auto&& TT: m_TransactionTransformers)
         TT->SetConsumer(this);
       for (auto&& WT: m_WrapperTransformers)
@@ -116,10 +117,6 @@ namespace cling {
     /// Macro support
     void MacroDefined(const clang::Token &MacroNameTok,
                               const clang::MacroDirective *MD);
-    /// \}
-    /// \name ASTMutationListeners overrides
-    virtual void AddedCXXImplicitMember(const clang::CXXRecordDecl *RD,
-                                        const clang::Decl *D);
     /// \}
 
     /// \{
@@ -142,10 +139,6 @@ namespace cling {
     Transaction* getTransaction() { return m_CurTransaction; }
     const Transaction* getTransaction() const { return m_CurTransaction; }
     void setTransaction(Transaction* curT) { m_CurTransaction = curT; }
-    void setTransaction(const Transaction* curT) {
-      m_CurTransaction = const_cast<Transaction*>(curT);
-    }
-
     /// \}
 
     // dyn_cast/isa support

@@ -1,6 +1,13 @@
-//Creates a TChain to be used by the h1analysis.C class
-//the symbol H1 must point to a directory where the H1 data sets
-//have been installed.
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -nodraw
+/// Creates a TChain to be used by the h1analysis.C class
+/// the symbol H1 must point to a directory where the H1 data sets
+/// have been installed.
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 TChain chain("h42");
 

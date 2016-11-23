@@ -152,7 +152,7 @@ axis. A TH2F h("h","h",10, 0., 10., 20, -5., 5.) would correspond to
     Int_t bins[2] = {10, 20};
     Double_t xmin[2] = {0., -5.};
     Double_t xmax[2] = {10., 5.};
-    THnF hn("hn", "hn", 2, bins, min, max);
+    THnF hn("hn", "hn", 2, bins, xmin, xmax);
 
 ## Filling
 A THn is filled just like a regular histogram, using

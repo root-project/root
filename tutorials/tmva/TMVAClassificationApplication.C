@@ -1,11 +1,15 @@
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Exectuable: TMVAClassificationApplication                                      *
- *                                                                                *
- * This macro provides a simple example on how to use the trained classifiers     *
- * within an analysis module                                                      *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This macro provides a simple example on how to use the trained classifiers
+/// within an analysis module
+/// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+/// - Package   : TMVA
+/// - Exectuable: TMVAClassificationApplication
+///
+/// \macro_output
+/// \macro_code
+/// \author Andreas Hoecker
 
 #include <cstdlib>
 #include <vector>
@@ -26,32 +30,31 @@
 
 using namespace TMVA;
 
-void TMVAClassificationApplication( TString myMethodList = "" ) 
-{   
+void TMVAClassificationApplication( TString myMethodList = "" )
+{
 
    //---------------------------------------------------------------
-
    // This loads the library
    TMVA::Tools::Instance();
 
    // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
 
-   // --- Cut optimisation
+   // Cut optimisation
    Use["Cuts"]            = 1;
    Use["CutsD"]           = 1;
    Use["CutsPCA"]         = 0;
    Use["CutsGA"]          = 0;
    Use["CutsSA"]          = 0;
-   // 
-   // --- 1-dimensional likelihood ("naive Bayes estimator")
+   //
+   // 1-dimensional likelihood ("naive Bayes estimator")
    Use["Likelihood"]      = 1;
    Use["LikelihoodD"]     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
    Use["LikelihoodPCA"]   = 1; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
    Use["LikelihoodKDE"]   = 0;
    Use["LikelihoodMIX"]   = 0;
    //
-   // --- Mutidimensional likelihood and Nearest-Neighbour methods
+   // Mutidimensional likelihood and Nearest-Neighbour methods
    Use["PDERS"]           = 1;
    Use["PDERSD"]          = 0;
    Use["PDERSPCA"]        = 0;
@@ -59,14 +62,14 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    Use["PDEFoamBoost"]    = 0; // uses generalised MVA method boosting
    Use["KNN"]             = 1; // k-nearest neighbour method
    //
-   // --- Linear Discriminant Analysis
+   // Linear Discriminant Analysis
    Use["LD"]              = 1; // Linear Discriminant identical to Fisher
    Use["Fisher"]          = 0;
    Use["FisherG"]         = 0;
    Use["BoostedFisher"]   = 0; // uses generalised MVA method boosting
    Use["HMatrix"]         = 0;
    //
-   // --- Function Discriminant analysis
+   // Function Discriminant analysis
    Use["FDA_GA"]          = 1; // minimisation of user-defined function using Genetics Algorithm
    Use["FDA_SA"]          = 0;
    Use["FDA_MC"]          = 0;
@@ -74,23 +77,25 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    Use["FDA_GAMT"]        = 0;
    Use["FDA_MCMT"]        = 0;
    //
-   // --- Neural Networks (all are feed-forward Multilayer Perceptrons)
+   // Neural Networks (all are feed-forward Multilayer Perceptrons)
    Use["MLP"]             = 0; // Recommended ANN
    Use["MLPBFGS"]         = 0; // Recommended ANN with optional training method
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
+   Use["DNN"]             = 0; // improved implementation of a NN
    //
-   // --- Support Vector Machine 
+   // Support Vector Machine
    Use["SVM"]             = 1;
-   // 
-   // --- Boosted Decision Trees
+   //
+   // Boosted Decision Trees
    Use["BDT"]             = 1; // uses Adaptive Boost
    Use["BDTG"]            = 0; // uses Gradient Boost
    Use["BDTB"]            = 0; // uses Bagging
    Use["BDTD"]            = 0; // decorrelation + Adaptive Boost
-   // 
-   // --- Friedman's RuleFit method, ie, an optimised series of cuts ("rules")
+   Use["BDTF"]            = 0; // allow usage of fisher discriminant for node splitting
+   //
+   // Friedman's RuleFit method, ie, an optimised series of cuts ("rules")
    Use["RuleFit"]         = 1;
    // ---------------------------------------------------------------
    Use["Plugin"]          = 0;
@@ -111,7 +116,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
          std::string regMethod(mlist[i]);
 
          if (Use.find(regMethod) == Use.end()) {
-            std::cout << "Method \"" << regMethod 
+            std::cout << "Method \"" << regMethod
                       << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
             for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
                std::cout << it->first << " ";
@@ -125,9 +130,9 @@ void TMVAClassificationApplication( TString myMethodList = "" )
 
    // --------------------------------------------------------------------------------------------------
 
-   // --- Create the Reader object
+   // Create the Reader object
 
-   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
+   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );
 
    // Create a set of variables and declare them to the reader
    // - the variable names MUST corresponds in name and type to those given in the weight file(s) used
@@ -151,7 +156,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       reader->AddSpectator( "Category_cat3 := (var3>0)&&(var4>=0)", &Category_cat3 );
    }
 
-   // --- Book the MVA methods
+   // Book the MVA methods
 
    TString dir    = "dataset/weights/";
    TString prefix = "TMVAClassification";
@@ -161,17 +166,18 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       if (it->second) {
          TString methodName = TString(it->first) + TString(" method");
          TString weightfile = dir + prefix + TString("_") + TString(it->first) + TString(".weights.xml");
-         reader->BookMVA( methodName, weightfile ); 
+         reader->BookMVA( methodName, weightfile );
       }
    }
-   
+
    // Book output histograms
    UInt_t nbin = 100;
    TH1F   *histLk(0), *histLkD(0), *histLkPCA(0), *histLkKDE(0), *histLkMIX(0), *histPD(0), *histPDD(0);
    TH1F   *histPDPCA(0), *histPDEFoam(0), *histPDEFoamErr(0), *histPDEFoamSig(0), *histKNN(0), *histHm(0);
    TH1F   *histFi(0), *histFiG(0), *histFiB(0), *histLD(0), *histNn(0),*histNnbfgs(0),*histNnbnn(0);
-   TH1F   *histNnC(0), *histNnT(0), *histBdt(0), *histBdtG(0), *histBdtD(0), *histRf(0), *histSVMG(0);
-   TH1F   *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0), *histCat(0), *histPBdt(0);
+   TH1F   *histNnC(0), *histNnT(0), *histNdn(0), *histBdt(0), *histBdtG(0), *histBdtB(0), *histBdtD(0);
+   TH1F   *histBdtF(0), *histRf(0), *histSVMG(0), *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0);
+   TH1F   *histCat(0), *histPBdt(0);
 
    if (Use["Likelihood"])    histLk      = new TH1F( "MVA_Likelihood",    "MVA_Likelihood",    nbin, -1, 1 );
    if (Use["LikelihoodD"])   histLkD     = new TH1F( "MVA_LikelihoodD",   "MVA_LikelihoodD",   nbin, -1, 0.9999 );
@@ -192,9 +198,12 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["MLPBNN"])        histNnbnn   = new TH1F( "MVA_MLPBNN",        "MVA_MLPBNN",        nbin, -1.25, 1.5 );
    if (Use["CFMlpANN"])      histNnC     = new TH1F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,  0, 1 );
    if (Use["TMlpANN"])       histNnT     = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
+   if (Use["DNN"])           histNdn     = new TH1F( "MVA_DNN",           "MVA_DNN",           nbin, -0.1, 1.1 );
    if (Use["BDT"])           histBdt     = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
-   if (Use["BDTD"])          histBdtD    = new TH1F( "MVA_BDTD",          "MVA_BDTD",          nbin, -0.8, 0.8 );
    if (Use["BDTG"])          histBdtG    = new TH1F( "MVA_BDTG",          "MVA_BDTG",          nbin, -1.0, 1.0 );
+   if (Use["BDTB"])          histBdtB    = new TH1F( "MVA_BDTB",          "MVA_BDTB",          nbin, -1.0, 1.0 );
+   if (Use["BDTD"])          histBdtD    = new TH1F( "MVA_BDTD",          "MVA_BDTD",          nbin, -0.8, 0.8 );
+   if (Use["BDTF"])          histBdtF    = new TH1F( "MVA_BDTF",          "MVA_BDTF",          nbin, -1.0, 1.0 );
    if (Use["RuleFit"])       histRf      = new TH1F( "MVA_RuleFit",       "MVA_RuleFit",       nbin, -2.0, 2.0 );
    if (Use["SVM_Gauss"])     histSVMG    = new TH1F( "MVA_SVM_Gauss",     "MVA_SVM_Gauss",     nbin,  0.0, 1.0 );
    if (Use["SVM_Poly"])      histSVMP    = new TH1F( "MVA_SVM_Poly",      "MVA_SVM_Poly",      nbin,  0.0, 1.0 );
@@ -221,25 +230,25 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    // Prepare input tree (this must be replaced by your data source)
    // in this example, there is a toy tree with signal and one with background events
    // we'll later on use only the "signal" events for the test in this example.
-   //   
+   //
    TFile *input(0);
-   TString fname = "./tmva_example.root";   
-   if (!gSystem->AccessPathName( fname )) 
+   TString fname = "./tmva_example.root";
+   if (!gSystem->AccessPathName( fname ))
       input = TFile::Open( fname ); // check if file in local directory exists
-   else    
+   else
       input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" ); // if not: download from ROOT server
-   
+
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
       exit(1);
    }
    std::cout << "--- TMVAClassificationApp    : Using input file: " << input->GetName() << std::endl;
-   
-   // --- Event loop
+
+   // Event loop
 
    // Prepare the event tree
-   // - here the variable names have to corresponds to your tree
-   // - you can use the same variables as above which is slightly faster,
+   // - Here the variable names have to corresponds to your tree
+   // - You can use the same variables as above which is slightly faster,
    //   but of course you can use different ones and copy the values inside the event loop
    //
    std::cout << "--- Select signal sample" << std::endl;
@@ -268,7 +277,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       var1 = userVar1 + userVar2;
       var2 = userVar1 - userVar2;
 
-      // --- Return the MVA outputs and fill into histograms
+      // Return the MVA outputs and fill into histograms
 
       if (Use["CutsGA"]) {
          // Cuts is a special case: give the desired signal efficienciy
@@ -295,9 +304,12 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       if (Use["MLPBNN"       ])   histNnbnn  ->Fill( reader->EvaluateMVA( "MLPBNN method"        ) );
       if (Use["CFMlpANN"     ])   histNnC    ->Fill( reader->EvaluateMVA( "CFMlpANN method"      ) );
       if (Use["TMlpANN"      ])   histNnT    ->Fill( reader->EvaluateMVA( "TMlpANN method"       ) );
+      if (Use["DNN"          ])   histNdn    ->Fill( reader->EvaluateMVA( "DNN method"           ) );
       if (Use["BDT"          ])   histBdt    ->Fill( reader->EvaluateMVA( "BDT method"           ) );
-      if (Use["BDTD"         ])   histBdtD   ->Fill( reader->EvaluateMVA( "BDTD method"          ) );
       if (Use["BDTG"         ])   histBdtG   ->Fill( reader->EvaluateMVA( "BDTG method"          ) );
+      if (Use["BDTB"         ])   histBdtB   ->Fill( reader->EvaluateMVA( "BDTB method"          ) );
+      if (Use["BDTD"         ])   histBdtD   ->Fill( reader->EvaluateMVA( "BDTD method"          ) );
+      if (Use["BDTF"         ])   histBdtF   ->Fill( reader->EvaluateMVA( "BDTF method"          ) );
       if (Use["RuleFit"      ])   histRf     ->Fill( reader->EvaluateMVA( "RuleFit method"       ) );
       if (Use["SVM_Gauss"    ])   histSVMG   ->Fill( reader->EvaluateMVA( "SVM_Gauss method"     ) );
       if (Use["SVM_Poly"     ])   histSVMP   ->Fill( reader->EvaluateMVA( "SVM_Poly method"      ) );
@@ -312,9 +324,9 @@ void TMVAClassificationApplication( TString myMethodList = "" )
          Double_t val = reader->EvaluateMVA( "PDEFoam method" );
          Double_t err = reader->GetMVAError();
          histPDEFoam   ->Fill( val );
-         histPDEFoamErr->Fill( err );         
+         histPDEFoamErr->Fill( err );
          if (err>1.e-50) histPDEFoamSig->Fill( val/err );
-      }         
+      }
 
       // Retrieve probability instead of MVA output
       if (Use["Fisher"])   {
@@ -334,28 +346,28 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["CutsGA"]) {
 
       // test: retrieve cuts for particular signal efficiency
-      // CINT ignores dynamic_casts so we have to use a cuts-secific Reader function to acces the pointer  
+      // CINT ignores dynamic_casts so we have to use a cuts-secific Reader function to acces the pointer
       TMVA::MethodCuts* mcuts = reader->FindCutsMVA( "CutsGA method" ) ;
 
-      if (mcuts) {      
+      if (mcuts) {
          std::vector<Double_t> cutsMin;
          std::vector<Double_t> cutsMax;
          mcuts->GetCuts( 0.7, cutsMin, cutsMax );
          std::cout << "--- -------------------------------------------------------------" << std::endl;
          std::cout << "--- Retrieve cut values for signal efficiency of 0.7 from Reader" << std::endl;
          for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
-            std::cout << "... Cut: " 
-                      << cutsMin[ivar] 
-                      << " < \"" 
+            std::cout << "... Cut: "
+                      << cutsMin[ivar]
+                      << " < \""
                       << mcuts->GetInputVar(ivar)
-                      << "\" <= " 
+                      << "\" <= "
                       << cutsMax[ivar] << std::endl;
          }
          std::cout << "--- -------------------------------------------------------------" << std::endl;
       }
    }
 
-   // --- Write histograms
+   // Write histograms
 
    TFile *target  = new TFile( "TMVApp.root","RECREATE" );
    if (Use["Likelihood"   ])   histLk     ->Write();
@@ -377,9 +389,12 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["MLPBNN"       ])   histNnbnn  ->Write();
    if (Use["CFMlpANN"     ])   histNnC    ->Write();
    if (Use["TMlpANN"      ])   histNnT    ->Write();
+   if (Use["DNN"          ])   histNdn    ->Write();
    if (Use["BDT"          ])   histBdt    ->Write();
+   if (Use["BDTG"         ])   histBdtG   ->Write();
+   if (Use["BDTB"         ])   histBdtB   ->Write();
    if (Use["BDTD"         ])   histBdtD   ->Write();
-   if (Use["BDTG"         ])   histBdtG   ->Write(); 
+   if (Use["BDTF"         ])   histBdtF   ->Write();
    if (Use["RuleFit"      ])   histRf     ->Write();
    if (Use["SVM_Gauss"    ])   histSVMG   ->Write();
    if (Use["SVM_Poly"     ])   histSVMP   ->Write();
@@ -397,21 +412,21 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    target->Close();
 
    std::cout << "--- Created root file: \"TMVApp.root\" containing the MVA output histograms" << std::endl;
-  
+
    delete reader;
-    
+
    std::cout << "==> TMVAClassificationApplication is done!" << std::endl << std::endl;
-} 
+}
 
 int main( int argc, char** argv )
 {
-   TString methodList; 
+   TString methodList;
    for (int i=1; i<argc; i++) {
       TString regMethod(argv[i]);
       if(regMethod=="-b" || regMethod=="--batch") continue;
-      if (!methodList.IsNull()) methodList += TString(","); 
+      if (!methodList.IsNull()) methodList += TString(",");
       methodList += regMethod;
    }
-   TMVAClassificationApplication(methodList); 
-   return 0; 
+   TMVAClassificationApplication(methodList);
+   return 0;
 }

@@ -377,7 +377,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
 
    // check function
    if (!fFunc) {
-      MATH_ERROR_MSG("Fitter::DoLikelihoodFit","model function is not set");
+      MATH_ERROR_MSG("Fitter::DoBinnedLikelihoodFit","model function is not set");
       return false;
    }
 
@@ -387,7 +387,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
    }
 
    if (useWeight && fConfig.MinosErrors() ) {
-      MATH_INFO_MSG("Fitter::DoLikelihoodFit","MINOS errors cannot be computed in weighted likelihood fits");
+      MATH_INFO_MSG("Fitter::DoBinnedLikelihoodFit","MINOS errors cannot be computed in weighted likelihood fits");
       fConfig.SetMinosErrors(false);
    }
 
@@ -415,13 +415,13 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
       // check if fFunc provides gradient
       std::shared_ptr<IGradModelFunction> gradFun = std::dynamic_pointer_cast<IGradModelFunction>(fFunc);
       if (!gradFun) {
-         MATH_ERROR_MSG("Fitter::DoLikelihoodFit","wrong type of function - it does not provide gradient");
+         MATH_ERROR_MSG("Fitter::DoBinnedLikelihoodFit","wrong type of function - it does not provide gradient");
          return false;
       }
       // use gradient for minimization
       // not-extended is not impelemented in this case
       if (!extended) {
-         MATH_WARN_MSG("Fitter::DoLikelihoodFit","Not-extended binned fit with gradient not yet supported - do an extended fit");
+         MATH_WARN_MSG("Fitter::DoBinnedLikelihoodFit","Not-extended binned fit with gradient not yet supported - do an extended fit");
       }
       PoissonLikelihoodFCN<BaseGradFunc> logl(data,gradFun, useWeight, true);
       fFitType = logl.Type();
@@ -445,12 +445,12 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended) {
    bool useWeight = fConfig.UseWeightCorrection();
 
    if (!fFunc) {
-      MATH_ERROR_MSG("Fitter::DoLikelihoodFit","model function is not set");
+      MATH_ERROR_MSG("Fitter::DoUnbinnedLikelihoodFit","model function is not set");
       return false;
    }
 
    if (useWeight && fConfig.MinosErrors() ) {
-      MATH_INFO_MSG("Fitter::DoLikelihoodFit","MINOS errors cannot be computed in weighted likelihood fits");
+      MATH_INFO_MSG("Fitter::DoUnbinnedLikelihoodFit","MINOS errors cannot be computed in weighted likelihood fits");
       fConfig.SetMinosErrors(false);
    }
 
@@ -482,11 +482,11 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended) {
    else {
       // use gradient : check if fFunc provides gradient
       if (fConfig.MinimizerOptions().PrintLevel() > 0)
-         MATH_INFO_MSG("Fitter::DoLikelihoodFit","use gradient from model function");
+         MATH_INFO_MSG("Fitter::DoUnbinnedLikelihoodFit","use gradient from model function");
       std::shared_ptr<IGradModelFunction>  gradFun = std::dynamic_pointer_cast<IGradModelFunction>(fFunc);
       if (gradFun) {
          if (extended) {
-            MATH_WARN_MSG("Fitter::DoLikelihoodFit","Extended unbinned fit with gradient not yet supported - do a not-extended fit");
+            MATH_WARN_MSG("Fitter::DoUnbinnedLikelihoodFit","Extended unbinned fit with gradient not yet supported - do a not-extended fit");
          }
          LogLikelihoodFCN<BaseGradFunc> logl(data,gradFun,useWeight, extended);
          fFitType = logl.Type();
@@ -497,7 +497,7 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended) {
          }
          return true;
       }
-      MATH_ERROR_MSG("Fitter::DoLikelihoodFit","wrong type of function - it does not provide gradient");
+      MATH_ERROR_MSG("Fitter::DoUnbinnedLikelihoodFit","wrong type of function - it does not provide gradient");
    }
    return false;
 }

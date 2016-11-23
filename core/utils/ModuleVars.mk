@@ -57,7 +57,7 @@ ROOTCLINGSTAGE2DEP := $(ROOTCLINGEXE)
 # include all dependency files
 INCLUDEFILES += $(ROOTCLINGDEP)
 
-ROOTCLINGCXXFLAGS = $(filter-out -Wcast-qual,$(CLINGCXXFLAGS))
+ROOTCLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -Wcast-qual,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
 ROOTCLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif

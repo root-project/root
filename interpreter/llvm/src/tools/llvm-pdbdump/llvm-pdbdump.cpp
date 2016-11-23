@@ -13,369 +13,520 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm-pdbdump.h"
+#include "CompilandDumper.h"
+#include "ExternalSymbolDumper.h"
+#include "FunctionDumper.h"
+#include "LLVMOutputStyle.h"
+#include "LinePrinter.h"
+#include "OutputStyle.h"
+#include "TypeDumper.h"
+#include "VariableDumper.h"
+#include "YAMLOutputStyle.h"
+
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/BitVector.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/Config/config.h"
+#include "llvm/DebugInfo/CodeView/ByteStream.h"
+#include "llvm/DebugInfo/PDB/GenericError.h"
+#include "llvm/DebugInfo/PDB/IPDBEnumChildren.h"
+#include "llvm/DebugInfo/PDB/IPDBRawSymbol.h"
+#include "llvm/DebugInfo/PDB/IPDBSession.h"
+#include "llvm/DebugInfo/PDB/PDB.h"
+#include "llvm/DebugInfo/PDB/PDBSymbolCompiland.h"
+#include "llvm/DebugInfo/PDB/PDBSymbolData.h"
+#include "llvm/DebugInfo/PDB/PDBSymbolExe.h"
+#include "llvm/DebugInfo/PDB/PDBSymbolFunc.h"
+#include "llvm/DebugInfo/PDB/PDBSymbolThunk.h"
+#include "llvm/DebugInfo/PDB/Raw/PDBFile.h"
+#include "llvm/DebugInfo/PDB/Raw/RawConstants.h"
+#include "llvm/DebugInfo/PDB/Raw/RawError.h"
+#include "llvm/DebugInfo/PDB/Raw/RawSession.h"
+#include "llvm/Support/COM.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ConvertUTF.h"
+#include "llvm/Support/FileOutputBuffer.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/Process.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Process.h"
+#include "llvm/Support/ScopedPrinter.h"
 #include "llvm/Support/Signals.h"
-
-#include "llvm-pdbdump.h"
-#include "COMExtras.h"
-#include "DIAExtras.h"
-#include "DIASymbol.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
-using namespace llvm::sys::windows;
+using namespace llvm::codeview;
+using namespace llvm::pdb;
+
+namespace {
+// A simple adapter that acts like a ByteStream but holds ownership over
+// and underlying FileOutputBuffer.
+class FileBufferByteStream : public ByteStream<true> {
+public:
+  FileBufferByteStream(std::unique_ptr<FileOutputBuffer> Buffer)
+      : ByteStream(MutableArrayRef<uint8_t>(Buffer->getBufferStart(),
+                                            Buffer->getBufferEnd())),
+        FileBuffer(std::move(Buffer)) {}
+
+  Error commit() const override {
+    if (FileBuffer->commit())
+      return llvm::make_error<RawError>(raw_error_code::not_writable);
+    return Error::success();
+  }
+
+private:
+  std::unique_ptr<FileOutputBuffer> FileBuffer;
+};
+}
 
 namespace opts {
+
+cl::SubCommand RawSubcommand("raw", "Dump raw structure of the PDB file");
+cl::SubCommand
+    PrettySubcommand("pretty",
+                     "Dump semantic information about types and symbols");
+cl::SubCommand
+    YamlToPdbSubcommand("yaml2pdb",
+                        "Generate a PDB file from a YAML description");
+cl::SubCommand
+    PdbToYamlSubcommand("pdb2yaml",
+                        "Generate a detailed YAML description of a PDB File");
+
+cl::OptionCategory TypeCategory("Symbol Type Options");
+cl::OptionCategory FilterCategory("Filtering Options");
+cl::OptionCategory OtherOptions("Other Options");
+
+namespace pretty {
 cl::list<std::string> InputFilenames(cl::Positional,
                                      cl::desc("<input PDB files>"),
-                                     cl::OneOrMore);
+                                     cl::OneOrMore, cl::sub(PrettySubcommand));
 
-cl::opt<bool> Streams("streams", cl::desc("Display data stream information"));
-cl::alias StreamsShort("x", cl::desc("Alias for --streams"),
-                       cl::aliasopt(Streams));
+cl::opt<bool> Compilands("compilands", cl::desc("Display compilands"),
+                         cl::cat(TypeCategory), cl::sub(PrettySubcommand));
+cl::opt<bool> Symbols("symbols", cl::desc("Display symbols for each compiland"),
+                      cl::cat(TypeCategory), cl::sub(PrettySubcommand));
+cl::opt<bool> Globals("globals", cl::desc("Dump global symbols"),
+                      cl::cat(TypeCategory), cl::sub(PrettySubcommand));
+cl::opt<bool> Externals("externals", cl::desc("Dump external symbols"),
+                        cl::cat(TypeCategory), cl::sub(PrettySubcommand));
+cl::opt<bool> Types("types", cl::desc("Display types"), cl::cat(TypeCategory),
+                    cl::sub(PrettySubcommand));
+cl::opt<bool> Lines("lines", cl::desc("Line tables"), cl::cat(TypeCategory),
+                    cl::sub(PrettySubcommand));
+cl::opt<bool>
+    All("all", cl::desc("Implies all other options in 'Symbol Types' category"),
+        cl::cat(TypeCategory), cl::sub(PrettySubcommand));
 
-cl::opt<bool> StreamData("stream-data",
-                         cl::desc("Dumps stream record data as bytes"));
-cl::alias StreamDataShort("X", cl::desc("Alias for --stream-data"),
-                          cl::aliasopt(StreamData));
+cl::opt<uint64_t> LoadAddress(
+    "load-address",
+    cl::desc("Assume the module is loaded at the specified address"),
+    cl::cat(OtherOptions), cl::sub(PrettySubcommand));
+cl::list<std::string> ExcludeTypes(
+    "exclude-types", cl::desc("Exclude types by regular expression"),
+    cl::ZeroOrMore, cl::cat(FilterCategory), cl::sub(PrettySubcommand));
+cl::list<std::string> ExcludeSymbols(
+    "exclude-symbols", cl::desc("Exclude symbols by regular expression"),
+    cl::ZeroOrMore, cl::cat(FilterCategory), cl::sub(PrettySubcommand));
+cl::list<std::string> ExcludeCompilands(
+    "exclude-compilands", cl::desc("Exclude compilands by regular expression"),
+    cl::ZeroOrMore, cl::cat(FilterCategory), cl::sub(PrettySubcommand));
 
-cl::opt<bool> Tables("tables",
-                     cl::desc("Display summary information for all of the "
-                              "debug tables in the input file"));
-cl::alias TablesShort("t", cl::desc("Alias for --tables"),
-                      cl::aliasopt(Tables));
+cl::list<std::string> IncludeTypes(
+    "include-types",
+    cl::desc("Include only types which match a regular expression"),
+    cl::ZeroOrMore, cl::cat(FilterCategory), cl::sub(PrettySubcommand));
+cl::list<std::string> IncludeSymbols(
+    "include-symbols",
+    cl::desc("Include only symbols which match a regular expression"),
+    cl::ZeroOrMore, cl::cat(FilterCategory), cl::sub(PrettySubcommand));
+cl::list<std::string> IncludeCompilands(
+    "include-compilands",
+    cl::desc("Include only compilands those which match a regular expression"),
+    cl::ZeroOrMore, cl::cat(FilterCategory), cl::sub(PrettySubcommand));
 
-cl::opt<bool> SourceFiles("source-files",
-                          cl::desc("Display a list of the source files "
-                                   "contained in the PDB"));
-cl::alias SourceFilesShort("f", cl::desc("Alias for --source-files"),
-                           cl::aliasopt(SourceFiles));
-
-cl::opt<bool> Compilands("compilands",
-                         cl::desc("Display a list of compilands (e.g. object "
-                                  "files) and their source file composition"));
-cl::alias CompilandsShort("c", cl::desc("Alias for --compilands"),
-                          cl::aliasopt(Compilands));
-
-cl::opt<bool> Symbols("symbols", cl::desc("Display symbols"));
-cl::alias SymbolsShort("s", cl::desc("Alias for --symbols"),
-                       cl::aliasopt(Symbols));
-
-cl::opt<bool> SymbolDetails("symbol-details",
-                            cl::desc("Display symbol details"));
-cl::alias SymbolDetailsShort("S", cl::desc("Alias for --symbol-details"),
-                             cl::aliasopt(SymbolDetails));
+cl::opt<bool> ExcludeCompilerGenerated(
+    "no-compiler-generated",
+    cl::desc("Don't show compiler generated types and symbols"),
+    cl::cat(FilterCategory), cl::sub(PrettySubcommand));
+cl::opt<bool>
+    ExcludeSystemLibraries("no-system-libs",
+                           cl::desc("Don't show symbols from system libraries"),
+                           cl::cat(FilterCategory), cl::sub(PrettySubcommand));
+cl::opt<bool> NoClassDefs("no-class-definitions",
+                          cl::desc("Don't display full class definitions"),
+                          cl::cat(FilterCategory), cl::sub(PrettySubcommand));
+cl::opt<bool> NoEnumDefs("no-enum-definitions",
+                         cl::desc("Don't display full enum definitions"),
+                         cl::cat(FilterCategory), cl::sub(PrettySubcommand));
 }
 
-template <typename TableType>
-static HRESULT getDIATable(IDiaSession *Session, TableType **Table) {
-  CComPtr<IDiaEnumTables> EnumTables = nullptr;
-  HRESULT Error = S_OK;
-  if (FAILED(Error = Session->getEnumTables(&EnumTables)))
-    return Error;
+namespace raw {
 
-  for (auto CurTable : make_com_enumerator(EnumTables)) {
-    TableType *ResultTable = nullptr;
-    if (FAILED(CurTable->QueryInterface(
-            __uuidof(TableType), reinterpret_cast<void **>(&ResultTable))))
-      continue;
+cl::OptionCategory MsfOptions("MSF Container Options");
+cl::OptionCategory TypeOptions("Type Record Options");
+cl::OptionCategory FileOptions("Module & File Options");
+cl::OptionCategory SymbolOptions("Symbol Options");
+cl::OptionCategory MiscOptions("Miscellaneous Options");
 
-    *Table = ResultTable;
-    return S_OK;
+// MSF OPTIONS
+cl::opt<bool> DumpHeaders("headers", cl::desc("dump PDB headers"),
+                          cl::cat(MsfOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpStreamBlocks("stream-blocks",
+                               cl::desc("dump PDB stream blocks"),
+                               cl::cat(MsfOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpStreamSummary("stream-summary",
+                                cl::desc("dump summary of the PDB streams"),
+                                cl::cat(MsfOptions), cl::sub(RawSubcommand));
+
+// TYPE OPTIONS
+cl::opt<bool>
+    DumpTpiRecords("tpi-records",
+                   cl::desc("dump CodeView type records from TPI stream"),
+                   cl::cat(TypeOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpTpiRecordBytes(
+    "tpi-record-bytes",
+    cl::desc("dump CodeView type record raw bytes from TPI stream"),
+    cl::cat(TypeOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpTpiHash("tpi-hash", cl::desc("dump CodeView TPI hash stream"),
+                          cl::cat(TypeOptions), cl::sub(RawSubcommand));
+cl::opt<bool>
+    DumpIpiRecords("ipi-records",
+                   cl::desc("dump CodeView type records from IPI stream"),
+                   cl::cat(TypeOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpIpiRecordBytes(
+    "ipi-record-bytes",
+    cl::desc("dump CodeView type record raw bytes from IPI stream"),
+    cl::cat(TypeOptions), cl::sub(RawSubcommand));
+
+// MODULE & FILE OPTIONS
+cl::opt<bool> DumpModules("modules", cl::desc("dump compiland information"),
+                          cl::cat(FileOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpModuleFiles("module-files", cl::desc("dump file information"),
+                              cl::cat(FileOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpLineInfo("line-info",
+                           cl::desc("dump file and line information"),
+                           cl::cat(FileOptions), cl::sub(RawSubcommand));
+
+// SYMBOL OPTIONS
+cl::opt<bool> DumpModuleSyms("module-syms", cl::desc("dump module symbols"),
+                             cl::cat(SymbolOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpPublics("publics", cl::desc("dump Publics stream data"),
+                          cl::cat(SymbolOptions), cl::sub(RawSubcommand));
+cl::opt<bool>
+    DumpSymRecordBytes("sym-record-bytes",
+                       cl::desc("dump CodeView symbol record raw bytes"),
+                       cl::cat(SymbolOptions), cl::sub(RawSubcommand));
+
+// MISCELLANEOUS OPTIONS
+cl::opt<bool> DumpSectionContribs("section-contribs",
+                                  cl::desc("dump section contributions"),
+                                  cl::cat(MiscOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpSectionMap("section-map", cl::desc("dump section map"),
+                             cl::cat(MiscOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpSectionHeaders("section-headers",
+                                 cl::desc("dump section headers"),
+                                 cl::cat(MiscOptions), cl::sub(RawSubcommand));
+cl::opt<bool> DumpFpo("fpo", cl::desc("dump FPO records"), cl::cat(MiscOptions),
+                      cl::sub(RawSubcommand));
+
+cl::opt<std::string> DumpStreamDataIdx("stream", cl::desc("dump stream data"),
+                                       cl::cat(MiscOptions),
+                                       cl::sub(RawSubcommand));
+cl::opt<std::string> DumpStreamDataName("stream-name",
+                                        cl::desc("dump stream data"),
+                                        cl::cat(MiscOptions),
+                                        cl::sub(RawSubcommand));
+
+cl::opt<bool> RawAll("all", cl::desc("Implies most other options."),
+                     cl::cat(MiscOptions), cl::sub(RawSubcommand));
+
+cl::list<std::string> InputFilenames(cl::Positional,
+                                     cl::desc("<input PDB files>"),
+                                     cl::OneOrMore, cl::sub(RawSubcommand));
+}
+
+namespace yaml2pdb {
+cl::opt<std::string>
+    YamlPdbOutputFile("pdb", cl::desc("the name of the PDB file to write"),
+                      cl::sub(YamlToPdbSubcommand));
+
+cl::list<std::string> InputFilename(cl::Positional,
+                                    cl::desc("<input YAML file>"), cl::Required,
+                                    cl::sub(YamlToPdbSubcommand));
+}
+
+namespace pdb2yaml {
+cl::opt<bool> StreamMetadata(
+    "stream-metadata",
+    cl::desc("Dump the number of streams and each stream's size"),
+    cl::sub(PdbToYamlSubcommand));
+cl::opt<bool> StreamDirectory(
+    "stream-directory",
+    cl::desc("Dump each stream's block map (implies -stream-metadata)"),
+    cl::sub(PdbToYamlSubcommand));
+
+cl::list<std::string> InputFilename(cl::Positional,
+                                    cl::desc("<input PDB file>"), cl::Required,
+                                    cl::sub(PdbToYamlSubcommand));
+}
+}
+
+static ExitOnError ExitOnErr;
+
+static void yamlToPdb(StringRef Path) {
+  ErrorOr<std::unique_ptr<MemoryBuffer>> ErrorOrBuffer =
+      MemoryBuffer::getFileOrSTDIN(Path, /*FileSize=*/-1,
+                                   /*RequiresNullTerminator=*/false);
+
+  if (ErrorOrBuffer.getError()) {
+    ExitOnErr(make_error<GenericError>(generic_error_code::invalid_path, Path));
   }
-  return E_FAIL;
+
+  std::unique_ptr<MemoryBuffer> &Buffer = ErrorOrBuffer.get();
+
+  llvm::yaml::Input In(Buffer->getBuffer());
+  pdb::yaml::PdbObject YamlObj;
+  In >> YamlObj;
+
+  auto OutFileOrError = FileOutputBuffer::create(
+      opts::yaml2pdb::YamlPdbOutputFile, YamlObj.Headers.FileSize);
+  if (OutFileOrError.getError())
+    ExitOnErr(make_error<GenericError>(generic_error_code::invalid_path,
+                                       opts::yaml2pdb::YamlPdbOutputFile));
+
+  auto FileByteStream =
+      llvm::make_unique<FileBufferByteStream>(std::move(*OutFileOrError));
+  PDBFile Pdb(std::move(FileByteStream));
+  ExitOnErr(Pdb.setSuperBlock(&YamlObj.Headers.SuperBlock));
+  if (YamlObj.StreamMap.hasValue()) {
+    std::vector<ArrayRef<support::ulittle32_t>> StreamMap;
+    for (auto &E : YamlObj.StreamMap.getValue()) {
+      StreamMap.push_back(E.Blocks);
+    }
+    Pdb.setStreamMap(YamlObj.Headers.DirectoryBlocks, StreamMap);
+  }
+  if (YamlObj.StreamSizes.hasValue()) {
+    Pdb.setStreamSizes(YamlObj.StreamSizes.getValue());
+  }
+
+  ExitOnErr(Pdb.commit());
 }
 
-static void dumpBasicFileInfo(StringRef Path, IDiaSession *Session) {
-  CComPtr<IDiaSymbol> GlobalScope;
-  HRESULT hr = Session->get_globalScope(&GlobalScope);
-  DIASymbol GlobalScopeSymbol(GlobalScope);
-  if (S_OK == hr)
-    GlobalScopeSymbol.getSymbolsFileName().dump("File", 0);
+static void dumpRaw(StringRef Path) {
+  std::unique_ptr<IPDBSession> Session;
+  ExitOnErr(loadDataForPDB(PDB_ReaderType::Raw, Path, Session));
+
+  RawSession *RS = static_cast<RawSession *>(Session.get());
+  PDBFile &File = RS->getPDBFile();
+  std::unique_ptr<OutputStyle> O;
+  if (opts::PdbToYamlSubcommand)
+    O = llvm::make_unique<YAMLOutputStyle>(File);
   else
-    outs() << "File: " << Path << "\n";
-  HANDLE FileHandle = ::CreateFile(
-      Path.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
-      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-  LARGE_INTEGER FileSize;
-  if (INVALID_HANDLE_VALUE != FileHandle) {
-    outs().indent(2);
-    if (::GetFileSizeEx(FileHandle, &FileSize))
-      outs() << "Size: " << FileSize.QuadPart << " bytes\n";
-    else
-      outs() << "Size: (Unable to obtain file size)\n";
-    FILETIME ModifiedTime;
-    outs().indent(2);
-    if (::GetFileTime(FileHandle, nullptr, nullptr, &ModifiedTime)) {
-      ULARGE_INTEGER TimeInteger;
-      TimeInteger.LowPart = ModifiedTime.dwLowDateTime;
-      TimeInteger.HighPart = ModifiedTime.dwHighDateTime;
-      llvm::sys::TimeValue Time;
-      Time.fromWin32Time(TimeInteger.QuadPart);
-      outs() << "Timestamp: " << Time.str() << "\n";
-    } else {
-      outs() << "Timestamp: (Unable to obtain time stamp)\n";
-    }
-    ::CloseHandle(FileHandle);
-  }
+    O = llvm::make_unique<LLVMOutputStyle>(File);
 
-  if (S_OK == hr)
-    GlobalScopeSymbol.fullDump(2);
-  outs() << "\n";
-  outs().flush();
+  ExitOnErr(O->dump());
 }
 
-static void dumpDataStreams(IDiaSession *Session) {
-  CComPtr<IDiaEnumDebugStreams> DebugStreams = nullptr;
-  if (FAILED(Session->getEnumDebugStreams(&DebugStreams)))
-    return;
+static void dumpPretty(StringRef Path) {
+  std::unique_ptr<IPDBSession> Session;
 
-  LONG Count = 0;
-  if (FAILED(DebugStreams->get_Count(&Count)))
-    return;
-  outs() << "Data Streams [count=" << Count << "]\n";
+  ExitOnErr(loadDataForPDB(PDB_ReaderType::DIA, Path, Session));
 
-  std::string Name8;
+  if (opts::pretty::LoadAddress)
+    Session->setLoadAddress(opts::pretty::LoadAddress);
 
-  for (auto Stream : make_com_enumerator(DebugStreams)) {
-    BSTR Name16;
-    if (FAILED(Stream->get_name(&Name16)))
-      continue;
-    if (BSTRToUTF8(Name16, Name8))
-      outs() << "  " << Name8;
-    ::SysFreeString(Name16);
-    if (FAILED(Stream->get_Count(&Count))) {
-      outs() << "\n";
-      continue;
-    }
+  LinePrinter Printer(2, outs());
 
-    outs() << " [" << Count << " records]\n";
-    if (opts::StreamData) {
-      int RecordIndex = 0;
-      for (auto StreamRecord : make_com_data_record_enumerator(Stream)) {
-        outs() << "    Record " << RecordIndex << " [" << StreamRecord.size()
-               << " bytes]";
-        for (uint8_t byte : StreamRecord) {
-          outs() << " " << llvm::format_hex_no_prefix(byte, 2, true);
-        }
-        outs() << "\n";
-        ++RecordIndex;
+  auto GlobalScope(Session->getGlobalScope());
+  std::string FileName(GlobalScope->getSymbolsFileName());
+
+  WithColor(Printer, PDB_ColorItem::None).get() << "Summary for ";
+  WithColor(Printer, PDB_ColorItem::Path).get() << FileName;
+  Printer.Indent();
+  uint64_t FileSize = 0;
+
+  Printer.NewLine();
+  WithColor(Printer, PDB_ColorItem::Identifier).get() << "Size";
+  if (!sys::fs::file_size(FileName, FileSize)) {
+    Printer << ": " << FileSize << " bytes";
+  } else {
+    Printer << ": (Unable to obtain file size)";
+  }
+
+  Printer.NewLine();
+  WithColor(Printer, PDB_ColorItem::Identifier).get() << "Guid";
+  Printer << ": " << GlobalScope->getGuid();
+
+  Printer.NewLine();
+  WithColor(Printer, PDB_ColorItem::Identifier).get() << "Age";
+  Printer << ": " << GlobalScope->getAge();
+
+  Printer.NewLine();
+  WithColor(Printer, PDB_ColorItem::Identifier).get() << "Attributes";
+  Printer << ": ";
+  if (GlobalScope->hasCTypes())
+    outs() << "HasCTypes ";
+  if (GlobalScope->hasPrivateSymbols())
+    outs() << "HasPrivateSymbols ";
+  Printer.Unindent();
+
+  if (opts::pretty::Compilands) {
+    Printer.NewLine();
+    WithColor(Printer, PDB_ColorItem::SectionHeader).get()
+        << "---COMPILANDS---";
+    Printer.Indent();
+    auto Compilands = GlobalScope->findAllChildren<PDBSymbolCompiland>();
+    CompilandDumper Dumper(Printer);
+    CompilandDumpFlags options = CompilandDumper::Flags::None;
+    if (opts::pretty::Lines)
+      options = options | CompilandDumper::Flags::Lines;
+    while (auto Compiland = Compilands->getNext())
+      Dumper.start(*Compiland, options);
+    Printer.Unindent();
+  }
+
+  if (opts::pretty::Types) {
+    Printer.NewLine();
+    WithColor(Printer, PDB_ColorItem::SectionHeader).get() << "---TYPES---";
+    Printer.Indent();
+    TypeDumper Dumper(Printer);
+    Dumper.start(*GlobalScope);
+    Printer.Unindent();
+  }
+
+  if (opts::pretty::Symbols) {
+    Printer.NewLine();
+    WithColor(Printer, PDB_ColorItem::SectionHeader).get() << "---SYMBOLS---";
+    Printer.Indent();
+    auto Compilands = GlobalScope->findAllChildren<PDBSymbolCompiland>();
+    CompilandDumper Dumper(Printer);
+    while (auto Compiland = Compilands->getNext())
+      Dumper.start(*Compiland, true);
+    Printer.Unindent();
+  }
+
+  if (opts::pretty::Globals) {
+    Printer.NewLine();
+    WithColor(Printer, PDB_ColorItem::SectionHeader).get() << "---GLOBALS---";
+    Printer.Indent();
+    {
+      FunctionDumper Dumper(Printer);
+      auto Functions = GlobalScope->findAllChildren<PDBSymbolFunc>();
+      while (auto Function = Functions->getNext()) {
+        Printer.NewLine();
+        Dumper.start(*Function, FunctionDumper::PointerType::None);
       }
     }
-  }
-  outs() << "\n";
-  outs().flush();
-}
-
-static void dumpDebugTables(IDiaSession *Session) {
-  CComPtr<IDiaEnumTables> EnumTables = nullptr;
-  if (SUCCEEDED(Session->getEnumTables(&EnumTables))) {
-    LONG Count = 0;
-    if (FAILED(EnumTables->get_Count(&Count)))
-      return;
-
-    outs() << "Debug Tables [count=" << Count << "]\n";
-
-    std::string Name8;
-    for (auto Table : make_com_enumerator(EnumTables)) {
-      BSTR Name16;
-      if (FAILED(Table->get_name(&Name16)))
-        continue;
-      if (BSTRToUTF8(Name16, Name8))
-        outs() << "  " << Name8;
-      ::SysFreeString(Name16);
-      if (SUCCEEDED(Table->get_Count(&Count))) {
-        outs() << " [" << Count << " items]\n";
-      } else
-        outs() << "\n";
+    {
+      auto Vars = GlobalScope->findAllChildren<PDBSymbolData>();
+      VariableDumper Dumper(Printer);
+      while (auto Var = Vars->getNext())
+        Dumper.start(*Var);
     }
-  }
-  outs() << "\n";
-  outs().flush();
-}
-
-static void dumpSourceFiles(IDiaSession *Session) {
-  CComPtr<IDiaEnumSourceFiles> EnumSourceFileList;
-  if (FAILED(getDIATable(Session, &EnumSourceFileList)))
-    return;
-
-  LONG SourceFileCount = 0;
-  EnumSourceFileList->get_Count(&SourceFileCount);
-
-  outs() << "Dumping source files [" << SourceFileCount << " files]\n";
-  for (auto SourceFile : make_com_enumerator(EnumSourceFileList)) {
-    CComBSTR SourceFileName;
-    if (S_OK != SourceFile->get_fileName(&SourceFileName))
-      continue;
-    outs().indent(2);
-    std::string SourceFileName8;
-    BSTRToUTF8(SourceFileName, SourceFileName8);
-    outs() << SourceFileName8 << "\n";
-  }
-  outs() << "\n";
-  outs().flush();
-}
-
-static void dumpCompilands(IDiaSession *Session) {
-  CComPtr<IDiaEnumSourceFiles> EnumSourceFileList;
-  if (FAILED(getDIATable(Session, &EnumSourceFileList)))
-    return;
-
-  LONG SourceFileCount = 0;
-  EnumSourceFileList->get_Count(&SourceFileCount);
-
-  CComPtr<IDiaSymbol> GlobalScope;
-  HRESULT hr = Session->get_globalScope(&GlobalScope);
-  DIASymbol GlobalScopeSymbol(GlobalScope);
-  if (S_OK != hr)
-    return;
-
-  CComPtr<IDiaEnumSymbols> EnumCompilands;
-  if (S_OK !=
-      GlobalScope->findChildren(SymTagCompiland, nullptr, nsNone,
-                                &EnumCompilands))
-    return;
-
-  LONG CompilandCount = 0;
-  EnumCompilands->get_Count(&CompilandCount);
-  outs() << "Dumping compilands [" << CompilandCount
-         << " compilands containing " << SourceFileCount << " source files]\n";
-
-  for (auto Compiland : make_com_enumerator(EnumCompilands)) {
-    DIASymbol CompilandSymbol(Compiland);
-    outs().indent(2);
-    outs() << CompilandSymbol.getName().value() << "\n";
-
-    CComPtr<IDiaEnumSourceFiles> EnumFiles;
-    if (S_OK != Session->findFile(Compiland, nullptr, nsNone, &EnumFiles))
-      continue;
-
-    for (auto SourceFile : make_com_enumerator(EnumFiles)) {
-      DWORD ChecksumType = 0;
-      DWORD ChecksumSize = 0;
-      std::vector<uint8_t> Checksum;
-      outs().indent(4);
-      SourceFile->get_checksumType(&ChecksumType);
-      if (S_OK == SourceFile->get_checksum(0, &ChecksumSize, nullptr)) {
-        Checksum.resize(ChecksumSize);
-        if (S_OK ==
-            SourceFile->get_checksum(ChecksumSize, &ChecksumSize,
-                                     &Checksum[0])) {
-          outs() << "[" << ((ChecksumType == HashMD5) ? "MD5  " : "SHA-1")
-                 << ": ";
-          for (auto byte : Checksum)
-            outs() << format_hex_no_prefix(byte, 2, true);
-          outs() << "] ";
-        }
-      }
-      CComBSTR SourceFileName;
-      if (S_OK != SourceFile->get_fileName(&SourceFileName))
-        continue;
-
-      std::string SourceFileName8;
-      BSTRToUTF8(SourceFileName, SourceFileName8);
-      outs() << SourceFileName8 << "\n";
+    {
+      auto Thunks = GlobalScope->findAllChildren<PDBSymbolThunk>();
+      CompilandDumper Dumper(Printer);
+      while (auto Thunk = Thunks->getNext())
+        Dumper.dump(*Thunk);
     }
+    Printer.Unindent();
   }
-
-  outs() << "\n";
+  if (opts::pretty::Externals) {
+    Printer.NewLine();
+    WithColor(Printer, PDB_ColorItem::SectionHeader).get() << "---EXTERNALS---";
+    Printer.Indent();
+    ExternalSymbolDumper Dumper(Printer);
+    Dumper.start(*GlobalScope);
+  }
+  if (opts::pretty::Lines) {
+    Printer.NewLine();
+  }
   outs().flush();
-}
-
-static void dumpSymbols(IDiaSession *Session) {
-  CComPtr<IDiaEnumSymbols> EnumSymbols;
-  if (FAILED(getDIATable(Session, &EnumSymbols)))
-    return;
-
-  LONG SymbolCount = 0;
-  EnumSymbols->get_Count(&SymbolCount);
-
-  outs() << "Dumping symbols [" << SymbolCount << " symbols]\n";
-  int UnnamedSymbolCount = 0;
-  for (auto Symbol : make_com_enumerator(EnumSymbols)) {
-    DIASymbol SymbolSymbol(Symbol);
-    DIAResult<DIAString> SymbolName = SymbolSymbol.getName();
-    if (!SymbolName.hasValue() || SymbolName.value().empty()) {
-      ++UnnamedSymbolCount;
-      outs() << "  (Unnamed symbol)\n";
-    } else {
-      outs() << "  " << SymbolSymbol.getName().value() << "\n";
-    }
-    if (opts::SymbolDetails)
-      SymbolSymbol.fullDump(4);
-  }
-  outs() << "(Found " << UnnamedSymbolCount << " unnamed symbols)\n";
-  outs().flush();
-}
-
-static void dumpInput(StringRef Path) {
-  SmallVector<UTF16, 128> Path16String;
-  llvm::convertUTF8ToUTF16String(Path, Path16String);
-  wchar_t *Path16 = reinterpret_cast<wchar_t *>(Path16String.data());
-  CComPtr<IDiaDataSource> source;
-  HRESULT hr =
-      ::CoCreateInstance(CLSID_DiaSource, nullptr, CLSCTX_INPROC_SERVER,
-                         __uuidof(IDiaDataSource), (void **)&source);
-  if (FAILED(hr))
-    return;
-  if (FAILED(source->loadDataFromPdb(Path16)))
-    return;
-  CComPtr<IDiaSession> Session;
-  if (FAILED(source->openSession(&Session)))
-    return;
-
-  dumpBasicFileInfo(Path, Session);
-  if (opts::Streams || opts::StreamData) {
-    dumpDataStreams(Session);
-  }
-
-  if (opts::Tables) {
-    dumpDebugTables(Session);
-  }
-
-  if (opts::SourceFiles) {
-    dumpSourceFiles(Session);
-  }
-
-  if (opts::Compilands) {
-    dumpCompilands(Session);
-  }
-
-  if (opts::Symbols || opts::SymbolDetails) {
-    dumpSymbols(Session);
-  }
 }
 
 int main(int argc_, const char *argv_[]) {
   // Print a stack trace if we signal out.
-  sys::PrintStackTraceOnErrorSignal();
+  sys::PrintStackTraceOnErrorSignal(argv_[0]);
   PrettyStackTraceProgram X(argc_, argv_);
 
+  ExitOnErr.setBanner("llvm-pdbdump: ");
+
   SmallVector<const char *, 256> argv;
-  llvm::SpecificBumpPtrAllocator<char> ArgAllocator;
-  std::error_code EC = llvm::sys::Process::GetArgumentVector(
-      argv, llvm::makeArrayRef(argv_, argc_), ArgAllocator);
-  if (EC) {
-    llvm::errs() << "error: couldn't get arguments: " << EC.message() << '\n';
-    return 1;
-  }
+  SpecificBumpPtrAllocator<char> ArgAllocator;
+  ExitOnErr(errorCodeToError(sys::Process::GetArgumentVector(
+      argv, makeArrayRef(argv_, argc_), ArgAllocator)));
 
   llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
 
   cl::ParseCommandLineOptions(argv.size(), argv.data(), "LLVM PDB Dumper\n");
 
-  CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+  // These options are shared by two subcommands.
+  if ((opts::PdbToYamlSubcommand || opts::RawSubcommand) && opts::raw::RawAll) {
+    opts::raw::DumpHeaders = true;
+    opts::raw::DumpModules = true;
+    opts::raw::DumpModuleFiles = true;
+    opts::raw::DumpModuleSyms = true;
+    opts::raw::DumpPublics = true;
+    opts::raw::DumpSectionHeaders = true;
+    opts::raw::DumpStreamSummary = true;
+    opts::raw::DumpStreamBlocks = true;
+    opts::raw::DumpTpiRecords = true;
+    opts::raw::DumpTpiHash = true;
+    opts::raw::DumpIpiRecords = true;
+    opts::raw::DumpSectionMap = true;
+    opts::raw::DumpSectionContribs = true;
+    opts::raw::DumpLineInfo = true;
+    opts::raw::DumpFpo = true;
+  }
 
-  std::for_each(opts::InputFilenames.begin(), opts::InputFilenames.end(),
-                dumpInput);
+  llvm::sys::InitializeCOMRAII COM(llvm::sys::COMThreadingMode::MultiThreaded);
 
-  CoUninitialize();
+  if (opts::PdbToYamlSubcommand) {
+    dumpRaw(opts::pdb2yaml::InputFilename.front());
+  } else if (opts::YamlToPdbSubcommand) {
+    yamlToPdb(opts::yaml2pdb::InputFilename.front());
+  } else if (opts::PrettySubcommand) {
+    if (opts::pretty::Lines)
+      opts::pretty::Compilands = true;
+
+    if (opts::pretty::All) {
+      opts::pretty::Compilands = true;
+      opts::pretty::Symbols = true;
+      opts::pretty::Globals = true;
+      opts::pretty::Types = true;
+      opts::pretty::Externals = true;
+      opts::pretty::Lines = true;
+    }
+
+    // When adding filters for excluded compilands and types, we need to
+    // remember
+    // that these are regexes.  So special characters such as * and \ need to be
+    // escaped in the regex.  In the case of a literal \, this means it needs to
+    // be escaped again in the C++.  So matching a single \ in the input
+    // requires
+    // 4 \es in the C++.
+    if (opts::pretty::ExcludeCompilerGenerated) {
+      opts::pretty::ExcludeTypes.push_back("__vc_attributes");
+      opts::pretty::ExcludeCompilands.push_back("\\* Linker \\*");
+    }
+    if (opts::pretty::ExcludeSystemLibraries) {
+      opts::pretty::ExcludeCompilands.push_back(
+          "f:\\\\binaries\\\\Intermediate\\\\vctools\\\\crt_bld");
+      opts::pretty::ExcludeCompilands.push_back("f:\\\\dd\\\\vctools\\\\crt");
+      opts::pretty::ExcludeCompilands.push_back(
+          "d:\\\\th.obj.x86fre\\\\minkernel");
+    }
+    std::for_each(opts::pretty::InputFilenames.begin(),
+                  opts::pretty::InputFilenames.end(), dumpPretty);
+  } else if (opts::RawSubcommand) {
+    std::for_each(opts::raw::InputFilenames.begin(),
+                  opts::raw::InputFilenames.end(), dumpRaw);
+  }
+
+  outs().flush();
   return 0;
 }

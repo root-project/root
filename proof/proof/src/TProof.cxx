@@ -924,7 +924,8 @@ Int_t TProof::Init(const char *, const char *conffile,
       TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
       TProofServ::ResolveKeywords(globpack);
       Int_t nglb = TPackMgr::RegisterGlobalPath(globpack);
-      Info("Init", " %d global package directories registered", nglb);
+      if (gDebug > 0)
+         Info("Init", " %d global package directories registered", nglb);
    }
 
    // Master may want dynamic startup
@@ -1362,7 +1363,7 @@ Int_t TProof::AddWorkers(TList *workerList)
       // Remove worker from the list of workers terminated gracefully
       dummysi->SetOrdinal(fullord);
       TSlaveInfo *rmsi = (TSlaveInfo *)fTerminatedSlaveInfos->Remove(dummysi);
-      if (rmsi) SafeDelete(rmsi);
+      SafeDelete(rmsi);
 
       // Create worker server
       TString wn(worker->GetNodeName());
@@ -5319,6 +5320,9 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
       fWrksOutputReady->Clear();
    }
 
+   // Make sure the selector path is in the macro path
+   TProof::AssertMacroPath(selector);
+
    // Reset time measurements
    fQuerySTW.Reset();
 
@@ -8560,6 +8564,23 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt,
    return 0;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that the directory path contained by macro is in the macro path
+
+void TProof::AssertMacroPath(const char *macro)
+{
+   static TString macrop(gROOT->GetMacroPath());
+   if (macro && strlen(macro) > 0) {
+      TString dirn(gSystem->DirName(macro));
+      if (!macrop.Contains(dirn)) {
+         macrop += TString::Format("%s:", dirn.Data());
+         gROOT->SetMacroPath(macrop);
+      }
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Load the specified macro on master, workers and, if notOnClient is
 /// kFALSE, on the client. The macro file is uploaded if new or updated.
@@ -8585,6 +8606,9 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
       Error("Load", "need to specify a macro name");
       return -1;
    }
+
+   // Make sure the path is in the macro path
+   TProof::AssertMacroPath(macro);
 
    if (TestBit(TProof::kIsClient) && !wrks) {
 
@@ -12020,10 +12044,11 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       // Check if the entry list is valid. If it has spaces, commas, or pipes,
       // it is not considered as valid and we revert to the "multiple datasets"
       // case
-      Bool_t validEnl = ((enl.Index("|") == kNPOS) &&
-        (enl.Index(",") == kNPOS) && (enl.Index(" ") == kNPOS));
+      TRegexp rg("[, |]");
+      Bool_t validEnl = (enl.Index(rg) == kNPOS) ? kTRUE : kFALSE;
+      Bool_t validSdsn = (dsns.Index(rg) == kNPOS) ? kTRUE : kFALSE;
 
-      if (validEnl && (( fc = mgr->GetDataSet(dsns) ))) {
+      if (validEnl && validSdsn && (( fc = mgr->GetDataSet(dsns) ))) {
 
          //
          // String corresponds to ONE dataset only
@@ -12039,8 +12064,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
          // Adds the entry list (or empty string if not specified)
          datasets->Add( new TPair(dataset, new TObjString( enl.Data() )) );
 
-      }
-      else {
+      } else {
 
          //
          // String does NOT correspond to one dataset: check if many datasets

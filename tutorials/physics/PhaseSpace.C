@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_physics
+/// \notebook -js
 /// Example of use of TGenPhaseSpace
 ///
 /// \macro_image

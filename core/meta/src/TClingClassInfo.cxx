@@ -643,26 +643,6 @@ ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, b
    return binfo.Offset(address, isDerivedObject);
 }
 
-static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &interp)
-{
-   if (decl.hasBody()) return true;
-
-   GlobalDecl GD;
-   if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(&decl))
-     GD = GlobalDecl(Ctor, Ctor_Complete);
-   else if (const CXXDestructorDecl* Dtor = dyn_cast<CXXDestructorDecl>(&decl))
-     GD = GlobalDecl(Dtor, Dtor_Deleting);
-   else
-     GD = GlobalDecl(&decl);
-   std::string mangledName;
-   cling::utils::Analyze::maybeMangleDeclName(GD, mangledName);
-
-   void *GV = interp.getAddressOfGlobal(mangledName.c_str());
-   if (GV) return true;
-
-   return false;
-}
-
 bool TClingClassInfo::HasDefaultConstructor() const
 {
    // Return true if there a constructor taking no arguments (including
@@ -681,29 +661,9 @@ bool TClingClassInfo::HasDefaultConstructor() const
       // Namespaces do not have constructors.
       return false;
    }
-   if (CRD->hasTrivialDefaultConstructor()) {
-      // This class has a default constructor that can be called,
-      // but has no body.
-      return true;
-   }
-   // Note: This iteration may force template instantiations!
-   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
-   for (CXXRecordDecl::ctor_iterator I = CRD->ctor_begin(),
-         E = CRD->ctor_end(); I != E; ++I) {
-      if (I->getMinRequiredArguments() == 0) {
-         if ((I->getAccess() == AS_public) && HasBody(**I,*fInterp)) {
-            return true;
-         }
-         if (I->isTemplateInstantiation()) {
-            const clang::FunctionDecl* FD =
-               I->getInstantiatedFromMemberFunction();
-            if ((FD->getAccess() == AS_public) && HasBody(*FD,*fInterp)) {
-               return true;
-            }
-         }
-      }
-   }
-   return false;
+   using namespace TMetaUtils;
+   const RConstructorType ioctortype("",*fInterp);
+   return EIOCtorCategory::kAbsent != CheckConstructor(CRD,ioctortype,*fInterp);
 }
 
 bool TClingClassInfo::HasMethod(const char *name) const

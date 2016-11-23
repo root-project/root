@@ -22,9 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_PyMethodBase
 #include "TMVA/PyMethodBase.h"
-#endif
+
+#include "TString.h"
 
 namespace TMVA {
 
@@ -40,12 +40,10 @@ namespace TMVA {
       MethodPyAdaBoost(const TString &jobName,
                        const TString &methodTitle,
                        DataSetInfo &theData,
-                       const TString &theOption = "",
-                       TDirectory *theTargetDir = NULL);
+                       const TString &theOption = "");
 
       MethodPyAdaBoost(DataSetInfo &dsi,
-                       const TString &theWeightFile,
-                       TDirectory *theTargetDir = NULL);
+                       const TString &theWeightFile);
 
 
       ~MethodPyAdaBoost(void);

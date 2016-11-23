@@ -147,6 +147,9 @@ Bool_t   TFile::fgCacheFileForce = kFALSE;
 Bool_t   TFile::fgCacheFileDisconnected = kTRUE;
 UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
 Bool_t   TFile::fgOnlyStaged = 0;
+#ifdef R__USE_IMT
+ROOT::TRWSpinLock TFile::fgRwLock;
+#endif
 
 const Int_t kBEGIN = 100;
 
@@ -855,7 +858,10 @@ void TFile::Init(Bool_t create)
                goto zombie;
             }
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {
-            Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
+            // Don't complain about missing streamer info for empty files.
+            if (fKeys->GetSize()) {
+               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
+            }
          }
       }
    }
@@ -1795,23 +1801,37 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
       //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());
       return pid;
    }
-      //check that a similar pid is not already registered in fgPIDs
+
+   //check that a similar pid is not already registered in fgPIDs
    TObjArray *pidslist = TProcessID::GetPIDs();
    TIter next(pidslist);
    TProcessID *p;
+   bool found = false;
+   R__RWLOCK_ACQUIRE_READ(fgRwLock);
    while ((p = (TProcessID*)next())) {
       if (!strcmp(p->GetTitle(),pid->GetTitle())) {
-         delete pid;
-         pids->AddAtAndExpand(p,pidf);
-         p->IncrementCount();
-         return p;
+         found = true;
+         break;
       }
    }
+   R__RWLOCK_RELEASE_READ(fgRwLock);
+
+   if (found) {
+      delete pid;
+      pids->AddAtAndExpand(p,pidf);
+      p->IncrementCount();
+      return p;
+   }
+
    pids->AddAtAndExpand(pid,pidf);
    pid->IncrementCount();
+
+   R__RWLOCK_ACQUIRE_WRITE(fgRwLock);
    pidslist->Add(pid);
    Int_t ind = pidslist->IndexOf(pid);
    pid->SetUniqueID((UInt_t)ind);
+   R__RWLOCK_RELEASE_WRITE(fgRwLock);
+
    return pid;
 }
 

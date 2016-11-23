@@ -2,7 +2,7 @@
 /// \ingroup tutorial_unuran
 /// This program must be compiled and executed with Aclic as follows
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// .x unuranFoamTest.C+
 /// ~~~
 ///

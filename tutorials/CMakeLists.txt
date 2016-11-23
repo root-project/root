@@ -121,6 +121,10 @@ if(NOT TBB_FOUND)
   set(tbb_veto  multicore/mtbb*.C)
 endif()
 
+if(NOT ROOT_imt_FOUND)
+  set(imt_veto multicore/imt*.C)
+endif()
+
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
@@ -183,7 +187,8 @@ set(all_veto hsimple.C
              ${gviz_veto}
              ${r_veto}
              ${histfactory_veto}
-             ${tbb_veto})
+             ${tbb_veto}
+             ${imt_veto})
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -228,6 +233,7 @@ set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
+set(fit-myfit-depends tutorial-fit-fitslicesy)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 set(tree-staff-depends  tutorial-tree-cernbuild)
 set(tree-cernstaff-depends  tutorial-tree-cernbuild)
@@ -246,6 +252,7 @@ set(benchmarks-depends tutorial-hsimple
 set(geom-na49view-depends tutorial-geom-geometry)
 set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
+set(tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
@@ -285,10 +292,8 @@ foreach(t ${tutorials})
   string(REPLACE "/" "-" tname ${tname})
 
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
-   if (${tname} STREQUAL "tmva-TMVAClassification" OR
-       ${tname} STREQUAL "tmva-TMVARegression" OR
-       ${tname} STREQUAL "tmva-TMVAMulticlass")
-     set(thisTestTimeout 3600) # 1h
+   if(ROOT_ARCHITECTURE MATCHES arm64)
+     set(thisTestTimeout 2400) # 40m
    else()
      set(thisTestTimeout 1200) # 20m
    endif()

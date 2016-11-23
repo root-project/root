@@ -141,7 +141,7 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   Float_t sigmat, sigmas;
   gRandom->Rannor(sigmat,sigmas);
   Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
-  Float_t random = gRandom->Rndm(1);
+  Float_t random = gRandom->Rndm();
 
   //Save current Object count
   Int_t ObjectNumber = TProcessID::GetObjectCount();
@@ -172,9 +172,9 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
     }
   }
 
-  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
+  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
+  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
 
   //  Create and Fill the Track objects
   for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
@@ -320,7 +320,7 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
    gRandom->Rannor(a,b);
    fBx = 0.1*a;
    fBy = 0.1*b;
-   fMeanCharge = 0.01*gRandom->Rndm(1);
+   fMeanCharge = 0.01*gRandom->Rndm();
    gRandom->Rannor(a,b);
    fXfirst = a*10;
    fXlast  = b*10;
@@ -330,17 +330,17 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
    gRandom->Rannor(a,b);
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
-   fCharge = Double32_t(Int_t(3*gRandom->Rndm(1)) - 1);
+   fCharge = Double32_t(Int_t(3*gRandom->Rndm()) - 1);
 
-   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
 
    fVertex[0] = gRandom->Gaus(0,0.1);
    fVertex[1] = gRandom->Gaus(0,0.2);
    fVertex[2] = gRandom->Gaus(0,10);
-   fNpoint = Int_t(60+10*gRandom->Rndm(1));
-   fNsp = Int_t(3*gRandom->Rndm(1));
+   fNpoint = Int_t(60+10*gRandom->Rndm());
+   fNsp = Int_t(3*gRandom->Rndm());
    if (fNsp) {
       fPointValue = new Double32_t[fNsp];
       for(int i=0; i<fNsp; i++) {
@@ -349,7 +349,7 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
    } else {
       fPointValue = 0;
    }
-   fValid  = Int_t(0.6+gRandom->Rndm(1));
+   fValid  = Int_t(0.6+gRandom->Rndm());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,7 +438,7 @@ void Track::Set(Float_t random)
    gRandom->Rannor(a,b);
    fBx = 0.1*a;
    fBy = 0.1*b;
-   fMeanCharge = 0.01*gRandom->Rndm(1);
+   fMeanCharge = 0.01*gRandom->Rndm();
    gRandom->Rannor(a,b);
    fXfirst = a*10;
    fXlast  = b*10;
@@ -448,17 +448,17 @@ void Track::Set(Float_t random)
    gRandom->Rannor(a,b);
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
-   fCharge = Double32_t(Int_t(3*gRandom->Rndm(1)) - 1);
+   fCharge = Double32_t(Int_t(3*gRandom->Rndm()) - 1);
 
-   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm()));
 
    fVertex[0] = gRandom->Gaus(0,0.1);
    fVertex[1] = gRandom->Gaus(0,0.2);
    fVertex[2] = gRandom->Gaus(0,10);
-   fNpoint = Int_t(60+10*gRandom->Rndm(1));
-   Int_t newNsp = Int_t(3*gRandom->Rndm(1));
+   fNpoint = Int_t(60+10*gRandom->Rndm());
+   Int_t newNsp = Int_t(3*gRandom->Rndm());
    if (fNsp > newNsp) {
       fNsp = newNsp;
       if (fNsp == 0) {
@@ -484,7 +484,7 @@ void Track::Set(Float_t random)
          fPointValue = 0;
       }
    }
-   fValid  = Int_t(0.6+gRandom->Rndm(1));
+   fValid  = Int_t(0.6+gRandom->Rndm());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

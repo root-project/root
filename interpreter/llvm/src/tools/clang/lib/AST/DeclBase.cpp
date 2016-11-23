@@ -45,10 +45,19 @@ void Decl::updateOutOfDate(IdentifierInfo &II) const {
   getASTContext().getExternalSource()->updateOutOfDateIdentifier(II);
 }
 
+#define DECL(DERIVED, BASE)                                                    \
+  static_assert(llvm::AlignOf<Decl>::Alignment >=                              \
+                    llvm::AlignOf<DERIVED##Decl>::Alignment,                   \
+                "Alignment sufficient after objects prepended to " #DERIVED);
+#define ABSTRACT_DECL(DECL)
+#include "clang/AST/DeclNodes.inc"
+
 void *Decl::operator new(std::size_t Size, const ASTContext &Context,
                          unsigned ID, std::size_t Extra) {
   // Allocate an extra 8 bytes worth of storage, which ensures that the
-  // resulting pointer will still be 8-byte aligned. 
+  // resulting pointer will still be 8-byte aligned.
+  static_assert(sizeof(unsigned) * 2 >= llvm::AlignOf<Decl>::Alignment,
+                "Decl won't be misaligned");
   void *Start = Context.Allocate(Size + Extra + 8);
   void *Result = (char*)Start + 8;
 
@@ -66,12 +75,29 @@ void *Decl::operator new(std::size_t Size, const ASTContext &Context,
 void *Decl::operator new(std::size_t Size, const ASTContext &Ctx,
                          DeclContext *Parent, std::size_t Extra) {
   assert(!Parent || &Parent->getParentASTContext() == &Ctx);
+  // With local visibility enabled, we track the owning module even for local
+  // declarations.
+  if (Ctx.getLangOpts().ModulesLocalVisibility) {
+    // Ensure required alignment of the resulting object by adding extra
+    // padding at the start if required.
+    size_t ExtraAlign =
+        llvm::OffsetToAlignment(sizeof(Module *),
+                                llvm::AlignOf<Decl>::Alignment);
+    char *Buffer = reinterpret_cast<char *>(
+        ::operator new(ExtraAlign + sizeof(Module *) + Size + Extra, Ctx));
+    Buffer += ExtraAlign;
+    return new (Buffer) Module*(nullptr) + 1;
+  }
   return ::operator new(Size + Extra, Ctx);
 }
 
 Module *Decl::getOwningModuleSlow() const {
   assert(isFromASTFile() && "Not from AST file?");
   return getASTContext().getExternalSource()->getModule(getOwningModuleID());
+}
+
+bool Decl::hasLocalOwningModuleStorage() const {
+  return getASTContext().getLangOpts().ModulesLocalVisibility;
 }
 
 const char *Decl::getDeclKindName() const {
@@ -171,6 +197,17 @@ bool Decl::isTemplateDecl() const {
   return isa<TemplateDecl>(this);
 }
 
+TemplateDecl *Decl::getDescribedTemplate() const {
+  if (auto *FD = dyn_cast<FunctionDecl>(this))
+    return FD->getDescribedFunctionTemplate();
+  else if (auto *RD = dyn_cast<CXXRecordDecl>(this))
+    return RD->getDescribedClassTemplate();
+  else if (auto *VD = dyn_cast<VarDecl>(this))
+    return VD->getDescribedVarTemplate();
+
+  return nullptr;
+}
+
 const DeclContext *Decl::getParentFunctionOrMethod() const {
   for (const DeclContext *DC = getDeclContext();
        DC && !DC->isTranslationUnit() && !DC->isNamespace(); 
@@ -226,6 +263,7 @@ void Decl::setLexicalDeclContext(DeclContext *DC) {
   } else {
     getMultipleDC()->LexicalDC = DC;
   }
+  Hidden = cast<Decl>(DC)->Hidden;
 }
 
 void Decl::setDeclContextsImpl(DeclContext *SemaDC, DeclContext *LexicalDC,
@@ -238,6 +276,18 @@ void Decl::setDeclContextsImpl(DeclContext *SemaDC, DeclContext *LexicalDC,
     MDC->LexicalDC = LexicalDC;
     DeclCtx = MDC;
   }
+}
+
+bool Decl::isLexicallyWithinFunctionOrMethod() const {
+  const DeclContext *LDC = getLexicalDeclContext();
+  while (true) {
+    if (LDC->isFunctionOrMethod())
+      return true;
+    if (!isa<TagDecl>(LDC))
+      return false;
+    LDC = LDC->getLexicalParent();
+  }
+  return false;
 }
 
 bool Decl::isInAnonymousNamespace() const {
@@ -291,25 +341,29 @@ unsigned Decl::getMaxAlignment() const {
   return Align;
 }
 
-bool Decl::isUsed(bool CheckUsedAttr) const { 
-  if (Used)
-    return true;
-  
-  // Check for used attribute.
-  if (CheckUsedAttr && hasAttr<UsedAttr>())
+bool Decl::isUsed(bool CheckUsedAttr) const {
+  const Decl *CanonD = getCanonicalDecl();
+  if (CanonD->Used)
     return true;
 
-  return false; 
+  // Check for used attribute.
+  // Ask the most recent decl, since attributes accumulate in the redecl chain.
+  if (CheckUsedAttr && getMostRecentDecl()->hasAttr<UsedAttr>())
+    return true;
+
+  // The information may have not been deserialized yet. Force deserialization
+  // to complete the needed information.
+  return getMostRecentDecl()->getCanonicalDecl()->Used;
 }
 
 void Decl::markUsed(ASTContext &C) {
-  if (Used)
+  if (isUsed(false))
     return;
 
   if (C.getASTMutationListener())
     C.getASTMutationListener()->DeclarationMarkedUsed(this);
 
-  Used = true;
+  setIsUsed();
 }
 
 bool Decl::isReferenced() const { 
@@ -324,6 +378,18 @@ bool Decl::isReferenced() const {
   return false; 
 }
 
+bool Decl::hasDefiningAttr() const {
+  return hasAttr<AliasAttr>() || hasAttr<IFuncAttr>();
+}
+
+const Attr *Decl::getDefiningAttr() const {
+  if (AliasAttr *AA = getAttr<AliasAttr>())
+    return AA;
+  if (IFuncAttr *IFA = getAttr<IFuncAttr>())
+    return IFA;
+  return nullptr;
+}
+
 /// \brief Determine the availability of the given declaration based on
 /// the target platform.
 ///
@@ -336,20 +402,34 @@ bool Decl::isReferenced() const {
 static AvailabilityResult CheckAvailability(ASTContext &Context,
                                             const AvailabilityAttr *A,
                                             std::string *Message) {
-  StringRef TargetPlatform = Context.getTargetInfo().getPlatformName();
-  StringRef PrettyPlatformName
-    = AvailabilityAttr::getPrettyPlatformName(TargetPlatform);
-  if (PrettyPlatformName.empty())
-    PrettyPlatformName = TargetPlatform;
+  VersionTuple TargetMinVersion =
+    Context.getTargetInfo().getPlatformMinVersion();
 
-  VersionTuple TargetMinVersion = Context.getTargetInfo().getPlatformMinVersion();
   if (TargetMinVersion.empty())
     return AR_Available;
 
+  // Check if this is an App Extension "platform", and if so chop off
+  // the suffix for matching with the actual platform.
+  StringRef ActualPlatform = A->getPlatform()->getName();
+  StringRef RealizedPlatform = ActualPlatform;
+  if (Context.getLangOpts().AppExt) {
+    size_t suffix = RealizedPlatform.rfind("_app_extension");
+    if (suffix != StringRef::npos)
+      RealizedPlatform = RealizedPlatform.slice(0, suffix);
+  }
+
+  StringRef TargetPlatform = Context.getTargetInfo().getPlatformName();
+
   // Match the platform name.
-  if (A->getPlatform()->getName() != TargetPlatform)
+  if (RealizedPlatform != TargetPlatform)
     return AR_Available;
-  
+
+  StringRef PrettyPlatformName
+    = AvailabilityAttr::getPrettyPlatformName(ActualPlatform);
+
+  if (PrettyPlatformName.empty())
+    PrettyPlatformName = ActualPlatform;
+
   std::string HintMessage;
   if (!A->getMessage().empty()) {
     HintMessage = " - ";
@@ -380,7 +460,7 @@ static AvailabilityResult CheckAvailability(ASTContext &Context,
           << VTI << HintMessage;
     }
 
-    return AR_NotYetIntroduced;
+    return A->getStrict() ? AR_Unavailable : AR_NotYetIntroduced;
   }
 
   // Make sure that this declaration hasn't been obsoleted.
@@ -415,6 +495,9 @@ static AvailabilityResult CheckAvailability(ASTContext &Context,
 }
 
 AvailabilityResult Decl::getAvailability(std::string *Message) const {
+  if (auto *FTD = dyn_cast<FunctionTemplateDecl>(this))
+    return FTD->getTemplatedDecl()->getAvailability(Message);
+
   AvailabilityResult Result = AR_Available;
   std::string ResultMessage;
 
@@ -511,13 +594,13 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case Function:
     case CXXMethod:
     case CXXConstructor:
+    case ConstructorUsingShadow:
     case CXXDestructor:
     case CXXConversion:
     case EnumConstant:
     case Var:
     case ImplicitParam:
     case ParmVar:
-    case NonTypeTemplateParm:
     case ObjCMethod:
     case ObjCProperty:
     case MSProperty:
@@ -526,6 +609,12 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
       return IDNS_Label;
     case IndirectField:
       return IDNS_Ordinary | IDNS_Member;
+
+    case NonTypeTemplateParm:
+      // Non-type template parameters are not found by lookups that ignore
+      // non-types, but they are found by redeclaration lookups for tag types,
+      // so we include them in the tag namespace.
+      return IDNS_Ordinary | IDNS_Tag;
 
     case ObjCCompatibleAlias:
     case ObjCInterface:
@@ -536,6 +625,7 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case TypeAliasTemplate:
     case UnresolvedUsingTypename:
     case TemplateTypeParm:
+    case ObjCTypeParam:
       return IDNS_Ordinary | IDNS_Type;
 
     case UsingShadow:
@@ -572,6 +662,9 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case TemplateTemplateParm:
       return IDNS_Ordinary | IDNS_Tag | IDNS_Type;
 
+    case OMPDeclareReduction:
+      return IDNS_OMPReduction;
+
     // Never have names.
     case Friend:
     case FriendTemplate:
@@ -580,11 +673,15 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case FileScopeAsm:
     case StaticAssert:
     case ObjCPropertyImpl:
+    case PragmaComment:
+    case PragmaDetectMismatch:
     case Block:
     case Captured:
     case TranslationUnit:
+    case ExternCContext:
 
     case UsingDirective:
+    case BuiltinTemplate:
     case ClassTemplateSpecialization:
     case ClassTemplatePartialSpecialization:
     case ClassScopeFunctionSpecialization:
@@ -595,6 +692,7 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case ObjCCategoryImpl:
     case Import:
     case OMPThreadPrivate:
+    case OMPCapturedExpr:
     case Empty:
       // Never looked up by name.
       return 0;
@@ -846,6 +944,10 @@ bool DeclContext::isDependentContext() const {
       return getLexicalParent()->isDependentContext();
   }
 
+  // FIXME: A variable template is a dependent context, but is not a
+  // DeclContext. A context within it (such as a lambda-expression)
+  // should be considered dependent.
+
   return getParent() && getParent()->isDependentContext();
 }
 
@@ -889,9 +991,11 @@ bool DeclContext::Encloses(const DeclContext *DC) const {
 DeclContext *DeclContext::getPrimaryContext() {
   switch (DeclKind) {
   case Decl::TranslationUnit:
+  case Decl::ExternCContext:
   case Decl::LinkageSpec:
   case Decl::Block:
   case Decl::Captured:
+  case Decl::OMPDeclareReduction:
     // There is only one DeclContext for these entities.
     return this;
 
@@ -991,37 +1095,31 @@ DeclContext::BuildDeclChain(ArrayRef<Decl*> Decls,
 /// built a lookup map. For every name in the map, pull in the new names from
 /// the external storage.
 void DeclContext::reconcileExternalVisibleStorage() const {
-  assert(NeedToReconcileExternalVisibleStorage && LookupPtr.getPointer());
+  assert(NeedToReconcileExternalVisibleStorage && LookupPtr);
   NeedToReconcileExternalVisibleStorage = false;
 
-  for (auto &Lookup : *LookupPtr.getPointer())
+  for (auto &Lookup : *LookupPtr)
     Lookup.second.setHasExternalDecls();
 }
 
 /// \brief Load the declarations within this lexical storage from an
 /// external source.
-void
+/// \return \c true if any declarations were added.
+bool
 DeclContext::LoadLexicalDeclsFromExternalStorage() const {
   ExternalASTSource *Source = getParentASTContext().getExternalSource();
   assert(hasExternalLexicalStorage() && Source && "No external storage?");
 
   // Notify that we have a DeclContext that is initializing.
   ExternalASTSource::Deserializing ADeclContext(Source);
-  
+
   // Load the external declarations, if any.
   SmallVector<Decl*, 64> Decls;
   ExternalLexicalStorage = false;
-  switch (Source->FindExternalLexicalDecls(this, Decls)) {
-  case ELR_Success:
-    break;
-    
-  case ELR_Failure:
-  case ELR_AlreadyLoaded:
-    return;
-  }
+  Source->FindExternalLexicalDecls(this, Decls);
 
   if (Decls.empty())
-    return;
+    return false;
 
   // We may have already loaded just the fields of this record, in which case
   // we need to ignore them.
@@ -1038,6 +1136,7 @@ DeclContext::LoadLexicalDeclsFromExternalStorage() const {
   FirstDecl = ExternalFirst;
   if (!LastDecl)
     LastDecl = ExternalLast;
+  return true;
 }
 
 DeclContext::lookup_result
@@ -1045,7 +1144,7 @@ ExternalASTSource::SetNoExternalVisibleDeclsForName(const DeclContext *DC,
                                                     DeclarationName Name) {
   ASTContext &Context = DC->getParentASTContext();
   StoredDeclsMap *Map;
-  if (!(Map = DC->LookupPtr.getPointer()))
+  if (!(Map = DC->LookupPtr))
     Map = DC->CreateStoredDeclsMap(Context);
   if (DC->NeedToReconcileExternalVisibleStorage)
     DC->reconcileExternalVisibleStorage();
@@ -1061,7 +1160,7 @@ ExternalASTSource::SetExternalVisibleDeclsForName(const DeclContext *DC,
                                                   ArrayRef<NamedDecl*> Decls) {
   ASTContext &Context = DC->getParentASTContext();
   StoredDeclsMap *Map;
-  if (!(Map = DC->LookupPtr.getPointer()))
+  if (!(Map = DC->LookupPtr))
     Map = DC->CreateStoredDeclsMap(Context);
   if (DC->NeedToReconcileExternalVisibleStorage)
     DC->reconcileExternalVisibleStorage();
@@ -1078,7 +1177,7 @@ ExternalASTSource::SetExternalVisibleDeclsForName(const DeclContext *DC,
     // first.
     llvm::SmallVector<unsigned, 8> Skip;
     for (unsigned I = 0, N = Decls.size(); I != N; ++I)
-      if (List.HandleRedeclaration(Decls[I]))
+      if (List.HandleRedeclaration(Decls[I], /*IsKnownNewer*/false))
         Skip.push_back(I);
     Skip.push_back(Decls.size());
 
@@ -1155,19 +1254,20 @@ void DeclContext::removeDecl(Decl *D) {
     // Remove only decls that have a name or registered in the lookup.
     if (!ND->getDeclName() || ND->isHidden()) return;
 
-    StoredDeclsMap *Map = D->getDeclContext()->getPrimaryContext()->LookupPtr.getPointer();
-    if (!Map) return;
-
-    StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
-#ifndef NDEBUG
-    assert(Pos != Map->end() && "no lookup entry for decl");
-#endif
-    if (Pos != Map->end()) {
-    StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector();
-    if ((Vec && std::find(Vec->begin(), Vec->end(), ND) != Vec->end())
-        || Pos->second.getAsDecl() == ND)
-      Pos->second.remove(ND);
-    } // if (Pos != Map->end())
+    auto *DC = D->getDeclContext();
+    do {
+      StoredDeclsMap *Map = DC->getPrimaryContext()->LookupPtr;
+      if (Map) {
+        StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
+        assert((DC->hasExternalVisibleStorage() || Pos != Map->end()) && "no lookup entry for decl");
+        if (Pos != Map->end()) {
+        StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector();
+        if ((Vec && std::find(Vec->begin(), Vec->end(), ND) != Vec->end())
+            || Pos->second.getAsDecl() == ND)
+          Pos->second.remove(ND);
+        } // if (Pos != Map->end())
+      }
+    } while (DC->isTransparentContext() && (DC = DC->getParent()));
   }
 }
 
@@ -1185,7 +1285,7 @@ void DeclContext::addHiddenDecl(Decl *D) {
   }
 
   // Notify a C++ record declaration that we've added a member, so it can
-  // update it's class-specific state.
+  // update its class-specific state.
   if (CXXRecordDecl *Record = dyn_cast<CXXRecordDecl>(this))
     Record->addedMember(D);
 
@@ -1249,32 +1349,38 @@ static bool shouldBeHidden(NamedDecl *D) {
 StoredDeclsMap *DeclContext::buildLookup() {
   assert(this == getPrimaryContext() && "buildLookup called on non-primary DC");
 
-  // FIXME: Should we keep going if hasExternalVisibleStorage?
-  if (!LookupPtr.getInt())
-    return LookupPtr.getPointer();
+  if (!HasLazyLocalLexicalLookups && !HasLazyExternalLexicalLookups)
+    return LookupPtr;
 
   SmallVector<DeclContext *, 2> Contexts;
   collectAllContexts(Contexts);
-  for (unsigned I = 0, N = Contexts.size(); I != N; ++I)
-    buildLookupImpl<&DeclContext::decls_begin,
-                    &DeclContext::decls_end>(Contexts[I]);
+
+  if (HasLazyExternalLexicalLookups) {
+    HasLazyExternalLexicalLookups = false;
+    for (auto *DC : Contexts) {
+      if (DC->hasExternalLexicalStorage())
+        HasLazyLocalLexicalLookups |=
+            DC->LoadLexicalDeclsFromExternalStorage();
+    }
+
+    if (!HasLazyLocalLexicalLookups)
+      return LookupPtr;
+  }
+
+  for (auto *DC : Contexts)
+    buildLookupImpl(DC, hasExternalVisibleStorage());
 
   // We no longer have any lazy decls.
-  LookupPtr.setInt(false);
-  return LookupPtr.getPointer();
+  HasLazyLocalLexicalLookups = false;
+  return LookupPtr;
 }
 
 /// buildLookupImpl - Build part of the lookup data structure for the
 /// declarations contained within DCtx, which will either be this
 /// DeclContext, a DeclContext linked to it, or a transparent context
 /// nested within it.
-template<DeclContext::decl_iterator (DeclContext::*Begin)() const,
-         DeclContext::decl_iterator (DeclContext::*End)() const>
-void DeclContext::buildLookupImpl(DeclContext *DCtx) {
-  for (decl_iterator I = (DCtx->*Begin)(), E = (DCtx->*End)();
-       I != E; ++I) {
-    Decl *D = *I;
-
+void DeclContext::buildLookupImpl(DeclContext *DCtx, bool Internal) {
+  for (Decl *D : DCtx->noload_decls()) {
     // Insert this declaration into the lookup structure, but only if
     // it's semantically within its decl context. Any other decls which
     // should be found in this context are added eagerly.
@@ -1288,39 +1394,46 @@ void DeclContext::buildLookupImpl(DeclContext *DCtx) {
           (!ND->isFromASTFile() ||
            (isTranslationUnit() &&
             !getParentASTContext().getLangOpts().CPlusPlus)))
-        makeDeclVisibleInContextImpl(ND, false);
+        makeDeclVisibleInContextImpl(ND, Internal);
 
     // If this declaration is itself a transparent declaration context
     // or inline namespace, add the members of this declaration of that
     // context (recursively).
     if (DeclContext *InnerCtx = dyn_cast<DeclContext>(D))
       if (InnerCtx->isTransparentContext() || InnerCtx->isInlineNamespace())
-        buildLookupImpl<Begin, End>(InnerCtx);
+        buildLookupImpl(InnerCtx, Internal);
   }
 }
 
+NamedDecl *const DeclContextLookupResult::SingleElementDummyList = nullptr;
+
 DeclContext::lookup_result
-DeclContext::lookup(DeclarationName Name) {
+DeclContext::lookup(DeclarationName Name) const {
   assert(DeclKind != Decl::LinkageSpec &&
          "Should not perform lookups into linkage specs!");
 
-  DeclContext *PrimaryContext = getPrimaryContext();
+  const DeclContext *PrimaryContext = getPrimaryContext();
   if (PrimaryContext != this)
     return PrimaryContext->lookup(Name);
 
-  // If this is a namespace, ensure that any later redeclarations of it have
-  // been loaded, since they may add names to the result of this lookup.
-  if (auto *ND = dyn_cast<NamespaceDecl>(this))
-    (void)ND->getMostRecentDecl();
+  // If we have an external source, ensure that any later redeclarations of this
+  // context have been loaded, since they may add names to the result of this
+  // lookup (or add external visible storage).
+  ExternalASTSource *Source = getParentASTContext().getExternalSource();
+  if (Source)
+    (void)cast<Decl>(this)->getMostRecentDecl();
 
   if (hasExternalVisibleStorage()) {
+    assert(Source && "external visible storage but no external source?");
+
     if (NeedToReconcileExternalVisibleStorage)
       reconcileExternalVisibleStorage();
 
-    StoredDeclsMap *Map = LookupPtr.getPointer();
+    StoredDeclsMap *Map = LookupPtr;
 
-    if (LookupPtr.getInt())
-      Map = buildLookup();
+    if (HasLazyLocalLexicalLookups || HasLazyExternalLexicalLookups)
+      // FIXME: Make buildLookup const?
+      Map = const_cast<DeclContext*>(this)->buildLookup();
 
     if (!Map)
       Map = CreateStoredDeclsMap(getParentASTContext());
@@ -1331,28 +1444,27 @@ DeclContext::lookup(DeclarationName Name) {
     if (!R.second && !R.first->second.hasExternalDecls())
       return R.first->second.getLookupResult();
 
-    ExternalASTSource *Source = getParentASTContext().getExternalSource();
     if (Source->FindExternalVisibleDeclsByName(this, Name) || !R.second) {
-      if (StoredDeclsMap *Map = LookupPtr.getPointer()) {
+      if (StoredDeclsMap *Map = LookupPtr) {
         StoredDeclsMap::iterator I = Map->find(Name);
         if (I != Map->end())
           return I->second.getLookupResult();
       }
     }
 
-    return lookup_result(lookup_iterator(nullptr), lookup_iterator(nullptr));
+    return lookup_result();
   }
 
-  StoredDeclsMap *Map = LookupPtr.getPointer();
-  if (LookupPtr.getInt())
-    Map = buildLookup();
+  StoredDeclsMap *Map = LookupPtr;
+  if (HasLazyLocalLexicalLookups || HasLazyExternalLexicalLookups)
+    Map = const_cast<DeclContext*>(this)->buildLookup();
 
   if (!Map)
-    return lookup_result(lookup_iterator(nullptr), lookup_iterator(nullptr));
+    return lookup_result();
 
   StoredDeclsMap::iterator I = Map->find(Name);
   if (I == Map->end())
-    return lookup_result(lookup_iterator(nullptr), lookup_iterator(nullptr));
+    return lookup_result();
 
   return I->second.getLookupResult();
 }
@@ -1361,40 +1473,29 @@ DeclContext::lookup_result
 DeclContext::noload_lookup(DeclarationName Name) {
   assert(DeclKind != Decl::LinkageSpec &&
          "Should not perform lookups into linkage specs!");
-  if (!hasExternalVisibleStorage())
-    return lookup(Name);
 
   DeclContext *PrimaryContext = getPrimaryContext();
   if (PrimaryContext != this)
     return PrimaryContext->noload_lookup(Name);
 
-  StoredDeclsMap *Map = LookupPtr.getPointer();
-  if (LookupPtr.getInt()) {
-    // Carefully build the lookup map, without deserializing anything.
+  // If we have any lazy lexical declarations not in our lookup map, add them
+  // now. Don't import any external declarations, not even if we know we have
+  // some missing from the external visible lookups.
+  if (HasLazyLocalLexicalLookups) {
     SmallVector<DeclContext *, 2> Contexts;
     collectAllContexts(Contexts);
     for (unsigned I = 0, N = Contexts.size(); I != N; ++I)
-      buildLookupImpl<&DeclContext::noload_decls_begin,
-                      &DeclContext::noload_decls_end>(Contexts[I]);
-
-    // We no longer have any lazy decls.
-    LookupPtr.setInt(false);
-
-    // There may now be names for which we have local decls but are
-    // missing the external decls. FIXME: Just set the hasExternalDecls
-    // flag on those names that have external decls.
-    NeedToReconcileExternalVisibleStorage = true;
-
-    Map = LookupPtr.getPointer();
+      buildLookupImpl(Contexts[I], hasExternalVisibleStorage());
+    HasLazyLocalLexicalLookups = false;
   }
 
+  StoredDeclsMap *Map = LookupPtr;
   if (!Map)
-    return lookup_result(lookup_iterator(nullptr), lookup_iterator(nullptr));
+    return lookup_result();
 
   StoredDeclsMap::iterator I = Map->find(Name);
   return I != Map->end() ? I->second.getLookupResult()
-                         : lookup_result(lookup_iterator(nullptr),
-                                         lookup_iterator(nullptr));
+                         : lookup_result();
 }
 
 void DeclContext::localUncachedLookup(DeclarationName Name,
@@ -1410,8 +1511,9 @@ void DeclContext::localUncachedLookup(DeclarationName Name,
   }
 
   // If we have a lookup table, check there first. Maybe we'll get lucky.
-  if (Name && !LookupPtr.getInt()) {
-    if (StoredDeclsMap *Map = LookupPtr.getPointer()) {
+  // FIXME: Should we be checking these flags on the primary context?
+  if (Name && !HasLazyLocalLexicalLookups && !HasLazyExternalLexicalLookups) {
+    if (StoredDeclsMap *Map = LookupPtr) {
       StoredDeclsMap::iterator Pos = Map->find(Name);
       if (Pos != Map->end()) {
         Results.insert(Results.end(),
@@ -1424,6 +1526,8 @@ void DeclContext::localUncachedLookup(DeclarationName Name,
 
   // Slow case: grovel through the declarations in our chain looking for 
   // matches.
+  // FIXME: If we have lazy external declarations, this will not find them!
+  // FIXME: Should we CollectAllContexts and walk them all here?
   for (Decl *D = FirstDecl; D; D = D->getNextDeclInContext()) {
     if (NamedDecl *ND = dyn_cast<NamedDecl>(D))
       if (ND->getDeclName() == Name)
@@ -1488,9 +1592,12 @@ void DeclContext::makeDeclVisibleInContextWithFlags(NamedDecl *D, bool Internal,
                                                     bool Recoverable) {
   assert(this == getPrimaryContext() && "expected a primary DC");
 
-  // Skip declarations within functions.
-  if (isFunctionOrMethod())
+  if (!isLookupContext()) {
+    if (isTransparentContext())
+      getParent()->getPrimaryContext()
+        ->makeDeclVisibleInContextWithFlags(D, Internal, Recoverable);
     return;
+  }
 
   // Skip declarations which should be invisible to name lookup.
   if (shouldBeHidden(D))
@@ -1504,7 +1611,7 @@ void DeclContext::makeDeclVisibleInContextWithFlags(NamedDecl *D, bool Internal,
   // FIXME: As a performance hack, don't add such decls into the translation
   // unit unless we're in C++, since qualified lookup into the TU is never
   // performed.
-  if (LookupPtr.getPointer() || hasExternalVisibleStorage() ||
+  if (LookupPtr || hasExternalVisibleStorage() ||
       ((!Recoverable || D->getDeclContext() != D->getLexicalDeclContext()) &&
        (getParentASTContext().getLangOpts().CPlusPlus ||
         !isTranslationUnit()))) {
@@ -1514,7 +1621,7 @@ void DeclContext::makeDeclVisibleInContextWithFlags(NamedDecl *D, bool Internal,
     buildLookup();
     makeDeclVisibleInContextImpl(D, Internal);
   } else {
-    LookupPtr.setInt(true);
+    HasLazyLocalLexicalLookups = true;
   }
 
   // If we are a transparent context or inline namespace, insert into our
@@ -1532,7 +1639,7 @@ void DeclContext::makeDeclVisibleInContextWithFlags(NamedDecl *D, bool Internal,
 
 void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   // Find or create the stored declaration map.
-  StoredDeclsMap *Map = LookupPtr.getPointer();
+  StoredDeclsMap *Map = LookupPtr;
   if (!Map) {
     ASTContext *C = &getParentASTContext();
     Map = CreateStoredDeclsMap(*C);
@@ -1561,12 +1668,12 @@ void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
     return;
   }
 
-  else if (DeclNameEntries.isNull()) {
+  if (DeclNameEntries.isNull()) {
     DeclNameEntries.setOnlyValue(D);
     return;
   }
 
-  if (DeclNameEntries.HandleRedeclaration(D)) {
+  if (DeclNameEntries.HandleRedeclaration(D, /*IsKnownNewer*/!Internal)) {
     // This declaration has replaced an existing one for which
     // declarationReplaces returns true.
     return;
@@ -1576,15 +1683,17 @@ void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   DeclNameEntries.AddSubsequentDecl(D);
 }
 
+UsingDirectiveDecl *DeclContext::udir_iterator::operator*() const {
+  return cast<UsingDirectiveDecl>(*I);
+}
+
 /// Returns iterator range [First, Last) of UsingDirectiveDecls stored within
 /// this context.
 DeclContext::udir_range DeclContext::using_directives() const {
   // FIXME: Use something more efficient than normal lookup for using
   // directives. In C++, using directives are looked up more than anything else.
-  lookup_const_result Result = lookup(UsingDirectiveDecl::getName());
-  return udir_range(
-      reinterpret_cast<UsingDirectiveDecl *const *>(Result.begin()),
-      reinterpret_cast<UsingDirectiveDecl *const *>(Result.end()));
+  lookup_result Result = lookup(UsingDirectiveDecl::getName());
+  return udir_range(Result.begin(), Result.end());
 }
 
 //===----------------------------------------------------------------------===//
@@ -1592,7 +1701,7 @@ DeclContext::udir_range DeclContext::using_directives() const {
 //===----------------------------------------------------------------------===//
 
 StoredDeclsMap *DeclContext::CreateStoredDeclsMap(ASTContext &C) const {
-  assert(!LookupPtr.getPointer() && "context already has a decls map");
+  assert(!LookupPtr && "context already has a decls map");
   assert(getPrimaryContext() == this &&
          "creating decls map on non-primary context");
 
@@ -1604,7 +1713,7 @@ StoredDeclsMap *DeclContext::CreateStoredDeclsMap(ASTContext &C) const {
     M = new StoredDeclsMap();
   M->Previous = C.LastSDM;
   C.LastSDM = llvm::PointerIntPair<StoredDeclsMap*,1>(M, Dependent);
-  LookupPtr.setPointer(M);
+  LookupPtr = M;
   return M;
 }
 
@@ -1636,11 +1745,11 @@ DependentDiagnostic *DependentDiagnostic::Create(ASTContext &C,
   assert(Parent->isDependentContext()
          && "cannot iterate dependent diagnostics of non-dependent context");
   Parent = Parent->getPrimaryContext();
-  if (!Parent->LookupPtr.getPointer())
+  if (!Parent->LookupPtr)
     Parent->CreateStoredDeclsMap(C);
 
-  DependentStoredDeclsMap *Map
-    = static_cast<DependentStoredDeclsMap*>(Parent->LookupPtr.getPointer());
+  DependentStoredDeclsMap *Map =
+      static_cast<DependentStoredDeclsMap *>(Parent->LookupPtr);
 
   // Allocate the copy of the PartialDiagnostic via the ASTContext's
   // BumpPtrAllocator, rather than the ASTContext itself.

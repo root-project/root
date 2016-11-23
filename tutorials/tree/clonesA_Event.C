@@ -3,7 +3,7 @@
 ///
 /// Example to write & read a Tree built with a complex class inheritance tree.
 /// It demonstrates usage of inheritance and TClonesArrays
-/// This is simplied / stripped extract of an event structure which was used 
+/// This is simplified / stripped extract of an event structure which was used
 /// within the Marabou project.
 ///
 /// To run this example, do:
@@ -11,9 +11,8 @@
 ///  root > .x clonesA_Event.C
 /// ~~~
 /// \macro_code
+///
 /// \author The ROOT Team
-
-
 
 #ifndef CLONESA_EVENT_SECOND_RUN
 

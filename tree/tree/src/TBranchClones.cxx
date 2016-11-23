@@ -171,9 +171,9 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
          itype = "D";
       } else if (type == 11) {
          itype = "b";
-      } if (type == 12) {
+      } else if (type == 12) {
          itype = "s";
-      } if (type == 13) {
+      } else if (type == 13) {
          itype = "i";
       }
 

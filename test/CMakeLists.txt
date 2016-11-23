@@ -60,7 +60,7 @@ ROOT_ADD_TEST(test-tcollex COMMAND tcollex)
 
 #--tcollbm------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(tcollbm tcollbm.cxx LIBRARIES Core MathCore)
-ROOT_ADD_TEST(test-tcollbm COMMAND tcollbm 1000 100000)
+ROOT_ADD_TEST(test-tcollbm COMMAND tcollbm 1000 1000000)
 
 #--vvector------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(vvector vvector.cxx LIBRARIES Core Matrix RIO)
@@ -127,10 +127,9 @@ ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${ROOT_root_CMD} -b -q -l
               FAILREGEX "FAILED|Error in" DEPENDS test-stresshistogram)
 
 #--stressGUI---------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
-#---Cannot run GUI test in batch mode--------------------
-#configure_file(stressGUI.ref stressGUI.ref COPYONLY)
-#ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -ref FAILREGEX "FAILED|Error in")
+if(ROOT_asimage_FOUND)
+  ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
+endif()
 
 #--stressSpectrum----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressSpectrum stressSpectrum.cxx LIBRARIES Hist Spectrum Gpad)
@@ -145,6 +144,14 @@ ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
               FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
 
 #--stressTMVA--------------------------------------------------------------------------------------
+if(CUDA_FOUND)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
+endif()
+
+if(BLAS_FOUND AND imt)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
+endif()
+
 if(ROOT_tmva_FOUND)
   ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
   ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b)
@@ -171,6 +178,7 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
 #--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit)
+  configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY) 
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in")
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit)
@@ -179,7 +187,7 @@ endif()
 #--stressRooStats----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
-  configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
+  configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY) 
   ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED|Error in")
   ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats)
@@ -298,6 +306,8 @@ if(ROOT_vc_FOUND)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-unused-parameter)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-missing-braces)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
   set_source_files_properties(testVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
   ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${Vc_LIBRARIES})
   ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")

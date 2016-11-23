@@ -63,24 +63,29 @@
 // End_Html
 //_______________________________________________________________________
 
-#include <string>
-#include <cstdlib>
-#include <iostream>
+#include "TMVA/MethodCFMlpANN.h"
+
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MethodCFMlpANN_def.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 #include "TMatrix.h"
 #include "TObjString.h"
 #include "Riostream.h"
 #include "TMath.h"
 
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/DataSet.h"
-#include "TMVA/DataSetInfo.h"
-#include "TMVA/MethodBase.h"
-#include "TMVA/MethodCFMlpANN.h"
-#include "TMVA/MethodCFMlpANN_def.h"
-#include "TMVA/MsgLogger.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Types.h"
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+
 
 REGISTER_METHOD(CFMlpANN)
 
@@ -90,10 +95,6 @@ using std::atoi;
 
 ClassImp(TMVA::MethodCFMlpANN)
 
-// initialization of global variable
-namespace TMVA {
-   Int_t MethodCFMlpANN_nsel = 0;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,35 +129,33 @@ namespace TMVA {
 TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
                                       const TString& methodTitle,
                                       DataSetInfo& theData,
-                                      const TString& theOption,
-                                      TDirectory* theTargetDir  ) :
-   TMVA::MethodBase( jobName, Types::kCFMlpANN, methodTitle, theData, theOption, theTargetDir  ),
+                                      const TString& theOption  ) :
+   TMVA::MethodBase( jobName, Types::kCFMlpANN, methodTitle, theData, theOption),
    fData(0),
    fClass(0),
    fNlayers(0),
    fNcycles(0),
    fNodes(0),
-   fYNN(0)
+   fYNN(0),
+   MethodCFMlpANN_nsel(0)
 {
    MethodCFMlpANN_Utils::SetLogger(&Log());
-   fgThis = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from weight file
 
 TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData,
-                                      const TString& theWeightFile,
-                                      TDirectory* theTargetDir ):
-   TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile, theTargetDir ),
+                                      const TString& theWeightFile):
+   TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile),
    fData(0),
    fClass(0),
    fNlayers(0),
    fNcycles(0),
    fNodes(0),
-   fYNN(0)
+   fYNN(0),
+   MethodCFMlpANN_nsel(0)
 {
-   fgThis = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -259,11 +258,8 @@ void TMVA::MethodCFMlpANN::Init( void )
    // CFMlpANN prefers normalised input variables
    SetNormalised( kTRUE );
 
-   // initialize all pointers
-   fgThis = this;  
-
    // initialize dimensions
-   TMVA::MethodCFMlpANN_nsel = 0;  
+   MethodCFMlpANN_nsel = 0;  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,6 +310,8 @@ void TMVA::MethodCFMlpANN::Train( void )
 #endif  
 
    delete [] nodes;
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,24 +510,22 @@ Int_t TMVA::MethodCFMlpANN::DataInterface( Double_t* /*tout2*/, Double_t*  /*tin
    // icode and ikend are dummies needed to match f2c mlpl3 functions
    *ikend = 0; 
 
-   // retrieve pointer to current object (CFMlpANN must be a singleton class!)
-   TMVA::MethodCFMlpANN* opt = TMVA::MethodCFMlpANN::This();
 
    // sanity checks
    if (0 == xpg) {
       Log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface zero pointer xpg" << Endl;
    }
-   if (*nvar != (Int_t)opt->GetNvar()) {
+   if (*nvar != (Int_t)this->GetNvar()) {
       Log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface mismatch in num of variables: "
-            << *nvar << " " << opt->GetNvar() << Endl;
+            << *nvar << " " << this->GetNvar() << Endl;
    }
 
    // fill variables
-   *iclass = (int)opt->GetClass( TMVA::MethodCFMlpANN_nsel );
-   for (UInt_t ivar=0; ivar<opt->GetNvar(); ivar++) 
-      xpg[ivar] = (double)opt->GetData( TMVA::MethodCFMlpANN_nsel, ivar );
+   *iclass = (int)this->GetClass( MethodCFMlpANN_nsel );
+   for (UInt_t ivar=0; ivar<this->GetNvar(); ivar++) 
+      xpg[ivar] = (double)this->GetData( MethodCFMlpANN_nsel, ivar );
 
-   ++TMVA::MethodCFMlpANN_nsel;
+   ++MethodCFMlpANN_nsel;
 
    return 0;
 }
@@ -688,13 +684,7 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
       o << "Del.temp in layer " << layer << " :  " << fDel_1.temp[layer] << std::endl;
    }      
 }
-////////////////////////////////////////////////////////////////////////////////
-/// static pointer to this object (required for external functions
 
-TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::This( void ) 
-{ 
-   return fgThis; 
-}  
 void TMVA::MethodCFMlpANN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response

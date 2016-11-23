@@ -43,6 +43,9 @@
 #include "TObjString.h"
 #include "TRandom3.h"
 
+#include <string.h>
+
+#include "TMVA/Configurable.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
 #include "TMVA/Tools.h"
@@ -56,18 +59,20 @@
 #include "TMVA/MethodBoost.h"
 #include "TMVA/MethodCategory.h"
 
+#include "TMVA/VariableInfo.h"
 #include "TMVA/VariableIdentityTransform.h"
 #include "TMVA/VariableDecorrTransform.h"
 #include "TMVA/VariablePCATransform.h"
 #include "TMVA/VariableGaussTransform.h"
 #include "TMVA/VariableNormalizeTransform.h"
+#include "TMVA/VarTransformHandler.h"
+
 
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsRegression.h"
 #include "TMVA/ResultsMulticlass.h"
+#include "TMVA/Types.h"
 
-//const Int_t  MinNoTrainingEvents = 10;
-//const Int_t  MinNoTestEvents     = 1;
 
 ClassImp(TMVA::DataLoader)
 
@@ -79,16 +84,13 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fDataInputHandler     ( new DataInputHandler ),
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
-   fName                 ( thedlName ),
    fDataAssignType       ( kAssignEvents ),
-   fATreeEvent           ( NULL )
+   fATreeEvent           (0),
+   fMakeFoldDataSet      ( kFALSE )
 {
-
-   //   DataSetManager::CreateInstance(*fDataInputHandler); // DSMTEST removed
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
-
-   // render silent
-   //    if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
+   SetName(thedlName.Data());
+   fLogger->SetSource("DataLoader");
 }
 
 
@@ -96,7 +98,6 @@ TMVA::DataLoader::DataLoader( TString thedlName)
 TMVA::DataLoader::~DataLoader( void )
 {
    // destructor
-   //   delete fATreeEvent;
 
    std::vector<TMVA::VariableTransformBase*>::iterator trfIt = fDefaultTrfs.begin();
    for (;trfIt != fDefaultTrfs.end(); trfIt++) delete (*trfIt);
@@ -131,6 +132,56 @@ TMVA::DataSetInfo& TMVA::DataLoader::AddDataSet( const TString& dsiName )
    return fDataSetManager->AddDataSetInfo(*(new DataSetInfo(dsiName))); // DSMTEST
 }
 
+//_______________________________________________________________________
+TMVA::DataSetInfo& TMVA::DataLoader::GetDataSetInfo()
+{
+   return DefaultDataSetInfo(); // DSMTEST
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Transforms the variables and return a new DataLoader with the transformed 
+/// variables
+
+TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
+{
+   TString trOptions = "0";
+   TString trName = "None";
+   if (trafoDefinition.Contains("(")) {
+
+      // contains transformation parameters
+      Ssiz_t parStart = trafoDefinition.Index( "(" );
+      Ssiz_t parLen   = trafoDefinition.Index( ")", parStart )-parStart+1;
+
+      trName = trafoDefinition(0,parStart);
+      trOptions = trafoDefinition(parStart,parLen);
+      trOptions.Remove(parLen-1,1);
+      trOptions.Remove(0,1);
+   }
+   else
+      trName = trafoDefinition;
+
+   VarTransformHandler* handler = new VarTransformHandler(this);
+   // variance threshold variable transformation
+   if (trName == "VT") {
+
+      // find threshold value from given input
+      Double_t threshold = 0.0;
+      if (!trOptions.IsFloat()){
+         Log() << kFATAL << " VT transformation must be passed a floating threshold value" << Endl;
+         return this;
+      }
+      else
+         threshold =  trOptions.Atof();
+      TMVA::DataLoader *transformedLoader = handler->VarianceThreshold(threshold);
+      return transformedLoader;
+   }
+   else {
+      Log() << kFATAL << "Incorrect transformation string provided, please check" << Endl;
+   }
+   Log() << kINFO << "No transformation applied, returning original loader" << Endl;
+   return this;
+}
+
 // ________________________________________________
 // the next functions are to assign events directly 
 
@@ -147,21 +198,21 @@ TTree* TMVA::DataLoader::CreateEventAssignTrees( const TString& name )
    std::vector<VariableInfo>& tgts = DefaultDataSetInfo().GetTargetInfos();
    std::vector<VariableInfo>& spec = DefaultDataSetInfo().GetSpectatorInfos();
 
-   if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()+tgts.size()+spec.size()];
+   if (fATreeEvent.size()==0) fATreeEvent.resize(vars.size()+tgts.size()+spec.size());
    // add variables
    for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
       TString vname = vars[ivar].GetExpression();
-      assignTree->Branch( vname, &(fATreeEvent[ivar]), vname + "/F" );
+      assignTree->Branch( vname, &fATreeEvent[ivar], vname + "/F" );
    }
    // add targets
    for (UInt_t itgt=0; itgt<tgts.size(); itgt++) {
       TString vname = tgts[itgt].GetExpression();
-      assignTree->Branch( vname, &(fATreeEvent[vars.size()+itgt]), vname + "/F" );
+      assignTree->Branch( vname, &fATreeEvent[vars.size()+itgt], vname + "/F" );
    }
    // add spectators
    for (UInt_t ispc=0; ispc<spec.size(); ispc++) {
       TString vname = spec[ispc].GetExpression();
-      assignTree->Branch( vname, &(fATreeEvent[vars.size()+tgts.size()+ispc]), vname + "/F" );
+      assignTree->Branch( vname, &fATreeEvent[vars.size()+tgts.size()+ispc], vname + "/F" );
    }
    return assignTree;
 }
@@ -293,7 +344,7 @@ void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t 
    if( fAnalysisType == Types::kNoAnalysisType && DefaultDataSetInfo().GetNClasses() > 2 )
       fAnalysisType = Types::kMulticlass;
 
-   Log() << kINFO << "Add Tree " << tree->GetName() << " of type " << className 
+   Log() << kINFO<< "Add Tree " << tree->GetName() << " of type " << className 
          << " with " << tree->GetEntries() << " events" << Endl;
    DataInput().AddTree( tree, className, weight, cut, tt );
 }
@@ -545,7 +596,7 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
    // if event-wise data assignment, add local trees to dataset first
    SetInputTreesFromEventAssignTrees();
 
-   Log() << kINFO << "Preparing trees for training and testing..." << Endl;
+   //Log() << kINFO <<"Preparing trees for training and testing..."<<  Endl;
    AddCut( sigcut, "Signal"  );
    AddCut( bkgcut, "Background" );
 
@@ -553,181 +604,222 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
 }
 
 //______________________________________________________________________
-void TMVA::DataLoader::PrepareTrainingAndTestTree(int foldNumber, Types::ETreeType tt)
-{
-  DataInput().ClearSignalTreeList();
-  DataInput().ClearBackgroundTreeList();
+// Function required to split the training and testing datasets into a
+// number of folds. Required by the CrossValidation and HyperParameterOptimisation
+// classes. The option to split the training dataset into a training set and
+// a validation set is implemented but not currently used.
+void TMVA::DataLoader::MakeKFoldDataSet(UInt_t numberFolds, bool validationSet){
 
-  TString CrossValidate = "ParameterOpt";
 
-  int numFolds = fTrainSigTree.size();
+   // No need to do it again if the sets have already been split.
+   if(fMakeFoldDataSet){
+      Log() << kInfo << "Splitting in k-folds has been already done" << Endl;
+      return;
+   }
 
-  for(int i=0; i<numFolds; ++i){
-    if(CrossValidate == "PerformanceEst"){
-      if(i!=foldNumber){
-	AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
-	AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
-	AddTree( fTestSigTree.at(i),      "Signal",     1.0,     TCut(""), Types::kTraining );
-	AddTree( fTestBkgTree.at(i),      "Background", 1.0,     TCut(""), Types::kTraining );
+   fMakeFoldDataSet = kTRUE; 
+  
+   // Get the original event vectors for testing and training from the dataset.
+   const std::vector<Event*> TrainingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTraining);
+   const std::vector<Event*> TestingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTesting);
+
+   std::vector<Event*> TrainSigData;
+   std::vector<Event*> TrainBkgData;
+   std::vector<Event*> TestSigData;
+   std::vector<Event*> TestBkgData;
+
+   // Split the testing and training sets into signal and background classes.
+   for(UInt_t i=0; i<TrainingData.size(); ++i){
+      if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TrainSigData.push_back(TrainingData.at(i)); }
+      else if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TrainBkgData.push_back(TrainingData.at(i)); }
+      else{ 
+         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
       }
+   }
+
+   for(UInt_t i=0; i<TestingData.size(); ++i){
+      if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TestSigData.push_back(TestingData.at(i)); }
+      else if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TestBkgData.push_back(TestingData.at(i)); }
       else{
-	AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
-	AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
-	AddTree( fTestSigTree.at(i),      "Signal",     1.0,     TCut(""), Types::kTesting );
-	AddTree( fTestBkgTree.at(i),      "Background", 1.0,     TCut(""), Types::kTesting );
+         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
       }
-    }
-    else if(CrossValidate == "ParameterOpt"){
+   }
+
+
+   // Split the sets into the number of folds.
+   if(validationSet){
+      std::vector<std::vector<Event*>> tempSigEvents = SplitSets(TrainSigData,0,2);
+      std::vector<std::vector<Event*>> tempBkgEvents = SplitSets(TrainBkgData,0,2);
+      fTrainSigEvents = SplitSets(tempSigEvents.at(0),0,numberFolds);
+      fTrainBkgEvents = SplitSets(tempBkgEvents.at(0),0,numberFolds);
+      fValidSigEvents = SplitSets(tempSigEvents.at(1),0,numberFolds);
+      fValidBkgEvents = SplitSets(tempBkgEvents.at(1),0,numberFolds);
+   }
+   else{
+      fTrainSigEvents = SplitSets(TrainSigData,0,numberFolds);
+      fTrainBkgEvents = SplitSets(TrainBkgData,0,numberFolds);
+   }
+
+   fTestSigEvents = SplitSets(TestSigData,0,numberFolds);
+   fTestBkgEvents = SplitSets(TestBkgData,0,numberFolds);
+}
+
+//______________________________________________________________________
+// Function for assigning the correct folds to the testing or training set.
+void TMVA::DataLoader::PrepareFoldDataSet(UInt_t foldNumber, Types::ETreeType tt){
+
+   UInt_t numFolds = fTrainSigEvents.size();
+
+   std::vector<Event*>* tempTrain = new std::vector<Event*>;
+   std::vector<Event*>* tempTest = new std::vector<Event*>;
+
+   UInt_t nTrain = 0;
+   UInt_t nTest = 0;
+
+   // Get the number of events so the memory can be reserved.
+   for(UInt_t i=0; i<numFolds; ++i){
       if(tt == Types::kTraining){
-	if(i!=foldNumber){
-	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
-	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
-	}
-	else{
-	  AddTree( fTrainSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
-	  AddTree( fTrainBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
-	}
+         if(i!=foldNumber){
+            nTrain += fTrainSigEvents.at(i).size();
+            nTrain += fTrainBkgEvents.at(i).size();
+         }
+         else{
+            nTest += fTrainSigEvents.at(i).size();
+            nTest += fTrainSigEvents.at(i).size();
+         }
+      }
+      else if(tt == Types::kValidation){
+         if(i!=foldNumber){
+            nTrain += fValidSigEvents.at(i).size();
+            nTrain += fValidBkgEvents.at(i).size();
+         }
+         else{
+            nTest += fValidSigEvents.at(i).size();
+            nTest += fValidSigEvents.at(i).size();
+         }
       }
       else if(tt == Types::kTesting){
-	if(i!=foldNumber){
-	  AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTraining );
-	  AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTraining );
-	}
-	else{
-	  AddTree( fTestSigTree.at(i),     "Signal",     1.0,     TCut(""), Types::kTesting );
-	  AddTree( fTestBkgTree.at(i),     "Background", 1.0,     TCut(""), Types::kTesting );
-	}
+         if(i!=foldNumber){
+            nTrain += fTestSigEvents.at(i).size();
+            nTrain += fTestBkgEvents.at(i).size();
+         }
+         else{
+            nTest += fTestSigEvents.at(i).size();
+            nTest += fTestSigEvents.at(i).size();
+         }
       }
-    }
-  }
+   }
 
-}
+   // Reserve memory before filling vectors
+   tempTrain->reserve(nTrain);
+   tempTest->reserve(nTest);
 
-void TMVA::DataLoader::MakeKFoldDataSet(int numberFolds)
-{
-  
-  UInt_t nSigTrees = DataInput().GetNSignalTrees();
-  UInt_t nBkgTrees = DataInput().GetNBackgroundTrees();
-
-  if(nSigTrees == 1){
-    std::vector<TTree*> tempSigTrees = SplitSets(DataInput().SignalTreeInfo(0).GetTree(), 1, 2);
-    fTrainSigTree = SplitSets(tempSigTrees.at(0), 0, numberFolds);
-    fTestSigTree = SplitSets(tempSigTrees.at(1), 1, numberFolds);
-  }
-  if(nBkgTrees == 1){
-    std::vector<TTree*> tempBkgTrees = SplitSets(DataInput().BackgroundTreeInfo(0).GetTree(), 1, 2);
-    fTrainBkgTree = SplitSets(tempBkgTrees.at(0), 0, numberFolds);
-    fTestBkgTree = SplitSets(tempBkgTrees.at(1), 1, numberFolds);
-  }
-
-  for(UInt_t i=0; i<nSigTrees; ++i){
-    if(DataInput().SignalTreeInfo(i).GetTreeType() == Types::kTraining){
-      fTrainSigTree = SplitSets(DataInput().SignalTreeInfo(i).GetTree(), i, numberFolds);
-    }
-    else if(DataInput().SignalTreeInfo(i).GetTreeType() == Types::kTesting){
-      fTestSigTree = SplitSets(DataInput().SignalTreeInfo(i).GetTree(), i, numberFolds);
-    }
-  }
-  for(UInt_t j=0; j<nBkgTrees; ++j){
-    if(DataInput().BackgroundTreeInfo(j).GetTreeType() == Types::kTraining){
-      fTrainBkgTree = SplitSets(DataInput().BackgroundTreeInfo(j).GetTree(), j, numberFolds);
-    }
-    else if(DataInput().BackgroundTreeInfo(j).GetTreeType() == Types::kTesting){
-      fTestBkgTree = SplitSets(DataInput().BackgroundTreeInfo(j).GetTree(), j, numberFolds);
-    }
-  }
-
-  DataInput().ClearSignalTreeList();
-  DataInput().ClearBackgroundTreeList();
-
-  nSigTrees = DataInput().GetNSignalTrees();
-  nBkgTrees = DataInput().GetNBackgroundTrees();
-
-}
-
-void TMVA::DataLoader::ValidationKFoldSet(){
-  DefaultDataSetInfo().GetDataSet()->DivideTrainingSet(2);
-  DefaultDataSetInfo().GetDataSet()->MoveTrainingBlock(1, Types::kValidation, kTRUE);
-}
-
-std::vector<TTree*> TMVA::DataLoader::SplitSets(TTree * oldTree, int seedNum, int numFolds)
-{
-  std::vector<TTree*> tempTrees;
-
-  for(int l=0; l<numFolds; ++l){
-    tempTrees.push_back(oldTree->CloneTree(0));
-    tempTrees.at(l)->SetDirectory(0);
-  }
-
-  TRandom3 r(seedNum);
-
-  Long64_t nEntries = oldTree->GetEntries();
-
-  std::vector<TBranch*> branches;
-
-  //TBranch * typeBranch = oldTree->GetBranch("type");
-  //branches.push_back(typeBranch);
-  //oldTree->SetBranchAddress( "type",   &fATreeType);
-  //TBranch * weightBranch = oldTree->GetBranch("weight");
-  //branches.push_back(weightBranch);
-  //oldTree->SetBranchAddress( "weight", &fATreeWeight);
-
-  std::vector<VariableInfo>& vars = DefaultDataSetInfo().GetVariableInfos();
-  std::vector<VariableInfo>& tgts = DefaultDataSetInfo().GetTargetInfos();
-  std::vector<VariableInfo>& spec = DefaultDataSetInfo().GetSpectatorInfos();
-
-  UInt_t varsSize = vars.size();
-
-  if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()+tgts.size()+spec.size()];
-  // add variables
-  for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
-    TString vname = vars[ivar].GetExpression();
-    if(vars[ivar].GetExpression() != vars[ivar].GetLabel()){
-      varsSize--;
-      continue; 
-    }
-    TBranch * branch = oldTree->GetBranch(vname);
-    branches.push_back(branch);
-    oldTree->SetBranchAddress(vname, &(fATreeEvent[ivar]));
-  }
-  // add targets
-  for (UInt_t itgt=0; itgt<tgts.size(); itgt++) {
-    TString vname = tgts[itgt].GetExpression();
-    if(tgts[itgt].GetExpression() != tgts[itgt].GetLabel()){ continue; }
-    TBranch * branch = oldTree->GetBranch(vname);
-    branches.push_back(branch);
-    oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+itgt]));
-  }
-  // add spectators
-  for (UInt_t ispc=0; ispc<spec.size(); ispc++) {
-    TString vname = spec[ispc].GetExpression();
-    if(spec[ispc].GetExpression() != spec[ispc].GetLabel()){ continue; }
-    TBranch * branch = oldTree->GetBranch(vname);
-    branches.push_back(branch);
-    oldTree->SetBranchAddress( vname, &(fATreeEvent[vars.size()+tgts.size()+ispc]));
-  }
-
-  Long64_t foldSize = nEntries/numFolds;
-  Long64_t inSet = 0;
-
-  for(Long64_t i=0; i<nEntries; i++){
-    for(UInt_t j=0; j<vars.size(); j++){ fATreeEvent[j]=0; }
-    oldTree->GetEvent(i);
-    bool inTree = false;
-    if(inSet == foldSize*numFolds){
-      break;
-    }
-    else{
-      while(!inTree){
-	int s = r.Integer(numFolds);
-	if(tempTrees.at(s)->GetEntries()<foldSize){
-	  tempTrees.at(s)->Fill();
-	  inSet++;
-	  inTree=true;
-	}
+   // Fill vectors with correct folds for testing and training.
+   for(UInt_t j=0; j<numFolds; ++j){
+      if(tt == Types::kTraining){
+         if(j!=foldNumber){
+            tempTrain->insert(tempTrain->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
+            tempTrain->insert(tempTrain->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
+         }
+         else{
+            tempTest->insert(tempTest->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
+            tempTest->insert(tempTest->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
+         }
       }
-    }
-  }
+      else if(tt == Types::kValidation){
+         if(j!=foldNumber){
+            tempTrain->insert(tempTrain->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
+            tempTrain->insert(tempTrain->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
+         }
+         else{
+            tempTest->insert(tempTest->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
+            tempTest->insert(tempTest->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
+         }
+      }
+      else if(tt == Types::kTesting){
+         if(j!=foldNumber){
+            tempTrain->insert(tempTrain->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
+            tempTrain->insert(tempTrain->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
+         }
+         else{
+            tempTest->insert(tempTest->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
+            tempTest->insert(tempTest->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
+         }
+      }
+   }
 
-  return tempTrees;
+   // Assign the vectors of the events to rebuild the dataset
+   DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
+   DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
+
 }
+
+//______________________________________________________________________
+// Splits the input vector in to equally sized randomly sampled folds.
+std::vector<std::vector<TMVA::Event*>> TMVA::DataLoader::SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, int numFolds){
+
+   ULong64_t nEntries = oldSet.size();
+   ULong64_t foldSize = nEntries/numFolds;
+
+   std::vector<std::vector<Event*>> tempSets;
+   tempSets.resize(numFolds);
+
+   TRandom3 r(seedNum);
+
+   ULong64_t inSet = 0;
+
+   for(ULong64_t i=0; i<nEntries; i++){
+      bool inTree = false;
+      if(inSet == foldSize*numFolds){
+         break;
+      }
+      else{
+         while(!inTree){
+            int s = r.Integer(numFolds);
+            if(tempSets.at(s).size()<foldSize){
+               tempSets.at(s).push_back(oldSet.at(i));
+               inSet++;
+               inTree=true;
+            }
+         }
+      }
+   }
+
+   return tempSets;
+
+}
+
+//_______________________________________________________________________
+//Copy method use in VI and CV
+TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
+{
+   TMVA::DataLoader* des=new TMVA::DataLoader(name);
+   DataLoaderCopy(des,this);
+   return des;
+}
+
+//_______________________________________________________________________
+void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
+{
+   //Loading Dataset from DataInputHandler for subseed
+   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
+   {
+      des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+   }
+
+   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
+   {
+      des->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+   }
+}
+
+//_______________________________________________________________________
+TH2* TMVA::DataLoader::GetCorrelationMatrix(const TString& className)
+{
+   //returns the correlation matrix of datasets
+   const TMatrixD * m = DefaultDataSetInfo().CorrelationMatrix(className);
+   return DefaultDataSetInfo().CreateCorrelationMatrixHist(m,
+                                                           "CorrelationMatrix"+className, "Correlation Matrix ("+className+")");
+}
+
+

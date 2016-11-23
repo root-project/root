@@ -10,8 +10,11 @@
 #ifndef LLVM_MC_MCPARSER_MCPARSEDASMOPERAND_H
 #define LLVM_MC_MCPARSER_MCPARSEDASMOPERAND_H
 
+#include <string>
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/SMLoc.h"
+
 namespace llvm {
-class SMLoc;
 class raw_ostream;
 
 /// MCParsedAsmOperand - This abstract class represents a source-level assembly
@@ -27,8 +30,16 @@ class MCParsedAsmOperand {
   /// MS-style inline assembly.
   std::string Constraint;
 
+protected:
+  // This only seems to need to be movable (by ARMOperand) but ARMOperand has
+  // lots of members and MSVC doesn't support defaulted move ops, so to avoid
+  // that verbosity, just rely on defaulted copy ops. It's only the Constraint
+  // string member that would benefit from movement anyway.
+  MCParsedAsmOperand(const MCParsedAsmOperand &RHS) = default;
+  MCParsedAsmOperand &operator=(const MCParsedAsmOperand &) = default;
+  MCParsedAsmOperand() = default;
+
 public:
-  MCParsedAsmOperand() {}
   virtual ~MCParsedAsmOperand() {}
 
   void setConstraint(StringRef C) { Constraint = C.str(); }

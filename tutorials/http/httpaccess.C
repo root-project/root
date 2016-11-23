@@ -1,3 +1,28 @@
+/// \file
+/// \ingroup tutorial_http
+///  This program demonstrates access control to the THttpServer with digest methods.
+///  Authentication file auth.txt was generated with following shell commands:
+/// ~~~
+///    [shell]  htdigest -c auth.txt root guest
+///          typing <empty> password for guest account
+///    [shell]  htdigest auth.txt root admin
+///          typing 'admin' as password for admin account
+/// ~~~
+///  When macro started and opening in browser with url
+/// ~~~
+///      http://localhost:8080
+/// ~~~
+///  User name and password will be requested. One should
+///  either specify guest account without password or
+///  admin account with password 'admin'
+///
+///  User with guest account only can monitor histograms
+///  User with admin account see commands, which can be executed
+///
+/// \macro_code
+///
+/// \author
+
 #include "TH1.h"
 #include "TH2.h"
 #include "TRandom3.h"
@@ -6,21 +31,6 @@
 
 void httpaccess()
 {
-//  This program demonstrates access control to the THttpServer with digest methods.
-//  Authentication file auth.txt was generated with following shell commands:
-//    [shell]  htdigest -c auth.txt root guest
-//          typing <empty> password for guest account
-//    [shell]  htdigest auth.txt root admin
-//          typing 'admin' as password for admin account
-//  When macro started and opening in browser with url
-//      http://localhost:8080
-//  User name and password will be requested. One should
-//  either specify guest account without password or
-//  admin account with password 'admin'
-//
-//  User with guest account only can monitor histograms
-//  User with admin account see commands, which can be executed
-
    // create histograms
    TH1D *hpx = new TH1D("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);

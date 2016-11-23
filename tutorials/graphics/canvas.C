@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook -js
 /// Example of primitives in a canvas.
 /// One of the first actions in a ROOT session is the creation of a Canvas.
 /// Here we create a Canvas named "c1".

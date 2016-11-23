@@ -14,7 +14,7 @@
 #ifndef LLVM_LIB_TARGET_BPF_MCTARGETDESC_BPFMCASMINFO_H
 #define LLVM_LIB_TARGET_BPF_MCTARGETDESC_BPFMCASMINFO_H
 
-#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Triple.h"
 #include "llvm/MC/MCAsmInfo.h"
 
 namespace llvm {
@@ -22,13 +22,18 @@ class Target;
 
 class BPFMCAsmInfo : public MCAsmInfo {
 public:
-  explicit BPFMCAsmInfo(StringRef TT) {
+  explicit BPFMCAsmInfo(const Triple &TT) {
+    if (TT.getArch() == Triple::bpfeb)
+      IsLittleEndian = false;
+
     PrivateGlobalPrefix = ".L";
     WeakRefDirective = "\t.weak\t";
 
     UsesELFSectionDirectiveForBSS = true;
     HasSingleParameterDotFile = false;
     HasDotTypeDotSizeDirective = false;
+
+    SupportsDebugInformation = true;
   }
 };
 }

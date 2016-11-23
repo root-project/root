@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook -nodraw
 /// This macro illustrates how to create a hierarchy of directories
 /// in a Root file.
 /// Ten directories called plane0, plane1, ..., plane9 are created.
@@ -61,7 +62,7 @@ void dirs() {
       cdtof->cd();    // change current directory to top
    }
 
-     // .. fill histograms
+   // Fill histograms
    TRandom r;
    for (i=0;i<nplanes;i++) {
       cdplane[i]->cd();
@@ -73,7 +74,7 @@ void dirs() {
       }
    }
 
-     // save histogram hierarchy in the file
+   // save histogram hierarchy in the file
    top->Write();
    delete top;
 }

@@ -22,6 +22,16 @@ etc/allDict.h
 *_dictUmbrella.h
 *_rdict.pcm
 
+# MacOS Xcode
+xcuserdata
+project.xcworkspace
+
+# Visual Code
+.vscode/*
+
+# Vim
+*.swp
+
 # Other Stuff
 *.d
 
@@ -46,6 +56,7 @@ etc/allDict.h
 /roottest
 /*.mk
 /.project
+/files
 
 # /README/
 /README/ChangeLog
@@ -183,6 +194,19 @@ core/base/src/RGitCommit.h
 
 # /interpreter/cling/lib/Interpreter/
 /interpreter/cling/lib/Interpreter/cling-compiledata.h
+/interpreter/cling/lib/Interpreter/cling-compiledata.h.in
+
+# /interpreter/cling/...
+/interpreter/cling/CMakeFiles
+/interpreter/cling/Makefile
+/interpreter/cling/cmake_install.cmake
+/interpreter/cling/*/CMakeFiles
+/interpreter/cling/*/Makefile
+/interpreter/cling/*/cmake_install.cmake
+/interpreter/cling/lib/*/CMakeFiles
+/interpreter/cling/lib/*/Makefile
+/interpreter/cling/lib/*/cmake_install.cmake
+/interpreter/cling/lib/cmake
 
 # /interpreter/llvm/
 /interpreter/llvm/obj

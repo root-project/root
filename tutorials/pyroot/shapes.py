@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ##  Draw the geometry using the x3d viewver.
 ##  Note that this viewver may also be invoked from the "View" menu in
 ##  the canvas tool bar
@@ -84,7 +85,8 @@ node14 = ROOT.TNode( 'NODE14', 'NODE14', 'SPHE1',   10,   250,   300 )
 node15 = ROOT.TNode( 'NODE15', 'NODE15', 'SPHE2',   10,  -100,  -200 )
 
 # for memory management
-for l, o in locals().items():
+list_of_locals = dict(locals())
+for l, o in list_of_locals.items():
    if isinstance( o, ROOT.TShape ) or isinstance( o, ROOT.TNode ):
       ROOT.SetOwnership( o, False )
 

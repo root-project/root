@@ -70,14 +70,11 @@ void ObjCARCAPElim::getAnalysisUsage(AnalysisUsage &AU) const {
 /// possibly produce autoreleases.
 bool ObjCARCAPElim::MayAutorelease(ImmutableCallSite CS, unsigned Depth) {
   if (const Function *Callee = CS.getCalledFunction()) {
-    if (Callee->isDeclaration() || Callee->mayBeOverridden())
+    if (!Callee->hasExactDefinition())
       return true;
-    for (Function::const_iterator I = Callee->begin(), E = Callee->end();
-         I != E; ++I) {
-      const BasicBlock *BB = I;
-      for (BasicBlock::const_iterator J = BB->begin(), F = BB->end();
-           J != F; ++J)
-        if (ImmutableCallSite JCS = ImmutableCallSite(J))
+    for (const BasicBlock &BB : *Callee) {
+      for (const Instruction &I : BB)
+        if (ImmutableCallSite JCS = ImmutableCallSite(&I))
           // This recursion depth limit is arbitrary. It's just great
           // enough to cover known interesting testcases.
           if (Depth < 3 &&
@@ -96,12 +93,12 @@ bool ObjCARCAPElim::OptimizeBB(BasicBlock *BB) {
 
   Instruction *Push = nullptr;
   for (BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ) {
-    Instruction *Inst = I++;
-    switch (GetBasicInstructionClass(Inst)) {
-    case IC_AutoreleasepoolPush:
+    Instruction *Inst = &*I++;
+    switch (GetBasicARCInstKind(Inst)) {
+    case ARCInstKind::AutoreleasepoolPush:
       Push = Inst;
       break;
-    case IC_AutoreleasepoolPop:
+    case ARCInstKind::AutoreleasepoolPop:
       // If this pop matches a push and nothing in between can autorelease,
       // zap the pair.
       if (Push && cast<CallInst>(Inst)->getArgOperand(0) == Push) {
@@ -115,7 +112,7 @@ bool ObjCARCAPElim::OptimizeBB(BasicBlock *BB) {
       }
       Push = nullptr;
       break;
-    case IC_CallOrUser:
+    case ARCInstKind::CallOrUser:
       if (MayAutorelease(ImmutableCallSite(Inst)))
         Push = nullptr;
       break;
@@ -133,6 +130,9 @@ bool ObjCARCAPElim::runOnModule(Module &M) {
 
   // If nothing in the Module uses ARC, don't do anything.
   if (!ModuleHasARC(M))
+    return false;
+
+  if (skipModule(M))
     return false;
 
   // Find the llvm.global_ctors variable, as the first step in
@@ -169,7 +169,7 @@ bool ObjCARCAPElim::runOnModule(Module &M) {
     if (std::next(F->begin()) != F->end())
       continue;
     // Ok, a single-block constructor function definition. Try to optimize it.
-    Changed |= OptimizeBB(F->begin());
+    Changed |= OptimizeBB(&F->front());
   }
 
   return Changed;

@@ -24,12 +24,11 @@ public:
 
   /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
   /// the function.
-  void emitPrologue(MachineFunction &MF) const override;
+  void emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
 
-  void eliminateCallFramePseudoInstr(MachineFunction &MF,
-                                  MachineBasicBlock &MBB,
-                                  MachineBasicBlock::iterator I) const override;
+  int getFrameIndexReference(const MachineFunction &MF, int FI,
+                             unsigned &FrameReg) const override;
 
   bool spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MI,
@@ -38,11 +37,16 @@ public:
 
   bool hasReservedCallFrame(const MachineFunction &MF) const override;
 
-  void processFunctionBeforeCalleeSavedScan(MachineFunction &MF,
-                                            RegScavenger *RS) const override;
+  void determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs,
+                            RegScavenger *RS) const override;
   unsigned ehDataReg(unsigned I) const;
-};
 
+private:
+  void emitInterruptEpilogueStub(MachineFunction &MF,
+                                 MachineBasicBlock &MBB) const;
+  void emitInterruptPrologueStub(MachineFunction &MF,
+                                 MachineBasicBlock &MBB) const;
+};
 } // End llvm namespace
 
 #endif

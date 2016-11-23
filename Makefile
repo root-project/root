@@ -130,12 +130,6 @@ MODULES += core/utils
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
-ifeq ($(BUILDVC),yes)
-MODULES      += math/vc
-endif
-ifeq ($(BUILDVDT),yes)
-MODULES      += math/vdt
-endif
 ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
@@ -339,7 +333,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd graf2d/ios \
-                graf2d/quartz graf2d/cocoa core/macosx math/vc math/vdt \
+                graf2d/quartz graf2d/cocoa core/macosx \
                 net/http bindings/r main/python
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
@@ -512,7 +506,6 @@ MAKEDISTSRC   := $(ROOT_SRCDIR)/build/unix/makedistsrc.sh
 MAKEVERSION   := $(ROOT_SRCDIR)/build/unix/makeversion.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/unix/compiledata.sh
 MAKECHANGELOG := $(ROOT_SRCDIR)/build/unix/makechangelog.sh
-MAKEHTML      := $(ROOT_SRCDIR)/build/unix/makehtml.sh
 MAKELOGHTML   := $(ROOT_SRCDIR)/build/unix/makeloghtml.sh
 MAKEPLUGINS   := $(ROOT_SRCDIR)/build/unix/makeplugins-ios.sh
 MAKERELNOTES  := $(ROOT_SRCDIR)/build/unix/makereleasenotes.sh
@@ -601,9 +594,22 @@ ALLHDRS :=
 ifeq ($(CXXMODULES),yes)
 # Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS  := include/module.modulemap
-ROOT_CXXMODULES_FLAGS = -fmodules -fmodule-map-file=$(ROOT_OBJDIR)/include/module.modulemap -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
-CXXFLAGS += $(ROOT_CXXMODULES_FLAGS)
-CFLAGS   += $(ROOT_CXXMODULES_FLAGS)
+ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+ROOT_CXXMODULES_CFLAGS =  -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+# FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
+# Frameworks' modulemaps predate the flag.
+ifneq ($(PLATFORM),macosx)
+ROOT_CXXMODULES_CXXFLAGS += -Xclang -fmodules-local-submodule-visibility
+endif # not macos
+
+CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
+CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
+endif
+
+ifneq ($(GCCTOOLCHAIN),)
+CXXFLAGS += --gcc-toolchain=$(GCCTOOLCHAIN)
+CFLAGS   += --gcc-toolchain=$(GCCTOOLCHAIN)
+LDFLAGS  += --gcc-toolchain=$(GCCTOOLCHAIN)
 endif
 
 
@@ -1071,6 +1077,7 @@ endif
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root tutorials/tmva/data/toy_sigbkg_categ_offset.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root tutorials/tmva/data/toy_sigbkg_categ_varoff.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/tmva_logo.gif tutorials/tmva/tmva_logo.gif- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/spectrum/TSpectrum.root tutorials/spectrum/TSpectrum.root- >/dev/null 2>&1;true)
 	@(find tutorials -name "files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
@@ -1088,6 +1095,7 @@ endif
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root- tutorials/tmva/data/toy_sigbkg_categ_offset.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root- tutorials/tmva/data/toy_sigbkg_categ_varoff.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/tmva/tmva_logo.gif- tutorials/tmva/tmva_logo.gif >/dev/null 2>&1;true)
+	-@(mv -f tutorials/spectrum/TSpectrum.root- tutorials/spectrum/TSpectrum.root >/dev/null 2>&1;true)
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -f etc/gitinfo.txt
@@ -1129,15 +1137,18 @@ plugins-ios: $(ROOTEXE)
 	@$(MAKEPLUGINS)
 
 changelog:
-	@$(MAKECHANGELOG)
+	@$(MAKECHANGELOG) $(ROOT_SRCDIR)
 
 releasenotes:
 	@$(MAKERELNOTES)
 ROOTCLING_CXXFLAGS := $(CXXFLAGS)
-# rootcling doesn't know what to do with these flags.
-# FIXME: Disable until until somebody teaches it.
+# rootcling uses our internal version of clang. Passing the modules flags here
+# would allow rootcling to find module files built by the external compiler
+# (eg. $CXX or $CC). This, in turn, would cause problems if we are using
+# different clang version (even different commit revision) as the modules files
+# are not guaranteed to be compatible among clang revisions.
 ifeq ($(CXXMODULES),yes)
-ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_FLAGS),$(CXXFLAGS))
+ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(CXXFLAGS))
 endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
@@ -1160,7 +1171,7 @@ ifneq ($(USECONFIG),FALSE)
 	fi
 endif
 	@$(MAKELOGHTML)
-	@$(MAKEHTML)
+	@$(MAKE) -C $(ROOT_SRCDIR)/documentation/doxygen
 else
 html:
 	@echo "Error: Generating the html doc requires to enable the asimage component when running configure." && exit 1

@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup Tutorials
+/// This macro run several tests and produces an benchmark report.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 TCanvas* bench1 = 0;
 
 void bexec(TString &dir,const char *macro)

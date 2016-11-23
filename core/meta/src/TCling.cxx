@@ -70,6 +70,7 @@ clang/LLVM technology.
 #include "TStreamerInfo.h" // This is here to avoid to use the plugin manager
 #include "ThreadLocalStorage.h"
 #include "TFile.h"
+#include "TKey.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -98,6 +99,8 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/ParserStateRAII.h"
+#include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
 #include "llvm/IR/GlobalValue.h"
@@ -449,11 +452,7 @@ TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
       return 0;
    }
    const char* name = buf.c_str();
-   if (cl) {
-      enumType = new TEnum(name, VD, cl);
-   } else {
-      enumType = new TEnum(name, VD, cl);
-   }
+   enumType = new TEnum(name, VD, cl);
    UpdateEnumConstants(enumType, cl);
 
    return enumType;
@@ -735,7 +734,10 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
       // vector is special: we need to check whether
       // vector::iterator is a typedef to pointer or a
       // class.
-      static const std::set<std::string> sSTLTypes {"vector","list","unordered_list","deque","map","multimap","set","unordered_set","multiset","queue","priority_queue","stack","iterator"};
+      static const std::set<std::string> sSTLTypes {
+         "vector","list","forward_list","deque","map","unordered_map","multimap",
+         "unordered_multimap","set","unordered_set","multiset","unordered_multiset",
+         "queue","priority_queue","stack","iterator"};
       std::vector<std::string>::const_iterator it;
       std::string fileContent("");
       for (it = headers.begin(); it != headers.end(); ++it) {
@@ -975,11 +977,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 2;
-#ifdef R__WIN32
       char *scopeName = new char[scopeNameSize + 1];
-#else
-      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
-#endif
       strncpy(scopeName, inner, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // Check if the scope is in the list of classes
@@ -995,9 +993,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
             if (enumTable && enumTable->THashList::FindObject(enName)) return true;
          }
       }
-#ifdef R__WIN32
       delete [] scopeName;
-#endif
    } else
    {
       // We don't have any scope: this could only be a global enum
@@ -1064,8 +1060,20 @@ TCling::TCling(const char *name, const char *title)
    if (!fromRootCling) {
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
 
-      interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
+      // Add -I early so ASTReader can find the headers.
+      std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
       clingArgsStorage.push_back(interpInclude);
+
+      // Add include path to etc/cling. FIXME: This is a short term solution. The
+      // llvm/clang header files shouldn't be there at all. We have to get rid of
+      // that dependency and avoid copying the header files.
+      clingArgsStorage.push_back(interpInclude + "/cling");
+
+      // Add the root include directory and etc/ to list searched by default.
+      clingArgsStorage.push_back(std::string("-I") + ROOT::TMetaUtils::GetROOTIncludeDir(false));
+
+      // Add the current path to the include path
+      // TCling::AddIncludePath(".");
 
       std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
       if (gSystem->Getenv("ROOT_PCH")) {
@@ -1077,20 +1085,6 @@ TCling::TCling(const char *name, const char *title)
       // clingArgsStorage.push_back("-Xclang");
       // clingArgsStorage.push_back("-fmodules");
 
-      std::string include;
-#ifndef ROOTINCDIR
-      if (const char* rootsys = gSystem->Getenv("ROOTSYS")) {
-         include = rootsys;
-         include += "/include";
-      } else {
-        ::Fatal("TCling::TCling", "ROOTSYS not set!");
-        exit(1);
-      }
-#else // ROOTINCDIR
-      include = ROOTINCDIR;
-#endif // ROOTINCDIR
-      clingArgsStorage.push_back("-I");
-      clingArgsStorage.push_back(include);
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
    }
@@ -1118,18 +1112,6 @@ TCling::TCling(const char *name, const char *title)
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
-
-      // Add include path to etc/cling. FIXME: This is a short term solution. The
-      // llvm/clang header files shouldn't be there at all. We have to get rid of
-      // that dependency and avoid copying the header files.
-      // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
-      TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
-
-      // Add the current path to the include path
-      // TCling::AddIncludePath(".");
-
-      // Add the root include directory and etc/ to list searched by default.
-      TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
    }
 
    // Don't check whether modules' files exist.
@@ -1187,16 +1169,20 @@ TCling::TCling(const char *name, const char *title)
    //optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
 
-   // Attach cling callbacks
+   // Enable dynamic lookup
+   if (!fromRootCling) {
+      fInterpreter->enableDynamicLookup();
+   }
+
+   // Attach cling callbacks last; they might need TROOT::fInterpreter
+   // and should thus not be triggered during the equivalent of
+   // TROOT::fInterpreter = new TCling;
    std::unique_ptr<TClingCallbacks>
       clingCallbacks(new TClingCallbacks(fInterpreter));
    fClingCallbacks = clingCallbacks.get();
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
-   if (!fromRootCling) {
-      fInterpreter->enableDynamicLookup();
-   }
 }
 
 
@@ -1332,7 +1318,16 @@ bool TCling::LoadPCM(TString pcmFileName,
       auto listOfKeys = pcmFile->GetListOfKeys();
 
       // This is an empty pcm
-      if (listOfKeys && listOfKeys->GetSize() == 0) {
+      if (
+         listOfKeys &&
+         (
+            (listOfKeys->GetSize() == 0) || // Nothing here, or
+            (
+               (listOfKeys->GetSize() == 1) && // only one, and
+               !strcmp(((TKey*)listOfKeys->At(0))->GetName(), "EMPTY") // name is EMPTY
+            )
+         )
+      ) {
          delete pcmFile;
          gDebug = oldDebug;
          return kTRUE;
@@ -1761,6 +1756,8 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 
       if (!hasHeaderParsingOnDemand){
+         SuspendAutoParsing autoParseRaii(this);
+
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
          cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
          if (isACLiC) {
@@ -1878,7 +1875,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    }
    catch (cling::InvalidDerefException& ex)
    {
-      Info("Handle", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      Error("HandleInterpreterException", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
    }
    return 0;
@@ -2002,28 +1999,24 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          }
       } else {
          // not ACLiC
-         bool unnamedMacro = false;
+         size_t unnamedMacroOpenCurly;
          {
-            std::string line;
+            std::string code;
+            std::string codeline;
             std::ifstream in(fname);
-            static const char whitespace[] = " \t\r\n";
             while (in) {
-               std::getline(in, line);
-               std::string::size_type posNonWS = line.find_first_not_of(whitespace);
-               if (posNonWS == std::string::npos) continue;
-               if (line[posNonWS] == '/' && line[posNonWS + 1] == '/')
-                  // Too bad, we only suppose C++ comments here.
-                  continue;
-               unnamedMacro = (line[posNonWS] == '{');
-               break;
+               std::getline(in, codeline);
+               code += codeline + "\n";
             }
+            unnamedMacroOpenCurly
+              = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getLangOpts());
          }
 
          fCurExecutingMacros.push_back(fname);
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
-         if (unnamedMacro) {
+         if (unnamedMacroOpenCurly != std::string::npos) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
-                                                        true /*ignoreOutmostBlock*/);
+                                                        unnamedMacroOpenCurly);
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
@@ -2039,7 +2032,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
 
          // Turn off autoparsing if this is an include directive
-         bool isInclusionDirective = sLine.Contains("\n#include");
+         bool isInclusionDirective = sLine.Contains("\n#include") || sLine.BeginsWith("#include");
          if (isInclusionDirective) {
             SuspendAutoParsing autoParseRaii(this);
             indent = HandleInterpreterException(fMetaProcessor, sLine, compRes, &result);
@@ -2624,8 +2617,10 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                                                         const clang::DirectoryEntry *>>(),
                                               /*SearchPath*/ 0,
                                               /*RelativePath*/ 0,
+                                              /*RequestingModule*/ 0,
                                               /*SuggestedModule*/ 0,
                                               /*SkipCache*/ false,
+                                              /*BuildSystemModule*/ false,
                                               /*OpenFile*/ false,
                                               /*CacheFail*/ false);
    if (FE && FE->isValid()) {
@@ -2711,6 +2706,8 @@ void TCling::UpdateListOfLoadedSharedLibraries()
       LinkMap_t* linkMap = (LinkMap_t*) ((PointerNo4_t*)procLinkMap->fPtr)->fPtr;
       RegisterLoadedSharedLibrary(linkMap->fName);
       fPrevLoadedDynLibInfo = linkMap;
+      // reduce use count of link map structure:
+      dlclose(procLinkMap);
    }
 
    LinkMap_t* iDyLib = (LinkMap_t*)fPrevLoadedDynLibInfo;
@@ -3175,6 +3172,111 @@ void TCling::UpdateListOfTypes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check in what order the member of a tuple are layout.
+enum class ETupleOrdering {
+   kAscending,
+   kDescending,
+   kUnexpected
+};
+
+struct AlternateTupleIntDoubleAsc
+{
+   Int_t    _0;
+   Double_t _1;
+};
+
+struct AlternateTupleIntDoubleDes
+{
+   Double_t _1;
+   Int_t    _0;
+};
+
+static ETupleOrdering IsTupleAscending()
+{
+   std::tuple<int,double> value;
+   AlternateTupleIntDoubleAsc asc;
+   AlternateTupleIntDoubleDes des;
+
+   size_t offset0 = ((char*)&(std::get<0>(value))) - ((char*)&value);
+   size_t offset1 = ((char*)&(std::get<1>(value))) - ((char*)&value);
+
+   size_t ascOffset0 = ((char*)&(asc._0)) - ((char*)&asc);
+   size_t ascOffset1 = ((char*)&(asc._1)) - ((char*)&asc);
+
+   size_t desOffset0 = ((char*)&(des._0)) - ((char*)&des);
+   size_t desOffset1 = ((char*)&(des._1)) - ((char*)&des);
+
+   if (offset0 == ascOffset0 && offset1 == ascOffset1) {
+      return ETupleOrdering::kAscending;
+   } else if (offset0 == desOffset0 && offset1 == desOffset1) {
+      return ETupleOrdering::kDescending;
+   } else {
+      return ETupleOrdering::kUnexpected;
+   }
+}
+
+std::string AtlernateTuple(const char *classname)
+{
+   TClassEdit::TSplitType tupleContent(classname);
+   std::string alternateName = "TEmulatedTuple";
+   alternateName.append( classname + 5 );
+
+   std::string guard_name;
+   ROOT::TMetaUtils::GetCppName(guard_name,alternateName.c_str());
+   std::ostringstream guard;
+   guard << "ROOT_INTERNAL_TEmulated_";
+   guard << guard_name;
+
+   std::ostringstream alternateTuple;
+   alternateTuple << "#ifndef " << guard.str() << "\n";
+   alternateTuple << "#define " << guard.str() << "\n";
+   alternateTuple << "namespace ROOT { namespace Internal {\n";
+   alternateTuple << "template <class... Types> struct TEmulatedTuple;\n";
+   alternateTuple << "template <> struct " << alternateName << " {\n";
+
+   // This could also be a compile time choice ...
+   switch(IsTupleAscending()) {
+      case ETupleOrdering::kAscending: {
+         unsigned int nMember = 0;
+         auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple)
+         auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
+         while (iter != theEnd) {
+            alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+            ++iter;
+            ++nMember;
+         }
+         break;
+      }
+      case ETupleOrdering::kDescending: {
+         unsigned int nMember = tupleContent.fElements.size() - 3;
+         auto iter = tupleContent.fElements.rbegin() + 1; // Skip the template name (tuple)
+         auto theEnd = tupleContent.fElements.rend() - 1; // skip the 'stars'.
+         while (iter != theEnd) {
+            alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+            ++iter;
+            --nMember;
+         }
+         break;
+      }
+      case ETupleOrdering::kUnexpected: {
+         Fatal("TCling::SetClassInfo::AtlernateTuple",
+               "Layout of std::tuple on this platform is unexpected.");
+         break;
+      }
+   }
+
+   alternateTuple << "};\n";
+   alternateTuple << "}}\n";
+   alternateTuple << "#endif\n";
+   if (!gCling->Declare(alternateTuple.str().c_str())) {
+      Error("Load","Could not declare %s",alternateName.c_str());
+      return "";
+   }
+   alternateName = "ROOT::Internal::" + alternateName;
+   return alternateName;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set pointer to the TClingClassInfo in TClass.
 /// If 'reload' is true, (attempt to) generate a new ClassInfo even if we
 /// already have one.
@@ -3193,6 +3295,16 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    delete TClinginfo;
    cl->fClassInfo = 0;
    std::string name(cl->GetName());
+
+   // Handle the special case of 'tuple' where we ignore the real implementation
+   // details and just overlay a 'simpler'/'simplistic' version that is easy
+   // for the I/O to understand and handle.
+   if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+
+      name = AtlernateTuple(cl->GetName());
+
+   }
+
    TClingClassInfo* info = new TClingClassInfo(fInterpreter, name.c_str());
    if (!info->IsValid()) {
       if (cl->fState != TClass::kHasTClassInit) {
@@ -3424,16 +3536,16 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
    if (!tci) return;
    TClingBaseClassInfo t(fInterpreter, tci);
-   // This is put here since TClingBaseClassInfo can trigger a
-   // TClass::ResetCaches, which deallocates cl->fBase
-   cl->fBase = new TList;
+   TList *listOfBase = new TList;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
          TClingBaseClassInfo *a = new TClingBaseClassInfo(t);
-         cl->fBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
+         listOfBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
       }
    }
+   // Now that is complete, publish it.
+   cl->fBase = listOfBase;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3563,14 +3675,15 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
    if (m->fMethodArgs) {
       return;
    }
-   m->fMethodArgs = new TList;
+   TList *arglist = new TList;
    TClingMethodArgInfo t(fInterpreter, (TClingMethodInfo*)m->fInfo);
    while (t.Next()) {
       if (t.IsValid()) {
          TClingMethodArgInfo* a = new TClingMethodArgInfo(t);
-         m->fMethodArgs->Add(new TMethodArg((MethodArgInfo_t*)a, m));
+         arglist->Add(new TMethodArg((MethodArgInfo_t*)a, m));
       }
    }
+   m->fMethodArgs = arglist;
 }
 
 
@@ -3893,7 +4006,7 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
 
    if (!strncmp(scopename.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       scopename.erase(0, sizeof("typeinfo for ")-1);
-   } if (!strncmp(scopename.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
+   } else if (!strncmp(scopename.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
       scopename.erase(0, sizeof("vtable for ")-1);
    } else {
       // See if it is a function
@@ -5180,6 +5293,49 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    return status;
 }
 
+namespace {
+////////////////////////////////////////////////////////////////////////////////
+/// RAII used to store Parser, Sema, Preprocessor state for recursive parsing.
+   struct ParsingStateRAII_t {
+      Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
+      Parser::ParserCurTokRestoreRAII fSavedCurToken;
+      cling::ParserStateRAII fParserRAII;
+
+      // We can't PushDeclContext, because we go up and the routine that pops
+      // the DeclContext assumes that we drill down always.
+      // We have to be on the global context. At that point we are in a
+      // wrapper function so the parent context must be the global.
+      Sema::ContextAndScopeRAII fPushedDCAndS;
+
+      struct SemaParsingInitForAutoVarsRAII_t {
+         using PIFAV_t = decltype(Sema::ParsingInitForAutoVars);
+         PIFAV_t& fSemaPIFAV;
+         PIFAV_t fSavedPIFAV;
+         SemaParsingInitForAutoVarsRAII_t(PIFAV_t& PIFAV): fSemaPIFAV(PIFAV) {
+            fSavedPIFAV.swap(PIFAV);
+         }
+         ~SemaParsingInitForAutoVarsRAII_t() {
+            fSavedPIFAV.swap(fSemaPIFAV);
+         }
+      };
+      SemaParsingInitForAutoVarsRAII_t fSemaParsingInitForAutoVarsRAII;
+
+      ParsingStateRAII_t(Parser& parser, Sema& sema):
+         fCleanupRAII(sema.getPreprocessor()),
+         fSavedCurToken(parser),
+         fParserRAII(parser, false /*skipToEOF*/),
+         fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
+                       sema.TUScope),
+         fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
+      {
+         // After we have saved the token reset the current one to something which
+         // is safe (semi colon usually means empty decl)
+         Token& Tok = const_cast<Token&>(parser.getCurToken());
+         Tok.setKind(tok::semi);
+      }
+   };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse the payload or header.
 
@@ -5187,24 +5343,6 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
                                                            Bool_t header,
                                                            cling::Interpreter *interpreter)
 {
-   // Save state of the PP
-   Sema &SemaR = interpreter->getSema();
-   ASTContext& C = SemaR.getASTContext();
-   Preprocessor &PP = SemaR.getPreprocessor();
-   Parser& P = const_cast<Parser&>(interpreter->getParser());
-   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-   Parser::ParserCurTokRestoreRAII savedCurToken(P);
-   // After we have saved the token reset the current one to something which
-   // is safe (semi colon usually means empty decl)
-   Token& Tok = const_cast<Token&>(P.getCurToken());
-   Tok.setKind(tok::semi);
-
-   // We can't PushDeclContext, because we go up and the routine that pops
-   // the DeclContext assumes that we drill down always.
-   // We have to be on the global context. At that point we are in a
-   // wrapper function so the parent context must be the global.
-   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
-                                          SemaR.TUScope);
    std::string code = gNonInterpreterClassDef ;
    if (!header) {
       // This is the complete header file content and not the
@@ -5227,6 +5365,8 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
       // For now we disable diagnostics because we saw them already at
       // dictionary generation time. That won't be an issue with the PCMs.
 
+      Sema &SemaR = interpreter->getSema();
+      ParsingStateRAII_t parsingStateRAII(interpreter->getParser(), SemaR);
       clangDiagSuppr diagSuppr(SemaR.getDiagnostics());
 
       #if defined(R__MUST_REVISIT)
@@ -5268,7 +5408,9 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          TString templateName(autoparseKeys[0]);
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
-         clang::DeclContext* previousScopeAsContext = nullptr;
+         clang::DeclContext* previousScopeAsContext = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
+         if (TClassEdit::IsStdClass(cls))
+             previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
          for (auto const scopeObj : *tokens){
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
@@ -5279,9 +5421,11 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          }
          delete tokens;
          // Now, let's check if the last scope, the template, has a definition, i.e. it's not a fwd decl
-         if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
-            if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
-               skipFirstEntry = nullptr != templatedDecl->getDefinition();
+         if ((clang::NamedDecl*)-1 != previousScopeAsNamedDecl) {
+            if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
+               if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
+                  skipFirstEntry = nullptr != templatedDecl->getDefinition();
+               }
             }
          }
 
@@ -5394,8 +5538,12 @@ Int_t TCling::AutoParse(const char *cls)
    }
 
    // The catalogue of headers is in the dictionary
-   if (fClingCallbacks->IsAutoloadingEnabled()) {
-      AutoLoad(cls);
+   if (fClingCallbacks->IsAutoloadingEnabled()
+         && !gClassTable->GetDictNorm(cls)) {
+      // Need RAII against recursive (dictionary payload) parsing (ROOT-8445).
+      ParsingStateRAII_t parsingStateRAII(fInterpreter->getParser(),
+         fInterpreter->getSema());
+      AutoLoad(cls, true /*knowDictNotLoaded*/);
    }
 
    // Prevent the recursion when the library dictionary are loaded.
@@ -5648,24 +5796,12 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
    if (!HandleNewTransaction(T)) return;
 
    bool isTUTransaction = false;
-   if (T.decls_end()-T.decls_begin() == 1 && !T.hasNestedTransactions()) {
+   if (!T.empty() && T.decls_begin() + 1 == T.decls_end() && !T.hasNestedTransactions()) {
       clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
-      if (clang::TranslationUnitDecl* TU
-          = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
+      if (llvm::isa<clang::TranslationUnitDecl>(FirstDecl)) {
          // The is the first transaction, we have to expose to meta
          // what's already in the AST.
          isTUTransaction = true;
-
-         // FIXME: don't load the world. Really, don't. Maybe
-         // instead smarten TROOT::GetListOfWhateveros() which
-         // currently is a THashList but could be a
-         // TInterpreterLookupCollection, one that reimplements
-         // TCollection::FindObject(name) and performs a lookup
-         // if not found in its T(Hash)List.
-         cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
-         for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
-                 TUE = TU->decls_end(); TUI != TUE; ++TUI)
-            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
       }
    }
 
@@ -5800,13 +5936,13 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
    TListOfFunctionTemplates* functiontemplates = (TListOfFunctionTemplates*)gROOT->GetListOfFunctionTemplates();
    TListOfEnums* enums = (TListOfEnums*)gROOT->GetListOfEnums();
    TListOfDataMembers* globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
-  cling::Transaction::const_nested_iterator iNested = T.nested_begin();
+   cling::Transaction::const_nested_iterator iNested = T.nested_begin();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I) {
       if (I->m_Call == cling::Transaction::kCCIHandleVTable)
          continue;
 
-     if (I->m_Call == cling::Transaction::kCCINone) {
+      if (I->m_Call == cling::Transaction::kCCINone) {
          UpdateListsOnUnloaded(**iNested);
          ++iNested;
          continue;
@@ -6165,26 +6301,6 @@ Long_t TCling::GetExecByteCode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface to the CINT global object pointer which was controlling the
-/// behavior of the wrapper around the calls to operator new and the constructor
-/// and operator delete and the destructor.
-
-Long_t TCling::Getgvp() const
-{
-   Error("Getgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const char* TCling::Getp2f2funcname(void*) const
-{
-   Error("Getp2f2funcname", "Will not be implemented: "
-         "all function pointers are compiled!");
-   return NULL;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Interface to cling function
 
 int TCling::GetSecurityError() const
@@ -6299,30 +6415,6 @@ void TCling::SetErrmsgcallback(void* p) const
 #endif
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to the cling global object pointer which was controlling the
-/// behavior of the wrapper around the calls to operator new and the constructor
-/// and operator delete and the destructor.
-
-void TCling::Setgvp(Long_t gvp) const
-{
-   Error("Setgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TCling::SetRTLD_NOW() const
-{
-   Error("SetRTLD_NOW()", "Will never be implemented! Don't use!");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TCling::SetRTLD_LAZY() const
-{
-   Error("SetRTLD_LAZY()", "Will never be implemented! Don't use!");
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create / close a scope for temporaries. No-op for cling; use
@@ -6355,6 +6447,25 @@ TInterpreterValue *TCling::CreateTemporary()
 {
    TClingValue *val = new TClingValue;
    return val;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The call to Cling's tab complition.
+
+void TCling::CodeComplete(const std::string& line, size_t& cursor,
+                          std::vector<std::string>& completions)
+{
+   fInterpreter->codeComplete(line, cursor, completions);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the interpreter value corresponding to the statement.
+int TCling::Evaluate(const char* code, TInterpreterValue& value)
+{
+   auto V = reinterpret_cast<cling::Value*>(value.GetValAddr());
+   auto interpreter = this->GetInterpreter();
+   auto compRes = interpreter->evaluate(code, *V);
+   return compRes!=cling::Interpreter::kSuccess ? 0 : 1 ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

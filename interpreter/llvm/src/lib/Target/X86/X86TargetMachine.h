@@ -24,19 +24,16 @@ class StringRef;
 
 class X86TargetMachine final : public LLVMTargetMachine {
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
-  // Calculates type size & alignment
-  const DataLayout DL;
   X86Subtarget Subtarget;
 
   mutable StringMap<std::unique_ptr<X86Subtarget>> SubtargetMap;
 
 public:
-  X86TargetMachine(const Target &T, StringRef TT, StringRef CPU, StringRef FS,
-                   const TargetOptions &Options, Reloc::Model RM,
-                   CodeModel::Model CM, CodeGenOpt::Level OL);
+  X86TargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                   StringRef FS, const TargetOptions &Options,
+                   Optional<Reloc::Model> RM, CodeModel::Model CM,
+                   CodeGenOpt::Level OL);
   ~X86TargetMachine() override;
-  const DataLayout *getDataLayout() const override { return &DL; }
-  const X86Subtarget *getSubtargetImpl() const override { return &Subtarget; }
   const X86Subtarget *getSubtargetImpl(const Function &F) const override;
 
   TargetIRAnalysis getTargetIRAnalysis() override;

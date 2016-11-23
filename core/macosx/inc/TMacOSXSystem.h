@@ -13,11 +13,9 @@
 #ifndef ROOT_TMacOSXSystem
 #define ROOT_TMacOSXSystem
 
-#include <memory>
-
-#ifndef ROOT_TUnixSystem
 #include "TUnixSystem.h"
-#endif
+
+#include <memory>
 
 ////////////////////////////////////////////////////////////////////
 //                                                                //
@@ -29,7 +27,7 @@
 
 namespace ROOT {
 namespace MacOSX {
-namespace Detail {
+namespace Details {
 
 //'Private' pimpl class to hide Apple's specific things from CINT.
 class MacOSXSystem;
@@ -58,7 +56,7 @@ private:
 
    void ProcessApplicationDefinedEvent(void *event);
 
-   std::auto_ptr<ROOT::MacOSX::Detail::MacOSXSystem> fPimpl; //!
+   std::unique_ptr<ROOT::MacOSX::Details::MacOSXSystem> fPimpl; //!
    bool fCocoaInitialized; //!
    bool fFirstDispatch; //!
 

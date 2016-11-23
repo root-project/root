@@ -70,6 +70,15 @@ static inline ULong_t Void_Hash(const void *ptr)
 
 TProcessID::TProcessID()
 {
+   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+   // and Apple LLVM version 7.3.0 (clang-703.0.31) warns about:
+   // fLock(ATOMIC_FLAG_INIT)
+   // ^~~~~~~~~~~~~~~~
+   //    c++/v1/atomic:1779:26: note: expanded from macro 'ATOMIC_FLAG_INIT'
+   //  #define ATOMIC_FLAG_INIT {false}
+   // So reset the flag instead.
+   std::atomic_flag_clear( &fLock );
+
    fCount = 0;
    fObjects = 0;
 }
@@ -166,7 +175,11 @@ UInt_t TProcessID::AssignID(TObject *obj)
 
 void TProcessID::CheckInit()
 {
-   if (!fObjects) fObjects = new TObjArray(100);
+   if (!fObjects) {
+       while (fLock.test_and_set(std::memory_order_acquire));  // acquire lock
+       if (!fObjects) fObjects = new TObjArray(100);
+       fLock.clear(std::memory_order_release);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,8 +282,8 @@ TProcessID *TProcessID::GetSessionProcessID()
 
 Int_t TProcessID::IncrementCount()
 {
-   if (!fObjects) fObjects = new TObjArray(100);
-   fCount++;
+   CheckInit();
+   ++fCount;
    return fCount;
 }
 

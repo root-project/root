@@ -27,8 +27,8 @@ public:
   bool isFPCloseToIncomingSP() const override { return false; }
   const SpillSlot *getCalleeSavedSpillSlots(unsigned &NumEntries) const
     override;
-  void processFunctionBeforeCalleeSavedScan(MachineFunction &MF,
-                                            RegScavenger *RS) const override;
+  void determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs,
+                            RegScavenger *RS) const override;
   bool spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MBBI,
                                  const std::vector<CalleeSavedInfo> &CSI,
@@ -40,15 +40,15 @@ public:
     override;
   void processFunctionBeforeFrameFinalized(MachineFunction &MF,
                                            RegScavenger *RS) const override;
-  void emitPrologue(MachineFunction &MF) const override;
+  void emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
   bool hasFP(const MachineFunction &MF) const override;
-  int getFrameIndexOffset(const MachineFunction &MF, int FI) const override;
+  int getFrameIndexReference(const MachineFunction &MF, int FI,
+                             unsigned &FrameReg) const override;
   bool hasReservedCallFrame(const MachineFunction &MF) const override;
-  void eliminateCallFramePseudoInstr(MachineFunction &MF,
-                                     MachineBasicBlock &MBB,
-                                     MachineBasicBlock::iterator MI) const
-    override;
+  MachineBasicBlock::iterator
+  eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
+                                MachineBasicBlock::iterator MI) const override;
 
   // Return the number of bytes in the callee-allocated part of the frame.
   uint64_t getAllocatedStackSize(const MachineFunction &MF) const;

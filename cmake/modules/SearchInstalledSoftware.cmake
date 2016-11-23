@@ -28,14 +28,44 @@ endif()
 #---Check for Zlib ------------------------------------------------------------------
 if(NOT builtin_zlib)
   message(STATUS "Looking for ZLib")
-  find_Package(ZLIB)
+  find_package(ZLIB)
   if(NOT ZLIB_FOUND)
     message(STATUS "Zlib not found. Switching on builtin_zlib option")
     set(builtin_zlib ON CACHE BOOL "" FORCE)
    endif()
 endif()
 if(builtin_zlib)
-  set(ZLIB_LIBRARY "" CACHE PATH "" FORCE)
+  message(STATUS "Building zlib included in ROOT itself")
+  set(zlib_sources
+    ${CMAKE_SOURCE_DIR}/core/zip/src/adler32.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/compress.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/crc32.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/deflate.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzclose.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzlib.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzread.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/gzwrite.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/infback.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/inffast.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/inflate.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/inftrees.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/trees.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/uncompr.c
+    ${CMAKE_SOURCE_DIR}/core/zip/src/zutil.c)
+  add_library(ZLIB STATIC ${zlib_sources})
+  set_target_properties(ZLIB PROPERTIES COMPILE_FLAGS "-fPIC -I${CMAKE_SOURCE_DIR}/core/zip/inc")
+  set(ZLIB_LIBRARY " " CACHE PATH "" FORCE)
+  set(ZLIB_LIBRARIES ZLIB)
+endif()
+
+#---Check for Unuran ------------------------------------------------------------------
+if(NOT builtin_unuran)
+  message(STATUS "Looking for Unuran")
+  find_Package(Unuran)
+  if(NOT UNURAN_FOUND)
+    message(STATUS "Unuran not found. Switching on builtin_unuran option")
+    set(builtin_unuran ON CACHE BOOL "" FORCE)
+  endif()
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
@@ -171,7 +201,7 @@ if(builtin_lzma)
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else()
-    if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
       set(LZMA_CFLAGS "-Wno-format-nonliteral")
       set(LZMA_LDFLAGS "-Qunused-arguments")
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -294,9 +324,13 @@ if(builtin_afterimage)
     message(STATUS "Building AfterImage library included in ROOT itself")
     if(JPEG_FOUND)
       set(_jpeginclude --with-jpeg-includes=${JPEG_INCLUDE_DIR})
+    else()
+      set(_jpeginclude --with-builtin-jpeg)
     endif()
     if(PNG_FOUND)
       set(_pnginclude  --with-png-includes=${PNG_PNG_INCLUDE_DIR})
+    else()
+       set(_pnginclude  --with-builtin-png)
     endif()
     if(TIFF_FOUND)
       set(_tiffinclude --with-tiff-includes=${TIFF_INCLUDE_DIR})
@@ -316,7 +350,9 @@ if(builtin_afterimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-ttf ${_ttf_include} --with-afterbase=no 
+      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
+                        --libdir=<INSTALL_DIR>/lib 
+                        --with-ttf ${_ttf_include} --with-afterbase=no 
                         --without-svg --disable-glx ${_after_mmx} 
                         --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
                         --with-png ${_pnginclude} ${_tiffinclude}
@@ -437,6 +473,16 @@ if(opengl)
       message(STATUS "OpenGL (with GLU) not found. Switching off opengl option")
       set(opengl OFF CACHE BOOL "" FORCE)
     endif()
+  endif()
+endif()
+
+#---Check for gl2ps ------------------------------------------------------------------
+if(NOT builtin_gl2ps)
+  message(STATUS "Looking for gl2ps")
+  find_Package(gl2ps)
+  if(NOT GL2PS_FOUND)
+    message(STATUS "gl2ps not found. Switching on builtin_gl2ps option")
+    set(builtin_gl2ps ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -562,15 +608,29 @@ if(ssl OR builtin_openssl)
 endif()
 
 #---Check for Castor-------------------------------------------------------------------
-if(castor OR rfio)
+if(castor)
   message(STATUS "Looking for Castor")
   find_package(Castor)
   if(NOT CASTOR_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "Castor libraries not found and they are required (castor option enabled)")
     else()
-      message(STATUS "Castor not found. Switching off castor/rfio option")
+      message(STATUS "Castor not found. Switching off castor option")
       set(castor OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+#---Check for RFIO-------------------------------------------------------------------
+if(rfio)
+  message(STATUS "Looking for RFIO")
+  find_package(Castor)
+  find_package(DPM)
+  if(NOT CASTOR_FOUND AND NOT DPM_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Castor or DPM libraries not found and one of them is required (rfio option enabled)")
+    else()
+      message(STATUS "Castor or DPM not found. Switching off rfio option")
       set(rfio OFF CACHE BOOL "" FORCE)
     endif()
   endif()
@@ -747,16 +807,6 @@ if(shadowpw)
   endif()
 endif()
 
-#---Alien support----------------------------------------------------------------
-if(alien)
-  find_package(Alien)
-  if(NOT ALIEN_FOUND)
-    message(STATUS "Alien API not found. Set variable ALIEN_DIR to point to your Alien installation")
-    message(STATUS "For the time being switching OFF 'alien' option")
-    set(alien OFF CACHE BOOL "" FORCE)
-  endif()
-endif()
-
 #---Monalisa support----------------------------------------------------------------
 if(monalisa)
   find_package(Monalisa)
@@ -773,18 +823,24 @@ if(xrootd)
     message(STATUS "Looking for XROOTD")
     find_package(XROOTD)
     if(NOT XROOTD_FOUND)
-      message(STATUS "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation")
-      message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'")
-      message(STATUS "                  For the time being switching OFF 'xrootd' option")
-      set(xrootd OFF CACHE BOOL "" FORCE)
+      if(fail-on-missing)
+        message(FATAL_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
+                            "or inlcude the installation of XROOTD in the CMAKE_PREFIX_PATH. "
+                            "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
+      else()
+        message(STATUS "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation")
+        message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
+        message(STATUS "                  For the time being switching OFF 'xrootd' option")
+        set(xrootd OFF CACHE BOOL "" FORCE)
+      endif()
     else()
       set(xrootd_versionnum ${xrdversnum})  # variable used internally
     endif()
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.2.2)
-  set(xrootd_versionnum 400020002)
+  set(xrootd_version 4.3.0)
+  set(xrootd_versionnum 400030000)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
@@ -824,6 +880,25 @@ if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
   set(netxng ON)
 else()
   set(netxng OFF)
+endif()
+
+#---Alien support----------------------------------------------------------------
+if(alien)
+  if(NOT xrootd)
+    message(FATAL_ERROR "The Alien plugin requires option 'xrootd' to be enabled. Re-run the configuration with 'xrootd=ON'")
+  endif()
+  find_package(Alien)
+  if(NOT ALIEN_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Alien API not found and is required. Set the variable ALIEN_DIR to point to your Alien installation,"
+                          "or include the installation of Alien in the CMAKE_PREFIX_PATH. ")
+    else()
+      message(STATUS "Alien API not found. Set variable ALIEN_DIR to point to your Alien installation,"
+                     "or include the installation of Alien in the CMAKE_PREFIX_PATH.")
+      message(STATUS "For the time being switching OFF 'alien' option")
+      set(alien OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
 endif()
 
 #---Check for cling and llvm --------------------------------------------------------
@@ -981,7 +1056,7 @@ if(davix OR builtin_davix)
     if(NOT davix)
       set(davix ON CACHE BOOL "" FORCE)
     endif()
-    set(DAVIX_VERSION 0.6.3)
+    set(DAVIX_VERSION 0.6.4)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
     string(REPLACE "-W " "" __cxxflags "${__cxxflags}")
@@ -994,8 +1069,7 @@ if(davix OR builtin_davix)
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
-      # Patch need. see https://github.com/cern-it-sdc-id/davix/issues/6
-      # PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch 
+      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -1026,9 +1100,13 @@ if(davix OR builtin_davix)
     message(STATUS "Looking for DAVIX")
     find_package(Davix)
     if(NOT DAVIX_FOUND)
-      message(STATUS "Davix not found. You can enable the option 'builtin_davix' to build the library internally'")
-      message(STATUS "                 For the time being switching off 'davix' option")
-      set(davix OFF CACHE BOOL "" FORCE)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Davix not found. You can enable the option 'builtin_davix' to build the library internally'")
+      else()
+        message(STATUS "Davix not found. You can enable the option 'builtin_davix' to build the library internally'")
+        message(STATUS "                 For the time being switching off 'davix' option")
+        set(davix OFF CACHE BOOL "" FORCE)
+      endif()
     endif()
   endif()
 endif()
@@ -1089,27 +1167,33 @@ if(imt)
       endif()
     endif()  
     if(NOT TBB_FOUND)
-      message(STATUS "TBB not found. Switching on builtin_tbb option")
-      set(builtin_tbb ON CACHE BOOL "" FORCE)
+      if(fail-on-missing)
+        message(FATAL_ERROR "TBB not found. You can enable the option 'builtin_tbb' to build the library internally")
+      else()
+        message(STATUS "TBB not found. Switching on builtin_tbb option")
+        set(builtin_tbb ON CACHE BOOL "" FORCE)
+      endif()
     endif()
   endif()
-  if(builtin_tbb)
-    set(tbb_version 44_20160128)
-    ExternalProject_Add(
-      TBB
-      URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
-                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
-      INSTALL_COMMAND ""
-      BUILD_IN_SOURCE 1
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-    )
-    set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  endif()
+endif()  
+if(builtin_tbb)
+  set(tbb_version 44_20160413)
+  ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
+  ExternalProject_Add(
+    TBB
+    URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND make CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+    INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
+                                     -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+    INSTALL_COMMAND ""
+    BUILD_IN_SOURCE 1
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+  )
+  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
 endif()
 
 #---Check for OCC--------------------------------------------------------------------
@@ -1132,10 +1216,14 @@ if (vecgeom)
   message(STATUS "Looking for VecGeom")
   find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
   if(NOT VecGeom_FOUND )
+    if(fail-on-missing)
+      message(FATAL_ERROR "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
+    else()
       message(STATUS "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
       message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/CMake/VecGeom")
       message(STATUS "              For the time being switching OFF 'vecgeom' option")
       set(vecgeom OFF CACHE BOOL "" FORCE)
+    endif()
   endif()
 endif()
 
@@ -1145,10 +1233,14 @@ if(vc OR builtin_vc)
     message(STATUS "Looking for Vc")
     find_package(Vc 1.0 CONFIG QUIET)
     if(NOT Vc_FOUND)
-      message(STATUS "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
-      message(STATUS "              Alternatively, you can also enable the option 'builtin_vc' to build the Vc libraries internally")
-      message(STATUS "              For the time being switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
+      else()
+        message(STATUS "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
+        message(STATUS "              Alternatively, you can also enable the option 'builtin_vc' to build the Vc libraries internally")
+        message(STATUS "              For the time being switching OFF 'vc' option")
+        set(vc OFF CACHE BOOL "" FORCE)
+      endif()
     endif()
     set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})    # Missing from VcConfig.cmake
   endif()
@@ -1165,6 +1257,61 @@ if(vc OR builtin_vc)
     set(Vc_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(vc ON CACHE BOOL "" FORCE)
   endif()
+endif()
+
+#---Check for Vdt--------------------------------------------------------------------
+if(vdt OR builtin_vdt)
+  if(NOT builtin_vdt)
+    message(STATUS "Looking for VDT")
+    find_package(Vdt)
+    if(NOT VDT_FOUND)
+      if(fail-on-missing)
+        message(FATAL_ERROR "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
+      else()
+        message(STATUS "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
+        message(STATUS "               Alternatively, you can also enable the option 'builtin_vdt' to build the VDT libraries internally")
+        message(STATUS "               For the time being switching OFF 'vdt' option")
+        set(vdt OFF CACHE BOOL "" FORCE)
+      endif()
+    endif()
+  endif()
+  if(builtin_vdt)
+    set(vdt_version 0.3.9)
+    ExternalProject_Add(
+      VDT
+      URL ${repository_tarfiles}/vdt-${vdt_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    )
+    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
+    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX} 
+            DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+    set(vdt ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+#---Check for CUDA and BLAS ---------------------------------------------------------
+if(tmva AND cuda)
+  message(STATUS "Looking for CUDA for optional parts of TMVA")
+  find_package(CUDA 7.5)
+  if(NOT CUDA_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
+    else()
+      message(STATUS "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
+      message(STATUS "                For the time being switching OFF 'cuda' option")
+      set(cuda OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+if(tmva)
+  message(STATUS "Looking for BLAS for optional parts of TMVA")
+  find_package(BLAS QUIET)
 endif()
 
 #---Report non implemented options---------------------------------------------------

@@ -180,7 +180,7 @@ namespace cling {
       }
     }
 
-    CS->setStmts(*m_Context, Stmts.data(), Stmts.size());
+    CS->setStmts(*m_Context, Stmts);
 
     if (hasNoErrors && !TouchedDecls.empty()) {
       // Put the wrapper after its declarations. (Nice when AST dumping)
@@ -255,7 +255,6 @@ namespace cling {
       VD->setInit(TheCall);
 
       Emit(VD); // Add it to the transaction for codegenning
-      VD->setHidden(true);
       TUDC->addHiddenDecl(VD);
       Stmts.clear();
       return;
@@ -277,7 +276,7 @@ namespace cling {
                               Sema::LookupTagName, Sema::ForRedeclaration
                               );
 
-        m_Sema->LookupName(Previous, S);
+        m_Sema->LookupQualifiedName(Previous, DC);
 
         // There is no function diagnosing the redeclaration of tags (eg. enums).
         // So either we have to do it by hand or we can call the top-most
@@ -290,8 +289,7 @@ namespace cling {
         LookupResult Previous(*m_Sema, ND->getDeclName(), ND->getLocation(),
                               Sema::LookupOrdinaryName, Sema::ForRedeclaration
                               );
-
-        m_Sema->LookupName(Previous, S);
+        m_Sema->LookupQualifiedName(Previous, DC);
         m_Sema->CheckVariableDeclaration(VD, Previous);
         if (VD->isInvalidDecl())
           return true;
@@ -514,7 +512,7 @@ namespace cling {
           SourceLocation KWLoc = NewTD->getLocStart();
           if (!m_Sema->isAcceptableTagRedeclaration(PrevTagDecl, Kind,
                                           NewTD->isThisDeclarationADefinition(),
-                                                    KWLoc, *Name)) {
+                                                    KWLoc, Name)) {
             bool SafeToContinue
               = (PrevTagDecl->getTagKind() != TTK_Enum && Kind != TTK_Enum);
 

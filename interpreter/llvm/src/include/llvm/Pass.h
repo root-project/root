@@ -29,7 +29,6 @@
 #ifndef LLVM_PASS_H
 #define LLVM_PASS_H
 
-#include "llvm/Support/Compiler.h"
 #include <string>
 
 namespace llvm {
@@ -83,8 +82,8 @@ class Pass {
   AnalysisResolver *Resolver;  // Used to resolve analysis
   const void *PassID;
   PassKind Kind;
-  void operator=(const Pass&) LLVM_DELETED_FUNCTION;
-  Pass(const Pass &) LLVM_DELETED_FUNCTION;
+  void operator=(const Pass&) = delete;
+  Pass(const Pass &) = delete;
 
 public:
   explicit Pass(PassKind K, char &pid)
@@ -250,7 +249,12 @@ public:
 
   explicit ModulePass(char &pid) : Pass(PT_Module, pid) {}
   // Force out-of-line virtual method.
-  virtual ~ModulePass();
+  ~ModulePass() override;
+
+protected:
+  /// Optional passes call this function to check whether the pass should be
+  /// skipped. This is the case when optimization bisect is over the limit.
+  bool skipModule(Module &M) const;
 };
 
 
@@ -279,7 +283,7 @@ public:
   : ModulePass(pid) {}
 
   // Force out-of-line virtual method.
-  virtual ~ImmutablePass();
+  ~ImmutablePass() override;
 };
 
 //===----------------------------------------------------------------------===//
@@ -310,9 +314,10 @@ public:
   PassManagerType getPotentialPassManagerType() const override;
 
 protected:
-  /// skipOptnoneFunction - This function has Attribute::OptimizeNone
-  /// and most transformation passes should skip it.
-  bool skipOptnoneFunction(const Function &F) const;
+  /// Optional passes call this function to check whether the pass should be
+  /// skipped. This is the case when Attribute::OptimizeNone is set or when
+  /// optimization bisect is over the limit.
+  bool skipFunction(const Function &F) const;
 };
 
 
@@ -359,9 +364,10 @@ public:
   PassManagerType getPotentialPassManagerType() const override;
 
 protected:
-  /// skipOptnoneFunction - Containing function has Attribute::OptimizeNone
-  /// and most transformation passes should skip it.
-  bool skipOptnoneFunction(const BasicBlock &BB) const;
+  /// Optional passes call this function to check whether the pass should be
+  /// skipped. This is the case when Attribute::OptimizeNone is set or when
+  /// optimization bisect is over the limit.
+  bool skipBasicBlock(const BasicBlock &BB) const;
 };
 
 /// If the user specifies the -time-passes argument on an LLVM tool command line
@@ -369,6 +375,10 @@ protected:
 /// @brief This is the storage for the -time-passes option.
 extern bool TimePassesIsEnabled;
 
+/// isFunctionInPrintList - returns true if a function should be printed via
+//  debugging options like -print-after-all/-print-before-all.
+//  @brief Tells if the function IR should be printed by PrinterPass.
+extern bool isFunctionInPrintList(StringRef FunctionName);
 } // End llvm namespace
 
 // Include support files that contain important APIs commonly used by Passes,

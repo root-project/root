@@ -24,18 +24,27 @@ SystemZRegisterInfo::SystemZRegisterInfo()
 
 const MCPhysReg *
 SystemZRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
+  if (MF->getSubtarget().getTargetLowering()->supportSwiftError() &&
+      MF->getFunction()->getAttributes().hasAttrSomewhere(
+          Attribute::SwiftError))
+    return CSR_SystemZ_SwiftError_SaveList;
   return CSR_SystemZ_SaveList;
 }
 
 const uint32_t *
-SystemZRegisterInfo::getCallPreservedMask(CallingConv::ID CC) const {
+SystemZRegisterInfo::getCallPreservedMask(const MachineFunction &MF,
+                                          CallingConv::ID CC) const {
+  if (MF.getSubtarget().getTargetLowering()->supportSwiftError() &&
+      MF.getFunction()->getAttributes().hasAttrSomewhere(
+          Attribute::SwiftError))
+    return CSR_SystemZ_SwiftError_RegMask;
   return CSR_SystemZ_RegMask;
 }
 
 BitVector
 SystemZRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
-  const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
+  const SystemZFrameLowering *TFI = getFrameLowering(MF);
 
   if (TFI->hasFP(MF)) {
     // R11D is the frame pointer.  Reserve all aliases.
@@ -63,13 +72,13 @@ SystemZRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
   MachineFunction &MF = *MBB.getParent();
   auto *TII =
       static_cast<const SystemZInstrInfo *>(MF.getSubtarget().getInstrInfo());
-  const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
+  const SystemZFrameLowering *TFI = getFrameLowering(MF);
   DebugLoc DL = MI->getDebugLoc();
 
   // Decompose the frame index into a base and offset.
   int FrameIndex = MI->getOperand(FIOperandNum).getIndex();
-  unsigned BasePtr = getFrameRegister(MF);
-  int64_t Offset = (TFI->getFrameIndexOffset(MF, FrameIndex) +
+  unsigned BasePtr;
+  int64_t Offset = (TFI->getFrameIndexReference(MF, FrameIndex, BasePtr) +
                     MI->getOperand(FIOperandNum + 1).getImm());
 
   // Special handling of dbg_value instructions.
@@ -83,8 +92,14 @@ SystemZRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
   // accepts the offset exists.
   unsigned Opcode = MI->getOpcode();
   unsigned OpcodeForOffset = TII->getOpcodeForOffset(Opcode, Offset);
-  if (OpcodeForOffset)
+  if (OpcodeForOffset) {
+    if (OpcodeForOffset == SystemZ::LE &&
+        MF.getSubtarget<SystemZSubtarget>().hasVector()) {
+      // If LE is ok for offset, use LDE instead on z13.
+      OpcodeForOffset = SystemZ::LDE32;
+    }
     MI->getOperand(FIOperandNum).ChangeToRegister(BasePtr, false);
+  }
   else {
     // Create an anchor point that is in range.  Start at 0xffff so that
     // can use LLILH to load the immediate.
@@ -134,6 +149,6 @@ SystemZRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
 
 unsigned
 SystemZRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
-  const TargetFrameLowering *TFI = MF.getSubtarget().getFrameLowering();
+  const SystemZFrameLowering *TFI = getFrameLowering(MF);
   return TFI->hasFP(MF) ? SystemZ::R11D : SystemZ::R15D;
 }

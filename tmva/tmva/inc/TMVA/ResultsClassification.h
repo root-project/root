@@ -58,7 +58,8 @@ namespace TMVA {
       void     SetValue( Float_t value, Int_t ievt );
 
       void     Resize( Int_t entries )   { fMvaValues.resize( entries ); }
-      void     Clear()                   { fMvaValues.clear(); fMvaValuesTypes.clear(); }
+      using TObject::Clear;
+      virtual void     Clear(Option_t *)                   { fMvaValues.clear(); fMvaValuesTypes.clear(); }
 
       // getters
       Long64_t GetSize()                  const { return fMvaValues.size(); }
@@ -71,11 +72,15 @@ namespace TMVA {
 
    private:
 
-      std::vector< Float_t >  fMvaValues;   //! mva values (Results)
-      std::vector< Bool_t>    fMvaValuesTypes;//! mva values type(sig/bkg) (Results)
-      mutable std::vector< Float_t >  fRet;         //! return val
+      std::vector< Float_t >  fMvaValues;   // mva values (Results)
+      std::vector< Bool_t>    fMvaValuesTypes;// mva values type(sig/bkg) (Results)
+      mutable std::vector< Float_t >  fRet;         // return val
       mutable MsgLogger*      fLogger;      //! message logger
       MsgLogger& Log() const { return *fLogger; }
+   protected:
+       
+       ClassDef(Results,2);
+      
    };
 }
 

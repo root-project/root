@@ -31,14 +31,7 @@ EXTRA=$8
 
 rm -f $LIB
 
-if [ $PLATFORM = "macosx" ]; then
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   if [ $macosx_minor -ge 5 ]; then
-      soext="so"
-   else
-      soext="dylib"
-   fi
-elif [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
+if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
    soext="a"
 else
    soext="so"
@@ -101,14 +94,7 @@ elif [ $PLATFORM = "fbsd" ] || [ $PLATFORM = "obsd" ]; then
    echo $cmd
    $cmd
 elif [ $PLATFORM = "macosx" ]; then
-   # Look for a fink installation
-   FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    export DYLD_LIBRARY_PATH=`pwd`/lib:$DYLD_LIBRARY_PATH
-   if [ $macosx_minor -ge 3 ]; then
-      unset LD_PREBIND
-   fi
-   # We need two library files: a .dylib to link to and a .so to load
-   BUNDLE=`echo $LIB | sed s/.dylib/.so/`
    # Add versioning information to shared library if available
    if [ "x$MAJOR" != "x" ]; then
       VERSION="-compatibility_version ${MAJOR} -current_version ${MAJOR}.${MINOR}.${REVIS}"
@@ -116,34 +102,13 @@ elif [ $PLATFORM = "macosx" ]; then
       LIB=`echo $LIB | sed "s/\(\/*.*\/.*\)\.$soext/\1.${MAJOR}.${MINOR}.$soext/"`
       LIBVERS=$LIB
    fi
-   if [ $macosx_minor -ge 4 ]; then
-      cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
-           -ldl $EXPLLNKCORE $EXTRA $VERSION"
-   else
-      cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
-           `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-           -ldl $EXPLLNKCORE $EXTRA $VERSION"
-   fi
+   cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
+        -ldl $EXPLLNKCORE $EXTRA $VERSION"
    echo $cmd
    $cmd
    linkstat=$?
    if [ $linkstat -ne 0 ]; then
       exit $linkstat
-   fi
-   if [ $LIB != $BUNDLE ]; then
-       if [ $macosx_minor -ge 4 ]; then
-          cmd="ln -fs `basename $LIB` $BUNDLE"
-       elif [ $macosx_minor -ge 3 ]; then
-          cmd="$LD $LDFLAGS -bundle -undefined dynamic_lookup -o \
-                $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-                -ldl $EXPLLNKCORE $EXTRA"
-       else
-          cmd="$LD $LDFLAGS -bundle -undefined suppress -o $BUNDLE \
-               $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-                -ldl $EXPLLNKCORE $EXTRA"
-       fi
-       echo $cmd
-       $cmd
    fi
 elif [ $PLATFORM = "ios" ]; then
    export DYLD_LIBRARY_PATH=`pwd`/lib:$DYLD_LIBRARY_PATH

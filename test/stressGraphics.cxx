@@ -64,6 +64,7 @@
 #include <TPaveText.h>
 #include <TPaveStats.h>
 #include <TPaveLabel.h>
+#include <TRatioPlot.h>
 #include <TGaxis.h>
 #include <TGraph.h>
 #include <TGraphErrors.h>
@@ -74,7 +75,6 @@
 #include <TParallelCoord.h>
 #include <TImage.h>
 #include <TMath.h>
-#include <TSystem.h>
 
 
 void     stressGraphics (Int_t verbose);
@@ -105,6 +105,7 @@ void     options2d5     ();
 void     parallelcoord  ();
 void     patterns       ();
 void     quarks         ();
+void     ratioplot      ();
 void     statfitparam   ();
 void     tellipse       ();
 void     tgaxis1        ();
@@ -150,18 +151,18 @@ void     cleanup        ();
 Int_t     gVerbose;
 Int_t     gTestNum;
 Int_t     gTestsFailed;
-Int_t     gPS1RefNb[50];
-Int_t     gPS1ErrNb[50];
-Int_t     gPDFRefNb[50];
-Int_t     gPDFErrNb[50];
-Int_t     gGIFRefNb[50];
-Int_t     gGIFErrNb[50];
-Int_t     gJPGRefNb[50];
-Int_t     gJPGErrNb[50];
-Int_t     gPNGRefNb[50];
-Int_t     gPNGErrNb[50];
-Int_t     gPS2RefNb[50];
-Int_t     gPS2ErrNb[50];
+Int_t     gPS1RefNb[60];
+Int_t     gPS1ErrNb[60];
+Int_t     gPDFRefNb[60];
+Int_t     gPDFErrNb[60];
+Int_t     gGIFRefNb[60];
+Int_t     gGIFErrNb[60];
+Int_t     gJPGRefNb[60];
+Int_t     gJPGErrNb[60];
+Int_t     gPNGRefNb[60];
+Int_t     gPNGErrNb[60];
+Int_t     gPS2RefNb[60];
+Int_t     gPS2ErrNb[60];
 Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
@@ -177,10 +178,6 @@ char      gLine[80];
 
 int main(int argc, char *argv[])
 {
-   gROOT->SetBatch();
-   TApplication theApp("App", &argc, argv);
-   gBenchmark = new TBenchmark();
-
    TString opt;
    Int_t verbose = 0;
    if (argc > 1) verbose = atoi(argv[1]);
@@ -199,6 +196,10 @@ int main(int argc, char *argv[])
       printf("  -h : Print usage\n");
       return 0;
    }
+
+   gROOT->SetBatch();
+   TApplication theApp("App", &argc, argv);
+   gBenchmark = new TBenchmark();
 
    if (opt.Contains("-r")) {
       gOptionR = kTRUE;
@@ -348,6 +349,7 @@ void stressGraphics(Int_t verbose = 0)
    labels1       ();
    tellipse      ();
    feynman       ();
+   ratioplot     ();
    tgraph1       ();
    tgraph2       ();
    tgraph3       ();
@@ -1790,6 +1792,32 @@ void feynman()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Ratio plot test.
+
+void ratioplot()
+{
+   TCanvas *C = StartTest(600,300);
+
+   gStyle->SetOptStat(0);
+   TH1D* rh1 = new TH1D("rh1", "rh1", 50, 0, 10);
+   TH1D* rh2 = new TH1D("rh2", "rh2", 50, 0, 10);
+   TF1*  rf1 = new TF1("rf1", "exp(- x/[0] )");
+   rf1->SetParameter(0, 3);
+   rh1->FillRandom("rf1", 1900);
+   rh2->FillRandom("rf1", 2000);
+   rh1->Sumw2();
+   rh2->Scale(1.9 / 2.,"nosw2");
+   TRatioPlot *rp = new TRatioPlot(rh1, rh2);
+   C->SetTicks(0, 1);
+   rp->Draw();
+
+   TestReport1(C, "Ratio plot");
+   DoCcode(C);
+   TestReport2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// 1st TGraph test.
 
 void tgraph1()
@@ -2403,8 +2431,8 @@ void tgraph2d2()
    rz = new Double_t[np];
    TRandom *r = new TRandom();
    for (Int_t N=0; N<np; N++) {
-      rx[N]=2*Px*(r->Rndm(N))-Px;
-      ry[N]=2*Py*(r->Rndm(N))-Py;
+      rx[N]=2*Px*(r->Rndm())-Px;
+      ry[N]=2*Py*(r->Rndm())-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
    gStyle->SetPalette(kBird);
@@ -2444,8 +2472,8 @@ void tgraph2d3()
    rz = new Double_t[np];
    TRandom *r = new TRandom();
    for (Int_t N=0; N<np; N++) {
-      rx[N]=2*Px*(r->Rndm(N))-Px;
-      ry[N]=2*Py*(r->Rndm(N))-Py;
+      rx[N]=2*Px*(r->Rndm())-Px;
+      ry[N]=2*Py*(r->Rndm())-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
    gStyle->SetPalette(kBird);

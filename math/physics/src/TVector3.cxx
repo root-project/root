@@ -176,74 +176,6 @@ theta plane) to the (x,y,z) frame.
 
 ClassImp(TVector3)
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-TVector3::TVector3()
-: fX(0.0), fY(0.0), fZ(0.0) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-TVector3::TVector3(const TVector3 & p) : TObject(p),
-  fX(p.fX), fY(p.fY), fZ(p.fZ) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-TVector3::TVector3(Double_t xx, Double_t yy, Double_t zz)
-: fX(xx), fY(yy), fZ(zz) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-TVector3::TVector3(const Double_t * x0)
-: fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-TVector3::TVector3(const Float_t * x0)
-: fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-TVector3::~TVector3() {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Dereferencing operator const
-
-Double_t TVector3::operator () (int i) const {
-   switch(i) {
-      case 0:
-         return fX;
-      case 1:
-         return fY;
-      case 2:
-         return fZ;
-      default:
-         Error("operator()(i)", "bad index (%d) returning 0",i);
-   }
-   return 0.;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Dereferencing operator
-
-Double_t & TVector3::operator () (int i) {
-   switch(i) {
-      case 0:
-         return fX;
-      case 1:
-         return fY;
-      case 2:
-         return fZ;
-      default:
-         Error("operator()(i)", "bad index (%d) returning &fX",i);
-   }
-   return fX;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiplication operator
@@ -273,14 +205,6 @@ Double_t TVector3::Angle(const TVector3 & q) const
       if(arg < -1.0) arg = -1.0;
       return TMath::ACos(arg);
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the magnitude (rho in spherical coordinate system).
-
-Double_t TVector3::Mag() const
-{
-   return TMath::Sqrt(Mag2());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

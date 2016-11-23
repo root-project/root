@@ -2031,7 +2031,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                   }
                   struct passwd *pw = getpwnam(usr);
                   if (pw != 0)
-                     SPrintf(gUserAllow[mth[jm]], gUserIgnLen[mth[jm]], "%s %d",
+                     SPrintf(gUserAllow[mth[jm]], gUserAlwLen[mth[jm]], "%s %d",
                              gUserAllow[mth[jm]], (int)pw->pw_uid);
                }
                pd = pd2;

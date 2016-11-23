@@ -21,9 +21,8 @@
 #ifndef LLVM_TOOLS_OPT_NEWPMDRIVER_H
 #define LLVM_TOOLS_OPT_NEWPMDRIVER_H
 
-#include "llvm/ADT/StringRef.h"
-
 namespace llvm {
+class StringRef;
 class LLVMContext;
 class Module;
 class TargetMachine;
@@ -51,7 +50,9 @@ enum VerifierKind {
 bool runPassPipeline(StringRef Arg0, LLVMContext &Context, Module &M,
                      TargetMachine *TM, tool_output_file *Out,
                      StringRef PassPipeline, opt_tool::OutputKind OK,
-                     opt_tool::VerifierKind VK);
+                     opt_tool::VerifierKind VK,
+                     bool ShouldPreserveAssemblyUseListOrder,
+                     bool ShouldPreserveBitcodeUseListOrder);
 }
 
 #endif

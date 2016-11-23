@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Draw Feynman diagrams.
 ///
 /// \macro_image
@@ -26,9 +27,9 @@ void feynman()
    t.DrawLatex(7,55,"e^{+}");
    t.DrawLatex(7,30,"#gamma");
 
-   TCurlyLine *gamma = new TCurlyLine(30, 30, 55, 30);
-   gamma->SetWavy();
-   gamma->Draw();
+   TCurlyLine *Gamma = new TCurlyLine(30, 30, 55, 30);
+   Gamma->SetWavy();
+   Gamma->Draw();
    t.DrawLatex(42.5,37.7,"#gamma");
 
    TArc *a = new TArc(70, 30, 15);

@@ -22,14 +22,6 @@
 
 using namespace llvm;
 
-const TargetRegisterInfo *DwarfExpression::getTRI() const {
-  return AP.TM.getSubtargetImpl()->getRegisterInfo();
-}
-
-unsigned DwarfExpression::getDwarfVersion() const {
-  return AP.getDwarfDebug()->getDwarfVersion();
-}
-
 void DwarfExpression::AddReg(int DwarfReg, const char *Comment) {
   assert(DwarfReg >= 0 && "invalid negative dwarf register number");
   if (DwarfReg < 32) {
@@ -73,29 +65,31 @@ void DwarfExpression::AddShr(unsigned ShiftBy) {
   EmitOp(dwarf::DW_OP_shr);
 }
 
-bool DwarfExpression::AddMachineRegIndirect(unsigned MachineReg, int Offset) {
-  int DwarfReg = getTRI()->getDwarfRegNum(MachineReg, false);
-  if (DwarfReg < 0)
-    return false;
-
-  if (isFrameRegister(MachineReg)) {
+bool DwarfExpression::AddMachineRegIndirect(const TargetRegisterInfo &TRI,
+                                            unsigned MachineReg, int Offset) {
+  if (isFrameRegister(TRI, MachineReg)) {
     // If variable offset is based in frame register then use fbreg.
     EmitOp(dwarf::DW_OP_fbreg);
     EmitSigned(Offset);
-  } else {
-    AddRegIndirect(DwarfReg, Offset);
+    return true;
   }
+
+  int DwarfReg = TRI.getDwarfRegNum(MachineReg, false);
+  if (DwarfReg < 0)
+    return false;
+
+  AddRegIndirect(DwarfReg, Offset);
   return true;
 }
 
-bool DwarfExpression::AddMachineRegPiece(unsigned MachineReg,
+bool DwarfExpression::AddMachineRegPiece(const TargetRegisterInfo &TRI,
+                                         unsigned MachineReg,
                                          unsigned PieceSizeInBits,
                                          unsigned PieceOffsetInBits) {
-  const TargetRegisterInfo *TRI = getTRI();
-  if (!TRI->isPhysicalRegister(MachineReg))
+  if (!TRI.isPhysicalRegister(MachineReg))
     return false;
 
-  int Reg = TRI->getDwarfRegNum(MachineReg, false);
+  int Reg = TRI.getDwarfRegNum(MachineReg, false);
 
   // If this is a valid register number, emit it.
   if (Reg >= 0) {
@@ -107,12 +101,12 @@ bool DwarfExpression::AddMachineRegPiece(unsigned MachineReg,
 
   // Walk up the super-register chain until we find a valid number.
   // For example, EAX on x86_64 is a 32-bit piece of RAX with offset 0.
-  for (MCSuperRegIterator SR(MachineReg, TRI); SR.isValid(); ++SR) {
-    Reg = TRI->getDwarfRegNum(*SR, false);
+  for (MCSuperRegIterator SR(MachineReg, &TRI); SR.isValid(); ++SR) {
+    Reg = TRI.getDwarfRegNum(*SR, false);
     if (Reg >= 0) {
-      unsigned Idx = TRI->getSubRegIndex(*SR, MachineReg);
-      unsigned Size = TRI->getSubRegIdxSize(Idx);
-      unsigned RegOffset = TRI->getSubRegIdxOffset(Idx);
+      unsigned Idx = TRI.getSubRegIndex(*SR, MachineReg);
+      unsigned Size = TRI.getSubRegIdxSize(Idx);
+      unsigned RegOffset = TRI.getSubRegIdxOffset(Idx);
       AddReg(Reg, "super-register");
       if (PieceOffsetInBits == RegOffset) {
         AddOpPiece(Size, RegOffset);
@@ -136,15 +130,15 @@ bool DwarfExpression::AddMachineRegPiece(unsigned MachineReg,
   // efficient DW_OP_piece.
   unsigned CurPos = PieceOffsetInBits;
   // The size of the register in bits, assuming 8 bits per byte.
-  unsigned RegSize = TRI->getMinimalPhysRegClass(MachineReg)->getSize() * 8;
+  unsigned RegSize = TRI.getMinimalPhysRegClass(MachineReg)->getSize() * 8;
   // Keep track of the bits in the register we already emitted, so we
   // can avoid emitting redundant aliasing subregs.
   SmallBitVector Coverage(RegSize, false);
-  for (MCSubRegIterator SR(MachineReg, TRI); SR.isValid(); ++SR) {
-    unsigned Idx = TRI->getSubRegIndex(MachineReg, *SR);
-    unsigned Size = TRI->getSubRegIdxSize(Idx);
-    unsigned Offset = TRI->getSubRegIdxOffset(Idx);
-    Reg = TRI->getDwarfRegNum(*SR, false);
+  for (MCSubRegIterator SR(MachineReg, &TRI); SR.isValid(); ++SR) {
+    unsigned Idx = TRI.getSubRegIndex(MachineReg, *SR);
+    unsigned Size = TRI.getSubRegIdxSize(Idx);
+    unsigned Offset = TRI.getSubRegIdxOffset(Idx);
+    Reg = TRI.getDwarfRegNum(*SR, false);
 
     // Intersection between the bits we already emitted and the bits
     // covered by this subregister.
@@ -167,29 +161,37 @@ bool DwarfExpression::AddMachineRegPiece(unsigned MachineReg,
   return CurPos > PieceOffsetInBits;
 }
 
-void DwarfExpression::AddSignedConstant(int Value) {
-  EmitOp(dwarf::DW_OP_consts);
-  EmitSigned(Value);
-  // The proper way to describe a constant value is
-  // DW_OP_constu <const>, DW_OP_stack_value.
-  // Unfortunately, DW_OP_stack_value was not available until DWARF-4,
-  // so we will continue to generate DW_OP_constu <const> for DWARF-2
-  // and DWARF-3. Technically, this is incorrect since DW_OP_const <const>
-  // actually describes a value at a constant addess, not a constant value.
-  // However, in the past there was no better way  to describe a constant
-  // value, so the producers and consumers started to rely on heuristics
-  // to disambiguate the value vs. location status of the expression.
-  // See PR21176 for more details.
-  if (getDwarfVersion() >= 4)
+void DwarfExpression::AddStackValue() {
+  if (DwarfVersion >= 4)
     EmitOp(dwarf::DW_OP_stack_value);
 }
 
-void DwarfExpression::AddUnsignedConstant(unsigned Value) {
+void DwarfExpression::AddSignedConstant(int64_t Value) {
+  EmitOp(dwarf::DW_OP_consts);
+  EmitSigned(Value);
+  AddStackValue();
+}
+
+void DwarfExpression::AddUnsignedConstant(uint64_t Value) {
   EmitOp(dwarf::DW_OP_constu);
   EmitUnsigned(Value);
-  // cf. comment in DwarfExpression::AddSignedConstant().
-  if (getDwarfVersion() >= 4)
-    EmitOp(dwarf::DW_OP_stack_value);
+  AddStackValue();
+}
+
+void DwarfExpression::AddUnsignedConstant(const APInt &Value) {
+  unsigned Size = Value.getBitWidth();
+  const uint64_t *Data = Value.getRawData();
+
+  // Chop it up into 64-bit pieces, because that's the maximum that
+  // AddUnsignedConstant takes.
+  unsigned Offset = 0;
+  while (Offset < Size) {
+    AddUnsignedConstant(*Data++);
+    if (Offset == 0 && Size <= 64)
+      break;
+    AddOpPiece(std::min(Size-Offset, 64u), Offset);
+    Offset += 64;
+  }
 }
 
 static unsigned getOffsetOrZero(unsigned OffsetInBits,
@@ -200,39 +202,46 @@ static unsigned getOffsetOrZero(unsigned OffsetInBits,
   return OffsetInBits;
 }
 
-bool DwarfExpression::AddMachineRegExpression(DIExpression Expr,
+bool DwarfExpression::AddMachineRegExpression(const TargetRegisterInfo &TRI,
+                                              const DIExpression *Expr,
                                               unsigned MachineReg,
                                               unsigned PieceOffsetInBits) {
-  auto I = Expr.begin();
+  auto I = Expr->expr_op_begin();
+  auto E = Expr->expr_op_end();
+  if (I == E)
+    return AddMachineRegPiece(TRI, MachineReg);
+
   // Pattern-match combinations for which more efficient representations exist
   // first.
-  if (I == Expr.end())
-    return AddMachineRegPiece(MachineReg);
-
   bool ValidReg = false;
-  switch (*I) {
-  case dwarf::DW_OP_piece: {
-    unsigned SizeOfByte = 8;
-    unsigned OffsetInBits = I->getArg(1) * SizeOfByte;
-    unsigned SizeInBits   = I->getArg(2) * SizeOfByte;
+  switch (I->getOp()) {
+  case dwarf::DW_OP_bit_piece: {
+    unsigned OffsetInBits = I->getArg(0);
+    unsigned SizeInBits   = I->getArg(1);
     // Piece always comes at the end of the expression.
-    return AddMachineRegPiece(MachineReg, SizeInBits,
+    return AddMachineRegPiece(TRI, MachineReg, SizeInBits,
                getOffsetOrZero(OffsetInBits, PieceOffsetInBits));
   }
   case dwarf::DW_OP_plus:
-    // [DW_OP_reg,Offset,DW_OP_plus,DW_OP_deref] --> [DW_OP_breg,Offset].
-    if (I->getNext() == dwarf::DW_OP_deref) {
-      unsigned Offset = I->getArg(1);
-      ValidReg = AddMachineRegIndirect(MachineReg, Offset);
+  case dwarf::DW_OP_minus: {
+    // [DW_OP_reg,Offset,DW_OP_plus, DW_OP_deref] --> [DW_OP_breg, Offset].
+    // [DW_OP_reg,Offset,DW_OP_minus,DW_OP_deref] --> [DW_OP_breg,-Offset].
+    auto N = I.getNext();
+    if (N != E && N->getOp() == dwarf::DW_OP_deref) {
+      unsigned Offset = I->getArg(0);
+      ValidReg = AddMachineRegIndirect(
+          TRI, MachineReg, I->getOp() == dwarf::DW_OP_plus ? Offset : -Offset);
       std::advance(I, 2);
       break;
     } else
-      ValidReg = AddMachineRegPiece(MachineReg);
-  case dwarf::DW_OP_deref:
-    // [DW_OP_reg,DW_OP_deref] --> [DW_OP_breg].
-    ValidReg = AddMachineRegIndirect(MachineReg);
-    ++I;
-    break;
+      ValidReg = AddMachineRegPiece(TRI, MachineReg);
+  }
+  case dwarf::DW_OP_deref: {
+      // [DW_OP_reg,DW_OP_deref] --> [DW_OP_breg].
+      ValidReg = AddMachineRegIndirect(TRI, MachineReg);
+      ++I;
+      break;
+  }
   default:
     llvm_unreachable("unsupported operand");
   }
@@ -241,30 +250,36 @@ bool DwarfExpression::AddMachineRegExpression(DIExpression Expr,
     return false;
 
   // Emit remaining elements of the expression.
-  AddExpression(I, PieceOffsetInBits);
+  AddExpression(I, E, PieceOffsetInBits);
   return true;
 }
 
-void DwarfExpression::AddExpression(DIExpression::iterator I,
+void DwarfExpression::AddExpression(DIExpression::expr_op_iterator I,
+                                    DIExpression::expr_op_iterator E,
                                     unsigned PieceOffsetInBits) {
- for (; I != DIExpression::iterator(); ++I) {
-    switch (*I) {
-    case dwarf::DW_OP_piece: {
-      unsigned SizeOfByte = 8;
-      unsigned OffsetInBits = I->getArg(1) * SizeOfByte;
-      unsigned SizeInBits   = I->getArg(2) * SizeOfByte;
+  for (; I != E; ++I) {
+    switch (I->getOp()) {
+    case dwarf::DW_OP_bit_piece: {
+      unsigned OffsetInBits = I->getArg(0);
+      unsigned SizeInBits   = I->getArg(1);
       AddOpPiece(SizeInBits, getOffsetOrZero(OffsetInBits, PieceOffsetInBits));
       break;
     }
     case dwarf::DW_OP_plus:
       EmitOp(dwarf::DW_OP_plus_uconst);
-      EmitUnsigned(I->getArg(1));
+      EmitUnsigned(I->getArg(0));
+      break;
+    case dwarf::DW_OP_minus:
+      // There is no OP_minus_uconst.
+      EmitOp(dwarf::DW_OP_constu);
+      EmitUnsigned(I->getArg(0));
+      EmitOp(dwarf::DW_OP_minus);
       break;
     case dwarf::DW_OP_deref:
       EmitOp(dwarf::DW_OP_deref);
       break;
     default:
-      llvm_unreachable("unhandled opcode found in DIExpression");
+      llvm_unreachable("unhandled opcode found in expression");
     }
   }
 }

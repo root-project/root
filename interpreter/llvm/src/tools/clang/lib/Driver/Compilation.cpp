@@ -24,9 +24,13 @@ using namespace llvm::opt;
 
 Compilation::Compilation(const Driver &D, const ToolChain &_DefaultToolChain,
                          InputArgList *_Args, DerivedArgList *_TranslatedArgs)
-    : TheDriver(D), DefaultToolChain(_DefaultToolChain), Args(_Args),
-      TranslatedArgs(_TranslatedArgs), Redirects(nullptr),
-      ForDiagnostics(false) {}
+    : TheDriver(D), DefaultToolChain(_DefaultToolChain), ActiveOffloadMask(0u),
+      Args(_Args), TranslatedArgs(_TranslatedArgs), Redirects(nullptr),
+      ForDiagnostics(false) {
+  // The offloading host toolchain is the default tool chain.
+  OrderedOffloadingToolchains.insert(
+      std::make_pair(Action::OFK_Host, &DefaultToolChain));
+}
 
 Compilation::~Compilation() {
   delete TranslatedArgs;
@@ -39,13 +43,9 @@ Compilation::~Compilation() {
     if (it->second != TranslatedArgs)
       delete it->second;
 
-  // Free the actions, if built.
-  for (ActionList::iterator it = Actions.begin(), ie = Actions.end();
-       it != ie; ++it)
-    delete *it;
-
   // Free redirections of stdout/stderr.
   if (Redirects) {
+    delete Redirects[0];
     delete Redirects[1];
     delete Redirects[2];
     delete [] Redirects;
@@ -167,43 +167,17 @@ int Compilation::ExecuteCommand(const Command &C,
   return ExecutionFailed ? 1 : Res;
 }
 
-typedef SmallVectorImpl< std::pair<int, const Command *> > FailingCommandList;
-
-static bool ActionFailed(const Action *A,
-                         const FailingCommandList &FailingCommands) {
-
-  if (FailingCommands.empty())
-    return false;
-
-  for (FailingCommandList::const_iterator CI = FailingCommands.begin(),
-         CE = FailingCommands.end(); CI != CE; ++CI)
-    if (A == &(CI->second->getSource()))
-      return true;
-
-  for (Action::const_iterator AI = A->begin(), AE = A->end(); AI != AE; ++AI)
-    if (ActionFailed(*AI, FailingCommands))
-      return true;
-
-  return false;
-}
-
-static bool InputsOk(const Command &C,
-                     const FailingCommandList &FailingCommands) {
-  return !ActionFailed(&C.getSource(), FailingCommands);
-}
-
-void Compilation::ExecuteJob(const Job &J,
-                             FailingCommandList &FailingCommands) const {
-  if (const Command *C = dyn_cast<Command>(&J)) {
-    if (!InputsOk(*C, FailingCommands))
-      return;
+void Compilation::ExecuteJobs(
+    const JobList &Jobs,
+    SmallVectorImpl<std::pair<int, const Command *>> &FailingCommands) const {
+  for (const auto &Job : Jobs) {
     const Command *FailingCommand = nullptr;
-    if (int Res = ExecuteCommand(*C, FailingCommand))
+    if (int Res = ExecuteCommand(Job, FailingCommand)) {
       FailingCommands.push_back(std::make_pair(Res, FailingCommand));
-  } else {
-    const JobList *Jobs = cast<JobList>(&J);
-    for (const auto &Job : *Jobs)
-      ExecuteJob(Job, FailingCommands);
+      // Bail as soon as one command fails, so we don't output duplicate error
+      // messages if we die on e.g. the same file.
+      return;
+    }
   }
 }
 
@@ -211,7 +185,8 @@ void Compilation::initCompilationForDiagnostics() {
   ForDiagnostics = true;
 
   // Free actions and jobs.
-  DeleteContainerPointers(Actions);
+  Actions.clear();
+  AllActions.clear();
   Jobs.clear();
 
   // Clear temporary/results file lists.
@@ -238,4 +213,8 @@ void Compilation::initCompilationForDiagnostics() {
 
 StringRef Compilation::getSysRoot() const {
   return getDriver().SysRoot;
+}
+
+void Compilation::Redirect(const StringRef** Redirects) {
+  this->Redirects = Redirects;
 }

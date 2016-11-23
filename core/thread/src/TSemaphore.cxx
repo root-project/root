@@ -64,7 +64,7 @@ Int_t TSemaphore::Wait(Int_t millisec)
    fValue--;
 
    if (fValue < 0) {
-      std::cv_status cvs;
+      std::cv_status cvs = std::cv_status::timeout;
       do {
          cvs = fCond.wait_for(lk,std::chrono::milliseconds(millisec));
       } while (fWakeups < 1 && cvs != std::cv_status::timeout);

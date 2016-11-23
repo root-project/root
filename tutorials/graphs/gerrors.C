@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook -js
 /// Draw a graph with error bars
 ///
 /// \macro_image
@@ -10,9 +11,7 @@
 void gerrors() {
    TCanvas *c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
 
-   c1->SetFillColor(42);
    c1->SetGrid();
-   c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(12);
 
    const Int_t n = 10;

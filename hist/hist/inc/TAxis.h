@@ -47,6 +47,7 @@ private:
    TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
    TObject     *fParent;         //!Object owning this axis
    THashList   *fLabels;         //List of labels
+   TList       *fModLabs;        //List of modified labels
 
    // TAxis extra status bits (stored in fBits2)
    enum {
@@ -56,9 +57,6 @@ private:
    };
 
    Bool_t       HasBinWithoutLabel() const;
-   Bool_t       IsAlphanumeric() { return fBits2 & kAlphanumeric; }
-   Bool_t       CanBeAlphanumeric() { return !(fBits2 & kNotAlpha); }
-   void         SetAlphanumeric(Bool_t alphanumeric = kTRUE);
 
 public:
    // TAxis status bits
@@ -88,6 +86,9 @@ public:
    TAxis& operator=(const TAxis&);
 
    Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  }
+   Bool_t     CanBeAlphanumeric() { return !(fBits2 & kNotAlpha); }
+   Bool_t     IsAlphanumeric() { return fBits2 & kAlphanumeric; }
+   void       SetAlphanumeric(Bool_t alphanumeric = kTRUE);
    void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
    void       SetNoAlphanumeric(Bool_t noalpha = kTRUE) {
       fBits2 = noalpha ? (fBits2 | kNotAlpha) : (fBits2 & ~kNotAlpha);
@@ -120,6 +121,7 @@ public:
            Bool_t     GetCenterTitle() const { return TestBit(kCenterTitle); }
            Bool_t     GetDecimals() const { return TestBit(kDecimals); }
    THashList         *GetLabels() const { return fLabels; }
+   TList             *GetModifiedLabels() const { return fModLabs; }
    virtual void       GetLowEdge(Double_t *edge) const;
            Bool_t     GetMoreLogLabels() const { return TestBit(kMoreLogLabels); }
            Int_t      GetNbins() const { return fNbins; }
@@ -151,6 +153,10 @@ public:
            void       SetDecimals(Bool_t dot = kTRUE); // *TOGGLE* *GETTER=GetDecimals
    virtual void       SetDefaults();
    virtual void       SetDrawOption(Option_t * /*option*/ ="") { }
+   void               ChangeLabel(Int_t labNum=0, Double_t labAngle = -1.,
+                                  Double_t labSize = -1., Int_t labAlign = -1,
+                                  Int_t labColor = -1 , Int_t labFont = -1,
+                                  TString labText = ""); // *MENU*
    virtual void       SetLimits(Double_t xmin, Double_t xmax) { /* set axis limits */ fXmin = xmin; fXmax = xmax; }
            void       SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
            void       SetNoExponent(Bool_t noExponent=kTRUE);  // *TOGGLE* *GETTER=GetNoExponent
@@ -164,7 +170,7 @@ public:
    virtual void       UnZoom();  // *MENU*
    virtual void       ZoomOut(Double_t factor=0, Double_t offset=0);  // *MENU*
 
-   ClassDef(TAxis,9)  //Axis class
+   ClassDef(TAxis,10)  //Axis class
 };
 
 ////////////////////////////////////////////////////////////////////////////////

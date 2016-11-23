@@ -2,8 +2,8 @@
 #
 # This module defines
 # LZMA_INCLUDE_DIR, where to locate LZMA header files
-# LZMA_LIBRARIES, the libraries to link against to use Pythia6
-# LZMA_FOUND.  If false, you cannot build anything that requires Pythia6.
+# LZMA_LIBRARIES, the libraries to link against to use LZMA
+# LZMA_FOUND.  If false, you cannot build anything that requires LZMA
 
 if(LZMA_CONFIG_EXECUTABLE)
   set(LZMA_FIND_QUIETLY 1)

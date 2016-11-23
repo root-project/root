@@ -1,0 +1,11 @@
+\begin{optiontableAuto}
+                Boost\_Num  &  \mc{1}{c}{--}  &              100  &  \mc{1}{l}{--}  &  Number of times the classifier is boosted \\
+      Boost\_MonitorMethod  &  \mc{1}{c}{--}  &             True  &  \mc{1}{l}{--}  &  Write monitoring histograms for each boosted classifier \\
+ Boost\_DetailedMonitoring  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Produce histograms for detailed boost-wise monitoring \\
+               Boost\_Type  &  \mc{1}{c}{--}  &         AdaBoost  &  AdaBoost, Bagging, HighEdgeGauss, HighEdgeCoPara  &  Boosting type for the classifiers \\
+   Boost\_MethodWeightType  &  \mc{1}{c}{--}  &          ByError  &  ByError, Average, ByROC, ByOverlap, LastMethod  &  How to set the final weight of the boosted classifiers \\
+  Boost\_RecalculateMVACut  &  \mc{1}{c}{--}  &             True  &  \mc{1}{l}{--}  &  Recalculate the classifier MVA Signallike cut at every boost iteration \\
+       Boost\_AdaBoostBeta  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  The ADA boost parameter that sets the effect of every boost step on the events' weights \\
+          Boost\_Transform  &  \mc{1}{c}{--}  &             step  &  step, linear, log, gauss  &  Type of transform applied to every boosted method linear, log, step \\
+         Boost\_RandomSeed  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Seed for random number generator used for bagging 
+\end{optiontableAuto}

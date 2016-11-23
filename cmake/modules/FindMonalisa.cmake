@@ -12,6 +12,10 @@ if(MONALISA_LIBRARY AND MONALISA_INCLUDE_DIR)
 endif()
 
 find_path(MONALISA_INCLUDE_DIR ApMon.h
+  ${MONALISA}
+  $ENV{MONALISA}
+  ${MONALISA}/include
+  $ENV{MONALISA}/include
   ${MONALISA_DIR}/include
   $ENV{MONALISA_DIR}/include
   /usr/local/include
@@ -22,6 +26,8 @@ find_path(MONALISA_INCLUDE_DIR ApMon.h
 )
 
 find_library(MONALISA_LIBRARY NAMES apmoncpp PATHS
+  ${MONALISA}/.libs
+  $ENV{MONALISA}/.libs
   ${MONALISA_DIR}/lib
   $ENV{MONALISA_DIR}/lib
   /usr/local/lib

@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class Detail::TBranchProxy
+/** \class ROOT::Detail::TBranchProxy
 Base class for all the proxy object. It includes the imeplemtation
 of the autoloading of branches as well as all the generic setup routine.
 */

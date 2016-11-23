@@ -64,42 +64,31 @@
 // PDEFoamEventDensity.
 // _____________________________________________________________________
 
-
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include <cassert>
-#include <limits>
+#include "TMVA/PDEFoam.h"
 
 #include "TMVA/Event.h"
-#include "TMVA/Tools.h"
-#include "TMVA/PDEFoam.h"
-#include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoamKernelBase.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#ifndef ROOT_TStyle
 #include "TStyle.h"
-#endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TH1D
 #include "TH1D.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
-#ifndef ROOT_TVectorT
 #include "TVectorT.h"
-#endif
-#ifndef ROOT_TRandom3
 #include "TRandom3.h"
-#endif
-#ifndef ROOT_TColor
 #include "TColor.h"
-#endif
+#include "TDirectory.h"
+#include "TObjArray.h"
+
+#include <cassert>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <limits>
+#include <sstream>
 
 ClassImp(TMVA::PDEFoam)
 

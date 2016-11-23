@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_eve
 /// Preliminary demo for showing Timur's GL plots in EVE.
-/// Author: Matevz Tadel, July 2009
 ///
 /// \image html eve_glplot.png
 /// \macro_code

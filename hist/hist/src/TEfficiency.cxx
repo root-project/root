@@ -89,7 +89,7 @@ Example: create a twodimensional TEfficiency object with
 If you already have two histograms filled with the number of passed and total
 events, you will use the constructor TEfficiency(const TH1& passed,const TH1& total)
 to construct the TEfficiency object. The histograms "passed" and "total" have
-to fullfill the conditions  mentioned in TEfficiency::CheckConsistency, otherwise the construction will fail.
+to fulfill the conditions  mentioned in TEfficiency::CheckConsistency, otherwise the construction will fail.
 As the histograms already exist, the new TEfficiency is by default **not** attached
 to the current directory to avoid duplication of data. If you want to store the
 new object anyway, you can either write it directly by calling TObject::Write or attach it to a directory using TEfficiency::SetDirectory.
@@ -217,7 +217,7 @@ SetBit(kPosteriorMode) or TEfficiency::SetPosteriorMode. In this case the estima
 In the case of a uniform prior distribution, B(x,1,1), the posterior mode is k/n, equivalent to the frequentist
 estimate (the maximum likelihood value).
 
-The statistic options also specifiy which confidence interval is used for calculating
+The statistic options also specify which confidence interval is used for calculating
 the uncertainties of the efficiency. The following properties define the error
 calculation:
 - **fConfLevel:** desired confidence level: 0 < fConfLevel < 1 (TEfficiency::GetConfidenceLevel / TEfficiency::SetConfidenceLevel)
@@ -329,7 +329,7 @@ parameters. The resulting priors for different combinations of these shape
 parameters are shown in the plot below.
 
 Begin_Macro(source)
-   {
+{
       //canvas only needed for the documentation
       TCanvas* c1 = new TCanvas("c1","",600,400);
       c1->SetFillStyle(1001);
@@ -363,7 +363,7 @@ Begin_Macro(source)
 
       //only for this documentation
       return c1;
-   }
+}
 End_Macro
 
 
@@ -394,16 +394,16 @@ different number of total events is shown in the next picture.
 \image html av_cov.png "Average Coverage"
 
 ## V. Merging and combining TEfficiency objects
-In many applications the efficiency should be calculated for an inhomogenous
+In many applications the efficiency should be calculated for an inhomogeneous
 sample in the sense that it contains events with different weights. In order
 to be able to determine the correct overall efficiency, it is necessary to
 use for each subsample (= all events with the same weight) a different
-TEfficiency object. After finsihing your analysis you can then construct the
+TEfficiency object. After finishing your analysis you can then construct the
 overall efficiency with its uncertainty.
 
 This procedure has the advantage that you can change the weight of one
 subsample easily without rerunning the whole analysis. On the other hand more
-efford is needed to handle several TEfficiency objects instead of one
+effort is needed to handle several TEfficiency objects instead of one
 histogram. In the case of many different or even continuously distributed
 weights this approach becomes cumbersome. One possibility to overcome this
 problem is the usage of binned weights.
@@ -530,9 +530,9 @@ TH1* clone = pEff->GetCopyTotalHisto();
 //change clone...
 //save changes of clone directly
 clone->Write();
-//or append it to the current directoy and write the file
+//or append it to the current directory and write the file
 //clone->SetDirectory(gDirectory);
-//pFile->Wrtie();
+//pFile->Write();
 
 //delete histogram object
 delete clone;
@@ -638,11 +638,11 @@ fWeight(kDefWeight)
 ////////////////////////////////////////////////////////////////////////////////
 ///constructor using two existing histograms as input
 ///
-///Input: passed - contains the events fullfilling some criteria
+///Input: passed - contains the events fulfilling some criteria
 ///       total  - contains all investigated events
 ///
-///Notes: - both histograms have to fullfill the conditions of CheckConsistency (with option 'w')
-///       - dimension of the resulating efficiency object depends
+///Notes: - both histograms have to fulfill the conditions of CheckConsistency (with option 'w')
+///       - dimension of the resulting efficiency object depends
 ///         on the dimension of the given histograms
 ///       - Clones of both histograms are stored internally
 ///       - The function SetName(total.GetName() + "_clone") is called to set
@@ -702,21 +702,23 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///create 1-dimensional TEfficiency object with variable bin size
+/// Create 1-dimensional TEfficiency object with variable bin size.
 ///
-///constructor creates two new and empty histograms with a given binning
+/// Constructor creates two new and empty histograms with a given binning
 ///
-/// Input: name   - the common part of the name for both histograms (no blanks)
-///                 fTotalHistogram has name: name + "_total"
-///                 fPassedHistogram has name: name + "_passed"
-///        title  - the common part of the title for both histogram
-///                 fTotalHistogram has title: title + " (total)"
-///                 fPassedHistogram has title: title + " (passed)"
-///                 It is possible to label the axis by passing a title with
-///                 the following format: "title;xlabel;ylabel".
-///        nbins  - number of bins on the x-axis
-///        xbins  - array of length (nbins + 1) with low-edges for each bin
-///                 xbins[nbinsx] ... lower edge for overflow bin
+/// Input:
+///
+///   - `name`: the common part of the name for both histograms (no blanks)
+///      fTotalHistogram has name: name + "_total"
+///      fPassedHistogram has name: name + "_passed"
+///   - `title`: the common part of the title for both histogram
+///      fTotalHistogram has title: title + " (total)"
+///      fPassedHistogram has title: title + " (passed)"
+///      It is possible to label the axis by passing a title with
+///      the following format: "title;xlabel;ylabel".
+///   - `nbins`: number of bins on the x-axis
+///   - `xbins`: array of length (nbins + 1) with low-edges for each bin
+///      xbins[nbinsx] ... lower edge for overflow bin
 
 TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbins,
                          const Double_t* xbins):
@@ -739,21 +741,23 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///create 1-dimensional TEfficiency object with fixed bins isze
+/// Create 1-dimensional TEfficiency object with fixed bins size.
 ///
-///constructor creates two new and empty histograms with a fixed binning
+/// Constructor creates two new and empty histograms with a fixed binning.
 ///
-/// Input: name   - the common part of the name for both histograms(no blanks)
-///                 fTotalHistogram has name: name + "_total"
-///                 fPassedHistogram has name: name + "_passed"
-///        title  - the common part of the title for both histogram
-///                 fTotalHistogram has title: title + " (total)"
-///                 fPassedHistogram has title: title + " (passed)"
-///                 It is possible to label the axis by passing a title with
-///                 the following format: "title;xlabel;ylabel".
-///        nbinsx - number of bins on the x-axis
-///        xlow   - lower edge of first bin
-///        xup    - upper edge of last bin
+/// Input:
+///
+///   - `name`: the common part of the name for both histograms(no blanks)
+///      fTotalHistogram has name: name + "_total"
+///      fPassedHistogram has name: name + "_passed"
+///   - `title`: the common part of the title for both histogram
+///      fTotalHistogram has title: title + " (total)"
+///      fPassedHistogram has title: title + " (passed)"
+///      It is possible to label the axis by passing a title with
+///      the following format: "title;xlabel;ylabel".
+///   - `nbinsx`: number of bins on the x-axis
+///   - `xlow`: lower edge of first bin
+///   - `xup`: upper edge of last bin
 
 TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
                          Double_t xlow,Double_t xup):
@@ -776,24 +780,26 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///create 2-dimensional TEfficiency object with fixed bin size
+/// Create 2-dimensional TEfficiency object with fixed bin size.
 ///
-///constructor creates two new and empty histograms with a fixed binning
+/// Constructor creates two new and empty histograms with a fixed binning.
 ///
-/// Input: name   - the common part of the name for both histograms(no blanks)
-///                 fTotalHistogram has name: name + "_total"
-///                 fPassedHistogram has name: name + "_passed"
-///        title  - the common part of the title for both histogram
-///                 fTotalHistogram has title: title + " (total)"
-///                 fPassedHistogram has title: title + " (passed)"
-///                 It is possible to label the axis by passing a title with
-///                 the following format: "title;xlabel;ylabel;zlabel".
-///        nbinsx - number of bins on the x-axis
-///        xlow   - lower edge of first x-bin
-///        xup    - upper edge of last x-bin
-///        nbinsy - number of bins on the y-axis
-///        ylow   - lower edge of first y-bin
-///        yup    - upper edge of last y-bin
+/// Input:
+///
+///   - `name`: the common part of the name for both histograms(no blanks)
+///      fTotalHistogram has name: name + "_total"
+///      fPassedHistogram has name: name + "_passed"
+///   - `title`: the common part of the title for both histogram
+///      fTotalHistogram has title: title + " (total)"
+///      fPassedHistogram has title: title + " (passed)"
+///      It is possible to label the axis by passing a title with
+///      the following format: "title;xlabel;ylabel;zlabel".
+///   - `nbinsx`: number of bins on the x-axis
+///   - `xlow`: lower edge of first x-bin
+///   - `xup`: upper edge of last x-bin
+///   - `nbinsy`: number of bins on the y-axis
+///   - `ylow`: lower edge of first y-bin
+///   - `yup`: upper edge of last y-bin
 
 TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
                          Double_t xlow,Double_t xup,Int_t nbinsy,
@@ -817,24 +823,26 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///create 2-dimensional TEfficiency object with variable bin size
+/// Create 2-dimensional TEfficiency object with variable bin size.
 ///
-///constructor creates two new and empty histograms with a given binning
+/// Constructor creates two new and empty histograms with a given binning.
 ///
-/// Input: name   - the common part of the name for both histograms(no blanks)
-///                 fTotalHistogram has name: name + "_total"
-///                 fPassedHistogram has name: name + "_passed"
-///        title  - the common part of the title for both histogram
-///                 fTotalHistogram has title: title + " (total)"
-///                 fPassedHistogram has title: title + " (passed)"
-///                 It is possible to label the axis by passing a title with
-///                 the following format: "title;xlabel;ylabel;zlabel".
-///        nbinsx - number of bins on the x-axis
-///        xbins  - array of length (nbins + 1) with low-edges for each bin
-///                 xbins[nbinsx] ... lower edge for overflow x-bin
-///        nbinsy - number of bins on the y-axis
-///        ybins  - array of length (nbins + 1) with low-edges for each bin
-///                 ybins[nbinsy] ... lower edge for overflow y-bin
+/// Input:
+///
+///   - `name`: the common part of the name for both histograms(no blanks)
+///      fTotalHistogram has name: name + "_total"
+///      fPassedHistogram has name: name + "_passed"
+///   - `title`: the common part of the title for both histogram
+///      fTotalHistogram has title: title + " (total)"
+///      fPassedHistogram has title: title + " (passed)"
+///      It is possible to label the axis by passing a title with
+///      the following format: "title;xlabel;ylabel;zlabel".
+///   - `nbinsx`: number of bins on the x-axis
+///   - `xbins`: array of length (nbins + 1) with low-edges for each bin
+///      xbins[nbinsx] ... lower edge for overflow x-bin
+///   - `nbinsy`: number of bins on the y-axis
+///   - `ybins`: array of length (nbins + 1) with low-edges for each bin
+///      ybins[nbinsy] ... lower edge for overflow y-bin
 
 TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
                          const Double_t* xbins,Int_t nbinsy,
@@ -858,27 +866,29 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///create 3-dimensional TEfficiency object with fixed bin size
+/// Create 3-dimensional TEfficiency object with fixed bin size.
 ///
-///constructor creates two new and empty histograms with a fixed binning
+/// Constructor creates two new and empty histograms with a fixed binning.
 ///
-/// Input: name   - the common part of the name for both histograms(no blanks)
-///                 fTotalHistogram has name: name + "_total"
-///                 fPassedHistogram has name: name + "_passed"
-///        title  - the common part of the title for both histogram
-///                 fTotalHistogram has title: title + " (total)"
-///                 fPassedHistogram has title: title + " (passed)"
-///                 It is possible to label the axis by passing a title with
-///                 the following format: "title;xlabel;ylabel;zlabel".
-///        nbinsx - number of bins on the x-axis
-///        xlow   - lower edge of first x-bin
-///        xup    - upper edge of last x-bin
-///        nbinsy - number of bins on the y-axis
-///        ylow   - lower edge of first y-bin
-///        yup    - upper edge of last y-bin
-///        nbinsz - number of bins on the z-axis
-///        zlow   - lower edge of first z-bin
-///        zup    - upper edge of last z-bin
+/// Input:
+///
+///   - `name`: the common part of the name for both histograms(no blanks)
+///      fTotalHistogram has name: name + "_total"
+///      fPassedHistogram has name: name + "_passed"
+///   - `title`: the common part of the title for both histogram
+///      fTotalHistogram has title: title + " (total)"
+///      fPassedHistogram has title: title + " (passed)"
+///      It is possible to label the axis by passing a title with
+///      the following format: "title;xlabel;ylabel;zlabel".
+///   - `nbinsx`: number of bins on the x-axis
+///   - `xlow`: lower edge of first x-bin
+///   - `xup`: upper edge of last x-bin
+///   - `nbinsy`: number of bins on the y-axis
+///   - `ylow`: lower edge of first y-bin
+///   - `yup`: upper edge of last y-bin
+///   - `nbinsz`: number of bins on the z-axis
+///   - `zlow`: lower edge of first z-bin
+///   - `zup`: upper edge of last z-bin
 
 TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
                          Double_t xlow,Double_t xup,Int_t nbinsy,
@@ -903,27 +913,29 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///create 3-dimensional TEfficiency object with variable bin size
+/// Create 3-dimensional TEfficiency object with variable bin size.
 ///
-///constructor creates two new and empty histograms with a given binning
+/// Constructor creates two new and empty histograms with a given binning.
 ///
-/// Input: name   - the common part of the name for both histograms(no blanks)
-///                 fTotalHistogram has name: name + "_total"
-///                 fPassedHistogram has name: name + "_passed"
-///        title  - the common part of the title for both histogram
-///                 fTotalHistogram has title: title + " (total)"
-///                 fPassedHistogram has title: title + " (passed)"
-///                 It is possible to label the axis by passing a title with
-///                 the following format: "title;xlabel;ylabel;zlabel".
-///        nbinsx - number of bins on the x-axis
-///        xbins  - array of length (nbins + 1) with low-edges for each bin
-///                 xbins[nbinsx] ... lower edge for overflow x-bin
-///        nbinsy - number of bins on the y-axis
-///        ybins  - array of length (nbins + 1) with low-edges for each bin
-///                 xbins[nbinsx] ... lower edge for overflow y-bin
-///        nbinsz - number of bins on the z-axis
-///        zbins  - array of length (nbins + 1) with low-edges for each bin
-///                 xbins[nbinsx] ... lower edge for overflow z-bin
+/// Input:
+///
+///   - `name`: the common part of the name for both histograms(no blanks)
+///      fTotalHistogram has name: name + "_total"
+///      fPassedHistogram has name: name + "_passed"
+///   - `title`: the common part of the title for both histogram
+///      fTotalHistogram has title: title + " (total)"
+///      fPassedHistogram has title: title + " (passed)"
+///      It is possible to label the axis by passing a title with
+///      the following format: "title;xlabel;ylabel;zlabel".
+///   - `nbinsx`: number of bins on the x-axis
+///   - `xbins`: array of length (nbins + 1) with low-edges for each bin
+///      xbins[nbinsx] ... lower edge for overflow x-bin
+///   - `nbinsy`: number of bins on the y-axis
+///   - `ybins`: array of length (nbins + 1) with low-edges for each bin
+///      xbins[nbinsx] ... lower edge for overflow y-bin
+///   - `nbinsz`: number of bins on the z-axis
+///   - `zbins`: array of length (nbins + 1) with low-edges for each bin
+///      xbins[nbinsx] ... lower edge for overflow z-bin
 
 TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
                          const Double_t* xbins,Int_t nbinsy,
@@ -948,19 +960,21 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor.
 ///
 ///The list of associated objects (e.g. fitted functions) is not copied.
 ///
-///Note: - SetName(rEff.GetName() + "_copy") is called to set the names of the
+///Note:
+///
+///   - SetName(rEff.GetName() + "_copy") is called to set the names of the
 ///        object and the histograms.
-///      - The titles are set by calling SetTitle("[copy] " + rEff.GetTitle()).
-///      - The copied TEfficiency object is NOT appended to a directory. It
-///        will not be written to disk during the next TFile::Write() command
-///        in order to prevent duplication of data. If you want to save this
-///        TEfficiency object anyway, you can either append it to a directory
-///        by calling SetDirectory(TDirectory*) or write it explicitly to disk
-///        by calling Write().
+///   - The titles are set by calling SetTitle("[copy] " + rEff.GetTitle()).
+///   - The copied TEfficiency object is NOT appended to a directory. It
+///      will not be written to disk during the next TFile::Write() command
+///      in order to prevent duplication of data. If you want to save this
+///      TEfficiency object anyway, you can either append it to a directory
+///      by calling SetDirectory(TDirectory*) or write it explicitly to disk
+///      by calling Write().
 
 TEfficiency::TEfficiency(const TEfficiency& rEff):
 TNamed(),
@@ -1124,18 +1138,19 @@ Bool_t TEfficiency::FeldmanCousinsInterval(Double_t total,Double_t passed,Double
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/**
-Calculates the boundaries using the  mid-P binomial
-interval (Lancaster method)  from B. Cousing and J. Tucker.
-See http://arxiv.org/abs/0905.3831 for a description and references for the method
+/// Calculates the boundaries using the  mid-P binomial
+/// interval (Lancaster method)  from B. Cousing and J. Tucker.
+/// See http://arxiv.org/abs/0905.3831 for a description and references for the method
+///
+/// Modify equal_tailed to get the kind of interval you want.
+/// Can also be converted to interval on ratio of poisson means X/Y by the substitutions
+/// ~~~ {.cpp}
+///  X = passed
+///  total = X + Y
+///  lower_poisson = lower/(1 - lower)
+///  upper_poisson = upper/(1 - upper)
+/// ~~~
 
-Modify equal_tailed to get the kind of interval you want.
-Can also be converted to interval on ratio of poisson means X/Y by the substitutions
- X = passed
- total = X + Y
- lower_poisson = lower/(1 - lower)
- upper_poisson = upper/(1 - upper)
-*/
 Double_t TEfficiency::MidPInterval(Double_t total,Double_t passed,Double_t level,Bool_t bUpper)
 {
    const double alpha = 1. - level;
@@ -1226,7 +1241,7 @@ Hence it is the solution \f$ \varepsilon \f$ of the following equation:
 \f[
   I_{\varepsilon}(k + \alpha,N - k + \beta) = \frac{1}{norm} \int_{0}^{\varepsilon} dt t^{k + \alpha - 1} (1 - t)^{N - k + \beta - 1} =  \frac{1 \pm level}{2}
 \f]
-In the case of shortest interval the minimum interval aorund the mode is found by minimizing the length of all intervals whith the
+In the case of shortest interval the minimum interval around the mode is found by minimizing the length of all intervals width the
 given probability content. See TEfficiency::BetaShortestInterval
 */
 
@@ -1306,7 +1321,7 @@ struct Beta_interval_length {
 /// \param[out] upper upper boundary is returned
 /// \param[out] lower lower boundary is returned
 ///
-/// The lower/upper boundary are then obtained by finding the shortest interval of the beta distribbution
+/// The lower/upper boundary are then obtained by finding the shortest interval of the beta distribution
 /// contained the desired probability level.
 /// The length of all possible intervals is minimized in order to find the shortest one
 
@@ -1517,11 +1532,13 @@ Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total,Option_t* 
 ///
 /// and the histogram have to be filled with unit weights.
 ///
-/// Option: - w: Do not check for unit weights -> accept histograms filled with
-///             weights
+/// Option:
 ///
-/// Note: - It is assumed that both histograms have the same dimension and
-///        binning.
+///   - `w`: Do not check for unit weights -> accept histograms filled with weights
+///
+/// Note:
+///
+///   - It is assumed that both histograms have the same dimension and binning.
 
 Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
 {
@@ -1591,7 +1608,7 @@ TGraphAsymmErrors * TEfficiency::CreateGraph(Option_t * opt) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the graph to be painted with information from TEfficiency
-/// Internal metyhod called by TEfficiency::Paint or TEfficiency::CreateGraph
+/// Internal method called by TEfficiency::Paint or TEfficiency::CreateGraph
 
 void TEfficiency::FillGraph(TGraphAsymmErrors * graph, Option_t * opt) const
 {
@@ -1705,7 +1722,7 @@ TH2 * TEfficiency::CreateHistogram(Option_t *) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the 2d histogram to be painted with information from TEfficiency 2D
-/// Internal metyhod called by TEfficiency::Paint or TEfficiency::CreatePaintingGraph
+/// Internal method called by TEfficiency::Paint or TEfficiency::CreatePaintingGraph
 
 void TEfficiency::FillHistogram(TH2 * hist ) const
 {
@@ -1761,7 +1778,7 @@ of the test:
       &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed - 1} (1 - t)^{total - passed} dt\\
       &=& I_{\varepsilon}(passed,total - passed + 1)
     \f}
-The lower boundary is therfore given by the \f$ \frac{1 - level}{2}\f$ quantile
+The lower boundary is therefore given by the \f$ \frac{1 - level}{2}\f$ quantile
 of the beta distribution.
 
 The upper boundary of the Clopper-Pearson interval is the "exact" inversion
@@ -1774,7 +1791,7 @@ of the test:
       \Rightarrow 1 - \frac{1 - level}{2} &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed -1} dt\\
       \frac{1 + level}{2} &=& I_{\varepsilon}(passed + 1,total - passed)
     \f}
-The upper boundary is therfore given by the \f$\frac{1 + level}{2}\f$ quantile
+The upper boundary is therefore given by the \f$\frac{1 + level}{2}\f$ quantile
 of the beta distribution.
 
 Note: The connection between the binomial distribution and the regularized
@@ -2129,9 +2146,9 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
 
       //fill efficiency and errors
       eff[i-1] = Combine(up,low,num,&pass[0],&total[0],alpha,beta,level,&vWeights[0],opt.Data());
-      //did an error occured ?
+      //did an error occurred ?
       if(eff[i-1] == -1) {
-         gROOT->Error("TEfficiency::Combine","error occured during combining");
+         gROOT->Error("TEfficiency::Combine","error occurred during combining");
          gROOT->Info("TEfficiency::Combine","stop combining");
          return 0;
       }
@@ -2286,9 +2303,11 @@ void TEfficiency::FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the global bin number containing the given values
 ///
-/// Note: - values which belong to dimensions higher than the current dimension
-///         of the TEfficiency object are ignored (i.e. for 1-dimensional
-///         efficiencies only the x-value is considered)
+/// Note:
+///
+///   - values which belong to dimensions higher than the current dimension
+///     of the TEfficiency object are ignored (i.e. for 1-dimensional
+///     efficiencies only the x-value is considered)
 
 Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
 {
@@ -2751,11 +2770,11 @@ TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
       return *this;
    }
 
-   if (rhs.fTotalHistogram == 0 && rhs.fTotalHistogram == 0 ) {
+   if (rhs.fTotalHistogram == 0 && rhs.fPassedHistogram == 0 ) {
       Warning("operator+=","no operation: adding an empty object");
       return *this;
    }
-   else  if (rhs.fTotalHistogram == 0  || rhs.fTotalHistogram == 0 ) {
+   else  if (rhs.fTotalHistogram == 0  || rhs.fPassedHistogram == 0 ) {
       Fatal("operator+=","Adding a non consistent TEfficiency object which has not a total or a passed histogram ");
       return *this;
    }
@@ -2862,7 +2881,7 @@ void TEfficiency::Paint(const Option_t* opt)
       //paint all associated functions
       if(fFunctions) {
          //paint box with fit parameters
-         //the fit dtatistics will be painted if gStyle->SetOptFit(1) has been
+         //the fit statistics will be painted if gStyle->SetOptFit(1) has been
          // called by the user
          TIter next(fFunctions);
          TObject* obj = 0;
@@ -3630,9 +3649,10 @@ Double_t TEfficiency::Wilson(Double_t total,Double_t passed,Double_t level,Bool_
 /// Addition operator
 ///
 /// adds the corresponding histograms:
+/// ~~~ {.cpp}
 /// lhs.GetTotalHistogram() + rhs.GetTotalHistogram()
 /// lhs.GetPassedHistogram() + rhs.GetPassedHistogram()
-///
+/// ~~~
 /// the statistic option and the confidence level are taken from lhs
 
 const TEfficiency operator+(const TEfficiency& lhs,const TEfficiency& rhs)

@@ -1579,6 +1579,6 @@ Double_t TAttParticle::SampleMass(Double_t widthcut) const
    else {
       return (fPDGMass+
              0.5*fPDGDecayWidth*
-             TMath::Tan((2.0*gRandom->Rndm(0)-1.0)*TMath::ATan(2.0*widthcut)));
+             TMath::Tan((2.0*gRandom->Rndm()-1.0)*TMath::ATan(2.0*widthcut)));
    }
 }

@@ -29,14 +29,9 @@ using namespace clang;
 
 namespace cling {
 
-  ValuePrinterSynthesizer::ValuePrinterSynthesizer(clang::Sema* S,
-                                                   llvm::raw_ostream* Stream)
-    : WrapperTransformer(S), m_Context(&S->getASTContext()) {
-    if (Stream)
-      m_ValuePrinterStream.reset(Stream);
-    else
-      m_ValuePrinterStream.reset(new llvm::raw_os_ostream(std::cout));
-  }
+  ValuePrinterSynthesizer::ValuePrinterSynthesizer(clang::Sema* S)
+    : WrapperTransformer(S), m_Context(&S->getASTContext()),
+      m_LookupResult(nullptr) { }
 
 
   // pin the vtable here.
@@ -140,10 +135,10 @@ namespace cling {
 
     Expr* VoidEArg = utils::Synthesize::CStyleCastPtrExpr(m_Sema,
                                                           m_Context->VoidPtrTy,
-                                                          (uint64_t)E);
+                                                          (uintptr_t)E);
     Expr* VoidCArg = utils::Synthesize::CStyleCastPtrExpr(m_Sema,
                                                           m_Context->VoidPtrTy,
-                                                          (uint64_t)m_Context);
+                                                          (uintptr_t)m_Context);
 
     SourceLocation NoSLoc = SourceLocation();
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
@@ -173,11 +168,11 @@ namespace cling {
 
   unsigned ValuePrinterSynthesizer::ClearNullStmts(CompoundStmt* CS) {
     llvm::SmallVector<Stmt*, 8> FBody;
-    for (StmtRange range = CS->children(); range; ++range)
-      if (!isa<NullStmt>(*range))
-        FBody.push_back(*range);
+    for (auto&& child: CS->children())
+      if (!isa<NullStmt>(child))
+        FBody.push_back(child);
 
-    CS->setStmts(*m_Context, FBody.data(), FBody.size());
+    CS->setStmts(*m_Context, FBody);
     return FBody.size();
   }
 

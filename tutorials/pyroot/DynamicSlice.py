@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ## Example of function called when a mouse event occurs in a pad.
 ## When moving the mouse in the canvas, a second canvas shows the
 ## projection along X of the bin corresponding to the Y position
@@ -116,7 +117,7 @@ if __name__ == '__main__':
    hpxpy  = TH2F( 'hpxpy', 'py vs px', 40, -4, 4, 40, -4, 4 )
    hpxpy.SetStats( 0 )
    x, y = Double( 0.1 ), Double( 0.101 )
-   for i in xrange( 50000 ):
+   for i in range( 50000 ):
      gRandom.Rannor( x, y )
      hpxpy.Fill( x, y )
    hpxpy.Draw( 'COL' )

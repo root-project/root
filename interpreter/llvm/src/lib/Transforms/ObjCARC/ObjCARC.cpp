@@ -17,7 +17,6 @@
 #include "llvm-c/Core.h"
 #include "llvm-c/Initialization.h"
 #include "llvm/InitializePasses.h"
-#include "llvm/Support/CommandLine.h"
 
 namespace llvm {
   class PassRegistry;
@@ -26,18 +25,10 @@ namespace llvm {
 using namespace llvm;
 using namespace llvm::objcarc;
 
-/// \brief A handy option to enable/disable all ARC Optimizations.
-bool llvm::objcarc::EnableARCOpts;
-static cl::opt<bool, true>
-EnableARCOptimizations("enable-objc-arc-opts",
-                       cl::desc("enable/disable all ARC Optimizations"),
-                       cl::location(EnableARCOpts),
-                       cl::init(true));
-
 /// initializeObjCARCOptsPasses - Initialize all passes linked into the
 /// ObjCARCOpts library.
 void llvm::initializeObjCARCOpts(PassRegistry &Registry) {
-  initializeObjCARCAliasAnalysisPass(Registry);
+  initializeObjCARCAAWrapperPassPass(Registry);
   initializeObjCARCAPElimPass(Registry);
   initializeObjCARCExpandPass(Registry);
   initializeObjCARCContractPass(Registry);

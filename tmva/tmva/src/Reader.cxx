@@ -91,11 +91,10 @@
 
 #include "TMVA/Reader.h"
 
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataInputHandler.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/DataSetManager.h"
 #include "TMVA/IMethod.h"
@@ -103,6 +102,7 @@
 #include "TMVA/MethodCuts.h"
 #include "TMVA/MethodCategory.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
 #include "TTree.h"
@@ -122,8 +122,6 @@
 #include <fstream>
 
 #include <iostream>
-
-ClassImp(TMVA::Reader)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

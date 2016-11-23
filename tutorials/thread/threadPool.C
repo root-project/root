@@ -3,7 +3,7 @@
 ///
 /// Usage:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root [0] .L threadPool.C++
 /// root [1] threadPool(10)  10 = numThreads
 /// ~~~

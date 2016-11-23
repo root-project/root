@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook -nodraw
 /// Fill n-tuples in distinct workers.
 /// This tutorial illustrates the basics of how it's possible with ROOT to
 /// offload heavy operations on multiple processes and how it's possible to write
@@ -9,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 // Some useful constants and functions
 
@@ -33,7 +35,8 @@ Int_t mp101_fillNtuples()
    // No nuisance for batch execution
    gROOT->SetBatch();
 
-   // Perform the operation sequentially ---------------------------------------
+   //---------------------------------------
+   // Perform the operation sequentially 
 
    // Create a random generator and and Ntuple to hold the numbers
    TRandom3 rndm(1);
@@ -43,7 +46,8 @@ Int_t mp101_fillNtuples()
    randomNumbers.Write();
    ofile.Close();
 
-   // We now go MP! ------------------------------------------------------------
+   //---------------------------------------
+   // We now go MP!
 
    // We define our work item
    auto workItem = [](UInt_t workerID) {
@@ -57,7 +61,7 @@ Int_t mp101_fillNtuples()
    };
 
    // Create the pool of workers
-   TProcPool workers(nWorkers);
+   ROOT::TProcessExecutor workers(nWorkers);
 
    // Fill the pool with work
    workers.Map(workItem, ROOT::TSeqI(nWorkers));

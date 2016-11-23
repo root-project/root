@@ -2,8 +2,6 @@
 /// \ingroup tutorial_geom
 /// Drawing a figure, made of lego block, using ROOT geometry class.
 ///
-/// Name: lego.C
-/// Author: Soon Gi Kwon(1116won@hanmail.net), Dept. of Physics, Univ. of Seoul
 /// Reviewed by Sunman Kim (sunman98@hanmail.net)
 /// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
 ///
@@ -14,7 +12,7 @@
 ///
 /// \macro_code
 ///
-/// \author Soon Gi Kwon
+/// \author Soon Gi Kwon(1116won@hanmail.net), Dept. of Physics, Univ. of Seoul
 
 #include "TSystem.h"
 #include "TGeoManager.h"

@@ -45,8 +45,14 @@
 //Davix.GSI.CACheck
 //Davix.GSI.GridMode
 //
+//Davix.S3.AccessKey
+//Davix.S3.SecretKey
+//Davix.S3.Region
+//Davix.S3.Token
+//
 // Environment variables:
 // X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY ... usual meaning for the X509 Grid things. gEnv vars have higher priority.
+// S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, S3_TOKEN. gEnv vars have higher priority.
 
 #include "TFile.h"
 #include "TUrl.h"
@@ -70,7 +76,7 @@ private:
 
     // perfStats
     Double_t eventStart();
-    void eventStop(Double_t t, Long64_t len);
+    void eventStop(Double_t t, Long64_t len, bool read = true);
 
 public:
     ///
@@ -82,6 +88,8 @@ public:
     ///  - CA_CHECK=no      : remove all the certificate authority check, this option can create a security vulnerability
     ///  - S3_SECKEY=string : Amazon S3 secret token
     ///  - S3_ACCKEY=string : Amazon S3 access token
+    ///  - S3_REGION=string : Amazon S3 region. Optional, if provided, davix will use v4 signatures.
+    ///  - S3_TOKEN=string  : Amazon STS temporary credentials token.
     ///
     /// Several parameters can be used if separated with whitespace
 

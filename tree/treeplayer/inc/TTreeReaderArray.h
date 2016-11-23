@@ -48,7 +48,7 @@ namespace Internal {
       virtual void CreateProxy();
       const char* GetBranchContentDataType(TBranch* branch,
                                            TString& contentTypeName,
-                                           TDictionary* &dict) const;
+                                           TDictionary* &dict);
 
       TVirtualCollectionReader* fImpl; // Common interface to collections
 

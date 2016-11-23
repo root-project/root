@@ -24,7 +24,7 @@ protected:
    Double_t      *fPosition;        ///< [fNPeaks] array of current peak positions
    Double_t      *fPositionX;       ///< [fNPeaks] X position of peaks
    Double_t      *fPositionY;       ///< [fNPeaks] Y position of peaks
-   Double_t       fResolution;      ///< resolution of the neighboring peaks
+   Double_t       fResolution;      ///< *NOT USED* resolution of the neighboring peaks
    TH1           *fHistogram;       ///< resulting histogram
 static Int_t      fgAverageWindow;  ///< Average window of searched peaks
 static Int_t      fgIterations;     ///< Maximum number of decon iterations (default=3)
@@ -38,7 +38,7 @@ public:
    };
 
    TSpectrum2();
-   TSpectrum2(Int_t maxpositions, Double_t resolution=1);
+   TSpectrum2(Int_t maxpositions, Double_t resolution=1); // resolution is *NOT USED*
    virtual ~TSpectrum2();
    virtual TH1  *Background(const TH1 *hist, Int_t niter=20, Option_t *option="");
    TH1          *GetHistogram() const {return fHistogram;}
@@ -49,7 +49,7 @@ public:
    virtual Int_t Search(const TH1 *hist, Double_t sigma=2, Option_t *option="", Double_t threshold=0.05);
    static void   SetAverageWindow(Int_t w=3);   //set average window
    static void   SetDeconIterations(Int_t n=3); //set max number of decon iterations
-   void          SetResolution(Double_t resolution=1);
+   void          SetResolution(Double_t resolution=1); // *NOT USED*
 
    //new functions January 2006
    const char   *Background(Double_t **spectrum,Int_t ssizex, Int_t ssizey,Int_t numberIterationsX,Int_t numberIterationsY,Int_t direction,Int_t filterType);

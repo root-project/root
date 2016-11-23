@@ -2,7 +2,6 @@
 /// \ingroup tutorial_geom
 /// Drawing the Cheongwadae building which is the Presidential Residence of the Republic of Korea, using ROOT geometry class.
 ///
-/// Author: Hee Jun Shin (s-heejun@hanmail.net), Dept. of Physics, Univ. of Seoul
 /// Reviewed by Sunman Kim (sunman98@hanmail.net)
 /// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
 ///
@@ -13,7 +12,7 @@
 ///
 /// \macro_code
 ///
-/// \author  Hee Jun Shin
+/// \author Hee Jun Shin (s-heejun@hanmail.net), Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"
 

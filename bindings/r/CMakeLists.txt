@@ -9,6 +9,8 @@ set(libname RInterface)
 
 include_directories(${R_INCLUDE_DIRS})
 
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
+
 set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRObject.h 
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunctionExport.h

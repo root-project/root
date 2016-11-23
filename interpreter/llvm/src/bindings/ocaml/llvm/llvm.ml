@@ -283,6 +283,14 @@ module ValueKind = struct
   | Instruction of Opcode.t
 end
 
+module DiagnosticSeverity = struct
+  type t =
+  | Error
+  | Warning
+  | Remark
+  | Note
+end
+
 exception IoError of string
 
 let () = Callback.register_exception "Llvm.IoError" (IoError "")
@@ -303,6 +311,20 @@ type ('a, 'b) llpos =
 type ('a, 'b) llrev_pos =
 | At_start of 'a
 | After of 'b
+
+
+(*===-- Context error handling --------------------------------------------===*)
+module Diagnostic = struct
+  type t
+
+  external description : t -> string = "llvm_get_diagnostic_description"
+  external severity : t -> DiagnosticSeverity.t
+                    = "llvm_get_diagnostic_severity"
+end
+
+external set_diagnostic_handler
+  : llcontext -> (Diagnostic.t -> unit) option -> unit
+  = "llvm_set_diagnostic_handler"
 
 (*===-- Contexts ----------------------------------------------------------===*)
 external create_context : unit -> llcontext = "llvm_create_context"
@@ -461,6 +483,8 @@ external mdstring : llcontext -> string -> llvalue = "llvm_mdstring"
 external mdnode : llcontext -> llvalue array -> llvalue = "llvm_mdnode"
 external mdnull : llcontext -> llvalue = "llvm_mdnull"
 external get_mdstring : llvalue -> string option = "llvm_get_mdstring"
+external get_mdnode_operands : llvalue -> llvalue array
+                            = "llvm_get_mdnode_operands"
 external get_named_metadata : llmodule -> string -> llvalue array
                             = "llvm_get_namedmd"
 external add_named_metadata_operand : llmodule -> string -> llvalue -> unit
@@ -579,6 +603,8 @@ external global_parent : llvalue -> llmodule = "LLVMGetGlobalParent"
 external is_declaration : llvalue -> bool = "llvm_is_declaration"
 external linkage : llvalue -> Linkage.t = "llvm_linkage"
 external set_linkage : Linkage.t -> llvalue -> unit = "llvm_set_linkage"
+external unnamed_addr : llvalue -> bool = "llvm_unnamed_addr"
+external set_unnamed_addr : bool -> llvalue -> unit = "llvm_set_unnamed_addr"
 external section : llvalue -> string = "llvm_section"
 external set_section : string -> llvalue -> unit = "llvm_set_section"
 external visibility : llvalue -> Visibility.t = "llvm_visibility"
@@ -1300,6 +1326,8 @@ external build_fcmp : Fcmp.t -> llvalue -> llvalue -> string ->
 (*--... Miscellaneous instructions .........................................--*)
 external build_phi : (llvalue * llbasicblock) list -> string -> llbuilder ->
                      llvalue = "llvm_build_phi"
+external build_empty_phi : lltype -> string -> llbuilder -> llvalue
+                         = "llvm_build_empty_phi"
 external build_call : llvalue -> llvalue array -> string -> llbuilder -> llvalue
                     = "llvm_build_call"
 external build_select : llvalue -> llvalue -> llvalue -> string -> llbuilder ->

@@ -54,9 +54,6 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #endif
 
-#include <algorithm>
-#include <vector>
-
 using namespace llvm;
 
 #define DEBUG_TYPE "ctrloops"
@@ -98,7 +95,7 @@ namespace {
       AU.addPreserved<LoopInfoWrapperPass>();
       AU.addRequired<DominatorTreeWrapperPass>();
       AU.addPreserved<DominatorTreeWrapperPass>();
-      AU.addRequired<ScalarEvolution>();
+      AU.addRequired<ScalarEvolutionWrapperPass>();
     }
 
   private:
@@ -112,6 +109,7 @@ namespace {
     const DataLayout *DL;
     DominatorTree *DT;
     const TargetLibraryInfo *LibInfo;
+    bool PreserveLCSSA;
   };
 
   char PPCCTRLoops::ID = 0;
@@ -147,7 +145,7 @@ INITIALIZE_PASS_BEGIN(PPCCTRLoops, "ppc-ctr-loops", "PowerPC CTR Loops",
                       false, false)
 INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(LoopInfoWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(ScalarEvolution)
+INITIALIZE_PASS_DEPENDENCY(ScalarEvolutionWrapperPass)
 INITIALIZE_PASS_END(PPCCTRLoops, "ppc-ctr-loops", "PowerPC CTR Loops",
                     false, false)
 
@@ -168,13 +166,16 @@ FunctionPass *llvm::createPPCCTRLoopsVerify() {
 #endif // NDEBUG
 
 bool PPCCTRLoops::runOnFunction(Function &F) {
+  if (skipFunction(F))
+    return false;
+
   LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-  SE = &getAnalysis<ScalarEvolution>();
+  SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-  DL = DLP ? &DLP->getDataLayout() : nullptr;
+  DL = &F.getParent()->getDataLayout();
   auto *TLIP = getAnalysisIfAvailable<TargetLibraryInfoWrapperPass>();
   LibInfo = TLIP ? &TLIP->getTLI() : nullptr;
+  PreserveLCSSA = mustPreserveAnalysisID(LCSSAID);
 
   bool MadeChange = false;
 
@@ -198,10 +199,18 @@ static bool isLargeIntegerTy(bool Is32Bit, Type *Ty) {
 // Determining the address of a TLS variable results in a function call in
 // certain TLS models.
 static bool memAddrUsesCTR(const PPCTargetMachine *TM,
-                           const llvm::Value *MemAddr) {
+                           const Value *MemAddr) {
   const auto *GV = dyn_cast<GlobalValue>(MemAddr);
-  if (!GV)
+  if (!GV) {
+    // Recurse to check for constants that refer to TLS global variables.
+    if (const auto *CV = dyn_cast<Constant>(MemAddr))
+      for (const auto &CO : CV->operands())
+        if (memAddrUsesCTR(TM, CO))
+          return true;
+
     return false;
+  }
+
   if (!GV->isThreadLocal())
     return false;
   if (!TM)
@@ -236,10 +245,15 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
       if (Function *F = CI->getCalledFunction()) {
         // Most intrinsics don't become function calls, but some might.
         // sin, cos, exp and log are always calls.
-        unsigned Opcode;
+        unsigned Opcode = 0;
         if (F->getIntrinsicID() != Intrinsic::not_intrinsic) {
           switch (F->getIntrinsicID()) {
           default: continue;
+          // If we have a call to ppc_is_decremented_ctr_nonzero, or ppc_mtctr
+          // we're definitely using CTR.
+          case Intrinsic::ppc_is_decremented_ctr_nonzero:
+          case Intrinsic::ppc_mtctr:
+            return true;
 
 // VisualStudio defines setjmp as _setjmp
 #if defined(_MSC_VER) && defined(setjmp) && \
@@ -291,6 +305,8 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
           case Intrinsic::rint:      Opcode = ISD::FRINT;      break;
           case Intrinsic::nearbyint: Opcode = ISD::FNEARBYINT; break;
           case Intrinsic::round:     Opcode = ISD::FROUND;     break;
+          case Intrinsic::minnum:    Opcode = ISD::FMINNUM;    break;
+          case Intrinsic::maxnum:    Opcode = ISD::FMAXNUM;    break;
           }
         }
 
@@ -350,13 +366,24 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
           case LibFunc::truncf:
           case LibFunc::truncl:
             Opcode = ISD::FTRUNC; break;
+          case LibFunc::fmin:
+          case LibFunc::fminf:
+          case LibFunc::fminl:
+            Opcode = ISD::FMINNUM; break;
+          case LibFunc::fmax:
+          case LibFunc::fmaxf:
+          case LibFunc::fmaxl:
+            Opcode = ISD::FMAXNUM; break;
           }
+        }
 
-          MVT VTy =
-            TLI->getSimpleValueType(CI->getArgOperand(0)->getType(), true);
+        if (Opcode) {
+          auto &DL = CI->getModule()->getDataLayout();
+          MVT VTy = TLI->getSimpleValueType(DL, CI->getArgOperand(0)->getType(),
+                                            true);
           if (VTy == MVT::Other)
             return true;
-          
+
           if (TLI->isOperationLegalOrCustom(Opcode, VTy))
             continue;
           else if (VTy.isVector() &&
@@ -407,6 +434,25 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
       if (SI->getNumCases() + 1 >= (unsigned)TLI->getMinimumJumpTableEntries())
         return true;
     }
+
+    if (TM->getSubtargetImpl(*BB->getParent())->getTargetLowering()->useSoftFloat()) {
+      switch(J->getOpcode()) {
+      case Instruction::FAdd:
+      case Instruction::FSub:
+      case Instruction::FMul:
+      case Instruction::FDiv:
+      case Instruction::FRem:
+      case Instruction::FPTrunc:
+      case Instruction::FPExt:
+      case Instruction::FPToUI:
+      case Instruction::FPToSI:
+      case Instruction::UIToFP:
+      case Instruction::SIToFP:
+      case Instruction::FCmp:
+        return true;
+      }
+    }
+
     for (Value *Operand : J->operands())
       if (memAddrUsesCTR(TM, Operand))
         return true;
@@ -418,14 +464,15 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
 bool PPCCTRLoops::convertToCTRLoop(Loop *L) {
   bool MadeChange = false;
 
-  Triple TT = Triple(L->getHeader()->getParent()->getParent()->
-                     getTargetTriple());
+  const Triple TT =
+      Triple(L->getHeader()->getParent()->getParent()->getTargetTriple());
   if (!TT.isArch32Bit() && !TT.isArch64Bit())
     return MadeChange; // Unknown arch. type.
 
   // Process nested loops first.
   for (Loop::iterator I = L->begin(), E = L->end(); I != E; ++I) {
     MadeChange |= convertToCTRLoop(*I);
+    DEBUG(dbgs() << "Nested loop converted\n");
   }
 
   // If a nested loop has been converted, then we can't convert this loop.
@@ -523,7 +570,7 @@ bool PPCCTRLoops::convertToCTRLoop(Loop *L) {
   // the CTR register because some such uses might be reordered by the
   // selection DAG after the mtctr instruction).
   if (!Preheader || mightUseCTR(TT, Preheader))
-    Preheader = InsertPreheaderForLoop(L, this);
+    Preheader = InsertPreheaderForLoop(L, DT, LI, PreserveLCSSA);
   if (!Preheader)
     return MadeChange;
 
@@ -533,17 +580,16 @@ bool PPCCTRLoops::convertToCTRLoop(Loop *L) {
   // selected branch.
   MadeChange = true;
 
-  SCEVExpander SCEVE(*SE, "loopcnt");
+  SCEVExpander SCEVE(*SE, Preheader->getModule()->getDataLayout(), "loopcnt");
   LLVMContext &C = SE->getContext();
   Type *CountType = TT.isArch64Bit() ? Type::getInt64Ty(C) :
                                        Type::getInt32Ty(C);
   if (!ExitCount->getType()->isPointerTy() &&
       ExitCount->getType() != CountType)
     ExitCount = SE->getZeroExtendExpr(ExitCount, CountType);
-  ExitCount = SE->getAddExpr(ExitCount,
-                             SE->getConstant(CountType, 1)); 
-  Value *ECValue = SCEVE.expandCodeFor(ExitCount, CountType,
-                                       Preheader->getTerminator());
+  ExitCount = SE->getAddExpr(ExitCount, SE->getOne(CountType));
+  Value *ECValue =
+      SCEVE.expandCodeFor(ExitCount, CountType, Preheader->getTerminator());
 
   IRBuilder<> CountBuilder(Preheader->getTerminator());
   Module *M = Preheader->getParent()->getParent();
@@ -554,7 +600,7 @@ bool PPCCTRLoops::convertToCTRLoop(Loop *L) {
   IRBuilder<> CondBuilder(CountedExitBranch);
   Value *DecFunc =
     Intrinsic::getDeclaration(M, Intrinsic::ppc_is_decremented_ctr_nonzero);
-  Value *NewCond = CondBuilder.CreateCall(DecFunc);
+  Value *NewCond = CondBuilder.CreateCall(DecFunc, {});
   Value *OldCond = CountedExitBranch->getCondition();
   CountedExitBranch->setCondition(NewCond);
 
@@ -663,7 +709,7 @@ bool PPCCTRLoopsVerify::runOnMachineFunction(MachineFunction &MF) {
   // any other instructions that might clobber the ctr register.
   for (MachineFunction::iterator I = MF.begin(), IE = MF.end();
        I != IE; ++I) {
-    MachineBasicBlock *MBB = I;
+    MachineBasicBlock *MBB = &*I;
     if (!MDT->isReachableFromEntry(MBB))
       continue;
 
@@ -680,4 +726,3 @@ bool PPCCTRLoopsVerify::runOnMachineFunction(MachineFunction &MF) {
   return false;
 }
 #endif // NDEBUG
-

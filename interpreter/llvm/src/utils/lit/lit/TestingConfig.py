@@ -24,7 +24,8 @@ class TestingConfig:
 
         pass_vars = ['LIBRARY_PATH', 'LD_LIBRARY_PATH', 'SYSTEMROOT', 'TERM',
                      'LD_PRELOAD', 'ASAN_OPTIONS', 'UBSAN_OPTIONS',
-                     'LSAN_OPTIONS']
+                     'LSAN_OPTIONS', 'ADB', 'ANDROID_SERIAL',
+                     'SANITIZER_IGNORE_CVE_2016_2143']
         for var in pass_vars:
             val = os.environ.get(var, '')
             # Check for empty string as some variables such as LD_PRELOAD cannot be empty
@@ -118,7 +119,8 @@ class TestingConfig:
     def __init__(self, parent, name, suffixes, test_format,
                  environment, substitutions, unsupported,
                  test_exec_root, test_source_root, excludes,
-                 available_features, pipefail):
+                 available_features, pipefail, limit_to_features = [],
+                 is_early = False):
         self.parent = parent
         self.name = str(name)
         self.suffixes = set(suffixes)
@@ -131,6 +133,12 @@ class TestingConfig:
         self.excludes = set(excludes)
         self.available_features = set(available_features)
         self.pipefail = pipefail
+        # This list is used by TestRunner.py to restrict running only tests that
+        # require one of the features in this list if this list is non-empty.
+        # Configurations can set this list to restrict the set of tests to run.
+        self.limit_to_features = set(limit_to_features)
+        # Whether the suite should be tested early in a given run.
+        self.is_early = bool(is_early)
 
     def finish(self, litConfig):
         """finish() - Finish this config object, after loading is complete."""

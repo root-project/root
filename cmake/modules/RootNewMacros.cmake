@@ -39,7 +39,7 @@ endif()
 if(soversion)
   set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
       VERSION ${ROOT_VERSION}
-      SOVERSION ${ROOT_MAJOR_VERSION}
+      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}
       SUFFIX ${libsuffix}
       PREFIX ${libprefix} )
 else()
@@ -242,7 +242,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
+                    -I${CMAKE_SOURCE_DIR}/interpreter/cling/include # This is for the RuntimeUniverse
                     -I${CMAKE_BINARY_DIR}/include)
+    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
   endif()
@@ -330,9 +332,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
 
+  #---build the path exclusion switches----------------------
+  set(excludepathsargs "")
+  foreach(excludepath ${excludepaths})
+    set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
+  endforeach()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
-                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
+                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      IMPLICIT_DEPENDS CXX ${_linkdef} ${headerfiles}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
@@ -406,6 +414,7 @@ function(ROOT_LINKER_LIBRARY library)
     add_library(${library} ${_all} SHARED ${lib_srcs})
     target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES ${ROOT_LIBRARY_PROPERTIES} LINK_FLAGS -DEF:${library}.def)
+
     #---set the .def file as generated------------------------------------
     set_source_files_properties(${library}.def PROPERTIES GENERATED 1)
     #---create a custom pre-link command that runs bindexplib
@@ -438,6 +447,12 @@ function(ROOT_LINKER_LIBRARY library)
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
+  # Do not add -Dname_EXPORTS to the command-line when building files in this
+  # target. Doing so is actively harmful for the modules build because it
+  # creates extra module variants, and not useful because we don't use these
+  # macros.
+  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+
   #----Installation details-------------------------------------------------------
   if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     if(ARG_CMAKENOEXPORT)
@@ -475,6 +490,11 @@ function(ROOT_OBJECT_LIBRARY library)
 
   #--- Only for building shared libraries
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
+  # Do not add -Dname_EXPORTS to the command-line when building files in this
+  # target. Doing so is actively harmful for the modules build because it
+  # creates extra module variants, and not useful because we don't use these
+  # macros.
+  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
 
   #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
@@ -516,6 +536,12 @@ function(ROOT_MODULE_LIBRARY library)
     add_dependencies(${library} move_headers)
   endif()
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
+  # Do not add -Dname_EXPORTS to the command-line when building files in this
+  # target. Doing so is actively harmful for the modules build because it
+  # creates extra module variants, and not useful because we don't use these
+  # macros.
+  set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+
   target_link_libraries(${library} ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
   install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
@@ -685,6 +711,7 @@ endmacro()
 #                        [OUTPUT outfile] [ERROR errfile] [INPUT infile]
 #                        [ENVIRONMENT var1=val1 var2=val2 ...
 #                        [DEPENDS test1 ...]
+#                        [RUN_SERIAL]
 #                        [TIMEOUT seconds]
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
@@ -694,7 +721,7 @@ endmacro()
 #                        [PASSRC code])
 #
 function(ROOT_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
+  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
                             "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
                              "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS"
                             ${ARGN})
@@ -878,6 +905,10 @@ function(ROOT_ADD_TEST test)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
+  if(ARG_RUN_SERIAL)
+    set_property(TEST ${test} PROPERTY RUN_SERIAL true)
+  endif()
+
 endfunction()
 
 #----------------------------------------------------------------------------
@@ -904,7 +935,7 @@ endmacro()
 #----------------------------------------------------------------------------
 function(ROOT_ADD_CXX_FLAG var flag)
   string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
-  CHECK_CXX_COMPILER_FLAG("${flag}" CXX_HAS${flag_esc})
+  CHECK_CXX_COMPILER_FLAG("-Werror ${flag}" CXX_HAS${flag_esc})
   if(CXX_HAS${flag_esc})
     set(${var} "${${var}} ${flag}" PARENT_SCOPE)
   endif()
@@ -914,34 +945,45 @@ endfunction()
 #----------------------------------------------------------------------------
 function(ROOT_ADD_C_FLAG var flag)
   string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
-  CHECK_C_COMPILER_FLAG("${flag}" C_HAS${flag_esc})
+  CHECK_C_COMPILER_FLAG("-Werror ${flag}" C_HAS${flag_esc})
   if(C_HAS${flag_esc})
     set(${var} "${${var}} ${flag}" PARENT_SCOPE)
   endif()
 endfunction()
 
 #----------------------------------------------------------------------------
-# find_python_module(module [REQUIRED])
+# find_python_module(module [REQUIRED] [QUIET])
 #----------------------------------------------------------------------------
 function(find_python_module module)
-  string(TOUPPER ${module} module_upper)
-  if(NOT PY_${module_upper})
-    if(ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
-      set(${module}_FIND_REQUIRED TRUE)
-    endif()
-    # A module's location is usually a directory, but for binary modules
-    # it's a .so file.
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
-      "import re, ${module}; print re.compile('/__init__.py.*').sub('',${module}.__file__)"
-      RESULT_VARIABLE _${module}_status
-      OUTPUT_VARIABLE _${module}_location
-      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(NOT _${module}_status)
-      set(PY_${module_upper} ${_${module}_location} CACHE STRING  "Location of Python module ${module}")
-    endif()
-  endif()
-  find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper})
-  set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE) 
+   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
+   string(TOUPPER ${module} module_upper)
+   if(NOT PY_${module_upper})
+      if(ARG_REQUIRED)
+         set(py_${module}_FIND_REQUIRED TRUE)
+      endif()
+      if(ARG_QUIET)
+         set(py_${module}_FIND_QUIETLY TRUE)
+      endif()
+      # A module's location is usually a directory, but for binary modules
+      # it's a .so file.
+      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
+         RESULT_VARIABLE _${module}_status
+         OUTPUT_VARIABLE _${module}_location
+         ERROR_VARIABLE _${module}_error
+         OUTPUT_STRIP_TRAILING_WHITESPACE
+         ERROR_STRIP_TRAILING_WHITESPACE)
+      if(NOT _${module}_status)
+         set(PY_${module_upper} ${_${module}_location} CACHE STRING "Location of Python module ${module}")
+         mark_as_advanced(PY_${module_upper})
+      else()
+         if(NOT ARG_QUIET)
+            message(STATUS "Failed to find Python module ${module}: ${_${module}_error}")
+          endif()
+      endif()
+   endif()
+   find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
+   set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
 
 

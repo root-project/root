@@ -15,13 +15,13 @@
 #define LLVM_CLANG_LEX_MACROARGS_H
 
 #include "clang/Basic/LLVM.h"
+#include "clang/Lex/Token.h"
 #include "llvm/ADT/ArrayRef.h"
 #include <vector>
 
 namespace clang {
   class MacroInfo;
   class Preprocessor;
-  class Token;
   class SourceLocation;
 
 /// MacroArgs - An instance of this class captures information about
@@ -56,7 +56,8 @@ class MacroArgs {
   MacroArgs(unsigned NumToks, bool varargsElided)
     : NumUnexpArgTokens(NumToks), VarargsElided(varargsElided),
       ArgCache(nullptr) {}
-  ~MacroArgs() {}
+  ~MacroArgs() = default;
+
 public:
   /// MacroArgs ctor function - Create a new MacroArgs object with the specified
   /// macro and argument info.

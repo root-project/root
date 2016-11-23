@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook -nodraw
 /// Example of script showing how to copy all objects (including directories)
 /// from a source file.
 /// For each input file, a new directory is created in the current directory

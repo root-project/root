@@ -19,19 +19,17 @@
 #include "AntiDepBreaker.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
-#include "llvm/CodeGen/MachineFrameInfo.h"
-#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RegisterClassInfo.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
-#include <map>
 
 namespace llvm {
 class RegisterClassInfo;
 class TargetInstrInfo;
 class TargetRegisterInfo;
+class MachineFunction;
 
-  class CriticalAntiDepBreaker : public AntiDepBreaker {
+class LLVM_LIBRARY_VISIBILITY CriticalAntiDepBreaker : public AntiDepBreaker {
     MachineFunction& MF;
     MachineRegisterInfo &MRI;
     const TargetInstrInfo *TII;
@@ -69,7 +67,7 @@ class TargetRegisterInfo;
 
   public:
     CriticalAntiDepBreaker(MachineFunction& MFi, const RegisterClassInfo&);
-    ~CriticalAntiDepBreaker();
+    ~CriticalAntiDepBreaker() override;
 
     /// Initialize anti-dep breaking for a new basic block.
     void StartBlock(MachineBasicBlock *BB) override;
@@ -84,15 +82,15 @@ class TargetRegisterInfo;
 
     /// Update liveness information to account for the current
     /// instruction, which will not be scheduled.
-    void Observe(MachineInstr *MI, unsigned Count,
+    void Observe(MachineInstr &MI, unsigned Count,
                  unsigned InsertPosIndex) override;
 
     /// Finish anti-dep breaking for a basic block.
     void FinishBlock() override;
 
   private:
-    void PrescanInstruction(MachineInstr *MI);
-    void ScanInstruction(MachineInstr *MI, unsigned Count);
+    void PrescanInstruction(MachineInstr &MI);
+    void ScanInstruction(MachineInstr &MI, unsigned Count);
     bool isNewRegClobberedByRefs(RegRefIter RegRefBegin,
                                  RegRefIter RegRefEnd,
                                  unsigned NewReg);

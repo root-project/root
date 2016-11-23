@@ -26,6 +26,7 @@ if 'cppyy' in sys.builtin_module_names:
 
    _thismodule = sys.modules[ __name__ ]
    _backend = _thismodule.gbl
+   _thismodule._backend = _backend
 
    # custom behavior that is not yet part of PyPy's cppyy
    def _CreateScopeProxy( self, name ):
@@ -187,6 +188,10 @@ if not _builtin_cppyy:
 
          string = _backend.CreateScopeProxy( 'string' )
 
+   def addressOf( obj ) :                  # Cintex-style
+      return _backend.AddressOf( obj )[0]
+   addressof = _backend.addressof          # cppyy-style
+
 else:
    _global_cpp = _backend
  
@@ -204,11 +209,7 @@ makeNamespace = Namespace
 
 def makeClass( name ) :
    return _backend.CreateScopeProxy( name )
-  
-def addressOf( obj ) :                  # Cintex-style
-   return _backend.AddressOf( obj )[0]
-addressof = _backend.addressof          # cppyy-style
-       
+ 
 def getAllClasses() :
    TClassTable = makeClass( 'TClassTable' )
    TClassTable.Init()

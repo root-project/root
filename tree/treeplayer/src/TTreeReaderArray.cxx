@@ -192,11 +192,32 @@ namespace {
 
    class TArrayParameterSizeReader : public TObjectArrayReader {
    private:
-      TTreeReaderValue<Int_t> indexReader;
-   public:
-      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName) : indexReader(*treeReader, branchName) {}
+      // The index can be of type int or unsigned int.
+      TTreeReaderValue<Int_t>  fIndexReader;
+      bool fIsUnsigned = false;
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){ return *indexReader; }
+      template <class T>
+      TTreeReaderValue<T>& GetIndexReader() {
+         return reinterpret_cast<TTreeReaderValue<T>&>(fIndexReader);
+      }
+   public:
+      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName)
+         {
+            if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(branchName)) {
+               fIsUnsigned = sizeLeaf->IsUnsigned();
+               if (fIsUnsigned) {
+                  GetIndexReader<UInt_t>() = TTreeReaderValue<UInt_t>(*treeReader, branchName);
+               } else {
+                  GetIndexReader<Int_t>() = TTreeReaderValue<Int_t>(*treeReader, branchName);
+               }
+            }
+         }
+
+      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) {
+         if (fIsUnsigned)
+            return *GetIndexReader<UInt_t>();
+         return *GetIndexReader<Int_t>();
+      }
    };
 
    // Reader interface for fixed size arrays
@@ -307,9 +328,12 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
    if (fProxy) {
       return;
    }
+
+   fSetupStatus = kSetupInternalError; // Fallback; set to something concrete below.
    if (!fTreeReader) {
       Error("TTreeReaderArrayBase::CreateProxy()", "TTreeReader object not set / available for branch %s!",
             fBranchName.Data());
+      fSetupStatus = kSetupTreeDestructed;
       return;
    }
    if (!fDict) {
@@ -321,6 +345,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       }
       Error("TTreeReaderArrayBase::CreateProxy()", "The template argument type T of %s accessing branch %s (which contains data of type %s) is not known to ROOT. You will need to create a dictionary for it.",
             GetDerivedTypeName(), fBranchName.Data(), brDataType);
+      fSetupStatus = kSetupMissingDictionary;
       return;
    }
 
@@ -331,9 +356,11 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
 
    TNamedBranchProxy* namedProxy = fTreeReader->FindProxy(fBranchName);
    if (namedProxy && namedProxy->GetContentDict() == fDict) {
+      fSetupStatus = kSetupMatch;
       fProxy = namedProxy->GetProxy();
       if (!fImpl){
          Fatal("TTreeReaderArrayBase::CreateProxy()", "No fImpl set!");
+         fSetupStatus = kSetupMissingDictionary;
       }
       return;
    }
@@ -350,6 +377,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          branch = fTreeReader->GetTree()->GetBranch(branchName);
          if (!branch){
             Error("TTreeReaderArrayBase::CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+            fSetupStatus = kSetupMissingBranch;
             fProxy = 0;
             return;
          }
@@ -357,6 +385,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
             if (!myLeaf){
                Error("TTreeReaderArrayBase::CreateProxy()", "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+               fSetupStatus = kSetupMissingBranch;
                fProxy = 0;
                return;
             }
@@ -364,6 +393,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
                TDictionary *tempDict = TDictionary::GetDictionary(myLeaf->GetTypeName());
                if (!tempDict){
                   Error("TTreeReaderArrayBase::CreateProxy()", "Failed to get the dictionary for %s.", myLeaf->GetTypeName());
+                  fSetupStatus = kSetupMissingDictionary;
                   fProxy = 0;
                   return;
                }
@@ -373,10 +403,12 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
                   fLeaf = myLeaf;
                   fBranchName = branchName;
                   fLeafName = leafName(1, leafName.Length());
+                  fSetupStatus = kSetupMatchLeaf;
                }
                else {
                   Error("TTreeReaderArrayBase::CreateProxy()", "Leaf of type %s cannot be read by TTreeReaderValue<%s>.", myLeaf->GetTypeName(), fDict->GetName());
                   fProxy = 0;
+                  fSetupStatus = kSetupMismatch;
                   return;
                }
             }
@@ -384,6 +416,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       }
       else {
          Error("TTreeReaderArrayBase::CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+         fSetupStatus = kSetupMissingBranch;
          fProxy = 0;
          return;
       }
@@ -393,6 +426,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
    if (namedProxy && !namedProxy->GetContentDict()) {
       namedProxy->SetContentDict(fDict);
       fProxy = namedProxy->GetProxy();
+      if (fProxy)
+         fSetupStatus = kSetupMatch;
    }
    else {
       TString membername;
@@ -407,6 +442,10 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
       fTreeReader->GetProxies()->Add(namedProxy);
       fProxy = namedProxy->GetProxy();
+      if (fProxy)
+         fSetupStatus = kSetupMatch;
+      else
+         fSetupStatus = kSetupMismatch;
    }
 
    if (!myLeaf){
@@ -415,6 +454,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       if (nonCollTypeName) {
          Error("TTreeReaderArrayBase::CreateContentProxy()", "The branch %s contains data of type %s, which should be accessed through a TTreeReaderValue< %s >.",
                fBranchName.Data(), nonCollTypeName, nonCollTypeName);
+         if (fSetupStatus == kSetupInternalError)
+            fSetupStatus = kSetupNotACollection;
          fProxy = 0;
          return;
       }
@@ -425,6 +466,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          } else {
             Error("TTreeReaderArrayBase::CreateContentProxy()", "The branch %s contains data of type %s, which does not have a dictionary.",
                   fBranchName.Data(), branchActualTypeName.Data());
+            if (fSetupStatus == kSetupInternalError)
+               fSetupStatus = kSetupMissingDictionary;
          }
          fProxy = 0;
          return;
@@ -433,6 +476,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       if (fDict != branchActualType) {
          Error("TTreeReaderArrayBase::CreateContentProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderArray<%s>",
                fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
+         if (fSetupStatus == kSetupInternalError || fSetupStatus >= 0)
+            fSetupStatus = kSetupMismatch;
 
          // Update named proxy's dictionary
          if (namedProxy && !namedProxy->GetContentDict()) {
@@ -463,6 +508,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          leafFullName += myLeaf->GetLeafCount()->GetName();
          fImpl = new TLeafParameterSizeReader(fTreeReader, leafFullName.Data(), this);
       }
+      fSetupStatus = kSetupMatchLeaf;
    }
    else if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* branchElement = ((TBranchElement*)branch);
@@ -476,6 +522,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          // Bool_t isPointer = element->IsaPointer();
          // TClass *classPointer = element->GetClassPointer();
 
+         if (fSetupStatus == kSetupInternalError)
+            fSetupStatus = kSetupMatch;
          if (element->IsA() == TStreamerSTL::Class()){
             fImpl = new TSTLReader();
          }
@@ -504,8 +552,17 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
                ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
             }
          }
+         else if (element->IsA() == TStreamerBasicPointer::Class()) {
+            fImpl = new TArrayParameterSizeReader(fTreeReader, branchElement->GetBranchCount()->GetName());
+            ((TArrayParameterSizeReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
+         }
          else if (element->IsA() == TStreamerBase::Class()){
             fImpl = new TClonesReader();
+         } else {
+            Error("TTreeReaderArrayBase::CreateProxy()",
+                  "Cannot read branch %s: unhandled streamer element type %s",
+                  fBranchName.Data(), element->IsA()->GetName());
+            fSetupStatus = kSetupInternalError;
          }
       }
       else { // We are at root node?
@@ -517,10 +574,13 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       TLeaf *topLeaf = branch->GetLeaf(branch->GetName());
       if (!topLeaf) {
          Error("TTreeReaderArrayBase::CreateProxy", "Failed to get the top leaf from the branch");
+         fSetupStatus = kSetupMissingBranch;
          return;
       }
       Int_t size = 0;
       TLeaf *sizeLeaf = topLeaf->GetLeafCounter(size);
+      if (fSetupStatus == kSetupInternalError)
+         fSetupStatus = kSetupMatch;
       if (!sizeLeaf) {
          fImpl = new TArrayFixedSizeReader(size);
       }
@@ -530,13 +590,17 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
    } else if (branch->IsA() == TBranchClones::Class()) {
       Error("TTreeReaderArrayBase::CreateProxy", "Support for branches of type TBranchClones not implemented");
+      fSetupStatus = kSetupInternalError;
    } else if (branch->IsA() == TBranchObject::Class()) {
       Error("TTreeReaderArrayBase::CreateProxy", "Support for branches of type TBranchObject not implemented");
+      fSetupStatus = kSetupInternalError;
    } else if (branch->IsA() == TBranchSTL::Class()) {
       Error("TTreeReaderArrayBase::CreateProxy", "Support for branches of type TBranchSTL not implemented");
       fImpl = new TSTLReader();
+      fSetupStatus = kSetupInternalError;
    } else if (branch->IsA() == TBranchRef::Class()) {
       Error("TTreeReaderArrayBase::CreateProxy", "Support for branches of type TBranchRef not implemented");
+      fSetupStatus = kSetupInternalError;
    }
 }
 
@@ -552,7 +616,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
 
 const char* ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch,
                                                                  TString& contentTypeName,
-                                                                 TDictionary* &dict) const
+                                                                 TDictionary* &dict)
 {
    dict = 0;
    contentTypeName = "";
@@ -690,6 +754,7 @@ const char* ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBran
             contentTypeName = "TClonesArray";
             Warning("TTreeReaderArrayBase::GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
             dict = fDict;
+            fSetupStatus = kSetupNoCheck;
          }
          else if (!dict && (branch->GetSplitLevel() == 0 || brElement->GetClass()->GetCollectionProxy())){
             // Try getting the contained class
@@ -725,7 +790,7 @@ const char* ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBran
          }
 
          // leaflist. Can't represent.
-         Error("TTreeReaderArrayBase::GetBranchContentDataType()", "The branch %s was created using a leaf list and cannot be represented as a C++ type. Please access one of its siblings using a TTreeReaderValueArray:", branch->GetName());
+         Error("TTreeReaderArrayBase::GetBranchContentDataType()", "The branch %s was created using a leaf list and cannot be represented as a C++ type. Please access one of its siblings using a TTreeReaderArray:", branch->GetName());
          TIter iLeaves(branch->GetListOfLeaves());
          TLeaf* leaf = 0;
          while ((leaf = (TLeaf*) iLeaves())) {
@@ -737,6 +802,7 @@ const char* ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBran
       if (branch->IsA() == TBranchSTL::Class()){
          Warning("TTreeReaderArrayBase::GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
          dict = fDict;
+         fSetupStatus = kSetupNoCheck;
          return 0;
       }
       return dataTypeName;

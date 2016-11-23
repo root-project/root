@@ -230,7 +230,9 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
       Bool_t hasMaskedEntries = GetInput( ev, input, mask );
       if (hasMaskedEntries){
          Log() << kWARNING << "Print event which triggers an error" << Endl;
-         ev->Print(Log());
+         std::ostringstream oss;
+         ev->Print(oss);
+         Log() << oss.str();
          Log() << kFATAL << "Masked entries found in event read in when calculating the principal components for the PCA transformation." << Endl;
       }
 

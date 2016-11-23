@@ -25,6 +25,8 @@
 
 #include "XrdProofdManager.h"
 
+#include "XrdVersion.hh"
+#include "Xrd/XrdProtocol.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
@@ -60,6 +62,9 @@ typedef struct {
    XrdOucString allowed;
    XrdOucString denied;
 } xpd_acm_lists_t;
+
+// Protocol loader; arguments: const char *pname, char *parms,  XrdProtocol_Config *pi
+typedef XrdProtocol *(*XrdProtocolLoader_t)(const char *, char *, XrdProtocol_Config *);
 
 #ifdef __sun
 /*-
@@ -214,9 +219,13 @@ void *XrdProofdManagerCron(void *p)
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
+XrdProofdManager::XrdProofdManager(char *parms, XrdProtocol_Config *pi, XrdSysError *edest)
                  : XrdProofdConfig(pi->ConfigFN, edest)
 {
+
+   fParms = parms; // only used for construction: not to be trusted later on
+   fPi = pi;       // only used for construction: not to be trusted later on
+
    fSrvType = kXPD_AnyServer;
    fEffectiveUser = "";
    fHost = "";
@@ -241,8 +250,9 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fDataDirOpts = "";    // Default: no action
    fDataDirUrlOpts = ""; // Default: none
 
-   // Rootd file serving enabled by default in readonly mode
-   fRootdExe = "<>";
+   ////// This is deprecated: see fXrootd below
+   // Rootd file serving enabled by default in readonly mode 
+   fRootdExe = "";
    // Add mandatory arguments
    fRootdArgs.push_back(XrdOucString("-i"));
    fRootdArgs.push_back(XrdOucString("-nologin"));
@@ -260,6 +270,11 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
    // Started with 'system' (not 'fork')
    fRootdFork = 0;
+   /////////////////////////////////////////////////////////////////
+
+   // Tools to enable xrootd file serving
+   fXrootdLibPath = "<>";
+   fXrootdPlugin = 0;
 
    // Proof admin path
    fAdminPath = pi->AdmPath;
@@ -316,6 +331,42 @@ XrdProofdManager::~XrdProofdManager()
    SafeDelete(fROOTMgr);
    SafeDelete(fSessionMgr);
    SafeDelArray(fRootdArgsPtrs);
+   SafeDelete(fXrootdPlugin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Load the Xrootd protocol, if required
+
+XrdProtocol *XrdProofdManager::LoadXrootd(char *parms, XrdProtocol_Config *pi, XrdSysError *edest)
+{
+   XPDLOC(ALL, "Manager::LoadXrootd")
+
+   XrdProtocol *xrp = 0;
+
+   // Create the plug-in instance
+   fXrootdPlugin = new XrdSysPlugin((edest ? edest : (XrdSysError *)0), fXrootdLibPath.c_str());
+   if (!fXrootdPlugin) {
+      TRACE(XERR, "could not create plugin instance for "<<fXrootdLibPath.c_str());
+      return xrp;
+   }
+
+   // Get the function
+   XrdProtocolLoader_t ep = (XrdProtocolLoader_t) fXrootdPlugin->getPlugin("XrdgetProtocol");
+   if (!ep) {
+      TRACE(XERR, "could not find 'XrdgetProtocol()' in "<<fXrootdLibPath.c_str());
+      return xrp;
+   }
+
+   // Get the server object
+   if (!(xrp = (*ep)("xrootd", parms, pi))) {
+      TRACE(XERR, "Unable to create xrootd protocol service object via " << fXrootdLibPath.c_str());
+      SafeDelete(fXrootdPlugin);
+   } else {
+      // Notify
+      TRACE(ALL, "xrootd protocol service created");
+   }
+
+   return xrp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1189,6 +1240,12 @@ int XrdProofdManager::Config(bool rcf)
       return -1;
    }
 
+   // Xrootd protocol service
+   if ((fXrootd = LoadXrootd(fParms, fPi, fEDest))) {
+      // If enabled, Xrootd takes precedence
+      fRootdExe = "";
+   }
+
    // File server
    if (fRootdExe.length() > 0) {
       // Absolute or relative?
@@ -1372,6 +1429,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("rootdallow", new XrdProofdDirective("rootdallow", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
    Register("filterlibpaths", new XrdProofdDirective("filterlibpaths", this, &DoDirectiveClass));
+   Register("xrootd", new XrdProofdDirective("xrootd", this, &DoDirectiveClass));
    // Register config directives for strings
    Register("tmp", new XrdProofdDirective("tmp", (void *)&fTMPdir, &DoDirectiveString));
    Register("poolurl", new XrdProofdDirective("poolurl", (void *)&fPoolURL, &DoDirectiveString));
@@ -1516,6 +1574,8 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectivePort(val, cfg, rcf);
    } else if (d->fName == "filterlibpaths") {
       return DoDirectiveFilterLibPaths(val, cfg, rcf);
+   } else if (d->fName == "xrootd") {
+      return DoDirectiveXrootd(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: " << d->fName);
    return -1;
@@ -1927,6 +1987,30 @@ int XrdProofdManager::DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Process 'xrootd' directive
+///  xpd.xrootd [path/]libXrdXrootd.so
+
+int XrdProofdManager::DoDirectiveXrootd(char *val, XrdOucStream *, bool)
+{
+   XPDLOC(ALL, "Manager::DoDirectiveXrootd")
+
+   if (!val)
+      // undefined inputs
+      return -1;
+   TRACE(ALL, "val: "<< val);
+   // Check version (v3 does not have the plugin, loading v4 may lead to problems)
+   if (XrdMajorVNUM(XrdVNUMBER) < 4) {
+      TRACE(ALL, "WARNING: built against an XRootD version without libXrdXrootd.so :");
+      TRACE(ALL, "WARNING:    loading external " << val << " may lead to incompatibilities");
+   }
+
+   fXrootdLibPath = val;
+
+   // Done
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process 'rootd' directive
 ///  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw]
 ///            [auth:none|full] [other_rootd_args]
@@ -1947,7 +2031,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
 
    // Parse directive
    XrdOucString mode("ro"), auth("none"), fork("0");
-   bool denied = 0;
+   bool denied = 1;
    char *nxt = val;
    do {
       if (!strcmp(nxt, "deny") || !strcmp(nxt, "disable") || !strcmp(nxt, "off")) {
@@ -1956,6 +2040,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
       } else if (!strcmp(nxt, "allow") || !strcmp(nxt, "enable") || !strcmp(nxt, "on")) {
          denied = 0;
          fRootdExe = "<>";
+         TRACE(ALL, "Use of this directive is deprecated: use xpd.xrootd instead");
       } else if (!strncmp(nxt, "mode:", 5)) {
          mode = nxt + 5;
       } else if (!strncmp(nxt, "auth:", 5)) {
@@ -2009,6 +2094,8 @@ int XrdProofdManager::DoDirectiveRootdAllow(char *val, XrdOucStream *cfg, bool)
    if (!val)
       // undefined inputs
       return -1;
+
+   TRACE(ALL, "Use of this and 'xpd.rootd' directives is deprecated: use xpd.xrootd instead");
 
    TRACE(ALL, "val: "<< val);
 

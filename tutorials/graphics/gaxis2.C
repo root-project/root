@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Example illustrating how to draw TGaxis with labels defined by a function.
 ///
 /// \macro_image

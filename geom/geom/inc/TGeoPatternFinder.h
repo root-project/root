@@ -252,7 +252,7 @@ class TGeoPatternParaY : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t         fTxy;      // tangent of alpha
+   Double_t         fTxy = 0.;      // tangent of alpha
 public:
    // constructors
    TGeoPatternParaY();
@@ -288,8 +288,8 @@ class TGeoPatternParaZ : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t            fTxz;  // tangent of alpha xz
-   Double_t            fTyz;  // tangent of alpha yz
+   Double_t            fTxz = 0.;  // tangent of alpha xz
+   Double_t            fTyz = 0.;  // tangent of alpha yz
 public:
    // constructors
    TGeoPatternParaZ();
@@ -325,8 +325,8 @@ class TGeoPatternTrapZ : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t            fTxz;  // tangent of alpha xz
-   Double_t            fTyz;  // tangent of alpha yz
+   Double_t            fTxz = 0.;  // tangent of alpha xz
+   Double_t            fTyz = 0.;  // tangent of alpha yz
 public:
    // constructors
    TGeoPatternTrapZ();
@@ -397,7 +397,7 @@ class TGeoPatternCylPhi : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t           *fSinCos;          //![2*fNdivisions] table of sines/cosines
+   Double_t           *fSinCos = nullptr;   //![2*fNdivisions] table of sines/cosines
 
 protected:
    TGeoPatternCylPhi(const TGeoPatternCylPhi& pfc)
@@ -499,7 +499,7 @@ public:
 class TGeoPatternSphPhi : public TGeoPatternFinder
 {
 private:
-   Double_t           *fSinCos;         //! Sincos table
+   Double_t           *fSinCos = nullptr;         //! Sincos table
 
 protected:
    TGeoPatternSphPhi(const TGeoPatternSphPhi& pfc); // Not implemented

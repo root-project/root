@@ -118,6 +118,8 @@ enum compareOptions {
 int defaultEqualOptions = 0; //cmpOptPrint;
 //int defaultEqualOptions = cmpOptDebug;
 
+Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swict off in case of debugging)
+
 const double defaultErrorLimit = 1.E-10;
 
 enum RefFileEnum {
@@ -178,9 +180,9 @@ bool testAdd1()
    h4->Add(h1, h2, c1, c2);
 
    bool ret = equals("Add1D1", h3, h4, cmpOptStats, 1E-13);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -237,8 +239,8 @@ bool testAdd2()
    h6->Add(h7, c2);
 
    bool ret = equals("Add1D2", h5, h6, cmpOptStats, 1E-13);
-   delete h5;
-   delete h7;
+   if (cleanHistos) delete h5;
+   if (cleanHistos) delete h7;
    return ret;
 }
 
@@ -299,8 +301,8 @@ bool testAdd3()
    h2->ResetStats();
 
    bool ret = equals("Add1D3", h2, h3, cmpOptStats, 1E-13);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -327,9 +329,9 @@ bool testAddVar1()
    h4->Add(h1, h2, c1, c2);
 
    bool ret = equals("AddVar1D1", h3, h4, cmpOptStats, 1E-13);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -383,8 +385,8 @@ bool testAddVar2()
    h6->Add(h7, c2);
 
    bool ret = equals("AddVar1D2", h5, h6, cmpOptStats, 1E-13);
-   delete h5;
-   delete h7;
+   if (cleanHistos) delete h5;
+   if (cleanHistos) delete h7;
    return ret;
 }
 
@@ -441,8 +443,8 @@ bool testAddVar3()
    h2->ResetStats();
 
    bool ret = equals("Add1D3", h2, h3, cmpOptStats, 1E-13);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -481,8 +483,8 @@ bool testAdd2D3()
    h2->ResetStats();
 
    bool ret = equals("Add1D2", h2, h3, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -527,8 +529,8 @@ bool testAdd3D3()
    h2->ResetStats();
 
    bool ret = equals("Add2D3", h2, h3, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -572,9 +574,9 @@ bool testAdd2D1()
                        numberOfBins + 2, minRange, maxRange);
    h4->Add(h1, h2, c1, c2);
    bool ret = equals("Add2D1", h3, h4, cmpOptStats , 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -660,8 +662,8 @@ bool testAdd2D2()
 
    h1->Add(h2, c2);
    bool ret = equals("Add2D2", h3, h1, cmpOptStats, 1E-10);
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -752,9 +754,9 @@ bool testAdd3D1()
                        numberOfBins + 2, minRange, maxRange);
    h4->Add(h1, h2, c1, c2);
    bool ret = equals("Add3D1", h3, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -851,8 +853,8 @@ bool testAdd3D2()
 
    h1->Add(h2, c2);
    bool ret = equals("Add3D2", h3, h1, cmpOptStats, 1E-10);
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -989,9 +991,9 @@ bool testMul1()
    h4->Multiply(h1, h2, c1, c2);
 
    bool ret = equals("Multiply1D1", h3, h4, cmpOptStats  , 1E-14);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1041,9 +1043,9 @@ bool testMulVar1()
    h4->Multiply(h1, h2, c1, c2);
 
    bool ret = equals("MultiVar1D1", h3, h4, cmpOptStats, 1E-14);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1084,8 +1086,8 @@ bool testMul2()
    h1->Multiply(h2);
 
    bool ret = equals("Multiply1D2", h3, h1, cmpOptStats, 1E-14);
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1129,8 +1131,8 @@ bool testMulVar2()
    h1->Multiply(h2);
 
    bool ret = equals("MultiVar1D2", h3, h1, cmpOptStats, 1E-14);
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1192,9 +1194,9 @@ bool testMul2D1()
    h4->Multiply(h1, h2, c1, c2);
 
    bool ret = equals("Multiply2D1", h3, h4, cmpOptStats, 1E-12);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1250,8 +1252,8 @@ bool testMul2D2()
    h1->Multiply(h2);
 
    bool ret = equals("Multiply2D2", h3, h1, cmpOptStats, 1E-12);
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1324,9 +1326,9 @@ bool testMul3D1()
    h4->Multiply(h1, h2, c1, c2);
 
    bool ret = equals("Multiply3D1", h3, h4, cmpOptStats, 1E-13);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1392,8 +1394,8 @@ bool testMul3D2()
    h1->Multiply(h2);
 
    bool ret = equals("Multiply3D2", h3, h1, cmpOptStats, 1E-13);
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1491,7 +1493,7 @@ bool testMulF1D()
 
    // stats fails because of the error precision
    int status = equals("MULF H1D", h1, h2); //,cmpOptStats | cmpOptDebug);
-   delete h1;
+   if (cleanHistos) delete h1;
    delete f;
    return status;
 }
@@ -1523,7 +1525,7 @@ bool testMulF1D2()
 
    // stats fails because of the error precision
    int status = equals("MULF H1D2", h1, h2); //,cmpOptStats | cmpOptDebug);
-   delete h1;
+   if (cleanHistos) delete h1;
    delete f;
    return status;
 }
@@ -1557,7 +1559,7 @@ bool testMulF2D()
 
    // stats fails because of the error precision
    int status = equals("MULF H2D", h1, h2); //, cmpOptStats | cmpOptDebug);
-   delete h1;
+   if (cleanHistos) delete h1;
    delete f;
    return status;
 }
@@ -1595,7 +1597,7 @@ bool testMulF2D2()
 
    // stats fails because of the error precision
    int status = equals("MULF H2D2", h1, h2); //, cmpOptStats | cmpOptDebug);
-   delete h1;
+   if (cleanHistos) delete h1;
    delete f;
    return status;
 }
@@ -1632,7 +1634,7 @@ bool testMulF3D()
 
    // stats fails because of the error precision
    int status = equals("MULF H3D", h1, h2); //, cmpOptStats | cmpOptDebug);
-   delete h1;
+   if (cleanHistos) delete h1;
    delete f;
    return status;
 }
@@ -1673,7 +1675,7 @@ bool testMulF3D2()
 
    // stats fails because of the error precision
    int status = equals("MULF H3D2", h1, h2); //, cmpOptStats | cmpOptDebug);
-   delete h1;
+   if (cleanHistos) delete h1;
    delete f;
    return status;
 }
@@ -1799,9 +1801,9 @@ bool testDivide1()
    h1->ResetStats();
 
    bool ret = equals("Divide1D1", h1, h4, cmpOptStats );
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1849,9 +1851,9 @@ bool testDivideVar1()
    h1->ResetStats();
 
    bool ret = equals("DivideVar1D1", h1, h4, cmpOptStats);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1931,9 +1933,9 @@ bool testDivide2()
    h1->ResetStats();
 
    bool ret = equals("Divide1D2", h1, h4, cmpOptStats);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -1978,9 +1980,9 @@ bool testDivideVar2()
    h1->ResetStats();
 
    bool ret = equals("DivideVar1D2", h1, h4, cmpOptStats);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -2037,9 +2039,9 @@ bool testDivide2D1()
    h1->ResetStats();
 
    bool ret = equals("Divide2D1", h1, h4, cmpOptStats );
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -2091,9 +2093,9 @@ bool testDivide2D2()
    h1->ResetStats();
 
    bool ret = equals("Divide2D2", h1, h4, cmpOptStats);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -2160,9 +2162,9 @@ bool testDivide3D1()
    h1->ResetStats();
 
    bool ret = equals("Divide3D1", h1, h4, cmpOptStats);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -2221,9 +2223,9 @@ bool testDivide3D2()
    h1->ResetStats();
 
    bool ret = equals("Divide3D2", h1, h4, cmpOptStats);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -2372,7 +2374,7 @@ bool testAssign1D()
    *h2 = *h1;
 
    bool ret = equals("Assign Oper Hist '='  1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2396,7 +2398,7 @@ bool testAssignVar1D()
    *h2 = *h1;
 
    bool ret = equals("Assign Oper VarH '='  1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2459,7 +2461,7 @@ bool testCopyConstructor1D()
    TH1D* h2 = new TH1D(*h1);
 
    bool ret = equals("Copy Constructor Hist 1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2482,7 +2484,7 @@ bool testCopyConstructorVar1D()
    TH1D* h2 = new TH1D(*h1);
 
    bool ret = equals("Copy Constructor VarH 1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2543,7 +2545,7 @@ bool testClone1D()
    TH1D* h2 = static_cast<TH1D*> ( h1->Clone() );
 
    bool ret = equals("Clone Function Hist   1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2566,7 +2568,7 @@ bool testCloneVar1D()
    TH1D* h2 = static_cast<TH1D*> ( h1->Clone() );
 
    bool ret = equals("Clone Function VarH   1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2633,7 +2635,7 @@ bool testAssign2D()
    *h2 = *h1;
 
    bool ret = equals("Assign Oper Hist '='  2D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2682,7 +2684,7 @@ bool testCopyConstructor2D()
    TH2D* h2 = new TH2D(*h1);
 
    bool ret = equals("Copy Constructor Hist 2D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2727,7 +2729,7 @@ bool testClone2D()
    TH2D* h2 = static_cast<TH2D*> ( h1->Clone() );
 
    bool ret = equals("Clone Function Hist   2D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2778,7 +2780,7 @@ bool testAssign3D()
    *h2 = *h1;
 
    bool ret = equals("Assign Oper Hist '='  3D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2831,7 +2833,7 @@ bool testCopyConstructor3D()
    TH3D* h2 = new TH3D(*h1);
 
    bool ret = equals("Copy Constructor Hist 3D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2880,7 +2882,7 @@ bool testClone3D()
    TH3D* h2 = static_cast<TH3D*> ( h1->Clone() );
 
    bool ret = equals("Clone Function Hist   3D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2958,7 +2960,7 @@ bool testWriteRead1D()
    TH1D* h2 = static_cast<TH1D*> ( f2.Get("wr1D-h1") );
 
    bool ret = equals("Read/Write Hist 1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -2986,7 +2988,7 @@ bool testWriteReadVar1D()
    TH1D* h2 = static_cast<TH1D*> ( f2.Get("wr1D-h1") );
 
    bool ret = equals("Read/Write VarH 1D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -3065,7 +3067,7 @@ bool testWriteRead2D()
    TH2D* h2 = static_cast<TH2D*> ( f2.Get("wr2D-h1") );
 
    bool ret = equals("Read/Write Hist 2D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -3122,7 +3124,7 @@ bool testWriteRead3D()
    TH3D* h2 = static_cast<TH3D*> ( f2.Get("wr3D-h1") );
 
    bool ret = equals("Read/Write Hist 3D", h1, h2, cmpOptStats);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -3200,10 +3202,10 @@ bool testMerge1D()
    // Tests the merge method for 1D Histograms
    // simple merge with histogram with same limits
 
-   TH1D* h1 = new TH1D("merge1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
-   TH1D* h2 = new TH1D("merge1D-h2", "h2-Title", numberOfBins, minRange, maxRange);
-   TH1D* h3 = new TH1D("merge1D-h3", "h3-Title", numberOfBins, minRange, maxRange);
-   TH1D* h4 = new TH1D("merge1D-h4", "h4-Title", numberOfBins, minRange, maxRange);
+   TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D* h2 = new TH1D("h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D* h3 = new TH1D("h3", "h3-Title", numberOfBins, minRange, maxRange);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, minRange, maxRange);
 
    h1->Sumw2();h2->Sumw2();h3->Sumw2();
 
@@ -3218,9 +3220,9 @@ bool testMerge1D()
    h1->Merge(list);
 
    bool ret = equals("Merge1D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -3231,10 +3233,10 @@ bool testMergeVar1D()
    Double_t v[numberOfBins+1];
    FillVariableRange(v);
 
-   TH1D* h1 = new TH1D("merge1D-h1", "h1-Title", numberOfBins, v);
-   TH1D* h2 = new TH1D("merge1D-h2", "h2-Title", numberOfBins, v);
-   TH1D* h3 = new TH1D("merge1D-h3", "h3-Title", numberOfBins, v);
-   TH1D* h4 = new TH1D("merge1D-h4", "h4-Title", numberOfBins, v);
+   TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, v);
+   TH1D* h2 = new TH1D("h2", "h2-Title", numberOfBins, v);
+   TH1D* h3 = new TH1D("h3", "h3-Title", numberOfBins, v);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, v);
 
    h1->Sumw2();h2->Sumw2();h3->Sumw2();
 
@@ -3249,9 +3251,9 @@ bool testMergeVar1D()
    h1->Merge(list);
 
    bool ret = equals("MergeVar1D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -3259,10 +3261,10 @@ bool testMergeProf1D()
 {
    // Tests the merge method for 1D Profiles
 
-   TProfile* p1 = new TProfile("merge1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("merge1D-p2", "p2-Title", numberOfBins, minRange, maxRange);
-   TProfile* p3 = new TProfile("merge1D-p3", "p3-Title", numberOfBins, minRange, maxRange);
-   TProfile* p4 = new TProfile("merge1D-p4", "p4-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p3 = new TProfile("p3", "p3-Title", numberOfBins, minRange, maxRange);
+   TProfile* p4 = new TProfile("p4", "p4-Title", numberOfBins, minRange, maxRange);
 
    FillProfiles(p1, p4);
    FillProfiles(p2, p4);
@@ -3288,10 +3290,10 @@ bool testMergeProfVar1D()
    Double_t v[numberOfBins+1];
    FillVariableRange(v);
 
-   TProfile* p1 = new TProfile("merge1D-p1", "p1-Title", numberOfBins, v);
-   TProfile* p2 = new TProfile("merge1D-p2", "p2-Title", numberOfBins, v);
-   TProfile* p3 = new TProfile("merge1D-p3", "p3-Title", numberOfBins, v);
-   TProfile* p4 = new TProfile("merge1D-p4", "p4-Title", numberOfBins, v);
+   TProfile* p1 = new TProfile("p1", "p1-Title", numberOfBins, v);
+   TProfile* p2 = new TProfile("p2", "p2-Title", numberOfBins, v);
+   TProfile* p3 = new TProfile("p3", "p3-Title", numberOfBins, v);
+   TProfile* p4 = new TProfile("p4", "p4-Title", numberOfBins, v);
 
    FillProfiles(p1, p4);
    FillProfiles(p2, p4);
@@ -3357,9 +3359,9 @@ bool testMerge2D()
    h1->Merge(list);
 
    bool ret = equals("Merge2D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -3471,9 +3473,9 @@ bool testMerge3D()
    h1->Merge(list);
 
    bool ret = equals("Merge3D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -3602,10 +3604,10 @@ bool testMerge1DLabelSame()
    // Tests the merge with some equal labels method for 1D Histograms
    // number of labels used = number of bins
 
-   TH1D* h1 = new TH1D("merge1DLabelSame-h1", "h1-Title", numberOfBins, minRange, maxRange);
-   TH1D* h2 = new TH1D("merge1DLabelSame-h2", "h2-Title", numberOfBins, minRange, maxRange);
-   TH1D* h3 = new TH1D("merge1DLabelSame-h3", "h3-Title", numberOfBins, minRange, maxRange);
-   TH1D* h4 = new TH1D("merge1DLabelSame-h4", "h4-Title", numberOfBins, minRange, maxRange);
+   TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D* h2 = new TH1D("h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D* h3 = new TH1D("h3", "h3-Title", numberOfBins, minRange, maxRange);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, minRange, maxRange);
 
    const char labels[10][5] = {"aaa","bbb","ccc","ddd","eee","fff","ggg","hhh","iii","lll"};
 
@@ -3654,9 +3656,9 @@ bool testMerge1DLabelSame()
 
 
    bool ret = equals("MergeLabelSame1D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -3714,9 +3716,9 @@ bool testMerge2DLabelSame()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelSame2D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -3777,9 +3779,9 @@ bool testMerge3DLabelSame()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelSame3D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -3787,10 +3789,10 @@ bool testMergeProf1DLabelSame()
 {
    // Tests the merge with some equal labels method for 1D Profiles
 
-   TProfile* p1 = new TProfile("merge1DLabelSame-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("merge1DLabelSame-p2", "p2-Title", numberOfBins, minRange, maxRange);
-   TProfile* p3 = new TProfile("merge1DLabelSame-p3", "p3-Title", numberOfBins, minRange, maxRange);
-   TProfile* p4 = new TProfile("merge1DLabelSame-p4", "p4-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p3 = new TProfile("p3", "p3-Title", numberOfBins, minRange, maxRange);
+   TProfile* p4 = new TProfile("p4", "p4-Title", numberOfBins, minRange, maxRange);
 
    // It does not work properly! Look, the bins with the same labels
    // are different ones and still the tests passes! This is not
@@ -4027,9 +4029,9 @@ bool testMerge1DLabelDiff()
    h4->LabelsOption("a");
 
    bool ret = equals("MergeLabelDiff1D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4087,9 +4089,9 @@ bool testMerge2DLabelDiff()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelDiff2D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4154,9 +4156,9 @@ bool testMerge3DLabelDiff()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelDiff3D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4346,10 +4348,10 @@ bool testMerge1DLabelAll()
 {
    // Tests the merge method with fully equally labelled 1D Histograms
 
-   TH1D* h1 = new TH1D("merge1DLabelAll-h1", "h1-Title", numberOfBins, minRange, maxRange);
-   TH1D* h2 = new TH1D("merge1DLabelAll-h2", "h2-Title", numberOfBins, minRange, maxRange);
-   TH1D* h3 = new TH1D("merge1DLabelAll-h3", "h3-Title", numberOfBins, minRange, maxRange);
-   TH1D* h4 = new TH1D("merge1DLabelAll-h4", "h4-Title", numberOfBins, minRange, maxRange);
+   TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D* h2 = new TH1D("h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D* h3 = new TH1D("h3", "h3-Title", numberOfBins, minRange, maxRange);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4387,14 +4389,17 @@ bool testMerge1DLabelAll()
    h2->LabelsOption("<");
    h3->LabelsOption(">");
 
+   auto h0 = (TH1*) h1->Clone("h1clone");
+   
    h1->Merge(list);
 
    h4->LabelsOption("a");
 
    bool ret = equals("MergeLabelAll1D", h1, h4, cmpOptNone, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h0;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4451,9 +4456,9 @@ bool testMerge2DLabelAll()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAll2D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4517,9 +4522,9 @@ bool testMerge3DLabelAll()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAll3D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4758,9 +4763,9 @@ bool testMerge1DLabelAllDiff()
 
 
    bool ret = equals("MergeLabelAllDiff1D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4828,9 +4833,9 @@ bool testMerge2DLabelAllDiff()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAllDiff2D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -4910,9 +4915,9 @@ bool testMerge3DLabelAllDiff()
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAllDiff3D", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -5136,13 +5141,13 @@ bool testMerge1D_Diff(bool testEmpty=false)
    // Tests the merge method with different binned 1D Histograms
    // test also case when the first histogram is empty (bug Savannah 95190)
 
-   TH1D *h1 = new TH1D("merge1DDiff-h1","h1-Title",100,-100,0);
-   TH1D *h2 = new TH1D("merge1DDiff-h2","h2-Title",200,0,100);
-   TH1D *h3 = new TH1D("merge1DDiff-h3","h3-Title",25,-50,50);
+   TH1D *h1 = new TH1D("h1","h1-Title",100,-100,0);
+   TH1D *h2 = new TH1D("h2","h2-Title",200,0,100);
+   TH1D *h3 = new TH1D("h3","h3-Title",25,-50,50);
    // resulting histogram will have the bigger range and the larger bin width
    // eventually range is extended by half bin width to have correct bin boundaries
    // of largest bin width histogram
-   TH1D *h4 = new TH1D("merge1DDiff-h4","h4-Title",51,-102,102);
+   TH1D *h4 = new TH1D("h4","h4-Title",51,-102,102);
 
    h1->Sumw2();h2->Sumw2();h3->Sumw2();h4->Sumw2();
 
@@ -5175,9 +5180,9 @@ bool testMerge1D_Diff(bool testEmpty=false)
 
    const char * testName = (!testEmpty) ? "Merge1D-Diff" : "Merge1D-DiffEmpty";
    bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -5241,9 +5246,9 @@ bool testMerge2D_Diff(bool testEmpty = false)
 
    const char * testName = (!testEmpty) ? "Merge2D-Diff" : "Merge2D-DiffEmpty";
    bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -5312,9 +5317,9 @@ bool testMerge3D_Diff(bool testEmpty = false)
 
    const char * testName = (!testEmpty) ? "Merge3D-Diff" : "Merge3D-DiffEmpty";
    bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -5500,14 +5505,14 @@ bool testMergeProf3DDiff()
    return ret;
 }
 
-bool testMerge1DRebin()
+bool testMerge1DExtend()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
 
-   TH1D* h1 = new TH1D("merge1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
-   TH1D* h2 = new TH1D("merge1D-h2", "h2-Title", numberOfBins, minRange, maxRange);
-   TH1D* h4 = new TH1D("merge1D-h4", "h4-Title", numberOfBins, minRange, maxRange);
+   TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D* h2 = new TH1D("h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, minRange, maxRange);
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
    h1->SetCanExtend(TH1::kAllAxes);
@@ -5531,15 +5536,15 @@ bool testMerge1DRebin()
    h1->Merge(list);
 
    bool ret = equals("Merge1DRebin", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
-bool testMerge2DRebin()
+bool testMerge2DExtend(UInt_t extendType = TH1::kAllAxes)
 {
    // Tests the merge method for diferent 1D Histograms
-   // when axis can rebin (e.g. for time histograms)
+   // when axis can be extended (e.g. for time histograms)
 
    TH2D* h1 = new TH2D("merge2D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
@@ -5553,10 +5558,11 @@ bool testMerge2DRebin()
 
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
-   h1->SetCanExtend(TH1::kAllAxes);
-   h2->SetCanExtend(TH1::kAllAxes);
-   h4->SetCanExtend(TH1::kAllAxes);
-
+   
+   h1->SetCanExtend(extendType);
+   h2->SetCanExtend(extendType);
+   h4->SetCanExtend(extendType);
+     
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
       Double_t y = r.Uniform( minRange,  maxRange);
@@ -5576,15 +5582,26 @@ bool testMerge2DRebin()
    h1->Merge(list);
 
    bool ret = equals("Merge2DRebin", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
-bool testMerge3DRebin()
+bool testMerge2DExtendAll() {
+   return testMerge2DExtend(TH1::kAllAxes);
+}
+
+bool testMerge2DExtendX() {
+   return testMerge2DExtend(TH1::kXaxis);
+}
+bool testMerge2DExtendY() {
+   return testMerge2DExtend(TH1::kYaxis);
+}
+
+bool testMerge3DExtend(UInt_t extendType = TH1::kAllAxes)
 {
    // Tests the merge method for diferent 1D Histograms
-   // when axis can rebin (e.g. for time histograms)
+   // when axis can be extended (e.g. for time histograms)
 
    TH3D* h1 = new TH3D("merge3D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
@@ -5599,9 +5616,9 @@ bool testMerge3DRebin()
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   h1->SetCanExtend(TH1::kAllAxes);
-   h2->SetCanExtend(TH1::kAllAxes);
-   h4->SetCanExtend(TH1::kAllAxes);
+   h1->SetCanExtend(extendType);
+   h2->SetCanExtend(extendType);
+   h4->SetCanExtend(extendType);
 
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
@@ -5612,8 +5629,9 @@ bool testMerge3DRebin()
    }
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       Double_t x = r.Uniform(0.9*maxRange, 2.1 * maxRange);
-      Double_t y = r.Uniform(maxRange, 3 * maxRange);
-      Double_t z = r.Uniform(0.8*maxRange, 4.1 * maxRange);
+      //Double_t x = r.Uniform(minRange,  maxRange);
+      Double_t y = r.Uniform(minRange, 3 * maxRange);
+      Double_t z = r.Uniform(0.8*minRange, 4.1 * maxRange);
       h2->Fill(x,y,z,1.);
       h4->Fill(x,y,z,1.);
    }
@@ -5624,19 +5642,29 @@ bool testMerge3DRebin()
    h1->Merge(list);
 
    bool ret = equals("Merge3DRebin", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
-bool testMerge1DRebinProf()
+bool testMerge3DExtendAll() {
+   return testMerge3DExtend(TH1::kAllAxes); 
+}
+bool testMerge3DExtendX() {
+   return testMerge3DExtend(TH1::kXaxis); 
+}
+bool testMerge3DExtendZ() {
+   return testMerge3DExtend(TH1::kZaxis); 
+}
+
+bool testMerge1DExtendProf()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
 
-   TProfile* h1 = new TProfile("merge1D-p1", "h1-Title", numberOfBins, minRange, maxRange);
-   TProfile* h2 = new TProfile("merge1D-p2", "h2-Title", numberOfBins, minRange, maxRange);
-   TProfile* h4 = new TProfile("merge1D-p4", "h4-Title", numberOfBins, minRange, maxRange);
+   TProfile* h1 = new TProfile("p1", "h1-Title", numberOfBins, minRange, maxRange);
+   TProfile* h2 = new TProfile("p2", "h2-Title", numberOfBins, minRange, maxRange);
+   TProfile* h4 = new TProfile("p4", "h4-Title", numberOfBins, minRange, maxRange);
 
    h1->SetCanExtend(TH1::kAllAxes);
    h2->SetCanExtend(TH1::kAllAxes);
@@ -5661,8 +5689,8 @@ bool testMerge1DRebinProf()
    h1->Merge(list);
 
    bool ret = equals("Merge1DRebinProf", h1, h4, cmpOptStats, 1E-10);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -5678,11 +5706,11 @@ bool testMerge1DWithBuffer(bool allNoLimits)
       x1 = minRange; x2 = maxRange;
    }
 
-   TH1D* h0 = new TH1D("merge1D-h0", "h1-Title", numberOfBins, 1, 0);
-   TH1D* h1 = new TH1D("merge1D-h1", "h1-Title", numberOfBins, x1, x2);
-   TH1D* h2 = new TH1D("merge1D-h2", "h2-Title", 1,1,0);
-   TH1D* h3 = new TH1D("merge1D-h3", "h3-Title", 1,1,0);
-   TH1D* h4 = new TH1D("merge1D-h4", "h4-Title", numberOfBins, x1,x2);
+   TH1D* h0 = new TH1D("h0", "h1-Title", numberOfBins, 1, 0);
+   TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, x1, x2);
+   TH1D* h2 = new TH1D("h2", "h2-Title", 1,1,0);
+   TH1D* h3 = new TH1D("h3", "h3-Title", 1,1,0);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, x1,x2);
 
    h0->Sumw2(); h1->Sumw2();h2->Sumw2();h4->Sumw2();
    h1->SetBuffer(nEvents*10);
@@ -5724,10 +5752,10 @@ bool testMerge1DWithBuffer(bool allNoLimits)
    const char * testName = (allNoLimits) ? "Merge1DNoLimits" : "Merge1DMixedLimits";
 
    bool ret = equals(testName, h0, h4, cmpOptStats, 1E-10);
-   delete h0;
-   delete h1;
-   delete h2;
-   delete h3;
+   if (cleanHistos) delete h0;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
    return ret;
 }
 
@@ -5774,7 +5802,7 @@ bool testLabel()
    h2->LabelsDeflate();
 
    bool status = equals("Fill(char*)", h1, h2, cmpOptStats, 1E-13);
-   delete h1;
+   if (cleanHistos) delete h1;
    return status;
 }
 
@@ -5813,7 +5841,7 @@ bool testLabel2DX()
    h2->LabelsDeflate();
 
    bool status = equals("Fill(char*)", h1, h2, cmpOptStats, 1E-13);
-   delete h1;
+   if (cleanHistos) delete h1;
    return status;
 }
 
@@ -5851,7 +5879,7 @@ bool testLabel2DY()
    h2->LabelsDeflate("Y");
 
    bool status = equals("Fill(char*)", h1, h2, cmpOptStats, 1E-13);
-   delete h1;
+   if (cleanHistos) delete h1;
    return status;
 }
 
@@ -5930,7 +5958,7 @@ bool testInterpolation1D()
       }
    }
 
-   delete h1;
+   if (cleanHistos) delete h1;
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation1D: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
@@ -5969,7 +5997,7 @@ bool testInterpolationVar1D()
       }
    }
 
-   delete h1;
+   if (cleanHistos) delete h1;
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolaVar1D: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
@@ -6019,7 +6047,7 @@ bool testInterpolation2D()
       }
    }
 
-   delete h1;
+   if (cleanHistos) delete h1;
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation2D: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
@@ -6068,7 +6096,7 @@ bool testInterpolation3D()
          status = true;
    }
 
-   delete h1;
+   if (cleanHistos) delete h1;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation3D: \t" << (status?"FAILED":"OK") << std::endl;
 
@@ -6213,7 +6241,7 @@ bool testH1Integral()
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H1:\t" << (iret?"FAILED":"OK") << std::endl;
 
-   delete h1;
+   if (cleanHistos) delete h1;
    return iret;
 }
 
@@ -6275,7 +6303,7 @@ bool testH2Integral()
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H2:\t" << (iret?"FAILED":"OK") << std::endl;
 
-   delete h2;
+   if (cleanHistos) delete h2;
    return iret;
 
 }
@@ -6367,7 +6395,7 @@ bool testH3Integral()
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H3:\t" << (iret?"FAILED":"OK") << std::endl;
 
-   delete h3;
+   if (cleanHistos) delete h3;
    return iret;
 }
 
@@ -6486,7 +6514,7 @@ bool testH1Buffer() {
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer H1:\t" << (iret?"FAILED":"OK") << std::endl;
 
-   delete h1;
+   if (cleanHistos) delete h1;
 
 
    return iret;
@@ -6555,7 +6583,7 @@ bool testH1BufferWeights() {
 
    std::cout.precision(pr);
 
-   delete h1;
+   if (cleanHistos) delete h1;
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer Weighted H1:\t" << (iret?"FAILED":"OK") << std::endl;
@@ -6603,7 +6631,7 @@ bool testH2Buffer() {
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer H2:\t" << (iret?"FAILED":"OK") << std::endl;
 
-   delete h1;
+   if (cleanHistos) delete h1;
 
    return iret;
 }
@@ -6649,7 +6677,7 @@ bool testH3Buffer() {
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer H3:\t" << (iret?"FAILED":"OK") << std::endl;
 
-   delete h1;
+   if (cleanHistos) delete h1;
 
    return iret;
 }
@@ -6666,7 +6694,7 @@ bool testH1Extend() {
       h0->Fill(x);
    }
    bool ret = equals("testh1extend", h1, h0, cmpOptStats, 1E-10);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 
 }
@@ -6684,7 +6712,7 @@ bool testH2Extend() {
       h2->Fill(x,y);
    }
    bool ret = equals("testh2extend", h1, h2, cmpOptStats, 1E-10);
-   delete h1;
+   if (cleanHistos) delete h1;
    return ret;
 
 }
@@ -6702,7 +6730,7 @@ bool testProfileExtend() {
       h0->Fill(x,y);
    }
    bool ret = equals("testProfileextend", h1, h0, cmpOptStats, 1E-10);
-   delete h1;
+   if (cleanHistos) delete h1;
    TProfile::Approximate(false);
    return ret;
 
@@ -6723,7 +6751,7 @@ bool testProfile2Extend() {
       h2->Fill(x,y,z);
    }
    bool ret = equals("testprofile2extend", h1, h2, cmpOptStats, 1E-10);
-   delete h1;
+   if (cleanHistos) delete h1;
    TProfile2D::Approximate(false);
    return ret;
 
@@ -7150,7 +7178,7 @@ bool testSparseData1DFull()
       status = 0;
 
    delete func;
-   delete h1;
+   if (cleanHistos) delete h1;
    delete s1;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData1DFull: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7186,7 +7214,7 @@ bool testSparseData1DSparse()
       status = 0;
 
    delete func;
-   delete h1;
+   if (cleanHistos) delete h1;
    delete s1;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData1DSpar: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7224,7 +7252,7 @@ bool testSparseData2DFull()
       status = 0;
 
    delete func;
-   delete h2;
+   if (cleanHistos) delete h2;
    delete s2;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData2DFull: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7262,7 +7290,7 @@ bool testSparseData2DSparse()
       status = 0;
 
    delete func;
-   delete h2;
+   if (cleanHistos) delete h2;
    delete s2;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData2DSpar: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7302,7 +7330,7 @@ bool testSparseData3DFull()
       status = 0;
 
    delete func;
-   delete h3;
+   if (cleanHistos) delete h3;
    delete s3;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData3DFull: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7342,7 +7370,7 @@ bool testSparseData3DSparse()
       status = 0;
 
    delete func;
-   delete h3;
+   if (cleanHistos) delete h3;
    delete s3;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData3DSpar: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7381,7 +7409,7 @@ bool testBinDataData1D()
       status = 0;
 
    delete func;
-   delete h1;
+   if (cleanHistos) delete h1;
    delete s1;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData1D: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7423,7 +7451,7 @@ bool testBinDataData2D()
       status = 0;
 
    delete func;
-   delete h2;
+   if (cleanHistos) delete h2;
    delete s2;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData2D: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7467,7 +7495,7 @@ bool testBinDataData3D()
       status = 0;
 
    delete func;
-   delete h3;
+   if (cleanHistos) delete h3;
    delete s3;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData3D: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7510,7 +7538,7 @@ bool testBinDataData1DInt()
       status = 0;
 
    delete func;
-   delete h1;
+   if (cleanHistos) delete h1;
    delete s1;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData1DInt: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7556,7 +7584,7 @@ bool testBinDataData2DInt()
       status = 0;
 
    delete func;
-   delete h2;
+   if (cleanHistos) delete h2;
    delete s2;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData2DInt: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7604,7 +7632,7 @@ bool testBinDataData3DInt()
       status = 0;
 
    delete func;
-   delete h3;
+   if (cleanHistos) delete h3;
    delete s3;
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData3DInt: \t" << (status?"FAILED":"OK") << std::endl;
@@ -7638,7 +7666,7 @@ bool testRefRead1D()
 
       ret = equals("Ref Read Hist 1D", h1, h2, cmpOptStats);
    }
-   if ( h1 ) delete h1;
+   if ( h1 ) if (cleanHistos) delete h1;
    return ret;
 
 }
@@ -7712,7 +7740,7 @@ bool testRefRead2D()
 
       ret = equals("Ref Read Hist 2D", h1, h2, cmpOptStats);
    }
-   if ( h1 ) delete h1;
+   if ( h1 ) if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -7790,7 +7818,7 @@ bool testRefRead3D()
 
       ret = equals("Ref Read Hist 3D", h1, h2, cmpOptStats);
    }
-   if ( h1 ) delete h1;
+   if ( h1 ) if (cleanHistos) delete h1;
    return ret;
 }
 
@@ -7901,8 +7929,8 @@ bool testIntegerRebin()
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) , r.Uniform(0,10) );
 
    bool ret = equals("TestIntegerRebinHist", h2, h3, cmpOptStats  );
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -7950,8 +7978,8 @@ bool testIntegerRebinNoName()
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
    bool ret = equals("TestIntRebinNoName", h2, h3, cmpOptStats );
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -8020,8 +8048,8 @@ bool testArrayRebin()
    delete [] rebinArray;
 
    bool ret = equals("TestArrayRebin", h2, h3, cmpOptStats);
-   delete h1;
-   delete h2;
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
    return ret;
 }
 
@@ -8110,8 +8138,8 @@ bool test2DRebin()
 
 
    bool ret = equals("TestIntRebin2D", h2d2, h3, cmpOptStats); // | cmpOptDebug);
-   delete h2d;
-   delete h2d2;
+   if (cleanHistos) delete h2d;
+   if (cleanHistos) delete h2d2;
    return ret;
 }
 
@@ -8154,8 +8182,8 @@ bool test3DRebin()
                 r.Uniform(0,10.) );
 
    bool ret = equals("TestIntRebin3D", h3d2, h3, cmpOptStats); // | cmpOptDebug);
-   delete h3d;
-   delete h3d2;
+   if (cleanHistos) delete h3d;
+   if (cleanHistos) delete h3d2;
    return ret;
 }
 
@@ -8184,8 +8212,8 @@ bool test2DRebinProfile()
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform(0,10) );
 
    bool ret = equals("TestIntRebin2DProfile", h2d2, h3, cmpOptStats);
-   delete h2d;
-   delete h2d2;
+   if (cleanHistos) delete h2d;
+   if (cleanHistos) delete h2d2;
    return ret;
 }
 
@@ -8351,14 +8379,14 @@ bool testTH2toTH1()
 
    options = 0;
 
-   delete h2XY;
-   delete h1X;
-   delete h1Y;
-   delete h1XOR;
-   delete h1YOR;
+   if (cleanHistos) delete h2XY;
+   if (cleanHistos) delete h1X;
+   if (cleanHistos) delete h1Y;
+   if (cleanHistos) delete h1XOR;
+   if (cleanHistos) delete h1YOR;
 
-   delete h1XR;
-   delete h1YR;
+   if (cleanHistos) delete h1XR;
+   if (cleanHistos) delete h1YR;
 
    delete pe1XY;
    delete pe1XYOR;
@@ -8525,19 +8553,19 @@ bool testTH3toTH1()
 
    options = 0;
 
-   delete h3;
+   if (cleanHistos) delete h3;
 
-   delete h1X;
-   delete h1Y;
-   delete h1Z;
+   if (cleanHistos) delete h1X;
+   if (cleanHistos) delete h1Y;
+   if (cleanHistos) delete h1Z;
 
-   delete h1XR;
-   delete h1YR;
-   delete h1ZR;
+   if (cleanHistos) delete h1XR;
+   if (cleanHistos) delete h1YR;
+   if (cleanHistos) delete h1ZR;
 
-   delete h1XOR;
-   delete h1YOR;
-   delete h1ZOR;
+   if (cleanHistos) delete h1XOR;
+   if (cleanHistos) delete h1YOR;
+   if (cleanHistos) delete h1ZOR;
 
    return status;
 }
@@ -8813,28 +8841,28 @@ bool testTH3toTH2()
 
    options = 0;
 
-   delete h3;
+   if (cleanHistos) delete h3;
 
-   delete h2XY;
-   delete h2XZ;
-   delete h2YX;
-   delete h2YZ;
-   delete h2ZX;
-   delete h2ZY;
+   if (cleanHistos) delete h2XY;
+   if (cleanHistos) delete h2XZ;
+   if (cleanHistos) delete h2YX;
+   if (cleanHistos) delete h2YZ;
+   if (cleanHistos) delete h2ZX;
+   if (cleanHistos) delete h2ZY;
 
-   delete h2XYR;
-   delete h2XZR;
-   delete h2YXR;
-   delete h2YZR;
-   delete h2ZXR;
-   delete h2ZYR;
+   if (cleanHistos) delete h2XYR;
+   if (cleanHistos) delete h2XZR;
+   if (cleanHistos) delete h2YXR;
+   if (cleanHistos) delete h2YZR;
+   if (cleanHistos) delete h2ZXR;
+   if (cleanHistos) delete h2ZYR;
 
-   delete h2XYOR;
-   delete h2XZOR;
-   delete h2YXOR;
-   delete h2YZOR;
-   delete h2ZXOR;
-   delete h2ZYOR;
+   if (cleanHistos) delete h2XYOR;
+   if (cleanHistos) delete h2XZOR;
+   if (cleanHistos) delete h2YXOR;
+   if (cleanHistos) delete h2YZOR;
+   if (cleanHistos) delete h2ZXOR;
+   if (cleanHistos) delete h2ZYOR;
 
    delete pe2XY;
    delete pe2XZ;
@@ -9076,22 +9104,22 @@ public:
 
    void DeleteHistograms()
    {
-      delete h3;
+      if (cleanHistos) delete h3;
 
-      delete h2XY;
-      delete h2XZ;
-      delete h2YX;
-      delete h2YZ;
-      delete h2ZX;
-      delete h2ZY;
+      if (cleanHistos) delete h2XY;
+      if (cleanHistos) delete h2XZ;
+      if (cleanHistos) delete h2YX;
+      if (cleanHistos) delete h2YZ;
+      if (cleanHistos) delete h2ZX;
+      if (cleanHistos) delete h2ZY;
 
-      delete h1X;
-      delete h1Y;
-      delete h1Z;
+      if (cleanHistos) delete h1X;
+      if (cleanHistos) delete h1Y;
+      if (cleanHistos) delete h1Z;
 
-      delete h1XStats;
-      delete h1YStats;
-      delete h1ZStats;
+      if (cleanHistos) delete h1XStats;
+      if (cleanHistos) delete h1YStats;
+      if (cleanHistos) delete h1ZStats;
 
       delete pe2XY;
       delete pe2XZ;
@@ -9100,12 +9128,12 @@ public:
       delete pe2ZX;
       delete pe2ZY;
 
-      delete h2wXY;
-      delete h2wXZ;
-      delete h2wYX;
-      delete h2wYZ;
-      delete h2wZX;
-      delete h2wZY;
+      if (cleanHistos) delete h2wXY;
+      if (cleanHistos) delete h2wXZ;
+      if (cleanHistos) delete h2wYX;
+      if (cleanHistos) delete h2wYZ;
+      if (cleanHistos) delete h2wZX;
+      if (cleanHistos) delete h2wZY;
 
       delete pe1XY;
       delete pe1XZ;
@@ -9114,12 +9142,12 @@ public:
       delete pe1ZY;
       delete pe1ZX;
 
-      delete hw1XY;
-      delete hw1XZ;
-      delete hw1YX;
-      delete hw1YZ;
-      delete hw1ZX;
-      delete hw1ZY;
+      if (cleanHistos) delete hw1XY;
+      if (cleanHistos) delete hw1XZ;
+      if (cleanHistos) delete hw1YX;
+      if (cleanHistos) delete hw1YZ;
+      if (cleanHistos) delete hw1ZX;
+      if (cleanHistos) delete hw1ZY;
 
       delete s3;
       delete n3;
@@ -9830,14 +9858,14 @@ int stressHistogram()
    //Ht->buildHistograms(2,4,5,6,8,10);
    status = ht->compareHistograms();
    GlobalStatus += status;
-   delete ht;
+   if (cleanHistos) delete ht;
    printResult("Testing Histogram Projections without weights....................", status);
 
    ProjectionTester* htp = new ProjectionTester();
    htp->buildProfiles();
    status = htp->compareProfiles();
    GlobalStatus += status;
-   delete htp;
+   if (cleanHistos) delete htp;
 
    printResult("Testing Profile Projections without weights......................", status);
 
@@ -9856,7 +9884,7 @@ int stressHistogram()
    status = ht2->compareHistograms();
    GlobalStatus += status;
    printResult("Testing Histogram Projections with weights.......................", status);
-   delete ht2;
+   if (cleanHistos) delete ht2;
 
 
    ProjectionTester* htp2 = new ProjectionTester(true);
@@ -9864,7 +9892,7 @@ int stressHistogram()
    status = htp2->compareProfiles();
    GlobalStatus += status;
    printResult("Testing Profile   Projections with weights.......................", status);
-   delete htp2;
+   if (cleanHistos) delete htp2;
 
    // Test 3
    // Range Tests
@@ -9988,37 +10016,57 @@ int stressHistogram()
 
    // Test 10
    // Merge Tests
-   const unsigned int numberOfMerge = 49;
-   pointer2Test mergeTestPointer[numberOfMerge] = { testMerge1D,                 testMergeProf1D,
-                                                    testMergeVar1D,              testMergeProfVar1D,
-                                                    testMerge2D,                 testMergeProf2D,
-                                                    testMerge3D,                 testMergeProf3D,
-                                                    testMergeHn<THnD>,           testMergeHn<THnSparseD>,
-                                                    testMerge1DLabelSame,        testMergeProf1DLabelSame,
-                                                    testMerge2DLabelSame,        testMergeProf2DLabelSame,
-                                                    testMerge3DLabelSame,        testMergeProf3DLabelSame,
-
-                                                    testMerge1DLabelDiff,        testMergeProf1DLabelDiff,
-                                                    testMerge2DLabelDiff,        testMergeProf2DLabelDiff,
-                                                    testMerge3DLabelDiff,        testMergeProf3DLabelDiff,
-                                                    testMerge1DLabelAll,         testMergeProf1DLabelAll,
-                                                    testMerge2DLabelAll,         testMergeProf2DLabelAll,
-                                                    testMerge3DLabelAll,         testMergeProf3DLabelAll,
-                                                    testMerge1DLabelAllDiff,     testMergeProf1DLabelAllDiff,
-                                                    testMerge2DLabelAllDiff,     testMergeProf2DLabelAllDiff,
-                                                    testMerge3DLabelAllDiff,     testMergeProf3DLabelAllDiff,
-                                                    testMerge1DDiff,             testMergeProf1DDiff,
-                                                    testMerge2DDiff,             testMergeProf2DDiff,
-                                                    testMerge3DDiff,             testMergeProf3DDiff,
-                                                    testMerge1DDiffEmpty,        testMerge2DDiffEmpty,
-                                                    testMerge3DDiffEmpty,        testMergeProf1DDiffEmpty,
-                                                    testMerge1DRebin,            testMerge2DRebin,
-                                                    testMerge3DRebin,            testMerge1DRebinProf,
-                                                    testMerge1DNoLimits
+   std::vector<pointer2Test> mergeSameTestPointer = { testMerge1D,                 testMergeProf1D,
+                                                      testMergeVar1D,              testMergeProfVar1D,
+                                                      testMerge2D,                 testMergeProf2D,
+                                                      testMerge3D,                 testMergeProf3D,
+                                                      testMergeHn<THnD>,           testMergeHn<THnSparseD>
    };
-   struct TTestSuite mergeTestSuite = { numberOfMerge,
-                                        "Merge tests for 1D, 2D and 3D Histograms and Profiles............",
-                                        mergeTestPointer };
+
+
+   std::vector<pointer2Test> mergeLabelTestPointer = {  testMerge1DLabelSame,        testMergeProf1DLabelSame,
+                                                        testMerge2DLabelSame,        testMergeProf2DLabelSame,
+                                                        testMerge3DLabelSame,        testMergeProf3DLabelSame,
+                                                        testMerge1DLabelDiff,        testMergeProf1DLabelDiff,
+                                                        testMerge2DLabelDiff,        testMergeProf2DLabelDiff,
+                                                        testMerge3DLabelDiff,        testMergeProf3DLabelDiff,
+                                                        testMerge1DLabelAll,         testMergeProf1DLabelAll,
+                                                        testMerge2DLabelAll,         testMergeProf2DLabelAll,
+                                                        testMerge3DLabelAll,         testMergeProf3DLabelAll,
+                                                        testMerge1DLabelAllDiff,     testMergeProf1DLabelAllDiff,
+                                                        testMerge2DLabelAllDiff,     testMergeProf2DLabelAllDiff,
+                                                        testMerge3DLabelAllDiff,     testMergeProf3DLabelAllDiff
+   };
+   std::vector<pointer2Test> mergeDiffTestPointer = {   testMerge1DDiff,             testMergeProf1DDiff,
+                                                        testMerge2DDiff,             testMergeProf2DDiff,
+                                                        testMerge3DDiff,             testMergeProf3DDiff,
+                                                        testMerge1DDiffEmpty,        testMerge2DDiffEmpty,
+                                                        testMerge3DDiffEmpty,        testMergeProf1DDiffEmpty
+   };
+   std::vector<pointer2Test> mergeExtTestPointer =  {   testMerge1DExtend,           testMerge2DExtendAll,
+                                                        testMerge2DExtendX,          testMerge2DExtendY,
+                                                        testMerge3DExtendAll,
+                                                        testMerge1DExtendProf,
+                                                        testMerge1DNoLimits
+   };
+   // tests failing                                                     testMerge3DExtendX,  testMerge3DExtendZ,
+
+   unsigned int numberOfMergeSame = mergeSameTestPointer.size();
+   unsigned int numberOfMergeLabel = mergeLabelTestPointer.size();
+   unsigned int numberOfMergeDiff = mergeDiffTestPointer.size();
+   unsigned int numberOfMergeExt = mergeExtTestPointer.size();
+   struct TTestSuite mergeSameTestSuite = { numberOfMergeSame,
+                                        "Merge tests for Histograms and Profiles with same axes ..........",
+                                            mergeSameTestPointer.data() };
+   struct TTestSuite mergeLabelTestSuite = { numberOfMergeLabel,
+                                        "Merge tests for Histograms and Profiles with labels  ............",
+                                             mergeLabelTestPointer.data() };
+   struct TTestSuite mergeDiffTestSuite = { numberOfMergeDiff,
+                                        "Merge tests for Histograms and Profiles with different axes .....",
+                                            mergeDiffTestPointer.data() };
+   struct TTestSuite mergeExtTestSuite = { numberOfMergeExt,
+                                        "Merge tests for Histograms and Profiles with extendable axes ....",
+                                           mergeExtTestPointer.data() };
    // Test 11
    // Label Tests
    const unsigned int numberOfLabel = 4;
@@ -10113,24 +10161,29 @@ int stressHistogram()
 
 
    // Combination of tests
-   const unsigned int numberOfSuits = 16;
-   struct TTestSuite* testSuite[numberOfSuits];
-   testSuite[ 0] = &rangeTestSuite;
-   testSuite[ 1] = &rebinTestSuite;
-   testSuite[ 2] = &addTestSuite;
-   testSuite[ 3] = &multiplyTestSuite;
-   testSuite[ 4] = &divideTestSuite;
-   testSuite[ 5] = &copyTestSuite;
-   testSuite[ 6] = &readwriteTestSuite;
-   testSuite[ 7] = &mergeTestSuite;
-   testSuite[ 8] = &labelTestSuite;
-   testSuite[ 9] = &interpolationTestSuite;
-   testSuite[10] = &scaleTestSuite;
-   testSuite[11] = &integralTestSuite;
-   testSuite[12] = &bufferTestSuite;
-   testSuite[13] = &extendTestSuite;
-   testSuite[14] = &conversionsTestSuite;
-   testSuite[15] = &fillDataTestSuite;
+   std::vector<TTestSuite*> testSuite;
+   testSuite.reserve(20);
+   testSuite.push_back( &rangeTestSuite);
+   testSuite.push_back( &rebinTestSuite);
+   testSuite.push_back( &addTestSuite);
+   testSuite.push_back( &multiplyTestSuite);
+   testSuite.push_back( &divideTestSuite);
+   testSuite.push_back( &copyTestSuite);
+   testSuite.push_back( &readwriteTestSuite);
+   testSuite.push_back( &mergeSameTestSuite);
+   testSuite.push_back( &mergeLabelTestSuite);
+   testSuite.push_back( &mergeDiffTestSuite);
+   testSuite.push_back( &mergeExtTestSuite);
+   testSuite.push_back( &labelTestSuite);
+   testSuite.push_back( &interpolationTestSuite);
+   testSuite.push_back( &scaleTestSuite);
+   testSuite.push_back( &integralTestSuite);
+   testSuite.push_back( &bufferTestSuite);
+   testSuite.push_back( &extendTestSuite);
+   testSuite.push_back( &conversionsTestSuite);
+   testSuite.push_back( &fillDataTestSuite);
+
+   unsigned int numberOfSuits = testSuite.size(); 
 
    status = 0;
    for ( unsigned int i = 0; i < numberOfSuits; ++i ) {
@@ -10297,7 +10350,7 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORL
 
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
 
-   delete h2;
+   if (cleanHistos) delete h2;
 
    return differents;
 }
@@ -10357,7 +10410,7 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
 
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
 
-   delete h2;
+   if (cleanHistos) delete h2;
 
    return differents;
 }
@@ -10412,7 +10465,7 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
 
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
 
-   delete h2;
+   if (cleanHistos) delete h2;
 
    return differents;
 }
@@ -10463,7 +10516,7 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
 
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
 
-   delete h2;
+   if (cleanHistos) delete h2;
 
    return differents;
 }
@@ -10528,7 +10581,7 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
 
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
 
-   delete h2;
+   if (cleanHistos) delete h2;
 
    return differents;
 }

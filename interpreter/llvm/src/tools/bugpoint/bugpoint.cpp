@@ -16,10 +16,10 @@
 #include "BugDriver.h"
 #include "ToolRunner.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/LegacyPassNameParser.h"
 #include "llvm/LinkAllIR.h"
 #include "llvm/LinkAllPasses.h"
-#include "llvm/PassManager.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/PluginLoader.h"
@@ -50,7 +50,7 @@ TimeoutValue("timeout", cl::init(300), cl::value_desc("seconds"),
 static cl::opt<int>
 MemoryLimit("mlimit", cl::init(-1), cl::value_desc("MBytes"),
             cl::desc("Maximum amount of memory to use. 0 disables check."
-                     " Defaults to 300MB (800MB under valgrind)."));
+                     " Defaults to 400MB (800MB under valgrind)."));
 
 static cl::opt<bool>
 UseValgrind("enable-valgrind",
@@ -92,7 +92,7 @@ static void BugpointInterruptFunction() {
 
 // Hack to capture a pass list.
 namespace {
-  class AddToDriver : public FunctionPassManager {
+  class AddToDriver : public legacy::FunctionPassManager {
     BugDriver &D;
   public:
     AddToDriver(BugDriver &_D) : FunctionPassManager(nullptr), D(_D) {}
@@ -113,7 +113,7 @@ void initializePollyPasses(llvm::PassRegistry &Registry);
 
 int main(int argc, char **argv) {
 #ifndef DEBUG_BUGPOINT
-  llvm::sys::PrintStackTraceOnErrorSignal();
+  llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
   llvm::PrettyStackTraceProgram X(argc, argv);
   llvm_shutdown_obj Y;  // Call llvm_shutdown() on exit.
 #endif
@@ -126,7 +126,6 @@ int main(int argc, char **argv) {
   initializeVectorization(Registry);
   initializeIPO(Registry);
   initializeAnalysis(Registry);
-  initializeIPA(Registry);
   initializeTransformUtils(Registry);
   initializeInstCombine(Registry);
   initializeInstrumentation(Registry);
@@ -144,7 +143,7 @@ int main(int argc, char **argv) {
   sys::SetInterruptFunction(BugpointInterruptFunction);
 #endif
 
-  LLVMContext& Context = getGlobalContext();
+  LLVMContext Context;
   // If we have an override, set it and then track the triple we want Modules
   // to use.
   if (!OverrideTriple.empty()) {
@@ -158,7 +157,7 @@ int main(int argc, char **argv) {
     if (sys::RunningOnValgrind() || UseValgrind)
       MemoryLimit = 800;
     else
-      MemoryLimit = 300;
+      MemoryLimit = 400;
   }
 
   BugDriver D(argv[0], FindBugs, TimeoutValue, MemoryLimit,
@@ -181,19 +180,12 @@ int main(int argc, char **argv) {
       Builder.Inliner = createFunctionInliningPass(225);
     else
       Builder.Inliner = createFunctionInliningPass(275);
-
-    // Note that although clang/llvm-gcc use two separate passmanagers
-    // here, it shouldn't normally make a difference.
     Builder.populateFunctionPassManager(PM);
     Builder.populateModulePassManager(PM);
   }
 
-  for (std::vector<const PassInfo*>::iterator I = PassList.begin(),
-         E = PassList.end();
-       I != E; ++I) {
-    const PassInfo* PI = *I;
+  for (const PassInfo *PI : PassList)
     D.addPass(PI->getPassArgument());
-  }
 
   // Bugpoint has the ability of generating a plethora of core files, so to
   // avoid filling up the disk, we prevent it

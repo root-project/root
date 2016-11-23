@@ -47,13 +47,13 @@ geometry can be saved as a starting state for later use.
 nodes inside the same container or extrude this container. Non-overlapping
 nodes can be created with:
 
-~~~ {.cpp]
+~~~ {.cpp}
      TGeoVolume::AddNode(TGeoVolume *daughter, Int_t copy_No, TGeoMatrix *matr);
 ~~~
 
 The creation of overlapping nodes can be done with a similar prototype:
 
-~~~ {.cpp]
+~~~ {.cpp}
      TGeoVolume::AddNodeOverlap(same arguments);
 ~~~
 

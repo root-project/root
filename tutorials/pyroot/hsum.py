@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -js
 ## Simple example illustrating how to use the C++ interpreter
 ##
 ## \macro_image
@@ -37,11 +38,11 @@ gauss, landau = gRandom.Gaus, gRandom.Landau
 # for speed, bind and cache the Fill member functions
 histos = [ 'total', 'main', 's1', 's2' ]
 for name in histos:
-   exec '%sFill = %s.Fill' % (name,name)
+   exec('%sFill = %s.Fill' % (name,name))
 
 # Fill histograms randomly
 kUPDATE = 500
-for i in xrange( 10000 ):
+for i in range( 10000 ):
  # Generate random values.
    xmain = gauss( -1, 1.5 )
    xs1   = gauss( -0.5, 0.5 )
@@ -74,7 +75,7 @@ for i in xrange( 10000 ):
 
 # Destroy member functions cache.
 for name in histos:
-   exec 'del %sFill' % name
+   exec('del %sFill' % name)
 del histos
 
 # Done, finalized and trigger an update.

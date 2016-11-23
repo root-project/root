@@ -48,7 +48,7 @@ namespace utils {
     ///
     ///\returns true if the decl is a interpreter-generated wrapper function.
     ///
-    bool IsWrapper(const clang::NamedDecl* ND);
+    bool IsWrapper(const clang::FunctionDecl* ND);
 
     ///\brief Get the mangled name of a GlobalDecl.
     ///
@@ -116,7 +116,7 @@ namespace utils {
     /// cast to.
     ///
     clang::Expr* CStyleCastPtrExpr(clang::Sema* S, clang::QualType Ty,
-                                   uint64_t Ptr);
+                                   uintptr_t Ptr);
 
     ///\brief Synthesizes c-style cast in the AST from given pointer and type to
     /// cast to.
@@ -128,7 +128,7 @@ namespace utils {
     ///
     //  TODO: Use Sema::ActOnIntegerConstant.
     clang::IntegerLiteral* IntegerLiteralExpr(clang::ASTContext& C,
-                                              uint64_t Ptr);
+                                              uintptr_t Ptr);
 
   }
 

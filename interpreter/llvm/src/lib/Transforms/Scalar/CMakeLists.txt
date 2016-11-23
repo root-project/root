@@ -1,6 +1,7 @@
 add_llvm_library(LLVMScalarOpts
   ADCE.cpp
   AlignmentFromAssumptions.cpp
+  BDCE.cpp
   ConstantHoisting.cpp
   ConstantProp.cpp
   CorrelatedValuePropagation.cpp
@@ -8,6 +9,8 @@ add_llvm_library(LLVMScalarOpts
   DeadStoreElimination.cpp
   EarlyCSE.cpp
   FlattenCFGPass.cpp
+  Float2Int.cpp
+  GuardWidening.cpp
   GVN.cpp
   InductiveRangeCheckElimination.cpp
   IndVarSimplify.cpp
@@ -15,31 +18,45 @@ add_llvm_library(LLVMScalarOpts
   LICM.cpp
   LoadCombine.cpp
   LoopDeletion.cpp
+  LoopDataPrefetch.cpp
+  LoopDistribute.cpp
   LoopIdiomRecognize.cpp
   LoopInstSimplify.cpp
+  LoopInterchange.cpp
+  LoopLoadElimination.cpp
   LoopRerollPass.cpp
   LoopRotation.cpp
+  LoopSimplifyCFG.cpp
   LoopStrengthReduce.cpp
   LoopUnrollPass.cpp
   LoopUnswitch.cpp
+  LoopVersioningLICM.cpp
   LowerAtomic.cpp
   LowerExpectIntrinsic.cpp
+  LowerGuardIntrinsic.cpp
   MemCpyOptimizer.cpp
   MergedLoadStoreMotion.cpp
+  NaryReassociate.cpp
   PartiallyInlineLibCalls.cpp
+  PlaceSafepoints.cpp
   Reassociate.cpp
   Reg2Mem.cpp
+  RewriteStatepointsForGC.cpp
   SCCP.cpp
   SROA.cpp
-  SampleProfile.cpp
   Scalar.cpp
-  ScalarReplAggregates.cpp
   Scalarizer.cpp
   SeparateConstOffsetFromGEP.cpp
   SimplifyCFGPass.cpp
   Sink.cpp
+  SpeculativeExecution.cpp
+  StraightLineStrengthReduce.cpp
   StructurizeCFG.cpp
   TailRecursionElimination.cpp
+
+  ADDITIONAL_HEADER_DIRS
+  ${LLVM_MAIN_INCLUDE_DIR}/llvm/Transforms
+  ${LLVM_MAIN_INCLUDE_DIR}/llvm/Transforms/Scalar
   )
 
 add_dependencies(LLVMScalarOpts intrinsics_gen)

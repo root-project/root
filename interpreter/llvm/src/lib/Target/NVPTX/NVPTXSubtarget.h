@@ -19,8 +19,8 @@
 #include "NVPTXISelLowering.h"
 #include "NVPTXInstrInfo.h"
 #include "NVPTXRegisterInfo.h"
+#include "llvm/CodeGen/SelectionDAGTargetInfo.h"
 #include "llvm/IR/DataLayout.h"
-#include "llvm/Target/TargetSelectionDAGInfo.h"
 #include "llvm/Target/TargetSubtargetInfo.h"
 #include <string>
 
@@ -32,8 +32,6 @@ namespace llvm {
 class NVPTXSubtarget : public NVPTXGenSubtargetInfo {
   virtual void anchor();
   std::string TargetName;
-  NVPTX::DrvInterface drvInterface;
-  bool Is64Bit;
 
   // PTX version x.y is represented as 10*x+y, e.g. 3.1 == 31
   unsigned PTXVersion;
@@ -41,9 +39,10 @@ class NVPTXSubtarget : public NVPTXGenSubtargetInfo {
   // SM version x.y is represented as 10*x+y, e.g. 3.1 == 31
   unsigned int SmVersion;
 
+  const NVPTXTargetMachine &TM;
   NVPTXInstrInfo InstrInfo;
   NVPTXTargetLowering TLInfo;
-  TargetSelectionDAGInfo TSInfo;
+  SelectionDAGTargetInfo TSInfo;
 
   // NVPTX does not have any call stack frame, but need a NVPTX specific
   // FrameLowering class because TargetFrameLowering is abstract.
@@ -53,8 +52,8 @@ public:
   /// This constructor initializes the data members to match that
   /// of the specified module.
   ///
-  NVPTXSubtarget(const std::string &TT, const std::string &CPU,
-                 const std::string &FS, const TargetMachine &TM, bool is64Bit);
+  NVPTXSubtarget(const Triple &TT, const std::string &CPU,
+                 const std::string &FS, const NVPTXTargetMachine &TM);
 
   const TargetFrameLowering *getFrameLowering() const override {
     return &FrameLowering;
@@ -66,7 +65,7 @@ public:
   const NVPTXTargetLowering *getTargetLowering() const override {
     return &TLInfo;
   }
-  const TargetSelectionDAGInfo *getSelectionDAGInfo() const override {
+  const SelectionDAGTargetInfo *getSelectionDAGInfo() const override {
     return &TSInfo;
   }
 
@@ -93,20 +92,9 @@ public:
   }
   inline bool hasROT32() const { return hasHWROT32() || hasSWROT32(); }
   inline bool hasROT64() const { return SmVersion >= 20; }
-
-  bool hasImageHandles() const {
-    // Enable handles for Kepler+, where CUDA supports indirect surfaces and
-    // textures
-    if (getDrvInterface() == NVPTX::CUDA)
-      return (SmVersion >= 30);
-
-    // Disabled, otherwise
-    return false;
-  }
-  bool is64Bit() const { return Is64Bit; }
+  bool hasImageHandles() const;
 
   unsigned int getSmVersion() const { return SmVersion; }
-  NVPTX::DrvInterface getDrvInterface() const { return drvInterface; }
   std::string getTargetName() const { return TargetName; }
 
   unsigned getPTXVersion() const { return PTXVersion; }

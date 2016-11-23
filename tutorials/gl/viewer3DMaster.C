@@ -13,12 +13,6 @@
 ///
 /// \author Richard Maunder
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("viewer3DMaster.C");
-   viewer3DMaster();
-}
-#else
 
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
@@ -338,4 +332,3 @@ void viewer3DMaster()
    myGeom->Draw("ogl");
 }
 
-#endif

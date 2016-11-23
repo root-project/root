@@ -5,11 +5,12 @@
 
 set(LLVM_LINK_COMPONENTS
   DebugInfoDWARF
+  DebugInfoPDB
   Object
   Support
+  Symbolize
   )
 
 add_llvm_tool(llvm-symbolizer
-  LLVMSymbolize.cpp
   llvm-symbolizer.cpp
   )

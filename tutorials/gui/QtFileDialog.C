@@ -26,20 +26,13 @@
 ///
 /// \author Valeri Fine   23/03/2006
 
-#ifndef __CINT__
 #  include <QFileDialog>
 #  include <QString>
 #  include "TString.h"
 #  include <string>
-#endif
+
 
 TString QtFileDialog() {
-#ifdef __CINT__
-   // Load the qt cint dictionary.
-   // One is recommended to do that at once somewhere.
-   // For example from one's custom rootlogon.C script
-   gSystem->Load("$ROOTSYS/cint/cint/include/qtcint");
-#endif
    QString fileName = QFileDialog::getOpenFileName ();
    std::string flnm = fileName.toStdString();
    return TString(flnm.c_str());

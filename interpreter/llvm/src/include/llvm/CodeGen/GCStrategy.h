@@ -51,20 +51,20 @@
 #define LLVM_IR_GCSTRATEGY_H
 
 #include "llvm/ADT/Optional.h"
-#include "llvm/IR/Value.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Registry.h"
 #include <string>
 
 namespace llvm {
 namespace GC {
-/// PointKind - The type of a collector-safe point.
+/// PointKind - Used to indicate whether the address of the call instruction
+/// or the address after the call instruction is listed in the stackmap.  For
+/// most runtimes, PostCall safepoints are appropriate.
 ///
 enum PointKind {
-  Loop,    ///< Instr is a loop (backwards branch).
-  Return,  ///< Instr is a return instruction.
   PreCall, ///< Instr is a call instruction.
   PostCall ///< Instr is the return address of a call.
 };
@@ -117,11 +117,11 @@ public:
   /** @name Statepoint Specific Properties */
   ///@{
 
-  /// If the value specified can be reliably distinguished, returns true for
+  /// If the type specified can be reliably distinguished, returns true for
   /// pointers to GC managed locations and false for pointers to non-GC
   /// managed locations.  Note a GCStrategy can always return 'None' (i.e. an
   /// empty optional indicating it can't reliably distinguish.
-  virtual Optional<bool> isGCManagedPointer(const Value *V) const {
+  virtual Optional<bool> isGCManagedPointer(const Type *Ty) const {
     return None;
   }
   ///@}

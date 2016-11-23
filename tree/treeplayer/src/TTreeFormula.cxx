@@ -929,7 +929,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             // This is inside a TClonesArray.
 
             if (!element) {
-               Warning("DefineVariable",
+               Warning("DefinedVariable",
                        "Missing TStreamerElement in object in TClonesArray section");
                return -2;
             }
@@ -968,7 +968,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             // This is inside a Collection
 
             if (!element) {
-               Warning("DefineVariable","Missing TStreamerElement in object in Collection section");
+               Warning("DefinedVariable","Missing TStreamerElement in object in Collection section");
                return -2;
             }
             // First we need to recover the collection.
@@ -2937,6 +2937,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                   fVarIndexes[code][dim] = new TTreeFormula("index_var",
                                                             varindex,
                                                             fTree);
+                  if (fVarIndexes[code][dim]->GetNdim() == 0) {
+                     // Parsing failed for the index, let's stop here ....
+                     return -1;
+                  }
                   current += strlen(varindex)+1; // move to the end of the index array
                }
             }
@@ -4071,7 +4075,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                          continue;
             case kint  : tab[pos-1] = T(Long64_t(tab[pos-1])); continue;
             case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
-            case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
+            case krndm : pos++; tab[pos-1] = gRandom->Rndm(); continue;
 
             case kAnd  : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
                                 else tab[pos-1]=0;

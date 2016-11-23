@@ -153,14 +153,12 @@ public:
    void SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const clang::Type *typeptr);
 
 protected:
-   static bool  BeginsWithStar(const std::string& pattern); // returns true if a pattern begins with a star
 
    // Checks if the test string matches against the pattern (which has produced the list of sub-patterns patterns_list). There is
    // difference if we are processing linkdef.h or selection.xmlpatterns
-   static bool CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef);
+   inline bool CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef) const;
 
-   static bool  EndsWithStar(const std::string& pattern);   // returns true of a pattern ends with a star
-   static void  ProcessPattern(const std::string& pattern, std::list<std::string>& out); // divides a pattern into a list of sub-patterns
+   inline void ProcessPattern(const std::string& pattern, std::list<std::string>& out) const; // divides a pattern into a list of sub-patterns
 };
 
 inline std::ostream &operator<<(std::ostream& out, const BaseSelectionRule &obj)

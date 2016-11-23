@@ -34,6 +34,7 @@
 
 #include "TGraph.h"
 #include "TMath.h"
+#include "TSpline.h"
 
 ClassImp(TMVA::TSpline2)
 

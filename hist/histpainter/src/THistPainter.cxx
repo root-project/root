@@ -83,6 +83,7 @@
 - [Giving titles to the X, Y and Z axis](#HP05)
 - [The option "SAME"](#HP060)
    - [Limitations](#HP060a)
+- [Colors automatically picked in palette](#HP061)
 - [Superimposing two histograms with different scales in the same pad](#HP06)
 - [Statistics Display](#HP07)
 - [Fit Statistics](#HP08)
@@ -140,7 +141,7 @@ canvas has to be redrawn, the `Paint` function of each objects in the
 pad is called. In case of histograms, `TH1::Paint` invokes directly
 `THistPainter::Paint`.
 
-To draw a histogram `h` is enough to do:
+To draw a histogram `h` it is enough to do:
 
     h->Draw();
 
@@ -157,12 +158,12 @@ When the `Draw()` method of a histogram is called for the first time
 pointer to this "painter" as a data member of the histogram. The
 `THistPainter` class specializes in the drawing of histograms. It is
 separated from the histogram so that one can have histograms without the
-graphics overhead, for example in a batch program. Each histogram have its own
-painter rather than a central singleton painter painting all histograms, allows
+graphics overhead, for example in a batch program. Each histogram having its own
+painter (rather than a central singleton painter painting all histograms), allows
 two histograms to be drawn in two threads without overwriting the painter's
 values.
 
-When a displayed histogram is filled again, there is not need to call the
+When a displayed histogram is filled again, there is no need to call the
 `Draw()` method again; the image will be refreshed the next time the
 pad will be updated.
 
@@ -217,9 +218,12 @@ using `TH1::GetOption`:
 | "E"      | Draw error bars. |
 | "AXIS"   | Draw only axis. |
 | "AXIG"   | Draw only grid (if the grid is requested). |
-| "HIST"   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
+| <a name="OPTHIST">"HIST"</a>   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
 | "FUNC"   | When an histogram has a fitted function, this option allows to draw the fit result only. |
 | "SAME"   | Superimpose on previous picture in the same pad. |
+| "PFC"    | Palette Fill Color: histogram's fill color is taken in the current palette. |
+| "PLC"    | Palette Line Color: histogram's line color is taken in the current palette. |
+| "PMC"    | Palette Marker Color: histogram's marker color is taken in the current palette. |
 | "LEGO"   | Draw a lego plot with hidden line removal. |
 | "LEGO1"  | Draw a lego plot with hidden surface removal. |
 | "LEGO2"  | Draw a lego plot using colors to show the cell contents When the option "0" is used with any LEGO option, the empty bins are not drawn.|
@@ -318,6 +322,9 @@ using `TH1::GetOption`:
 | "NOSTACK"  | Histograms in the stack are all paint in the same pad as if the option `SAME` had been specified.|
 | "NOSTACKB" | Histograms are  drawn next to each other as bar charts.|
 | "PADS"     | The current pad/canvas is subdivided into a number of pads equal to the number of histograms in the stack and each histogram is paint into a separate pad.|
+| "PFC"      | Palette Fill Color: stack's fill color is taken in the current palette. |
+| "PLC"      | Palette Line Color: stack's line color is taken in the current palette. |
+| "PMC"      | Palette Marker Color: stack's marker color is taken in the current palette. |
 
 
 
@@ -368,7 +375,6 @@ the histograms by calling:
     gPad->RedrawAxis();
 
 
-
 ### <a name="HP05"></a> Giving titles to the X, Y and Z axis
 
 
@@ -397,6 +403,32 @@ some combinations must be use with care.
   ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
   lego plots [histograms' stacks](#HP26) should be used.</li>
 
+
+### <a name="HP061"></a> Colors automatically picked in palette
+
+\since **ROOT version 6.09/01**
+
+When several histograms are painted in the same canvas thanks to the option "SAME"
+or via a `THStack` it might be useful to have an easy and automatic way to choose
+their color. The simplest way is to pick colors in the current active color
+palette. Palette coloring for histogram is activated thanks to the options `PFC`
+(Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
+When one of these options is given to `TH1::Draw` the histogram get its color
+from the current color palette defined by `gStyle->SetPalette(…)`. The color
+is determined according to the number of objects having palette coloring in
+the current pad.
+
+Begin_Macro(source)
+../../../tutorials/hist/histpalettecolor.C
+End_Macro
+
+Begin_Macro(source)
+../../../tutorials/hist/thstackpalettecolor.C
+End_Macro
+
+Begin_Macro(source)
+../../../tutorials/hist/thstack2palettecolor.C
+End_Macro
 
 ### <a name="HP06"></a> Superimposing two histograms with different scales in the same pad
 
@@ -732,12 +764,10 @@ End_Macro
 ### <a name="HP10"></a> The "BAR" and "HBAR" options
 
 
-When the option "bar" or "hbar" is specified, a bar chart is drawn. A vertical
-bar-chart is drawn with the options `bar`, `bar0`,
-`bar1`, `bar2`, `bar3`, `bar4`.
-An horizontal bar-chart is drawn with the options `hbar`,
-`hbar0`, `hbar1`, `hbar2``, `hbar3`,
-`hbar4` (hbars.C).
+When the option `bar` or `hbar` is specified, a bar chart is drawn. A vertical
+bar-chart is drawn with the options `bar`, `bar0`, `bar1`, `bar2`, `bar3`, `bar4`.
+An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
+`hbar2`, `hbar3`, `hbar4` (hbars.C).
 
 - The bar is filled with the histogram fill color.
 - The left side of the bar is drawn with a light fill color.
@@ -748,6 +778,8 @@ An horizontal bar-chart is drawn with the options `hbar`,
    - 20% for option "(h)bar2"
    - 30% for option "(h)bar3"
    - 40% for option "(h)bar4"
+
+When an histogram has errors the option ["HIST"](#OPTHIST) together with the `(h)bar` option.
 
 Begin_Macro(source)
 ../../../tutorials/hist/hbars.C
@@ -1003,6 +1035,35 @@ Begin_Macro(source)
    hcol22->SetMaximum(100);
    hcol22->SetMinimum(40);
    return c1;
+}
+End_Macro
+
+\since **ROOT version 6.09/01:**
+When the option SAME (or "SAMES") is used with the option COL, the boxes' color
+are computing taking the previous plots into account. The range along the Z axis
+is imposed by the first plot (the one without option SAME); therefore the order
+in which the plots are done is relevant.
+
+Begin_Macro(source)
+{
+   c = new TCanvas("c","Example of col plots with option SAME",200,10,700,500);
+   TH2F *h1 = new TH2F("h1","h1",40,-3,3,40,-3,3);
+   TH2F *h2 = new TH2F("h2","h2",40,-3,3,40,-3,3);
+   TH2F *h3 = new TH2F("h3","h3",40,-3,3,40,-3,3);
+   TH2F *h4 = new TH2F("h4","h4",40,-3,3,40,-3,3);
+   h1->SetBit(TH1::kNoStats);
+   for (Int_t i=0;i<5000;i++) {
+      double x,y;
+      gRandom->Rannor(x,y);
+      if(x>0 && y>0) h1->Fill(x,y,4);
+      if(x<0 && y<0) h2->Fill(x,y,3);
+      if(x>0 && y<0) h3->Fill(x,y,2);
+      if(x<0 && y>0) h4->Fill(x,y,1);
+   }
+   h1->Draw("colz");
+   h2->Draw("col same");
+   h3->Draw("col same");
+   h4->Draw("col same");
 }
 End_Macro
 
@@ -1385,7 +1446,7 @@ It is also possible to use `TEXTnn` in order to draw the text with
 the angle `nn` (`0 < nn < 90`).
 
 For 2D histograms the text is plotted in the center of each non empty cells.
-It is possible to plot empty cells by calling gStyle->SetHistMinimumZero().
+It is possible to plot empty cells by calling `gStyle->SetHistMinimumZero()`.
 For 1D histogram the text is plotted at a y position equal to the bin content.
 
 For 2D histograms when the option "E" (errors) is combined with the option
@@ -1400,7 +1461,7 @@ Begin_Macro(source)
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
-        htext1->Fill(px,0.1);
+      htext1->Fill(px,0.1);
       htext2->Fill(px,5*py,0.1);
    }
    gStyle->SetPaintTextFormat("4.1f m");
@@ -1411,6 +1472,38 @@ Begin_Macro(source)
    htext1->Draw();
    htext1->Draw("HIST TEXT0 SAME");
    return c01;
+}
+End_Macro
+
+\since **ROOT version 6.07/07:**
+In case several histograms are drawn on top ot each other (using option `SAME`),
+the text can be shifted using `SetBarOffset()`. It specifies an offset for the
+text position in each cell, in percentage of the bin width.
+
+Begin_Macro(source)
+{
+   TCanvas *c03 = new TCanvas("c03","c03",700,400);
+   gStyle->SetOptStat(0);
+   TH2F *htext3 = new TH2F("htext3","Several 2D histograms drawn with option TEXT",10,-4,4,10,-20,20);
+   TH2F *htext4 = new TH2F("htext4","htext4",10,-4,4,10,-20,20);
+   TH2F *htext5 = new TH2F("htext5","htext5",10,-4,4,10,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      htext3->Fill(4*px,20*py,0.1);
+      htext4->Fill(4*px,20*py,0.5);
+      htext5->Fill(4*px,20*py,1.0);
+   }
+   //gStyle->SetPaintTextFormat("4.1f m");
+   htext4->SetMarkerSize(1.8);
+   htext5->SetMarkerSize(1.8);
+   htext5->SetMarkerColor(kRed);
+   htext3->Draw("COL");
+   htext4->SetBarOffset(0.2);
+   htext4->Draw("TEXT SAME");
+   htext5->SetBarOffset(-0.2);
+   htext5->Draw("TEXT SAME");
+   return c03;
 }
 End_Macro
 
@@ -1699,7 +1792,7 @@ Begin_Macro(source)
    hlego3->SetFillColor(kRed);
    hlego3->Draw("LEGO3");
    return c2;
- }
+}
 End_Macro
 
 The following example shows a 2D histogram plotted with the option
@@ -2785,6 +2878,7 @@ THistPainter::~THistPainter()
 Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
 
+   Double_t defaultLabelSize = 0.04; // See TAttAxis.h for source of this value
 
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
@@ -2829,7 +2923,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    dsame = kFALSE;
    if (doption.Contains("same")) dsame = kTRUE;
 
-   dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
+   dyaxis = Int_t(2*(puymin-puymax)*TMath::Max(Double_t(fYaxis->GetLabelSize()), defaultLabelSize));
    if (doption.Contains("y+")) {
       xyaxis = puxmax + Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
       if (px <= xyaxis+dyaxis && px >= xyaxis && py >puymax && py < puymin) {
@@ -2850,7 +2944,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       }
    }
 
-   dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
+   dxaxis = Int_t((puymin-puymax)*TMath::Max(Double_t(fXaxis->GetLabelSize()), defaultLabelSize));
    if (doption.Contains("x+")) {
       yxaxis = puymax - Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
       if (py >= yxaxis-dxaxis && py <= yxaxis && px <puxmax && px > puxmin) {
@@ -3435,6 +3529,16 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (fFunctions->First()) Hoption.Func = 1;
    if (fH->GetSumw2N() && hdim == 1) Hoption.Error = 2;
 
+   char *l1 = strstr(chopt,"PFC"); // Automatic Fill Color
+   char *l2 = strstr(chopt,"PLC"); // Automatic Line Color
+   char *l3 = strstr(chopt,"PMC"); // Automatic Marker Color
+   if (l1 || l2 || l3) {
+      Int_t i = gPad->NextPaletteColor();
+      if (l1) {strncpy(l1,"   ",3); fH->SetFillColor(i);}
+      if (l2) {strncpy(l2,"   ",3); fH->SetLineColor(i);}
+      if (l3) {strncpy(l3,"   ",3); fH->SetMarkerColor(i);}
+   }
+
    l = strstr(chopt,"SPEC");
    if (l) {
       Hoption.Scat = 0;
@@ -3491,12 +3595,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       strncpy(l,"   ",3);
    }
 
-   
+
    l = strstr(chopt,"CANDLE");
    if (l) {
-	   TCandle candle;
-	   Hoption.Candle = candle.ParseOption(l);
-	   Hoption.Scat = 0;
+      TCandle candle;
+      Hoption.Candle = candle.ParseOption(l);
+      Hoption.Scat = 0;
    }
 
    l = strstr(chopt,"VIOLIN");
@@ -4499,7 +4603,7 @@ void THistPainter::PaintBoxes(Option_t *)
    Double_t dxmin = 0.51*(gPad->PadtoX(ux1)-gPad->PadtoX(ux0));
    Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
 
-   Double_t zmin = fH->GetMinimum();
+   Double_t zmin = TMath::Max(fH->GetMinimum(),0.);
    Double_t zmax = TMath::Max(TMath::Abs(fH->GetMaximum()),
                               TMath::Abs(fH->GetMinimum()));
 
@@ -4510,31 +4614,33 @@ void THistPainter::PaintBoxes(Option_t *)
       TIter next(gPad->GetListOfPrimitives());
       while ((h2 = (TH2 *)next())) {
          if (!h2->InheritsFrom(TH2::Class())) continue;
-         zmin = h2->GetMinimum();
+         zmin = TMath::Max(h2->GetMinimum(), 0.);
          zmax = TMath::Max(TMath::Abs(h2->GetMaximum()),
                            TMath::Abs(h2->GetMinimum()));
          if (Hoption.Logz) {
-            zmax = TMath::Log10(zmax);
             if (zmin <= 0) {
                zmin = TMath::Log10(zmax*0.001);
             } else {
                zmin = TMath::Log10(zmin);
             }
+            zmax = TMath::Log10(zmax);
          }
          break;
       }
-   }
-
-   if (Hoption.Logz) {
-      if (zmin > 0) {
-         zmin = TMath::Log10(zmin*0.1);
-         zmax = TMath::Log10(zmax);
-      } else {
-         return;
+   } else {
+      if (Hoption.Logz) {
+         if (zmin > 0) {
+            zmin = TMath::Log10(zmin);
+            zmax = TMath::Log10(zmax);
+         } else {
+            return;
+         }
       }
    }
 
    Double_t zratio, dz = zmax - zmin;
+   Bool_t kZminNeg     = kFALSE;
+   if (fH->GetMinimum()<0) kZminNeg = kTRUE;
    Bool_t kZNeg        = kFALSE;
 
    // Define the dark and light colors the "button style" boxes.
@@ -4559,8 +4665,9 @@ void THistPainter::PaintBoxes(Option_t *)
          z     = Hparam.factor*fH->GetBinContent(bin);
          kZNeg = kFALSE;
 
-         if (z <  zmin) continue; // Can be the case with
-         if (z >  zmax) z = zmax; // option Same
+         if (TMath::Abs(z) <  zmin) continue; // Can be the case with ...
+         if (TMath::Abs(z) >  zmax) z = zmax; // ... option Same
+         if (kZminNeg && z==0) continue;      // Do not draw empty bins if case of histo with netgative bins.
 
          if (z < 0) {
             if (Hoption.Logz) continue;
@@ -4665,17 +4772,16 @@ void THistPainter::PaintCandlePlot(Option_t *)
    TH1D *hproj;
    TH2D *h2 = (TH2D*)fH;
 
+   TCandle myCandle;
+   myCandle.SetOption((TCandle::CandleOption)Hoption.Candle);
+   myCandle.SetMarkerColor(fH->GetLineColor());
+   myCandle.SetLineColor(fH->GetLineColor());
+   myCandle.SetFillColor(fH->GetFillColor());
+   myCandle.SetFillStyle(fH->GetFillStyle());
+   myCandle.SetMarkerSize(fH->GetMarkerSize());
+   myCandle.SetMarkerStyle(fH->GetMarkerStyle());
+   myCandle.SetLog(Hoption.Logx,Hoption.Logy);
 
-	TCandle myCandle;
-	myCandle.SetOption((TCandle::CandleOption)Hoption.Candle);
-	myCandle.SetMarkerColor(fH->GetLineColor());
-	myCandle.SetLineColor(fH->GetLineColor());
-	myCandle.SetFillColor(fH->GetFillColor());
-	myCandle.SetFillStyle(fH->GetFillStyle());
-	myCandle.SetMarkerSize(fH->GetMarkerSize());
-	myCandle.SetMarkerStyle(fH->GetMarkerStyle());
-	myCandle.SetLog(Hoption.Logx,Hoption.Logy);
-	
    Bool_t swapXY = myCandle.IsHorizontal();
    const Double_t standardCandleWidth = 0.66;
 
@@ -4960,6 +5066,8 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
    // the appropriate value to use.
    Double_t zmin = fH->GetMinimumStored();
    Double_t zmax = fH->GetMaximumStored();
+   Double_t originalZMin = zmin;
+   Double_t originalZMax = zmax;
    if ((zmin == -1111) && (zmax == -1111)) {
       fH->GetMinimumAndMaximum(zmin, zmax);
       fH->SetMinimum(zmin);
@@ -5121,6 +5229,11 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 
    if (Hoption.Zscale) PaintPalette();
 
+   // Reset the maximum and minimum values to their original values
+   // when this function was called. If we don't do this, an initial
+   // value of -1111 will be replaced with the true max or min values.
+   fH->SetMinimum(originalZMin);
+   fH->SetMaximum(originalZMax);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5139,13 +5252,35 @@ void THistPainter::PaintColorLevels(Option_t*)
       dz = zmax - zmin;
    }
 
-   if (Hoption.Logz) {
-      if (zmin > 0) {
-         zmin = TMath::Log10(zmin);
-         zmax = TMath::Log10(zmax);
+   // In case of option SAME, zmin and zmax values are taken from the
+   // first plotted 2D histogram.
+   if (Hoption.Same) {
+      TH2 *h2;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((h2 = (TH2 *)next())) {
+         if (!h2->InheritsFrom(TH2::Class())) continue;
+         zmin = h2->GetMinimum();
+         zmax = h2->GetMaximum();
+         if (Hoption.Logz) {
+            if (zmin <= 0) {
+               zmin = TMath::Log10(zmax*0.001);
+            } else {
+               zmin = TMath::Log10(zmin);
+            }
+            zmax = TMath::Log10(zmax);
+         }
          dz = zmax - zmin;
-      } else {
-         return;
+         break;
+      }
+   } else {
+      if (Hoption.Logz) {
+         if (zmin > 0) {
+            zmin = TMath::Log10(zmin);
+            zmax = TMath::Log10(zmax);
+            dz   = zmax - zmin;
+         } else {
+            return;
+         }
       }
    }
 
@@ -7418,8 +7553,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
                   gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                   marker=0;
                }
-               fXbuf[marker] = (random.Rndm(loop)*xstep) + xk;
-               fYbuf[marker] = (random.Rndm(loop)*ystep) + yk;
+               fXbuf[marker] = (random.Rndm()*xstep) + xk;
+               fYbuf[marker] = (random.Rndm()*ystep) + yk;
                if (Hoption.Logx) {
                   if (fXbuf[marker] > 0) fXbuf[marker] = TMath::Log10(fXbuf[marker]);
                   else                   break;
@@ -8834,8 +8969,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (random.Rndm(loop)*xstep) + xk;
-            yp = (random.Rndm(loop)*ystep) + yk;
+            xp = (random.Rndm()*xstep) + xk;
+            yp = (random.Rndm()*ystep) + yk;
             if (g->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;
@@ -8858,8 +8993,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (random.Rndm(loop)*xstep) + xk;
-            yp = (random.Rndm(loop)*ystep) + yk;
+            xp = (random.Rndm()*xstep) + xk;
+            yp = (random.Rndm()*ystep) + yk;
             if (mg->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;
@@ -9022,7 +9157,8 @@ void THistPainter::PaintText(Option_t *)
             } else {
                snprintf(value,50,format,z);
             }
-            text.PaintLatex(x,y,angle,0.02*fH->GetMarkerSize(),value);
+            text.PaintLatex(x,y+fH->GetBarOffset()*fYaxis->GetBinWidth(j),
+                            angle,0.02*fH->GetMarkerSize(),value);
          }
       }
    }

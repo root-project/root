@@ -7,7 +7,6 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This class prints an Hexagon MCInst to a .s file.
 //
 //===----------------------------------------------------------------------===//
 
@@ -15,72 +14,78 @@
 #define LLVM_LIB_TARGET_HEXAGON_INSTPRINTER_HEXAGONINSTPRINTER_H
 
 #include "llvm/MC/MCInstPrinter.h"
-#include "llvm/MC/MCInstrInfo.h"
 
 namespace llvm {
-  class HexagonMCInst;
+/// Prints bundles as a newline separated list of individual instructions
+/// Duplexes are separated by a vertical tab \v character
+/// A trailing line includes bundle properties such as endloop0/1
+///
+/// r0 = add(r1, r2)
+/// r0 = #0 \v jump 0x0
+/// :endloop0 :endloop1
+class HexagonInstPrinter : public MCInstPrinter {
+public:
+  explicit HexagonInstPrinter(MCAsmInfo const &MAI, MCInstrInfo const &MII,
+                              MCRegisterInfo const &MRI);
+  void printInst(MCInst const *MI, raw_ostream &O, StringRef Annot,
+                 const MCSubtargetInfo &STI) override;
+  virtual StringRef getOpcodeName(unsigned Opcode) const;
+  void printInstruction(MCInst const *MI, raw_ostream &O);
 
-  class HexagonInstPrinter : public MCInstPrinter {
-  public:
-    explicit HexagonInstPrinter(const MCAsmInfo &MAI,
-                                const MCInstrInfo &MII,
-                                const MCRegisterInfo &MRI)
-      : MCInstPrinter(MAI, MII, MRI), MII(MII) {}
+  StringRef getRegName(unsigned RegNo) const;
+  static char const *getRegisterName(unsigned RegNo);
+  void printRegName(raw_ostream &O, unsigned RegNo) const override;
 
-    void printInst(const MCInst *MI, raw_ostream &O, StringRef Annot) override;
-    void printInst(const HexagonMCInst *MI, raw_ostream &O, StringRef Annot);
-    virtual StringRef getOpcodeName(unsigned Opcode) const;
-    void printInstruction(const MCInst *MI, raw_ostream &O);
-    StringRef getRegName(unsigned RegNo) const;
-    static const char *getRegisterName(unsigned RegNo);
-
-    void printOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O) const;
-    void printImmOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O) const;
-    void printExtOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O) const;
-    void printUnsignedImmOperand(const MCInst *MI, unsigned OpNo,
-                                 raw_ostream &O) const;
-    void printNegImmOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printNOneImmOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printMEMriOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printFrameIndexOperand(const MCInst *MI, unsigned OpNo,
-                                raw_ostream &O) const;
-    void printBranchOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printCallOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printAbsAddrOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printPredicateOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printGlobalOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O)
-           const;
-    void printJumpTable(const MCInst *MI, unsigned OpNo, raw_ostream &O) const;
-
-    void printConstantPool(const MCInst *MI, unsigned OpNo,
+  void printOperand(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
+  void printExtOperand(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
+  void printUnsignedImmOperand(MCInst const *MI, unsigned OpNo,
+                               raw_ostream &O) const;
+  void printNegImmOperand(MCInst const *MI, unsigned OpNo,
+                          raw_ostream &O) const;
+  void printNOneImmOperand(MCInst const *MI, unsigned OpNo,
                            raw_ostream &O) const;
+  void prints3_6ImmOperand(MCInst const *MI, unsigned OpNo,
+                           raw_ostream &O) const;
+  void prints3_7ImmOperand(MCInst const *MI, unsigned OpNo,
+                           raw_ostream &O) const;
+  void prints4_6ImmOperand(MCInst const *MI, unsigned OpNo,
+                           raw_ostream &O) const;
+  void prints4_7ImmOperand(MCInst const *MI, unsigned OpNo,
+                           raw_ostream &O) const;
+  void printBranchOperand(MCInst const *MI, unsigned OpNo,
+                          raw_ostream &O) const;
+  void printCallOperand(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
+  void printAbsAddrOperand(MCInst const *MI, unsigned OpNo,
+                           raw_ostream &O) const;
+  void printPredicateOperand(MCInst const *MI, unsigned OpNo,
+                             raw_ostream &O) const;
+  void printGlobalOperand(MCInst const *MI, unsigned OpNo,
+                          raw_ostream &O) const;
+  void printJumpTable(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
+  void printBrtarget(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
 
-    void printSymbolHi(const MCInst *MI, unsigned OpNo, raw_ostream &O) const
-      { printSymbol(MI, OpNo, O, true); }
-    void printSymbolLo(const MCInst *MI, unsigned OpNo, raw_ostream &O) const
-      { printSymbol(MI, OpNo, O, false); }
+  void printConstantPool(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
 
-    const MCInstrInfo &getMII() const {
-      return MII;
-    }
+  void printSymbolHi(MCInst const *MI, unsigned OpNo, raw_ostream &O) const {
+    printSymbol(MI, OpNo, O, true);
+  }
+  void printSymbolLo(MCInst const *MI, unsigned OpNo, raw_ostream &O) const {
+    printSymbol(MI, OpNo, O, false);
+  }
 
-  protected:
-    void printSymbol(const MCInst *MI, unsigned OpNo, raw_ostream &O, bool hi)
-           const;
+  MCAsmInfo const &getMAI() const { return MAI; }
+  MCInstrInfo const &getMII() const { return MII; }
 
-    static const char PacketPadding;
+protected:
+  void printSymbol(MCInst const *MI, unsigned OpNo, raw_ostream &O,
+                   bool hi) const;
 
-  private:
-    const MCInstrInfo &MII;
+private:
+  MCInstrInfo const &MII;
 
-  };
+  bool HasExtender;
+  void setExtender(MCInst const &MCI);
+};
 
 } // end namespace llvm
 

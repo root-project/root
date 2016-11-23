@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_unfold
+/// \notebook
 /// Test program for the class TUnfoldSys
 ///
 /// Simple toy tests of the TUnfold package

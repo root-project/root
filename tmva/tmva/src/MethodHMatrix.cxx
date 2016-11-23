@@ -31,13 +31,17 @@
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
-#include "TMatrix.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
 #include "Riostream.h"
+#include "TMatrix.h"
+#include "TVectorT.h"
+#include "TList.h"
+
 #include <algorithm>
 
 REGISTER_METHOD(HMatrix)
@@ -77,9 +81,8 @@ ClassImp(TMVA::MethodHMatrix)
    TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& theData,
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption, theTargetDir )
+                                       const TString& theOption )
+   : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption)
    ,fInvHMatrixS(0) 
    ,fInvHMatrixB(0) 
    ,fVecMeanS(0)    
@@ -91,9 +94,8 @@ ClassImp(TMVA::MethodHMatrix)
 /// constructor from weight file
 
 TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir )
-   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile)
+   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile)
    ,fInvHMatrixS(0) 
    ,fInvHMatrixB(0) 
    ,fVecMeanS(0)    
@@ -191,6 +193,7 @@ void TMVA::MethodHMatrix::Train( void )
    // invert matrix
    fInvHMatrixS->Invert();
    fInvHMatrixB->Invert();
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

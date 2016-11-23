@@ -20,6 +20,9 @@
 #ifndef ROOT_TMatrix
 #include "TMatrix.h"
 #endif
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
 
 class TRotation;
 
@@ -42,7 +45,7 @@ public:
    TVector3(const TVector3 &);
    // The copy constructor.
 
-   virtual ~TVector3();
+   virtual ~TVector3() {};
    // Destructor
 
    Double_t operator () (int) const;
@@ -88,7 +91,7 @@ public:
    inline Double_t Mag2() const;
    // The magnitude squared (rho^2 in spherical coordinate system).
 
-   Double_t Mag() const;
+   Double_t Mag() const { return TMath::Sqrt(Mag2()); }
    // The magnitude (rho in spherical coordinate system).
 
    void SetPhi(Double_t);
@@ -192,8 +195,9 @@ private:
 
    ClassDef(TVector3,3) // A 3D physics vector
 
+   // make TLorentzVector a friend class
+   friend class TLorentzVector;
 };
-
 
 TVector3 operator + (const TVector3 &, const TVector3 &);
 // Addition of 3-vectors.
@@ -211,8 +215,8 @@ TVector3 operator * (Double_t a, const TVector3 &);
 TVector3 operator * (const TMatrix &, const TVector3 &);
 
 
-Double_t & TVector3::operator[] (int i)       { return operator()(i); }
-Double_t   TVector3::operator[] (int i) const { return operator()(i); }
+inline Double_t & TVector3::operator[] (int i)       { return operator()(i); }
+inline Double_t   TVector3::operator[] (int i) const { return operator()(i); }
 
 inline Double_t TVector3::x()  const { return fX; }
 inline Double_t TVector3::y()  const { return fY; }
@@ -246,6 +250,51 @@ inline void TVector3::GetXYZ(Float_t *carray) const {
    carray[2] = fZ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructors
+inline TVector3::TVector3()
+: fX(0.0), fY(0.0), fZ(0.0) {}
+
+inline TVector3::TVector3(const TVector3 & p) : TObject(p),
+  fX(p.fX), fY(p.fY), fZ(p.fZ) {}
+
+inline TVector3::TVector3(Double_t xx, Double_t yy, Double_t zz)
+: fX(xx), fY(yy), fZ(zz) {}
+
+inline TVector3::TVector3(const Double_t * x0)
+: fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
+
+inline TVector3::TVector3(const Float_t * x0)
+: fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
+
+
+inline Double_t TVector3::operator () (int i) const {
+   switch(i) {
+      case 0:
+         return fX;
+      case 1:
+         return fY;
+      case 2:
+         return fZ;
+      default:
+         Error("operator()(i)", "bad index (%d) returning 0",i);
+   }
+   return 0.;
+}
+
+inline Double_t & TVector3::operator () (int i) {
+   switch(i) {
+      case 0:
+         return fX;
+      case 1:
+         return fY;
+      case 2:
+         return fZ;
+      default:
+         Error("operator()(i)", "bad index (%d) returning &fX",i);
+   }
+   return fX;
+}
 
 inline TVector3 & TVector3::operator = (const TVector3 & p) {
    fX = p.fX;
@@ -372,5 +421,6 @@ inline TVector2 TVector3::EtaPhiVector() const {
 inline TVector2 TVector3::XYvector() const {
    return TVector2(fX,fY);
 }
+
 
 #endif

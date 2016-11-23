@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Example of using the TKDE class (kernel density estimator)
 ///
 /// \macro_image
@@ -11,11 +12,9 @@
 #include "TF1.h"
 #include "TKDE.h"
 #include "TCanvas.h"
-//#include "TStopwatch.h"
+/*#include "TStopwatch.h"*/
 #include "TRandom.h"
-#ifndef __CINT__
 #include "Math/DistFunc.h"
-#endif
 #include "TLegend.h"
 
 // test TKDE

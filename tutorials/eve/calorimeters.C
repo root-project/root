@@ -98,7 +98,6 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    v->SetElementName("Viewer - Lego");
    s->SetElementName("Scene - Lego");
 
-   gStyle->SetPalette(1, 0);
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
 

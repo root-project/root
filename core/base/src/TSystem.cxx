@@ -868,12 +868,28 @@ const char *TSystem::WorkingDirectory()
    return 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
+std::string TSystem::GetWorkingDirectory() const
+{
+   return std::string();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the user's home directory.
 
 const char *TSystem::HomeDirectory(const char*)
 {
    return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
+std::string TSystem::GetHomeDirectory(const char*) const
+{
+   return std::string();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1055,15 +1071,45 @@ const char *TSystem::PrependPathName(const char *, TString&)
 
 const char *TSystem::ExpandFileName(const char *fname)
 {
-   const int   kBufSize = kMAXPATHLEN;
+   const int kBufSize = kMAXPATHLEN;
+   TTHREAD_TLS_ARRAY(char, kBufSize, xname);
+
+   Bool_t res = ExpandFileName(fname, xname, kBufSize);
+   if (res) 
+      return nullptr;
+   else
+      return xname;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
+/// This function is analogous to ExpandFileName(const char *), except that
+/// it receives a TString reference of the pathname to be expanded.
+/// Returns kTRUE in case of error and kFALSE otherwise.
+
+Bool_t TSystem::ExpandFileName(TString &fname)
+{
+   const int kBufSize = kMAXPATHLEN;
+   char xname[kBufSize];
+
+   Bool_t res = ExpandFileName(fname.Data(), xname, kBufSize);
+   if (!res)
+      fname = xname;
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Private method for pathname expansion.
+/// Returns kTRUE in case of error and kFALSE otherwise.
+
+Bool_t TSystem::ExpandFileName(const char *fname, char *xname, const int kBufSize)
+{
    int         n, ier, iter, lx, ncopy;
    char       *inp, *out, *x, *t, buff[kBufSize*4];
    const char *b, *c, *e;
    const char *p;
-   static char xname[kBufSize];
-
-   R__LOCKGUARD2(gSystemMutex);
-
+   
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
    c = fname + strspn(fname, " \t\f\r");
@@ -1077,7 +1123,8 @@ again:
 
    p = 0; e = 0;
    if (c[0] == '~' && c[1] == '/') { // ~/ case
-      p = HomeDirectory();
+      std::string hd = GetHomeDirectory();
+      p = hd.c_str();
       e = c + 1;
       if (p) {                         // we have smth to copy
          strlcpy(x, p, kBufSize);
@@ -1091,7 +1138,8 @@ again:
       n = strcspn(c+1, "/ ");
       buff[0] = 0;
       strncat(buff, c+1, n);
-      p = HomeDirectory(buff);
+      std::string hd = GetHomeDirectory(buff);
+      p = hd.c_str();
       e = c+1+n;
       if (p) {                          // we have smth to copy
          strlcpy(x, p, kBufSize);
@@ -1108,7 +1156,8 @@ again:
       p = 0; e = 0;
 
       if (c[0] == '.' && c[1] == '/' && c[-1] == ' ') { // $cwd
-         strlcpy(buff, WorkingDirectory(), kBufSize);
+         std::string wd = GetWorkingDirectory();
+         strlcpy(buff, wd.c_str(), kBufSize);
          p = buff;
          e = c + 1;
       }
@@ -1137,7 +1186,8 @@ again:
             p = Getenv(buff);
          }
          if (!p && !strcmp(buff, "cwd")) { // it is $cwd
-            strlcpy(buff, WorkingDirectory(), kBufSize);
+            std::string wd = GetWorkingDirectory();
+            strlcpy(buff, wd.c_str(), kBufSize);
             p = buff;
          }
          if (!p && !strcmp(buff, "$")) { // it is $$ (replace by GetPid())
@@ -1177,11 +1227,12 @@ again:
 
    if (ier || ncopy != lx) {
       ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
-      return 0;
+      return kTRUE;
    }
 
-   return xname;
+   return kFALSE;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand a pathname getting rid of special shell characters like ~.$, etc.
@@ -2150,6 +2201,33 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    } else
       fListLibs = libs;
 
+#if defined(R__MACOSX)
+// We need to remove the libraries that are dynamically loaded and not linked
+{
+   TString libs2 = fListLibs;
+   TString maclibs;
+
+   static TRegexp separator("[^ \\t\\s]+");
+   static TRegexp dynload("/lib-dynload/");
+
+   Ssiz_t start, index, end;
+   start = index = end = 0;
+
+   while ((start < libs2.Length()) && (index != kNPOS)) {
+      index = libs2.Index(separator, &end, start);
+      if (index >= 0) {
+         TString s = libs2(index, end);
+         if (s.Index(dynload) == kNPOS) {
+            if (!maclibs.IsNull()) maclibs.Append(" ");
+            maclibs.Append(s);
+         }
+      }
+      start += end+1;
+   }
+   fListLibs = maclibs;
+}
+#endif
+
 #if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)
    if (so2dylib) {
       TString libs2 = fListLibs;
@@ -2587,6 +2665,15 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          }
       }
    }
+   {
+      // Add dependency on rootcling.
+      char *rootCling = gSystem->Which(gSystem->Getenv("PATH"),"rootcling");
+      if (rootCling) {
+         R__AddPath(adddictdep,rootCling);
+         adddictdep += " ";
+         delete [] rootCling;
+      }
+   }
    adddictdep += " >> \""+depfilename+"\"";
 
    TString addversiondep( "echo ");
@@ -2821,7 +2908,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          return kFALSE;
       }
    }
-   { // Remove multiple '/' characters, rootcint treats them as comments.
+   { // Remove multiple '/' characters, rootcling treats them as comments.
       Ssiz_t pos = 0;
       while ((pos = library.Index("//", 2, pos, TString::kExact)) != kNPOS) {
          library.Remove(pos, 1);
@@ -2951,7 +3038,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          sub.Remove(0,3); // Remove ' -I'
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I\"");
-         sub.Append("\"");
+         sub.Chop(); // Remove trailing space (i.e between the -Is ...
+         sub.Append("\" ");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
       }
@@ -3257,7 +3345,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString dict = libname + "_ACLiC_dict";
 
    // the file name end up in the file produced
-   // by rootcint as a variable name so all character need to be valid!
+   // by rootcling as a variable name so all character need to be valid!
    static const int maxforbidden = 27;
    static const char *forbidden_chars[maxforbidden] =
       { "+","-","*","/","&","%","|","^",">","<",
@@ -3413,7 +3501,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    rcling.Append(filename_fullpath).Append("\" \"").Append(linkdef).Append("\"");;
 
-   // ======= Run rootcint
+   // ======= Run rootcling
    if (withInfo) {
       if (verboseLevel>3) {
          ::Info("ACLiC","creating the dictionary files");
@@ -3486,7 +3574,32 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
         linkLibraries.Prepend(" ");
      }
    */
-   linkLibraries.Prepend(GetLibraries("","SDL"));
+   TString linkLibrariesNoQuotes(GetLibraries("","SDL"));
+   // We need to enclose the single paths in quotes to account for paths with spaces
+   TString librariesWithQuotes;
+   TString singleLibrary;
+   Bool_t collectingSingleLibraryNameTokens = kFALSE;
+   for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
+      singleLibrary = ((TObjString*)tokenObj)->GetString();
+      if (!AccessPathName(singleLibrary) || singleLibrary[0]=='-') {
+         if (collectingSingleLibraryNameTokens) {
+            librariesWithQuotes.Chop();
+            librariesWithQuotes += "\" \"" + singleLibrary + "\"";
+            collectingSingleLibraryNameTokens = kFALSE;
+         } else {
+            librariesWithQuotes += " \"" + singleLibrary + "\"";
+         }
+      } else {
+         if (collectingSingleLibraryNameTokens) {
+            librariesWithQuotes += singleLibrary + " ";
+         } else {
+            collectingSingleLibraryNameTokens = kTRUE;
+            librariesWithQuotes += " \"" + singleLibrary + " ";
+         }
+      }
+   }
+
+   linkLibraries.Prepend(librariesWithQuotes);
 
    // ======= Generate the build command lines
    TString cmd = fMakeSharedLib;

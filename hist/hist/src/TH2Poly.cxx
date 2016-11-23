@@ -294,7 +294,7 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
    // Create Sumw2 if h1p has Sumw2 set
    if (fSumw2.fN == 0 && h1p->GetSumw2N() != 0) Sumw2();
 
-   // statistics can be preserbed only in case of positive coefficients
+   // statistics can be preserved only in case of positive coefficients
    // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
    Bool_t resetStats = (c1 < 0);
    Double_t s1[kNstat] = {0};

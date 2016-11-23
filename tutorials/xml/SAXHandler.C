@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_xml
+/// \notebook -nodraw
 /// ROOT implementation of a simple SAX Handler.
 ///
 /// This handler uses TSAXParser, a SAX Parser using the SAX interface
@@ -7,7 +8,7 @@
 /// file, if successfully parsed.
 ///
 /// To run this program do:
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// .x SAXHandler.C
 /// ~~~
 ///
@@ -103,6 +104,6 @@ void SAXHandler()
    SaxHandler *saxHandler = new SaxHandler();
 
    saxParser->ConnectToHandler("SaxHandler", saxHandler);
-   TString dir = gSystem->DirName(__FILE__);
-   saxParser->ParseFile(dir+"/saxexample.xml");
+   TString dir = gROOT->GetTutorialsDir();
+   saxParser->ParseFile(dir+"/xml/saxexample.xml");
 }

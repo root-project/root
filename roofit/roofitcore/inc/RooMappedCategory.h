@@ -24,11 +24,13 @@
 #include <map>
 #include <string>
 
+class RooMappedCategoryCache;
+
 class RooMappedCategory : public RooAbsCategory {
 public:
   // Constructors etc.
   enum CatIdx { NoCatIdx=-99999 } ;
-  inline RooMappedCategory() : _defCat(0) { }
+  inline RooMappedCategory() : _defCat(0), _mapcache(0) { }
   RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defCatName="NotMapped", Int_t defCatIdx=NoCatIdx);
   RooMappedCategory(const RooMappedCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooMappedCategory(*this,newname); }
@@ -66,16 +68,19 @@ public:
     RooCatType _cat ;
 
     ClassDef(Entry,1) // Map cat entry definition
-  } ;
-
+  };
 
 protected:
     
   RooCatType* _defCat ;         // Default (unmapped) output type
   RooCategoryProxy _inputCat ;  // Input category
   std::map<std::string,RooMappedCategory::Entry> _mapArray ;  // List of mapping rules
+  mutable RooMappedCategoryCache* _mapcache; //! transient member: cache the mapping
 
   virtual RooCatType evaluate() const ; 
+  const RooMappedCategoryCache* getOrCreateCache() const;
+
+  friend class RooMappedCategoryCache;
 
   ClassDef(RooMappedCategory,1) // Index variable, derived from another index using pattern-matching based mapping
 };

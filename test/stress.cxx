@@ -616,7 +616,7 @@ void stress7()
    for (i = 0; i < nall; i++) {
       gRandom->Rannor(px,py);
       pz = px*px + py*py;
-      Float_t random = gRandom->Rndm(1);
+      Float_t random = gRandom->Rndm();
       ntuple->Fill(px,py,pz,random,i);
    }
    ntuple->Write();

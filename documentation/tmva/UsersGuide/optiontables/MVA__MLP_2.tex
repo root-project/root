@@ -1,0 +1,9 @@
+\begin{optiontableAuto}
+                BatchSize  &  \mc{1}{c}{--}  &               -1  &  \mc{1}{l}{--}  &  Batch size: number of events/batch, only set if in Batch Mode, -1 for BatchSize=number\_of\_events \\
+       ConvergenceImprove  &  \mc{1}{c}{--}  &            1e-30  &  \mc{1}{l}{--}  &  Minimum improvement which counts as improvement ($<$0 means automatic convergence check is turned off) \\
+         ConvergenceTests  &  \mc{1}{c}{--}  &               -1  &  \mc{1}{l}{--}  &  Number of steps (without improvement) required for convergence ($<$0 means automatic convergence check is turned off) \\
+             UseRegulator  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Use regulator to avoid over-training \\
+              UpdateLimit  &  \mc{1}{c}{--}  &            10000  &  \mc{1}{l}{--}  &  Maximum times of regulator update \\
+          CalculateErrors  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Calculates inverse Hessian matrix at the end of the training to be able to calculate the uncertainties of an MVA value \\
+              WeightRange  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Take the events for the estimator calculations from small deviations from the desired value to large deviations only over the weight range 
+\end{optiontableAuto}

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example of candle plot showing the whiskers definition.
 ///
 /// \macro_image
@@ -12,7 +13,7 @@ void candleplotwhiskers() {
    TCanvas *c1 = new TCanvas("c1","Candle Presets",700,800);
    c1->Divide(1,2);
 
-   TRandom *rand = new TRandom();
+   TRandom *randnum = new TRandom();
    TH2I *h1 = new TH2I("h1","Gaus",100,-5,5,1,0,1);
    TH1I *h2 = new TH1I("h2","Gaus",100,-5,5);
 
@@ -22,7 +23,7 @@ void candleplotwhiskers() {
 
    float myRand;
    for (int i = 0; i < 100000; i++) {
-       myRand = rand->Gaus(0,1);
+       myRand = randnum->Gaus(0,1);
        h1->Fill(myRand,0);
        h2->Fill(myRand);
    }

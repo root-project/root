@@ -11,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/StaticAnalyzer/Core/PathDiagnosticConsumers.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/FileManager.h"
@@ -22,6 +21,9 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/PathDiagnostic.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
+#include "clang/StaticAnalyzer/Core/IssueHash.h"
+#include "clang/StaticAnalyzer/Core/PathDiagnosticConsumers.h"
+#include "llvm/Support/Errc.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
@@ -45,7 +47,7 @@ class HTMLDiagnostics : public PathDiagnosticConsumer {
 public:
   HTMLDiagnostics(AnalyzerOptions &AnalyzerOpts, const std::string& prefix, const Preprocessor &pp);
 
-  virtual ~HTMLDiagnostics() { FlushDiagnostics(nullptr); }
+  ~HTMLDiagnostics() override { FlushDiagnostics(nullptr); }
 
   void FlushDiagnosticsImpl(std::vector<const PathDiagnostic *> &Diags,
                             FilesMade *filesMade) override;
@@ -121,11 +123,11 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
 
   // The path as already been prechecked that all parts of the path are
   // from the same file and that it is non-empty.
-  const SourceManager &SMgr = (*path.begin())->getLocation().getManager();
+  const SourceManager &SMgr = path.front()->getLocation().getManager();
   assert(!path.empty());
   FileID FID =
-    (*path.begin())->getLocation().asLocation().getExpansionLoc().getFileID();
-  assert(!FID.isInvalid());
+    path.front()->getLocation().asLocation().getExpansionLoc().getFileID();
+  assert(FID.isValid());
 
   // Create a new rewriter to generate HTML.
   Rewriter R(const_cast<SourceManager&>(SMgr), PP.getLangOpts());
@@ -142,7 +144,7 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
           // Retrieve the relative position of the declaration which will be used
           // for the file name
           FullSourceLoc L(
-              SMgr.getExpansionLoc((*path.rbegin())->getLocation().asLocation()),
+              SMgr.getExpansionLoc(path.back()->getLocation().asLocation()),
               SMgr);
           FullSourceLoc FunL(SMgr.getExpansionLoc(Body->getLocStart()), SMgr);
           offsetDecl = L.getExpansionLineNumber() - FunL.getExpansionLineNumber();
@@ -186,8 +188,8 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
     DirName += '/';
   }
 
-  int LineNumber = (*path.rbegin())->getLocation().asLocation().getExpansionLineNumber();
-  int ColumnNumber = (*path.rbegin())->getLocation().asLocation().getExpansionColumnNumber();
+  int LineNumber = path.back()->getLocation().asLocation().getExpansionLineNumber();
+  int ColumnNumber = path.back()->getLocation().asLocation().getExpansionColumnNumber();
 
   // Add the name of the file as an <h1> tag.
 
@@ -235,6 +237,13 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
     if (!BugType.empty())
       os << "\n<!-- BUGTYPE " << BugType << " -->\n";
 
+    PathDiagnosticLocation UPDLoc = D.getUniqueingLoc();
+    FullSourceLoc L(SMgr.getExpansionLoc(UPDLoc.isValid()
+                                             ? UPDLoc.asLocation()
+                                             : D.getLocation().asLocation()),
+                    SMgr);
+    const Decl *DeclWithIssue = D.getDeclWithIssue();
+
     StringRef BugCategory = D.getCategory();
     if (!BugCategory.empty())
       os << "\n<!-- BUGCATEGORY " << BugCategory << " -->\n";
@@ -244,6 +253,10 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
     os << "\n<!-- FILENAME " << llvm::sys::path::filename(Entry->getName()) << " -->\n";
 
     os  << "\n<!-- FUNCTIONNAME " <<  declName << " -->\n";
+
+    os << "\n<!-- ISSUEHASHCONTENTOFLINEINCONTEXT "
+       << GetIssueHash(SMgr, L, D.getCheckName(), D.getBugType(), DeclWithIssue,
+                       PP.getLangOpts()) << " -->\n";
 
     os << "\n<!-- BUGLINE "
        << LineNumber
@@ -280,9 +293,14 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
 
   if (!AnalyzerOpts.shouldWriteStableReportFilename()) {
       llvm::sys::path::append(Model, Directory, "report-%%%%%%.html");
-
       if (std::error_code EC =
-          llvm::sys::fs::createUniqueFile(Model.str(), FD, ResultPath)) {
+          llvm::sys::fs::make_absolute(Model)) {
+          llvm::errs() << "warning: could not make '" << Model
+                       << "' absolute: " << EC.message() << '\n';
+        return;
+      }
+      if (std::error_code EC =
+          llvm::sys::fs::createUniqueFile(Model, FD, ResultPath)) {
           llvm::errs() << "warning: could not create file in '" << Directory
                        << "': " << EC.message() << '\n';
           return;
@@ -302,12 +320,12 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
                    << "-" << i << ".html";
           llvm::sys::path::append(Model, Directory,
                                   filename.str());
-          EC = llvm::sys::fs::openFileForWrite(Model.str(),
+          EC = llvm::sys::fs::openFileForWrite(Model,
                                                FD,
                                                llvm::sys::fs::F_RW |
                                                llvm::sys::fs::F_Excl);
-          if (EC && EC != std::errc::file_exists) {
-              llvm::errs() << "warning: could not create file '" << Model.str()
+          if (EC && EC != llvm::errc::file_exists) {
+              llvm::errs() << "warning: could not create file '" << Model
                            << "': " << EC.message() << '\n';
               return;
           }
@@ -394,13 +412,13 @@ void HTMLDiagnostics::HandlePiece(Rewriter& R, FileID BugFileID,
   // Output a maximum size.
   if (!isa<PathDiagnosticMacroPiece>(P)) {
     // Get the string and determining its maximum substring.
-    const std::string& Msg = P.getString();
+    const auto &Msg = P.getString();
     unsigned max_token = 0;
     unsigned cnt = 0;
     unsigned len = Msg.size();
 
-    for (std::string::const_iterator I=Msg.begin(), E=Msg.end(); I!=E; ++I)
-      switch (*I) {
+    for (char C : Msg)
+      switch (C) {
       default:
         ++cnt;
         continue;

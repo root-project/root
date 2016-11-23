@@ -141,6 +141,7 @@ public:
       fTree(0),
       fDirectory(0),
       fEntryStatus(kEntryNoTree),
+      fMostRecentTreeNumber(-1),
       fDirector(0),
       fLastEntry(-1),
       fProxiesSet(false)
@@ -148,7 +149,6 @@ public:
 
    TTreeReader(TTree* tree);
    TTreeReader(const char* keyname, TDirectory* dir = NULL );
-   TTreeReader(const char* /*keyname*/, TFileCollection* /*files*/) { Error("TTreeReader()", "Not Implemented!");};
 
    ~TTreeReader();
 
@@ -163,6 +163,7 @@ public:
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
    void SetLastEntry(Long64_t entry) { fLastEntry = entry; }
    EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
+   void Restart();
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
@@ -182,7 +183,7 @@ protected:
       return (ROOT::Internal::TNamedBranchProxy*) fProxies.FindObject(branchname); }
    TCollection* GetProxies() { return &fProxies; }
 
-   void RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
+   Bool_t RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
@@ -196,6 +197,7 @@ private:
    TTree* fTree; ///< tree that's read
    TDirectory* fDirectory; ///< directory (or current file for chains)
    EEntryStatus fEntryStatus; ///< status of most recent read request
+   Int_t fMostRecentTreeNumber; ///< TTree::GetTreeNumber() of the most recent tree
    ROOT::Internal::TBranchProxyDirector* fDirector; ///< proxying director, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    THashTable   fProxies; ///< attached ROOT::TNamedBranchProxies; owned

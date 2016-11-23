@@ -47,7 +47,7 @@
 // #include "Math/QRDecomposition.h"
 // #endif
 
-#include <iostream>
+#include "TError.h"
 
 namespace ROOT {
 
@@ -85,7 +85,7 @@ public:
      typename MatrixRep::value_type det(0.0);
 
      if (DfactMatrix(rhs,det,work) != 0) {
-        std::cerr << "Dfact_matrix failed!!" << std::endl;
+        Error("Inverter::Dinv","Dfact_matrix failed!!");
         return false;
      }
 

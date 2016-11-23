@@ -85,6 +85,9 @@ public:
 
    Int_t   GetBDPoint();                     //returns the breakdown point of the algorithm
 
+   /// returns a reference to the data matrix
+   const TMatrixD & GetData() { return fData; } 
+   
    void    GetCovariance(TMatrixDSym &matr); //returns robust covariance matrix estimate
    const   TMatrixDSym* GetCovariance() const{return &fCovariance;}
    void    GetCorrelation(TMatrixDSym &matr); //returns robust correlation matrix estimate

@@ -3,8 +3,12 @@
 #include "TF3.h"
 #include "TFormula.h"
 #include "TGraph.h"
+#include "TMath.h"
 #include "Math/ChebyshevPol.h"
 
+#include <limits>
+#include <cstdlib>
+#include <stdio.h>
 // test of tformula neeeded to be run
 
 
@@ -13,6 +17,19 @@ class TFormulaParsingTests {
    
 bool verbose; 
 std::vector<int> failedTests; 
+
+// We need a softer way to reason about equality in 32 bits
+// Being this a quick test, doing the check at runtime is really no problem.
+bool fpEqual(double x, double y, bool epsilon = false)
+{
+   bool isEqual = epsilon ? std::abs(x-y) <= std::numeric_limits<double>::epsilon() : x == y;
+   if (!isEqual) {
+       // std::hexfloat not there for older gcc versions
+       printf("\nThe numbers differ: %A and %A\n", x, y);
+   }
+   return isEqual;
+}
+
 public:
 
 TFormulaParsingTests(bool _verbose = false) : verbose(_verbose) {}
@@ -296,9 +313,9 @@ bool test17() {
    TF1 * f0 = new TF1("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]); },0,10,2);
    f0->SetParameters(2,3);
    bool ok = true; 
-   ok &= (f1->Eval(1.5) == f0->Eval(1.5) );
+   ok &= fpEqual(f1->Eval(1.5) , f0->Eval(1.5) );
    double xx[1] = {2.5};
-   ok &= (f1->EvalPar(xx) == f0->Eval(2.5) );
+   ok &= fpEqual(f1->EvalPar(xx) , f0->Eval(2.5) );
    return ok;
 }
 
@@ -309,10 +326,10 @@ bool test18() {
    TF2 * f0 = new TF2("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]); },0,10,0,10,2);
    f0->SetParameters(2,3);
    bool ok = true; 
-   ok &= (f1->Eval(1.5,2.5) == f0->Eval(1.5,2.5) );
+   ok &= fpEqual(f1->Eval(1.5,2.5) , f0->Eval(1.5,2.5) );
    double par[2] = {3,4};
    double xx[2] = {0.8,1.6};
-   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   ok &= fpEqual(f1->EvalPar(xx,par) , f0->EvalPar(xx,par) );
    return ok; 
 }
 
@@ -323,10 +340,10 @@ bool test19() {
    TF3 * f0 = new TF3("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]*x[2]); },0,10,0,10,0,10,2);
    f0->SetParameters(2,3);
    bool ok = true; 
-   ok &= (f1->Eval(1.5,2.5,3.5) == f0->Eval(1.5,2.5,3.5) );
+   ok &= fpEqual(f1->Eval(1.5,2.5,3.5) , f0->Eval(1.5,2.5,3.5) );
    double par[2] = {3,4};
    double xx[3] = {0.8,1.6,2.2};
-   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   ok &= fpEqual(f1->EvalPar(xx,par) , f0->EvalPar(xx,par) );
    return ok; 
 }
 
@@ -341,7 +358,7 @@ bool test20() {
       -10,10,-10,10,16);
    double xx[2]={1,2};
    //printf(" difference = %f , value %f \n", f2.Eval(1,2) - f0.EvalPar(xx,params), f2.Eval(1,2) );
-   return ( f2.Eval(1,2) == f0.EvalPar(xx,params) );
+   return fpEqual( f2.Eval(1,2) , f0.EvalPar(xx,params) );
 }
 
 bool test21() {
@@ -350,7 +367,7 @@ bool test21() {
    f.SetParameters(1,2,3,1,0,1);
    TF1 f0("f0",[](double *x, double *p){ return p[0]+x[0]*p[1]+x[0]*x[0]*p[2]+p[3]*TMath::Gaus(x[0],p[4],p[5]); },0,1,6);
    f0.SetParameters(f.GetParameters() );
-   return (f.Eval(2) == f0.Eval(2) );
+   return fpEqual(f.Eval(2) , f0.Eval(2) );
 }
 
 bool test22() {
@@ -369,12 +386,12 @@ bool test23() {
    TF1 f0("f0",[](double *x, double *p){ return p[0]+p[1]*TMath::Gaus(x[0],p[2],p[3]); },-3,3,4 );
    f2.SetParameters(10,1,0,1);
    f0.SetParameters(f2.GetParameters() );
-   ok &= (f2.Eval(1) == f0.Eval(1) );
+   ok &= fpEqual(f2.Eval(1) , f0.Eval(1) );
 
    TF1 f3("f3","f1+[0]");
    // param order should be the same
    f3.SetParameters( f2.GetParameters() );
-   ok &= (f2.Eval(1) == f0.Eval(1) );
+   ok &= fpEqual(f2.Eval(1) , f0.Eval(1) );
    return ok;
 }
 
@@ -393,40 +410,56 @@ bool test24() {
 
 bool test25() {
    // fix parsing of operator^ (ROOT-7349)
-   bool ok = true; 
+   bool ok = true;
    TF1 f1("f1","x^-2.5");
    ok &= (f1.Eval(3.) == TMath::Power(3,-2.5) );
+   if (!ok)  std::cout << "Error in test25 - f != x^-2.5 " << f1.Eval(3.) << "  " <<  TMath::Power(3,-2.5) << std::endl;
 
    TF1 f2("f2","x^+2.5");
    //TF1 f3("f3","std::pow(x,2.5)");  // this needed to be fixed
    TF1 f3("f3","TMath::Power(x,2.5)");
-   ok &= (f2.Eval(3.) == f3.Eval(3) );
+   bool ret =  (f2.Eval(3.) == f3.Eval(3) );
+   if (!ret)  std::cout << "Error in test25 - f2 != f3 " << f2.Eval(3.) << "  " <<  f3.Eval(3.) << std::endl;
+   ok &= ret; 
 
    //cms test
    TF1 t1("t1","(x<190)?(-18.7813+(((2.49368+(10.3321/(x^0.881126)))*exp(-((x^-1.66603)/0.074916)))-(-17.5757*exp(-((x^-1464.26)/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))))");
    double x = 2;
    double y =(x<190)?(-18.7813+(((2.49368+(10.3321/(std::pow(x,0.881126))))*exp(-((std::pow(x,-1.66603))/0.074916)))-(-17.5757*exp(-((std::pow(x,-1464.26))/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))));
-   ok &= (t1.Eval(2) == y );
+   // this fails on 32 bits - put a tolerance
+   ret = TMath::AreEqualAbs(t1.Eval(2) , y , 1.E-8);
+   if (!ret)  std::cout << "Error in test25 - t1 != y " << t1.Eval(2.) << "  " <<  y << std::endl;
+   ok &= ret; 
 
    // tests with scientific notations
    auto ff = new TFormula("ff","x+2.e-2^1.2e-1");
-   ok &= ( ff->Eval(1.) == (1. + std::pow(2.e-2,1.2e-1) ) );
+   ret = ( ff->Eval(1.) == (1. + std::pow(2.e-2,1.2e-1) ) );
+   if (!ret) std::cout << "Error in test25 - ff != expr " << ff->Eval(1.) << "  " <<   (1. + std::pow(2.e-2,1.2e-1) ) << std::endl;
+   ok &= ret; 
 
    ff = new TFormula("ff","x^-1.2e1");
-   ok &= ( ff->Eval(1.5) == std::pow(1.5,-1.2e1) ) ;
+   ret = ( ff->Eval(1.5) == std::pow(1.5,-1.2e1) ) ;
+   if (!ret) std::cout << "Error in test25 - ff(1.5) != pow " <<  ff->Eval(1.5) << "  " <<  std::pow(1.5,-1.2e1) << std::endl; 
+   ok &= ret; 
 
    ff = new TFormula("ff","1.5e2^x");
-   ok &= ( ff->Eval(2) == std::pow(1.5e2,2) );
+   ret = ( ff->Eval(2) == std::pow(1.5e2,2) );
+   if (!ret) std::cout << "Error in test25 - ff(2) != pow " << ff->Eval(2) << "  " <<  std::pow(1.5e2,2) << std::endl; 
+   ok &= ret; 
 
    ff = new TFormula("ff","1.5e2^x^-1.1e-2");
-   ok &= ( ff->Eval(2.) == std::pow(1.5e2, std::pow(2,-1.1e-2) ) );
+   ret = ( ff->Eval(2.) == std::pow(1.5e2, std::pow(2,-1.1e-2) ) );
+   if (!ret) std::cout << "Error in test25 - ff(2) != pow^pow " << ff->Eval(2.) << "  " <<  std::pow(1.5e2, std::pow(2,-1.1e-2) ) << std::endl; 
+   ok &= ret; 
 
    // test same prelacements
    ff = new TFormula("ff","pol10(3)+pol2");
    std::vector<double> p = {1,2,3,4,5,6,7,8,9,10,11,12,13,14};
    ff->SetParameters(p.data() );
    double sum = 0; for (auto &a : p) { sum+= a;} 
-   ok &= ( ff->Eval(1.) == sum );
+   ret = ( ff->Eval(1.) == sum );
+   if (!ret) std::cout << "Error in test25 - ff(1) != sum " << ff->Eval(1.) << "  " <<  sum << std::endl; 
+   ok &= ret; 
 
    return ok;   
 }
@@ -454,18 +487,18 @@ bool test27() {
    TF1 f1("f1","x+sq(x+2)+sq(x+[0])");
    TF1 f2("f2","x+(x+2)^2+(x+[0])^2");
    f1.SetParameter(0,3); f2.SetParameter(0,3);
-   ok &= (f1.Eval(2) == f2.Eval(2));
-   ok &= (f1.Eval(-4) == f2.Eval(-4));
+   ok &= fpEqual(f1.Eval(2) , f2.Eval(2));
+   ok &= fpEqual(f1.Eval(-4) , f2.Eval(-4));
    // test nested expressions and conflict with sqrt
    TF1 f3("f3","sqrt(1.+sq(x))");
-   ok &= (f3.Eval(2) == sqrt(5) );
+   ok &= fpEqual(f3.Eval(2) , sqrt(5) );
    TF1 f4("f4","sq(1.+std::sqrt(x))");
-   ok &= (f4.Eval(2) == TMath::Sq(1.+sqrt(2)) );
+   ok &= fpEqual(f4.Eval(2) , TMath::Sq(1.+sqrt(2)) );
    TF1 f5("f5","sqrt(((TMath::Sign(1,[0])*sq([0]/x))+(sq([1])*(x^([3]-1))))+sq([2]))");
    auto func = [](double *x, double *p){ return TMath::Sqrt(((TMath::Sign(1,p[0])*TMath::Sq(p[0]/x[0]))+(TMath::Sq(p[1])*(TMath::Power(x[0],(p[3]-1)))))+TMath::Sq(p[2])); };
    TF1 f6("f6",func,-10,10,4);
    f5.SetParameters(-1,2,3,4); f6.SetParameters(f5.GetParameters());
-   ok &= (f5.Eval(2) == f6.Eval(2) );
+   ok &= fpEqual(f5.Eval(2) , f6.Eval(2) );
    return ok;
 }
 
@@ -485,7 +518,12 @@ bool test28() {
    // keep same order in evaluation
    TF1 f0("f0",[](double *x, double *p){ return p[1]*sin(x[0]) + p[0]*cos(x[0]);},0.,10.,2);
    f0.SetParameters(1.1,2.1);
-   ok &= (fsincos.Eval(2) == f0.Eval(2) );
+#ifdef R__B64
+   bool epsilon = false;
+#else
+   bool epsilon = true;
+#endif
+   ok &= fpEqual(fsincos.Eval(2) , f0.Eval(2), epsilon);
    return ok;
 
 }
@@ -580,13 +618,15 @@ bool test35() {
    g1.SetParameters(par.data()); 
 
    ok &=  TMath::AreEqualRel( f1.Eval(2), g1.Eval(2), 1.E-6);
+   if (!ok) std::cout << "Error in test35 - f1 != g1 " << f1.Eval(2) << "  " << g1.Eval(2) << std::endl;
    
    TF1 f2("f2","cheb10(0)+cheb1(11)",-1,1);
    TF1 g2("g2",[](double *x, double *p){ return ROOT::Math::ChebyshevN(10, x[0], p ) + ROOT::Math::ChebyshevN(1,x[0],p+11 ); }, -1, 1, 13);
    f2.SetParameters(par.data()); 
    g2.SetParameters(par.data()); 
 
-   ok &=  TMath::AreEqualRel( f2.Eval(2), g2.Eval(2), 1.E-6);   
+   ok &=  TMath::AreEqualRel( f2.Eval(2), g2.Eval(2), 1.E-6);
+   if (!ok) std::cout << "Error in test35 - f2 != g2 " << f2.Eval(2.) << "  " << g2.Eval(2.) << std::endl;
    
    return ok; 
 }

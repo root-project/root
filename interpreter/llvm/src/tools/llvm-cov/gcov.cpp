@@ -16,16 +16,14 @@
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/GCOV.h"
-#include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/PrettyStackTrace.h"
-#include "llvm/Support/Signals.h"
 #include <system_error>
 using namespace llvm;
 
-void reportCoverage(StringRef SourceFile, StringRef ObjectDir,
-                    const std::string &InputGCNO, const std::string &InputGCDA,
-                    bool DumpGCOV, const GCOVOptions &Options) {
+static void reportCoverage(StringRef SourceFile, StringRef ObjectDir,
+                           const std::string &InputGCNO,
+                           const std::string &InputGCDA, bool DumpGCOV,
+                           const GCOV::Options &Options) {
   SmallString<128> CoverageFileStem(ObjectDir);
   if (CoverageFileStem.empty()) {
     // If no directory was specified with -o, look next to the source file.
@@ -84,11 +82,6 @@ void reportCoverage(StringRef SourceFile, StringRef ObjectDir,
 }
 
 int gcovMain(int argc, const char *argv[]) {
-  // Print a stack trace if we signal out.
-  sys::PrintStackTraceOnErrorSignal();
-  PrettyStackTraceProgram X(argc, argv);
-  llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
-
   cl::list<std::string> SourceFiles(cl::Positional, cl::OneOrMore,
                                     cl::desc("SOURCEFILE"));
 
@@ -142,8 +135,8 @@ int gcovMain(int argc, const char *argv[]) {
 
   cl::ParseCommandLineOptions(argc, argv, "LLVM code coverage tool\n");
 
-  GCOVOptions Options(AllBlocks, BranchProb, BranchCount, FuncSummary,
-                      PreservePaths, UncondBranch, LongNames, NoOutput);
+  GCOV::Options Options(AllBlocks, BranchProb, BranchCount, FuncSummary,
+                        PreservePaths, UncondBranch, LongNames, NoOutput);
 
   for (const auto &SourceFile : SourceFiles)
     reportCoverage(SourceFile, ObjectDir, InputGCNO, InputGCDA, DumpGCOV,

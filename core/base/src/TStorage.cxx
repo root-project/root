@@ -365,6 +365,17 @@ void TStorage::ObjectDealloc(void *vp, void *ptr)
    if (vp && ptr) { }
 }
 
+#ifdef R__SIZEDDELETE
+////////////////////////////////////////////////////////////////////////////////
+/// Used to deallocate a TObject on the heap (via TObject::operator delete()),
+/// for sized deallocation.
+
+void TStorage::ObjectDealloc(void *vp, size_t size)
+{
+   ::operator delete(vp, size);
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a free handler.
 

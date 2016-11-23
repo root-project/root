@@ -63,7 +63,7 @@ public:
                        const char *location = 0);
    static Bool_t CheckFile(const char *path, const char *location = 0);
 
-   /// Note: This must be kept in sync with values #defined in dcap.h
+   /// Note: This must be kept in sync with values \#defined in dcap.h
    enum EOnErrorAction {
       kOnErrorRetry   =  1,
       kOnErrorFail    =  0,

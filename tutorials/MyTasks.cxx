@@ -1,7 +1,12 @@
-// A set of classes deriving from TTask
-// see macro tasks.C to see an example of use
-// The Exec function of each class prints one line when it is called.
-//Author: Rene Brun
+/// \file
+/// \ingroup Tutorials
+/// A set of classes deriving from TTask.
+/// See macro tasks.C to see an example of use
+/// The Exec function of each class prints one line when it is called.
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TTask.h"
 

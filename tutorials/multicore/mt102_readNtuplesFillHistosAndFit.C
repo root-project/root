@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_multicore
 /// Read n-tuples in distinct workers, fill histograms, merge them and fit.
-/// Knowing that other facilities like TProcPool might be more adequate for
+/// Knowing that other facilities like TProcessExecutor might be more adequate for
 /// this operation, this tutorial complements mc101, reading and merging.
 /// We convey another message with this tutorial: the synergy of ROOT and
 /// STL algorithms is possible.
@@ -10,6 +10,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 Int_t mt102_readNtuplesFillHistosAndFit()
 {

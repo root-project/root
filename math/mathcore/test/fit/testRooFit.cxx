@@ -159,8 +159,8 @@ class MultiGaussRooPdf {
 
    RooAbsPdf & getPdf() { return *pdf.back(); }
 
-   std::auto_ptr<RooArgSet>  getVars() {
-      std::auto_ptr<RooArgSet> vars(new RooArgSet() );
+   std::unique_ptr<RooArgSet>  getVars() {
+      std::unique_ptr<RooArgSet> vars(new RooArgSet() );
       for (unsigned int i = 0; i < x.size(); ++i)
          vars->add(*x[i]);
       return vars;
@@ -352,7 +352,7 @@ int main() {
    MultiGaussRooPdf multipdf(N);
    RooAbsPdf & pdf = multipdf.getPdf();
 
-   std::auto_ptr<RooArgSet> xvars = multipdf.getVars();
+   std::unique_ptr<RooArgSet> xvars(multipdf.getVars());
 
    WrapperRooPdf  wpdf( &pdf, *xvars );
 

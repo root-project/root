@@ -10,7 +10,9 @@
 #include "IncrementalJIT.h"
 
 #include "IncrementalExecutor.h"
+#include "cling/Utils/Platform.h"
 
+#include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
 #include "llvm/Support/DynamicLibrary.h"
 
 #ifdef __APPLE__
@@ -32,19 +34,8 @@ static void local_cxa_atexit(void (*func) (void*), void* arg, void* dso) {
 ///\brief Memory manager providing the lop-level link to the
 /// IncrementalExecutor, handles missing or special / replaced symbols.
 class ClingMemoryManager: public SectionMemoryManager {
-  cling::IncrementalExecutor& m_exe;
-
 public:
-  ClingMemoryManager(cling::IncrementalExecutor& Exe):
-    m_exe(Exe) {}
-
-  /// This method returns the address of the specified function or variable
-  /// that could not be resolved by getSymbolAddress() or by resolving
-  /// possible weak symbols by the ExecutionEngine.
-  /// It is used to resolve symbols during module linking.
-  uint64_t getMissingSymbolAddress(const std::string &Name) override {
-    return (uint64_t) m_exe.NotifyLazyFunctionCreators(Name);
-  }
+  ClingMemoryManager(cling::IncrementalExecutor& Exe) {}
 
   ///\brief Simply wraps the base class's function setting AbortOnFailure
   /// to false and instead using the error handling mechanism to report it.
@@ -53,6 +44,18 @@ public:
     return SectionMemoryManager::getPointerToNamedFunction(Name, false);
   }
 };
+
+  class NotifyFinalizedT {
+  public:
+    NotifyFinalizedT(cling::IncrementalJIT &jit) : m_JIT(jit) {}
+    void operator()(llvm::orc::ObjectLinkingLayerBase::ObjSetHandleT H) {
+      m_JIT.RemoveUnfinalizedSection(H);
+    }
+
+  private:
+    cling::IncrementalJIT &m_JIT;
+  };
+
 } // unnamed namespace
 
 namespace cling {
@@ -86,9 +89,12 @@ public:
     return Addr;
   }
 
-  void reserveAllocationSpace(uintptr_t CodeSize, uintptr_t DataSizeRO,
-                              uintptr_t DataSizeRW) override {
-    return getExeMM()->reserveAllocationSpace(CodeSize, DataSizeRO, DataSizeRW);
+  void reserveAllocationSpace(uintptr_t CodeSize, uint32_t CodeAlign,
+                              uintptr_t RODataSize, uint32_t RODataAlign,
+                              uintptr_t RWDataSize, uint32_t RWDataAlign) override {
+    return getExeMM()->reserveAllocationSpace(CodeSize, CodeAlign, RODataSize,
+                                              RODataAlign, RWDataSize,
+                                              RWDataAlign);
   }
 
   bool needsToReserveAllocationSpace() override {
@@ -107,13 +113,16 @@ public:
 
   uint64_t getSymbolAddress(const std::string &Name) override {
     return m_jit.getSymbolAddressWithoutMangling(Name,
-                                                 true /*also use dlsym*/);
+                                                 true /*also use dlsym*/)
+      .getAddress();
   }
 
   void *getPointerToNamedFunction(const std::string &Name,
                                   bool AbortOnFailure = true) override {
     return getExeMM()->getPointerToNamedFunction(Name, AbortOnFailure);
   }
+
+  using llvm::RuntimeDyld::MemoryManager::notifyObjectLoaded;
 
   void notifyObjectLoaded(ExecutionEngine *EE,
                           const object::ObjectFile &O) override {
@@ -139,40 +148,24 @@ public:
     return false;
   };
 
-  /// This method returns the address of the specified function or variable
-  /// that could not be resolved by getSymbolAddress() or by resolving
-  /// possible weak symbols by the ExecutionEngine.
-  /// It is used to resolve symbols during module linking.
-  uint64_t getMissingSymbolAddress(const std::string &Name) override {
-    std::string NameNoPrefix;
-    if (MANGLE_PREFIX[0]
-        && !Name.compare(0, strlen(MANGLE_PREFIX), MANGLE_PREFIX))
-      NameNoPrefix = Name.substr(strlen(MANGLE_PREFIX), -1);
-    else
-      NameNoPrefix = std::move(Name);
-    return (uint64_t) m_jit.getParent().NotifyLazyFunctionCreators(NameNoPrefix);
-  }
-
-
 }; // class Azog
 
 IncrementalJIT::IncrementalJIT(IncrementalExecutor& exe,
                                std::unique_ptr<TargetMachine> TM):
   m_Parent(exe),
   m_TM(std::move(TM)),
+  m_TMDataLayout(m_TM->createDataLayout()),
   m_ExeMM(llvm::make_unique<ClingMemoryManager>(m_Parent)),
-  m_Mang(m_TM->getDataLayout()),
-  m_NotifyObjectLoaded(*this), m_NotifyFinalized(*this),
-  m_ObjectLayer(ObjectLayerT::CreateRTDyldMMFtor(), m_NotifyObjectLoaded,
-                m_NotifyFinalized),
-  m_CompileLayer(m_ObjectLayer, SimpleCompiler(*m_TM)),
+  m_NotifyObjectLoaded(*this),
+  m_ObjectLayer(m_SymbolMap, m_NotifyObjectLoaded, NotifyFinalizedT(*this)),
+  m_CompileLayer(m_ObjectLayer, llvm::orc::SimpleCompiler(*m_TM)),
   m_LazyEmitLayer(m_CompileLayer) {
 
   // Enable JIT symbol resolution from the binary.
   llvm::sys::DynamicLibrary::LoadLibraryPermanently(0, 0);
 
   // Make debug symbols available.
-  m_GDBListener = JITEventListener::createGDBRegistrationListener();
+  m_GDBListener = 0; // JITEventListener::createGDBRegistrationListener();
 
 // #if MCJIT
 //   llvm::EngineBuilder builder(std::move(m));
@@ -198,37 +191,115 @@ IncrementalJIT::IncrementalJIT(IncrementalExecutor& exe,
 }
 
 
-uint64_t IncrementalJIT::getSymbolAddressWithoutMangling(llvm::StringRef Name,
-                                                         bool AlsoInProcess) {
+llvm::orc::JITSymbol
+IncrementalJIT::getInjectedSymbols(const std::string& Name) const {
+  using JITSymbol = llvm::orc::JITSymbol;
   if (Name == MANGLE_PREFIX "__cxa_atexit") {
     // Rewire __cxa_atexit to ~Interpreter(), thus also global destruction
     // coming from the JIT.
-    return (uint64_t)&local_cxa_atexit;
+    return JITSymbol((uint64_t)&local_cxa_atexit,
+                     llvm::JITSymbolFlags::Exported);
   } else if (Name == MANGLE_PREFIX "__dso_handle") {
     // Provide IncrementalExecutor as the third argument to __cxa_atexit.
-    return (uint64_t)&m_Parent;
+    return JITSymbol((uint64_t)&m_Parent,
+                     llvm::JITSymbolFlags::Exported);
   }
-  if (AlsoInProcess) {
-    if (uint64_t Addr = m_ExeMM->getSymbolAddress(Name))
-      return Addr;
-  }
-  if (uint64_t Addr = m_LazyEmitLayer.getSymbolAddress(Name, false))
-    return Addr;
 
-  return 0;
+  auto SymMapI = m_SymbolMap.find(Name);
+  if (SymMapI != m_SymbolMap.end())
+    return JITSymbol(SymMapI->second, llvm::JITSymbolFlags::Exported);
+
+  return JITSymbol(nullptr);
+}
+
+std::pair<void*, bool>
+IncrementalJIT::searchLibraries(llvm::StringRef Name, void *InAddr) {
+  // FIXME: See comments on DLSym below.
+#if !defined(LLVM_ON_WIN32)
+  void* Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(Name);
+#else
+  void* Addr = const_cast<void*>(platform::DLSym(Name));
+#endif
+
+  if (InAddr && !Addr) {
+    llvm::sys::DynamicLibrary::AddSymbol(Name, InAddr);
+    return std::make_pair(InAddr, true);
+  }
+  return std::make_pair(Addr, false);
+}
+    
+llvm::orc::JITSymbol
+IncrementalJIT::getSymbolAddressWithoutMangling(const std::string& Name,
+                                                bool AlsoInProcess) {
+  if (auto Sym = getInjectedSymbols(Name))
+    return Sym;
+
+  if (AlsoInProcess) {
+    if (RuntimeDyld::SymbolInfo SymInfo = m_ExeMM->findSymbol(Name))
+      return llvm::orc::JITSymbol(SymInfo.getAddress(),
+                                  llvm::JITSymbolFlags::Exported);
+#ifdef LLVM_ON_WIN32
+    // FIXME: DLSym symbol lookup can overlap m_ExeMM->findSymbol wasting time
+    // looking for a symbol in libs where it is already known not to exist.
+    // Perhaps a better solution would be to have IncrementalJIT own the
+    // DynamicLibraryManger instance (or at least have a reference) that will
+    // look only through user loaded libraries.
+    // An upside to doing it this way is RTLD_GLOBAL won't need to be used
+    // allowing libs with competing symbols to co-exists.
+    if (const void* Sym = platform::DLSym(Name))
+      return llvm::orc::JITSymbol(llvm::orc::TargetAddress(Sym),
+                                  llvm::JITSymbolFlags::Exported);
+#endif
+  }
+
+  if (auto Sym = m_LazyEmitLayer.findSymbol(Name, false))
+    return Sym;
+
+  return llvm::orc::JITSymbol(nullptr);
 }
 
 size_t IncrementalJIT::addModules(std::vector<llvm::Module*>&& modules) {
   // If this module doesn't have a DataLayout attached then attach the
   // default.
   for (auto&& mod: modules) {
-    if (!mod->getDataLayout())
-      mod->setDataLayout(m_TM->getDataLayout());
+    mod->setDataLayout(m_TMDataLayout);
   }
+
+  // LLVM MERGE FIXME: update this to use new interfaces.
+  auto Resolver = llvm::orc::createLambdaResolver(
+    [&](const std::string &S) {
+      if (auto Sym = getInjectedSymbols(S))
+        return RuntimeDyld::SymbolInfo((uint64_t)Sym.getAddress(),
+                                       Sym.getFlags());
+      return m_ExeMM->findSymbol(S);
+    },
+    [&](const std::string &Name) {
+      if (auto Sym = getSymbolAddressWithoutMangling(Name, true)
+          /*was: findSymbol(Name)*/)
+        return RuntimeDyld::SymbolInfo(Sym.getAddress(),
+                                       Sym.getFlags());
+
+
+      /// This method returns the address of the specified function or variable
+      /// that could not be resolved by getSymbolAddress() or by resolving
+      /// possible weak symbols by the ExecutionEngine.
+      /// It is used to resolve symbols during module linking.
+
+      std::string NameNoPrefix;
+      if (MANGLE_PREFIX[0]
+          && !Name.compare(0, strlen(MANGLE_PREFIX), MANGLE_PREFIX))
+        NameNoPrefix = Name.substr(strlen(MANGLE_PREFIX), -1);
+      else
+        NameNoPrefix = std::move(Name);
+      uint64_t addr
+        = (uint64_t) getParent().NotifyLazyFunctionCreators(NameNoPrefix);
+      return RuntimeDyld::SymbolInfo(addr, llvm::JITSymbolFlags::Weak);
+    });
 
   ModuleSetHandleT MSHandle
     = m_LazyEmitLayer.addModuleSet(std::move(modules),
-                                   llvm::make_unique<Azog>(*this));
+                                   llvm::make_unique<Azog>(*this),
+                                   std::move(Resolver));
   m_UnloadPoints.push_back(MSHandle);
   return m_UnloadPoints.size() - 1;
 }
@@ -243,7 +314,8 @@ size_t IncrementalJIT::addModules(std::vector<llvm::Module*>&& modules) {
 void IncrementalJIT::removeModules(size_t handle) {
   if (handle == (size_t)-1)
     return;
-  m_LazyEmitLayer.removeModuleSet(m_UnloadPoints[handle]);
+  auto objSetHandle = m_UnloadPoints[handle];
+  m_LazyEmitLayer.removeModuleSet(objSetHandle);
 }
 
 }// end namespace cling

@@ -35,6 +35,8 @@
 #include <ext/atomicity.h>
 #endif
 
+#include "Rtypes.h"
+
 #if defined(__GLIBCXX__) // g++ 3.4+
 
 using __gnu_cxx::__atomic_add;

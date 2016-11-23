@@ -28,10 +28,14 @@
 
  These NIM papers are also available as doc or ps files from:
 
- - [Spectrum.doc](ftp://root.cern.ch/root/Spectrum.doc)
- - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
- - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
- - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
+ - [Spectrum.doc](https://root.cern.ch/download/Spectrum.doc)
+ - [SpectrumDec.ps.gz](https://root.cern.ch/download/SpectrumDec.ps.gz)
+ - [SpectrumSrc.ps.gz](https://root.cern.ch/download/SpectrumSrc.ps.gz)
+ - [SpectrumBck.ps.gz](https://root.cern.ch/download/SpectrumBck.ps.gz)
+
+ See also the
+ [online documentation](https://root.cern.ch/guides/tspectrum-manual) and
+ [tutorials](https://root.cern.ch/doc/master/group__tutorial__spectrum.html).
 */
 
 Int_t TSpectrum::fgIterations    = 3;
@@ -57,7 +61,7 @@ TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 ////////////////////////////////////////////////////////////////////////////////
 ///   - maxpositions: maximum number of peaks
-///   - resolution: determines resolution of the neighbouring peaks
+///   - resolution: *NOT USED* determines resolution of the neighbouring peaks
 ///                   default value is 1 correspond to 3 sigma distance
 ///                   between peaks. Higher values allow higher resolution
 ///                   (smaller distance between peaks.
@@ -337,6 +341,7 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// *NOT USED*
 ///  resolution: determines resolution of the neighbouring peaks
 ///              default value is 1 correspond to 3 sigma distance
 ///              between peaks. Higher values allow higher resolution
@@ -405,276 +410,75 @@ void TSpectrum::SetResolution(Double_t resolution)
 ///   3. D. D. Burgess, R. J. Tervo: Background estimation for gamma-ray
 /// spectroscopy. NIM 214 (1983), 431-434.
 ///
-/// ### Example 1 script Background_incr.c:
+/// ### Example 1 script Background_incr.C:
 ///
-/// \image html TSpectrum_Background_incr.jpg Fig. 1 Example of the estimation of background for number of iterations=6. Original spectrum is shown in black color, estimated background in red color.
+/// Example of the estimation of background for number of iterations=6.
+/// Original spectrum is shown in black color, estimated background in red color.
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_incr.C
+/// End_Macro
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate the background estimator (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x Background_incr.C
+/// ### Example 2 script Background_decr.C:
 ///
-/// #include <TSpectrum>
-///
-/// void Background_incr() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *back = new TH1F("back","",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    back=(TH1F*) f->Get("back1;1");
-///    TCanvas *Background = gROOT->GetListOfCanvases()->FindObject("Background");
-///    if (!Background) Background =
-///      new TCanvas("Background",
-///                  "Estimation of background with increasing window",
-///                  10,10,1000,700);
-///    back->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    for (i = 0; i < nbins; i++) source[i]=back->GetBinContent(i + 1);
-///    s->Background(source,nbins,6,kBackIncreasingWindow,kBackOrder2,kFALSE,
-///                  kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME L");
-/// }
-/// ~~~
-///
-/// ### Example 2 script Background_decr.c:
-///
-/// In Fig. 1. one can notice that at the edges of the peaks the estimated
+/// In Example 1. one can notice that at the edges of the peaks the estimated
 /// background goes under the peaks. An alternative approach is to decrease the
 /// clipping window from a given value numberIterations to the value of one, which
 /// is presented in this example.
 ///
-/// \image html TSpectrum_Background_decr.jpg Fig. 2 Example of the estimation of background for numberIterations=6 using decreasing clipping window algorithm. Original spectrum is shown in black color, estimated background in red color.
+/// Example of the estimation of background for numberIterations=6 using
+/// decreasing clipping window algorithm. Original spectrum is shown in black
+/// color, estimated background in red color.
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_decr.C
+/// End_Macro
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate the background estimator (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x Background_decr.C
-///
-/// #include <TSpectrum>
-///
-/// void Background_decr() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *back = new TH1F("back","",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    back=(TH1F*) f->Get("back1;1");
-///    TCanvas *Background = gROOT->GetListOfCanvases()->FindObject("Background");
-///    if (!Background) Background =
-///      new TCanvas("Background","Estimation of background with decreasing window",
-///                  10,10,1000,700);
-///    back->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    for (i = 0; i < nbins; i++) source[i]=back->GetBinContent(i + 1);
-///    s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///                  kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME L");
-/// }
-/// ~~~
-///
-/// ### Example 3 script Background_width.c:
+/// ### Example 3 script Background_width.C:
 ///
 /// The question is how to choose the width of the clipping window, i.e.,
 /// numberIterations parameter. The influence of this parameter on the estimated
-/// background is illustrated in Fig. 3.
+/// background is illustrated in Example 3.
 ///
-/// \image html TSpectrum_Background_width.jpg Fig. 3 Example of the influence of clipping window width on the estimated background for numberIterations=4 (red line), 6 (blue line) 8 (green line) using decreasing clipping window algorithm.
+/// Example of the influence of clipping window width on the estimated background
+/// for numberIterations=4 (red line), 6 (orange line) 8 (green line) using decreasing
+/// clipping window algorithm.
 ///
 /// in general one should set this parameter so that the value
 /// 2*numberIterations+1 was greater than the widths of preserved objects (peaks).
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_width.C
+/// End_Macro
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate the influence of the clipping window width on the
-/// // estimated background. To execute this example, do:
-/// // root > .x Background_width.C
+/// ### Example 4 script Background_width2.C:
 ///
-/// #include <TSpectrum>
+/// another example for very complex spectrum is given here.
 ///
-/// void Background_width() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
-///    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
-///    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
-///    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("back1;1");
-///    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
-///    if (!background) background = new TCanvas("background",
-///    "Influence of clipping window width on the estimated background",
-///    10,10,1000,700);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,4,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);
-///    d1->SetLineColor(kRed);
-///    d1->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);
-///    d2->SetLineColor(kBlue);
-///    d2->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,8,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d3->SetBinContent(i + 1,source[i]);
-///    d3->SetLineColor(kGreen);
-///    d3->Draw("SAME L");
-/// }
-/// ~~~
+/// Example of the influence of clipping window width on the estimated background
+/// for numberIterations=10 (red line), 20 (blue line), 30 (green line) and
+/// 40 (magenta line) using decreasing clipping window algorithm.
 ///
-/// ### Example 4 script Background_width2.c:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_width2.C
+/// End_Macro
 ///
-/// another example for very complex spectrum is given in Fig. 4.
-///
-/// \image html TSpectrum_Background_width2.jpg Fig. 4 Example of the influence of clipping window width on the estimated background for numberIterations=10 (red line), 20 (blue line), 30 (green line) and 40 (magenta line) using decreasing clipping window algorithm.
-///
-/// #### Script:
-///
-/// ~~~ {.cpp}
-/// // Example to illustrate the influence of the clipping window width on the
-/// // estimated background. To execute this example, do:
-/// // root > .x Background_width2.C
-///
-/// #include <TSpectrum>
-///
-/// void Background_width2() {
-///    Int_t i;
-///    Double_t nbins = 4096;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = 4096;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
-///    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
-///    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
-///    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
-///    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("back2;1");
-///    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
-///    if (!background) background = new TCanvas("background",
-///    "Influence of clipping window width on the estimated background",
-///    10,10,1000,700);
-///    h->SetAxisRange(0,1000);
-///    h->SetMaximum(20000);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);
-///    d1->SetLineColor(kRed);
-///    d1->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,20,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);
-///    d2->SetLineColor(kBlue);
-///    d2->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,30,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d3->SetBinContent(i + 1,source[i]);
-///    d3->SetLineColor(kGreen);
-///    d3->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d4->SetBinContent(i + 1,source[i]);
-///    d4->SetLineColor(kMagenta);
-///    d4->Draw("SAME L");
-/// }
-/// ~~~
-///
-/// ### Example 5 script Background_order.c:
+/// ### Example 5 script Background_order.C:
 ///
 /// Second order difference filter removes linear (quasi-linear) background and
 /// preserves symmetrical peaks. However if the shape of the background is more
-/// complex one can employ higher-order clipping filters (see example in Fig. 5)
+/// complex one can employ higher-order clipping filters.
 ///
-/// \image html TSpectrum_Background_order.jpg Fig. 5 Example of the influence of clipping filter difference order on the estimated background for fNnumberIterations=40, 2-nd order red line, 4-th order blue line, 6-th order green line and 8-th order magenta line, and using decreasing clipping window algorithm.
+/// Example of the influence of clipping filter difference order on the estimated
+/// background for fNnumberIterations=40, 2-nd order red line, 4-th order blue line,
+/// 6-th order green line and 8-th order magenta line, and using decreasing
+/// clipping window algorithm.
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_order.C
+/// End_Macro
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate the influence of the clipping filter difference order
-/// // on the estimated background. To execute this example, do
-/// // root > .x Background_order.C
-///
-/// #include <TSpectrum>
-///
-/// void Background_order() {
-///    Int_t i;
-///    Double_t nbins = 4096;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = 4096;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
-///    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
-///    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
-///    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
-///    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("back2;1");
-///    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
-///    if (!background) background = new TCanvas("background",
-///    "Influence of clipping filter difference order on the estimated background",
-///    10,10,1000,700);
-///    h->SetAxisRange(1220,1460);
-///    h->SetMaximum(11000);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);
-///    d1->SetLineColor(kRed);
-///    d1->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder4,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);
-///    d2->SetLineColor(kBlue);
-///    d2->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder6,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d3->SetBinContent(i + 1,source[i]);
-///    d3->SetLineColor(kGreen);
-///    d3->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder8,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d4->SetBinContent(i + 1,source[i]);
-///    d4->SetLineColor(kMagenta);
-///    d4->Draw("SAME L");
-/// }
-/// ~~~
-///
-/// ### Example 6 script Background_smooth.c:
+/// ### Example 6 script Background_smooth.C:
 ///
 /// The estimate of the background can be influenced by noise present in the
 /// spectrum.  We proposed the algorithm of the background estimate with
@@ -682,93 +486,28 @@ void TSpectrum::SetResolution(Double_t resolution)
 /// estimated background snatches the lower spikes in the noise. Consequently,
 /// the areas of peaks are biased by this error.
 ///
-/// \image html TSpectrum_Background_smooth1.jpg Fig. 7 Principle of background estimation algorithm with simultaneous smoothing.
-/// \image html TSpectrum_Background_smooth2.jpg Fig. 8 Illustration of non-smoothing (red line) and smoothing algorithm of background estimation (blue line).
+/// \image html TSpectrum_Background_smooth1.jpg Principle of background estimation algorithm with simultaneous smoothing.
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_smooth.C
+/// End_Macro
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate the background estimator (class TSpectrum) including
-/// // Compton edges. To execute this example, do:
-/// // root > .x Background_smooth.C
-///
-/// #include <TSpectrum>
-///
-/// void Background_smooth() {
-///    Int_t i;
-///    Double_t nbins = 4096;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
-///    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
-///    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("back4;1");
-///    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
-///    if (!background) background = new TCanvas("background",
-///    "Estimation of background with noise",10,10,1000,700);
-///    h->SetAxisRange(3460,3830);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);
-///    d1->SetLineColor(kRed);
-///    d1->Draw("SAME L");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kTRUE,
-///    kBackSmoothing3,kFALSE);
-///    for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);
-///    d2->SetLineColor(kBlue);
-///    d2->Draw("SAME L");
-/// }
-/// ~~~
-///
-/// ### Example 8 script Background_compton.c:
+/// ### Example 8 script Background_compton.C:
 ///
 /// Sometimes it is necessary to include also the Compton edges into the estimate of
-/// the background. In Fig. 8 we present the example of the synthetic spectrum
+/// the background. This example presents the synthetic spectrum
 /// with Compton edges. The background was estimated using the 8-th order filter
 /// with the estimation of the Compton edges using decreasing
 /// clipping window algorithm (numberIterations=10) with smoothing
 /// (smoothingWindow=5).
 ///
-/// \image html TSpectrum_Background_compton.jpg Fig. 8 Example of the estimate of the background with Compton edges (red line) for numberIterations=10, 8-th order difference filter, using decreasing clipping window algorithm and smoothing (smoothingWindow=5).
+/// Example of the estimate of the background with Compton edges (red line) for
+/// numberIterations=10, 8-th order difference filter, using decreasing clipping
+/// window algorithm and smoothing (smoothingWindow=5).
 ///
-/// #### Script:
-///
-/// ~~~ {.cpp}
-/// // Example to illustrate the background estimator (class TSpectrum) including
-/// // Compton edges. To execute this example, do:
-/// // root > .x Background_compton.C
-///
-/// #include <TSpectrum>
-///
-/// void Background_compton() {
-///    Int_t i;
-///    Double_t nbins = 512;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
-///    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("back3;1");
-///    TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
-///    if (!background) background = new TCanvas("background",
-///    "Estimation of background with Compton edges under peaks",10,10,1000,700);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->Background(source,nbins,10,kBackDecreasingWindow,kBackOrder8,kTRUE,
-///    kBackSmoothing5,,kTRUE);
-///    for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);
-///    d1->SetLineColor(kRed);
-///    d1->Draw("SAME L");
-/// }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Background_compton.C
+/// End_Macro
 
 const char *TSpectrum::Background(Double_t *spectrum, int ssize,
                                           int numberIterations,
@@ -1447,39 +1186,11 @@ const char *TSpectrum::Background(Double_t *spectrum, int ssize,
 ///  1. Z.K. Silagadze, A new algorithm for automatic photopeak searches.
 /// NIM A 376 (1996), 451.
 ///
-/// ### Example 14 - script Smoothing.c
+/// ### Example 14 - script Smoothing.C
 ///
-/// \image html TSpectrum_Smoothing1.jpg Fig. 23 Original noisy spectrum
-/// \image html TSpectrum_Smoothing2.jpg Fig. 24 Smoothed spectrum m=3
-/// \image html TSpectrum_Smoothing3.jpg Fig. 25 Smoothed spectrum
-/// \image html TSpectrum_Smoothing4.jpg Fig. 26 Smoothed spectrum m=10
-///
-/// #### Script:
-///
-/// ~~~ {.cpp}
-/// // Example to illustrate smoothing using Markov algorithm (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x Smoothing.C
-///
-/// void Smoothing() {
-///    Int_t i;
-///    Double_t nbins = 1024;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","Smoothed spectrum for m=3",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("smooth1;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    TCanvas *Smooth1 = gROOT->GetListOfCanvases()->FindObject("Smooth1");
-///    if (!Smooth1) Smooth1 = new TCanvas("Smooth1","Smooth1",10,10,1000,700);
-///    TSpectrum *s = new TSpectrum();
-///    s->SmoothMarkov(source,1024,3);  //3, 7, 10
-///    for (i = 0; i < nbins; i++) h->SetBinContent(i + 1,source[i]);
-///    h->SetAxisRange(330,880);
-///    h->Draw("L");
-/// }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Smoothing.C
+/// End_Macro
 
 const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 {
@@ -1661,49 +1372,16 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 ///     deconvolution and its application to nuclear data processing, Digital Signal
 ///     Processing 13 (2003) 144.
 ///
-/// ### Example 8 - script Deconvolution.c :
+/// ### Example 8 - script Deconvolution.C :
 ///
 /// response function (usually peak) should be shifted left to the first
-/// non-zero channel (bin) (see Fig. 9)
+/// non-zero channel (bin).
 ///
-/// \image html TSpectrum_Deconvolution1.jpg Fig. 9 Response spectrum.
-/// \image html TSpectrum_Deconvolution2.jpg Fig. 10 Principle how the response matrix is composed inside of the Deconvolution function.
-/// \image html TSpectrum_Deconvolution3.jpg Fig. 11 Example of Gold deconvolution. The original source spectrum is drawn with black color, the spectrum after the deconvolution (10000 iterations) with red color.
+/// \image html TSpectrum_Deconvolution2.jpg Principle how the response matrix is composed inside of the Deconvolution function.
 ///
-/// #### Script:
-///
-/// ~~~ {.cpp}
-/// // Example to illustrate deconvolution function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x Deconvolution.C
-///
-/// #include <TSpectrum>
-///
-/// void Deconvolution() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    Double_t * response = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("decon1;1");
-///    TFile *fr = new TFile("spectra/TSpectrum.root");
-///    d=(TH1F*) fr->Get("decon_response;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
-///    TCanvas *Decon1 = gROOT->GetListOfCanvases()->FindObject("Decon1");
-///    if (!Decon1) Decon1 = new TCanvas("Decon1","Decon1",10,10,1000,700);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    s->Deconvolution(source,response,256,1000,1,1);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME L");
-/// }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Deconvolution.C
+/// End_Macro
 ///
 /// ### Examples of Gold deconvolution method:
 ///
@@ -1746,109 +1424,37 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 /// \image html TSpectrum_Deconvolution_wide3.jpg Fig. 14 The same spectrum like in Fig. 13, outlined bars show the contents of present components (peaks).
 /// \image html TSpectrum_Deconvolution_wide4.jpg Fig. 15 Least squares solution of the system of linear equations without regularisation.
 ///
-/// ### Example 9 - script Deconvolution_wide.c
+/// ### Example 9 - script Deconvolution_wide.C
 ///
 /// When we employ Gold deconvolution algorithm we obtain the result given in
 /// Fig. 16. One can observe that the resulting spectrum is smooth. On the
 /// other hand the method is not able to decompose completely the peaks in the
 /// spectrum.
 ///
-/// \image html TSpectrum_Deconvolution_wide5.jpg Fig 16 Example of Gold deconvolution for closely positioned wide peaks. The original source spectrum is drawn with black color, the spectrum after the deconvolution (10000 iterations) with red color.
+/// Example of Gold deconvolution for closely positioned wide peaks. The original
+/// source spectrum is drawn with black color, the spectrum after the deconvolution
+/// (10000 iterations) with red color.
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Deconvolution_wide.C
+/// End_Macro
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate deconvolution function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x Deconvolution_wide.C
-///
-/// #include <TSpectrum>
-///
-/// void Deconvolution_wide() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    Double_t * response = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("decon3;1");
-///    TFile *fr = new TFile("spectra/TSpectrum.root");
-///    d=(TH1F*) fr->Get("decon_response_wide;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
-///    TCanvas *Decon1 = gROOT->GetListOfCanvases()->FindObject("Decon1");
-///    if (!Decon1) Decon1 = new TCanvas("Decon1",
-///    "Deconvolution of closely positioned overlapping peaks using Gold deconvolution method",10,10,1000,700);
-///    h->SetMaximum(30000);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    s->Deconvolution(source,response,256,10000,1,1);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME L");
-/// }
-/// ~~~
-///
-/// ### Example 10 - script Deconvolution_wide_boost.c :
+/// ### Example 10 - script Deconvolution_wide_boost.C :
 ///
 /// Further let us employ boosting operation into deconvolution (Fig. 17).
 ///
-/// \image html TSpectrum_Deconvolution_wide6.jpg Fig. 17 The original source spectrum is drawn with black color, the spectrum after the deconvolution with red color. Number of iterations = 200, number of repetitions = 50 and boosting coefficient = 1.2.
-///
-///   | Peak #  | Original/Estimated (max) position  | Original/Estimated area |
-///   |---------|------------------------------------|-------------------------|
-///   | 1       | 50/49                              | 10159/10419             |
-///   | 2       | 70/70                              | 60957/58933             |
-///   | 3       | 80/79                              | 20319/19935             |
-///   | 4       | 100/100                            | 101596/105413           |
-///   | 5       | 110/117                            | 10159/6676              |
-///
-/// Table 2 Results of the estimation of peaks in spectrum shown in Fig. 17.
+/// The original source spectrum is drawn with black color, the spectrum after
+/// the deconvolution with red color. Number of iterations = 200, number of
+/// repetitions = 50 and boosting coefficient = 1.2.
 ///
 /// One can observe that peaks are decomposed practically to delta functions.
 /// Number of peaks is correct, positions of big peaks as well as their areas
 /// are relatively well estimated. However there is a considerable error in
 /// the estimation of the position of small right hand peak.
 ///
-/// #### Script:
-///
-/// ~~~ {.cpp}
-/// // Example to illustrate deconvolution function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x Deconvolution_wide_boost.C
-///
-/// #include <TSpectrum>
-///
-/// void Deconvolution_wide_boost() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    Double_t * response = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("decon3;1");
-///    TFile *fr = new TFile("spectra/TSpectrum.root");
-///    d=(TH1F*) fr->Get("decon_response_wide;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
-///    TCanvas *Decon1 = gROOT->GetListOfCanvases()->FindObject("Decon1");
-///    if (!Decon1) Decon1 = new TCanvas("Decon1",
-///    "Deconvolution of closely positioned overlapping peaks using boosted Gold deconvolution method",10,10,1000,700);
-///    h->SetMaximum(110000);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    s->Deconvolution(source,response,256,200,50,1.2);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME L");
-/// }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/Deconvolution_wide_boost.C
+/// End_Macro
 
 const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
                                       int ssize, int numberIterations,
@@ -2026,109 +1632,35 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
 ///
 /// ### Examples of Richardson-Lucy deconvolution method:
 ///
-/// ### Example 11 - script DeconvolutionRL_wide.c :
+/// ### Example 11 - script DeconvolutionRL_wide.C :
 ///
 /// When we employ Richardson-Lucy deconvolution algorithm to our data from
-/// Fig. 13 we obtain the result given in Fig. 18. One can observe improvements
+/// Fig. 13 we obtain the following result. One can observe improvements
 /// as compared to the result achieved by Gold deconvolution. Nevertheless it is
 /// unable to decompose the multiplet.
 ///
-/// \image html TSpectrum_DeconvolutionRL_wide1.jpg Fig. 18 Example of Richardson-Lucy deconvolution for closely positioned wide peaks. The original source spectrum is drawn with black color, the spectrum after the deconvolution (10000 iterations) with red color.
+/// Example of Richardson-Lucy deconvolution for closely positioned wide peaks.
+/// The original source spectrum is drawn with black color, the spectrum after
+/// the deconvolution (10000 iterations) with red color.
 ///
-/// #### Script:
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/DeconvolutionRL_wide.C
+/// End_Macro
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate deconvolution function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x DeconvolutionRL_wide.C
+/// ### Example 12 - script DeconvolutionRL_wide_boost.C :
 ///
-/// #include <TSpectrum>
+/// Further let us employ boosting operation into deconvolution.
 ///
-/// void DeconvolutionRL_wide() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    Double_t * response = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("decon3;1");
-///    TFile *fr = new TFile("spectra/TSpectrum.root");
-///    d=(TH1F*) fr->Get("decon_response_wide;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
-///    TCanvas *Decon1 = gROOT->GetListOfCanvases()->FindObject("Decon1");
-///    if (!Decon1) Decon1 = new TCanvas("Decon1",
-///    "Deconvolution of closely positioned overlapping peaks using Richardson-Lucy deconvolution method",
-///    10,10,1000,700);
-///    h->SetMaximum(30000);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    s->DeconvolutionRL(source,response,256,10000,1,1);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME L");
-/// }
-/// ~~~
-///
-/// ### Example 12 - script DeconvolutionRL_wide_boost.c :
-///
-/// Further let us employ boosting operation into deconvolution (Fig. 19).
-///
-/// \image html TSpectrum_DeconvolutionRL_wide2.jpg Fig. 19 The original source spectrum is drawn with black color, the spectrum after the deconvolution with red color. Number of iterations = 200, number of repetitions = 50 and boosting coefficient = 1.2.
-///
-///   | Peak # | Original/Estimated (max) position | Original/Estimated area  |
-///   |--------|-----------------------------------|--------------------------|
-///   | 1      | 50/51                             | 10159/11426              |
-///   | 2      | 70/71                             | 60957/65003              |
-///   | 3      | 80/81                             | 20319/12813              |
-///   | 4      | 100/100                           | 101596/101851            |
-///   | 5      | 110/111                           | 10159/8920               |
-///
-/// Table 3 Results of the estimation of peaks in spectrum shown in Fig. 19.
+/// The original source spectrum is drawn with black color, the spectrum after
+/// the deconvolution with red color. Number of iterations = 200, number of
+/// repetitions = 50 and boosting coefficient = 1.2.
 ///
 /// One can observe improvements in the estimation of peak positions as compared
 /// to the results achieved by Gold deconvolution.
 ///
-/// #### Script:
-///
-/// ~~~ {.cpp}
-/// // Example to illustrate deconvolution function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x DeconvolutionRL_wide_boost.C
-///
-/// #include <TSpectrum>
-///
-/// void DeconvolutionRL_wide_boost() {
-///    Int_t i;
-///    Double_t nbins = 256;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    Double_t * response = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("decon3;1");
-///    TFile *fr = new TFile("spectra/TSpectrum.root");
-///    d=(TH1F*) fr->Get("decon_response_wide;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);
-///    TCanvas *Decon1 = gROOT->GetListOfCanvases()->FindObject("Decon1");
-///    if (!Decon1) Decon1 = new TCanvas("Decon1",
-///    "Deconvolution of closely positioned overlapping peaks using boosted Richardson-Lucy deconvolution method",
-///    10,10,1000,700);
-///    h->SetMaximum(110000);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    s->DeconvolutionRL(source,response,256,200,50,1.2);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME L");
-/// }
-/// ~~~
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/DeconvolutionRL_wide_boost.C
+/// End_Macro
 
 const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *response,
                                       int ssize, int numberIterations,
@@ -2304,7 +1836,7 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
 ///
 /// ### Example of unfolding:
 ///
-/// ### Example 13 - script Unfolding.c:
+/// ### Example 13 - script Unfolding.C:
 ///
 /// \image html TSpectrum_Unfolding3.gif Fig. 20 Response matrix composed of neutron spectra of pure chemical elements.
 /// \image html TSpectrum_Unfolding2.jpg Fig. 21 Source neutron spectrum to be decomposed
@@ -2572,160 +2104,25 @@ const char *TSpectrum::Unfolding(Double_t *source,
 /// input parameters and with the access to the output deconvolved data in the
 /// destination spectrum. Based on the output data one can tune the parameters.
 ///
-/// ### Example 15 - script SearchHR1.c:
+/// ### Example 15 - script SearchHR1.C:
 ///
-/// \image html TSpectrum_Searching1.jpg Fig. 28 One-dimensional spectrum with found peaks denoted by markers, 3 iterations steps in the deconvolution.
-/// \image html TSpectrum_Searching2.jpg Fig. 29 One-dimensional spectrum with found peaks denoted by markers, 8 iterations steps in the deconvolution.
-///
-/// #### Script:
-///
-/// ~~~ {.cpp}
-/// // Example to illustrate high resolution peak searching function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x SearchHR1.C
-///
-/// #include <TSpectrum>
-///
-/// void SearchHR1() {
-///    Double_t fPositionX[100];
-///    Double_t fPositionY[100];
-///    Int_t fNPeaks = 0;
-///    Int_t i,nfound,bin;
-///    Double_t nbins = 1024,a;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    Double_t * dest = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","High resolution peak searching, number of iterations = 3",nbins,xmin,xmax);
-///    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("search2;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    TCanvas *Search = gROOT->GetListOfCanvases()->FindObject("Search");
-///    if (!Search) Search = new TCanvas("Search","Search",10,10,1000,700);
-///    h->SetMaximum(4000);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    nfound = s->SearchHighRes(source, dest, nbins, 8, 2, kTRUE, 3, kTRUE, 3);
-///    Double_t *xpeaks = s->GetPositionX();
-///    for (i = 0; i < nfound; i++) {
-///       a=xpeaks[i];
-///       bin = 1 + Int_t(a + 0.5);
-///       fPositionX[i] = h->GetBinCenter(bin);
-///       fPositionY[i] = h->GetBinContent(bin);
-///    }
-///    TPolyMarker * pm = (TPolyMarker*)h->GetListOfFunctions()->FindObject("TPolyMarker");
-///    if (pm) {
-///       h->GetListOfFunctions()->Remove(pm);
-///       delete pm;
-///    }
-///    pm = new TPolyMarker(nfound, fPositionX, fPositionY);
-///    h->GetListOfFunctions()->Add(pm);
-///    pm->SetMarkerStyle(23);
-///    pm->SetMarkerColor(kRed);
-///    pm->SetMarkerSize(1.3);
-///    for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,dest[i]);
-///    d->SetLineColor(kRed);
-///    d->Draw("SAME");
-///    printf("Found %d candidate peaks\n",nfound);
-///    for(i=0;i<nfound;i++)
-///       printf("posx= %d, posy= %d\n",fPositionX[i], fPositionY[i]);
-///    }
-/// ~~~
-///
-/// ### Example 16 - script SearchHR3.c:
-///
-///   | Peak # | Position | Sigma |
-///   |--------|----------|-------|
-///   | 1      | 118      | 26    |
-///   | 2      | 162      | 41    |
-///   | 3      | 310      | 4     |
-///   | 4      | 330      | 8     |
-///   | 5      | 482      | 22    |
-///   | 6      | 491      | 26    |
-///   | 7      | 740      | 21    |
-///   | 8      | 852      | 15    |
-///   | 9      | 954      | 12    |
-///   | 10     | 989      | 13    |
-///
-/// Table 4 Positions and sigma of peaks in the following examples.
-///
-/// \image html TSpectrum_Searching3.jpg Fig. 30 Influence of number of iterations (3-red, 10-blue, 100- green, 1000-magenta), sigma=8, smoothing width=3.
-/// \image html TSpectrum_Searching4.jpg Fig. 31 Influence of sigma (3-red, 8-blue, 20- green, 43-magenta), num. iter.=10, sm. width=3.
-/// \image html TSpectrum_Searching5.jpg Fig. 32 Influence smoothing width (0-red, 3-blue, 7- green, 20-magenta), num. iter.=10, sigma=8.
+/// One-dimensional spectrum with found peaks denoted by markers, 3 iterations
+/// steps in the deconvolution.
 ///
 /// #### Script:
 ///
-/// ~~~ {.cpp}
-/// // Example to illustrate the influence of number of iterations in deconvolution in high resolution peak searching function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x SearchHR3.C
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/SearchHR1.C
+/// End_Macro
 ///
-/// #include <TSpectrum>
+/// ### Example 16 - script SearchHR3.C:
 ///
-/// void SearchHR3() {
-///    Double_t fPositionX[100];
-///    Double_t fPositionY[100];
-///    Int_t fNPeaks = 0;
-///    Int_t i,nfound,bin;
-///    Double_t nbins = 1024,a;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbins;
-///    Double_t * source = new Double_t[nbins];
-///    Double_t * dest = new Double_t[nbins];
-///    TH1F *h = new TH1F("h","Influence of # of iterations in deconvolution in peak searching",nbins,xmin,xmax);
-///    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
-///    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
-///    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
-///    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("search3;1");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    TCanvas *Search = gROOT->GetListOfCanvases()->FindObject("Search");
-///    if (!Search) Search = new TCanvas("Search","Search",10,10,1000,700);
-///    h->SetMaximum(1300);
-///    h->Draw("L");
-///    TSpectrum *s = new TSpectrum();
-///    nfound = s->SearchHighRes(source, dest, nbins, 8, 2, kTRUE, 3, kTRUE, 3);
-///    Double_t *xpeaks = s->GetPositionX();
-///    for (i = 0; i < nfound; i++) {
-///       a=xpeaks[i];
-///       bin = 1 + Int_t(a + 0.5);
-///       fPositionX[i] = h->GetBinCenter(bin);
-///       fPositionY[i] = h->GetBinContent(bin);
-///    }
-///    TPolyMarker * pm = (TPolyMarker*)h->GetListOfFunctions()->FindObject("TPolyMarker");
-///    if (pm) {
-///       h->GetListOfFunctions()->Remove(pm);
-///       delete pm;
-///    }
-///    pm = new TPolyMarker(nfound, fPositionX, fPositionY);
-///    h->GetListOfFunctions()->Add(pm);
-///    pm->SetMarkerStyle(23);
-///    pm->SetMarkerColor(kRed);
-///    pm->SetMarkerSize(1.3);
-///    for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,dest[i]);
-///    h->Draw("");
-///    d1->SetLineColor(kRed);
-///    d1->Draw("SAME");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->SearchHighRes(source, dest, nbins, 8, 2, kTRUE, 10, kTRUE, 3);
-///    for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,dest[i]);
-///    d2->SetLineColor(kBlue);
-///    d2->Draw("SAME");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->SearchHighRes(source, dest, nbins, 8, 2, kTRUE, 100, kTRUE, 3);
-///    for (i = 0; i < nbins; i++) d3->SetBinContent(i + 1,dest[i]);
-///    d3->SetLineColor(kGreen);
-///    d3->Draw("SAME");
-///    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
-///    s->SearchHighRes(source, dest, nbins, 8, 2, kTRUE, 1000, kTRUE, 3);
-///    for (i = 0; i < nbins; i++) d4->SetBinContent(i + 1,dest[i]);
-///    d4->SetLineColor(kMagenta);
-///    d4->Draw("SAME");
-///    printf("Found %d candidate peaks\n",nfound);
-/// }
-/// ~~~
+/// Influence of number of iterations (3-red, 10-blue, 100- green, 1000-magenta),
+/// sigma=8, smoothing width=3.
+///
+/// Begin_Macro(source)
+/// ../../../tutorials/spectrum/SearchHR3.C
+/// End_Macro
 
 Int_t TSpectrum::SearchHighRes(Double_t *source,Double_t *destVector, int ssize,
                                      Double_t sigma, Double_t threshold,

@@ -788,6 +788,8 @@ protected:
 
    static Int_t AssertDataSet(TDSet *dset, TList *input,
                               TDataSetManager *mgr, TString &emsg);
+   static void AssertMacroPath(const char *macro);
+
    // Input data handling
    static Int_t GetInputData(TList *input, const char *cachedir, TString &emsg);
    static Int_t SaveInputData(TQueryResult *qr, const char *cachedir, TString &emsg);

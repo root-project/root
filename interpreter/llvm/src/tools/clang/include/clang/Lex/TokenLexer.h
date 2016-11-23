@@ -99,8 +99,8 @@ class TokenLexer {
   /// should not be subject to further macro expansion.
   bool DisableMacroExpansion : 1;
 
-  TokenLexer(const TokenLexer &) LLVM_DELETED_FUNCTION;
-  void operator=(const TokenLexer &) LLVM_DELETED_FUNCTION;
+  TokenLexer(const TokenLexer &) = delete;
+  void operator=(const TokenLexer &) = delete;
 public:
   /// Create a TokenLexer for the specified macro with the specified actual
   /// arguments.  Note that this ctor takes ownership of the ActualArgs pointer.
@@ -175,7 +175,7 @@ private:
   /// macro, other active macros, and anything left on the current physical
   /// source line of the expanded buffer.  Handle this by returning the
   /// first token on the next line.
-  void HandleMicrosoftCommentPaste(Token &Tok);
+  void HandleMicrosoftCommentPaste(Token &Tok, SourceLocation OpLoc);
 
   /// \brief If \p loc is a FileID and points inside the current macro
   /// definition, returns the appropriate source location pointing at the

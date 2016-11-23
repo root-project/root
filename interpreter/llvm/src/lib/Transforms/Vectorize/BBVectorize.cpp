@@ -25,8 +25,11 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/AliasSetTracker.h"
+#include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/Analysis/ScalarEvolutionAliasAnalysis.h"
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Constants.h"
@@ -39,6 +42,7 @@
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Metadata.h"
+#include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Pass.h"
@@ -203,11 +207,10 @@ namespace {
 
     BBVectorize(Pass *P, Function &F, const VectorizeConfig &C)
       : BasicBlockPass(ID), Config(C) {
-      AA = &P->getAnalysis<AliasAnalysis>();
+      AA = &P->getAnalysis<AAResultsWrapperPass>().getAAResults();
       DT = &P->getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-      SE = &P->getAnalysis<ScalarEvolution>();
-      DataLayoutPass *DLP = P->getAnalysisIfAvailable<DataLayoutPass>();
-      DL = DLP ? &DLP->getDataLayout() : nullptr;
+      SE = &P->getAnalysis<ScalarEvolutionWrapperPass>().getSE();
+      TLI = &P->getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
       TTI = IgnoreTargetInfo
                 ? nullptr
                 : &P->getAnalysis<TargetTransformInfoWrapperPass>().getTTI(F);
@@ -222,7 +225,7 @@ namespace {
     AliasAnalysis *AA;
     DominatorTree *DT;
     ScalarEvolution *SE;
-    const DataLayout *DL;
+    const TargetLibraryInfo *TLI;
     const TargetTransformInfo *TTI;
 
     // FIXME: const correct?
@@ -394,7 +397,7 @@ namespace {
                      Instruction *I, Instruction *J);
 
     bool vectorizeBB(BasicBlock &BB) {
-      if (skipOptnoneFunction(BB))
+      if (skipBasicBlock(BB))
         return false;
       if (!DT->isReachableFromEntry(&BB)) {
         DEBUG(dbgs() << "BBV: skipping unreachable " << BB.getName() <<
@@ -439,11 +442,10 @@ namespace {
     bool runOnBasicBlock(BasicBlock &BB) override {
       // OptimizeNone check deferred to vectorizeBB().
 
-      AA = &getAnalysis<AliasAnalysis>();
+      AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
       DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-      SE = &getAnalysis<ScalarEvolution>();
-      DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-      DL = DLP ? &DLP->getDataLayout() : nullptr;
+      SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
+      TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
       TTI = IgnoreTargetInfo
                 ? nullptr
                 : &getAnalysis<TargetTransformInfoWrapperPass>().getTTI(
@@ -454,13 +456,15 @@ namespace {
 
     void getAnalysisUsage(AnalysisUsage &AU) const override {
       BasicBlockPass::getAnalysisUsage(AU);
-      AU.addRequired<AliasAnalysis>();
+      AU.addRequired<AAResultsWrapperPass>();
       AU.addRequired<DominatorTreeWrapperPass>();
-      AU.addRequired<ScalarEvolution>();
+      AU.addRequired<ScalarEvolutionWrapperPass>();
+      AU.addRequired<TargetLibraryInfoWrapperPass>();
       AU.addRequired<TargetTransformInfoWrapperPass>();
-      AU.addPreserved<AliasAnalysis>();
       AU.addPreserved<DominatorTreeWrapperPass>();
-      AU.addPreserved<ScalarEvolution>();
+      AU.addPreserved<GlobalsAAWrapperPass>();
+      AU.addPreserved<ScalarEvolutionWrapperPass>();
+      AU.addPreserved<SCEVAAWrapperPass>();
       AU.setPreservesCFG();
     }
 
@@ -642,19 +646,19 @@ namespace {
             dyn_cast<SCEVConstant>(OffsetSCEV)) {
         ConstantInt *IntOff = ConstOffSCEV->getValue();
         int64_t Offset = IntOff->getSExtValue();
-
+        const DataLayout &DL = I->getModule()->getDataLayout();
         Type *VTy = IPtr->getType()->getPointerElementType();
-        int64_t VTyTSS = (int64_t) DL->getTypeStoreSize(VTy);
+        int64_t VTyTSS = (int64_t)DL.getTypeStoreSize(VTy);
 
         Type *VTy2 = JPtr->getType()->getPointerElementType();
         if (VTy != VTy2 && Offset < 0) {
-          int64_t VTy2TSS = (int64_t) DL->getTypeStoreSize(VTy2);
+          int64_t VTy2TSS = (int64_t)DL.getTypeStoreSize(VTy2);
           OffsetInElmts = Offset/VTy2TSS;
-          return (abs64(Offset) % VTy2TSS) == 0;
+          return (std::abs(Offset) % VTy2TSS) == 0;
         }
 
         OffsetInElmts = Offset/VTyTSS;
-        return (abs64(Offset) % VTyTSS) == 0;
+        return (std::abs(Offset) % VTyTSS) == 0;
       }
 
       return false;
@@ -666,7 +670,7 @@ namespace {
       Function *F = I->getCalledFunction();
       if (!F) return false;
 
-      Intrinsic::ID IID = (Intrinsic::ID) F->getIntrinsicID();
+      Intrinsic::ID IID = F->getIntrinsicID();
       if (!IID) return false;
 
       switch(IID) {
@@ -846,7 +850,7 @@ namespace {
 
     // It is important to cleanup here so that future iterations of this
     // function have less work to do.
-    (void) SimplifyInstructionsInBlock(&BB, DL, AA->getTargetLibraryInfo());
+    (void)SimplifyInstructionsInBlock(&BB, TLI);
     return true;
   }
 
@@ -882,9 +886,16 @@ namespace {
       Type *DestTy = C->getDestTy();
       if (!DestTy->isSingleValueType())
         return false;
-    } else if (isa<SelectInst>(I)) {
+    } else if (SelectInst *SI = dyn_cast<SelectInst>(I)) {
       if (!Config.VectorizeSelect)
         return false;
+      // We can vectorize a select if either all operands are scalars,
+      // or all operands are vectors. Trying to "widen" a select between
+      // vectors that has a scalar condition results in a malformed select.
+      // FIXME: We could probably be smarter about this by rewriting the select
+      // with different types instead.
+      return (SI->getCondition()->getType()->isVectorTy() == 
+              SI->getTrueValue()->getType()->isVectorTy());
     } else if (isa<CmpInst>(I)) {
       if (!Config.VectorizeCmp)
         return false;
@@ -899,10 +910,6 @@ namespace {
         isa<ExtractElementInst>(I) || isa<InsertElementInst>(I))) {
       return false;
     }
-
-    // We can't vectorize memory operations without target data
-    if (!DL && IsSimpleLoadStore)
-      return false;
 
     Type *T1, *T2;
     getInstructionTypes(I, T1, T2);
@@ -938,9 +945,8 @@ namespace {
     if (T2->isX86_FP80Ty() || T2->isPPC_FP128Ty() || T2->isX86_MMXTy())
       return false;
 
-    if ((!Config.VectorizePointers || !DL) &&
-        (T1->getScalarType()->isPointerTy() ||
-         T2->getScalarType()->isPointerTy()))
+    if (!Config.VectorizePointers && (T1->getScalarType()->isPointerTy() ||
+                                      T2->getScalarType()->isPointerTy()))
       return false;
 
     if (!TTI && (T1->getPrimitiveSizeInBits() >= Config.VectorBits ||
@@ -985,8 +991,8 @@ namespace {
       unsigned IAlignment, JAlignment, IAddressSpace, JAddressSpace;
       int64_t OffsetInElmts = 0;
       if (getPairPtrInfo(I, J, IPtr, JPtr, IAlignment, JAlignment,
-            IAddressSpace, JAddressSpace,
-            OffsetInElmts) && abs64(OffsetInElmts) == 1) {
+                         IAddressSpace, JAddressSpace, OffsetInElmts) &&
+          std::abs(OffsetInElmts) == 1) {
         FixedOrder = (int) OffsetInElmts;
         unsigned BottomAlignment = IAlignment;
         if (OffsetInElmts < 0) BottomAlignment = JAlignment;
@@ -1001,8 +1007,8 @@ namespace {
           // An aligned load or store is possible only if the instruction
           // with the lower offset has an alignment suitable for the
           // vector type.
-
-          unsigned VecAlignment = DL->getPrefTypeAlignment(VType);
+          const DataLayout &DL = I->getModule()->getDataLayout();
+          unsigned VecAlignment = DL.getPrefTypeAlignment(VType);
           if (BottomAlignment < VecAlignment)
             return false;
         }
@@ -1107,7 +1113,7 @@ namespace {
     CallInst *CI = dyn_cast<CallInst>(I);
     Function *FI;
     if (CI && (FI = CI->getCalledFunction())) {
-      Intrinsic::ID IID = (Intrinsic::ID) FI->getIntrinsicID();
+      Intrinsic::ID IID = FI->getIntrinsicID();
       if (IID == Intrinsic::powi || IID == Intrinsic::ctlz ||
           IID == Intrinsic::cttz) {
         Value *A1I = CI->getArgOperand(1),
@@ -1118,16 +1124,25 @@ namespace {
       }
 
       if (IID && TTI) {
+        FastMathFlags FMFCI;
+        if (auto *FPMOCI = dyn_cast<FPMathOperator>(CI))
+          FMFCI = FPMOCI->getFastMathFlags();
+
         SmallVector<Type*, 4> Tys;
         for (unsigned i = 0, ie = CI->getNumArgOperands(); i != ie; ++i)
           Tys.push_back(CI->getArgOperand(i)->getType());
-        unsigned ICost = TTI->getIntrinsicInstrCost(IID, IT1, Tys);
+        unsigned ICost = TTI->getIntrinsicInstrCost(IID, IT1, Tys, FMFCI);
 
         Tys.clear();
         CallInst *CJ = cast<CallInst>(J);
+
+        FastMathFlags FMFCJ;
+        if (auto *FPMOCJ = dyn_cast<FPMathOperator>(CJ))
+          FMFCJ = FPMOCJ->getFastMathFlags();
+
         for (unsigned i = 0, ie = CJ->getNumArgOperands(); i != ie; ++i)
           Tys.push_back(CJ->getArgOperand(i)->getType());
-        unsigned JCost = TTI->getIntrinsicInstrCost(IID, JT1, Tys);
+        unsigned JCost = TTI->getIntrinsicInstrCost(IID, JT1, Tys, FMFCJ);
 
         Tys.clear();
         assert(CI->getNumArgOperands() == CJ->getNumArgOperands() &&
@@ -1141,8 +1156,10 @@ namespace {
                                             CJ->getArgOperand(i)->getType()));
         }
 
+        FastMathFlags FMFV = FMFCI;
+        FMFV &= FMFCJ;
         Type *RetTy = getVecTypeForPair(IT1, JT1);
-        unsigned VCost = TTI->getIntrinsicInstrCost(IID, RetTy, Tys);
+        unsigned VCost = TTI->getIntrinsicInstrCost(IID, RetTy, Tys, FMFV);
 
         if (VCost > ICost + JCost)
           return false;
@@ -1248,20 +1265,23 @@ namespace {
       if (I == Start) IAfterStart = true;
 
       bool IsSimpleLoadStore;
-      if (!isInstVectorizable(I, IsSimpleLoadStore)) continue;
+      if (!isInstVectorizable(&*I, IsSimpleLoadStore))
+        continue;
 
       // Look for an instruction with which to pair instruction *I...
       DenseSet<Value *> Users;
       AliasSetTracker WriteSet(*AA);
-      if (I->mayWriteToMemory()) WriteSet.add(I);
+      if (I->mayWriteToMemory())
+        WriteSet.add(&*I);
 
       bool JAfterStart = IAfterStart;
       BasicBlock::iterator J = std::next(I);
       for (unsigned ss = 0; J != E && ss <= Config.SearchLimit; ++J, ++ss) {
-        if (J == Start) JAfterStart = true;
+        if (J == Start)
+          JAfterStart = true;
 
         // Determine if J uses I, if so, exit the loop.
-        bool UsesI = trackUsesOfI(Users, WriteSet, I, J, !Config.FastDep);
+        bool UsesI = trackUsesOfI(Users, WriteSet, &*I, &*J, !Config.FastDep);
         if (Config.FastDep) {
           // Note: For this heuristic to be effective, independent operations
           // must tend to be intermixed. This is likely to be true from some
@@ -1278,25 +1298,26 @@ namespace {
         // J does not use I, and comes before the first use of I, so it can be
         // merged with I if the instructions are compatible.
         int CostSavings, FixedOrder;
-        if (!areInstsCompatible(I, J, IsSimpleLoadStore, NonPow2Len,
-            CostSavings, FixedOrder)) continue;
+        if (!areInstsCompatible(&*I, &*J, IsSimpleLoadStore, NonPow2Len,
+                                CostSavings, FixedOrder))
+          continue;
 
         // J is a candidate for merging with I.
         if (PairableInsts.empty() ||
-             PairableInsts[PairableInsts.size()-1] != I) {
-          PairableInsts.push_back(I);
+            PairableInsts[PairableInsts.size() - 1] != &*I) {
+          PairableInsts.push_back(&*I);
         }
 
-        CandidatePairs[I].push_back(J);
+        CandidatePairs[&*I].push_back(&*J);
         ++TotalPairs;
         if (TTI)
-          CandidatePairCostSavings.insert(ValuePairWithCost(ValuePair(I, J),
-                                                            CostSavings));
+          CandidatePairCostSavings.insert(
+              ValuePairWithCost(ValuePair(&*I, &*J), CostSavings));
 
         if (FixedOrder == 1)
-          FixedOrderPairs.insert(ValuePair(I, J));
+          FixedOrderPairs.insert(ValuePair(&*I, &*J));
         else if (FixedOrder == -1)
-          FixedOrderPairs.insert(ValuePair(J, I));
+          FixedOrderPairs.insert(ValuePair(&*J, &*I));
 
         // The next call to this function must start after the last instruction
         // selected during this invocation.
@@ -1477,14 +1498,16 @@ namespace {
     BasicBlock::iterator E = BB.end(), EL =
       BasicBlock::iterator(cast<Instruction>(PairableInsts.back()));
     for (BasicBlock::iterator I = BB.getFirstInsertionPt(); I != E; ++I) {
-      if (IsInPair.find(I) == IsInPair.end()) continue;
+      if (IsInPair.find(&*I) == IsInPair.end())
+        continue;
 
       DenseSet<Value *> Users;
       AliasSetTracker WriteSet(*AA);
-      if (I->mayWriteToMemory()) WriteSet.add(I);
+      if (I->mayWriteToMemory())
+        WriteSet.add(&*I);
 
       for (BasicBlock::iterator J = std::next(I); J != E; ++J) {
-        (void) trackUsesOfI(Users, WriteSet, I, J);
+        (void)trackUsesOfI(Users, WriteSet, &*I, &*J);
 
         if (J == EL)
           break;
@@ -1493,7 +1516,7 @@ namespace {
       for (DenseSet<Value *>::iterator U = Users.begin(), E = Users.end();
            U != E; ++U) {
         if (IsInPair.find(*U) == IsInPair.end()) continue;
-        PairableInstUsers.insert(ValuePair(I, *U));
+        PairableInstUsers.insert(ValuePair(&*I, *U));
       }
 
       if (I == EL)
@@ -2779,7 +2802,7 @@ namespace {
         continue;
       } else if (isa<CallInst>(I)) {
         Function *F = cast<CallInst>(I)->getCalledFunction();
-        Intrinsic::ID IID = (Intrinsic::ID) F->getIntrinsicID();
+        Intrinsic::ID IID = F->getIntrinsicID();
         if (o == NumOperands-1) {
           BasicBlock &BB = *I->getParent();
 
@@ -2815,55 +2838,51 @@ namespace {
                      Instruction *J, Instruction *K,
                      Instruction *&InsertionPt,
                      Instruction *&K1, Instruction *&K2) {
-    if (isa<StoreInst>(I)) {
-      AA->replaceWithNewValue(I, K);
-      AA->replaceWithNewValue(J, K);
+    if (isa<StoreInst>(I))
+      return;
+
+    Type *IType = I->getType();
+    Type *JType = J->getType();
+
+    VectorType *VType = getVecTypeForPair(IType, JType);
+    unsigned numElem = VType->getNumElements();
+
+    unsigned numElemI = getNumScalarElements(IType);
+    unsigned numElemJ = getNumScalarElements(JType);
+
+    if (IType->isVectorTy()) {
+      std::vector<Constant *> Mask1(numElemI), Mask2(numElemI);
+      for (unsigned v = 0; v < numElemI; ++v) {
+        Mask1[v] = ConstantInt::get(Type::getInt32Ty(Context), v);
+        Mask2[v] = ConstantInt::get(Type::getInt32Ty(Context), numElemJ + v);
+      }
+
+      K1 = new ShuffleVectorInst(K, UndefValue::get(VType),
+                                 ConstantVector::get(Mask1),
+                                 getReplacementName(K, false, 1));
     } else {
-      Type *IType = I->getType();
-      Type *JType = J->getType();
-
-      VectorType *VType = getVecTypeForPair(IType, JType);
-      unsigned numElem = VType->getNumElements();
-
-      unsigned numElemI = getNumScalarElements(IType);
-      unsigned numElemJ = getNumScalarElements(JType);
-
-      if (IType->isVectorTy()) {
-        std::vector<Constant*> Mask1(numElemI), Mask2(numElemI);
-        for (unsigned v = 0; v < numElemI; ++v) {
-          Mask1[v] = ConstantInt::get(Type::getInt32Ty(Context), v);
-          Mask2[v] = ConstantInt::get(Type::getInt32Ty(Context), numElemJ+v);
-        }
-
-        K1 = new ShuffleVectorInst(K, UndefValue::get(VType),
-                                   ConstantVector::get( Mask1),
-                                   getReplacementName(K, false, 1));
-      } else {
-        Value *CV0 = ConstantInt::get(Type::getInt32Ty(Context), 0);
-        K1 = ExtractElementInst::Create(K, CV0,
-                                          getReplacementName(K, false, 1));
-      }
-
-      if (JType->isVectorTy()) {
-        std::vector<Constant*> Mask1(numElemJ), Mask2(numElemJ);
-        for (unsigned v = 0; v < numElemJ; ++v) {
-          Mask1[v] = ConstantInt::get(Type::getInt32Ty(Context), v);
-          Mask2[v] = ConstantInt::get(Type::getInt32Ty(Context), numElemI+v);
-        }
-
-        K2 = new ShuffleVectorInst(K, UndefValue::get(VType),
-                                   ConstantVector::get( Mask2),
-                                   getReplacementName(K, false, 2));
-      } else {
-        Value *CV1 = ConstantInt::get(Type::getInt32Ty(Context), numElem-1);
-        K2 = ExtractElementInst::Create(K, CV1,
-                                          getReplacementName(K, false, 2));
-      }
-
-      K1->insertAfter(K);
-      K2->insertAfter(K1);
-      InsertionPt = K2;
+      Value *CV0 = ConstantInt::get(Type::getInt32Ty(Context), 0);
+      K1 = ExtractElementInst::Create(K, CV0, getReplacementName(K, false, 1));
     }
+
+    if (JType->isVectorTy()) {
+      std::vector<Constant *> Mask1(numElemJ), Mask2(numElemJ);
+      for (unsigned v = 0; v < numElemJ; ++v) {
+        Mask1[v] = ConstantInt::get(Type::getInt32Ty(Context), v);
+        Mask2[v] = ConstantInt::get(Type::getInt32Ty(Context), numElemI + v);
+      }
+
+      K2 = new ShuffleVectorInst(K, UndefValue::get(VType),
+                                 ConstantVector::get(Mask2),
+                                 getReplacementName(K, false, 2));
+    } else {
+      Value *CV1 = ConstantInt::get(Type::getInt32Ty(Context), numElem - 1);
+      K2 = ExtractElementInst::Create(K, CV1, getReplacementName(K, false, 2));
+    }
+
+    K1->insertAfter(K);
+    K2->insertAfter(K1);
+    InsertionPt = K2;
   }
 
   // Move all uses of the function I (including pairing-induced uses) after J.
@@ -2878,7 +2897,7 @@ namespace {
     if (I->mayWriteToMemory()) WriteSet.add(I);
 
     for (; cast<Instruction>(L) != J; ++L)
-      (void) trackUsesOfI(Users, WriteSet, I, L, true, &LoadMoveSetPairs);
+      (void)trackUsesOfI(Users, WriteSet, I, &*L, true, &LoadMoveSetPairs);
 
     assert(cast<Instruction>(L) == J &&
       "Tracking has not proceeded far enough to check for dependencies");
@@ -2900,9 +2919,9 @@ namespace {
     if (I->mayWriteToMemory()) WriteSet.add(I);
 
     for (; cast<Instruction>(L) != J;) {
-      if (trackUsesOfI(Users, WriteSet, I, L, true, &LoadMoveSetPairs)) {
+      if (trackUsesOfI(Users, WriteSet, I, &*L, true, &LoadMoveSetPairs)) {
         // Move this instruction
-        Instruction *InstToMove = L; ++L;
+        Instruction *InstToMove = &*L++;
 
         DEBUG(dbgs() << "BBV: moving: " << *InstToMove <<
                         " to after " << *InsertionPt << "\n");
@@ -2933,11 +2952,11 @@ namespace {
     // Note: We cannot end the loop when we reach J because J could be moved
     // farther down the use chain by another instruction pairing. Also, J
     // could be before I if this is an inverted input.
-    for (BasicBlock::iterator E = BB.end(); cast<Instruction>(L) != E; ++L) {
-      if (trackUsesOfI(Users, WriteSet, I, L)) {
+    for (BasicBlock::iterator E = BB.end(); L != E; ++L) {
+      if (trackUsesOfI(Users, WriteSet, I, &*L)) {
         if (L->mayReadFromMemory()) {
-          LoadMoveSet[L].push_back(I);
-          LoadMoveSetPairs.insert(ValuePair(L, I));
+          LoadMoveSet[&*L].push_back(I);
+          LoadMoveSetPairs.insert(ValuePair(&*L, I));
         }
       }
     }
@@ -3000,7 +3019,7 @@ namespace {
     DEBUG(dbgs() << "BBV: initial: \n" << BB << "\n");
 
     for (BasicBlock::iterator PI = BB.getFirstInsertionPt(); PI != BB.end();) {
-      DenseMap<Value *, Value *>::iterator P = ChosenPairs.find(PI);
+      DenseMap<Value *, Value *>::iterator P = ChosenPairs.find(&*PI);
       if (P == ChosenPairs.end()) {
         ++PI;
         continue;
@@ -3112,15 +3131,22 @@ namespace {
       else if (H->hasName())
         K->takeName(H);
 
-      if (!isa<StoreInst>(K))
+      if (auto CS = CallSite(K)) {
+        SmallVector<Type *, 3> Tys;
+        FunctionType *Old = CS.getFunctionType();
+        unsigned NumOld = Old->getNumParams();
+        assert(NumOld <= ReplacedOperands.size());
+        for (unsigned i = 0; i != NumOld; ++i)
+          Tys.push_back(ReplacedOperands[i]->getType());
+        CS.mutateFunctionType(
+            FunctionType::get(getVecTypeForPair(L->getType(), H->getType()),
+                              Tys, Old->isVarArg()));
+      } else if (!isa<StoreInst>(K))
         K->mutateType(getVecTypeForPair(L->getType(), H->getType()));
 
-      unsigned KnownIDs[] = {
-        LLVMContext::MD_tbaa,
-        LLVMContext::MD_alias_scope,
-        LLVMContext::MD_noalias,
-        LLVMContext::MD_fpmath
-      };
+      unsigned KnownIDs[] = {LLVMContext::MD_tbaa, LLVMContext::MD_alias_scope,
+                             LLVMContext::MD_noalias, LLVMContext::MD_fpmath,
+                             LLVMContext::MD_invariant_group};
       combineMetadata(K, H, KnownIDs);
       K->intersectOptionalDataWith(H);
 
@@ -3144,8 +3170,6 @@ namespace {
       if (!isa<StoreInst>(I)) {
         L->replaceAllUsesWith(K1);
         H->replaceAllUsesWith(K2);
-        AA->replaceWithNewValue(L, K1);
-        AA->replaceWithNewValue(H, K2);
       }
 
       // Instructions that may read from memory may be in the load move set.
@@ -3196,10 +3220,14 @@ namespace {
 char BBVectorize::ID = 0;
 static const char bb_vectorize_name[] = "Basic-Block Vectorization";
 INITIALIZE_PASS_BEGIN(BBVectorize, BBV_NAME, bb_vectorize_name, false, false)
-INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(ScalarEvolution)
+INITIALIZE_PASS_DEPENDENCY(ScalarEvolutionWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(GlobalsAAWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(SCEVAAWrapperPass)
 INITIALIZE_PASS_END(BBVectorize, BBV_NAME, bb_vectorize_name, false, false)
 
 BasicBlockPass *llvm::createBBVectorizePass(const VectorizeConfig &C) {

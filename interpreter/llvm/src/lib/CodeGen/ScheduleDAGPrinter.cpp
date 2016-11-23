@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/ScheduleDAG.h"
-#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -43,9 +42,12 @@ namespace llvm {
       return (Node->NumPreds > 10 || Node->NumSuccs > 10);
     }
 
-    static bool hasNodeAddressLabel(const SUnit *Node,
-                                    const ScheduleDAG *Graph) {
-      return true;
+    static std::string getNodeIdentifierLabel(const SUnit *Node,
+                                              const ScheduleDAG *Graph) {
+      std::string R;
+      raw_string_ostream OS(R);
+      OS << static_cast<const void *>(Node);
+      return R;
     }
 
     /// If you want to override the dot attributes printed for a particular

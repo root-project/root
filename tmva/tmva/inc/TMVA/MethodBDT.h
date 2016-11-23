@@ -55,6 +55,7 @@
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
+#include "TMVA/LossFunction.h"
 
 namespace TMVA {
 
@@ -67,13 +68,11 @@ namespace TMVA {
       MethodBDT( const TString& jobName,
                  const TString& methodTitle,
                  DataSetInfo& theData,
-                 const TString& theOption = "",
-                 TDirectory* theTargetDir = 0 );
+                 const TString& theOption = "");
 
       // constructor for calculating BDT-MVA using previously generatad decision trees
       MethodBDT( DataSetInfo& theData,
-                 const TString& theWeightFile,
-                 TDirectory* theTargetDir = NULL );
+                 const TString& theWeightFile);
 
       virtual ~MethodBDT( void );
 
@@ -202,7 +201,6 @@ namespace TMVA {
       void UpdateTargetsRegression( std::vector<const TMVA::Event*>&,Bool_t first=kFALSE);
       Double_t GetGradBoostMVA(const TMVA::Event *e, UInt_t nTrees);
       void     GetBaggedSubSample(std::vector<const TMVA::Event*>&);
-      Double_t GetWeightedQuantile(std::vector<std::pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t SumOfWeights = 0.0);
 
       std::vector<const TMVA::Event*>       fEventSample;     // the training events
       std::vector<const TMVA::Event*>       fValidationSample;// the Validation events
@@ -216,12 +214,14 @@ namespace TMVA {
       TString                         fBoostType;       // string specifying the boost type
       Double_t                        fAdaBoostBeta;    // beta parameter for AdaBoost algorithm
       TString                         fAdaBoostR2Loss;  // loss type used in AdaBoostR2 (Linear,Quadratic or Exponential)
-      Double_t                        fTransitionPoint; // break-down point for gradient regression
+      //Double_t                        fTransitionPoint; // break-down point for gradient regression
       Double_t                        fShrinkage;       // learning rate for gradient boost;
       Bool_t                          fBaggedBoost;     // turn bagging in combination with boost on/off
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
-      Double_t                        fSumOfWeights;    // sum of all event weights
-      std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
+      //Double_t                        fSumOfWeights;    // sum of all event weights
+      //std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
+      std::map< const TMVA::Event*, LossFunctionEventInfo>                fLossFunctionEventInfo;  // map event to true value, predicted value, and weight
+                                                                                                   // used by different loss functions for BDT regression
       std::map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
 
       //options for the decision Tree
@@ -272,6 +272,8 @@ namespace TMVA {
       
       Bool_t                           fDoPreselection;  // do or do not perform automatic pre-selection of 100% eff. cuts
 
+      Bool_t                           fSkipNormalization; // true for skipping normalization at initialization of trees
+
       std::vector<Double_t>            fVariableImportance; // the relative importance of the different variables
 
 
@@ -290,6 +292,10 @@ namespace TMVA {
       
       Bool_t fHistoricBool; //historic variable, only needed for "CompatibilityOptions" 
 
+      TString                         fRegressionLossFunctionBDTGS;       // the option string determining the loss function for BDT regression
+      Double_t                        fHuberQuantile;                     // the option string determining the quantile for the Huber Loss Function
+                                                                          // in BDT regression.
+      LossFunctionBDT* fRegressionLossFunctionBDTG;
 
       // debugging flags
       static const Int_t               fgDebugLevel;     // debug level determining some printout/control plots etc.

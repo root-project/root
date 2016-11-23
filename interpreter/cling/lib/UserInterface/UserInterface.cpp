@@ -9,9 +9,9 @@
 
 #include "cling/UserInterface/UserInterface.h"
 
-#include "cling/UserInterface/CompilationException.h"
 #include "cling/Interpreter/Exception.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
+#include "textinput/Callbacks.h"
 #include "textinput/TextInput.h"
 #include "textinput/StreamReader.h"
 #include "textinput/TerminalDisplay.h"
@@ -30,10 +30,6 @@
 # include <unistd.h>
 #endif
 
-#if defined(LLVM_ON_WIN32)
-#include <Shlobj.h>
-#endif
-
 #if defined(_MSC_VER)
 #ifndef STDIN_FILENO
 # define STDIN_FILENO 0
@@ -49,45 +45,29 @@
 #include <memory>
 
 namespace {
-  // Handle fatal llvm errors by throwing an exception.
-  // Yes, throwing exceptions in error handlers is bad.
-  // Doing nothing is pretty terrible, too.
-  void exceptionErrorHandler(void * /*user_data*/,
-                             const std::string& reason,
-                             bool /*gen_crash_diag*/) {
-    throw cling::CompilationException(reason);
-  }
-#if defined(LLVM_ON_UNIX)
-  static void GetUserHomeDirectory(llvm::SmallVectorImpl<char>& str) {
-    str.clear();
-    const char* home = getenv("HOME");
-    if (!home)
-      home = "/";
-    llvm::StringRef SRhome(home);
-    str.insert(str.begin(), SRhome.begin(), SRhome.end());
-  }
-#elif defined(LLVM_ON_WIN32)
-  static void GetUserHomeDirectory(llvm::SmallVectorImpl<char>& str) {
-    str.reserve(MAX_PATH);
-    HRESULT res = SHGetFolderPathA(NULL,
-                                   CSIDL_FLAG_CREATE | CSIDL_APPDATA,
-                                   NULL,
-                                   SHGFP_TYPE_CURRENT,
-                                   str.data());
-    if (res != S_OK) {
-      assert(0 && "Failed to get user home directory");
-      llvm::StringRef SRhome("\\");
-      str.insert(str.begin(), SRhome.begin(), SRhome.end());
+  ///\brief Class that specialises the textinput TabCompletion to allow Cling
+  /// to code complete through its own textinput mechanism which is part of the
+  /// UserInterface.
+  ///
+  class UITabCompletion : public textinput::TabCompletion {
+    const cling::Interpreter& m_ParentInterpreter;
+  
+  public:
+    UITabCompletion(const cling::Interpreter& Parent) :
+                    m_ParentInterpreter(Parent) {}
+    ~UITabCompletion() {}
+
+    bool Complete(textinput::Text& Line /*in+out*/,
+                  size_t& Cursor /*in+out*/,
+                  textinput::EditorRange& R /*out*/,
+                  std::vector<std::string>& Completions /*out*/) override {
+      m_ParentInterpreter.codeComplete(Line.GetText(), Cursor, Completions);
+      return true;
     }
-  }
-#else
-# error "Unsupported platform."
-#endif
+  };
 }
 
 namespace cling {
-  // Declared in CompilationException.h; vtable pinned here.
-  CompilationException::~CompilationException() throw() {}
 
   UserInterface::UserInterface(Interpreter& interp) {
     // We need stream that doesn't close its file descriptor, thus we are not
@@ -95,7 +75,7 @@ namespace cling {
     // the results in pipes (Savannah #99234).
     static llvm::raw_fd_ostream m_MPOuts (STDOUT_FILENO, /*ShouldClose*/false);
     m_MetaProcessor.reset(new MetaProcessor(interp, m_MPOuts));
-    llvm::install_fatal_error_handler(&exceptionErrorHandler);
+    llvm::install_fatal_error_handler(&CompilationException::throwingHandler);
   }
 
   UserInterface::~UserInterface() {}
@@ -108,15 +88,20 @@ namespace cling {
     llvm::SmallString<512> histfilePath;
     if (!getenv("CLING_NOHISTORY")) {
       // History file is $HOME/.cling_history
-      static const char* histfile = ".cling_history";
-      GetUserHomeDirectory(histfilePath);
-      llvm::sys::path::append(histfilePath, histfile);
+      if (llvm::sys::path::home_directory(histfilePath))
+        llvm::sys::path::append(histfilePath, ".cling_history");
     }
 
     using namespace textinput;
     std::unique_ptr<StreamReader> R(StreamReader::Create());
     std::unique_ptr<TerminalDisplay> D(TerminalDisplay::Create());
     TextInput TI(*R, *D, histfilePath.empty() ? 0 : histfilePath.c_str());
+
+    // Inform text input about the code complete consumer
+    // TextInput owns the TabCompletion.
+    UITabCompletion* Completion =
+                      new UITabCompletion(m_MetaProcessor->getInterpreter());
+    TI.SetCompletion(Completion);
 
     TI.SetPrompt("[cling]$ ");
     std::string line;

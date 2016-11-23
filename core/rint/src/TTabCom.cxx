@@ -426,18 +426,27 @@ void TTabCom::RehashAll()
 const TSeqCollection *TTabCom::GetListOfClasses()
 {
    if (!fpClasses) {
-      fpClasses = new TContainer;
+      fpClasses = new THashList;
       // Iterate over the table from the map file.
       THashList* entries = gInterpreter->GetMapfile()->GetTable();
       TIter next(entries);
       while (const auto key = next()) {
          // This is not needed with the new rootmap format
          const char* className = key->GetName();
-         if (strncmp(className, "Library.", 8))
+         if (!strncmp(className, "Library.", 8))
             className += 8;
 
          if (!strstr(className, ".h"))
             fpClasses->Add(new TObjString(className));
+      }
+
+      // We might have autoload entries that don't have a rootmap entry
+      // (libCore) and no interpreter info (not yet loaded).
+      TClassTable::Init(); // reset counter
+      while (const char* className = TClassTable::Next()) {
+         if (!fpClasses->FindObject(className)) {
+            fpClasses->Add(new TObjString(className));
+         }
       }
    }
 

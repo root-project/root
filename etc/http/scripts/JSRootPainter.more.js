@@ -98,11 +98,10 @@
    }
 
    JSROOT.Painter.GetColorPalette = function(col,alfa) {
-      if ((col == null) || (col==0)) col = JSROOT.gStyle.Palette;
+      if ((col===null) || (col===0)) col = JSROOT.gStyle.Palette;
       if ((col>0) && (col<10)) return JSROOT.Painter.CreateGrayPalette();
       if (col < 51) return JSROOT.Painter.CreateDefaultPalette();
       if (col > 112) col = 57;
-
       var red, green, blue,
           stops = [ 0.0000, 0.1250, 0.2500, 0.3750, 0.5000, 0.6250, 0.7500, 0.8750, 1.0000 ];
       switch(col) {
@@ -553,49 +552,44 @@
 
    JSROOT.Painter.drawEllipse = function(divid, obj, opt) {
 
-      this.ellipse = obj;
-      this.SetDivId(divid);
+      this.SetDivId(divid, 2);
 
-      // function used for live update of object
-      this['UpdateObject'] = function(obj) {
-         // copy all fields
-         JSROOT.extend(this.ellipse, obj);
-      }
+      this.Redraw = function() {
+         var ellipse = this.GetObject();
 
-      this['Redraw'] = function() {
-         var lineatt = JSROOT.Painter.createAttLine(this.ellipse);
-         var fillatt = this.createAttFill(this.ellipse);
+         if(!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(ellipse);
+         if (!this.fillatt) this.fillatt = this.createAttFill(ellipse);
 
          // create svg:g container for ellipse drawing
          this.RecreateDrawG(this.main_painter() == null);
 
-         var x = this.AxisToSvg("x", this.ellipse.fX1);
-         var y = this.AxisToSvg("y", this.ellipse.fY1);
-         var rx = this.AxisToSvg("x", this.ellipse.fX1 + this.ellipse.fR1) - x;
-         var ry = y - this.AxisToSvg("y", this.ellipse.fY1 + this.ellipse.fR2);
+         var x = this.AxisToSvg("x", ellipse.fX1);
+         var y = this.AxisToSvg("y", ellipse.fY1);
+         var rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR1) - x;
+         var ry = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR2);
 
-         if ((this.ellipse.fPhimin == 0) && (this.ellipse.fPhimax == 360) && (this.ellipse.fTheta == 0)) {
+         if ((ellipse.fPhimin == 0) && (ellipse.fPhimax == 360) && (ellipse.fTheta == 0)) {
             // this is simple case, which could be drawn with svg:ellipse
             this.draw_g
                 .append("svg:ellipse")
                 .attr("cx", x.toFixed(1)).attr("cy", y.toFixed(1))
                 .attr("rx", rx.toFixed(1)).attr("ry", ry.toFixed(1))
-                .call(lineatt.func).call(fillatt.func);
+                .call(this.lineatt.func).call(this.fillatt.func);
             return;
          }
 
          // here svg:path is used to draw more complex figure
 
-         var ct = Math.cos(Math.PI*this.ellipse.fTheta/180.);
-         var st = Math.sin(Math.PI*this.ellipse.fTheta/180.);
+         var ct = Math.cos(Math.PI*ellipse.fTheta/180.);
+         var st = Math.sin(Math.PI*ellipse.fTheta/180.);
 
-         var dx1 =  rx * Math.cos(this.ellipse.fPhimin*Math.PI/180.);
-         var dy1 =  ry * Math.sin(this.ellipse.fPhimin*Math.PI/180.);
+         var dx1 =  rx * Math.cos(ellipse.fPhimin*Math.PI/180.);
+         var dy1 =  ry * Math.sin(ellipse.fPhimin*Math.PI/180.);
          var x1 =  dx1*ct - dy1*st;
          var y1 = -dx1*st - dy1*ct;
 
-         var dx2 = rx * Math.cos(this.ellipse.fPhimax*Math.PI/180.);
-         var dy2 = ry * Math.sin(this.ellipse.fPhimax*Math.PI/180.);
+         var dx2 = rx * Math.cos(ellipse.fPhimax*Math.PI/180.);
+         var dy2 = ry * Math.sin(ellipse.fPhimax*Math.PI/180.);
          var x2 =  dx2*ct - dy2*st;
          var y2 = -dx2*st - dy2*ct;
 
@@ -604,9 +598,9 @@
             .append("svg:path")
             .attr("d", "M 0,0" +
                        " L " + x1.toFixed(1) + "," + y1.toFixed(1) +
-                       " A " + rx.toFixed(1) + " " + ry.toFixed(1) + " " + -this.ellipse.fTheta.toFixed(1) + " 1 0 " + x2.toFixed(1) + "," + y2.toFixed(1) +
+                       " A " + rx.toFixed(1) + " " + ry.toFixed(1) + " " + -ellipse.fTheta.toFixed(1) + " 1 0 " + x2.toFixed(1) + "," + y2.toFixed(1) +
                        " L 0,0 Z")
-            .call(lineatt.func).call(fillatt.func);
+            .call(this.lineatt.func).call(this.fillatt.func);
       }
 
       this.Redraw(); // actual drawing
@@ -617,7 +611,7 @@
 
    JSROOT.Painter.drawLine = function(divid, obj, opt) {
 
-      this.SetDivId(divid);
+      this.SetDivId(divid, 2);
 
       this.Redraw = function() {
          var line = this.GetObject(),
@@ -640,16 +634,84 @@
       return this.DrawingReady();
    }
 
+   // =============================================================================
+
+   JSROOT.Painter.drawPolyLine = function(divid, obj, opt) {
+
+      this.SetDivId(divid, 2);
+
+      this.Redraw = function() {
+         var polyline = this.GetObject(),
+             lineatt = JSROOT.Painter.createAttLine(polyline),
+             fillatt = this.createAttFill(polyline);
+
+         // create svg:g container for line drawing
+         this.RecreateDrawG(this.main_painter() == null);
+
+         var cmd = "M";
+         for (var n=0;n<=polyline.fLastPoint;++n) {
+            if (n>0) cmd += "L";
+            cmd += this.AxisToSvg("x", polyline.fX[n]).toFixed(1) + "," +
+                   this.AxisToSvg("y", polyline.fY[n]).toFixed(1);
+         }
+         if (fillatt.color!=='none') cmd+="Z";
+
+         this.draw_g
+             .append("svg:path")
+             .attr("d", cmd)
+             .call(lineatt.func)
+             .call(fillatt.func);
+      }
+
+      this.Redraw(); // actual drawing
+
+      return this.DrawingReady();
+   }
+
+   // =============================================================================
+
+   JSROOT.Painter.drawBox = function(divid, obj, opt) {
+
+      this.SetDivId(divid, 2);
+
+      this.Redraw = function() {
+         var box = this.GetObject(),
+             lineatt = JSROOT.Painter.createAttLine(box),
+             fillatt = this.createAttFill(box);
+
+         // create svg:g container for line drawing
+         this.RecreateDrawG(this.main_painter() == null);
+
+         var x1 = Math.round(this.AxisToSvg("x", box.fX1)),
+             x2 = Math.round(this.AxisToSvg("x", box.fX2)),
+             y1 = Math.round(this.AxisToSvg("y", box.fY1)),
+             y2 = Math.round(this.AxisToSvg("y", box.fY2));
+
+         this.draw_g
+             .append("svg:rect")
+             .attr("x", Math.min(x1,x2))
+             .attr("y", Math.min(y1,y2))
+             .attr("width", Math.abs(x2-x1))
+             .attr("height", Math.abs(y1-y2))
+             .call(lineatt.func)
+             .call(fillatt.func);
+      }
+
+      this.Redraw(); // actual drawing
+
+      return this.DrawingReady();
+   }
+
    // ======================================================================================
 
    JSROOT.Painter.drawArrow = function(divid, obj, opt) {
 
-      this.SetDivId(divid);
+      this.SetDivId(divid, 2);
 
       this.Redraw = function() {
-         var arrow = this.GetObject(),
-             lineatt = JSROOT.Painter.createAttLine(arrow),
-             fillatt = this.createAttFill(arrow);
+         var arrow = this.GetObject();
+         if (!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(arrow);
+         if (!this.fillatt) this.fillatt = this.createAttFill(arrow);
 
          var wsize = Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize;
          if (wsize<3) wsize = 3;
@@ -670,7 +732,7 @@
          if (oo.indexOf("<")==0) {
             var closed = (oo.indexOf("<|") == 0);
             if (!defs) defs = this.draw_g.append("defs");
-            m_start = "jsroot_arrowmarker_" +  JSROOT.Painter['arrowcnt']++;
+            m_start = "jsroot_arrowmarker_" +  JSROOT.Painter.arrowcnt++;
             var beg = defs.append("svg:marker")
                 .attr("id", m_start)
                 .attr("markerWidth", wsize.toFixed(1))
@@ -682,8 +744,8 @@
                 .append("svg:path")
                 .style("fill","none")
                 .attr("d", left_arrow + (closed ? " Z" : ""))
-                .call(lineatt.func);
-            if (closed) beg.call(fillatt.func);
+                .call(this.lineatt.func);
+            if (closed) beg.call(this.fillatt.func);
          }
 
          var midkind = 0;
@@ -695,7 +757,7 @@
          if (midkind > 0) {
             var closed = midkind > 10;
             if (!defs) defs = this.draw_g.append("defs");
-            m_mid = "jsroot_arrowmarker_" +  JSROOT.Painter['arrowcnt']++;
+            m_mid = "jsroot_arrowmarker_" +  JSROOT.Painter.arrowcnt++;
 
             var mid = defs.append("svg:marker")
               .attr("id", m_mid)
@@ -709,14 +771,14 @@
               .style("fill","none")
               .attr("d", ((midkind % 10 == 1) ? right_arrow : left_arrow) +
                          ((midkind > 10) ? " Z" : ""))
-              .call(lineatt.func);
-            if (midkind > 10) mid.call(fillatt.func);
+              .call(this.lineatt.func);
+            if (midkind > 10) mid.call(this.fillatt.func);
          }
 
          if (oo.lastIndexOf(">") == len-1) {
             var closed = (oo.lastIndexOf("|>") == len-2) && (len>1);
             if (!defs) defs = this.draw_g.append("defs");
-            m_end = "jsroot_arrowmarker_" +  JSROOT.Painter['arrowcnt']++;
+            m_end = "jsroot_arrowmarker_" +  JSROOT.Painter.arrowcnt++;
             var end = defs.append("svg:marker")
               .attr("id", m_end)
               .attr("markerWidth", wsize.toFixed(1))
@@ -728,8 +790,8 @@
               .append("svg:path")
               .style("fill","none")
               .attr("d", right_arrow + (closed ? " Z" : ""))
-              .call(lineatt.func);
-            if (closed) end.call(fillatt.func);
+              .call(this.lineatt.func);
+            if (closed) end.call(this.fillatt.func);
          }
 
          var path = this.draw_g
@@ -737,7 +799,7 @@
              .attr("d",  "M" + x1.toFixed(1) + "," + y1.toFixed(1) +
                       ((m_mid == null) ? "" : "L" + (x1/2+x2/2).toFixed(1) + "," + (y1/2+y2/2).toFixed(1)) +
                         " L" + x2.toFixed(1) + "," + y2.toFixed(1))
-             .call(lineatt.func);
+             .call(this.lineatt.func);
 
          if (m_start!=null) path.style("marker-start","url(#" + m_start + ")");
          if (m_mid!=null) path.style("marker-mid","url(#" + m_mid + ")");
@@ -877,23 +939,23 @@
             return res;
          }
 
-         var xmin = tf1.fXmin, xmax = tf1.fXmax, logx = false;
+         var xmin = tf1.fXmin, xmax = tf1.fXmax, logx = false, pad = this.root_pad();
 
          if (gxmin !== gxmax) {
             if (gxmin > xmin) xmin = gxmin;
             if (gxmax < xmax) xmax = gxmax;
          }
 
-         if ((main!==null) && main.options.Logx && (xmin>0) && (xmax>0)) {
+         if ((main!==null) && main.logx && (xmin>0) && (xmax>0)) {
             logx = true;
             xmin = Math.log(xmin);
             xmax = Math.log(xmax);
          }
 
-         var np = Math.max(tf1.fNpx, 101);
-         var dx = (xmax - xmin) / (np - 1);
+         var np = Math.max(tf1.fNpx, 101),
+            dx = (xmax - xmin) / (np - 1),
+            res = [];
 
-         var res = [];
          for (var n=0; n < np; n++) {
             var xx = xmin + n*dx;
             if (logx) xx = Math.exp(xx);
@@ -905,9 +967,8 @@
 
       this.CreateDummyHisto = function() {
 
-         var xmin = 0, xmax = 1, ymin = 0, ymax = 1;
-
-         var bins = this.CreateBins(true);
+         var xmin = 0, xmax = 1, ymin = 0, ymax = 1,
+             bins = this.CreateBins(true);
 
          if (bins!==null) {
 
@@ -965,8 +1026,8 @@
 
          bin = this.bins[best];
 
-         var gbin = this.draw_g.select(".tooltip_bin");
-         var radius = this.lineatt.width + 3;
+         var gbin = this.draw_g.select(".tooltip_bin"),
+             radius = this.lineatt.width + 3;
 
          if (gbin.empty())
             gbin = this.draw_g.append("svg:circle")
@@ -984,6 +1045,8 @@
                      exact : (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
 
          res.changed = gbin.property("current_bin") !== best;
+         res.menu = res.exact;
+         res.menu_dist = Math.sqrt((bin.grx-pnt.x)*(bin.grx-pnt.x) + (bin.gry-pnt.y)*(bin.grx-pnt.x));
 
          if (res.changed)
             gbin.attr("cx", bin.grx)
@@ -1004,7 +1067,7 @@
 
          var w = this.frame_width(), h = this.frame_height(), tf1 = this.GetObject();
 
-         this.RecreateDrawG(false, ".main_layer");
+         this.RecreateDrawG(false, "main_layer");
 
          // recalculate drawing bins when necessary
          this.bins = this.CreateBins(false);
@@ -1013,9 +1076,12 @@
          var pmain = this.main_painter();
          var name = this.GetTipName("\n");
 
-         this.lineatt = JSROOT.Painter.createAttLine(tf1);
-         this.fillatt = this.createAttFill(tf1);
-         if (this.fillatt.color == 'white') this.fillatt.color = 'none';
+         if (!this.lineatt)
+            this.lineatt = JSROOT.Painter.createAttLine(tf1);
+         this.lineatt.used = false;
+         if (!this.fillatt)
+            this.fillatt = this.createAttFill(tf1, undefined, undefined, 1);
+         this.fillatt.used = false;
 
          var n, bin;
          // first calculate graphical coordinates
@@ -1029,7 +1095,13 @@
 
          if (this.bins.length > 2) {
 
-            var path = JSROOT.Painter.BuildSvgPath("bezier", this.bins, h, 2);
+            var h0 = h;  // use maximal frame height for filling
+            if ((pmain.hmin!==undefined) && (pmain.hmin>=0)) {
+               h0 = Math.round(pmain.gry(0));
+               if ((h0 > h) || (h0 < 0)) h0 = h;
+            }
+
+            var path = JSROOT.Painter.BuildSvgPath("bezier", this.bins, h0, 2);
 
             if (this.lineatt.color != "none")
                this.draw_g.append("svg:path")
@@ -1048,19 +1120,8 @@
 
          delete this.ProcessTooltip;
 
-        if (JSROOT.gStyle.Tooltip > 1)
-           this.ProcessTooltip = this.ProcessTooltipFunc;
-        else
         if (JSROOT.gStyle.Tooltip > 0)
-           this.draw_g.selectAll()
-               .data(this.bins).enter()
-               .append("svg:circle")
-               .attr("cx", function(d) { return d.grx; })
-               .attr("cy", function(d) { return d.gry; })
-               .attr("r", 4)
-               .style("opacity", 0)
-               .append("svg:title")
-               .text( function(d) { return name + "x = " + pmain.AxisAsText("x",d.x) + " \ny = " + pmain.AxisAsText("y", d.y); });
+           this.ProcessTooltip = this.ProcessTooltipFunc;
       }
 
       this.CanZoomIn = function(axis,min,max) {
@@ -1104,13 +1165,19 @@
       // 'this' pointer set to created painter instance
       this.nostack = false;
       this.firstpainter = null;
-      this.painters = new Array; // keep painters to be able update objects
+      this.painters = []; // keep painters to be able update objects
 
       this.SetDivId(divid);
 
       if (!('fHists' in stack) || (stack.fHists.arr.length == 0)) return this.DrawingReady();
 
-      this['BuildStack'] = function() {
+      this.Cleanup = function() {
+         delete this.firstpainter;
+         delete this.painters;
+         JSROOT.TObjectPainter.prototype.Cleanup.call(this);
+      }
+
+      this.BuildStack = function() {
          //  build sum of all histograms
          //  Build a separate list fStack containing the running sum of all histograms
 
@@ -1144,7 +1211,7 @@
          return true;
       }
 
-      this['GetHistMinMax'] = function(hist, witherr) {
+      this.GetHistMinMax = function(hist, witherr) {
          var res = { min : 0, max : 0 };
          var domin = false, domax = false;
          if (hist.fMinimum != -1111)
@@ -1174,7 +1241,7 @@
          return res;
       }
 
-      this['GetMinMax'] = function(opt) {
+      this.GetMinMax = function(opt) {
          var res = { min : 0, max : 0 },
              iserr = (opt.indexOf('e')>=0),
              stack = this.GetObject();
@@ -1200,14 +1267,14 @@
          }
 
          var pad = this.root_pad();
-         if ((pad!=null) && (pad.fLogy > 0)) {
+         if (pad && pad.fLogy) {
             if (res.min<0) res.min = res.max * 1e-4;
          }
 
          return res;
       }
 
-      this['DrawNextHisto'] = function(indx, opt) {
+      this.DrawNextHisto = function(indx, opt) {
          var hist = null,
              stack = this.GetObject(),
              nhists = stack.fHists.arr.length;
@@ -1227,7 +1294,7 @@
          subp.WhenReady(this.DrawNextHisto.bind(this, indx+1, opt));
       }
 
-      this['drawStack'] = function(opt) {
+      this.drawStack = function(opt) {
          var pad = this.root_pad(),
              stack = this.GetObject(),
              histos = stack.fHists,
@@ -1291,7 +1358,7 @@
          return this;
       }
 
-      this['UpdateObject'] = function(obj) {
+      this.UpdateObject = function(obj) {
          if (!this.MatchObjectType(obj)) return false;
 
          var isany = false;
@@ -1316,6 +1383,8 @@
       JSROOT.TObjectPainter.call(this, graph);
       this.ownhisto = false; // indicate if graph histogram was drawn for axes
       this.bins = null;
+      this.xmin = this.ymin = this.xmax = this.ymax = 0;
+      this.wheel_zoomy = true;
    }
 
    JSROOT.TGraphPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -1378,9 +1447,11 @@
       if (this.opt.indexOf('1') != -1) {
          if (this.optionBar == 1) this.optionBar = 2;
       }
-      if (this.opt.indexOf('2') != -1)
+      if (this.opt.indexOf('2') != -1) {
          this.optionRect = 1;
-
+         this.optionLine = 0;
+         this.draw_errors = false;
+      }
       if (this.opt.indexOf('3') != -1) {
          this.optionEF = 1;
          this.optionLine = 0;
@@ -1405,9 +1476,7 @@
       }
 
       if (graph._typename == 'TGraphErrors') {
-         var maxEX = d3.max(graph.fEX);
-         var maxEY = d3.max(graph.fEY);
-         if (maxEX < 1.0e-300 && maxEY < 1.0e-300)
+         if (d3.max(graph.fEX) < 1.0e-300 && d3.max(graph.fEY) < 1.0e-300)
             this.draw_errors = false;
       }
    }
@@ -1426,7 +1495,7 @@
       this.bins = [];
 
       for (p=0;p<npoints;++p) {
-         var bin = { x : gr.fX[p], y : gr.fY[p] };
+         var bin = { x: gr.fX[p], y: gr.fY[p] };
          if (kind === 1) {
             bin.exlow = bin.exhigh = gr.fEX[p];
             bin.eylow = bin.eyhigh = gr.fEY[p];
@@ -1438,32 +1507,31 @@
             bin.eyhigh = gr.fEYhigh[p];
          }
          this.bins.push(bin);
+
+         if (p===0) {
+            this.xmin = this.xmax = bin.x;
+            this.ymin = this.ymax = bin.y;
+         }
+
+         if (kind > 0) {
+            this.xmin = Math.min(this.xmin, bin.x - bin.exlow, bin.x + bin.exhigh);
+            this.xmax = Math.max(this.xmax, bin.x - bin.exlow, bin.x + bin.exhigh);
+            this.ymin = Math.min(this.ymin, bin.y - bin.eylow, bin.y + bin.eyhigh);
+            this.ymax = Math.max(this.ymax, bin.y - bin.eylow, bin.y + bin.eyhigh);
+         } else {
+            this.xmin = Math.min(this.xmin, bin.x);
+            this.xmax = Math.max(this.xmax, bin.x);
+            this.ymin = Math.min(this.ymin, bin.y);
+            this.ymax = Math.max(this.ymax, bin.y);
+         }
+
       }
    }
 
    JSROOT.TGraphPainter.prototype.CreateHistogram = function() {
       // bins should be created
 
-      var xmin = 0, xmax = 1, ymin = 0, ymax = 1;
-
-      if (this.bins != null) {
-         xmin = xmax = this.bins[0].x;
-         ymin = ymax = this.bins[0].y;
-         for (var n = 0; n < this.bins.length; ++n) {
-            var pnt = this.bins[n];
-            if ('exlow' in pnt) {
-               xmin = Math.min(xmin, pnt.x - pnt.exlow, pnt.x + pnt.exhigh);
-               xmax = Math.max(xmax, pnt.x - pnt.exlow, pnt.x + pnt.exhigh);
-               ymin = Math.min(ymin, pnt.y - pnt.eylow, pnt.y + pnt.eyhigh);
-               ymax = Math.max(ymax, pnt.y - pnt.eylow, pnt.y + pnt.eyhigh);
-            } else {
-               xmin = Math.min(xmin, pnt.x);
-               xmax = Math.max(xmax, pnt.x);
-               ymin = Math.min(ymin, pnt.y);
-               ymax = Math.max(ymax, pnt.y);
-            }
-         }
-      }
+      var xmin = this.xmin, xmax = this.xmax, ymin = this.ymin, ymax = this.ymax;
 
       if (xmin >= xmax) xmax = xmin+1;
       if (ymin >= ymax) ymax = ymin+1;
@@ -1543,7 +1611,7 @@
 
    JSROOT.TGraphPainter.prototype.DrawBins = function() {
 
-      this.RecreateDrawG(false, ".main_layer");
+      this.RecreateDrawG(false, "main_layer");
 
       var pthis = this,
           pmain = this.main_painter(),
@@ -1552,25 +1620,19 @@
           graph = this.GetObject(),
           excl_width = 0;
 
-      // add title for complete TGraph
-      if (JSROOT.gStyle.Tooltip === 1)
-          this.draw_g.append("svg:title").text(this.GetTipName());
+      if (!this.lineatt)
+         this.lineatt = JSROOT.Painter.createAttLine(graph, undefined, true);
+      if (!this.fillatt)
+         this.fillatt = this.createAttFill(graph, undefined, undefined, 1);
+      this.fillatt.used = false;
 
-      this.lineatt = JSROOT.Painter.createAttLine(graph);
-      this.fillatt = this.createAttFill(graph);
+      if (this.fillatt) this.fillatt.used = false; // mark used only when really used
       this.draw_kind = "none"; // indicate if special svg:g were created for each bin
+      this.marker_size = 0; // indicate if markers are drawn
 
-      if (Math.abs(this.lineatt.width) > 99) {
-         // exclusion graph
-         if (this.lineatt.width < 0) {
-            this.lineatt.width = - this.lineatt.width;
-            excl_width = -1;
-         } else {
-            excl_width = 1;
-         }
-         excl_width *= Math.floor(this.lineatt.width / 100) * 5;
-         this.lineatt.width = this.lineatt.width % 100; // line width
-         if (this.lineatt.width > 0) this.optionLine = 1;
+      if (this.lineatt.excl_side!=0) {
+         excl_width = this.lineatt.excl_side * this.lineatt.excl_width;
+         if (this.lineatt.width>0) this.optionLine = 1;
       }
 
       var drawbins = null;
@@ -1595,7 +1657,7 @@
             bins2.push(bin);
          }
 
-         // build upper part (in reverse direction
+         // build upper part (in reverse direction)
          var path2 = JSROOT.Painter.BuildSvgPath(this.optionEF > 1 ? "Lbezier" : "Lline", bins2);
 
          this.draw_g.append("svg:path")
@@ -1664,18 +1726,6 @@
          }
 
          this.draw_kind = "lines";
-
-         // do not add tooltip for line, when we wants to add markers
-         if (JSROOT.gStyle.Tooltip===1)
-            this.draw_g.selectAll("circle")
-                       .data(drawbins).enter()
-                       .append("svg:circle")
-                       .attr("cx", function(d) { return Math.round(d.grx); })
-                       .attr("cy", function(d) { return Math.round(d.gry); })
-                       .attr("r", 3)
-                       .style("opacity", 0)
-                       .append("svg:title")
-                       .text(this.TooltipText.bind(this));
       }
 
       var nodes = null;
@@ -1726,9 +1776,6 @@
                      .attr("transform", function(d) { return "translate(" + d.grx1 + "," + d.gry1 + ")"; });
       }
 
-      if ((JSROOT.gStyle.Tooltip===1) && nodes)
-         nodes.append("svg:title").text(this.TooltipText.bind(this));
-
       if (this.optionBar) {
          // calculate bar width
          for (var i=1;i<drawbins.length-1;++i)
@@ -1758,38 +1805,17 @@
                 if (pthis.optionBar!==1) return h > d.gry1 ? h - d.gry1 : 0;
                 return Math.abs(yy0 - d.gry1);
              })
-            .call(this.fillatt.func)
-            .filter(function(d) { return JSROOT.gStyle.Tooltip===1 ? this : null; })
-            .on('mouseover', function() {
-                if (JSROOT.gStyle.Tooltip < 1) return;
-                var sel = d3.select(this);
-                if (sel.property('fill0') === undefined) sel.property('fill0', sel.style("fill"));
-                sel.transition().duration(100).style("fill", "grey");
-             })
-            .on('mouseout', function() {
-               d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill0'));
-             });
+            .call(this.fillatt.func);
       }
 
-      if (this.optionRect) {
+      if (this.optionRect)
          nodes.filter(function(d) { return (d.exlow > 0) && (d.exhigh > 0) && (d.eylow > 0) && (d.eyhigh > 0); })
            .append("svg:rect")
            .attr("x", function(d) { d.rect = true; return d.grx0; })
            .attr("y", function(d) { return d.gry2; })
            .attr("width", function(d) { return d.grx2 - d.grx0; })
            .attr("height", function(d) { return d.gry0 - d.gry2; })
-           .call(this.fillatt.func)
-           .filter(function() { return JSROOT.gStyle.Tooltip===1 ? this : null; })
-           .on('mouseover', function() {
-               if (JSROOT.gStyle.Tooltip !== 1) return;
-               var sel = d3.select(this);
-               if (sel.property('fill0') === undefined) sel.property('fill0', sel.style("fill"));
-               sel.transition().duration(100).style("fill", "grey");
-           })
-           .on('mouseout', function() {
-              d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill0'));
-           });
-      }
+           .call(this.fillatt.func);
 
       if (this.optionBrackets) {
          nodes.filter(function(d) { return (d.eylow > 0) || (d.eyhigh > 0); })
@@ -1803,38 +1829,49 @@
               });
       }
 
-      if (this.draw_errors)
+      if (this.draw_errors) {
+         // to show end of error markers, use line width attribute
+         var lw = this.lineatt.width + JSROOT.gStyle.EndErrorSize,
+             vv = "m0," + lw + "v-" + 2*lw,
+             hh = "m" + lw + ",0h-" + 2*lw;
+         lw = Math.floor((this.lineatt.width-1)/2); // one shoud take into account half of end-cup line width
          nodes.filter(function(d) { return (d.exlow > 0) || (d.exhigh > 0) || (d.eylow > 0) || (d.eyhigh > 0); })
              .append("svg:path")
              .call(this.lineatt.func)
              .style('fill', "none")
              .attr("d", function(d) {
                 d.error = true;
-                return ((d.exlow > 0)  ? "M0,0L"+d.grx0+","+d.grdx0+"m0,3v-6" : "") +
-                       ((d.exhigh > 0) ? "M0,0L"+d.grx2+","+d.grdx2+"m0,3v-6" : "") +
-                       ((d.eylow > 0)  ? "M0,0L"+d.grdy0+","+d.gry0+"m3,0h-6" : "") +
-                       ((d.eyhigh > 0) ? "M0,0L"+d.grdy2+","+d.gry2+"m3,0h-6" : "");
+                return ((d.exlow > 0)  ? "M0,0L"+(d.grx0+lw)+","+d.grdx0+vv : "") +
+                       ((d.exhigh > 0) ? "M0,0L"+(d.grx2-lw)+","+d.grdx2+vv : "") +
+                       ((d.eylow > 0)  ? "M0,0L"+d.grdy0+","+(d.gry0-lw)+hh : "") +
+                       ((d.eyhigh > 0) ? "M0,0L"+d.grdy2+","+(d.gry2+lw)+hh : "");
               });
+      }
 
       if (this.optionMark > 0) {
          // for tooltips use markers only if nodes where not created
          var step = Math.max(1, Math.round(this.bins.length / 50000)),
-             path = "", n, pnt, grx, gry, marker_kind = null;
+             path = "", n, pnt, grx, gry, marker_kind;
 
          if (this.optionMark==2) marker_kind = 3; else
-         if (this.optionMark==3) marker_kind = 777;
+         if (this.optionMark==3) marker_kind = 1;
 
-         var marker = JSROOT.Painter.createAttMarker(graph,marker_kind);
+         if (!this.markeratt)
+            this.markeratt = JSROOT.Painter.createAttMarker(graph,marker_kind);
+         else
+            this.markeratt.Change(undefined, marker_kind);
 
-         this.marker_size = marker.size;
+         this.marker_size = this.markeratt.size;
+
+         this.markeratt.reset_pos();
 
          for (n=0;n<this.bins.length;n+=step) {
             pnt = this.bins[n];
             grx = pmain.grx(pnt.x);
-            if ((grx > -marker.size) && (grx < w+marker.size)) {
+            if ((grx > -this.marker_size) && (grx < w+this.marker_size)) {
                gry = pmain.gry(pnt.y);
-               if ((gry >-marker.size) && (gry < h+marker.size)) {
-                  path += marker.create(grx, gry);
+               if ((gry >-this.marker_size) && (gry < h+this.marker_size)) {
+                  path += this.markeratt.create(grx, gry);
                }
             }
          }
@@ -1842,20 +1879,14 @@
          if (path.length>0) {
             this.draw_g.append("svg:path")
                        .attr("d", path)
-                       .style("fill", marker.fill)
-                       .style("stroke", marker.stroke);
+                       .call(this.markeratt.func);
             if ((nodes===null) && (this.draw_kind=="none"))
                this.draw_kind = (this.optionMark==3) ? "path" : "mark";
          }
       }
-
-      if (JSROOT.gStyle.Tooltip > 1)
-         this.ProcessTooltip = this.ProcessTooltipFunc;
-      else
-         delete this.ProcessTooltip;
    }
 
-   JSROOT.TGraphPainter.prototype.ProcessTooltipFunc = function(pnt) {
+   JSROOT.TGraphPainter.prototype.ProcessTooltip = function(pnt) {
       if (pnt === null) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
@@ -1918,10 +1949,13 @@
       var d = d3.select(findbin).datum();
 
       var res = { x: d.grx1, y: d.gry1,
-                  color1: this.lineatt.color, color2: this.fillatt.color,
+                  color1: this.lineatt.color,
                   lines: this.TooltipText(d, true) };
+      if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
 
       if (best.exact) res.exact = true;
+      res.menu = res.exact; // activate menu only when exactly locate bin
+      res.menu_dist = 3; // distance alwyas fixed
 
       if (ttrect.empty())
          ttrect = this.draw_g.append("svg:rect")
@@ -1932,7 +1966,7 @@
 
       if (res.changed)
          ttrect.attr("x", d.grx1 + best.x1)
-               .attr("width", best.x2-best.x1)
+               .attr("width", best.x2 - best.x1)
                .attr("y", d.gry1 + best.y1)
                .attr("height", best.y2 - best.y1)
                .style("opacity", "0.3")
@@ -1947,7 +1981,8 @@
 
       var islines = (this.draw_kind=="lines"),
           ismark = (this.draw_kind=="mark"),
-          bestbin = null, bestdist = 1e10,
+          bestbin = null,
+          bestdist = 1e10,
           pmain = this.main_painter(),
           dist, grx, gry, n, bin;
 
@@ -1955,30 +1990,27 @@
          bin = this.bins[n];
 
          grx = pmain.grx(bin.x);
-         dist = pnt.x-grx;
+         gry = pmain.gry(bin.y);
 
-         if (islines) {
-            if ((n==0) && (dist < -10)) { bestbin = null; break; } // check first point
-         } else {
-            gry = pmain.gry(bin.y);
-            if (pnt.nproc === 1) dist = dist*dist + (pnt.y-gry)*(pnt.y-gry);
-         }
+         dist = (pnt.x-grx)*(pnt.x-grx) + (pnt.y-gry)*(pnt.y-gry);
 
-         if (Math.abs(dist) < bestdist) {
+         if (dist < bestdist) {
             bestdist = dist;
             bestbin = bin;
          }
       }
 
       // check last point
-      if ((dist > 10) && islines) bestbin = null;
+      if ((bestdist > 100) && islines) bestbin = null;
 
       var radius = Math.max(this.lineatt.width + 3, 4);
 
-      if (ismark) radius = Math.max(this.marker_size/2 + 2, 4);
+      if (this.marker_size > 0) radius = Math.max(Math.round(this.marker_size*7), radius);
 
       if (bestbin !== null)
          bestdist = Math.sqrt(Math.pow(pnt.x-pmain.grx(bestbin.x),2) + Math.pow(pnt.y-pmain.gry(bestbin.y),2));
+
+      // console.log('draw kind', this.draw_kind, 'best dist', bestdist,'best bin', bestbin);
 
       if (!islines && !ismark && (bestdist>radius)) bestbin = null;
 
@@ -1995,10 +2027,15 @@
       }
 
       var res = { x: pmain.grx(bestbin.x), y: pmain.gry(bestbin.y),
-                  color1: this.lineatt.color, color2: this.fillatt.color,
+                  color1: this.lineatt.color,
                   lines: this.TooltipText(bestbin, true) };
 
-      if (!islines) res.color1 = res.color2 = JSROOT.Painter.root_colors[this.GetObject().fMarkerColor];
+      if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
+
+      if (!islines) {
+         res.color1 = JSROOT.Painter.root_colors[this.GetObject().fMarkerColor];
+         if (!res.color2) res.color2 = res.color1;
+      }
 
       if (ttbin.empty())
          ttbin = this.draw_g.append("svg:g")
@@ -2015,6 +2052,9 @@
 
       res.exact = (Math.abs(pnt.x - res.x) <= radius) &&
                   ((Math.abs(pnt.y - gry1) <= radius) || (Math.abs(pnt.y - gry2) <= radius));
+
+      res.menu = res.exact;
+      res.menu_dist = Math.sqrt((pnt.x-res.x)*(pnt.x-res.x) + Math.pow(Math.min(Math.abs(pnt.y-gry1),Math.abs(pnt.y-gry2)),2));
 
       res.changed = ttbin.property("current_bin") !== bestbin;
 
@@ -2086,6 +2126,20 @@
       return false;
    }
 
+   JSROOT.TGraphPainter.prototype.ButtonClick = function(funcname) {
+
+      if (funcname !== "ToggleZoom") return false;
+
+      var main = this.main_painter();
+      if (main === null) return false;
+
+      if ((this.xmin===this.xmax) && (this.ymin = this.ymax)) return false;
+
+      main.Zoom(this.xmin, this.xmax, this.ymin, this.ymax);
+
+      return true;
+   }
+
    JSROOT.TGraphPainter.prototype.DrawNextFunction = function(indx, callback) {
       // method draws next function from the functions list
 
@@ -2137,6 +2191,11 @@
 
       this.SetDivId(divid, -1); // it may be no element to set divid
 
+      this.Cleanup = function() {
+         this.painters = [];
+         JSROOT.TObjectPainter.prototype.Cleanup.call(this);
+      }
+
       this.UpdateObject = function(obj) {
          if (!this.MatchObjectType(obj)) return false;
 
@@ -2178,7 +2237,7 @@
          return res;
       }
 
-      this['padtoX'] = function(pad, x) {
+      this.padtoX = function(pad, x) {
          // Convert x from pad to X.
          if (pad.fLogx && (x < 50))
             return Math.exp(2.302585092994 * x);
@@ -2295,8 +2354,8 @@
          if ((mgraph.fFunctions == null) || (indx >= mgraph.fFunctions.arr.length))
             return JSROOT.CallBack(callback);
 
-         var func = mgraph.fFunctions.arr[indx];
-         var opt = mgraph.fFunctions.opt[indx];
+         var func = mgraph.fFunctions.arr[indx],
+             opt = mgraph.fFunctions.opt[indx];
 
          var painter = JSROOT.draw(this.divid, func, opt);
          if (painter) return painter.WhenReady(this.DrawNextFunction.bind(this, indx+1, callback));
@@ -2340,7 +2399,7 @@
 
       this.SetDivId(divid);
 
-      this['DrawLegendItems'] = function(w, h) {
+      this.DrawLegendItems = function(w, h) {
 
          var legend = this.GetObject(),
              nlines = legend.fPrimitives.arr.length,
@@ -2359,31 +2418,29 @@
              any_opt = false;
 
          for (var i = 0; i < nlines; ++i) {
-            var leg = legend.fPrimitives.arr[i];
-            var lopt = leg.fOption.toLowerCase();
-
-            var icol = i % ncols, irow = (i - icol) / ncols;
-
-            var x0 = icol * column_width;
-            var tpos_x = x0 + Math.round(legend.fMargin*column_width);
-
-            var pos_y = Math.round(padding_y + irow*step_y); // top corner
-            var mid_y = Math.round(padding_y + (irow+0.5)*step_y); // center line
-
-            var attfill = leg;
-            var attmarker = leg;
-            var attline = leg;
-
-            var mo = leg.fObject;
+            var leg = legend.fPrimitives.arr[i],
+                lopt = leg.fOption.toLowerCase(),
+                icol = i % ncols, irow = (i - icol) / ncols,
+                x0 = icol * column_width,
+                tpos_x = x0 + Math.round(legend.fMargin*column_width),
+                pos_y = Math.round(padding_y + irow*step_y), // top corner
+                mid_y = Math.round(padding_y + (irow+0.5)*step_y), // center line
+                o_fill = leg, o_marker = leg, o_line = leg,
+                mo = leg.fObject,
+                painter = null,
+                isany = false;
 
             if ((mo !== null) && (typeof mo == 'object')) {
-               if ('fLineColor' in mo) attline = mo;
-               if ('fFillColor' in mo) attfill = mo;
-               if ('fMarkerColor' in mo) attmarker = mo;
+               if ('fLineColor' in mo) o_line = mo;
+               if ('fFillColor' in mo) o_fill = mo;
+               if ('fMarkerColor' in mo) o_marker = mo;
+
+               painter = this.FindPainterFor(mo);
             }
 
             // Draw fill pattern (in a box)
-            if (lopt.indexOf('f') != -1)
+            if (lopt.indexOf('f') != -1) {
+               var fillatt = (painter && painter.fillatt) ? painter.fillatt : this.createAttFill(o_fill);
                // box total height is yspace*0.7
                // define x,y as the center of the symbol for this entry
                this.draw_g.append("svg:rect")
@@ -2391,16 +2448,21 @@
                       .attr("y", Math.round(pos_y+step_y*0.1))
                       .attr("width", tpos_x - 2*padding_x - x0)
                       .attr("height", Math.round(step_y*0.8))
-                      .call(this.createAttFill(attfill).func);
+                      .call(fillatt.func);
+               if (fillatt.color !== 'none') isany = true;
+            }
 
             // Draw line
-            if (lopt.indexOf('l') != -1)
+            if (lopt.indexOf('l') != -1) {
+               var lineatt = (painter && painter.lineatt) ? painter.lineatt : JSROOT.Painter.createAttLine(o_line)
                this.draw_g.append("svg:line")
                   .attr("x1", x0 + padding_x)
                   .attr("y1", mid_y)
                   .attr("x2", tpos_x - padding_x)
                   .attr("y2", mid_y)
-                  .call(JSROOT.Painter.createAttLine(attline).func);
+                  .call(lineatt.func);
+               if (lineatt.color !== 'none') isany = true;
+            }
 
             // Draw error
             if (lopt.indexOf('e') != -1  && (lopt.indexOf('l') == -1 || lopt.indexOf('f') != -1)) {
@@ -2408,13 +2470,23 @@
 
             // Draw Polymarker
             if (lopt.indexOf('p') != -1) {
-               var marker = JSROOT.Painter.createAttMarker(attmarker);
+               var marker = (painter && painter.markeratt) ? painter.markeratt : JSROOT.Painter.createAttMarker(o_marker);
                this.draw_g
                    .append("svg:path")
-                   .style("fill", marker.fill)
-                   .style("stroke", marker.stroke)
-                   .attr("d", marker.create((x0 + tpos_x)/2, mid_y));
+                   .attr("d", marker.create((x0 + tpos_x)/2, mid_y))
+                   .call(marker.func);
+               if (marker.color !== 'none') isany = true;
             }
+
+            // special case - nothing draw, try to show rect with line attributes
+            if (!isany && painter && painter.lineatt && (painter.lineatt.color !== 'none'))
+               this.draw_g.append("svg:rect")
+                          .attr("x", x0 + padding_x)
+                          .attr("y", Math.round(pos_y+step_y*0.1))
+                          .attr("width", tpos_x - 2*padding_x - x0)
+                          .attr("height", Math.round(step_y*0.8))
+                          .attr("fill", "none")
+                          .call(painter.lineatt.func);
 
             var pos_x = tpos_x;
             if (lopt.length>0) any_opt = true;
@@ -2446,39 +2518,26 @@
 
       this.SetDivId(divid);
 
-      this.z_handle = new JSROOT.TAxisPainter(palette.fAxis);
+      this.z_handle = new JSROOT.TAxisPainter(palette.fAxis, true);
       this.z_handle.SetDivId(divid, -1);
 
-      this['MakeIcon'] = function(contour, z) {
-         var h = this.frame_height();
-         var res = "";
-         var prev = { x : -1, y : -1, width: 0, height: 0, fill:"" };
-         for (var i=0;i<contour.length-1;++i) {
-            var z0 = z(contour[i]);
-            var z1 = z(contour[i+1]);
-            var col = this.main_painter().getValueColor(contour[i]);
-
-            var pnt = { x: 128, width: 256, y: Math.round(z1/h*512) , height: Math.round((z0-z1)/h*512), fill: col };
-
-            if (res.length == 0) res = "["; else res+=",";
-
-            var separ = "{";
-            if (pnt.x != prev.x) { res += separ + "x:" + Math.round(pnt.x); separ =","; }
-            if (pnt.y != prev.y) { res += separ + "y:" + Math.round(pnt.y); separ =","; }
-            if (pnt.width != prev.width) { res += separ + "w:" + Math.round(pnt.width); separ =","; }
-            if (pnt.height != prev.height) { res += separ + "h:" + Math.round(pnt.height); separ =","; }
-            if (pnt.fill != prev.fill) { res += separ + "f:'" + pnt.fill + "'"; separ =","; }
-            res += "}";
-
-            prev = pnt;
+      this.Cleanup = function() {
+         if (this.z_handle) {
+            this.z_handle.Cleanup();
+            delete this.z_handle;
          }
 
-         res += "]";
+         JSROOT.TObjectPainter.prototype.Cleanup.call(this);
       }
 
-      this.DrawAxisPalette = function(s_width, s_height) {
 
-         var pthis = this, palette = this.GetObject(), axis = palette.fAxis;
+      this.DrawAxisPalette = function(s_width, s_height, arg) {
+
+         var pthis = this,
+             palette = this.GetObject(),
+             axis = palette.fAxis,
+             can_move = (typeof arg == 'string') && (arg.indexOf('canmove')>0),
+             postpone_draw = (typeof arg == 'string') && (arg.indexOf('postpone')>0);
 
          var nbr1 = axis.fNdiv % 100;
          if (nbr1<=0) nbr1 = 8;
@@ -2488,17 +2547,27 @@
              width = this.pad_width(),
              height = this.pad_height(),
              axisOffset = axis.fLabelOffset * width,
-             contour = this.main_painter().fContour,
-             zmin = 0, zmax = this.main_painter().gmaxbin;
+             main = this.main_painter(),
+             zmin = 0, zmax = 100,
+             contour = main.fContour;
 
-         if (contour!==null) {
-            zmin = contour[0];
-            zmax = contour[contour.length-1];
+         axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
+
+         if (contour) {
+            zmin = contour[0]; zmax = contour[contour.length-1];
+         } else
+         if ((main.gmaxbin!==undefined) && (main.gminbin!==undefined)) {
+            // this is case of TH2 (needs only for size adjustment)
+            zmin = main.gminbin; zmax = main.gmaxbin;
+         } else
+         if ((main.hmin!==undefined) && (main.hmax!==undefined)) {
+            // this is case of TH1
+            zmin = main.hmin; zmax = main.hmax;
          }
 
-         var z = null, z_kind = "line";
+         var z = null, z_kind = "normal";
 
-         if (this.main_painter().options.Logz) {
+         if (this.root_pad().fLogz) {
             z = d3.scale.log();
             z_kind = "log";
          } else {
@@ -2506,7 +2575,7 @@
          }
          z.domain([zmin, zmax]).range([s_height,0]);
 
-         if ((contour==null) || this._can_move)
+         if (!contour || postpone_draw)
             // we need such rect to correctly calculate size
             this.draw_g.append("svg:rect")
                        .attr("x", 0)
@@ -2518,7 +2587,7 @@
             for (var i=0;i<contour.length-1;++i) {
                var z0 = z(contour[i]),
                    z1 = z(contour[i+1]),
-                   col = this.main_painter().getValueColor(contour[i]);
+                   col = main.getValueColor((contour[i]+contour[i+1])/2);
 
                var r = this.draw_g.append("svg:rect")
                           .attr("x", 0)
@@ -2526,14 +2595,15 @@
                           .attr("width", s_width)
                           .attr("height", (z0-z1).toFixed(1))
                           .style("fill", col)
-                          .style("stroke", col);
-
+                          .style("stroke", col)
+                          .property("fill0", col)
+                          .property("fill1", d3.rgb(col).darker(0.5).toString())
 
                if (JSROOT.gStyle.Tooltip > 0)
                   r.on('mouseover', function() {
-                     d3.select(this).transition().duration(100).style("stroke", "black").style("stroke-width", "2");
+                     d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill1'));
                   }).on('mouseout', function() {
-                     d3.select(this).transition().duration(100).style("stroke", d3.select(this).style('fill')).style("stroke-width", "");
+                     d3.select(this).transition().duration(100).style("fill", d3.select(this).property('fill0'));
                   }).append("svg:title").text(contour[i].toFixed(2) + " - " + contour[i+1].toFixed(2));
 
                if (JSROOT.gStyle.Zooming)
@@ -2543,11 +2613,9 @@
 
          this.z_handle.SetAxisConfig("zaxis", z_kind, z, zmin, zmax, zmin, zmax);
 
-         this.z_handle.DrawAxis(this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)");
+         this.z_handle.DrawAxis(true, this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)");
 
-         if (this._can_move && ('getBoundingClientRect' in this.draw_g.node())) {
-            this._can_move = false; // do it only once
-
+         if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
             var rect = this.draw_g.node().getBoundingClientRect();
 
             var shift = (pos_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
@@ -2557,7 +2625,6 @@
                           .attr("transform", "translate(" + (pos_x-shift) + ", " + pos_y + ")");
                palette.fX1NDC -= shift/width;
                palette.fX2NDC -= shift/width;
-               return;
             }
          }
 
@@ -2588,14 +2655,13 @@
             zoom_rect = null;
             doing_zoom = false;
 
-            var zmin = Math.min(z.invert(sel1), z.invert(sel2));
-            var zmax = Math.max(z.invert(sel1), z.invert(sel2));
+            var zmin = Math.min(z.invert(sel1), z.invert(sel2)),
+                zmax = Math.max(z.invert(sel1), z.invert(sel2));
 
-            pthis.main_painter().Zoom(0, 0, 0, 0, zmin, zmax);
+            pthis.main_painter().Zoom("z", zmin, zmax);
          }
 
          function startRectSel() {
-
             // ignore when touch selection is actiavated
             if (doing_zoom) return;
             doing_zoom = true;
@@ -2627,128 +2693,216 @@
                     .on("dblclick", function() { pthis.main_painter().Unzoom("z"); });
       }
 
-      this.ShowContextMenu = function(kind, evnt) {
-         this.main_painter().ShowContextMenu("z", evnt);
+      this.ShowContextMenu = function(evnt) {
+         this.main_painter().ShowContextMenu("z", evnt, this.GetObject().fAxis);
       }
 
-      this.Redraw = function() {
-         this.Enabled = true;
-         var main = this.main_painter();
-         this.UseContextMenu = (main !== null);
-         if ((main !== null) && ('options' in main))
-            this.Enabled = (main.options.Zscale > 0) && (main.options.Color > 0) && (main.options.Lego === 0);
-
-         this.DrawPave();
-      }
+//      this.Redraw = function() {
+         //this.Enabled = true;
+//         var main = this.main_painter();
+//         this.UseContextMenu = (main !== null);
+//         if ((main !== null) && main.options)
+//            this.Enabled = (main.options.Zscale > 0) &&
+//                           ((main.options.Color > 0) || (main.options.Lego === 12) || (main.options.Lego === 14));
+//
+//         this.DrawPave();
+//      }
 
       this.PaveDrawFunc = this.DrawAxisPalette;
 
       // workaround to let copmlete pallete draw when actual palette colors already there
-      this.CompleteDraw = this.Redraw;
+      // this.CompleteDraw = this.Redraw;
 
-      this._can_move = (opt === 'canmove');
+      this.UseContextMenu = true;
 
-      this.Redraw();
+      this.DrawPave(opt);
 
       return this.DrawingReady();
    }
 
-   // ==================== painter for TH2 histograms ==============================
+   // ================= some functions for basic histogram painter =======================
 
-   JSROOT.TH2Painter = function(histo) {
-      JSROOT.THistPainter.call(this, histo);
-      this.fContour = null; // contour levels
-      this.fUserContour = false; // are this user-defined levels
-      this.fPalette = null;
-      this.draw_kind = "none";
-   }
+   JSROOT.THistPainter.prototype.CreateContour = function(nlevels, zmin, zmax, zminpositive) {
 
-   JSROOT.TH2Painter.prototype = Object.create(JSROOT.THistPainter.prototype);
+      if (nlevels<1) nlevels = 20;
+      this.fContour = [];
+      this.zmin = zmin;
+      this.zmax = zmax;
 
-   JSROOT.TH2Painter.prototype.FillContextMenu = function(menu) {
-      JSROOT.THistPainter.prototype.FillContextMenu.call(this, menu);
-      if (this.options.Lego > 0) {
-         menu.add("Draw in 2D", function() { this.options.Lego = 0; this.RedrawPad(); });
+      if (this.root_pad().fLogz) {
+         if (this.zmax <= 0) this.zmax = 1.;
+         if (this.zmin <= 0)
+            this.zmin = (zminpositive!==undefined) && (zminpositive > 0) ? 0.3*zminpositive : 0.0001*this.zmax;
+         if (this.zmin >= this.zmax) this.zmin = 0.0001*this.zmax;
+
+         var logmin = Math.log(this.zmin)/Math.log(10);
+         var logmax = Math.log(this.zmax)/Math.log(10);
+         var dz = (logmax-logmin)/nlevels;
+         this.fContour.push(this.zmin);
+         for (var level=1; level<nlevels; level++)
+            this.fContour.push(Math.exp((logmin + dz*level)*Math.log(10)));
+         this.fContour.push(this.zmax);
+         this.fCustomContour = true;
       } else {
-         menu.add("Auto zoom-in", function() { this.AutoZoom(); });
-         menu.add("Draw in 3D", function() { this.options.Lego = 1; this.RedrawPad(); });
-         menu.add("Toggle col", function() { this.ToggleColor(); });
-         if (this.options.Color > 0)
-            menu.add("Toggle colz", this.ToggleColz.bind(this));
-      }
-   }
-
-   JSROOT.TH2Painter.prototype.FillToolbar = function(buttons) {
-      JSROOT.THistPainter.prototype.FillToolbar.call(this, buttons);
-      var painter = this;
-      buttons.push({
-         name: 'ToggleCol',
-         title: 'Toggle color options',
-         icon: JSROOT.ToolbarIcons.th2color,
-         click: function() { painter.ToggleColor(); }
-      });
-
-      buttons.push({
-         name: 'ToggleColZ',
-         title: 'Toggle color palette',
-         icon: JSROOT.ToolbarIcons.th2colorz,
-         click: function() { if (painter.options.Lego == 0 && painter.options.Color > 0) painter.ToggleColz(); }
-      });
-
-      buttons.push({
-         name: 'Toggle3D',
-         title: 'Toggle 3D mode',
-         icon: JSROOT.ToolbarIcons.th2draw3d,
-         click: function() { painter.options.Lego = painter.options.Lego > 0 ? 0 : 1; painter.RedrawPad(); }
-      });
-   }
-
-   JSROOT.TH2Painter.prototype.ToggleColor = function() {
-
-      var toggle = true;
-
-      if (this.options.Lego > 0) { this.options.Lego = 0; toggle = false; }
-
-      if (this.options.Color == 0) {
-         this.options.Color = ('LastColor' in this.options) ?  this.options.LastColor : 1;
-      } else
-      if (toggle) {
-         this.options.LastColor = this.options.Color;
-         this.options.Color = 0;
-      }
-
-      if ((this.options.Color > 0) && (this.options.Zscale > 0))
-         this.DrawNewPalette(true);
-
-      this.RedrawPad();
-   }
-
-   JSROOT.TH2Painter.prototype.FindPalette = function(remove) {
-
-      var funcs = this.GetObject().fFunctions;
-      if (funcs === null) return null;
-
-      for (var i = 0; i < funcs.arr.length; ++i) {
-         var func = funcs.arr[i];
-         if (func._typename !== 'TPaletteAxis') continue;
-         if (remove) {
-            funcs.RemoveAt(i);
-            if (this.pad_painter())
-               this.pad_painter().RemovePrimitive(func);
-            return null;
+         if ((this.zmin === this.zmax) && (this.zmin !== 0)) {
+            this.zmax += 0.01*Math.abs(this.zmax);
+            this.zmin -= 0.01*Math.abs(this.zmin);
          }
-         return func;
+         var dz = (this.zmax-this.zmin)/nlevels;
+         for (var level=0; level<=nlevels; level++)
+            this.fContour.push(this.zmin + dz*level);
       }
 
-      return null;
+      return this.fContour;
    }
 
-   JSROOT.TH2Painter.prototype.DrawNewPalette = function(force_resize) {
+   JSROOT.THistPainter.prototype.GetContour = function() {
+      if (this.fContour) return this.fContour;
+
+      // if not initialized, first create contour array
+      // difference from ROOT - fContour includes also last element with maxbin, which makes easier to build logz
+      var histo = this.GetObject();
+
+      if ((histo.fContour!=null) && (histo.fContour.length>1) && histo.TestBit(JSROOT.TH1StatusBits.kUserContour)) {
+         this.fContour = JSROOT.clone(histo.fContour);
+         this.fCustomContour = true;
+         return this.fContour;
+      }
+
+      this.fCustomContour = false;
+
+      var nlevels = 20, zmin = this.minbin, zmax = this.maxbin;
+      if (histo.fContour != null) nlevels = histo.fContour.length;
+      if ((this.histo.fMinimum != -1111) && (this.histo.fMaximum != -1111)) {
+         zmin = this.histo.fMinimum;
+         zmax = this.histo.fMaximum;
+      }
+      if (this.zoom_zmin != this.zoom_zmax) {
+         zmin = this.zoom_zmin;
+         zmax = this.zoom_zmax;
+      }
+      return this.CreateContour(nlevels, zmin, zmax, this.minposbin);
+   }
+
+   JSROOT.THistPainter.prototype.getContourIndex = function(zc) {
+      // return contour index, which corresponds to the z content value
+
+      var cntr = this.GetContour();
+
+      if (this.fCustomContour) {
+         var l = 0, r = cntr.length-1, mid;
+         if (zc < cntr[0]) return -1;
+         if (zc >= cntr[r]) return r;
+         while (l < r-1) {
+            mid = Math.round((l+r)/2);
+            if (cntr[mid] > zc) r = mid; else l = mid;
+         }
+         return l;
+      }
+
+      // bins less than zmin not drawn
+      if (zc < this.zmin) return -111;
+
+      // if bin content exactly zmin, draw it when col0 specified or when content is positive
+      if (zc===this.zmin) return ((this.zmin > 0) || (this.options.Color === 111)) ? 0 : -1;
+
+      return Math.floor(0.01+(zc-this.zmin)*(cntr.length-1)/(this.zmax-this.zmin));
+   }
+
+   JSROOT.THistPainter.prototype.getIndexColor = function(index, asindx) {
+      if (index < 0) return null;
+
+      var cntr = this.GetContour();
+
+      var palette = this.GetPalette();
+      var theColor = Math.floor((index+0.99)*palette.length/(cntr.length-1));
+      if (theColor > palette.length-1) theColor = palette.length-1;
+      return asindx ? theColor : palette[theColor];
+   }
+
+
+   JSROOT.THistPainter.prototype.getValueColor = function(zc, asindx) {
+
+      var index = this.getContourIndex(zc);
+
+      if (index < 0) return null;
+
+      var palette = this.GetPalette();
+
+      var theColor = Math.floor((index+0.99)*palette.length/(this.fContour.length-1));
+      if (theColor > palette.length-1) theColor = palette.length-1;
+      return asindx ? theColor : palette[theColor];
+   }
+
+   JSROOT.THistPainter.prototype.GetPalette = function(force) {
+      if (!this.fPalette || force)
+         this.fPalette = JSROOT.Painter.GetColorPalette(this.options.Palette);
+      return this.fPalette;
+   }
+
+   JSROOT.THistPainter.prototype.FillPaletteMenu = function(menu) {
+
+      var curr = this.options.Palette;
+      if ((curr===null) || (curr===0)) curr = JSROOT.gStyle.Palette;
+
+      function change(arg) {
+         this.options.Palette = parseInt(arg);
+         this.GetPalette(true);
+         this.Redraw(); // redraw histogram
+      };
+
+      function add(id, name, more) {
+         menu.addchk((id===curr) || more, '<nobr>' + name + '</nobr>', id, change);
+      };
+
+      menu.add("sub:Palette");
+
+      add(50, "ROOT 5", (curr>=10) && (curr<51));
+      add(51, "Deep Sea");
+      add(52, "Grayscale", (curr>0) && (curr<10));
+      add(53, "Dark body radiator");
+      add(54, "Two-color hue");
+      add(55, "Rainbow");
+      add(56, "Inverted dark body radiator");
+      add(57, "Bird", (curr>112));
+      add(58, "Cubehelix");
+      add(59, "Green Red Violet");
+      add(60, "Blue Red Yellow");
+      add(61, "Ocean");
+      add(62, "Color Printable On Grey");
+      add(63, "Alpine");
+      add(64, "Aquamarine");
+      add(65, "Army");
+      add(66, "Atlantic");
+
+      menu.add("endsub:");
+   }
+
+   JSROOT.THistPainter.prototype.DrawColorPalette = function(enabled, postpone_draw, can_move) {
       // only when create new palette, one could change frame size
 
-      var pal = this.FindPalette(), histo = this.GetObject();
+      var pal = this.FindFunction('TPaletteAxis'),
+          pal_painter = this.FindPainterFor(pal);
 
-      if ((pal !== null) && !force_resize) return;
+      if (this._can_move_colz) { can_move = true; delete this._can_move_colz; }
+
+      if (!pal_painter && !pal) {
+         pal_painter = this.FindPainterFor(undefined, undefined, "TPaletteAxis");
+         if (pal_painter) {
+            pal = pal_painter.GetObject();
+            // add to list of functions
+            this.AddFunction(pal, true);
+         }
+      }
+
+      if (!enabled) {
+         if (pal_painter) {
+            pal_painter.Enabled = false;
+            pal_painter.RemoveDrawG(); // completely remove drawing without need to redraw complete pad
+         }
+
+         return null;
+      }
 
       if (pal === null) {
          pal = JSROOT.Create('TPave');
@@ -2760,55 +2914,180 @@
 
          // set values from base classes
 
-         JSROOT.extend(pal.fAxis, { fTitle: histo.fZaxis.fTitle,
+         JSROOT.extend(pal.fAxis, { fTitle: this.GetObject().fZaxis.fTitle,
                                     fLineColor: 1, fLineSyle: 1, fLineWidth: 1,
                                     fTextAngle: 0, fTextSize: 0.04, fTextAlign: 11, fTextColor: 1, fTextFont: 42 });
 
-         if (histo.fFunctions == null)
-            histo.fFunctions = JSROOT.Create("TList");
-
          // place colz in the beginning, that stat box is always drawn on the top
-         histo.fFunctions.AddFirst(pal);
+         this.AddFunction(pal, true);
+
+         can_move = true;
       }
 
       var frame_painter = this.frame_painter();
 
       // keep palette width
-      pal.fX2NDC = frame_painter.fX2NDC + 0.01 + (pal.fX2NDC - pal.fX1NDC);
-      pal.fX1NDC = frame_painter.fX2NDC + 0.01;
-      pal.fY1NDC = frame_painter.fY1NDC;
-      pal.fY2NDC = frame_painter.fY2NDC;
+      if (can_move) {
+         pal.fX2NDC = frame_painter.fX2NDC + 0.01 + (pal.fX2NDC - pal.fX1NDC);
+         pal.fX1NDC = frame_painter.fX2NDC + 0.01;
+         pal.fY1NDC = frame_painter.fY1NDC;
+         pal.fY2NDC = frame_painter.fY2NDC;
+      }
 
-      var pal_painter = this.FindPainterFor(pal);
+      var arg = "";
+      if (postpone_draw) arg+=";postpone";
+      if (can_move && !this.do_redraw_palette) arg+= ";canmove"
 
       if (pal_painter === null) {
          // when histogram drawn on sub pad, let draw new axis object on the same pad
-         this.svg_canvas().property('current_pad', this.pad_name);
-         pal_painter = JSROOT.draw(this.divid, pal, "canmove");
-         this.svg_canvas().property('current_pad', '');
+         var prev = this.CurrentPadName(this.pad_name);
+         pal_painter = JSROOT.draw(this.divid, pal, arg);
+         this.CurrentPadName(prev);
       } else {
-         pal_painter._can_move = true;
-         pal_painter.Redraw();
+         pal_painter.Enabled = true;
+         pal_painter.DrawPave(arg);
       }
 
-      if (pal.fX1NDC < frame_painter.fX2NDC) {
+      // make dummy redraw, palette will be updated only from histogram painter
+      pal_painter.Redraw = function() {};
+
+      if ((pal.fX1NDC-0.005 < frame_painter.fX2NDC) && !this.do_redraw_palette && can_move) {
+
+         this.do_redraw_palette = true;
+
          frame_painter.fX2NDC = pal.fX1NDC - 0.01;
          frame_painter.Redraw();
+         // here we should redraw main object
+         if (!postpone_draw) this.Redraw();
+
+         delete this.do_redraw_palette;
       }
+
+      return pal_painter;
    }
 
-   JSROOT.TH2Painter.prototype.ToggleColz = function() {
+   JSROOT.THistPainter.prototype.ToggleColz = function() {
       if (this.options.Zscale > 0) {
          this.options.Zscale = 0;
       } else {
          this.options.Zscale = 1;
-         this.DrawNewPalette(true);
       }
 
-      this.RedrawPad();
+      this.DrawColorPalette(this.options.Zscale > 0, false, true);
+   }
+
+
+   // ==================== painter for TH2 histograms ==============================
+
+   JSROOT.TH2Painter = function(histo) {
+      JSROOT.THistPainter.call(this, histo);
+      this.fContour = null; // contour levels
+      this.fCustomContour = false; // are this user-defined levels (can be irregular)
+      this.fPalette = null;
+   }
+
+   JSROOT.TH2Painter.prototype = Object.create(JSROOT.THistPainter.prototype);
+
+   JSROOT.TH2Painter.prototype.Cleanup = function() {
+      delete this.fCustomContour;
+      delete this.tt_handle;
+
+      JSROOT.THistPainter.prototype.Cleanup.call(this);
+   }
+
+   JSROOT.TH2Painter.prototype.FillHistContextMenu = function(menu) {
+      // painter automatically bind to menu callbacks
+      menu.add("Auto zoom-in", this.AutoZoom);
+
+      var sett = JSROOT.getDrawSettings("ROOT." + this.GetObject()._typename, 'nosame');
+
+      menu.addDrawMenu("Draw with", sett.opts, function(arg) {
+         if (arg==='inspect')
+            return JSROOT.draw(this.divid, this.GetObject(), arg);
+         this.options = this.DecodeOptions(arg);
+         this.Redraw();
+      });
+
+      if (this.options.Color > 0)
+         this.FillPaletteMenu(menu);
+   }
+
+   JSROOT.TH2Painter.prototype.ButtonClick = function(funcname) {
+      if (JSROOT.THistPainter.prototype.ButtonClick.call(this, funcname)) return true;
+
+      if (this !== this.main_painter()) return false;
+
+      switch(funcname) {
+         case "ToggleColor": this.ToggleColor(); break;
+         case "ToggleColorZ":
+            if (this.options.Lego === 12 || this.options.Lego === 14 ||
+                this.options.Color > 0 || this.options.Contour > 0 ||
+                this.options.Surf === 11 || this.options.Surf === 12) this.ToggleColz();
+            break;
+         case "Toggle3D":
+            if (this.options.Surf > 0) {
+               this.options.Surf = -this.options.Surf;
+            } else
+            if (this.options.Lego > 0) {
+               this.options.Lego = 0;
+            } else
+            if (this.options.Surf < 0) {
+               this.options.Surf = -this.options.Surf;
+            } else {
+               if ((this.nbinsx>=50) || (this.nbinsy>=50))
+                  this.options.Lego = (this.options.Color > 0) ? 14 : 13;
+               else
+                  this.options.Lego = (this.options.Color > 0) ? 12 : 1;
+
+               this.options.Zero = 1;
+            }
+
+            this.RedrawPad();
+            break;
+         default: return false;
+      }
+
+      // all methods here should not be processed further
+      return true;
+   }
+
+   JSROOT.TH2Painter.prototype.FillToolbar = function() {
+      JSROOT.THistPainter.prototype.FillToolbar.call(this);
+
+      var pp = this.pad_painter(true);
+      if (pp===null) return;
+
+      if (!this.IsTH2Poly())
+         pp.AddButton(JSROOT.ToolbarIcons.th2color, "Toggle color", "ToggleColor");
+      pp.AddButton(JSROOT.ToolbarIcons.th2colorz, "Toggle color palette", "ToggleColorZ");
+      pp.AddButton(JSROOT.ToolbarIcons.th2draw3d, "Toggle 3D mode", "Toggle3D");
+   }
+
+   JSROOT.TH2Painter.prototype.ToggleColor = function() {
+
+      var toggle = true;
+
+      if (this.options.Lego > 0) { this.options.Lego = 0; toggle = false; } else
+      if (this.options.Surf > 0) { this.options.Surf = -this.options.Surf; toggle = false; }
+
+      if (this.options.Color == 0) {
+         this.options.Color = ('LastColor' in this.options) ?  this.options.LastColor : 1;
+      } else
+      if (toggle) {
+         this.options.LastColor = this.options.Color;
+         this.options.Color = 0;
+      }
+
+      this._can_move_colz = true; // indicate that next redraw can move Z scale
+
+      this.Redraw();
+
+      // this.DrawColorPalette((this.options.Color > 0) && (this.options.Zscale > 0));
    }
 
    JSROOT.TH2Painter.prototype.AutoZoom = function() {
+      if (this.IsTH2Poly()) return; // not implemented
+
       var i1 = this.GetSelectIndex("x", "left", -1),
           i2 = this.GetSelectIndex("x", "right", 1),
           j1 = this.GetSelectIndex("y", "left", -1),
@@ -2821,9 +3100,8 @@
       var min = histo.getBinContent(i1 + 1, j1 + 1);
       for (i = i1; i < i2; ++i)
          for (j = j1; j < j2; ++j)
-            if (histo.getBinContent(i + 1, j + 1) < min)
-               min = histo.getBinContent(i + 1, j + 1);
-      if (min>0) return; // if all points positive, no chance for autoscale
+            min = Math.min(min, histo.getBinContent(i+1, j+1));
+      if (min > 0) return; // if all points positive, no chance for autoscale
 
       var ileft = i2, iright = i1, jleft = j2, jright = j1;
 
@@ -2836,29 +3114,29 @@
                if (j >= jright) jright = j + 1;
             }
 
-      var xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+      var xmin, xmax, ymin, ymax, isany = false;
+
+      if ((ileft === iright-1) && (ileft > i1+1) && (iright < i2-1)) { ileft--; iright++; }
+      if ((jleft === jright-1) && (jleft > j1+1) && (jright < j2-1)) { jleft--; jright++; }
 
       if ((ileft > i1 || iright < i2) && (ileft < iright - 1)) {
          xmin = this.GetBinX(ileft);
          xmax = this.GetBinX(iright);
+         isany = true;
       }
 
       if ((jleft > j1 || jright < j2) && (jleft < jright - 1)) {
          ymin = this.GetBinY(jleft);
          ymax = this.GetBinY(jright);
+         isany = true;
       }
 
-      this.Zoom(xmin, xmax, ymin, ymax);
+      if (isany) this.Zoom(xmin, xmax, ymin, ymax);
    }
 
 
    JSROOT.TH2Painter.prototype.ScanContent = function() {
       var i,j,histo = this.GetObject();
-
-      this.fillcolor = JSROOT.Painter.root_colors[histo.fFillColor];
-
-      this.lineatt = JSROOT.Painter.createAttLine(histo);
-      if (this.lineatt.color == 'none') this.lineatt.color = '#4572A7';
 
       this.nbinsx = histo.fXaxis.fNbins;
       this.nbinsy = histo.fYaxis.fNbins;
@@ -2867,16 +3145,32 @@
 
       this.CreateAxisFuncs(true);
 
-      // global min/max, used at the moment in 3D drawing
-      this.gminbin = this.gmaxbin = histo.getBinContent(1, 1);
-      this.gmin0bin = null;
-      for (i = 0; i < this.nbinsx; ++i) {
-         for (j = 0; j < this.nbinsy; ++j) {
-            var bin_content = histo.getBinContent(i+1, j+1);
+      if (this.IsTH2Poly()) {
+         this.gmin0bin = null;
+         this.gminbin = this.gmaxbin = 0;
+
+         for (var n=0, len=histo.fBins.arr.length; n<len; ++n) {
+            var bin_content = histo.fBins.arr[n].fContent;
+            if (n===0) this.gminbin = this.gmaxbin = bin_content;
+
             if (bin_content < this.gminbin) this.gminbin = bin_content; else
-            if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+
             if (bin_content > 0)
                if ((this.gmin0bin===null) || (this.gmin0bin > bin_content)) this.gmin0bin = bin_content;
+         }
+      } else {
+         // global min/max, used at the moment in 3D drawing
+         this.gminbin = this.gmaxbin = histo.getBinContent(1, 1);
+         this.gmin0bin = null;
+         for (i = 0; i < this.nbinsx; ++i) {
+            for (j = 0; j < this.nbinsy; ++j) {
+               var bin_content = histo.getBinContent(i+1, j+1);
+               if (bin_content < this.gminbin) this.gminbin = bin_content; else
+                  if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+               if (bin_content > 0)
+                  if ((this.gmin0bin===null) || (this.gmin0bin > bin_content)) this.gmin0bin = bin_content;
+            }
          }
       }
 
@@ -2885,28 +3179,68 @@
 
       // used to enable/disable stat box
       this.draw_content = this.gmaxbin > 0;
+
+      // apply selected user X range if no other range selection was done
+      if (this.is_main_painter() && (this.zoom_xmin === this.zoom_xmax) &&
+          this.histo.fXaxis.TestBit(JSROOT.EAxisBits.kAxisRange) &&
+          (this.histo.fXaxis.fFirst !== this.histo.fXaxis.fLast) &&
+          ((this.histo.fXaxis.fFirst>1) || (this.histo.fXaxis.fLast <= this.nbinsx))) {
+         this.zoom_xmin = this.histo.fXaxis.fFirst > 1 ? this.GetBinX(this.histo.fXaxis.fFirst-1) : this.xmin;
+         this.zoom_xmax = this.histo.fXaxis.fLast <= this.nbinsx ? this.GetBinX(this.histo.fXaxis.fLast) : this.xmax;
+      }
+
+      // apply selected user Y range if no other range selection was done
+      if (this.is_main_painter() && (this.zoom_ymin === this.zoom_ymax) &&
+          this.histo.fYaxis.TestBit(JSROOT.EAxisBits.kAxisRange) &&
+          (this.histo.fYaxis.fFirst !== this.histo.fYaxis.fLast) &&
+          ((this.histo.fYaxis.fFirst>1) || (this.histo.fYaxis.fLast <= this.nbinsy))) {
+         this.zoom_ymin = this.histo.fYaxis.fFirst > 1 ? this.GetBinY(this.histo.fYaxis.fFirst-1) : this.ymin;
+         this.zoom_ymax = this.histo.fYaxis.fLast <= this.nbinsy ? this.GetBinY(this.histo.fYaxis.fLast) : this.ymax;
+      }
    }
 
    JSROOT.TH2Painter.prototype.CountStat = function(cond) {
       var histo = this.GetObject(),
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0, stat_sumxy = 0,
-          xleft = this.GetSelectIndex("x", "left"),
-          xright = this.GetSelectIndex("x", "right"),
-          yleft = this.GetSelectIndex("y", "left"),
-          yright = this.GetSelectIndex("y", "right"),
-          xi, xside, xx, yi, yside, yy, zz,
+          xside, yside, xx, yy, zz,
           res = { entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null };
 
-      for (xi = 0; xi <= this.nbinsx + 1; ++xi) {
-         xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
-         xx = this.GetBinX(xi - 0.5);
+      if (this.IsTH2Poly()) {
 
-         for (yi = 0; yi <= this.nbinsy + 1; ++yi) {
-            yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
-            yy = this.GetBinY(yi - 0.5);
+         var len = histo.fBins.arr.length, i, bin, n, gr, ngr, numgraphs, numpoints,
+             pmain = this.main_painter();
 
-            zz = histo.getBinContent(xi, yi);
+         for (i=0;i<len;++i) {
+            bin = histo.fBins.arr[i];
+
+            xside = 1; yside = 1;
+
+            if (bin.fXmin > pmain.scale_xmax) xside = 2; else
+            if (bin.fXmax < pmain.scale_xmin) xside = 0;
+            if (bin.fYmin > pmain.scale_ymax) yside = 2; else
+            if (bin.fYmax < pmain.scale_ymin) yside = 0;
+
+            xx = yy = numpoints = 0;
+            gr = bin.fPoly; numgraphs = 1;
+            if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
+
+            for (ngr=0;ngr<numgraphs;++ngr) {
+               if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
+
+               for (n=0;n<gr.fNpoints;++n) {
+                  ++numpoints;
+                  xx += gr.fX[n];
+                  yy += gr.fY[n];
+               }
+            }
+
+            if (numpoints > 1) {
+               xx = xx / numpoints;
+               yy = yy / numpoints;
+            }
+
+            zz = bin.fContent;
 
             res.entries += zz;
 
@@ -2925,6 +3259,41 @@
             stat_sumy2 += yy * yy * zz;
             stat_sumxy += xx * yy * zz;
          }
+      } else {
+         var xleft = this.GetSelectIndex("x", "left"),
+             xright = this.GetSelectIndex("x", "right"),
+             yleft = this.GetSelectIndex("y", "left"),
+             yright = this.GetSelectIndex("y", "right"),
+             xi, yi;
+
+         for (xi = 0; xi <= this.nbinsx + 1; ++xi) {
+            xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
+            xx = this.GetBinX(xi - 0.5);
+
+            for (yi = 0; yi <= this.nbinsy + 1; ++yi) {
+               yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
+               yy = this.GetBinY(yi - 0.5);
+
+               zz = histo.getBinContent(xi, yi);
+
+               res.entries += zz;
+
+               res.matrix[yside * 3 + xside] += zz;
+
+               if ((xside != 1) || (yside != 1)) continue;
+
+               if ((cond!=null) && !cond(xx,yy)) continue;
+
+               if ((res.wmax==null) || (zz>res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
+
+               stat_sum0 += zz;
+               stat_sumx1 += xx * zz;
+               stat_sumy1 += yy * zz;
+               stat_sumx2 += xx * xx * zz;
+               stat_sumy2 += yy * yy * zz;
+               stat_sumxy += xx * yy * zz;
+            }
+         }
       }
 
       if (!this.IsAxisZoomed("x") && !this.IsAxisZoomed("y") && (histo.fTsumw > 0)) {
@@ -2939,8 +3308,8 @@
       if (stat_sum0 > 0) {
          res.meanx = stat_sumx1 / stat_sum0;
          res.meany = stat_sumy1 / stat_sum0;
-         res.rmsx = Math.sqrt(stat_sumx2 / stat_sum0 - res.meanx * res.meanx);
-         res.rmsy = Math.sqrt(stat_sumy2 / stat_sum0 - res.meany * res.meany);
+         res.rmsx = Math.sqrt(Math.abs(stat_sumx2 / stat_sum0 - res.meanx * res.meanx));
+         res.rmsy = Math.sqrt(Math.abs(stat_sumy2 / stat_sum0 - res.meany * res.meany));
       }
 
       if (res.wmax===null) res.wmax = 0;
@@ -2982,9 +3351,8 @@
          pave.AddText("Std Dev y = " + stat.Format(data.rmsy));
       }
 
-      if (print_integral > 0) {
+      if (print_integral > 0)
          pave.AddText("Integral = " + stat.Format(data.matrix[4],"entries"));
-      }
 
       if (print_skew > 0) {
          pave.AddText("Skewness x = <undef>");
@@ -3014,362 +3382,60 @@
       return true;
    }
 
-   JSROOT.TH2Painter.prototype.getContourIndex = function(zc) {
-      // return contour index, which corresponds to the z content value
+   JSROOT.TH2Painter.prototype.PrepareColorDraw = function(args) {
 
-      if (this.fContour == null) {
-         // if not initialized, first create contour array
-         // difference from ROOT - fContour includes also last element with maxbin, which makes easier to build logz
-         var histo = this.GetObject();
+      if (!args) args = { rounding: true, extra: 0, middle: 0 };
 
-         this.fUserContour = false;
-         if ((histo.fContour!=null) && (histo.fContour.length>1) && histo.TestBit(JSROOT.TH1StatusBits.kUserContour)) {
-            this.fContour = JSROOT.clone(histo.fContour);
-            this.fUserContour = true;
-         } else {
-            var nlevels = 20;
-            if (histo.fContour != null) nlevels = histo.fContour.length;
-            if (nlevels<1) nlevels = 20;
-            this.fContour = [];
-            this.zmin = this.minbin;
-            this.zmax = this.maxbin;
-            if (this.zoom_zmin != this.zoom_zmax) {
-               this.zmin = this.zoom_zmin;
-               this.zmax = this.zoom_zmax;
-            }
+      if (args.extra === undefined) args.extra = 0;
+      if (args.middle === undefined) args.middle = 0;
 
-            if (this.options.Logz) {
-
-               if (this.zmax <= 0) this.zmax = 1.;
-               if (this.zmin <= 0) this.zmin = 0.3*this.minposbin;
-               if (this.zmin >= this.zmax) this.zmin = 0.0001*this.zmax;
-
-               var logmin = Math.log(this.zmin)/Math.log(10);
-               var logmax = Math.log(this.zmax)/Math.log(10);
-               var dz = (logmax-logmin)/nlevels;
-               this.fContour.push(this.zmin);
-               for (var level=1; level<nlevels; level++)
-                  this.fContour.push(Math.exp((logmin + dz*level)*Math.log(10)));
-               this.fContour.push(this.zmax);
-            } else {
-               if ((this.zmin == this.zmax) && (this.zmin != 0)) {
-                  this.zmax += 0.01*Math.abs(this.zmax);
-                  this.zmin -= 0.01*Math.abs(this.zmin);
-               }
-               var dz = (this.zmax-this.zmin)/nlevels;
-               for (var level=0; level<=nlevels; level++)
-                  this.fContour.push(this.zmin + dz*level);
-            }
-         }
-      }
-
-      if (this.fUserContour || this.options.Logz) {
-         var cntr = this.fContour, l = 0, r = this.fContour.length-1, mid;
-         if (zc < cntr[0]) return -1;
-         if (zc >= cntr[r]) return r;
-         while (l < r-1) {
-            mid = Math.round((l+r)/2);
-            if (cntr[mid] > zc) r = mid; else l = mid;
-         }
-         return l;
-      }
-
-      return Math.floor(0.01+(zc-this.zmin)*(this.fContour.length-1)/(this.zmax-this.zmin));
-   }
-
-   JSROOT.TH2Painter.prototype.getValueColor = function(zc, asindx) {
-      var index = this.getContourIndex(zc);
-
-      if (index<0) {
-         // do not draw bin where color is negative, only with col0 option minimal values are shown
-         if (this.options.Color !== 111) return null;
-         index = 0;
-      }
-
-      if (this.fPalette == null)
-         this.fPalette = JSROOT.Painter.GetColorPalette(this.options.Palette);
-
-      var theColor = Math.floor((index+0.99)*this.fPalette.length/(this.fContour.length-1));
-      if (theColor > this.fPalette.length-1) theColor = this.fPalette.length-1;
-      return asindx ? theColor : this.fPalette[theColor];
-   }
-
-   JSROOT.TH2Painter.prototype.CompressAxis = function(arr, maxlen, regular) {
-      if (arr.length <= maxlen) return;
-
-      // check filled bins
-      var left = 0, right = arr.length-2; // last bin does not have count
-      while ((left < right) && (arr[left].cnt===0)) ++left;
-      while ((left < right) && (arr[right].cnt===0)) --right;
-      if (right-left < maxlen) return;
-
-      function RemoveNulls() {
-         var j = right;
-         while (j>=left) {
-            while ((j>=left) && (arr[j]!==null)) --j;
-            var j2 = j;
-            while ((j>=0) && (arr[j]===null)) --j;
-            if (j < j2) { arr.splice(j+1, j2-j); right -= (j2-j); }
-            --j;
-         }
-      };
-
-      if (!regular) {
-         var grdist = Math.abs(arr[right+1].gr - arr[left].gr) / maxlen;
-         var i = left;
-         while (i <= right) {
-            var gr0 = arr[i++].gr;
-            // remove points which are not far away from current
-            while ((i <= right) && (Math.abs(arr[i+1].gr - gr0) < grdist)) arr[i++] = null;
-         }
-         RemoveNulls();
-      }
-
-      if (regular || ((right-left) > 1.5*maxlen)) {
-         // just remove regular number of bins
-         var period = Math.floor((right-left) / maxlen);
-         if (period<2) period = 2;
-         var i = left;
-         while (++i <= right) {
-            for (var k=1;k<period;++k)
-               if (++i <= right) arr[i] = null;
-         }
-         RemoveNulls();
-      }
-   }
-
-   JSROOT.TH2Painter.prototype.CreateDrawBins = function(w, h, coordinates_kind, tipkind) {
       var histo = this.GetObject(),
-          i1 = this.GetSelectIndex("x", "left", 0),
-          i2 = this.GetSelectIndex("x", "right", 1),
-          j1 = this.GetSelectIndex("y", "left", 0),
-          j2 = this.GetSelectIndex("y", "right", 1),
-          name = this.GetTipName("\n"),
-          xx = [], yy = [], i, j, x, y,
-          nbins = 0, binz = 0, sumz = 0, zdiff, dgrx, dgry;
-
-      for (i = i1; i <= i2; ++i) {
-         x = this.GetBinX(i);
-         if (this.options.Logx && (x <= 0)) { i1 = i+1; continue; }
-         xx.push({indx:i, axis: x, gr: this.grx(x), cnt:0});
-      }
-
-      for (j = j1; j <= j2; ++j) {
-         y = this.GetBinY(j);
-         if (this.options.Logy && (y <= 0)) { j1 = j+1; continue; }
-         yy.push({indx:j, axis:y, gr:this.gry(y), cnt:0});
-      }
-
-      // first found min/max values in selected range, and number of non-zero bins
-      this.maxbin = this.minbin = histo.getBinContent(i1 + 1, j1 + 1);
-      for (i = i1; i < i2; ++i) {
-         for (j = j1; j < j2; ++j) {
-            binz = histo.getBinContent(i + 1, j + 1);
-            if (binz != 0) nbins++;
-            if (binz>this.maxbin) this.maxbin = binz; else
-            if (binz<this.minbin) this.minbin = binz;
-         }
-      }
-
-      var xfactor = 1, yfactor = 1, uselogz = false, logmin  = 0, logmax = 1;
-      if (coordinates_kind == 1)
-         if (this.options.Logz && (this.maxbin>0)) {
-            uselogz = true;
-            logmax = Math.log(this.maxbin);
-            logmin = (this.minbin > 0) ? Math.log(this.minbin) : logmax - 10;
-            xfactor = 0.5 / (logmax - logmin);
-            yfactor = 0.5 / (logmax - logmin);
-         } else {
-            xfactor = 0.5 / (this.maxbin - this.minbin);
-            yfactor = 0.5 / (this.maxbin - this.minbin);
-         }
-
-      if (((this.options.Optimize > 0) && (nbins>1000) && (coordinates_kind<2)) || (this.options.Optimize > 10)) {
-         // if there are many non-empty points, check if all of them are selected
-         // probably we do not need to optimize axis
-
-         this.fContour = null; // z-scale ranges when drawing with color
-         this.fUserContour = false;
-         nbins = 0;
-         for (i = i1; i < i2; ++i) {
-            for (j = j1; j < j2; ++j) {
-               binz = histo.getBinContent(i+1, j+1);
-               if ((binz == 0) || (binz < this.minbin)) continue;
-
-               var show = false;
-
-               if (coordinates_kind == 0) {
-                  if (this.getValueColor(binz) != null) show = true;
-               } else {
-                  zdiff = uselogz ? (logmax - ((binz>0) ? Math.log(binz) : logmin)) : this.maxbin - binz;
-                  dgrx = zdiff * xfactor;
-                  dgry = zdiff * yfactor;
-
-                  if (((1 - 2*zdiff*xfactor)*(xx[i-i1+1].gr - xx[i-i1].gr) > 0.05) ||
-                      ((1 - 2*zdiff*yfactor)*(yy[j-j1].gr - yy[j-j1+1].gr) > 0.05)) show = true;
-               }
-
-               if (show) {
-                  nbins++;
-                  xx[i-i1].cnt+=1;
-                  yy[j-j1].cnt+=1;
-               }
-            }
-         }
-      }
-
-      if (((this.options.Optimize > 0) && (nbins>1000) && (coordinates_kind<2) && (this.options.Color<2)) || (this.options.Optimize > 10)) {
-         var numx = JSROOT.gStyle.Tooltip > 1 ? 80 : 40;
-         if (this.options.Optimize > 10) numx = Math.round(numx / 4);
-         var numy = numx;
-
-         var coef = Math.abs(xx[0].gr - xx[xx.length-1].gr) / Math.abs(yy[0].gr - yy[yy.length-1].gr);
-         if (coef > 1.) numy = Math.max(10, Math.round(numx / coef));
-                   else numx = Math.max(10, Math.round(numy * coef));
-
-         if ((this.options.Optimize > 1) || (xx.length > 50))
-            this.CompressAxis(xx, numx, !this.options.Logx && this.regularx);
-
-         if ((this.options.Optimize > 1) || (yy.length > 50))
-            this.CompressAxis(yy, numy, !this.options.Logy && this.regulary);
-      }
-
-      this.fContour = null; // z-scale ranges when drawing with color
-      this.fUserContour = false;
-
-      var local_bins = [];
-
-      for (i = 0; i < xx.length-1; ++i) {
-         var grx1 = xx[i].gr, grx2 = xx[i+1].gr;
-
-         for (j = 0; j < yy.length-1; ++j) {
-            var gry1 = yy[j].gr, gry2 = yy[j+1].gr;
-
-            sumz = binz = histo.getBinContent(xx[i].indx + 1, yy[j].indx + 1);
-
-            if ((xx[i+1].indx > xx[i].indx+1) || (yy[j+1].indx > yy[j].indx+1)) {
-               sumz = 0;
-               // check all other pixels inside range
-               for (var i1 = xx[i].indx;i1 < xx[i+1].indx;++i1)
-                  for (var j1 = yy[j].indx;j1 < yy[j+1].indx;++j1) {
-                     var morez = histo.getBinContent(i1 + 1, j1 + 1);
-                     binz = Math.max(binz, morez);
-                     sumz += morez;
-                  }
-            }
-
-            if ((binz == 0) || (binz < this.minbin)) continue;
-
-            var point = null;
-
-            switch (coordinates_kind) {
-            case 0: {
-               var fillcol = this.getValueColor(binz);
-               if (fillcol!=null)
-                 point = {
-                   x : grx1,
-                   y : gry2,
-                   width : grx2 - grx1 + 1,  // +1 to fill gaps between colored bins
-                   height : gry1 - gry2 + 1,
-                   stroke : "none",
-                   fill : fillcol,
-                   tipcolor: (fillcol == 'black') ? "grey" : "black"
-                 };
-               break;
-            }
-            case 1:
-               zdiff = uselogz ? (logmax - ((binz>0) ? Math.log(binz) : logmin)) : this.maxbin - binz;
-               dgrx = zdiff * xfactor * (grx2 - grx1);
-               dgry = zdiff * yfactor * (gry1 - gry2);
-               point = {
-                  x : grx1 + dgrx,
-                  y : gry2 + dgry,
-                  width : grx2 - grx1 - 2 * dgrx,
-                  height : gry1 - gry2 - 2 * dgry,
-                  stroke : this.lineatt.color,
-                  fill : this.fillcolor,
-                  tipcolor: this.fillcolor == 'black' ? "grey" : "black"
-               }
-               if ((point.width < 0.05) || (point.height < 0.05)) point = null;
-               break;
-
-            case 2:
-               point = {
-                  x : (xx[i].axis + xx[i+1].axis) / 2,
-                  y : (yy[j].axis + yy[j+1].axis) / 2,
-                  z : binz
-               }
-               break;
-            }
-
-            if (point==null) continue;
-
-            if (tipkind == 1) {
-               if (this.x_kind == 'labels')
-                  point.tip = name + "x = " + this.AxisAsText("x", xx[i].axis) + "\n";
-               else {
-                  point.tip = name + "x = [" + this.AxisAsText("x", xx[i].axis) + ", " + this.AxisAsText("x", xx[i+1].axis) + ")";
-
-                  if (xx[i].indx + 1 == xx[i+1].indx)
-                     point.tip += " bin=" + xx[i].indx + "\n";
-                  else
-                     point.tip += " bins=[" + xx[i].indx + "," + (xx[i+1].indx-1) + "]\n";
-               }
-               if (this.y_kind == 'labels')
-                  point.tip += "y = " + this.AxisAsText("y", yy[j].axis) + "\n";
-               else {
-                  point.tip += "y = [" + this.AxisAsText("y", yy[j].axis) + ", " + this.AxisAsText("y", yy[j+1].axis) + ")";
-                  if (yy[j].indx + 1 == yy[j+1].indx)
-                     point.tip += " bin=" + yy[j].indx + "\n";
-                  else
-                     point.tip += " bins=[" + yy[j].indx + "," + (yy[j+1].indx-1) + "]\n";
-               }
-
-               if (sumz == binz)
-                  point.tip += "entries = " + JSROOT.FFormat(sumz, JSROOT.gStyle.StatFormat);
-               else
-                  point.tip += "sum = " + JSROOT.FFormat(sumz, JSROOT.gStyle.StatFormat) +
-                               " max = " + JSROOT.FFormat(binz, JSROOT.gStyle.StatFormat);
-            } else if (tipkind == 2)
-               point.tip = name + "x = " + this.AxisAsText("x", xx[i].axis) + "\n" +
-                                  "y = " + this.AxisAsText("y", yy[j].axis) + "\n" +
-                                  "entries = " + JSROOT.FFormat(sumz, JSROOT.gStyle.StatFormat);
-
-            local_bins.push(point);
-         }
-      }
-
-      return local_bins;
-   }
-
-   JSROOT.TH2Painter.prototype.PrepareColorDraw = function(dorounding, pixel_density) {
-      var histo = this.GetObject(), i, j, x, y, binz,
+          pad = this.root_pad(),
+          pmain = this.main_painter(),
+          hdim = this.Dimension(),
+          i, j, x, y, binz, binarea,
           res = {
-             i1: this.GetSelectIndex("x", "left", 0),
-             i2: this.GetSelectIndex("x", "right", 1),
-             j1: this.GetSelectIndex("y", "left", 0),
-             j2: this.GetSelectIndex("y", "right", 1),
-             grx: [], gry: []
+             i1: this.GetSelectIndex("x", "left", 0 - args.extra),
+             i2: this.GetSelectIndex("x", "right", 1 + args.extra),
+             j1: (hdim===1) ? 0 : this.GetSelectIndex("y", "left", 0 - args.extra),
+             j2: (hdim===1) ? 1 : this.GetSelectIndex("y", "right", 1 + args.extra),
+             min: 0, max: 0
           };
+      res.grx = new Float32Array(res.i2+1);
+      res.gry = new Float32Array(res.j2+1);
 
-      if (pixel_density) dorounding = true;
+      if (args.pixel_density) args.rounding = true;
 
        // calculate graphical coordinates in advance
       for (i = res.i1; i <= res.i2; ++i) {
-         x = this.GetBinX(i);
-         if (this.options.Logx && (x <= 0)) { res.i1 = i+1; continue; }
-         res.grx[i] = this.grx(x);
-         if (dorounding) res.grx[i] = Math.round(res.grx[i]);
+         x = this.GetBinX(i + args.middle);
+         if (pmain.logx && (x <= 0)) { res.i1 = i+1; continue; }
+         res.grx[i] = pmain.grx(x);
+         if (args.rounding) res.grx[i] = Math.round(res.grx[i]);
+
+         if (args.size3d) {
+            if (res.grx[i] < -args.size3d) { res.i1 = i; res.grx[i] = -args.size3d; }
+            if (res.grx[i] > args.size3d) { res.i2 = i; res.grx[i] = args.size3d; }
+         }
       }
 
+      if (hdim===1) {
+         res.gry[0] = pmain.gry(0);
+         res.gry[1] = pmain.gry(1);
+      } else
       for (j = res.j1; j <= res.j2; ++j) {
-         y = this.GetBinY(j);
-         if (this.options.Logy && (y <= 0)) { res.j1 = j+1; continue; }
-         res.gry[j] = this.gry(y);
-         if (dorounding) res.gry[j] = Math.round(res.gry[j]);
+         y = this.GetBinY(j + args.middle);
+         if (pmain.logy && (y <= 0)) { res.j1 = j+1; continue; }
+         res.gry[j] = pmain.gry(y);
+         if (args.rounding) res.gry[j] = Math.round(res.gry[j]);
+
+         if (args.size3d) {
+            if (res.gry[j] < -args.size3d) { res.j1 = j; res.gry[j] = -args.size3d; }
+            if (res.gry[j] > args.size3d) { res.j2 = j; res.gry[j] = args.size3d; }
+         }
       }
 
-      //  findd min/max values in selected range
+      //  find min/max values in selected range
 
       binz = histo.getBinContent(res.i1 + 1, res.j1 + 1);
       this.maxbin = this.minbin = this.minposbin = null;
@@ -3377,7 +3443,13 @@
       for (i = res.i1; i < res.i2; ++i) {
          for (j = res.j1; j < res.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            if (pixel_density) binz = binz/(res.grx[i+1]-res.grx[i]+1)/(res.gry[j]-res.gry[j+1]+1);
+            if (args.pixel_density) {
+               binarea = (res.grx[i+1]-res.grx[i])*(res.gry[j]-res.gry[j+1]);
+               if (binarea <= 0) continue;
+               res.max = Math.max(res.max, binz);
+               if ((binz>0) && ((binz<res.min) || (res.min===0))) res.min = binz;
+               binz = binz/binarea;
+            }
             if (this.maxbin===null) {
                this.maxbin = this.minbin = binz;
             } else {
@@ -3385,147 +3457,27 @@
                this.minbin = Math.min(this.minbin, binz);
             }
             if (binz > 0)
-              this.minposbin = Math.min(binz, (this.minposbin===null) ? binz : this.minposbin);
+               if ((this.minposbin===null) || (binz<this.minposbin)) this.minposbin = binz;
          }
       }
 
-      this.fContour = null; // z-scale ranges when drawing with color
-      this.fUserContour = false;
+      // force recalculation of z levels
+      this.fContour = null;
+      this.fCustomContour = false;
 
       return res;
    }
 
-/*
-   JSROOT.TH2Painter.prototype.DrawNormalCanvas = function(w,h) {
-
-      var histo = this.GetObject(),
-          handle = this.PrepareColorDraw(true), i, j, binz;
-
-      var fo = this.draw_g.append("foreignObject").attr("width", w).attr("height", h);
-      this.SetForeignObjectPosition(fo);
-
-      var canvas = fo.append("xhtml:canvas").attr("width", w).attr("height", h);
-
-      var ctx = canvas.node().getContext("2d");
-
-      for (i = handle.i1; i < handle.i2; ++i)
-         for (j = handle.j1; j < handle.j2; ++j) {
-            binz = histo.getBinContent(i + 1, j + 1);
-            if ((binz == 0) || (binz < this.minbin)) continue;
-            ctx.fillStyle = this.getValueColor(binz);
-            ctx.fillRect(handle.grx[i],handle.gry[j+1],handle.grx[i+1] - handle.grx[i], handle.gry[j] - handle.gry[j+1]);
-         }
-
-      ctx.stroke();
-      this.draw_kind = "canv2";
-
-      if ((JSROOT.gStyle.Tooltip > 1) && JSROOT.browser.isFirefox) {
-         this.tt_handle = handle;
-         this.ProcessTooltip = this.ProcessTooltipPath;
-      }
-   }
-
-   JSROOT.TH2Painter.prototype.MakeIcon = function() {
-      this.options.Optimize = 100;
-
-      var w = this.frame_width(), h = this.frame_height();
-
-      var bins = this.CreateDrawBins(w, h, 0, 0);
-
-      var prev = { x : -1, y : -1, width: 0, height: 0, fill:"" };
-      var res = "";
-      for (var i=0;i<bins.length;++i) {
-         var pnt = bins[i];
-
-         pnt.x *= 512/w;
-         pnt.width *= 512/w;
-         pnt.y *= 512/h;
-         pnt.height *= 512/h;
-
-         if (res.length == 0) res = "["; else res+=",";
-
-         var separ = "{";
-         if (pnt.x != prev.x) { res += separ + "x:" + Math.round(pnt.x); separ =","; }
-         if (pnt.y != prev.y) { res += separ + "y:" + Math.round(pnt.y); separ =","; }
-         if (pnt.width != prev.width) { res += separ + "w:" + Math.round(pnt.width); separ =","; }
-         if (pnt.height != prev.height) { res += separ + "h:" + Math.round(pnt.height); separ =","; }
-         if (pnt.fill != prev.fill) { res += separ + "f:'" + pnt.fill + "'"; separ =","; }
-         res += "}";
-
-         prev = pnt;
-      }
-
-      res += "]";
-      //console.log('len = ',res.length);
-      //console.log(res);
-   }
-
-   JSROOT.TH2Painter.prototype.DrawMarkers = function(w,h) {
-      var local_bins = this.CreateDrawBins(w, h, 0, JSROOT.gStyle.Tooltip > 0 ? 2 : 0);
-
-      var marker = JSROOT.Painter.createAttMarker(this.GetObject());
-
-      this.draw_g.selectAll(".marker")
-            .data(local_bins)
-            .enter().append(marker.kind)
-            .attr("class", "marker")
-            .attr("transform", function(d) { return "translate(" + d.x.toFixed(1) + "," + d.y.toFixed(1) + ")" })
-            .call(marker.func)
-            .filter(function() { return JSROOT.gStyle.Tooltip === 1 ? this : null } )
-            .append("svg:title").text(function(d) { return d.tip; });
-
-      if (JSROOT.gStyle.Tooltip > 1)
-         this.ProcessTooltip = this.ProcessTooltipFunc;
-
-      this.draw_kind = "markers";
-   }
-*/
-
-   JSROOT.TH2Painter.prototype.DrawBinsAsRects = function(w,h) {
-      // this is old-style drawing of 2d histogram
-      // each bin shown as separate svg:rect, which leads to big number of elements at the end
-
-      var normal_coordinates = (this.options.Color > 0);
-
-      var tipkind = (JSROOT.gStyle.Tooltip > 0) ? 1 : 0;
-
-      var local_bins = this.CreateDrawBins(w, h, normal_coordinates ? 0 : 1, tipkind);
-
-      this.draw_g.selectAll(".bins")
-          .data(local_bins).enter()
-          .append("svg:rect")
-          .attr("class", "bins")
-          .attr("x", function(d) { return d.x.toFixed(1); })
-          .attr("y", function(d) { return d.y.toFixed(1); })
-          .attr("width", function(d) { return d.width.toFixed(1); })
-          .attr("height", function(d) { return d.height.toFixed(1); })
-          .style("stroke", function(d) { return d.stroke; })
-          .style("fill", function(d) { return d.fill; })
-          .filter(function() { return JSROOT.gStyle.Tooltip === 1 ? this : null } )
-          .on('mouseover', function() {
-              if (JSROOT.gStyle.Tooltip < 1) return;
-              d3.select(this).transition().duration(100).style("fill", d3.select(this).datum().tipcolor);
-           })
-          .on('mouseout', function() {
-             d3.select(this).transition().duration(100).style("fill", d3.select(this).datum().fill);
-          })
-          .append("svg:title").text(function(d) { return d.tip; });
-
-      this.draw_kind = "rects";
-   }
-
    JSROOT.TH2Painter.prototype.DrawBinsColor = function(w,h) {
       var histo = this.GetObject(),
-          handle = this.PrepareColorDraw(true),
+          handle = this.PrepareColorDraw(),
           colPaths = [], currx = [], curry = [],
           colindx, cmd1, cmd2, i, j, binz;
 
-         // now start build
+      // now start build
       for (i = handle.i1; i < handle.i2; ++i) {
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            if ((binz == 0) || (binz < this.minbin)) continue;
-
             colindx = this.getValueColor(binz, true);
             if (colindx === null) continue;
 
@@ -3546,7 +3498,7 @@
          }
       }
 
-     for (colindx=0;colindx<colPaths.length;++colindx)
+      for (colindx=0;colindx<colPaths.length;++colindx)
         if (colPaths[colindx] !== undefined)
            this.draw_g
                .append("svg:path")
@@ -3557,23 +3509,369 @@
       return handle;
    }
 
+
+   JSROOT.TH2Painter.prototype.DrawBinsContour = function(frame_w,frame_h) {
+      var histo = this.GetObject(),
+          handle = this.PrepareColorDraw({ rounding: false, extra: 100 }),
+          kMAXCONTOUR = 404,
+          kMAXCOUNT = 400,
+          // arguemnts used in he PaintContourLine
+          xarr = new Float32Array(2*kMAXCONTOUR),
+          yarr = new Float32Array(2*kMAXCONTOUR),
+          itarr = new Int32Array(2*kMAXCONTOUR),
+          levels, lj = 0;
+
+      function BinarySearch(zc) {
+         for (var kk=1;kk<levels.length;++kk)
+            if (zc<levels[kk]) return kk-1;
+         return levels.length-1;
+      }
+
+      function PaintContourLine(elev1, icont1, x1, y1,
+                                elev2, icont2, x2, y2) {
+            /* Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels */
+         var vert = (x1 === x2),
+             tlen = vert ? (y2 - y1) : (x2 - x1),
+             n = icont1 +1,
+             tdif = elev2 - elev1,
+             ii = lj-1,
+             maxii = kMAXCONTOUR/2 -3 + lj,
+             icount = 0,
+             xlen, pdif, diff, elev;
+
+         while (n <= icont2 && ii <= maxii) {
+//          elev = fH->GetContourLevel(n);
+            elev = levels[n];
+            diff = elev - elev1;
+            pdif = diff/tdif;
+            xlen = tlen*pdif;
+            if (vert) {
+               xarr[ii] = x1;
+               yarr[ii] = y1 + xlen;
+            } else {
+               xarr[ii] = x1 + xlen;
+               yarr[ii] = y1;
+            }
+            itarr[ii] = n;
+            icount++;
+            ii +=2;
+            n++;
+         }
+         return icount;
+      }
+
+      // initialize contour
+      this.getContourIndex(0);
+
+      // get levels
+      levels = this.fContour;
+
+      var palette = this.GetPalette(),
+          ipoly, poly, polys = [], np, npmax = 0,
+          x = new Float32Array(4),
+          y = new Float32Array(4),
+          zc = new Float32Array(4),
+          ir = new Int32Array(4),
+          i, j, k, n, m, ix, ljfill, count,
+          xsave, ysave, itars, ix, jx;
+
+      for (j = handle.j1; j < handle.j2-1; ++j) {
+
+         y[1] = y[0] = (handle.gry[j] + handle.gry[j+1])/2;
+         y[3] = y[2] = (handle.gry[j+1] + handle.gry[j+2])/2;
+
+         for (i = handle.i1; i < handle.i2-1; ++i) {
+
+            zc[0] = histo.getBinContent(i+1, j+1);
+            zc[1] = histo.getBinContent(i+2, j+1);
+            zc[2] = histo.getBinContent(i+2, j+2);
+            zc[3] = histo.getBinContent(i+1, j+2);
+
+            for (k=0;k<4;k++)
+               ir[k] = BinarySearch(zc[k]);
+
+            if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
+               x[3] = x[0] = (handle.grx[i] + handle.grx[i+1])/2;
+               x[2] = x[1] = (handle.grx[i+1] + handle.grx[i+2])/2;
+
+               if (zc[0] <= zc[1]) n = 0; else n = 1;
+               if (zc[2] <= zc[3]) m = 2; else m = 3;
+               if (zc[n] > zc[m]) n = m;
+               n++;
+               lj=1;
+               for (ix=1;ix<=4;ix++) {
+                  m = n%4 + 1;
+                  ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],
+                                            zc[m-1],ir[m-1],x[m-1],y[m-1]);
+                  lj += 2*ljfill;
+                  n = m;
+               }
+
+               if (zc[0] <= zc[1]) n = 0; else n = 1;
+               if (zc[2] <= zc[3]) m = 2; else m = 3;
+               if (zc[n] > zc[m]) n = m;
+               n++;
+               lj=2;
+               for (ix=1;ix<=4;ix++) {
+                  if (n == 1) m = 4;
+                  else        m = n-1;
+                  ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],
+                                            zc[m-1],ir[m-1],x[m-1],y[m-1]);
+                  lj += 2*ljfill;
+                  n = m;
+               }
+      //     Re-order endpoints
+
+               count = 0;
+               for (ix=1; ix<=lj-5; ix +=2) {
+                  //count = 0;
+                  while (itarr[ix-1] != itarr[ix]) {
+                     xsave = xarr[ix];
+                     ysave = yarr[ix];
+                     itars = itarr[ix];
+                     for (jx=ix; jx<=lj-5; jx +=2) {
+                        xarr[jx]  = xarr[jx+2];
+                        yarr[jx]  = yarr[jx+2];
+                        itarr[jx] = itarr[jx+2];
+                     }
+                     xarr[lj-3]  = xsave;
+                     yarr[lj-3]  = ysave;
+                     itarr[lj-3] = itars;
+                     if (count > kMAXCOUNT) break;
+                     count++;
+                  }
+               }
+
+               if (count > kMAXCOUNT) continue;
+
+               for (ix=1; ix<=lj-2; ix +=2) {
+
+                  ipoly = itarr[ix-1];
+
+                  if (ipoly >=0 && (ipoly < levels.length)) {
+                     poly = polys[ipoly];
+                     if (!poly)
+                        poly = polys[ipoly] = JSROOT.CreateTPolyLine(kMAXCONTOUR*4, true);
+
+                     np = poly.fLastPoint;
+                     if (np < poly.fN-2) {
+                        poly.fX[np+1] = Math.round(xarr[ix-1]); poly.fY[np+1] = Math.round(yarr[ix-1]);
+                        poly.fX[np+2] = Math.round(xarr[ix]); poly.fY[np+2] = Math.round(yarr[ix]);
+                        poly.fLastPoint = np+2;
+                        npmax = Math.max(npmax, poly.fLastPoint+1);
+                     } else {
+                        // console.log('reject point??', poly.fLastPoint);
+                     }
+                  }
+               }
+            } // end of if (ir[0]
+         } // end of j
+      } // end of i
+
+      if (this.options.Contour===14)
+         this.draw_g
+             .append("svg:rect")
+             .attr("x", 0).attr("y", 0)
+             .attr("width", frame_w).attr("height", frame_h)
+             .style("fill", palette[Math.floor(0.99*palette.length/(levels.length-1))]);
+
+
+      var polysort = new Int32Array(levels.length), first = 0;
+      //find first positive contour
+      for (ipoly=0;ipoly<levels.length;ipoly++) {
+         if (levels[ipoly] >= 0) { first = ipoly; break; }
+      }
+      //store negative contours from 0 to minimum, then all positive contours
+      k = 0;
+      for (ipoly=first-1;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
+      for (ipoly=first;ipoly<levels.length;ipoly++) { polysort[k] = ipoly; k++;}
+
+      var xp = new Int32Array(2*npmax),
+          yp = new Int32Array(2*npmax);
+
+      for (k=0;k<levels.length;++k) {
+
+         ipoly = polysort[k];
+         poly = polys[ipoly];
+         if (!poly) continue;
+
+         var colindx = Math.floor((ipoly+0.99)*palette.length/(levels.length-1));
+         if (colindx > palette.length-1) colindx = palette.length-1;
+         var icol = palette[colindx];
+
+         var fillcolor = icol, lineatt = null;
+
+         switch(this.options.Contour) {
+            case 1: break;
+            case 11: fillcolor = 'none'; lineatt = JSROOT.Painter.createAttLine(icol); break;
+            case 12: fillcolor = 'none'; lineatt = JSROOT.Painter.createAttLine({fLineColor:1, fLineStyle: (colindx%5 + 1), fLineWidth: 1 }); break;
+            case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
+            case 14: break;
+         }
+
+         var xx = poly.fX, yy = poly.fY, np = poly.fLastPoint+1,
+             istart = 0, iminus, iplus, xmin = 0, ymin = 0, nadd;
+
+         while (true) {
+            iminus = npmax;
+            iplus  = iminus+1;
+            xp[iminus]= xx[istart];   yp[iminus] = yy[istart];
+            xp[iplus] = xx[istart+1]; yp[iplus]  = yy[istart+1];
+            xx[istart] = xx[istart+1] = xmin;
+            yy[istart] = yy[istart+1] = ymin;
+            while (true) {
+               nadd = 0;
+               for (i=2;i<np;i+=2) {
+                  if (xx[i] === xp[iplus] && yy[i] === yp[iplus]) {
+                     iplus++;
+                     xp[iplus] = xx[i+1]; yp[iplus]  = yy[i+1];
+                     xx[i] = xx[i+1] = xmin;
+                     yy[i] = yy[i+1] = ymin;
+                     nadd++;
+                  }
+                  if (xx[i+1] === xp[iminus] && yy[i+1] === yp[iminus]) {
+                     iminus--;
+                     xp[iminus] = xx[i];   yp[iminus]  = yy[i];
+                     xx[i] = xx[i+1] = xmin;
+                     yy[i] = yy[i+1] = ymin;
+                     nadd++;
+                  }
+               }
+               if (nadd == 0) break;
+            }
+
+            // console.log('color', ipoly, icol, 'Draw area points', iplus-iminus+1, 'starts', iminus);
+
+            var cmd = "M" + xp[iminus] + "," + yp[iminus];
+            for (i = iminus+1;i<=iplus;++i)
+               cmd +=  "l" + (xp[i] - xp[i-1]) + "," + (yp[i] - yp[i-1]);
+
+            if (fillcolor !== 'none') cmd += "Z";
+
+            var elem = this.draw_g
+                         .append("svg:path")
+                         .attr("class","th2_contour")
+                         .attr("d", cmd)
+                         .style("fill", fillcolor);
+
+            if (lineatt!==null)
+               elem.call(lineatt.func);
+            else
+               elem.style('stroke','none');
+
+            istart = 0;
+            for (i=2;i<np;i+=2) {
+               if (xx[i] !== xmin && yy[i] !== ymin) {
+                  istart = i;
+                  break;
+               }
+            }
+            if (istart === 0) break;
+         }
+      }
+
+      return handle;
+   }
+
+   JSROOT.TH2Painter.prototype.CreatePolyBin = function(pmain, bin) {
+      var cmd = "", ngr, ngraphs = 1, gr = null;
+
+      if (bin.fPoly._typename=='TMultiGraph')
+         ngraphs = bin.fPoly.fGraphs.arr.length;
+      else
+         gr = bin.fPoly;
+
+      for (ngr = 0; ngr < ngraphs; ++ ngr) {
+         if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
+
+         var npnts = gr.fNpoints, n,
+             x = gr.fX, y = gr.fY,
+             grx = Math.round(pmain.grx(x[0])),
+             gry = Math.round(pmain.gry(y[0])),
+             nextx, nexty;
+
+         if ((npnts>2) && (x[0]==x[npnts-1]) && (y[0]==y[npnts-1])) npnts--;
+
+         cmd += "M"+grx+","+gry;
+
+         for (n=1;n<npnts;++n) {
+            nextx = Math.round(pmain.grx(x[n]));
+            nexty = Math.round(pmain.gry(y[n]));
+            if ((grx!==nextx) || (gry!==nexty)) {
+               if (grx===nextx) cmd += "v" + (nexty - gry); else
+                  if (gry===nexty) cmd += "h" + (nextx - grx); else
+                     cmd += "l" + (nextx - grx) + "," + (nexty - gry);
+            }
+            grx = nextx; gry = nexty;
+         }
+
+         cmd += "z";
+      }
+
+      return cmd;
+   }
+
+   JSROOT.TH2Painter.prototype.DrawPolyBinsColor = function(w,h) {
+      var histo = this.GetObject(),
+          pmain = this.main_painter(),
+          colPaths = [],
+          colindx, cmd, bin, item,
+          i, len = histo.fBins.arr.length;
+
+      // force recalculations of contours
+      this.fContour = null;
+      this.fCustomContour = false;
+
+      // use global coordinates
+      this.maxbin = this.gmaxbin;
+      this.minbin = this.gminbin;
+
+      for (i = 0; i < len; ++ i) {
+         bin = histo.fBins.arr[i];
+         colindx = this.getValueColor(bin.fContent, true);
+         if (colindx === null) continue;
+
+         // check if bin outside visible range
+         if ((bin.fXmin > pmain.scale_xmax) || (bin.fXmax < pmain.scale_xmin) ||
+             (bin.fYmin > pmain.scale_ymax) || (bin.fYmax < pmain.scale_ymin)) continue;
+
+         cmd = this.CreatePolyBin(pmain, bin);
+
+         if (colPaths[colindx] === undefined)
+            colPaths[colindx] = cmd;
+         else
+            colPaths[colindx] += cmd;
+      }
+
+      for (colindx=0;colindx<colPaths.length;++colindx)
+         if (colPaths[colindx] !== undefined) {
+            item = this.draw_g
+                     .append("svg:path")
+                     .attr("palette-index", colindx)
+                     .attr("fill", this.fPalette[colindx])
+                     .attr("d", colPaths[colindx])
+            if (this.options.Line)
+               item.call(this.lineatt.func);
+         }
+
+      return { poly: true };
+   }
+
    JSROOT.TH2Painter.prototype.DrawBinsText = function(w, h, handle) {
       var histo = this.GetObject(),
           i,j,binz,colindx,binw,binh,lbl;
 
-      if (handle===null) handle = this.PrepareColorDraw(false);
+      if (handle===null) handle = this.PrepareColorDraw({ rounding: false });
 
       var text_g = this.draw_g
                        .append("svg:g")
                        .attr("class","th2_text");
 
-      this.StartTextDrawing(42, 20, text_g);
+      this.StartTextDrawing(42, 20, text_g, 20);
 
       for (i = handle.i1; i < handle.i2; ++i)
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            if ((binz == 0) || (binz < this.minbin)) continue;
-
             colindx = this.getValueColor(binz, true);
             if (colindx === null) continue;
 
@@ -3588,32 +3886,283 @@
 
             this.DrawText(22, Math.round(handle.grx[i] + binw*0.1), Math.round(handle.gry[j+1] + binh*0.1),
                               Math.round(binw*0.8), Math.round(binh*0.8),
-                          lbl, "black", 0, text_g);
+                              lbl, "black", 0, text_g);
          }
 
-      this.FinishTextDrawing(text_g);
+      this.FinishTextDrawing(text_g, null);
 
       return handle;
    }
 
+   JSROOT.TH2Painter.prototype.DrawBinsArrow = function(w, h) {
+      var histo = this.GetObject(),
+          i,j,binz,colindx,binw,binh,lbl, loop, dn = 1e-30, dx, dy, xc,yc,
+          dxn,dyn,x1,x2,y1,y2, anr,si,co;
+
+      var handle = this.PrepareColorDraw({ rounding: false });
+
+      var scale_x  = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1-0.03)/2,
+          scale_y  = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2;
+
+      var cmd = "";
+
+      for (var loop=0;loop<2;++loop)
+         for (i = handle.i1; i < handle.i2; ++i)
+            for (j = handle.j1; j < handle.j2; ++j) {
+
+               if (i === handle.i1) {
+                  dx = histo.getBinContent(i+2, j+1) - histo.getBinContent(i+1, j+1);
+               } else if (i === handle.i2-1) {
+                  dx = histo.getBinContent(i+1, j+1) - histo.getBinContent(i, j+1);
+               } else {
+                  dx = 0.5*(histo.getBinContent(i+2, j+1) - histo.getBinContent(i, j+1));
+               }
+               if (j === handle.j1) {
+                  dy = histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j+1);
+               } else if (j === handle.j2-1) {
+                  dy = histo.getBinContent(i+1, j+1) - histo.getBinContent(i+1, j);
+               } else {
+                  dy = 0.5*(histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j));
+               }
+
+               if (loop===0) {
+                  dn = Math.max(dn, Math.abs(dx), Math.abs(dy));
+               } else {
+                  xc = (handle.grx[i] + handle.grx[i+1])/2;
+                  yc = (handle.gry[j] + handle.gry[j+1])/2;
+                  dxn = scale_x*dx/dn;
+                  dyn = scale_y*dy/dn;
+                  x1  = xc - dxn;
+                  x2  = xc + dxn;
+                  y1  = yc - dyn;
+                  y2  = yc + dyn;
+                  dx = Math.round(x2-x1);
+                  dy = Math.round(y2-y1);
+
+                  if ((dx!==0) || (dy!==0)) {
+                     cmd += "M"+Math.round(x1)+","+Math.round(y1)+"l"+dx+","+dy;
+
+                     if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                        anr = Math.sqrt(2/(dx*dx + dy*dy));
+                        si  = Math.round(anr*(dx + dy));
+                        co  = Math.round(anr*(dx - dy));
+                        if ((si!==0) && (co!==0))
+                           cmd+="l"+(-si)+","+co + "m"+si+","+(-co) + "l"+(-co)+","+(-si);
+                     }
+                  }
+               }
+            }
+
+      this.draw_g
+         .append("svg:path")
+         .attr("class","th2_arrows")
+         .attr("d", cmd)
+         .style("fill", "none")
+         .call(this.lineatt.func);
+
+      return handle;
+   }
+
+
    JSROOT.TH2Painter.prototype.DrawBinsBox = function(w,h) {
       var histo = this.GetObject(),
-          handle = this.PrepareColorDraw(false),
-          i, j, binz, colPaths = [], currx = [], curry = [],
-          colindx, zdiff, dgrx, dgry, ww, hh, cmd1, cmd2;
+          handle = this.PrepareColorDraw({ rounding: false }),
+          main = this.main_painter();
 
-      var xfactor = 1, yfactor = 1, uselogz = false, logmin = 0, logmax = 1;
-      if (this.options.Logz && (this.maxbin>0)) {
-         uselogz = true;
-         logmax = Math.log(this.maxbin);
-         logmin = (this.minbin > 0) ? Math.log(this.minbin) : logmax - 10;
-         if (logmin >= logmax) logmin = logmax - 10;
-         xfactor = 0.5 / (logmax - logmin);
-         yfactor = 0.5 / (logmax - logmin);
-      } else {
-         xfactor = 0.5 / (this.maxbin - this.minbin);
-         yfactor = 0.5 / (this.maxbin - this.minbin);
+      if (main===this) {
+         if (main.maxbin === main.minbin) {
+            main.maxbin = main.gmaxbin;
+            main.minbin = main.gminbin;
+         }
+         if (main.maxbin === main.minbin)
+            main.minbin = Math.min(0, main.maxbin-1);
       }
+
+      var absmax = Math.max(Math.abs(main.maxbin), Math.abs(main.minbin)),
+          absmin = Math.max(0, main.minbin),
+          i, j, binz, absz, res = "",
+          colindx, zdiff, dgrx, dgry, xx, yy, ww, hh, cmd1, cmd2,
+          xyfactor = 1, uselogz = false, logmin = 0, logmax = 1;
+
+      if (this.root_pad().fLogz && (absmax>0)) {
+         uselogz = true;
+         logmax = Math.log(absmax);
+         logmin = (absmin > 0) ? Math.log(absmin) : logmax - 10;
+         if (logmin >= logmax) logmin = logmax - 10;
+         xyfactor = 1. / (logmax - logmin);
+      } else {
+         xyfactor = 1. / (absmax - absmin);
+      }
+
+      // now start build
+      for (i = handle.i1; i < handle.i2; ++i) {
+         for (j = handle.j1; j < handle.j2; ++j) {
+            binz = histo.getBinContent(i + 1, j + 1);
+            absz = Math.abs(binz);
+            if ((absz === 0) || (absz < absmin)) continue;
+
+            zdiff = uselogz ? ((absz>0) ? Math.log(absz) - logmin : 0) : (absz - absmin);
+            // area of the box should be propotional to absolute bin content
+            zdiff = 0.5 * ((zdiff < 0) ? 1 : (1 - Math.sqrt(zdiff * xyfactor)));
+            // avoid oversized bins
+            if (zdiff < 0) zdiff = 0;
+
+            ww = handle.grx[i+1] - handle.grx[i];
+            hh = handle.gry[j] - handle.gry[j+1];
+
+            dgrx = zdiff * ww;
+            dgry = zdiff * hh;
+
+            xx = Math.round(handle.grx[i] + dgrx);
+            yy = Math.round(handle.gry[j+1] + dgry);
+
+            ww = Math.max(Math.round(ww - 2*dgrx), 1);
+            hh = Math.max(Math.round(hh - 2*dgry), 1);
+
+            res += "M"+xx+","+yy + "v"+hh + "h"+ww + "v-"+hh + "z";
+         }
+      }
+
+      if (res.length>0)
+           this.draw_g.append("svg:path")
+                      .attr("d", res)
+                      .call(this.lineatt.func)
+                      .call(this.fillatt.func);
+
+      return handle;
+   }
+
+   JSROOT.TH2Painter.prototype.DrawCandle = function(w,h) {
+      var histo = this.GetObject(),
+          handle = this.PrepareColorDraw(),
+          pad = this.root_pad(),
+          pmain = this.main_painter(), // used for axis values conversions
+          i, j, y, sum0, sum1, sum2, cont, center, counter, integral, w, pnt;
+
+      // candle option coded into string, which comes after candle indentifier
+      // console.log('Draw candle plot with option', this.options.Candle);
+
+      var bars = "", markers = "";
+
+      // create attribute only when necessary
+      if (!this.markeratt) {
+         if (histo.fMarkerColor === 1) histo.fMarkerColor = histo.fLineColor;
+         this.markeratt = JSROOT.Painter.createAttMarker(histo, 5);
+      }
+
+      // reset absolution position for markers
+      this.markeratt.reset_pos();
+
+      handle.candle = []; // array of drawn points
+
+      // loop over visible x-bins
+      for (i = handle.i1; i < handle.i2; ++i) {
+         sum1 = 0;
+         //estimate integral
+         integral = 0;
+         counter = 0;
+         for (j = 0; j < this.nbinsy; ++j) {
+            integral += histo.getBinContent(i+1,j+1);
+         }
+         pnt = { bin:i, meany:0, m25y:0, p25y:0, median:0, iqr:0, whiskerp:0, whiskerm:0};
+         //estimate quantiles... simple function... not so nice as GetQuantiles
+         for (j = 0; j < this.nbinsy; ++j) {
+            cont = histo.getBinContent(i+1,j+1);
+            if (counter/integral < 0.001 && (counter + cont)/integral >=0.001) pnt.whiskerm = this.GetBinY(j + 0.5); // Lower whisker
+            if (counter/integral < 0.25 && (counter + cont)/integral >=0.25) pnt.m25y = this.GetBinY(j + 0.5); // Lower edge of box
+            if (counter/integral < 0.5 && (counter + cont)/integral >=0.5) pnt.median = this.GetBinY(j + 0.5); //Median
+            if (counter/integral < 0.75 && (counter + cont)/integral >=0.75) pnt.p25y = this.GetBinY(j + 0.5); //Uppeder edge of box
+            if (counter/integral < 0.999 && (counter + cont)/integral >=0.999) pnt.whiskerp = this.GetBinY(j + 0.5); // Upper whisker
+            counter += cont;
+            y = this.GetBinY(j + 0.5); // center of y bin coordinate
+            sum1 += cont*y;
+         }
+         if (counter > 0) {
+            pnt.meany = sum1/counter;
+         }
+         pnt.iqr = pnt.p25y-pnt.m25y;
+
+//       console.log('Whisker before ' + pnt.whiskerm + '/' + pnt.whiskerp);
+
+         //Whsikers cannot exceed 1.5*iqr from box
+         if ((pnt.m25y-1.5*pnt.iqr) > pnt.whsikerm)  {
+            pnt.whiskerm = pnt.m25y-1.5*pnt.iqr;
+         }
+         if ((pnt.p25y+1.5*pnt.iqr) < pnt.whiskerp) {
+            pnt.whiskerp = pnt.p25y+1.5*pnt.iqr;
+         }
+//       console.log('Whisker after ' + pnt.whiskerm + '/' + pnt.whiskerp);
+
+         // exclude points with negative y when log scale is specified
+         if (pmain.logy && (pnt.whiskerm<=0)) continue;
+
+         w = handle.grx[i+1] - handle.grx[i];
+         w *= 0.66;
+         center = (handle.grx[i+1] + handle.grx[i]) / 2 + histo.fBarOffset/1000*w;
+         if (histo.fBarWidth>0) w = w * histo.fBarWidth / 1000;
+
+         pnt.x1 = Math.round(center - w/2);
+         pnt.x2 = Math.round(center + w/2);
+         center = Math.round(center);
+
+         pnt.y0 = Math.round(pmain.gry(pnt.median));
+         // mean line
+         bars += "M" + pnt.x1 + "," + pnt.y0 + "h" + (pnt.x2-pnt.x1);
+
+         pnt.y1 = Math.round(pmain.gry(pnt.p25y));
+         pnt.y2 = Math.round(pmain.gry(pnt.m25y));
+
+         // rectangle
+         bars += "M" + pnt.x1 + "," + pnt.y1 +
+         "v" + (pnt.y2-pnt.y1) + "h" + (pnt.x2-pnt.x1) + "v-" + (pnt.y2-pnt.y1) + "z";
+
+         pnt.yy1 = Math.round(pmain.gry(pnt.whiskerp));
+         pnt.yy2 = Math.round(pmain.gry(pnt.whiskerm));
+
+         // upper part
+         bars += "M" + center + "," + pnt.y1 + "v" + (pnt.yy1-pnt.y1);
+         bars += "M" + pnt.x1 + "," + pnt.yy1 + "h" + (pnt.x2-pnt.x1);
+
+         // lower part
+         bars += "M" + center + "," + pnt.y2 + "v" + (pnt.yy2-pnt.y2);
+         bars += "M" + pnt.x1 + "," + pnt.yy2 + "h" + (pnt.x2-pnt.x1);
+
+//       console.log('Whisker-: '+ pnt.whiskerm + ' Whisker+:' + pnt.whiskerp);
+         //estimate outliers
+         for (j = 0; j < this.nbinsy; ++j) {
+            cont = histo.getBinContent(i+1,j+1);
+            if (cont > 0 && this.GetBinY(j + 0.5) < pnt.whiskerm) markers += this.markeratt.create(center, this.GetBinY(j + 0.5));
+            if (cont > 0 && this.GetBinY(j + 0.5) > pnt.whiskerp) markers += this.markeratt.create(center, this.GetBinY(j + 0.5));
+         }
+
+         handle.candle.push(pnt); // keep point for the tooltip
+      }
+
+      if (bars.length > 0)
+         this.draw_g.append("svg:path")
+             .attr("d", bars)
+             .call(this.lineatt.func)
+             .call(this.fillatt.func);
+
+      if (markers.length > 0)
+         this.draw_g.append("svg:path")
+             .attr("d", markers)
+             .call(this.markeratt.func);
+
+      return handle;
+   }
+
+   JSROOT.TH2Painter.prototype.DrawBinsScatter = function(w,h) {
+      var histo = this.GetObject(),
+          handle = this.PrepareColorDraw({ rounding: true, pixel_density: true }),
+          colPaths = [], currx = [], curry = [], cell_w = [], cell_h = [],
+          colindx, cmd1, cmd2, i, j, binz, cw, ch, factor = 1.;
+
+      // limit filling factor, do not try to produce as many points as filled area;
+      if (this.maxbin > 0.7) factor = 0.7/this.maxbin;
+
+      var nlevels = Math.round(handle.max - handle.min);
+      this.CreateContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
 
       // now start build
       for (i = handle.i1; i < handle.i2; ++i) {
@@ -3621,48 +4170,9 @@
             binz = histo.getBinContent(i + 1, j + 1);
             if ((binz == 0) || (binz < this.minbin)) continue;
 
-            zdiff = uselogz ? (logmax - ((binz>0) ? Math.log(binz) : logmin)) : this.maxbin - binz;
-
-            ww = handle.grx[i+1] - handle.grx[i];
-            hh = handle.gry[j] - handle.gry[j+1];
-
-            dgrx = zdiff * xfactor * ww;
-            dgry = zdiff * yfactor * hh;
-
-            ww = Math.max(Math.round(ww - 2*dgrx), 1);
-            hh = Math.max(Math.round(hh - 2*dgry), 1);
-
-            if (colPaths[i]===undefined) colPaths[i] = "";
-            colPaths[i] += "M" + Math.round(handle.grx[i] + dgrx) + "," + Math.round(handle.gry[j+1] + dgry) +
-                           "v" + hh + "h" + ww + "v-" + hh + "z";
-         }
-      }
-
-     for (i=0;i<colPaths.length;++i)
-        if (colPaths[i] !== undefined)
-           this.draw_g.append("svg:path")
-                      .attr("hist-column", i)
-                      .attr("fill", this.fillcolor)
-                      .call(this.lineatt.func)
-                      .attr("d", colPaths[i]);
-
-      return handle;
-   }
-
-   JSROOT.TH2Painter.prototype.DrawBinsScatter = function(w,h) {
-      var histo = this.GetObject(),
-          handle = this.PrepareColorDraw(true, true),
-          colPaths = [], currx = [], curry = [], cell_w = [], cell_h = [],
-          colindx, cmd1, cmd2, i, j, binz, cw, ch;
-
-         // now start build
-      for (i = handle.i1; i < handle.i2; ++i) {
-         for (j = handle.j1; j < handle.j2; ++j) {
-            binz = histo.getBinContent(i + 1, j + 1);
-            if ((binz == 0) || (binz < this.minbin)) continue;
-
             cw = handle.grx[i+1] - handle.grx[i];
             ch = handle.gry[j] - handle.gry[j+1];
+            if (cw*ch <= 0) continue;
 
             colindx = this.getContourIndex(binz/cw/ch);
             if (colindx < 0) continue;
@@ -3686,15 +4196,16 @@
          }
       }
 
-      var defs = this.svg_frame().select('.main_layer').select("defs");
+      var layer = this.svg_frame().select('.main_layer');
+      var defs = layer.select("defs");
       if (defs.empty() && (colPaths.length>0))
-         defs = this.svg_frame().select('.main_layer').insert("svg:defs",":first-child");
+         defs = layer.insert("svg:defs",":first-child");
 
-      var marker = null;
-      if (histo.fMarkerStyle > 1) marker = JSROOT.Painter.createAttMarker(histo);
+      if (!this.markeratt)
+         this.markeratt = JSROOT.Painter.createAttMarker(histo);
 
       for (colindx=0;colindx<colPaths.length;++colindx)
-        if (colPaths[colindx] !== undefined) {
+        if ((colPaths[colindx] !== undefined) && (colindx<this.fContour.length)) {
            var pattern_class = "scatter_" + colindx;
            var pattern = defs.select('.'+pattern_class);
            if (pattern.empty())
@@ -3705,52 +4216,34 @@
            else
               pattern.selectAll("*").remove();
 
-           var dens = colindx < this.fContour.length-1 ? (this.fContour[colindx] + this.fContour[colindx+1]) / 2 : this.maxbin;
-
-           // console.log('index ' + colindx + '  density = ' + dens.toFixed(5) + ' max = ' + this.maxbin.toFixed(5));
-
-           if (this.maxbin>0.5) dens = dens / this.maxbin*0.5;
-
-           var npix = Math.round(dens*cell_w[colindx]*cell_h[colindx])*5;
+           var npix = Math.round(factor*this.fContour[colindx]*cell_w[colindx]*cell_h[colindx]);
            if (npix<1) npix = 1;
 
            var arrx = new Float32Array(npix), arry = new Float32Array(npix);
 
-           for (var n=0;n<npix;++n) {
-              arrx[n] = Math.random();
-              arry[n] = Math.random();
+           if (npix===1) {
+              arrx[0] = arry[0] = 0.5;
+           } else {
+              for (var n=0;n<npix;++n) {
+                 arrx[n] = Math.random();
+                 arry[n] = Math.random();
+              }
            }
 
            // arrx.sort();
 
-           var lastx = null, lasty = null, currx, curry, path = "", m1, m2;
+           this.markeratt.reset_pos();
 
-           for (var n=0;n<npix;++n) {
-              currx = Math.round(arrx[n] * cell_w[colindx]);
-              curry = Math.round(arry[n] * cell_h[colindx]);
+           var path = "";
 
-              if (marker!==null) {
-                 path += marker.create(currx, curry);
-                 continue;
-              }
-              m1 = "M" + currx + "," + curry;
-              if (lastx!==null) m2 = "m" + (currx-lastx) + "," + (curry-lasty);
-                           else m2 = m1;
-              if (m2.length<m1.length) path+=m2 + "v1";
-                                  else path+=m1 + "v1";
-              lastx = currx;
-              lasty = curry+1;
-           }
-
-           var color = this.lineatt.color;
-           if (color === 'none') color = this.fillcolor;
-           if (color === 'none') color = 'black';
+           for (var n=0;n<npix;++n)
+              path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
 
            pattern.attr("width", cell_w[colindx])
                   .attr("height", cell_h[colindx])
                   .append("svg:path")
                   .attr("d",path)
-                  .style("stroke", color);
+                  .call(this.markeratt.func);
 
            this.draw_g
                .append("svg:path")
@@ -3764,29 +4257,23 @@
 
    JSROOT.TH2Painter.prototype.DrawBins = function() {
 
-      this.draw_kind = "none";
+      this.CheckHistDrawAttributes();
 
-      this.RecreateDrawG(false, ".main_layer");
+      this.RecreateDrawG(false, "main_layer");
 
-      delete this.ProcessTooltip;
+      var w = this.frame_width(),
+          h = this.frame_height(),
+          handle = null;
 
-      var w = this.frame_width(), h = this.frame_height();
+      // if (this.lineatt.color == 'none') this.lineatt.color = 'cyan';
 
-      //if ((this.options.Color==3) && !JSROOT.browser.isIE)
-      //    return this.DrawNormalCanvas(w,h);
+      if (this.options.Color + this.options.Box + this.options.Scat + this.options.Text +
+          this.options.Contour + this.options.Arrow + this.options.Candle.length == 0)
+         this.options.Scat = 1;
 
-      //this.GetObject().fMarkerStyle = 30;
-      //if (this.options.Scat > 0 && this.GetObject().fMarkerStyle > 1)
-      //   return this.DrawMarkers(w,h);
-
-      if (JSROOT.gStyle.Tooltip===1)
-         return this.DrawBinsAsRects(w,h);
-
-      var handle = null;
-
-      if (this.options.Color + this.options.Box + this.options.Scat + this.options.Text == 0)
-         this.options.Box = 1;
-
+      if (this.IsTH2Poly())
+         handle = this.DrawPolyBinsColor(w, h);
+      else
       if (this.options.Color > 0)
          handle = this.DrawBinsColor(w, h);
       else
@@ -3795,33 +4282,36 @@
       else
       if (this.options.Box > 0)
          handle = this.DrawBinsBox(w, h);
+      else
+      if (this.options.Arrow > 0)
+         handle = this.DrawBinsArrow(w,h);
+      else
+      if (this.options.Contour > 0)
+         handle = this.DrawBinsContour(w,h);
+      else
+      if (this.options.Candle.length > 0)
+         handle = this.DrawCandle(w, h);
 
-      if (this.options.Text>0)
+      if (this.options.Text > 0)
          handle = this.DrawBinsText(w, h, handle);
 
-      if (handle!==null)
-         this.draw_kind = "path";
-
-      if (JSROOT.gStyle.Tooltip > 1) {
-         this.tt_handle = handle;
-         this.ProcessTooltip = this.ProcessTooltipPath;
-      }
+      this.tt_handle = handle;
    }
 
    JSROOT.TH2Painter.prototype.GetBinTips = function (i, j) {
-      var lines = [];
+      var lines = [], pmain = this.main_painter();
 
       lines.push(this.GetTipName());
 
       if (this.x_kind == 'labels')
-         lines.push("x = " + this.AxisAsText("x", this.GetBinX(i)));
+         lines.push("x = " + pmain.AxisAsText("x", this.GetBinX(i)));
       else
-         lines.push("x = [" + this.AxisAsText("x", this.GetBinX(i)) + ", " + this.AxisAsText("x", this.GetBinX(i+1)) + ")");
+         lines.push("x = [" + pmain.AxisAsText("x", this.GetBinX(i)) + ", " + pmain.AxisAsText("x", this.GetBinX(i+1)) + ")");
 
       if (this.y_kind == 'labels')
-         lines.push("y = " + this.AxisAsText("y", this.GetBinY(j)));
+         lines.push("y = " + pmain.AxisAsText("y", this.GetBinY(j)));
       else
-         lines.push("y = [" + this.AxisAsText("y", this.GetBinY(j)) + ", " + this.AxisAsText("y", this.GetBinY(j+1)) + ")");
+         lines.push("y = [" + pmain.AxisAsText("y", this.GetBinY(j)) + ", " + pmain.AxisAsText("y", this.GetBinY(j+1)) + ")");
 
       lines.push("bin = " + i + ", " + j);
 
@@ -3834,8 +4324,63 @@
       return lines;
    }
 
-   JSROOT.TH2Painter.prototype.ProcessTooltipPath = function(pnt) {
-      if (pnt==null) {
+   JSROOT.TH2Painter.prototype.GetCandleTips = function(p) {
+      var lines = [], main = this.main_painter();
+
+      lines.push(this.GetTipName());
+
+      lines.push("x = " + main.AxisAsText("x", this.GetBinX(p.bin)));
+      // lines.push("x = [" + main.AxisAsText("x", this.GetBinX(p.bin)) + ", " + main.AxisAsText("x", this.GetBinX(p.bin+1)) + ")");
+
+      lines.push('mean y = ' + JSROOT.FFormat(p.meany, JSROOT.gStyle.StatFormat))
+      lines.push('m25 = ' + JSROOT.FFormat(p.m25y, JSROOT.gStyle.StatFormat))
+      lines.push('p25 = ' + JSROOT.FFormat(p.p25y, JSROOT.gStyle.StatFormat))
+
+      return lines;
+   }
+
+   JSROOT.TH2Painter.prototype.ProvidePolyBinHints = function(binindx, realx, realy) {
+
+      var bin = this.histo.fBins.arr[binindx],
+          pmain = this.main_painter(),
+          binname = bin.fPoly.fName,
+          lines = [], numpoints = 0;
+
+      if (binname === "Graph") binname = "";
+      if (binname.length === 0) binname = bin.fNumber;
+
+      if ((realx===undefined) && (realy===undefined)) {
+         realx = realy = 0;
+         var gr = bin.fPoly, numgraphs = 1;
+         if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
+
+         for (var ngr=0;ngr<numgraphs;++ngr) {
+            if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
+
+            for (n=0;n<gr.fNpoints;++n) {
+               ++numpoints;
+               realx += gr.fX[n];
+               realy += gr.fY[n];
+            }
+         }
+
+         if (numpoints > 1) {
+            realx = realx / numpoints;
+            realy = realy / numpoints;
+         }
+      }
+
+      lines.push(this.GetTipName());
+      lines.push("x = " + pmain.AxisAsText("x", realx));
+      lines.push("y = " + pmain.AxisAsText("y", realy));
+      if (numpoints > 0) lines.push("npnts = " + numpoints);
+      lines.push("bin = " + binname);
+      lines.push("content = " + JSROOT.FFormat(bin.fContent, JSROOT.gStyle.StatFormat));
+      return lines;
+   }
+
+   JSROOT.TH2Painter.prototype.ProcessTooltip = function(pnt) {
+      if ((pnt==null) || !this.draw_content || !this.draw_g || !this.tt_handle) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
          this.ProvideUserTooltip(null);
@@ -3843,8 +4388,123 @@
       }
 
       var histo = this.GetObject(),
-          h = this.tt_handle,
-          i, j, find = 0;
+          h = this.tt_handle, i,
+          ttrect = this.draw_g.select(".tooltip_bin");
+
+      if (h.poly) {
+         // process toolltips from TH2Poly
+
+         var pmain = this.main_painter(),
+             realx, realy, foundindx = -1;
+
+         if (pmain.grx === pmain.x) realx = pmain.x.invert(pnt.x);
+         if (pmain.gry === pmain.y) realy = pmain.y.invert(pnt.y);
+
+         if ((realx!==undefined) && (realy!==undefined)) {
+            var i, len = histo.fBins.arr.length, bin;
+
+            for (i = 0; (i < len) && (foundindx < 0); ++ i) {
+               bin = histo.fBins.arr[i];
+
+               // found potential bins candidate
+               if ((realx < bin.fXmin) || (realx > bin.fXmax) ||
+                    (realy < bin.fYmin) || (realy > bin.fYmax)) continue;
+
+               var gr = bin.fPoly, numgraphs = 1;
+               if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
+
+               for (var ngr=0;ngr<numgraphs;++ngr) {
+                  if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
+                  if (gr.IsInside(realx,realy)) {
+                     foundindx = i;
+                     break;
+                  }
+               }
+            }
+         }
+
+         if (foundindx < 0) {
+            ttrect.remove();
+            this.ProvideUserTooltip(null);
+            return null;
+         }
+
+         var res = { x: pnt.x, y: pnt.y,
+                     color1: this.lineatt ? this.lineatt.color : 'green',
+                     color2: this.fillatt ? this.fillatt.color : 'blue',
+                     exact: true, menu: true,
+                     lines: this.ProvidePolyBinHints(foundindx, realx, realy) };
+
+         if (ttrect.empty())
+            ttrect = this.draw_g.append("svg:path")
+                                .attr("class","tooltip_bin h1bin")
+                                .style("pointer-events","none");
+
+         res.changed = ttrect.property("current_bin") !== foundindx;
+
+         if (res.changed)
+            ttrect.attr("d", this.CreatePolyBin(pmain, bin))
+                  .style("opacity", "0.7")
+                  .property("current_bin", foundindx);
+
+         if (this.IsUserTooltipCallback() && res.changed)
+            this.ProvideUserTooltip({ obj: histo,  name: histo.fName,
+                                      bin: foundindx,
+                                      cont: bin.fContent,
+                                      grx: pnt.x, gry: pnt.y });
+
+         return res;
+
+      } else
+
+      if (h.candle) {
+         // process tooltips for candle
+
+         var p;
+
+         for (i=0;i<h.candle.length;++i) {
+            p = h.candle[i];
+            if ((p.x1 <= pnt.x) && (pnt.x <= p.x2) && (p.yy1 <= pnt.y) && (pnt.y <= p.yy2)) break;
+         }
+
+         if (i>=h.candle.length) {
+            ttrect.remove();
+            this.ProvideUserTooltip(null);
+            return null;
+         }
+
+         var res = { x: pnt.x, y: pnt.y,
+                     color1: this.lineatt ? this.lineatt.color : 'green',
+                     color2: this.fillatt ? this.fillatt.color : 'blue',
+                     lines: this.GetCandleTips(p), exact: true, menu: true };
+
+         if (ttrect.empty())
+            ttrect = this.draw_g.append("svg:rect")
+                                .attr("class","tooltip_bin h1bin")
+                                .style("pointer-events","none");
+
+         res.changed = ttrect.property("current_bin") !== i;
+
+         if (res.changed)
+            ttrect.attr("x", p.x1)
+                  .attr("width", p.x2-p.x1)
+                  .attr("y", p.yy1)
+                  .attr("height", p.yy2- p.yy1)
+                  .style("opacity", "0.7")
+                  .property("current_bin", i);
+
+
+         if (this.IsUserTooltipCallback() && res.changed) {
+            this.ProvideUserTooltip({ obj: histo,  name: histo.fName,
+                                      bin: i+1, cont: p.median, binx: i+1, biny: 1,
+                                      grx: pnt.x, gry: pnt.y });
+         }
+
+         return res;
+
+      }
+
+      var i, j, find = 0;
 
       // search bin position
       for (i = h.i1; i < h.i2; ++i)
@@ -3853,21 +4513,20 @@
       for (j = h.j1; j <= h.j2; ++j)
          if ((pnt.y>=h.gry[j+1]) && (pnt.y<=h.gry[j])) { ++find; break; }
 
-      var ttrect = this.draw_g.select(".tooltip_bin");
+      var binz = (find === 2) ? histo.getBinContent(i+1,j+1) : 0;
 
-      var binz = (find === 2) ? histo.getBinContent(i+1,j+1) : -100;
+      var colindx = (find === 2) ? this.getValueColor(binz, true) : null;
 
-      // console.log('find = ' + find + '  binz = ' + binz + '  minbin ' + this.minbin);
-
-      if ((find !== 2) || (binz === 0) || (binz < this.minbin)) {
+      if ((find !== 2) || (colindx === null)) {
          ttrect.remove();
          this.ProvideUserTooltip(null);
          return null;
       }
 
       var res = { x: pnt.x, y: pnt.y,
-                 color1: this.lineatt.color, color2: this.fillcolor,
-                 lines: this.GetBinTips(i, j), exact: true };
+                  color1: this.lineatt ? this.lineatt.color : 'green',
+                  color2: this.fillatt ? this.fillatt.color : 'blue',
+                  lines: this.GetBinTips(i, j), exact: true, menu: true };
 
       if (this.options.Color > 0) res.color2 = this.getValueColor(binz);
 
@@ -3895,56 +4554,6 @@
       return res;
    }
 
-
-   JSROOT.TH2Painter.prototype.ProcessTooltipFunc = function(pnt) {
-
-      var find = null, cnt = 0, ismarker = false;
-
-      if (pnt !== null)
-         this.draw_g.selectAll(ismarker ? ".marker" : ".bins"). each(function() {
-            var d = d3.select(this).datum();
-            if (ismarker) {
-               if (Math.abs(pnt.x - d.x)>3 || Math.abs(pnt.y - d.y)>3) return;
-            } else {
-               if ((pnt.x < d.x) || (pnt.y<d.y)) return;
-               if ((pnt.x > d.x+d.width) || (pnt.y > d.y+d.height)) return;
-            }
-            cnt++; find = this;
-         });
-
-
-      var issame = (cnt===1) && (find === this._sbin);
-
-      if (!issame) {
-         if (('_sbin' in this) && !ismarker)
-            d3.select(this._sbin).transition().duration(100).style("fill", d3.select(this._sbin).datum().fill);
-
-         delete this._sbin;
-      }
-
-      if (cnt!==1) return null;
-
-      var d = d3.select(find).datum();
-
-      if (!issame) {
-         this._sbin = find;
-         if (!ismarker)
-            d3.select(find).transition().duration(100).style("fill", d.tipcolor);
-      }
-
-      var res = {
-            x: d.x + (ismarker ? 0 : d.width/2),
-            y: d.y + (ismarker ? 0 : d.height/2),
-            color1: d.fill,
-            color2: d.fill,
-            lines: d.tip.split("\n"),
-            exact: true,
-            changed: !issame
-        };
-
-      return res;
-   }
-
    JSROOT.TH2Painter.prototype.CanZoomIn = function(axis,min,max) {
       // check if it makes sense to zoom inside specified axis range
       if ((axis=="x") && (this.GetIndexX(max,0.5) - this.GetIndexX(min,0) > 1)) return true;
@@ -3956,10 +4565,17 @@
       return false;
    }
 
-   JSROOT.TH2Painter.prototype.Draw2D = function(call_back) {
+   JSROOT.TH2Painter.prototype.Draw2D = function(call_back, resize) {
 
-      if (typeof this['Create3DScene'] == 'function')
+      this.mode3d = false;
+
+      if (typeof this.Create3DScene == 'function')
          this.Create3DScene(-1);
+
+      this.CreateXY();
+
+      // draw new palette, resize frame if required
+      var pp = this.DrawColorPalette((this.options.Zscale > 0) && ((this.options.Color > 0) || (this.options.Contour > 0)), true);
 
       this.DrawAxes();
 
@@ -3967,38 +4583,31 @@
 
       this.DrawBins();
 
+      // redraw palette once again when contours are available
+      //if (pp) pp.WhenReady( function() { pp.DrawPave(); });
+      if (pp) pp.DrawPave();
+
       this.DrawTitle();
+
+      this.AddInteractive();
 
       JSROOT.CallBack(call_back);
    }
 
-   JSROOT.TH2Painter.prototype.CheckResize = function(size) {
-      // no painter - no resize
-      var pad_painter = this.pad_painter();
-      var changed = true, force = (this.options.Lego > 0) && !JSROOT.browser.isFirefox;
-      if (pad_painter)
-         changed = pad_painter.CheckCanvasResize(size, force);
-      if (changed && (this.options.Lego > 0) && (typeof this['Resize3D'] == 'function'))
-         this.Resize3D();
-      return changed;
-   }
-
-
    JSROOT.TH2Painter.prototype.Draw3D = function(call_back) {
+      this.mode3d = true;
       JSROOT.AssertPrerequisites('3d', function() {
-         this['Create3DScene'] = JSROOT.Painter.HPainter_Create3DScene;
-         this['Draw3DBins'] = JSROOT.Painter.TH2Painter_Draw3DBins;
-         this['Draw3D'] = JSROOT.Painter.TH2Painter_Draw3D;
-         this['Draw3D'](call_back);
+         this.Create3DScene = JSROOT.Painter.HPainter_Create3DScene;
+         this.Draw3D = JSROOT.Painter.TH2Painter_Draw3D;
+         this.Draw3D(call_back);
       }.bind(this));
    }
 
-   JSROOT.TH2Painter.prototype.Redraw = function() {
-      this.CreateXY();
+   JSROOT.TH2Painter.prototype.Redraw = function(resize) {
 
-      var func_name = (this.options.Lego > 0) ? "Draw3D" : "Draw2D";
+      var func_name = (this.options.Lego > 0) || (this.options.Surf > 0) ? "Draw3D" : "Draw2D";
 
-      this[func_name]();
+      this[func_name](null, resize);
    }
 
    JSROOT.Painter.drawHistogram2D = function(divid, histo, opt) {
@@ -4010,35 +4619,31 @@
       // here we deciding how histogram will look like and how will be shown
       this.options = this.DecodeOptions(opt);
 
-      this.CheckPadOptions();
+      if (this.IsTH2Poly()) {
+         this.options.Color = 1; // default color
+         if (this.options.Lego) this.options.Lego = 12; // and lego always 12
+      }
+
+      this._can_move_colz = true;
+
+      // special case for root 3D drawings - user range is wired
+      if ((this.options.Contour !==14) && !this.options.Lego)
+         this.CheckPadRange();
 
       this.ScanContent();
 
-      // check if we need to create palette
-      if (this.create_canvas && (this.options.Zscale > 0)) {
-         // draw new palette, resize frame if required
-         this.DrawNewPalette(true);
-      } else if (this.options.Zscale == 0) {
-         // delete palette - it may appear there due to previous draw options
-         this.FindPalette(true);
-      }
-
-      // create X/Y only when frame is adjusted, probably should be done differently
-      this.CreateXY();
-
       // check if we need to create statbox
-      if (JSROOT.gStyle.AutoStat && this.create_canvas)
+      if (JSROOT.gStyle.AutoStat && this.create_canvas && !this.IsTH2Poly())
          this.CreateStat();
 
-      var func_name = this.options.Lego > 0 ? "Draw3D" : "Draw2D";
+      var func_name = (this.options.Lego > 0) || (this.options.Surf > 0) ? "Draw3D" : "Draw2D";
 
       this[func_name](function() {
          this.DrawNextFunction(0, function() {
-            if (this.options.Lego == 0) {
-               this.AddInteractive();
+            if ((this.options.Lego <= 0) && (this.options.Surf <= 0)) {
                if (this.options.AutoZoom) this.AutoZoom();
             }
-            this.CreateToolbar();
+            this.FillToolbar();
             this.DrawingReady();
          }.bind(this));
 

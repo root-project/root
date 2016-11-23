@@ -30,6 +30,7 @@
 #include "TMVA/ClassifierFactory.h"
 
 #include "RtypesCore.h"
+#include "TString.h"
 
 #include <assert.h>
 #include <iostream>

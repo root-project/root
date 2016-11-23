@@ -47,6 +47,7 @@
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/BinarySearchTreeNode.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoamDensityBase.h"
 #include "TMVA/Types.h"
 #include "TMVA/Volume.h"
 

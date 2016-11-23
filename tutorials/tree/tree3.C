@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook
 /// Example of a Tree where branches are variable length arrays
 /// A second Tree is created and filled in parallel.
 /// Run this script with
@@ -12,6 +13,7 @@
 /// \macro_code
 ///
 /// \author Rene Brun
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TRandom.h"

@@ -269,7 +269,7 @@ void LoopBase<BlockT, LoopT>::verifyLoop() const {
       // A non-header loop shouldn't be reachable from outside the loop,
       // though it is permitted if the predecessor is not itself actually
       // reachable.
-      BlockT *EntryBB = BB->getParent()->begin();
+      BlockT *EntryBB = &BB->getParent()->front();
       for (BlockT *CB : depth_first(EntryBB))
         for (unsigned i = 0, e = OutsideLoopPreds.size(); i != e; ++i)
           assert(CB != OutsideLoopPreds[i] &&
@@ -277,7 +277,7 @@ void LoopBase<BlockT, LoopT>::verifyLoop() const {
     }
     assert(HasInsideLoopPreds && "Loop block has no in-loop predecessors!");
     assert(HasInsideLoopSuccs && "Loop block has no in-loop successors!");
-    assert(BB != getHeader()->getParent()->begin() &&
+    assert(BB != &getHeader()->getParent()->front() &&
            "Loop contains function entry block!");
 
     NumVisited++;
@@ -345,7 +345,7 @@ void LoopBase<BlockT, LoopT>::print(raw_ostream &OS, unsigned Depth) const {
 template<class BlockT, class LoopT>
 static void discoverAndMapSubloop(LoopT *L, ArrayRef<BlockT*> Backedges,
                                   LoopInfoBase<BlockT, LoopT> *LI,
-                                  DominatorTreeBase<BlockT> &DomTree) {
+                                  const DominatorTreeBase<BlockT> &DomTree) {
   typedef GraphTraits<Inverse<BlockT*> > InvBlockTraits;
 
   unsigned NumBlocks = 0;
@@ -402,7 +402,6 @@ static void discoverAndMapSubloop(LoopT *L, ArrayRef<BlockT*> Backedges,
   L->reserveBlocks(NumBlocks);
 }
 
-namespace {
 /// Populate all loop data in a stable order during a single forward DFS.
 template<class BlockT, class LoopT>
 class PopulateLoopsDFS {
@@ -410,9 +409,6 @@ class PopulateLoopsDFS {
   typedef typename BlockTraits::ChildIteratorType SuccIterTy;
 
   LoopInfoBase<BlockT, LoopT> *LI;
-  DenseSet<const BlockT *> VisitedBlocks;
-  std::vector<std::pair<BlockT*, SuccIterTy> > DFSStack;
-
 public:
   PopulateLoopsDFS(LoopInfoBase<BlockT, LoopT> *li):
     LI(li) {}
@@ -421,37 +417,13 @@ public:
 
 protected:
   void insertIntoLoop(BlockT *Block);
-
-  BlockT *dfsSource() { return DFSStack.back().first; }
-  SuccIterTy &dfsSucc() { return DFSStack.back().second; }
-  SuccIterTy dfsSuccEnd() { return BlockTraits::child_end(dfsSource()); }
-
-  void pushBlock(BlockT *Block) {
-    DFSStack.push_back(std::make_pair(Block, BlockTraits::child_begin(Block)));
-  }
 };
-} // anonymous
 
 /// Top-level driver for the forward DFS within the loop.
 template<class BlockT, class LoopT>
 void PopulateLoopsDFS<BlockT, LoopT>::traverse(BlockT *EntryBlock) {
-  pushBlock(EntryBlock);
-  VisitedBlocks.insert(EntryBlock);
-  while (!DFSStack.empty()) {
-    // Traverse the leftmost path as far as possible.
-    while (dfsSucc() != dfsSuccEnd()) {
-      BlockT *BB = *dfsSucc();
-      ++dfsSucc();
-      if (!VisitedBlocks.insert(BB).second)
-        continue;
-
-      // Push the next DFS successor onto the stack.
-      pushBlock(BB);
-    }
-    // Visit the top of the stack in postorder and backtrack.
-    insertIntoLoop(dfsSource());
-    DFSStack.pop_back();
-  }
+  for (BlockT *BB : post_order(EntryBlock))
+    insertIntoLoop(BB);
 }
 
 /// Add a single Block to its ancestor loops in PostOrder. If the block is a
@@ -496,14 +468,13 @@ void PopulateLoopsDFS<BlockT, LoopT>::insertIntoLoop(BlockT *Block) {
 /// insertions per block.
 template<class BlockT, class LoopT>
 void LoopInfoBase<BlockT, LoopT>::
-Analyze(DominatorTreeBase<BlockT> &DomTree) {
+analyze(const DominatorTreeBase<BlockT> &DomTree) {
 
   // Postorder traversal of the dominator tree.
-  DomTreeNodeBase<BlockT>* DomRoot = DomTree.getRootNode();
-  for (po_iterator<DomTreeNodeBase<BlockT>*> DomIter = po_begin(DomRoot),
-         DomEnd = po_end(DomRoot); DomIter != DomEnd; ++DomIter) {
+  const DomTreeNodeBase<BlockT> *DomRoot = DomTree.getRootNode();
+  for (auto DomNode : post_order(DomRoot)) {
 
-    BlockT *Header = DomIter->getBlock();
+    BlockT *Header = DomNode->getBlock();
     SmallVector<BlockT *, 4> Backedges;
 
     // Check each predecessor of the potential loop header.
@@ -556,7 +527,7 @@ void LoopInfoBase<BlockT, LoopT>::verify() const {
   // Verify that blocks are mapped to valid loops.
 #ifndef NDEBUG
   for (auto &Entry : BBMap) {
-    BlockT *BB = Entry.first;
+    const BlockT *BB = Entry.first;
     LoopT *L = Entry.second;
     assert(Loops.count(L) && "orphaned loop");
     assert(L->contains(BB) && "orphaned block");

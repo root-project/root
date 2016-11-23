@@ -7,7 +7,11 @@
 #include "TH1.h"
 #include "TH1F.h"
 #include "TH2F.h"
-//#include <stdio.h>
+
+// FIXME: We should not rely on std::cout but on the ROOT printing facilities or
+// MsgLogger!
+#include <iostream> // for std::cout
+#include <map>
 
 namespace TMVA
 {

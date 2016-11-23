@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_unfold
+/// \notebook
 ///  Test program as an example for a user specific regularisation scheme
 ///
 ///  1. Generate Monte Carlo and Data events
@@ -68,7 +69,7 @@ TRandom *rnd=0;
 //  positive mass: signal event
 Double_t GenerateEvent(Double_t bgr, // relative fraction of background
                        Double_t mass, // peak position
-                       Double_t gamma) // peak width
+                       Double_t gamma /* peak width*/ )
 {
   Double_t t;
   if(rnd->Rndm()>bgr) {

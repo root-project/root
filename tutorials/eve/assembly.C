@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_eve
 /// Geometry detector assembly example
-/// Author: Andrei Gheata
 ///
 /// Modified to save the assebly as shape-extract.
 /// 1. Run `root assembly.C`

@@ -15,13 +15,13 @@
 #define LLVM_LIB_TARGET_ARM_THUMB1INSTRINFO_H
 
 #include "ARMBaseInstrInfo.h"
-#include "Thumb1RegisterInfo.h"
+#include "ThumbRegisterInfo.h"
 
 namespace llvm {
   class ARMSubtarget;
 
 class Thumb1InstrInfo : public ARMBaseInstrInfo {
-  Thumb1RegisterInfo RI;
+  ThumbRegisterInfo RI;
 public:
   explicit Thumb1InstrInfo(const ARMSubtarget &STI);
 
@@ -36,11 +36,10 @@ public:
   /// such, whenever a client has an instance of instruction info, it should
   /// always be able to get register info as well (through this method).
   ///
-  const Thumb1RegisterInfo &getRegisterInfo() const override { return RI; }
+  const ThumbRegisterInfo &getRegisterInfo() const override { return RI; }
 
-  void copyPhysReg(MachineBasicBlock &MBB,
-                   MachineBasicBlock::iterator I, DebugLoc DL,
-                   unsigned DestReg, unsigned SrcReg,
+  void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
+                   const DebugLoc &DL, unsigned DestReg, unsigned SrcReg,
                    bool KillSrc) const override;
   void storeRegToStackSlot(MachineBasicBlock &MBB,
                            MachineBasicBlock::iterator MBBI,
@@ -55,8 +54,7 @@ public:
                             const TargetRegisterInfo *TRI) const override;
 
 private:
-  void expandLoadStackGuard(MachineBasicBlock::iterator MI,
-                            Reloc::Model RM) const override;
+  void expandLoadStackGuard(MachineBasicBlock::iterator MI) const override;
 };
 }
 

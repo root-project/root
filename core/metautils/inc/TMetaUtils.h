@@ -592,6 +592,22 @@ void GetNormalizedName(std::string &norm_name,
                        const cling::Interpreter &interpreter);
 
 //______________________________________________________________________________
+// Analog to GetNameForIO but with types.
+// It uses the LookupHelper of Cling to transform the name in type.
+clang::QualType GetTypeForIO(const clang::QualType& templateInstanceType,
+                             const cling::Interpreter &interpreter,
+                             const TNormalizedCtxt &normCtxt,
+                             TClassEdit::EModType mode = TClassEdit::kNone);
+
+//______________________________________________________________________________
+// Get the name and the type for the IO given a certain type. In some sense the
+// combination of GetNameForIO and GetTypeForIO.
+std::pair<std::string,clang::QualType> GetNameTypeForIO(const clang::QualType& templateInstanceType,
+                                                        const cling::Interpreter &interpreter,
+                                                        const TNormalizedCtxt &normCtxt,
+                                                        TClassEdit::EModType mode = TClassEdit::kNone);
+
+//______________________________________________________________________________
 // Returns comment in a meaningful way
 llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
 

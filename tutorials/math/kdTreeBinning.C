@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
-///
+/// \notebook
 /// kdTreeBinning tutorial: bin the data in cells of equal content using a kd-tree
 ///
 /// Using TKDTree wrapper class as a data binning structure
@@ -26,8 +26,7 @@
 void kdTreeBinning() {
 
    // -----------------------------------------------------------------------------------------------
-   //  C r e a t e  r a n d o m  s a m p l e  w i t h  r e g u l a r  b i n n i n g  p l o t t i n g
-   // -----------------------------------------------------------------------------------------------
+   //  Create random sample with regular binning plotting
 
    const UInt_t DATASZ = 10000;
    const UInt_t DATADIM = 2;
@@ -51,8 +50,7 @@ void kdTreeBinning() {
 
 
    // ---------------------------------------------------------------------------------------------
-   // C r e a t e  K D T r e e B i n n i n g  o b j e c t  w i t h  T H 2 P o l y  p l o t t i n g
-   // ---------------------------------------------------------------------------------------------
+   // Create KDTreeBinning object with TH2Poly plotting
 
    TKDTreeBinning* kdBins = new TKDTreeBinning(DATASZ, DATADIM, smp, NBINS);
 
@@ -84,16 +82,15 @@ void kdTreeBinning() {
    h2pol->Draw("COLZ L");
    c1->Update();
 
+   //-------------------------------------------------
+   // Draw an equivalent plot showing the data points 
 
-   /* Draw an equivalent plot showing the data points */
-   /*-------------------------------------------------*/
 
    std::vector<Double_t> z = std::vector<Double_t>(DATASZ, 0.);
    for (UInt_t i = 0; i < DATASZ; ++i)
       z[i] = (Double_t) h2pol->GetBinContent(h2pol->FindBin(smp[i], smp[DATASZ + i]));
 
    TGraph2D *g = new TGraph2D(DATASZ, smp, &smp[DATASZ], &z[0]);
-   gStyle->SetPalette(1);
    g->SetMarkerStyle(20);
 
    c1->cd(3);
@@ -102,14 +99,12 @@ void kdTreeBinning() {
 
    // ---------------------------------------------------------
    // make a new TH2Poly where bins are ordered by the density
-   // ---------------------------------------------------------
 
    TH2Poly* h2polrebin = new TH2Poly("h2PolyBinTest", "KDTree binning", kdBins->GetDataMin(0), kdBins->GetDataMax(0), kdBins->GetDataMin(1), kdBins->GetDataMax(1));
    h2polrebin->SetFloat();
 
-   /*---------------------------------*/
-   /* Sort the bins by their density  */
-   /*---------------------------------*/
+   //---------------------------------
+   // Sort the bins by their density  
 
    kdBins->SortBinsByDensity();
 

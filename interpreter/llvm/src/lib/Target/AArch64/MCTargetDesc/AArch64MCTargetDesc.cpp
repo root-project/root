@@ -15,7 +15,6 @@
 #include "AArch64ELFStreamer.h"
 #include "AArch64MCAsmInfo.h"
 #include "InstPrinter/AArch64InstPrinter.h"
-#include "llvm/MC/MCCodeGenInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCStreamer.h"
@@ -41,32 +40,27 @@ static MCInstrInfo *createAArch64MCInstrInfo() {
 }
 
 static MCSubtargetInfo *
-createAArch64MCSubtargetInfo(StringRef TT, StringRef CPU, StringRef FS) {
-  MCSubtargetInfo *X = new MCSubtargetInfo();
-
+createAArch64MCSubtargetInfo(const Triple &TT, StringRef CPU, StringRef FS) {
   if (CPU.empty())
     CPU = "generic";
 
-  InitAArch64MCSubtargetInfo(X, TT, CPU, FS);
-  return X;
+  return createAArch64MCSubtargetInfoImpl(TT, CPU, FS);
 }
 
-static MCRegisterInfo *createAArch64MCRegisterInfo(StringRef Triple) {
+static MCRegisterInfo *createAArch64MCRegisterInfo(const Triple &Triple) {
   MCRegisterInfo *X = new MCRegisterInfo();
   InitAArch64MCRegisterInfo(X, AArch64::LR);
   return X;
 }
 
 static MCAsmInfo *createAArch64MCAsmInfo(const MCRegisterInfo &MRI,
-                                         StringRef TT) {
-  Triple TheTriple(TT);
-
+                                         const Triple &TheTriple) {
   MCAsmInfo *MAI;
-  if (TheTriple.isOSDarwin())
+  if (TheTriple.isOSBinFormatMachO())
     MAI = new AArch64MCAsmInfoDarwin();
   else {
     assert(TheTriple.isOSBinFormatELF() && "Only expect Darwin or ELF");
-    MAI = new AArch64MCAsmInfoELF(TT);
+    MAI = new AArch64MCAsmInfoELF(TheTriple);
   }
 
   // Initial state of the frame pointer is SP.
@@ -77,11 +71,9 @@ static MCAsmInfo *createAArch64MCAsmInfo(const MCRegisterInfo &MRI,
   return MAI;
 }
 
-static MCCodeGenInfo *createAArch64MCCodeGenInfo(StringRef TT, Reloc::Model RM,
-                                                 CodeModel::Model CM,
-                                                 CodeGenOpt::Level OL) {
-  Triple TheTriple(TT);
-  assert((TheTriple.isOSBinFormatELF() || TheTriple.isOSBinFormatMachO()) &&
+static void adjustCodeGenOpts(const Triple &TT, Reloc::Model RM,
+                              CodeModel::Model &CM) {
+  assert((TT.isOSBinFormatELF() || TT.isOSBinFormatMachO()) &&
          "Only expect Darwin and ELF targets");
 
   if (CM == CodeModel::Default)
@@ -94,123 +86,76 @@ static MCCodeGenInfo *createAArch64MCCodeGenInfo(StringRef TT, Reloc::Model RM,
   else if (CM != CodeModel::Small && CM != CodeModel::Large)
     report_fatal_error(
         "Only small and large code models are allowed on AArch64");
-
-  // AArch64 Darwin is always PIC.
-  if (TheTriple.isOSDarwin())
-    RM = Reloc::PIC_;
-  // On ELF platforms the default static relocation model has a smart enough
-  // linker to cope with referencing external symbols defined in a shared
-  // library. Hence DynamicNoPIC doesn't need to be promoted to PIC.
-  else if (RM == Reloc::Default || RM == Reloc::DynamicNoPIC)
-    RM = Reloc::Static;
-
-  MCCodeGenInfo *X = new MCCodeGenInfo();
-  X->InitMCCodeGenInfo(RM, CM, OL);
-  return X;
 }
 
-static MCInstPrinter *createAArch64MCInstPrinter(const Target &T,
+static MCInstPrinter *createAArch64MCInstPrinter(const Triple &T,
                                                  unsigned SyntaxVariant,
                                                  const MCAsmInfo &MAI,
                                                  const MCInstrInfo &MII,
-                                                 const MCRegisterInfo &MRI,
-                                                 const MCSubtargetInfo &STI) {
+                                                 const MCRegisterInfo &MRI) {
   if (SyntaxVariant == 0)
-    return new AArch64InstPrinter(MAI, MII, MRI, STI);
+    return new AArch64InstPrinter(MAI, MII, MRI);
   if (SyntaxVariant == 1)
-    return new AArch64AppleInstPrinter(MAI, MII, MRI, STI);
+    return new AArch64AppleInstPrinter(MAI, MII, MRI);
 
   return nullptr;
 }
 
-static MCStreamer *createMCStreamer(const Target &T, StringRef TT,
-                                    MCContext &Ctx, MCAsmBackend &TAB,
-                                    raw_ostream &OS, MCCodeEmitter *Emitter,
-                                    const MCSubtargetInfo &STI, bool RelaxAll) {
-  Triple TheTriple(TT);
-
-  if (TheTriple.isOSDarwin())
-    return createMachOStreamer(Ctx, TAB, OS, Emitter, RelaxAll,
-                               /*LabelSections*/ true);
-
+static MCStreamer *createELFStreamer(const Triple &T, MCContext &Ctx,
+                                     MCAsmBackend &TAB, raw_pwrite_stream &OS,
+                                     MCCodeEmitter *Emitter, bool RelaxAll) {
   return createAArch64ELFStreamer(Ctx, TAB, OS, Emitter, RelaxAll);
+}
+
+static MCStreamer *createMachOStreamer(MCContext &Ctx, MCAsmBackend &TAB,
+                                       raw_pwrite_stream &OS,
+                                       MCCodeEmitter *Emitter, bool RelaxAll,
+                                       bool DWARFMustBeAtTheEnd) {
+  return createMachOStreamer(Ctx, TAB, OS, Emitter, RelaxAll,
+                             DWARFMustBeAtTheEnd,
+                             /*LabelSections*/ true);
 }
 
 // Force static initialization.
 extern "C" void LLVMInitializeAArch64TargetMC() {
-  // Register the MC asm info.
-  RegisterMCAsmInfoFn X(TheAArch64leTarget, createAArch64MCAsmInfo);
-  RegisterMCAsmInfoFn Y(TheAArch64beTarget, createAArch64MCAsmInfo);
-  RegisterMCAsmInfoFn Z(TheARM64Target, createAArch64MCAsmInfo);
+  for (Target *T :
+       {&TheAArch64leTarget, &TheAArch64beTarget, &TheARM64Target}) {
+    // Register the MC asm info.
+    RegisterMCAsmInfoFn X(*T, createAArch64MCAsmInfo);
 
-  // Register the MC codegen info.
-  TargetRegistry::RegisterMCCodeGenInfo(TheAArch64leTarget,
-                                        createAArch64MCCodeGenInfo);
-  TargetRegistry::RegisterMCCodeGenInfo(TheAArch64beTarget,
-                                        createAArch64MCCodeGenInfo);
-  TargetRegistry::RegisterMCCodeGenInfo(TheARM64Target,
-                                        createAArch64MCCodeGenInfo);
+    // Register the MC codegen info.
+    TargetRegistry::registerMCAdjustCodeGenOpts(*T, adjustCodeGenOpts);
 
-  // Register the MC instruction info.
-  TargetRegistry::RegisterMCInstrInfo(TheAArch64leTarget,
-                                      createAArch64MCInstrInfo);
-  TargetRegistry::RegisterMCInstrInfo(TheAArch64beTarget,
-                                      createAArch64MCInstrInfo);
-  TargetRegistry::RegisterMCInstrInfo(TheARM64Target,
-                                      createAArch64MCInstrInfo);
+    // Register the MC instruction info.
+    TargetRegistry::RegisterMCInstrInfo(*T, createAArch64MCInstrInfo);
 
-  // Register the MC register info.
-  TargetRegistry::RegisterMCRegInfo(TheAArch64leTarget,
-                                    createAArch64MCRegisterInfo);
-  TargetRegistry::RegisterMCRegInfo(TheAArch64beTarget,
-                                    createAArch64MCRegisterInfo);
-  TargetRegistry::RegisterMCRegInfo(TheARM64Target,
-                                    createAArch64MCRegisterInfo);
+    // Register the MC register info.
+    TargetRegistry::RegisterMCRegInfo(*T, createAArch64MCRegisterInfo);
 
-  // Register the MC subtarget info.
-  TargetRegistry::RegisterMCSubtargetInfo(TheAArch64leTarget,
-                                          createAArch64MCSubtargetInfo);
-  TargetRegistry::RegisterMCSubtargetInfo(TheAArch64beTarget,
-                                          createAArch64MCSubtargetInfo);
-  TargetRegistry::RegisterMCSubtargetInfo(TheARM64Target,
-                                          createAArch64MCSubtargetInfo);
+    // Register the MC subtarget info.
+    TargetRegistry::RegisterMCSubtargetInfo(*T, createAArch64MCSubtargetInfo);
+
+    // Register the MC Code Emitter
+    TargetRegistry::RegisterMCCodeEmitter(*T, createAArch64MCCodeEmitter);
+
+    // Register the obj streamers.
+    TargetRegistry::RegisterELFStreamer(*T, createELFStreamer);
+    TargetRegistry::RegisterMachOStreamer(*T, createMachOStreamer);
+
+    // Register the obj target streamer.
+    TargetRegistry::RegisterObjectTargetStreamer(
+        *T, createAArch64ObjectTargetStreamer);
+
+    // Register the asm streamer.
+    TargetRegistry::RegisterAsmTargetStreamer(*T,
+                                              createAArch64AsmTargetStreamer);
+    // Register the MCInstPrinter.
+    TargetRegistry::RegisterMCInstPrinter(*T, createAArch64MCInstPrinter);
+  }
 
   // Register the asm backend.
-  TargetRegistry::RegisterMCAsmBackend(TheAArch64leTarget,
-                                       createAArch64leAsmBackend);
+  for (Target *T : {&TheAArch64leTarget, &TheARM64Target})
+    TargetRegistry::RegisterMCAsmBackend(*T, createAArch64leAsmBackend);
   TargetRegistry::RegisterMCAsmBackend(TheAArch64beTarget,
                                        createAArch64beAsmBackend);
-  TargetRegistry::RegisterMCAsmBackend(TheARM64Target,
-                                       createAArch64leAsmBackend);
-
-  // Register the MC Code Emitter
-  TargetRegistry::RegisterMCCodeEmitter(TheAArch64leTarget,
-                                        createAArch64MCCodeEmitter);
-  TargetRegistry::RegisterMCCodeEmitter(TheAArch64beTarget,
-                                        createAArch64MCCodeEmitter);
-  TargetRegistry::RegisterMCCodeEmitter(TheARM64Target,
-                                        createAArch64MCCodeEmitter);
-
-  // Register the object streamer.
-  TargetRegistry::RegisterMCObjectStreamer(TheAArch64leTarget,
-                                           createMCStreamer);
-  TargetRegistry::RegisterMCObjectStreamer(TheAArch64beTarget,
-                                           createMCStreamer);
-  TargetRegistry::RegisterMCObjectStreamer(TheARM64Target, createMCStreamer);
-
-  // Register the asm streamer.
-  TargetRegistry::RegisterAsmStreamer(TheAArch64leTarget,
-                                      createAArch64MCAsmStreamer);
-  TargetRegistry::RegisterAsmStreamer(TheAArch64beTarget,
-                                      createAArch64MCAsmStreamer);
-  TargetRegistry::RegisterAsmStreamer(TheARM64Target,
-                                      createAArch64MCAsmStreamer);
-
-  // Register the MCInstPrinter.
-  TargetRegistry::RegisterMCInstPrinter(TheAArch64leTarget,
-                                        createAArch64MCInstPrinter);
-  TargetRegistry::RegisterMCInstPrinter(TheAArch64beTarget,
-                                        createAArch64MCInstPrinter);
-  TargetRegistry::RegisterMCInstPrinter(TheARM64Target,
-                                        createAArch64MCInstPrinter);
 }

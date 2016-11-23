@@ -1,13 +1,18 @@
-// Client program which allows the snooping of objects from a spyserv process.
-// To run this demo do the following (see spyserv.C):
-//   - open two or more windows
-//   - start root in all windows
-//   - execute in the first window:    .x spyserv.C  (or spyserv.C++)
-//   - execute in the other window(s): .x spy.C      (or spy.C++)
-//   - in the "spy" client windows click the "Connect" button and snoop
-//     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
-//     buttons
-//Author: Fons Rademakers
+/// \file
+/// \ingroup tutorial_net
+/// Client program which allows the snooping of objects from a spyserv process.
+/// To run this demo do the following (see spyserv.C):
+///   - open two or more windows
+///   - start root in all windows
+///   - execute in the first window:    .x spyserv.C  (or spyserv.C++)
+///   - execute in the other window(s): .x spy.C      (or spy.C++)
+///   - in the "spy" client windows click the "Connect" button and snoop
+///     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
+///     buttons
+///
+/// \macro_code
+///
+/// \author Fons Rademakers
 
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"
@@ -108,7 +113,7 @@ Spy::Spy()
    fLcan = new TGLayoutHints(kLHintsCenterX|kLHintsCenterY,30,30,30,30);
    fMain->AddFrame(fCanvas, fLcan);
 
-   // Create a horizonal frame containing three text buttons
+   // Create a horizontal frame containing three text buttons
    fLhorz = new TGLayoutHints(kLHintsExpandX, 0, 0, 0, 30);
    fHorz = new TGHorizontalFrame(fMain, 100, 100);
    fMain->AddFrame(fHorz, fLhorz);
@@ -129,7 +134,7 @@ Spy::Spy()
    fHprof->Connect("Clicked()", "Spy", this, "DoButton()");
    fHorz->AddFrame(fHprof, fLbut);
 
-   // Create a horizonal frame containing two text buttons
+   // Create a horizontal frame containing two text buttons
    fHorz2 = new TGHorizontalFrame(fMain, 100, 100);
    fMain->AddFrame(fHorz2, fLhorz);
 

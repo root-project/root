@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Test the TMath::LaplaceDist and TMath::LaplaceDistI functions
 ///
 /// \macro_image

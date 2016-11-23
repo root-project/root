@@ -32,6 +32,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef WIN32
 # ifndef EADDRINUSE
@@ -45,6 +46,8 @@
 static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.1";
 
 TUrl TWebFile::fgProxy;
+
+Long64_t TWebFile::fgMaxFullCacheSize = 500000000;
 
 
 // Internal class used to manage the socket that may stay open between
@@ -194,6 +197,11 @@ TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocke
 TWebFile::~TWebFile()
 {
    delete fSocket;
+   if (fFullCache) {
+      free(fFullCache);
+      fFullCache = 0;
+      fFullCacheSize = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +216,8 @@ void TWebFile::Init(Bool_t readHeadOnly)
    fSize       = -1;
    fHasModRoot = kFALSE;
    fHTTP11     = kFALSE;
-
+   fFullCache  = 0;
+   fFullCacheSize = 0;
    SetMsgReadBuffer10();
 
    if ((err = GetHead()) < 0) {
@@ -566,6 +575,32 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Extract requested segments from the cached content.
+/// Such cache can be produced when server suddenly returns full data instead of segments
+/// Returns -1 in case of error, 0 in case of success
+
+Int_t TWebFile::GetFromCache(char *buf, Int_t len, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len)
+{
+   if (!fFullCache) return -1;
+
+   if (gDebug > 0)
+      Info("GetFromCache", "Extract %d segments total len %d from cached data", nseg, len);
+
+   Int_t curr = 0;
+   for (Int_t cnt=0;cnt<nseg;cnt++) {
+      // check that target buffer has enough space
+      if (curr + seg_len[cnt] > len) return -1;
+      // check that segment is inside cached area
+      if (fArchiveOffset + seg_pos[cnt] + seg_len[cnt] > fFullCacheSize) return -1;
+      char* src = (char*) fFullCache + fArchiveOffset + seg_pos[cnt];
+      memcpy(buf + curr, src, seg_len[cnt]);
+      curr += seg_len[cnt];
+   }
+
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read request from web server. Returns -1 in case of error,
 /// 0 in case of success.
 
@@ -639,6 +674,10 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len)
 {
    if (!len) return 0;
+
+   // if file content was cached, reuse it
+   if (fFullCache && (nseg>0))
+       return GetFromCache(buf, len, nseg, seg_pos, seg_len);
 
    Double_t start = 0;
    if (gPerfStats) start = TTimeStamp();
@@ -715,6 +754,21 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
             if (len > fullsize) {
                Error("GetFromWeb10","Requested part %d longer than full size %lld", len, fullsize);
                return -1;
+            }
+
+            if ((fFullCache == 0) && (fullsize <= GetMaxFullCacheSize())) {
+              // try to read file content into cache and than reuse it, limit cache by 2 GB
+               fFullCache = malloc(fullsize);
+               if (fFullCache != 0) {
+                  if (fSocket->RecvRaw(fFullCache, fullsize) != fullsize) {
+                     Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
+                     free(fFullCache); fFullCache = 0;
+                     return -1;
+                  }
+                  fFullCacheSize = fullsize;
+                  return GetFromCache(buf, len, nseg, seg_pos, seg_len);
+               }
+               // when cache allocation failed, try without cache
             }
 
             // check all segemnts are inside range and in sorted order
@@ -1276,7 +1330,7 @@ Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine whether [START, PEEKED + PEEKLEN) contains an HTTP new
-/// line [\r]\n. If so, return the pointer to the position after the line,
+/// line [\\r]\\n. If so, return the pointer to the position after the line,
 /// otherwise return 0. This is used as callback to GetHunk(). The data
 /// between START and PEEKED has been read and cannot be "unread"; the
 /// data after PEEKED has only been peeked.
@@ -1364,6 +1418,25 @@ const char *TWebFile::GetProxy()
 void TWebFile::ProcessHttpHeader(const TString&)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning maxmimal size of full cache,
+/// which can be preserved by file instance
+
+Long64_t TWebFile::GetMaxFullCacheSize()
+{
+   return fgMaxFullCacheSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method, set maxmimal size of full cache,
+// which can be preserved by file instance
+
+void TWebFile::SetMaxFullCacheSize(Long64_t sz)
+{
+   fgMaxFullCacheSize = sz;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create helper class that allows directory access via httpd.

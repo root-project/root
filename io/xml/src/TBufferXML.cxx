@@ -161,16 +161,30 @@ TXMLFile* TBufferXML::XmlFile()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts object, inherited from TObject class, to XML string
-/// fmt contains configuration of XML layout. See TXMLSetup class for detatils
+/// GenericLayout defines layout choice for XML file
+/// UseNamespaces allow XML namespaces.
+/// See TXMLSetup class for details
 
 TString TBufferXML::ConvertToXML(const TObject* obj, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
-   return ConvertToXML(obj, obj ? obj->IsA() : 0, GenericLayout, UseNamespaces);
+   TClass *clActual = 0;
+   void *ptr = (void *) obj;
+
+   if (obj!=0) {
+      clActual = TObject::Class()->GetActualClass(obj);
+      if (!clActual) clActual = TObject::Class(); else
+      if (clActual != TObject::Class())
+         ptr = (void *) ((Long_t) obj - clActual->GetBaseClassOffset(TObject::Class()));
+   }
+
+   return ConvertToXML(ptr, clActual, GenericLayout, UseNamespaces);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts any type of object to XML string.
-/// fmt contains configuration of XML layout. See TXMLSetup class for detatils
+/// GenericLayout defines layout choice for XML file
+/// UseNamespaces allow XML namespaces.
+/// See TXMLSetup class for details
 
 TString TBufferXML::ConvertToXML(const void* obj, const TClass* cl, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
@@ -2710,7 +2724,7 @@ void TBufferXML::ReadTString(TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads a std::string
 
-void TBufferXML::ReadStdString(std::string &s)
+void TBufferXML::ReadStdString(std::string *s)
 {
    if (GetIOVersion()<3) {
       TBufferFile::ReadStdString(s);
@@ -2718,7 +2732,7 @@ void TBufferXML::ReadStdString(std::string &s)
       BeforeIOoperation();
       const char* buf;
       if ((buf = XmlReadValue(xmlio::String)))
-         s = buf;
+         if (s) *s = buf;
    }
 }
 
@@ -2859,13 +2873,14 @@ void TBufferXML::WriteTString(const TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes a TString
 
-void TBufferXML::WriteStdString(const std::string &s)
+void TBufferXML::WriteStdString(const std::string *s)
 {
    if (GetIOVersion()<3) {
       TBufferFile::WriteStdString(s);
    } else {
       BeforeIOoperation();
-      XmlWriteValue(s.c_str(), xmlio::String);
+      if (s) XmlWriteValue(s->c_str(), xmlio::String);
+      else XmlWriteValue("", xmlio::String);
    }
 }
 

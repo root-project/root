@@ -8,12 +8,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "MCTargetDesc/ARMFixupKinds.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCFixupKindInfo.h"
 #include "llvm/MC/MCValue.h"
 #include "llvm/MC/MCWinCOFFObjectWriter.h"
-#include "llvm/ADT/Twine.h"
 #include "llvm/Support/COFF.h"
 #include "llvm/Support/Debug.h"
 
@@ -26,7 +26,7 @@ public:
     : MCWinCOFFObjectTargetWriter(COFF::IMAGE_FILE_MACHINE_ARMNT) {
     assert(!Is64Bit && "AArch64 support not yet implemented");
   }
-  virtual ~ARMWinCOFFObjectWriter() { }
+  ~ARMWinCOFFObjectWriter() override {}
 
   unsigned getRelocType(const MCValue &Target, const MCFixup &Fixup,
                         bool IsCrossSection,
@@ -82,7 +82,8 @@ bool ARMWinCOFFObjectWriter::recordRelocation(const MCFixup &Fixup) const {
 }
 
 namespace llvm {
-MCObjectWriter *createARMWinCOFFObjectWriter(raw_ostream &OS, bool Is64Bit) {
+MCObjectWriter *createARMWinCOFFObjectWriter(raw_pwrite_stream &OS,
+                                             bool Is64Bit) {
   MCWinCOFFObjectTargetWriter *MOTW = new ARMWinCOFFObjectWriter(Is64Bit);
   return createWinCOFFObjectWriter(MOTW, OS);
 }

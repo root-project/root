@@ -29,16 +29,15 @@
 //                                                                      
 //_______________________________________________________________________
 
-#include <iostream>
+#include "TMVA/TActivationTanh.h"
+
+#include "TMVA/TActivation.h"
 
 #include "TFormula.h"
-#include "TString.h"
 #include "TMath.h"
+#include "TString.h"
 
-#ifndef ROOT_TMVA_TActivationTanh
-#include "TMVA/TActivationTanh.h"
-#endif
-
+#include <iostream>
 
 ClassImp(TMVA::TActivationTanh)
 

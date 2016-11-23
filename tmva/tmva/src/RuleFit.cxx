@@ -43,9 +43,12 @@
 #include "TMVA/Types.h"
 #include "TMVA/SeparationBase.h"
 
+#include "TDirectory.h"
 #include "TH2F.h"
+#include "TFile.h"
 #include "TKey.h"
 #include "TRandom3.h"
+#include "TROOT.h" // for gROOT
 
 #include <algorithm>
 
@@ -778,7 +781,7 @@ void TMVA::RuleFit::MakeVisHists()
 
    const TString corrDirName = "CorrelationPlots";   
    
-   TDirectory* rootDir   = Factory::RootBaseDir();
+   TDirectory* rootDir   = fMethodBase->GetFile();
    TDirectory* varDir    = 0;
    TDirectory* corrDir   = 0;
 

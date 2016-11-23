@@ -474,9 +474,9 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
             bin = h->GetBin(binx,biny,binz);
             ncounts = Int_t(h->GetBinContent(bin)*scale+0.5);
             for (in=0;in<ncounts;in++) {
-               xp = x + xw*gRandom->Rndm(in);
-               yp = y + yw*gRandom->Rndm(in);
-               zp = z + zw*gRandom->Rndm(in);
+               xp = x + xw*gRandom->Rndm();
+               yp = y + yw*gRandom->Rndm();
+               zp = z + zw*gRandom->Rndm();
                pm3d->SetPoint(Int_t(entry),xp,yp,zp);
                entry++;
             }
@@ -593,14 +593,14 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t [3*fN];
-   for (Int_t i = 0; i < fN; i++) {
-      if (p) {
+   if (p) {
+      for (Int_t i = 0; i < fN; i++) {
          fP[3*i]   = p[3*i];
          fP[3*i+1] = p[3*i+1];
          fP[3*i+2] = p[3*i+2];
-      } else {
-         memset(fP,0,kDimension*fN*sizeof(Float_t));
       }
+   } else {
+      memset(fP,0,kDimension*fN*sizeof(Float_t));
    }
    fLastPoint = fN-1;
 }
@@ -623,14 +623,14 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
    fN = n;
    if (fP) delete [] fP;
    fP = new Float_t [3*fN];
-   for (Int_t i = 0; i < fN; i++) {
-      if (p) {
+   if (p) {
+      for (Int_t i = 0; i < fN; i++) {
          fP[3*i]   = (Float_t) p[3*i];
          fP[3*i+1] = (Float_t) p[3*i+1];
          fP[3*i+2] = (Float_t) p[3*i+2];
-      } else {
-         memset(fP,0,kDimension*fN*sizeof(Float_t));
       }
+   } else {
+      memset(fP,0,kDimension*fN*sizeof(Float_t));
    }
    fLastPoint = fN-1;
 }
@@ -643,26 +643,44 @@ void TPolyMarker3D::Streamer(TBuffer &b)
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) b.ClassBegin(TPolyMarker3D::IsA());
+      if (R__v > 2) b.ClassMember("TObject");
       TObject::Streamer(b);
+      if (R__v > 2) b.ClassMember("TAttMarker");
       TAttMarker::Streamer(b);
+      if (R__v > 2) b.ClassMember("fN","Int_t");
       b >> fN;
       if (fN) {
+         if (R__v > 2) b.ClassMember("fP","Float_t", kDimension*fN);
          fP = new Float_t[kDimension*fN];
          b.ReadFastArray(fP,kDimension*fN);
       }
       fLastPoint = fN-1;
+      if (R__v > 2) b.ClassMember("fOption","TString");
       fOption.Streamer(b);
+      if (R__v > 2) b.ClassMember("fName","TString");
       if (R__v > 1) fName.Streamer(b);
+      if (R__v > 2) b.ClassEnd(TPolyMarker3D::IsA());
       b.CheckByteCount(R__s, R__c, TPolyMarker3D::IsA());
    } else {
       R__c = b.WriteVersion(TPolyMarker3D::IsA(), kTRUE);
+      b.ClassBegin(TPolyMarker3D::IsA());
+      b.ClassMember("TObject");
       TObject::Streamer(b);
+      b.ClassMember("TAttMarker");
       TAttMarker::Streamer(b);
+      b.ClassMember("fN","Int_t");
       Int_t size = Size();
       b << size;
-      if (size) b.WriteFastArray(fP, kDimension*size);
+      if (size) {
+         b.ClassMember("fP","Float_t", kDimension*size);
+         b.WriteFastArray(fP, kDimension*size);
+      }
+      b.ClassMember("fOption","TString");
       fOption.Streamer(b);
+      b.ClassMember("fName","TString");
       fName.Streamer(b);
+      b.ClassEnd(TPolyMarker3D::IsA());
       b.SetByteCount(R__c, kTRUE);
    }
 }

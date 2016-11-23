@@ -13,7 +13,7 @@ g2root \- convert GEANT geometry files to ROOT files
 You can convert a
 .B GEANT
 (see
-.I http://wwwinfo.cern.ch/asd/geant/index.html
+.I http://geant.cern.ch/
 fore more on
 .BR GEANT )
 geometry to
@@ -54,7 +54,7 @@ session;
 .nf
 root [1] .x detector.C
 root [2] detector.Draw()
-root [3] c1.x3d()   // (this invokes the 3-d Root viewver)
+root [3] c1.x3d()   // (this invokes the 3-d Root viewer)
 root [4] TFile f("detector.root","NEW") //open a new root file
 root [5] detector.Write() //Write the geometry structure
 root [6] f.Write()

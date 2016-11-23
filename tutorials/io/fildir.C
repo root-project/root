@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook
 /// This macro displays the ROOT Directory data structure
 ///
 /// \macro_image

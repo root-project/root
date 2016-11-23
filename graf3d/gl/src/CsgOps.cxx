@@ -21,14 +21,6 @@
   Please send remarks, questions and bug reports to laurencebourn@hotmail.com
 */
 
-/**
- * I've modified some very nice bounding box tree code from
- * Gino van der Bergen's Free Solid Library below. It's basically
- * the same code - but I've hacked out the transformation stuff as
- * I didn't understand it. I've also made it far less elegant!
- * Laurence Bourn.
- */
-
 /*
   SOLID - Software Library for Interference Detection
   Copyright (C) 1997-1998  Gino van den Bergen

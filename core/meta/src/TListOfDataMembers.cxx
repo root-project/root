@@ -28,6 +28,8 @@ unloaded data member.
 #include "TEnumConstant.h"
 #include "TClassEdit.h"
 
+#include <sstream>
+
 const unsigned int idsSize=19;
 
 ClassImp(TListOfDataMembers)
@@ -439,7 +441,7 @@ void TListOfDataMembers::Load()
    // Treat the complex<float>, complex<double> in a special way, i.e. replacing
    // the datamembers with the ones of _root_std_complex<T>
    bool skipChecks = false;
-   if (fClass){
+   if (fClass) {
       auto complexType = TClassEdit::GetComplexType(fClass->GetName());
       switch(complexType) {
          case TClassEdit::EComplexType::kNone:

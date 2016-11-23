@@ -17,6 +17,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TGaxis.h"
+#include "TAxisModLab.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TLine.h"
@@ -26,12 +27,14 @@
 #include "TAxis.h"
 #include "THashList.h"
 #include "TObjString.h"
+#include "TObject.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "TColor.h"
 #include "TClass.h"
 #include "TTimeStamp.h"
 #include "TSystem.h"
+#include "TTimeStamp.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 Float_t TGaxis::fXAxisExpXOffset = 0.; //Exponent X offset for the X axis
@@ -64,6 +67,7 @@ or an instance. For instance to draw an extra scale on a plot.
 - [Labels' position on tick marks](#GA08)
 - [Labels' format](#GA09)
 - [Alphanumeric labels](#GA10)
+- [Changing axis labels](#GA10a)
 - [Number of divisions optimisation](#GA11)
 - [Maximum Number of Digits for the axis labels](#GA12)
 - [Optional grid](#GA13)
@@ -256,7 +260,8 @@ A good way to remove tick marks on an axis is to set the tick length to 0:
 ## <a name="GA06"></a> Labels' positionning
 
 Labels are normally drawn on side opposite to tick marks. However the option
-`"="` allows to draw them on the same side.
+`"="` allows to draw them on the same side. The distance between the labels and
+the axis body can be changed with `SetLabelOffset`.
 
 ## <a name="GA07"></a> Labels' orientation
 
@@ -314,6 +319,29 @@ End_Macro
 
 Because the alphanumeric labels are usually longer that the numeric labels, their
 size is by default equal to `0.66666 * the_numeric_labels_size`.
+
+## <a name="GA10a"></a> Changing axis labels
+\since **ROOT version 6.07/07:**
+
+After an axis has been created, TGaxis::ChangeLabel allows to define new text
+attributes for a given label. A fine tuning of the labels can be done. All the
+attributes can be changed as well as the text label itself.
+
+When plotting an histogram or a graph the labels can be changed like in the
+following example which shows a way to produce \f$\pi\f$-axis :
+
+Begin_Macro(source)
+{
+   Double_t pi = TMath::Pi();
+   TF1*   f = new TF1("f","TMath::Cos(x/TMath::Pi())", -pi, pi);
+   TH1*   h = f->GetHistogram();
+   TAxis* a = h->GetXaxis();
+   a->SetNdivisions(-502);
+   a->ChangeLabel(1,-1,-1,-1,-1,-1,"-#pi");
+   a->ChangeLabel(-1,-1,-1,-1,-1,-1,"#pi");
+   f->Draw();
+}
+End_Macro
 
 ## <a name="GA11"></a> Number of divisions optimisation
 
@@ -381,7 +409,7 @@ The format is set with `SetTimeFormat()`.
 The `TGaxis` minimum (`wmin`) and maximum (`wmax`) values
 are considered as two time values in seconds.
 The time axis will be spread around the time offset value (set with
-`SetTimeOffset()`). Actually it will go from `TimeOffset+wmin`to
+`SetTimeOffset()`). Actually it will go from `TimeOffset+wmin` to
 `TimeOffset+wmax`
 
 Usually time axis are created automatically via histograms, but one may also
@@ -451,6 +479,8 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fFunction    = 0;
    fAxis        = 0;
    fNdiv        = 0;
+   fNModLabs    = 0;
+   fModLabs     = 0;
    fWmin        = 0.;
    fWmax        = 0.;
 }
@@ -467,6 +497,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    fWmin        = wmin;
    fWmax        = wmax;
    fNdiv        = ndiv;
+   fNModLabs    = 0;
+   fModLabs     = 0;
    fGridLength  = gridlength;
    fLabelOffset = 0.005;
    fLabelSize   = 0.040;
@@ -504,6 +536,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    }
    fFunctionName= funcname;
    fNdiv        = ndiv;
+   fNModLabs    = 0;
+   fModLabs     = 0;
    fGridLength  = gridlength;
    fLabelOffset = 0.005;
    fLabelSize   = 0.040;
@@ -536,13 +570,15 @@ TGaxis::TGaxis(const TGaxis& ax) :
   fNdiv(ax.fNdiv),
   fLabelColor(ax.fLabelColor),
   fLabelFont(ax.fLabelFont),
+  fNModLabs(ax.fNModLabs),
   fChopt(ax.fChopt),
   fName(ax.fName),
   fTitle(ax.fTitle),
   fTimeFormat(ax.fTimeFormat),
   fFunctionName(ax.fFunctionName),
   fFunction(ax.fFunction),
-  fAxis(ax.fAxis)
+  fAxis(ax.fAxis),
+  fModLabs(ax.fModLabs)
 {
 }
 
@@ -564,6 +600,7 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
       fTitleOffset=ax.fTitleOffset;
       fTitleSize=ax.fTitleSize;
       fNdiv=ax.fNdiv;
+      fModLabs=ax.fModLabs;
       fLabelColor=ax.fLabelColor;
       fLabelFont=ax.fLabelFont;
       fChopt=ax.fChopt;
@@ -573,6 +610,7 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
       fFunctionName=ax.fFunctionName;
       fFunction=ax.fFunction;
       fAxis=ax.fAxis;
+      fNModLabs=ax.fNModLabs;
    }
    return *this;
 }
@@ -829,6 +867,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          optionText = 1;
          ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
       }
+      TList *ml = fAxis->GetModifiedLabels();
+      if (ml) {
+         fModLabs = ml;
+         fNModLabs = fModLabs->GetSize();
+      } else {
+         fModLabs  = 0;
+         fNModLabs = 0;
+      }
    }
    if (ndiv < 0) {
       Error(where, "Invalid number of divisions: %d",ndiv);
@@ -871,28 +917,17 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          TString stringtimeoffset = fTimeFormat(idF+2,lnF);
          Int_t year, mm, dd, hh, mi, ss;
          if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &year, &mm, &dd, &hh, &mi, &ss) == 6) {
-           struct tm tp;
+            //Get time offset in seconds since EPOCH:
+            struct tm tp;
             tp.tm_year   = year-1900;
             tp.tm_mon    = mm-1;
             tp.tm_mday   = dd;
             tp.tm_hour   = hh;
             tp.tm_min    = mi;
             tp.tm_sec    = ss;
-            tp.tm_isdst  = -1; //automatic determination of daylight saving time
-            TString tz   = (TString)gSystem->Getenv("TZ"); //save timezone
-            Bool_t isUTC = kFALSE;
-            if (gSystem->Getenv("TZ") && tz.Length()==0) isUTC=kTRUE;
-            gSystem->Setenv("TZ", "UTC"); //sets timezone to UTC
-            tzset();
-            timeoffset  = mktime(&tp);
-            //restore TZ
-            if (tz.Length()) {
-               gSystem->Setenv("TZ", tz.Data());
-            } else {
-               if (isUTC) gSystem->Setenv("TZ", "");
-               else       gSystem->Unsetenv("TZ");
-            }
-            tzset();
+            tp.tm_isdst  = 0; //no DST for UTC (and forced to 0 in MktimeFromUTC function)
+            timeoffset = TTimeStamp::MktimeFromUTC(&tp);
+
             // Add the time offset's decimal part if it is there
             Int_t ids   = stringtimeoffset.Index("s");
             if (ids >= 0) {
@@ -1743,13 +1778,15 @@ L110:
                   if (!optionText) {
                      if (first > last)  strncpy(chtemp, " ", 256);
                      else               strncpy(chtemp, &label[first], 256);
+                     if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                           0,
+                           textaxis->GetTextAngle(),
                            textaxis->GetTextSize(),
                            typolabel.Data());
+                     if (fNModLabs) ResetLabelAttributes(textaxis);
                   }
                   else  {
                      if (optionText == 1) textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
@@ -1788,7 +1825,7 @@ L110:
 
             if (flexe && !optionText && nexe)  {
                snprintf(label,256,"#times10^{%d}", nexe);
-               if (x0 != x1) { xfactor = x1-x0+0.1*charheight; yfactor = 0; }
+               if (x0 != x1) { xfactor = axis_length+0.1*charheight; yfactor = 0; }
                else          { xfactor = y1-y0+0.1*charheight; yfactor = 0; }
                Rotate (xfactor,yfactor,cosphi,sinphi,x0,y0,xx,yy);
                textaxis->SetTextAlign(11);
@@ -2221,6 +2258,117 @@ void TGaxis::SetFunction(const char *funcname)
       fWmin = fFunction->GetXmin();
       fWmax = fFunction->GetXmax();
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label number "labNum". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed and even the
+/// label text itself.
+///
+/// \param[in] labNum           Number of the label to be changed, negative numbers start from the end
+/// \param[in] labAngle         New angle value
+/// \param[in] labSize          New size (0 erase the label)
+/// \param[in] labAlign         New alignment value
+/// \param[in] labColor         New label color
+/// \param[in] labText          New label text
+///
+/// If an attribute should not be changed just give the value
+/// "-1".The following macro gives an example:
+///
+/// Begin_Macro(source)
+/// {
+///    c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
+///    c1->Range(-6,-0.1,6,0.1);
+///    TGaxis *axis1 = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
+///    axis1->SetName("axis1");
+///    axis1->SetTitle("Axis Title");
+///    axis1->SetTitleSize(0.05);
+///    axis1->SetTitleColor(kBlue);
+///    axis1->SetTitleFont(42);
+///    axis1->ChangeLabel(1,-1,-1,-1,2);
+///    axis1->ChangeLabel(3,-1,0.);
+///    axis1->ChangeLabel(5,30.,-1,0);
+///    axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
+///    axis1->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
+///    axis1->Draw();
+/// }
+/// End_Macro
+///
+/// If labnum=0 the list of modified labels is reset.
+
+void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
+                                Int_t labAlign, Int_t labColor, Int_t labFont,
+                                TString labText)
+{
+   fNModLabs++;
+   if (!fModLabs) fModLabs = new TList();
+
+   // Reset the list of modified labels.
+   if (labNum == 0) {
+      delete fModLabs;
+      fModLabs  = 0;
+      fNModLabs = 0;
+      return;
+   }
+
+   TAxisModLab *ml = new TAxisModLab();
+   ml->SetLabNum(labNum);
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
+
+   fModLabs->Add((TObject*)ml);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change the label attributes of label number i. If needed.
+static Double_t SavedTextAngle;
+static Double_t SavedTextSize;
+static Int_t    SavedTextAlign;
+static Int_t    SavedTextColor;
+static Int_t    SavedTextFont;;
+
+void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
+{
+   if (!fModLabs) return;
+
+   TIter next(fModLabs);
+   TAxisModLab *ml;
+   Int_t labNum;
+   while ( (ml = (TAxisModLab*)next()) ) {
+      SavedTextAngle = t->GetTextAngle();
+      SavedTextSize  = t->GetTextSize();
+      SavedTextAlign = t->GetTextAlign();
+      SavedTextColor = t->GetTextColor();
+      SavedTextFont  = t->GetTextFont();
+      labNum = ml->GetLabNum();
+      if (labNum < 0) labNum = nlabels + labNum + 2;
+      if (i == labNum) {
+         if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
+         if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
+         if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());
+         if (ml->GetColor()>=0)  t->SetTextColor(ml->GetColor());
+         if (ml->GetFont()>0)    t->SetTextFont(ml->GetFont());
+         if (!(ml->GetText().IsNull())) strncpy(c, (ml->GetText()).Data(), 256);
+         return;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the label attributes to the value they have before the last call to
+/// ChangeLabelAttributes.
+
+void TGaxis::ResetLabelAttributes(TLatex* t)
+{
+   t->SetTextAngle(SavedTextAngle);
+   t->SetTextSize(SavedTextSize);
+   t->SetTextAlign(SavedTextAlign);
+   t->SetTextColor(SavedTextColor);
+   t->SetTextFont(SavedTextFont);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

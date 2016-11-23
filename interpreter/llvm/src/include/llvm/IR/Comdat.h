@@ -16,12 +16,10 @@
 #ifndef LLVM_IR_COMDAT_H
 #define LLVM_IR_COMDAT_H
 
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Compiler.h"
-
 namespace llvm {
 
 class raw_ostream;
+class StringRef;
 template <typename ValueTy> class StringMapEntry;
 
 // This is a Name X SelectionKind pair. The reason for having this be an
@@ -42,14 +40,13 @@ public:
   SelectionKind getSelectionKind() const { return SK; }
   void setSelectionKind(SelectionKind Val) { SK = Val; }
   StringRef getName() const;
-  void print(raw_ostream &OS) const;
+  void print(raw_ostream &OS, bool IsForDebug = false) const;
   void dump() const;
 
 private:
   friend class Module;
   Comdat();
-  Comdat(SelectionKind SK, StringMapEntry<Comdat> *Name);
-  Comdat(const Comdat &) LLVM_DELETED_FUNCTION;
+  Comdat(const Comdat &) = delete;
 
   // Points to the map in Module.
   StringMapEntry<Comdat> *Name;

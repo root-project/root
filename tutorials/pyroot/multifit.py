@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ## Example showing how to fit in a sub-range of an histogram
 ## An histogram is created and filled with the bin contents and errors
 ## defined in the table below.
@@ -35,7 +36,7 @@ np = len(x)
 h = TH1F( 'h', 'Example of several fits in subranges', np, 85, 134 )
 h.SetMaximum( 7 )
 
-for i in xrange(np):
+for i in range(np):
    h.SetBinContent( i+1, x[i] )
 
 par = array( 'd', 9*[0.] )

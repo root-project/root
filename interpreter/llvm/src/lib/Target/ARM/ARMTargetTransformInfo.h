@@ -41,8 +41,9 @@ class ARMTTIImpl : public BasicTTIImplBase<ARMTTIImpl> {
   const ARMTargetLowering *getTLI() const { return TLI; }
 
 public:
-  explicit ARMTTIImpl(const ARMBaseTargetMachine *TM, Function &F)
-      : BaseT(TM), ST(TM->getSubtargetImpl(F)), TLI(ST->getTargetLowering()) {}
+  explicit ARMTTIImpl(const ARMBaseTargetMachine *TM, const Function &F)
+      : BaseT(TM, F.getParent()->getDataLayout()), ST(TM->getSubtargetImpl(F)),
+        TLI(ST->getTargetLowering()) {}
 
   // Provide value semantics. MSVC requires that we spell all of these out.
   ARMTTIImpl(const ARMTTIImpl &Arg)
@@ -50,24 +51,23 @@ public:
   ARMTTIImpl(ARMTTIImpl &&Arg)
       : BaseT(std::move(static_cast<BaseT &>(Arg))), ST(std::move(Arg.ST)),
         TLI(std::move(Arg.TLI)) {}
-  ARMTTIImpl &operator=(const ARMTTIImpl &RHS) {
-    BaseT::operator=(static_cast<const BaseT &>(RHS));
-    ST = RHS.ST;
-    TLI = RHS.TLI;
-    return *this;
-  }
-  ARMTTIImpl &operator=(ARMTTIImpl &&RHS) {
-    BaseT::operator=(std::move(static_cast<BaseT &>(RHS)));
-    ST = std::move(RHS.ST);
-    TLI = std::move(RHS.TLI);
-    return *this;
+
+  bool enableInterleavedAccessVectorization() { return true; }
+
+  /// Floating-point computation using ARMv8 AArch32 Advanced
+  /// SIMD instructions remains unchanged from ARMv7. Only AArch64 SIMD
+  /// is IEEE-754 compliant, but it's not covered in this target.
+  bool isFPVectorizationPotentiallyUnsafe() {
+    return !ST->isTargetDarwin();
   }
 
   /// \name Scalar TTI Implementations
   /// @{
 
   using BaseT::getIntImmCost;
-  unsigned getIntImmCost(const APInt &Imm, Type *Ty);
+  int getIntImmCost(const APInt &Imm, Type *Ty);
+
+  int getIntImmCost(unsigned Opcode, unsigned Idx, const APInt &Imm, Type *Ty);
 
   /// @}
 
@@ -96,34 +96,35 @@ public:
     return 32;
   }
 
-  unsigned getMaxInterleaveFactor() {
-    // These are out of order CPUs:
-    if (ST->isCortexA15() || ST->isSwift())
-      return 2;
-    return 1;
+  unsigned getMaxInterleaveFactor(unsigned VF) {
+    return ST->getMaxInterleaveFactor();
   }
 
-  unsigned getShuffleCost(TTI::ShuffleKind Kind, Type *Tp, int Index,
-                          Type *SubTp);
+  int getShuffleCost(TTI::ShuffleKind Kind, Type *Tp, int Index, Type *SubTp);
 
-  unsigned getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src);
+  int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src);
 
-  unsigned getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy);
+  int getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy);
 
-  unsigned getVectorInstrCost(unsigned Opcode, Type *Val, unsigned Index);
+  int getVectorInstrCost(unsigned Opcode, Type *Val, unsigned Index);
 
-  unsigned getAddressComputationCost(Type *Val, bool IsComplex);
+  int getAddressComputationCost(Type *Val, bool IsComplex);
 
-  unsigned getArithmeticInstrCost(
+  int getFPOpCost(Type *Ty);
+
+  int getArithmeticInstrCost(
       unsigned Opcode, Type *Ty,
       TTI::OperandValueKind Op1Info = TTI::OK_AnyValue,
       TTI::OperandValueKind Op2Info = TTI::OK_AnyValue,
       TTI::OperandValueProperties Opd1PropInfo = TTI::OP_None,
       TTI::OperandValueProperties Opd2PropInfo = TTI::OP_None);
 
-  unsigned getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                           unsigned AddressSpace);
+  int getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
+                      unsigned AddressSpace);
 
+  int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
+                                 ArrayRef<unsigned> Indices, unsigned Alignment,
+                                 unsigned AddressSpace);
   /// @}
 };
 

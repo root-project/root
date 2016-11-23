@@ -18,7 +18,6 @@
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/Analysis/RegionIterator.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <algorithm>
@@ -236,7 +235,7 @@ std::string RegionBase<Tr>::getNameStr() const {
 template <class Tr>
 void RegionBase<Tr>::verifyBBInRegion(BlockT *BB) const {
   if (!contains(BB))
-    llvm_unreachable("Broken region found!");
+    llvm_unreachable("Broken region found: enumerated BB not in region!");
 
   BlockT *entry = getEntry(), *exit = getExit();
 
@@ -244,7 +243,8 @@ void RegionBase<Tr>::verifyBBInRegion(BlockT *BB) const {
                   SE = BlockTraits::child_end(BB);
        SI != SE; ++SI) {
     if (!contains(*SI) && exit != *SI)
-      llvm_unreachable("Broken region found!");
+      llvm_unreachable("Broken region found: edges leaving the region must go "
+                       "to the exit node!");
   }
 
   if (entry != BB) {
@@ -252,7 +252,8 @@ void RegionBase<Tr>::verifyBBInRegion(BlockT *BB) const {
                     SE = InvBlockTraits::child_end(BB);
          SI != SE; ++SI) {
       if (!contains(*SI))
-        llvm_unreachable("Broken region found!");
+        llvm_unreachable("Broken region found: edges entering the region must "
+                         "go to the entry node!");
     }
   }
 }
@@ -442,16 +443,14 @@ typename Tr::RegionT *RegionBase<Tr>::getExpandedRegion() const {
   if (NumSuccessors == 0)
     return nullptr;
 
-  for (PredIterTy PI = InvBlockTraits::child_begin(getExit()),
-                  PE = InvBlockTraits::child_end(getExit());
-       PI != PE; ++PI) {
-    if (!DT->dominates(getEntry(), *PI))
-      return nullptr;
-  }
-
   RegionT *R = RI->getRegionFor(exit);
 
   if (R->getEntry() != exit) {
+    for (PredIterTy PI = InvBlockTraits::child_begin(getExit()),
+                    PE = InvBlockTraits::child_end(getExit());
+         PI != PE; ++PI)
+      if (!contains(*PI))
+        return nullptr;
     if (Tr::getNumSuccessors(exit) == 1)
       return new RegionT(getEntry(), *BlockTraits::child_begin(exit), RI, DT);
     return nullptr;
@@ -460,13 +459,11 @@ typename Tr::RegionT *RegionBase<Tr>::getExpandedRegion() const {
   while (R->getParent() && R->getParent()->getEntry() == exit)
     R = R->getParent();
 
-  if (!DT->dominates(getEntry(), R->getExit())) {
-    for (PredIterTy PI = InvBlockTraits::child_begin(getExit()),
-                    PE = InvBlockTraits::child_end(getExit());
-         PI != PE; ++PI) {
-      if (!DT->dominates(R->getExit(), *PI))
-        return nullptr;
-    }
+  for (PredIterTy PI = InvBlockTraits::child_begin(getExit()),
+                  PE = InvBlockTraits::child_end(getExit());
+       PI != PE; ++PI) {
+    if (!(contains(*PI) || R->contains(*PI)))
+      return nullptr;
   }
 
   return new RegionT(getEntry(), R->getExit(), RI, DT);
@@ -487,7 +484,7 @@ void RegionBase<Tr>::print(raw_ostream &OS, bool print_tree, unsigned level,
     OS.indent(level * 2 + 2);
 
     if (Style == PrintBB) {
-      for (const auto BB : blocks())
+      for (const auto *BB : blocks())
         OS << BB->getName() << ", "; // TODO: remove the last ","
     } else if (Style == PrintRN) {
       for (const_element_iterator I = element_begin(), E = element_end();
@@ -539,6 +536,21 @@ RegionInfoBase<Tr>::RegionInfoBase()
 template <class Tr>
 RegionInfoBase<Tr>::~RegionInfoBase() {
   releaseMemory();
+}
+
+template <class Tr>
+void RegionInfoBase<Tr>::verifyBBMap(const RegionT *R) const {
+  assert(R && "Re must be non-null");
+  for (auto I = R->element_begin(), E = R->element_end(); I != E; ++I) {
+    if (I->isSubRegion()) {
+      const RegionT *SR = I->template getNodeAs<RegionT>();
+      verifyBBMap(SR);
+    } else {
+      BlockT *BB = I->template getNodeAs<BlockT>();
+      if (getRegionFor(BB) != R)
+        llvm_unreachable("BB map does not match region nesting");
+    }
+  }
 }
 
 template <class Tr>
@@ -653,7 +665,7 @@ typename Tr::RegionT *RegionInfoBase<Tr>::createRegion(BlockT *entry,
       new RegionT(entry, exit, static_cast<RegionInfoT *>(this), DT);
   BBtoRegion.insert(std::make_pair(entry, region));
 
-#ifdef XDEBUG
+#ifdef EXPENSIVE_CHECKS
   region->verifyRegion();
 #else
   DEBUG(region->verifyRegion());
@@ -714,10 +726,8 @@ void RegionInfoBase<Tr>::scanForRegions(FuncT &F, BBtoBBMap *ShortCut) {
   // regions from the bottom of the dominance tree.  If the small regions are
   // detected first, detection of bigger regions is faster, as we can jump
   // over the small regions.
-  for (po_iterator<DomTreeNodeT *> FI = po_begin(N), FE = po_end(N); FI != FE;
-       ++FI) {
-    findRegionsWithEntry(FI->getBlock(), ShortCut);
-  }
+  for (auto DomNode : post_order(N))
+    findRegionsWithEntry(DomNode->getBlock(), ShortCut);
 }
 
 template <class Tr>
@@ -754,7 +764,7 @@ void RegionInfoBase<Tr>::buildRegionsTree(DomTreeNodeT *N, RegionT *region) {
   }
 }
 
-#ifdef XDEBUG
+#ifdef EXPENSIVE_CHECKS
 template <class Tr>
 bool RegionInfoBase<Tr>::VerifyRegionInfo = true;
 #else
@@ -788,7 +798,14 @@ void RegionInfoBase<Tr>::releaseMemory() {
 
 template <class Tr>
 void RegionInfoBase<Tr>::verifyAnalysis() const {
+  // Do only verify regions if explicitely activated using EXPENSIVE_CHECKS or
+  // -verify-region-info
+  if (!RegionInfoBase<Tr>::VerifyRegionInfo)
+    return;
+
   TopLevelRegion->verifyRegionNest();
+
+  verifyBBMap(TopLevelRegion);
 }
 
 // Region pass manager support.
@@ -886,20 +903,6 @@ RegionInfoBase<Tr>::getCommonRegion(SmallVectorImpl<BlockT *> &BBs) const {
     ret = getCommonRegion(ret, getRegionFor(BB));
 
   return ret;
-}
-
-template <class Tr>
-void RegionInfoBase<Tr>::splitBlock(BlockT *NewBB, BlockT *OldBB) {
-  RegionT *R = getRegionFor(OldBB);
-
-  setRegionFor(NewBB, R);
-
-  while (R->getEntry() == OldBB && !R->isTopLevelRegion()) {
-    R->replaceEntry(NewBB);
-    R = R->getParent();
-  }
-
-  setRegionFor(OldBB, R);
 }
 
 template <class Tr>

@@ -26,7 +26,7 @@
 #include "TClass.h"
 #include "TError.h"
 
-/** \class
+/** \class TGLPolyMarker
 \ingroup opengl
 To draw a 3D polymarker in a GL window.
 */

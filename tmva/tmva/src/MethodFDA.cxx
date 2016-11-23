@@ -39,19 +39,6 @@
 
 #include "TMVA/MethodFDA.h"
 
-#include "Riostream.h"
-#include "TList.h"
-#include "TFormula.h"
-#include "TString.h"
-#include "TObjString.h"
-#include "TRandom3.h"
-#include "TMath.h"
-#include <sstream>
-
-#include <algorithm>
-#include <iterator>
-#include <stdexcept>
-
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
 #include "TMVA/Configurable.h"
@@ -60,7 +47,9 @@
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/Interval.h"
 #include "TMVA/IFitterTarget.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MCFitter.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MinuitFitter.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Timer.h"
@@ -68,6 +57,19 @@
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/Types.h"
 #include "TMVA/SimulatedAnnealingFitter.h"
+
+#include "Riostream.h"
+#include "TList.h"
+#include "TFormula.h"
+#include "TString.h"
+#include "TObjString.h"
+#include "TRandom3.h"
+#include "TMath.h"
+
+#include <algorithm>
+#include <iterator>
+#include <stdexcept>
+#include <sstream>
 
 using std::stringstream;
 
@@ -81,9 +83,8 @@ ClassImp(TMVA::MethodFDA)
    TMVA::MethodFDA::MethodFDA( const TString& jobName,
                                const TString& methodTitle,
                                DataSetInfo& theData,
-                               const TString& theOption,
-                               TDirectory* theTargetDir )
-   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption, theTargetDir ),
+                               const TString& theOption)
+   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption),
    IFitterTarget   (),
    fFormula        ( 0 ),
    fNPars          ( 0 ),
@@ -100,9 +101,8 @@ ClassImp(TMVA::MethodFDA)
 /// constructor from weight file
 
 TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
-                            const TString& theWeightFile,
-                            TDirectory* theTargetDir )
-   : MethodBase( Types::kFDA, theData, theWeightFile, theTargetDir ),
+                            const TString& theWeightFile)
+   : MethodBase( Types::kFDA, theData, theWeightFile),
      IFitterTarget   (),
      fFormula        ( 0 ),
      fNPars          ( 0 ),
@@ -212,7 +212,7 @@ void TMVA::MethodFDA::CreateFormula()
 
    Log() << "User-defined formula string       : \"" << fFormulaStringP << "\"" << Endl;
    Log() << "TFormula-compatible formula string: \"" << fFormulaStringT << "\"" << Endl;
-   Log() << "Creating and compiling formula" << Endl;
+   Log() << kDEBUG << "Creating and compiling formula" << Endl;
 
    // create TF1
    if (fFormula) delete fFormula;
@@ -405,6 +405,7 @@ void TMVA::MethodFDA::Train( void )
       delete fConvergerFitter;
       fConvergerFitter = 0;
    }
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -414,7 +415,7 @@ void TMVA::MethodFDA::Train( void )
 void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>& pars, const Double_t estimator ) const
 {
    Log() << kINFO;
-   Log() << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
+   Log() << kHEADER << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    std::vector<TString>  parNames;
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
    gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", Log(), "%g" );   

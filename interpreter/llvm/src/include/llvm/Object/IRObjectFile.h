@@ -20,6 +20,7 @@ namespace llvm {
 class Mangler;
 class Module;
 class GlobalValue;
+class Triple;
 
 namespace object {
 class ObjectFile;
@@ -31,7 +32,7 @@ class IRObjectFile : public SymbolicFile {
 
 public:
   IRObjectFile(MemoryBufferRef Object, std::unique_ptr<Module> M);
-  ~IRObjectFile();
+  ~IRObjectFile() override;
   void moveSymbolNext(DataRefImpl &Symb) const override;
   std::error_code printSymbolName(raw_ostream &OS,
                                   DataRefImpl Symb) const override;
@@ -58,6 +59,15 @@ public:
   /// \brief Finds and returns bitcode embedded in the given object file, or an
   /// error code if not found.
   static ErrorOr<MemoryBufferRef> findBitcodeInObject(const ObjectFile &Obj);
+
+  /// Parse inline ASM and collect the symbols that are not defined in
+  /// the current module.
+  ///
+  /// For each found symbol, call \p AsmUndefinedRefs with the name of the
+  /// symbol found and the associated flags.
+  static void CollectAsmUndefinedRefs(
+      const Triple &TheTriple, StringRef InlineAsm,
+      function_ref<void(StringRef, BasicSymbolRef::Flags)> AsmUndefinedRefs);
 
   /// \brief Finds and returns bitcode in the given memory buffer (which may
   /// be either a bitcode file or a native object file with embedded bitcode),

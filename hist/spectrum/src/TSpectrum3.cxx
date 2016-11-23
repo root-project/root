@@ -39,6 +39,10 @@
  - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
  - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
  - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
+
+ See also the
+ [online documentation](https://root.cern.ch/guides/tspectrum-manual) and
+ [tutorials](https://root.cern.ch/doc/master/group__tutorial__spectrum.html).
 */
 
 #include "TSpectrum3.h"
@@ -67,11 +71,11 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  - maxpositions:  maximum number of peaks
-///  - resolution:    determines resolution of the neighbouring peaks
-///                 default value is 1 correspond to 3 sigma distance
-///                 between peaks. Higher values allow higher resolution
-///                 (smaller distance between peaks.
-///                 May be set later through SetResolution.
+///  - resolution:    *NOT USED* determines resolution of the neighbouring peaks
+///                   default value is 1 correspond to 3 sigma distance
+///                   between peaks. Higher values allow higher resolution
+///                   (smaller distance between peaks.
+///                   May be set later through SetResolution.
 
 TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
@@ -213,6 +217,7 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// *NOT USED*
 ///  resolution: determines resolution of the neighbouring peaks
 ///              default value is 1 correspond to 3 sigma distance
 ///              between peaks. Higher values allow higher resolution

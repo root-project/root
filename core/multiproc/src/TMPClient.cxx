@@ -1,18 +1,29 @@
+/* @(#)root/multiproc:$Id$ */
+// Author: Enrico Guiraud July 2015
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#include "MPCode.h"
+#include "TGuiFactory.h" //gGuiFactory
+#include "TError.h" //gErrorIgnoreLevel
 #include "TMPClient.h"
 #include "TMPWorker.h"
-#include "MPCode.h"
-#include "TSocket.h"
-#include "TGuiFactory.h" //gGuiFactory
-#include "TVirtualX.h" //gVirtualX
-#include "TSystem.h" //gSystem
 #include "TROOT.h" //gROOT
-#include "TError.h" //gErrorIgnoreLevel
-#include <unistd.h> // close, fork
-#include <sys/wait.h> // waitpid
+#include "TSocket.h"
+#include "TSystem.h" //gSystem
+#include "TVirtualX.h" //gVirtualX
 #include <errno.h> //errno, used by socketpair
-#include <sys/socket.h> //socketpair
 #include <memory> //unique_ptr
-#include <iostream>
+#include <sys/socket.h> //socketpair
+#include <sys/wait.h> // waitpid
+#include <unistd.h> // close, fork
+#include <dlfcn.h>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -69,6 +80,34 @@ TMPClient::~TMPClient()
    ReapWorkers();
 }
 
+namespace ROOT {
+   namespace Internal {
+      /// Class to acquire and release the Python GIL where it applies, i.e.
+      /// if libPython is loaded and the interpreter is initialized.
+      class TGILRAII {
+         using Py_IsInitialized_type = int (*)(void);
+         using PyGILState_Ensure_type = void* (*)(void);
+         using PyGILState_Release_type = void (*)(void*);
+         void* fPyGILState_STATE = nullptr;
+         template<class FPTYPE>
+         FPTYPE GetSymT(const char* name) {return (FPTYPE) dlsym(nullptr,name);}
+      public:
+         TGILRAII()
+         {
+            auto Py_IsInitialized = GetSymT<Py_IsInitialized_type>("Py_IsInitialized");
+            if (!Py_IsInitialized || !Py_IsInitialized()) return;
+            auto PyGILState_Ensure = GetSymT<PyGILState_Ensure_type>("PyGILState_Ensure");
+            if (PyGILState_Ensure) fPyGILState_STATE = PyGILState_Ensure();
+         }
+
+         ~TGILRAII()
+         {
+            auto PyGILState_Release = GetSymT<PyGILState_Release_type>("PyGILState_Release");
+            if (fPyGILState_STATE && PyGILState_Release) PyGILState_Release(fPyGILState_STATE);
+         }
+      };
+   }
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// This method forks the ROOT session into fNWorkers children processes.
@@ -98,13 +137,16 @@ bool TMPClient::Fork(TMPWorker &server)
       //create socket pair
       int ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sockets);
       if (ret != 0) {
-         std::cerr << "[E][C] Could not create socketpair. Error n. " << errno << ". Now retrying.\n";
+         Error("TMPClient::Fork", "[E][C] Could not create socketpair. Error n. . Now retrying.\n%d", errno);
          --nWorker;
          continue;
       }
 
       //fork
-      pid = fork();
+      {
+         ROOT::Internal::TGILRAII tgilraai;
+         pid = fork();
+      }
 
       if (!pid) {
          //child process, exit loop. sockets[1] is the fd that should be used
@@ -117,7 +159,7 @@ bool TMPClient::Fork(TMPWorker &server)
             fMon.Add(s);
             fWorkerPids.push_back(pid);
          } else {
-            std::cerr << "[E][C] Could not connect to worker with pid " << pid << ". Giving up.\n";
+            Error("TMPClient::Fork","[E][C] Could not connect to worker with pid %d. Giving up.\n", pid);
             delete s;
          }
       }
@@ -129,6 +171,7 @@ bool TMPClient::Fork(TMPWorker &server)
    } else {
       //CHILD/WORKER
       fIsParent = false;
+      close(sockets[0]); //we don't need this
 
       //override signal handler (make the servers exit on SIGINT)
       TSeqCollection *signalHandlers = gSystem->GetListOfSignalHandlers();
@@ -149,7 +192,20 @@ bool TMPClient::Fork(TMPWorker &server)
          }
       }
       close(0);
-
+      if (fMon.GetListOfActives()) {
+         while (fMon.GetListOfActives()->GetSize() > 0) {
+            TSocket *s = (TSocket *) fMon.GetListOfActives()->First();
+            fMon.Remove(s);
+            delete s;
+         }
+      }
+      if (fMon.GetListOfDeActives()) {
+         while (fMon.GetListOfDeActives()->GetSize() > 0) {
+            TSocket *s = (TSocket *) fMon.GetListOfDeActives()->First();
+            fMon.Remove(s);
+            delete s;
+         }
+      }
       //disable graphics
       //these instructions were copied from TApplication::MakeBatch
       gROOT->SetBatch();
@@ -205,7 +261,7 @@ unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
          fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
-         std::cerr << "[E] Could not send message to server\n";
+         Error("TMPClient:Broadcast", "[E] Could not send message to server\n");
       }
    }
 
@@ -277,15 +333,14 @@ void TMPClient::HandleMPCode(MPCodeBufPair &msg, TSocket *s)
    const char *str = ReadBuffer<const char*>(msg.second.get());
 
    if (code == MPCode::kMessage) {
-      std::cerr << "[I][C] message received: " << str << "\n";
+      Error("TMPClient::HandleMPCode", "[I][C] message received: %s\n", str);
    } else if (code == MPCode::kError) {
-      std::cerr << "[E][C] error message received:\n" << str << "\n";
+      Error("TMPClient::HandleMPCode", "[E][C] error message received: %s\n", str);   
    } else if (code == MPCode::kShutdownNotice || code == MPCode::kFatalError) {
       if (gDebug > 0) //generally users don't want to know this
-         std::cerr << "[I][C] shutdown notice received from " << str << "\n";
+         Error("TMPClient::HandleMPCode", "[I][C] shutdown notice received from %s\n", str);
       Remove(s);
    } else
-      std::cerr << "[W][C] unknown code received. code=" << code << "\n";
-
+       Error("TMPClient::HandleMPCode", "[W][C] unknown code received. code=%d\n", code);
    delete [] str;
 }

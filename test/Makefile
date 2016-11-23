@@ -343,13 +343,7 @@ ifeq ($(ARCH),aix5)
 		$(MAKESHARED) $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-endif
-endif
 else
 ifeq ($(PLATFORM),win32)
 		bindexplib $* $^ > $*.def
@@ -370,13 +364,7 @@ ifeq ($(ARCH),aix5)
 		$(MAKESHARED) $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-endif
-endif
 else
 ifeq ($(PLATFORM),win32)
 		bindexplib $* $^ > $*.def
@@ -490,13 +478,7 @@ ifeq ($(ARCH),aix5)
 		$(MAKESHARED) $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(LIBS) $(STRESSMATHLIBS)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-endif
-endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
@@ -682,13 +664,7 @@ ifeq ($(ARCH),aix5)
 		$(MAKESHARED) $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-endif
-endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
@@ -701,13 +677,7 @@ ifeq ($(ARCH),aix5)
 		$(MAKESHARED) $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-endif
-endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
@@ -720,13 +690,7 @@ ifeq ($(ARCH),aix5)
 		$(MAKESHARED) $(OutPutOpt) $@ $(GLIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-endif
-endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
@@ -738,13 +702,7 @@ ifeq ($(ARCH),aix5)
 		$(MAKESHARED) $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-endif
-endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
@@ -776,12 +734,14 @@ clean:
 
 distclean:      clean
 		-@(mv -f stressRooStats_ref.root stressRooStats_ref.root- >/dev/null 2>&1;true)
+		-@(mv -f stressRooFit_ref.root stressRooFit_ref.root- >/dev/null 2>&1;true)
 		-@(mv -f stressHistFactory_ref.root stressHistFactory_ref.root- >/dev/null 2>&1;true)
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
 		   *.root *.ps *.so *.lib *.dll *.d *.log .def so_locations \
 		   files/* *.pcm testdb.sqlite
 		@rm -rf cxx_repository
 		-@(mv -f stressRooStats_ref.root- stressRooStats_ref.root >/dev/null 2>&1;true)
+		-@(mv -f stressRooFit_ref.root- stressRooFit_ref.root >/dev/null 2>&1;true)
 		-@(mv -f stressHistFactory_ref.root- stressHistFactory_ref.root >/dev/null 2>&1;true)
 		-@cd RootShower && $(MAKE) distclean
 		-@cd rhtml && $(MAKE) distclean

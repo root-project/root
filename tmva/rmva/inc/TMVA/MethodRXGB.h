@@ -39,12 +39,10 @@ namespace TMVA {
       MethodRXGB(const TString &jobName,
                  const TString &methodTitle,
                  DataSetInfo &theData,
-                 const TString &theOption = "",
-                 TDirectory *theTargetDir = NULL);
+                 const TString &theOption = "");
 
       MethodRXGB(DataSetInfo &dsi,
-                 const TString &theWeightFile,
-                 TDirectory *theTargetDir = NULL);
+                 const TString &theWeightFile);
 
 
       ~MethodRXGB(void);

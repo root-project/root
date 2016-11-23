@@ -12,18 +12,18 @@
 #ifndef ROOT_TPoolProcessor
 #define ROOT_TPoolProcessor
 
-#include "TMPWorker.h"
-#include "PoolUtils.h"
 #include "MPCode.h"
 #include "MPSendRecv.h"
+#include "PoolUtils.h"
+#include "TError.h"
+#include "TEntryList.h"
+#include "TEventList.h"
+#include "TFile.h"
+#include "TH1.h"
+#include "TKey.h"
+#include "TMPWorker.h"
 #include "TTree.h"
 #include "TTreeReader.h"
-#include "TEventList.h"
-#include "TEntryList.h"
-#include "TTree.h"
-#include "TFile.h"
-#include "TKey.h"
-#include "TH1.h"
 #include <memory>
 #include <string>
 #include <sstream>
@@ -79,36 +79,26 @@ public:
 
 private:
    void Process(unsigned code, MPCodeBufPair& msg);
-   TFile *OpenFile(const std::string& fileName);
-   TTree *RetrieveTree(TFile *fp);
    ULong64_t EvalMaxEntries(ULong64_t maxEntries);
 
    F fProcFunc; ///< the function to be executed
-   std::vector<std::string> fFileNames; ///< the files to be processed by all workers
-   std::string fTreeName; ///< the name of the tree to be processed
-   TTree *fTree; ///< pointer to the tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
-   unsigned fNWorkers; ///< the number of workers spawned
-   ULong64_t fMaxNEntries; ///< the maximum number of entries to be processed by this worker
-   ULong64_t fProcessedEntries; ///< the number of entries processed by this worker so far
    typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type fReducedResult; ///< the results of the executions of fProcFunc merged together
    bool fCanReduce; ///< true if fReducedResult can be reduced with a new result, false until we have produced one result
 };
 
 
 template<class F>
-TPoolProcessor<F>::TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames, const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries) : TMPWorker(), fProcFunc(procFunc),
-   fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
-   fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-   fProcessedEntries(0), fReducedResult(), fCanReduce(false)
+TPoolProcessor<F>::TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames,
+                                  const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries)
+                  : TMPWorker(fileNames, treeName, nWorkers, maxEntries),
+                    fProcFunc(procFunc), fReducedResult(), fCanReduce(false)
 {}
 
 
 template<class F>
-TPoolProcessor<F>::TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries) :
-   TMPWorker(), fProcFunc(procFunc),
-   fFileNames(), fTreeName(), fTree(tree),
-   fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-   fProcessedEntries(0), fReducedResult(), fCanReduce(false)
+TPoolProcessor<F>::TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
+                  : TMPWorker(tree, nWorkers, maxEntries),
+                    fProcFunc(procFunc), fReducedResult(), fCanReduce(false)
 {}
 
 
@@ -152,7 +142,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
    if (code == PoolCode::kProcRange || code == PoolCode::kProcTree) {
       if (code == PoolCode::kProcTree && !fTree) {
          // This must be defined
-         std::cerr << "[S]: Process:kProcTree fTree undefined!\n";
+         Error("TPoolProcessor::Process", "[S]: Process:kProcTree fTree undefined!\n");
          return;
       }
       //retrieve the total number of entries ranges processed so far by TPool
@@ -192,6 +182,9 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
       tree = fTree;
    }
 
+   // Setup the cache, if required
+   SetupTreeCache(tree);
+
    //create entries range
    Long64_t start = 0;
    Long64_t finish = 0;
@@ -219,8 +212,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
 
    // create a TTreeReader that reads this range of entries
    TTreeReader reader(tree);
-   //Set first entry to start-1 so that the next call to TTreeReader::Next() sets the entry to the right value
-   TTreeReader::EEntryStatus status = reader.SetEntriesRange(start-1, finish);
+   TTreeReader::EEntryStatus status = reader.SetEntriesRange(start, finish);
    if(status != TTreeReader::kEntryValid) {
       std::string reply = "S" + std::to_string(GetNWorker());
       reply += ": could not set TTreeReader to range " + std::to_string(start) + " " + std::to_string(finish);
@@ -252,56 +244,6 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
       //we are done for now
       MPSend(GetSocket(), PoolCode::kIdling);
 }
-
-
-template<class F>
-TFile *TPoolProcessor<F>::OpenFile(const std::string& fileName)
-{
-
-   TFile *fp = TFile::Open(fileName.c_str());
-   if (fp == nullptr || fp->IsZombie()) {
-      std::string reply = "S" + std::to_string(GetNWorker());
-      reply.append(": could not open file ");
-      reply.append(fileName);
-      MPSend(GetSocket(), PoolCode::kProcError, reply.data());
-      return nullptr;
-   }
-
-   return fp;
-}
-
-
-template<class F>
-TTree *TPoolProcessor<F>::RetrieveTree(TFile *fp)
-{
-   //retrieve the TTree with the specified name from file
-   //we are not the owner of the TTree object, the file is!
-   TTree *tree = nullptr;
-   if(fTreeName == "") {
-      // retrieve the first TTree
-      // (re-adapted from TEventIter.cxx)
-      if (fp->GetListOfKeys()) {
-         for(auto k : *fp->GetListOfKeys()) {
-            TKey *key = static_cast<TKey*>(k);
-            if (!strcmp(key->GetClassName(), "TTree") || !strcmp(key->GetClassName(), "TNtuple"))
-               tree = static_cast<TTree*>(fp->Get(key->GetName()));
-         }
-      }
-   } else {
-      tree = static_cast<TTree*>(fp->Get(fTreeName.c_str()));
-   }
-   if (tree == nullptr) {
-      std::string reply = "S" + std::to_string(GetNWorker());
-      std::stringstream ss;
-      ss << ": cannot find tree with name " << fTreeName << " in file " << fp->GetName();
-      reply.append(ss.str());
-      MPSend(GetSocket(), PoolCode::kProcError, reply.data());
-      return nullptr;
-   }
-
-   return tree;
-}
-
 
 template<class F>
 ULong64_t TPoolProcessor<F>::EvalMaxEntries(ULong64_t maxEntries)

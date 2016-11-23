@@ -336,7 +336,8 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
 Bool_t PyROOT::Utility::AddBinaryOperator(
    PyObject* pyclass, const char* op, const char* label, const char* alt )
 {
-   PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+   PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
+   if ( ! pyname ) pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
    std::string cname = Cppyy::ResolveName( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
@@ -470,18 +471,21 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
    for ( int i = argoff; i < nArgs; ++i ) {
    // add type as string to name
       PyObject* tn = PyTuple_GET_ITEM( args, i );
-      if ( PyROOT_PyUnicode_Check( tn ) )
+      if ( PyROOT_PyUnicode_Check( tn ) ) {
          PyROOT_PyUnicode_Append( &pyname, tn );
-      else if ( PyObject_HasAttr( tn, PyStrings::gName ) ) {
-      // this works for type objects
-         PyObject* tpName = PyObject_GetAttr( tn, PyStrings::gName );
-
-      // special case for strings
+      } else if (PyObject_HasAttr( tn, PyStrings::gName ) ) {
+         // __cppname__ provides a better name for C++ classes (namespaces)
+         PyObject* tpName;
+         if ( PyObject_HasAttr( tn, PyStrings::gCppName ) ) {
+            tpName = PyObject_GetAttr( tn, PyStrings::gCppName );
+         } else {
+            tpName = PyObject_GetAttr( tn, PyStrings::gName );
+         }
+         // special case for strings
          if ( strcmp( PyROOT_PyUnicode_AsString( tpName ), "str" ) == 0 ) {
             Py_DECREF( tpName );
             tpName = PyROOT_PyUnicode_FromString( "std::string" );
          }
-
          PyROOT_PyUnicode_AppendAndDel( &pyname, tpName );
       } else if ( PyInt_Check( tn ) || PyLong_Check( tn ) || PyFloat_Check( tn ) ) {
          // last ditch attempt, works for things like int values; since this is a
@@ -491,7 +495,7 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
          PyROOT_PyUnicode_AppendAndDel( &pyname, pystr );
       } else {
          Py_DECREF( pyname );
-         PyErr_SetString( PyExc_SyntaxError, "could not get __name__ from provided template argument. Is it a str, class, type or int?" );
+         PyErr_SetString( PyExc_SyntaxError, "could not get __cppname__ from provided template argument. Is it a str, class, type or int?" );
          return 0;
       }
 
@@ -700,17 +704,24 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
    std::string clname = "<unknown>";
    PyObject* pyclass = PyObject_GetAttr( pyobj, PyStrings::gClass );
    if ( pyclass != 0 ) {
-      PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+      PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
 
       if ( pyname != 0 ) {
          clname = PyROOT_PyUnicode_AsString( pyname );
          Py_DECREF( pyname );
-      } else
-         PyErr_Clear();
-
+      } else {
+         pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+         if ( pyname != 0 ) {
+            clname = PyROOT_PyUnicode_AsString( pyname );
+            Py_DECREF( pyname );
+         } else {
+            PyErr_Clear();
+         }
+      }
       Py_DECREF( pyclass );
-   } else
+   } else {
       PyErr_Clear();
+   }
 
    return clname;
 }
@@ -810,8 +821,17 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
    else if ( level >= kWarning ) {
       static const char* emptyString = "";
       if (!location) location = emptyString;
-   // either printout or raise exception, depending on user settings
-      PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
+      // This warning might be triggered while holding the ROOT lock, while
+      // some othe rtherad is holding the GIL and waiting for the ROOT lock.
+      // That will trigger a deadlock.
+      // So if ROOT is in MT mode, use ROOT's error handler that doesn't take
+      // the GIL.
+      if (!gGlobalMutex) {
+         // either printout or raise exception, depending on user settings
+         PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
+      } else {
+         ::DefaultErrorHandler( level, abort, location, msg );
+      }
    }
    else
       ::DefaultErrorHandler( level, abort, location, msg );

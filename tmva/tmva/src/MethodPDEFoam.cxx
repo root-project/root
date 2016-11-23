@@ -52,18 +52,16 @@
 
 #include "TMVA/MethodPDEFoam.h"
 
-#include "TMath.h"
-#include "TH1F.h"
-#include "TFile.h"
-
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/CrossEntropy.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
 #include "TMVA/GiniIndex.h"
 #include "TMVA/GiniIndexWithLaplace.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MisClassificationError.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
@@ -73,6 +71,10 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
+
+#include "TMath.h"
+#include "TH1F.h"
+#include "TFile.h"
 
 REGISTER_METHOD(PDEFoam)
 
@@ -84,9 +86,8 @@ ClassImp(TMVA::MethodPDEFoam)
    TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& dsi,
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kPDEFoam, methodTitle, dsi, theOption, theTargetDir )
+                                       const TString& theOption ) :
+   MethodBase( jobName, Types::kPDEFoam, methodTitle, dsi, theOption)
    , fSigBgSeparated(kFALSE)
    , fFrac(0.001)
    , fDiscrErrCut(-1.0)
@@ -121,9 +122,8 @@ ClassImp(TMVA::MethodPDEFoam)
 /// constructor from weight file
 
 TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   MethodBase( Types::kPDEFoam, dsi, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile) :
+   MethodBase( Types::kPDEFoam, dsi, theWeightFile)
    , fSigBgSeparated(kFALSE)
    , fFrac(0.001)
    , fDiscrErrCut(-1.0)
@@ -450,7 +450,7 @@ void TMVA::MethodPDEFoam::Train( void )
          TrainMultiClassification();
       else {
          if (DataInfo().GetNormalization() != "EQUALNUMEVENTS" ) {
-            Log() << kINFO << "NormMode=" << DataInfo().GetNormalization()
+            Log() << kHEADER << "NormMode=" << DataInfo().GetNormalization()
                   << " chosen. Note that only NormMode=EqualNumEvents"
                   << " ensures that Discriminant values correspond to"
                   << " signal probabilities." << Endl;
@@ -472,6 +472,7 @@ void TMVA::MethodPDEFoam::Train( void )
       if(fFoam.at(i))
          fFoam.at(i)->DeleteBinarySearchTree();
    }
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
