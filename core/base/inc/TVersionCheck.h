@@ -21,6 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TObject
+#error "TVersionCheck.h must be included only by TObject. Please #include TObject.h"
+#endif
+
 #ifndef ROOT_RVersion
 #include "RVersion.h"
 #endif
