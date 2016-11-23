@@ -83,6 +83,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   from the current color palette defined by `gStyle->SetPalette(…)`. The color
   is determined according to the number of objects having palette coloring in
   the current pad.
+- The line width and line style can be change on 2d histograms painted with
+  option `ARR`.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.

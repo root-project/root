@@ -4097,11 +4097,6 @@ paintstat:
 
 void THistPainter::PaintArrows(Option_t *)
 {
-
-   Style_t linesav   = fH->GetLineStyle();
-   Width_t widthsav  = fH->GetLineWidth();
-   fH->SetLineStyle(1);
-   fH->SetLineWidth(1);
    fH->TAttLine::Modify();
 
    Double_t xk, xstep, yk, ystep;
@@ -4176,9 +4171,6 @@ void THistPainter::PaintArrows(Option_t *)
    }
 
    if (Hoption.Zscale) PaintPalette();
-   fH->SetLineStyle(linesav);
-   fH->SetLineWidth(widthsav);
-   fH->TAttLine::Modify();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
