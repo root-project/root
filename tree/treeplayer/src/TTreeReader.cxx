@@ -313,7 +313,8 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       return fEntryStatus;
    }
 
-   if (fProxiesSet && fDirector && fDirector->GetReadEntry() == -1) {
+   if (fProxiesSet && fDirector && fDirector->GetReadEntry() == -1
+       && fMostRecentTreeNumber != -1) {
       // Passed the end of the chain, Restart() was not called:
       // don't try to load entries anymore. Can happen in these cases:
       // while (tr.Next()) {something()};
@@ -400,6 +401,8 @@ void TTreeReader::SetTree(TTree* tree)
    else {
       fDirector->SetTree(fTree);
       fDirector->SetReadEntry(-1);
+      // Distinguish from end-of-chain case:
+      fMostRecentTreeNumber = -1;
    }
 }
 
