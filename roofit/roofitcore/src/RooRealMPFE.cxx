@@ -505,7 +505,7 @@ void RooRealMPFE::calculate() const
 
     outfile << "{\"calculate_dispatch_timing_ns\": \"" << timing_ns
             << "\", \"pid:\": \"" << getpid()
-            << "\", \"tid:\": \"" << gettid()
+            << "\", \"tid:\": \"" << pthread_self()
             << "\"}," << std::endl;
 
     outfile.close();
