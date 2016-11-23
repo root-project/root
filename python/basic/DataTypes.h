@@ -1,4 +1,5 @@
-#include "Rtypes.h"
+#include "RtypesCore.h"
+#include <vector>
 
 const int N = 5;
 
@@ -11,14 +12,13 @@ struct CppyyTestPod {
 
 
 //===========================================================================
-enum EFruit { kApple=78, kBanana=29, kCitrus=34 };
+enum EFruit {kApple=78, kBanana=29, kCitrus=34};
+extern std::vector<EFruit> vecFruits;
 
-
-std::vector<EFruit> vecFruits { kCitrus, kApple };
 
 //===========================================================================
 namespace EnumSpace {
-   enum E { E1 = 1, E2 };
+   enum E {E1 = 1, E2};
 };
 
 
@@ -346,6 +346,8 @@ static const long double        g_c_ldouble = -799.l;
 static const EFruit             g_c_enum    = kApple;
 static const void*              g_c_voidp   = nullptr;
 
+
+//= global accessors ========================================================
 void set_global_int(int i);
 int get_global_int();
 

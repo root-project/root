@@ -2,6 +2,10 @@
 
 
 //===========================================================================
+std::vector<EFruit> vecFruits{kCitrus, kApple};
+
+
+//===========================================================================
 CppyyTestData::CppyyTestData() : m_owns_arrays(false)
 {
     m_bool    = false;
@@ -238,6 +242,7 @@ unsigned long*  CppyyTestData::pass_array(unsigned long* a)  { return a; }
 float*          CppyyTestData::pass_array(float* a)          { return a; }
 double*         CppyyTestData::pass_array(double* a)         { return a; }
 
+//- static data members -----------------------------------------------------
 bool                 CppyyTestData::s_bool    = false;
 char                 CppyyTestData::s_char    = 'c';
 signed char          CppyyTestData::s_schar   = 's';
@@ -301,28 +306,30 @@ long double        g_ldouble  = -788.l;
 EFruit             g_enum     = kBanana;
 void*              g_voidp    = nullptr;
 
+
+//= global accessors ========================================================
 void set_global_int(int i) {
-   g_int = i;
+    g_int = i;
 }
 
 int get_global_int() {
-   return g_int;
+    return g_int;
 }
 
 CppyyTestPod* g_pod = (CppyyTestPod*)0;
 
 bool is_global_pod(CppyyTestPod* t) {
-   return t == g_pod;
+    return t == g_pod;
 }
 
 void set_global_pod(CppyyTestPod* t) {
-   g_pod = t;
+    g_pod = t;
 }
 
 CppyyTestPod* get_global_pod() {
-   return g_pod;
+    return g_pod;
 }
 
 CppyyTestPod* get_null_pod() {
-   return (CppyyTestPod*)0;
+    return (CppyyTestPod*)0;
 }
