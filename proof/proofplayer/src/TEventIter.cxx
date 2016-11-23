@@ -779,6 +779,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
                fTreeCache = (TTreeCache *)curfile->GetCacheRead(main);
                if (fCacheSize < 0) fCacheSize = main->GetCacheSize();
             } else {
+               fTreeCache->ResetCache();
                curfile->SetCacheRead(fTreeCache, main);
                fTreeCache->UpdateBranches(main);
             }

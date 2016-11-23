@@ -63,7 +63,7 @@ defm SRAX : F3_S<"srax", 0b100111, 1, sra, i64, I64Regs>;
 
 // The ALU instructions want their simm13 operands as i32 immediates.
 def as_i32imm : SDNodeXForm<imm, [{
-  return CurDAG->getTargetConstant(N->getSExtValue(), MVT::i32);
+  return CurDAG->getTargetConstant(N->getSExtValue(), SDLoc(N), MVT::i32);
 }]>;
 def : Pat<(i64 simm13:$val), (ORri (i64 G0), (as_i32imm $val))>;
 def : Pat<(i64 SETHIimm:$val), (SETHIi (HI22 $val))>;
@@ -83,11 +83,12 @@ def nimm33 : PatLeaf<(imm), [{
 // Bits 10-31 inverted. Same as assembler's %hix.
 def HIX22 : SDNodeXForm<imm, [{
   uint64_t Val = (~N->getZExtValue() >> 10) & ((1u << 22) - 1);
-  return CurDAG->getTargetConstant(Val, MVT::i32);
+  return CurDAG->getTargetConstant(Val, SDLoc(N), MVT::i32);
 }]>;
 // Bits 0-9 with ones in bits 10-31. Same as assembler's %lox.
 def LOX10 : SDNodeXForm<imm, [{
-  return CurDAG->getTargetConstant(~(~N->getZExtValue() & 0x3ff), MVT::i32);
+  return CurDAG->getTargetConstant(~(~N->getZExtValue() & 0x3ff), SDLoc(N),
+                                   MVT::i32);
 }]>;
 def : Pat<(i64 nimm33:$val), (XORri (SETHIi (HIX22 $val)), (LOX10 $val))>,
       Requires<[Is64Bit]>;
@@ -121,12 +122,12 @@ def : Pat<(i64 nimm33:$val), (XORri (SETHIi (HIX22 $val)), (LOX10 $val))>,
 // Bits 42-63, same as assembler's %hh.
 def HH22 : SDNodeXForm<imm, [{
   uint64_t Val = (N->getZExtValue() >> 42) & ((1u << 22) - 1);
-  return CurDAG->getTargetConstant(Val, MVT::i32);
+  return CurDAG->getTargetConstant(Val, SDLoc(N), MVT::i32);
 }]>;
 // Bits 32-41, same as assembler's %hm.
 def HM10 : SDNodeXForm<imm, [{
   uint64_t Val = (N->getZExtValue() >> 32) & ((1u << 10) - 1);
-  return CurDAG->getTargetConstant(Val, MVT::i32);
+  return CurDAG->getTargetConstant(Val, SDLoc(N), MVT::i32);
 }]>;
 def : Pat<(i64 imm:$val),
           (ORrr (SLLXri (ORri (SETHIi (HH22 $val)), (HM10 $val)), (i32 32)),
@@ -485,13 +486,13 @@ def SETHIXi : F2_1<0b100,
 }
 
 // ATOMICS.
-let Predicates = [Is64Bit], Constraints = "$swap = $rd" in {
-  def CASXrr: F3_1_asi<3, 0b111110, 0b10000000,
+let Predicates = [Is64Bit], Constraints = "$swap = $rd", asi = 0b10000000 in {
+  def CASXrr: F3_1_asi<3, 0b111110,
                 (outs I64Regs:$rd), (ins I64Regs:$rs1, I64Regs:$rs2,
                                      I64Regs:$swap),
                  "casx [$rs1], $rs2, $rd",
                  [(set i64:$rd,
-                     (atomic_cmp_swap i64:$rs1, i64:$rs2, i64:$swap))]>;
+                     (atomic_cmp_swap_64 i64:$rs1, i64:$rs2, i64:$swap))]>;
 
 } // Predicates = [Is64Bit], Constraints = ...
 
@@ -500,47 +501,14 @@ let Predicates = [Is64Bit] in {
 def : Pat<(atomic_fence imm, imm), (MEMBARi 0xf)>;
 
 // atomic_load_64 addr -> load addr
-def : Pat<(i64 (atomic_load ADDRrr:$src)), (LDXrr ADDRrr:$src)>;
-def : Pat<(i64 (atomic_load ADDRri:$src)), (LDXri ADDRri:$src)>;
+def : Pat<(i64 (atomic_load_64 ADDRrr:$src)), (LDXrr ADDRrr:$src)>;
+def : Pat<(i64 (atomic_load_64 ADDRri:$src)), (LDXri ADDRri:$src)>;
 
 // atomic_store_64 val, addr -> store val, addr
-def : Pat<(atomic_store ADDRrr:$dst, i64:$val), (STXrr ADDRrr:$dst, $val)>;
-def : Pat<(atomic_store ADDRri:$dst, i64:$val), (STXri ADDRri:$dst, $val)>;
+def : Pat<(atomic_store_64 ADDRrr:$dst, i64:$val), (STXrr ADDRrr:$dst, $val)>;
+def : Pat<(atomic_store_64 ADDRri:$dst, i64:$val), (STXri ADDRri:$dst, $val)>;
 
 } // Predicates = [Is64Bit]
-
-let usesCustomInserter = 1, hasCtrlDep = 1, mayLoad = 1, mayStore = 1,
-    Defs = [ICC] in
-multiclass AtomicRMW<SDPatternOperator op32, SDPatternOperator op64> {
-
-  def _32 : Pseudo<(outs IntRegs:$rd),
-                   (ins ptr_rc:$addr, IntRegs:$rs2), "",
-                   [(set i32:$rd, (op32 iPTR:$addr, i32:$rs2))]>;
-
-  let Predicates = [Is64Bit] in
-  def _64 : Pseudo<(outs I64Regs:$rd),
-                   (ins ptr_rc:$addr, I64Regs:$rs2), "",
-                   [(set i64:$rd, (op64 iPTR:$addr, i64:$rs2))]>;
-}
-
-defm ATOMIC_LOAD_ADD  : AtomicRMW<atomic_load_add_32,  atomic_load_add_64>;
-defm ATOMIC_LOAD_SUB  : AtomicRMW<atomic_load_sub_32,  atomic_load_sub_64>;
-defm ATOMIC_LOAD_AND  : AtomicRMW<atomic_load_and_32,  atomic_load_and_64>;
-defm ATOMIC_LOAD_OR   : AtomicRMW<atomic_load_or_32,   atomic_load_or_64>;
-defm ATOMIC_LOAD_XOR  : AtomicRMW<atomic_load_xor_32,  atomic_load_xor_64>;
-defm ATOMIC_LOAD_NAND : AtomicRMW<atomic_load_nand_32, atomic_load_nand_64>;
-defm ATOMIC_LOAD_MIN  : AtomicRMW<atomic_load_min_32,  atomic_load_min_64>;
-defm ATOMIC_LOAD_MAX  : AtomicRMW<atomic_load_max_32,  atomic_load_max_64>;
-defm ATOMIC_LOAD_UMIN : AtomicRMW<atomic_load_umin_32, atomic_load_umin_64>;
-defm ATOMIC_LOAD_UMAX : AtomicRMW<atomic_load_umax_32, atomic_load_umax_64>;
-
-// There is no 64-bit variant of SWAP, so use a pseudo.
-let usesCustomInserter = 1, hasCtrlDep = 1, mayLoad = 1, mayStore = 1,
-    Defs = [ICC], Predicates = [Is64Bit] in
-def ATOMIC_SWAP_64 : Pseudo<(outs I64Regs:$rd),
-                            (ins ptr_rc:$addr, I64Regs:$rs2), "",
-                            [(set i64:$rd,
-                                  (atomic_swap_64 iPTR:$addr, i64:$rs2))]>;
 
 let Predicates = [Is64Bit], hasSideEffects = 1, Uses = [ICC], cc = 0b10 in
  defm TXCC : TRAP<"%xcc">;

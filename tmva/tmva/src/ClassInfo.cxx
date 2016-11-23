@@ -39,12 +39,11 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
 TMVA::ClassInfo::ClassInfo( const TString& name ) 
-   : fName( name ),
+    : TNamed(name.Data(),name.Data()),
      fWeight( "" ),
      fCut( "" ),
      fNumber( 0 ),

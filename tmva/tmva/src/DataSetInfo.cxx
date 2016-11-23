@@ -60,6 +60,7 @@
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -123,11 +124,16 @@ TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className )
    ClassInfo* theClass = GetClassInfo(className);
    if (theClass) return theClass;
 
+ 
    fClasses.push_back( new ClassInfo(className) );
    fClasses.back()->SetNumber(fClasses.size()-1);
 
-   Log() << kINFO << Form("Dataset[%s] : ",fName.Data()) << "Added class \"" << className << "\"\t with internal class number " 
-         << fClasses.back()->GetNumber() << Endl;
+   //Log() << kHEADER << Endl;
+
+   Log() << kHEADER << Form("[%s] : ",fName.Data()) << "Added class \"" << className << "\""<< Endl;
+ 
+   Log() << kDEBUG <<"\t with internal class number " << fClasses.back()->GetNumber() << Endl;
+ 
 
    if (className == "Signal") fSignalClass = fClasses.size()-1;  // store the signal class index ( for comparison reasons )
 
@@ -385,7 +391,9 @@ std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
 
 void TMVA::DataSetInfo::PrintCorrelationMatrix( const TString& className )
 {
-   Log() << kINFO << Form("Dataset[%s] : ",fName.Data()) << "Correlation matrix (" << className << "):" << Endl;
+
+   Log() << kHEADER //<< Form("Dataset[%s] : ",fName.Data()) 
+	 << "Correlation matrix (" << className << "):" << Endl;
    gTools().FormattedOutput( *CorrelationMatrix( className ), GetListOfVariables(), Log() );
 }
 
@@ -494,6 +502,29 @@ Int_t TMVA::DataSetInfo::GetClassNameMaxLength() const
    return maxL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t TMVA::DataSetInfo::GetVariableNameMaxLength() const
+{
+   Int_t maxL = 0;
+   for (UInt_t i = 0; i < GetNVariables(); i++) {
+      if (TString(GetVariableInfo(i).GetExpression()).Length() > maxL) maxL = TString(GetVariableInfo(i).GetExpression()).Length();
+   }
+
+   return maxL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t TMVA::DataSetInfo::GetTargetNameMaxLength() const
+{
+   Int_t maxL = 0;
+   for (UInt_t i = 0; i < GetNTargets(); i++) {
+      if (TString(GetTargetInfo(i).GetExpression()).Length() > maxL) maxL = TString(GetTargetInfo(i).GetExpression()).Length();
+   }
+
+   return maxL;
+}
 
 Double_t TMVA::DataSetInfo::GetTrainingSumSignalWeights(){
    if (fTrainingSumSignalWeights<0) Log() << kFATAL << Form("Dataset[%s] : ",fName.Data()) << " asking for the sum of training signal event weights which is not initicalised yet" << Endl;

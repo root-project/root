@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -js
 ## A Simple Graph with error bars
 ##
 ## \macro_image
@@ -11,11 +12,8 @@ from ROOT import TCanvas, TGraphErrors
 from ROOT import gROOT
 from array import array
 
-
-
 c1 = TCanvas( 'c1', 'A Simple Graph with error bars', 200, 10, 700, 500 )
 
-c1.SetFillColor( 42 )
 c1.SetGrid()
 c1.GetFrame().SetFillColor( 21 )
 c1.GetFrame().SetBorderSize( 12 )

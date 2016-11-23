@@ -50,8 +50,7 @@ Bool_t MethodRXGB::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("xg
 MethodRXGB::MethodRXGB(const TString &jobName,
                        const TString &methodTitle,
                        DataSetInfo &dsi,
-                       const TString &theOption,
-                       TDirectory *theTargetDir) : RMethodBase(jobName, Types::kRXGB, methodTitle, dsi, theOption, theTargetDir),
+                       const TString &theOption) : RMethodBase(jobName, Types::kRXGB, methodTitle, dsi, theOption),
    fNRounds(10),
    fEta(0.3),
    fMaxDepth(6),
@@ -66,13 +65,11 @@ MethodRXGB::MethodRXGB(const TString &jobName,
 {
    // standard constructor for the RXGB
 
-// default extension for weight files
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 //_______________________________________________________________________
-MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kRXGB, theData, theWeightFile, theTargetDir),
+MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kRXGB, theData, theWeightFile),
      fNRounds(10),
      fEta(0.3),
      fMaxDepth(6),
@@ -86,8 +83,6 @@ MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile, TDire
      fModel(NULL)
 {
 
-// default extension for weight files
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -144,11 +139,14 @@ void MethodRXGB::Train()
                          ROOT::R::Label["params"] = params);
 
    fModel = new ROOT::R::TRObject(Model);
-   TString path = GetWeightFileDir() + "/RXGBModel.RData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-   xgbsave(Model, path);
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/RXGBModel.RData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        xgbsave(Model, path);
+   }
 }
 
 //_______________________________________________________________________
@@ -184,9 +182,8 @@ Double_t MethodRXGB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
       fDfEvent[DataInfo().GetListOfVariables()[i].Data()] = ev->GetValues()[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadStateFromFile();
-   }
+   if (IsModelPersistence()) ReadStateFromFile();
+   
    mvaValue = (Double_t)predict(*fModel, xgbdmatrix(ROOT::R::Label["data"] = asmatrix(fDfEvent)));
    return mvaValue;
 }
@@ -232,9 +229,7 @@ std::vector<Double_t> MethodRXGB::GetMvaValues(Long64_t firstEvt, Long64_t lastE
       evtData[DataInfo().GetListOfVariables()[i].Data()] = inputData[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadModelFromFile();
-   }
+   if (IsModelPersistence()) ReadModelFromFile();
 
    std::vector<Double_t> mvaValues(nEvents); 
    ROOT::R::TRObject pred = predict(*fModel, xgbdmatrix(ROOT::R::Label["data"] = asmatrix(evtData)));

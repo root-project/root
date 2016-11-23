@@ -1,13 +1,19 @@
-// @(#)root/tmva $Id$
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Exectuable: TMVAGAexample                                                        *
- *                                                                                *
- * This exectutable gives an example of a very simple use of the genetic algorithm*
- * of TMVA                                                                        *
- *                                                                                *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This example shows the training of signal with three different backgrounds
+/// Then in the application a tree is created with all signal and background
+/// events where the true class ID and the three classifier outputs are added
+/// finally with the application tree, the significance is maximized with the
+/// help of the TMVA genetic algrorithm.
+/// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+/// - Package   : TMVA
+/// - Exectuable: TMVAGAexample
+///
+/// \macro_output
+/// \macro_code
+/// \author Andreas Hoecker
+
 
 #include <iostream> // Stream declarations
 #include <vector>
@@ -33,16 +39,12 @@
 
 using namespace std;
 
-namespace TMVA {
+using namespace TMVA;
 
-// =========== Description =============
-// This example shows the training of signal with three different backgrounds
-// Then in the application a tree is created with all signal and background events where the true class ID and the three classifier outputs are added
-// finally with the application tree, the significance is maximized with the help of the TMVA genetic algrorithm.
+// ----------------------------------------------------------------------------------------------
+// Training
+// ----------------------------------------------------------------------------------------------
 //
-
-
-// ------------------------------ Training ----------------------------------------------------------------
 void Training(){
    std::string factoryOptions( "!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification" );
    TString fname = "./tmva_example_multiple_background.root";
@@ -67,10 +69,11 @@ void Training(){
 
 
 
-   // ===================== background 0
+   // background 0
+   // ____________
    TMVA::Factory *factory = new TMVA::Factory( "TMVAMultiBkg0", outputFile, factoryOptions );
    TMVA::DataLoader *dataloader=new TMVA::DataLoader("datasetBkg0");
-   
+
    dataloader->AddVariable( "var1", "Variable 1", "", 'F' );
    dataloader->AddVariable( "var2", "Variable 2", "", 'F' );
    dataloader->AddVariable( "var3", "Variable 3", "units", 'F' );
@@ -79,7 +82,7 @@ void Training(){
    dataloader->AddSignalTree    ( signal,     signalWeight       );
    dataloader->AddBackgroundTree( background0, background0Weight );
 
-//   factory->SetBackgroundWeightExpression("weight");
+   //     factory->SetBackgroundWeightExpression("weight");
    TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
 
@@ -95,13 +98,14 @@ void Training(){
    factory->EvaluateAllMethods();
 
    outputFile->Close();
-   
+
    delete factory;
    delete dataloader;
 
 
 
-   //  ===================== background 1
+   // background 1
+   // ____________
 
    outfileName = "TMVASignalBackground1.root";
    outputFile = TFile::Open( outfileName, "RECREATE" );
@@ -116,7 +120,7 @@ void Training(){
    dataloader->AddSignalTree    ( signal,     signalWeight       );
    dataloader->AddBackgroundTree( background1, background1Weight );
 
-//   dataloader->SetBackgroundWeightExpression("weight");
+ //   dataloader->SetBackgroundWeightExpression("weight");
 
    // tell the factory to use all remaining events in the trees after training for testing:
    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
@@ -135,9 +139,9 @@ void Training(){
    delete dataloader;
 
 
+   // background 2
+   // ____________
 
-
-   //  ===================== background 2
    outfileName = "TMVASignalBackground2.root";
    outputFile = TFile::Open( outfileName, "RECREATE" );
 
@@ -152,7 +156,7 @@ void Training(){
    dataloader->AddSignalTree    ( signal,     signalWeight       );
    dataloader->AddBackgroundTree( background2, background2Weight );
 
-//   dataloader->SetBackgroundWeightExpression("weight");
+   //     dataloader->SetBackgroundWeightExpression("weight");
 
    // tell the dataloader to use all remaining events in the trees after training for testing:
    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
@@ -169,14 +173,17 @@ void Training(){
 
    delete factory;
    delete dataloader;
-   
+
 }
 
 
 
 
 
-// ------------------------------ Application ----------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+// Application
+// ----------------------------------------------------------------------------------------------
+//
 // create a summary tree with all signal and background events and for each event the three classifier values and the true classID
 void ApplicationCreateCombinedTree(){
 
@@ -189,7 +196,7 @@ void ApplicationCreateCombinedTree(){
    Float_t var3, var4;
    Int_t   classID = 0;
    Float_t weight = 1.f;
-   
+
    Float_t classifier0, classifier1, classifier2;
 
    outputTree->Branch("classID", &classID, "classID/I");
@@ -203,7 +210,7 @@ void ApplicationCreateCombinedTree(){
    outputTree->Branch("cls2", &classifier2, "cls2/F");
 
 
-   // ===== create three readers for the three different signal/background classifications, .. one for each background
+   // create three readers for the three different signal/background classifications, .. one for each background
    TMVA::Reader *reader0 = new TMVA::Reader( "!Color:!Silent" );
    TMVA::Reader *reader1 = new TMVA::Reader( "!Color:!Silent" );
    TMVA::Reader *reader2 = new TMVA::Reader( "!Color:!Silent" );
@@ -223,37 +230,37 @@ void ApplicationCreateCombinedTree(){
    reader2->AddVariable( "var3", &var3 );
    reader2->AddVariable( "var4", &var4 );
 
-   // ====== load the weight files for the readers
+   // load the weight files for the readers
    TString method =  "BDT method";
    reader0->BookMVA( "BDT method", "datasetBkg0/weights/TMVAMultiBkg0_BDTG.weights.xml" );
    reader1->BookMVA( "BDT method", "datasetBkg1/weights/TMVAMultiBkg1_BDTG.weights.xml" );
    reader2->BookMVA( "BDT method", "datasetBkg2/weights/TMVAMultiBkg2_BDTG.weights.xml" );
 
-   // ===== load the input file
+   // load the input file
    TFile *input(0);
    TString fname = "./tmva_example_multiple_background.root";
    input = TFile::Open( fname );
 
    TTree* theTree = NULL;
 
-   // ===== loop through signal and all background trees
+   // loop through signal and all background trees
    for( int treeNumber = 0; treeNumber < 4; ++treeNumber ) {
       if( treeNumber == 0 ){
 	 theTree = (TTree*)input->Get("TreeS");
 	 std::cout << "--- Select signal sample" << std::endl;
-//	 theTree->SetBranchAddress( "weight", &weight );
+//	    theTree->SetBranchAddress( "weight", &weight );
 	 weight = 1;
 	 classID = 0;
       }else if( treeNumber == 1 ){
 	 theTree = (TTree*)input->Get("TreeB0");
 	 std::cout << "--- Select background 0 sample" << std::endl;
-//	 theTree->SetBranchAddress( "weight", &weight );
+//	    theTree->SetBranchAddress( "weight", &weight );
 	 weight = 1;
 	 classID = 1;
       }else if( treeNumber == 2 ){
 	 theTree = (TTree*)input->Get("TreeB1");
 	 std::cout << "--- Select background 1 sample" << std::endl;
-//	 theTree->SetBranchAddress( "weight", &weight );
+//	    theTree->SetBranchAddress( "weight", &weight );
 	 weight = 1;
 	 classID = 2;
       }else if( treeNumber == 3 ){
@@ -275,7 +282,7 @@ void ApplicationCreateCombinedTree(){
       TStopwatch sw;
       sw.Start();
       Int_t nEvent = theTree->GetEntries();
-//      Int_t nEvent = 100;
+//       Int_t nEvent = 100;
       for (Long64_t ievt=0; ievt<nEvent; ievt++) {
 
 	 if (ievt%1000 == 0){
@@ -283,8 +290,8 @@ void ApplicationCreateCombinedTree(){
 	 }
 
 	 theTree->GetEntry(ievt);
-      
-	 // ==== get the classifiers for each of the signal/background classifications
+
+	 // get the classifiers for each of the signal/background classifications
 	 classifier0 = reader0->EvaluateMVA( method );
 	 classifier1 = reader1->EvaluateMVA( method );
 	 classifier2 = reader2->EvaluateMVA( method );
@@ -301,26 +308,29 @@ void ApplicationCreateCombinedTree(){
 
 
    // write output tree
-//   outputTree->SetDirectory(outputFile);
-//   outputTree->Write();
+/*   outputTree->SetDirectory(outputFile);
+     outputTree->Write(); */
    outputFile->Write();
 
    outputFile->Close();
 
    std::cout << "--- Created root file: \"" << outfileName.Data() << "\" containing the MVA output histograms" << std::endl;
-  
+
    delete reader0;
    delete reader1;
    delete reader2;
-    
+
    std::cout << "==> Application of readers is done! combined tree created" << std::endl << std::endl;
-   
+
 }
 
 
 
 
-// ------------------------------ Genetic Algorithm Fitness definition ----------------------------------------------------------------
+// -----------------------------------------------------------------------------------------
+// Genetic Algorithm Fitness definition
+// -----------------------------------------------------------------------------------------
+//
 class MyFitness : public IFitterTarget {
 public:
    // constructor
@@ -336,13 +346,13 @@ public:
       weightsSignal = hSignal->Integral();
 
    }
-       
+
    // the output of this function will be minimized
    Double_t EstimatorFunction( std::vector<Double_t> & factors ){
 
       TString cutsAndWeightTruePositive  = Form("weight*((classID==0) && cls0>%f && cls1>%f && cls2>%f )",factors.at(0), factors.at(1), factors.at(2));
       TString cutsAndWeightFalsePositive = Form("weight*((classID >0) && cls0>%f && cls1>%f && cls2>%f )",factors.at(0), factors.at(1), factors.at(2));
-	  
+
       // Entry$/Entries$ just draws something reasonable. Could in principle anything
       Float_t nTP = chain->Draw("Entry$/Entries$>>htp",cutsAndWeightTruePositive,"goff");
       Float_t nFP = chain->Draw("Entry$/Entries$>>hfp",cutsAndWeightFalsePositive,"goff");
@@ -353,14 +363,14 @@ public:
       efficiency = 0;
       if( weightsSignal > 0 )
 	 efficiency = weightsTruePositive/weightsSignal;
-	  
+
       purity = 0;
       if( weightsTruePositive+weightsFalsePositive > 0 )
 	 purity = weightsTruePositive/(weightsTruePositive+weightsFalsePositive);
 
       Float_t effTimesPur = efficiency*purity;
 
-      Float_t toMinimize = std::numeric_limits<float>::max(); // set to the highest existing number 
+      Float_t toMinimize = std::numeric_limits<float>::max(); // set to the highest existing number
       if( effTimesPur > 0 ) // if larger than 0, take 1/x. This is the value to minimize
 	 toMinimize = 1./(effTimesPur); // we want to minimize 1/efficiency*purity
 
@@ -404,11 +414,14 @@ private:
 
 
 
-// ------------------------------ call of Genetic algorithm  ----------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+// Call of Genetic algorithm
+// ----------------------------------------------------------------------------------------------
+//
 void MaximizeSignificance(){
-       
+
         // define all the parameters by their minimum and maximum value
-        // in this example 3 parameters (=cuts on the classifiers) are defined. 
+        // in this example 3 parameters (=cuts on the classifiers) are defined.
         vector<Interval*> ranges;
         ranges.push_back( new Interval(-1,1) ); // for some classifiers (especially LD) the ranges have to be taken larger
         ranges.push_back( new Interval(-1,1) );
@@ -427,7 +440,7 @@ void MaximizeSignificance(){
         // prepare the genetic algorithm with an initial population size of 20
         // mind: big population sizes will help in searching the domain space of the solution
         // but you have to weight this out to the number of generations
-        // the extreme case of 1 generation and populationsize n is equal to 
+        // the extreme case of 1 generation and populationsize n is equal to
         // a Monte Carlo calculation with n tries
 
         const TString name( "multipleBackgroundGA" );
@@ -448,21 +461,22 @@ void MaximizeSignificance(){
 	   n++;
 	}
 
-	
+
 }
 
 
-} // namespace TMVA
 
 
-// ------------------------------ Run all ----------------------------------------------------------------
 void TMVAMultipleBackgroundExample()
 {
+   // ----------------------------------------------------------------------------------------
+   // Run all
+   // ----------------------------------------------------------------------------------------
    cout << "Start Test TMVAGAexample" << endl
         << "========================" << endl
         << endl;
 
-   TString createDataMacro = TString(gSystem->DirName(__FILE__) ) + "/createData.C";
+   TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
    gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
    gROOT->ProcessLine("create_MultipleBackground(2000)");
 
@@ -470,19 +484,19 @@ void TMVAMultipleBackgroundExample()
    cout << endl;
    cout << "========================" << endl;
    cout << "--- Training" << endl;
-   TMVA::Training();
+   Training();
 
    cout << endl;
    cout << "========================" << endl;
    cout << "--- Application & create combined tree" << endl;
-   TMVA::ApplicationCreateCombinedTree();
+   ApplicationCreateCombinedTree();
 
    cout << endl;
    cout << "========================" << endl;
    cout << "--- maximize significance" << endl;
-   TMVA::MaximizeSignificance();
+   MaximizeSignificance();
 }
 
 int main( int argc, char** argv ) {
-   TMVAMultipleBackgroundExample(); 
+   TMVAMultipleBackgroundExample();
 }

@@ -8,5 +8,6 @@ void read_from_file(){
     in_file.GetObject("my_histogram",h);
 
     // Draw it
-    h->Draw();
+    auto myCanvas = new TCanvas();
+    h->DrawClone();
 }

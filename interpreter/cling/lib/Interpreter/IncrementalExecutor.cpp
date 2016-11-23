@@ -16,17 +16,17 @@
 #include "cling/Utils/AST.h"
 
 #include "clang/Basic/Diagnostic.h"
-#include <clang/Frontend/CodeGenOptions.h>
+#include "clang/Frontend/CodeGenOptions.h"
+#include "clang/Frontend/CompilerInstance.h"
 
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetMachine.h"
@@ -45,7 +45,7 @@ using namespace llvm;
 namespace cling {
 
 IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
-                                         const clang::CodeGenOptions& CGOpt):
+                                         const clang::CompilerInstance& CI):
   m_externalIncrementalExecutor(nullptr),
   m_CurrentAtExitModule(0)
 #if 0
@@ -60,7 +60,13 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
   // can use this object yet.
   m_AtExitFuncs.reserve(256);
 
-  m_JIT.reset(new IncrementalJIT(*this, CreateHostTargetMachine(CGOpt)));
+  std::unique_ptr<TargetMachine>
+    TM(CreateHostTargetMachine(CI.getCodeGenOpts()));
+  m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(),
+                                          CI.getTargetOpts(),
+                                          CI.getLangOpts(),
+                                          *TM));
+  m_JIT.reset(new IncrementalJIT(*this, std::move(TM)));
 }
 
 // Keep in source: ~unique_ptr<ClingJIT> needs ClingJIT
@@ -83,16 +89,20 @@ std::unique_ptr<TargetMachine>
   if (!TheTarget) {
     llvm::errs() << "cling::IncrementalExecutor: unable to find target:\n"
                  << Error;
+    return std::unique_ptr<TargetMachine>();
   }
 
   std::string MCPU;
   std::string FeaturesStr;
 
   TargetOptions Options = TargetOptions();
-  Options.NoFramePointerElim = 1;
-  Options.JITEmitDebugInfo = 1;
-  Reloc::Model RelocModel = Reloc::Default;
+// We have to use large code model for PowerPC64 because TOC and text sections
+// can be more than 2GB apart.
+#if defined(__powerpc64__) || defined(__PPC64__)
+  CodeModel::Model CMModel = CodeModel::Large;
+#else
   CodeModel::Model CMModel = CodeModel::JITDefault;
+#endif
   CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
   switch (CGOpt.OptimizationLevel) {
     case 0: OptLevel = CodeGenOpt::None; break;
@@ -106,7 +116,8 @@ std::unique_ptr<TargetMachine>
   TM.reset(TheTarget->createTargetMachine(TheTriple.getTriple(),
                                           MCPU, FeaturesStr,
                                           Options,
-                                          RelocModel, CMModel,
+                                          Optional<Reloc::Model>(),
+                                          CMModel,
                                           OptLevel));
   return TM;
 }
@@ -159,10 +170,9 @@ void* IncrementalExecutor::NotifyLazyFunctionCreators(const std::string& mangled
     if (ret)
       return ret;
   }
-  llvm::StringRef name(mangled_name);
   void *address = nullptr;
   if (m_externalIncrementalExecutor)
-   address = m_externalIncrementalExecutor->getAddressOfGlobal(name);
+   address = m_externalIncrementalExecutor->getAddressOfGlobal(mangled_name);
 
   return (address ? address : HandleMissingFunction(mangled_name));
 }
@@ -241,7 +251,7 @@ IncrementalExecutor::runStaticInitializersOnce(const Transaction& T) {
   if (InitList == 0)
     return kExeSuccess;
 
-  SmallVector<Function*, 2> initFuncs;
+  //SmallVector<Function*, 2> initFuncs;
 
   for (unsigned i = 0, e = InitList->getNumOperands(); i != e; ++i) {
     llvm::ConstantStruct *CS
@@ -259,18 +269,21 @@ IncrementalExecutor::runStaticInitializersOnce(const Transaction& T) {
 
     // Execute the ctor/dtor function!
     if (llvm::Function *F = llvm::dyn_cast<llvm::Function>(FP)) {
-      executeInit(F->getName());
-
+      const llvm::StringRef fName = F->getName();
+      executeInit(fName);
+/*
       initFuncs.push_back(F);
-      if (F->getName().startswith("_GLOBAL__sub_I_")) {
+      if (fName.startswith("_GLOBAL__sub_I_")) {
         BasicBlock& BB = F->getEntryBlock();
         for (BasicBlock::iterator I = BB.begin(), E = BB.end(); I != E; ++I)
           if (CallInst* call = dyn_cast<CallInst>(I))
             initFuncs.push_back(call->getCalledFunction());
       }
+*/
     }
   }
 
+/*
   for (SmallVector<Function*,2>::iterator I = initFuncs.begin(),
          E = initFuncs.end(); I != E; ++I) {
     // Cleanup also the dangling init functions. They are in the form:
@@ -291,6 +304,7 @@ IncrementalExecutor::runStaticInitializersOnce(const Transaction& T) {
     (*I)->removeDeadConstantUsers();
     (*I)->eraseFromParent();
   }
+*/
 
   return kExeSuccess;
 }
@@ -328,20 +342,13 @@ IncrementalExecutor::installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp)
 
 bool
 IncrementalExecutor::addSymbol(const char* symbolName,  void* symbolAddress) {
-  void* actualAddress
-    = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName);
-  if (actualAddress)
-    return false;
-
-  llvm::sys::DynamicLibrary::AddSymbol(symbolName, symbolAddress);
-  return true;
+  return IncrementalJIT::searchLibraries(symbolName, symbolAddress).second;
 }
 
 void* IncrementalExecutor::getAddressOfGlobal(llvm::StringRef symbolName,
                                               bool* fromJIT /*=0*/) {
   // Return a symbol's address, and whether it was jitted.
-  void* address
-    = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName);
+  void* address = IncrementalJIT::searchLibraries(symbolName).first;
 
   // It's not from the JIT if it's in a dylib.
   if (fromJIT)

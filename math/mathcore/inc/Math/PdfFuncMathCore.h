@@ -178,7 +178,7 @@ namespace Math {
 
   Crystal ball function
 
-  See the definition at 
+  See the definition at
   <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
   Wikipedia</A>.
 
@@ -187,11 +187,11 @@ namespace Math {
   @ingroup PdfFunc
 
   */
-   
+
   double crystalball_function(double x, double alpha, double n, double sigma, double x0 = 0);
 
-   /** 
-       pdf definition of the crystal_ball which is defined only for n > 1 otehrwise integral is diverging
+   /**
+       pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging
     */
   double crystalball_pdf(double x, double alpha, double n, double sigma, double x0 = 0);
 
@@ -275,13 +275,13 @@ namespace Math {
 
   Probability density function of the bi-dimensional (Gaussian) distribution.
 
-  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-(x^2/\sigma_x^2 + y^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]  
+  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-(x^2/\sigma_x^2 + y^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/BivariateNormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_pdf which will
   call the same implementation.
-  
+
  @param rho correlation , must be between -1,1
 
   @ingroup PdfFunc
@@ -301,7 +301,7 @@ namespace Math {
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>.
    The same algorithms as in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g110/top.html">
    CERNLIB</A> (DENLAN)  is used
 
    @param x The argument \f$x\f$
@@ -326,7 +326,7 @@ namespace Math {
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
   Mathworld</A>.
   @param s scale parameter (not the sigma of the distribution which is not even defined)
-  @param x0  location parameter, corresponds approximatly to the most probable value. For x0 = 0, sigma = 1, the x_mpv = -0.22278
+  @param x0  location parameter, corresponds approximately to the most probable value. For x0 = 0, sigma = 1, the x_mpv = -0.22278
 
   @ingroup PdfFunc
 

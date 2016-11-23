@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_geom
 /// Drawing a famous Korean robot, TaekwonV, using ROOT geometry class.
-/// Name: robot.C
-/// Author: Jin Hui Hwang, Dept. of Physics, Univ. of Seoul
+///
 /// Reviewed by Sunman Kim (sunman98@hanmail.net)
 /// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
 ///
@@ -13,7 +12,7 @@
 ///
 /// \macro_code
 ///
-/// \author Jin Hui Hwang
+/// \author Jin Hui Hwang, Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"
 

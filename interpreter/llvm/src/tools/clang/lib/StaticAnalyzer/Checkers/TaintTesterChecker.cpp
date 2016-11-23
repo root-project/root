@@ -48,11 +48,11 @@ void TaintTesterChecker::checkPostStmt(const Expr *E,
     return;
 
   if (State->isTainted(E, C.getLocationContext())) {
-    if (ExplodedNode *N = C.addTransition()) {
+    if (ExplodedNode *N = C.generateNonFatalErrorNode()) {
       initBugType();
-      BugReport *report = new BugReport(*BT, "tainted",N);
+      auto report = llvm::make_unique<BugReport>(*BT, "tainted",N);
       report->addRange(E->getSourceRange());
-      C.emitReport(report);
+      C.emitReport(std::move(report));
     }
   }
 }

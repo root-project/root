@@ -93,7 +93,8 @@ public:
    // ValueDecl is the common base between enum constant, var decl and field decl
    TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *, TClingClassInfo *);
 
-   TClingDataMemberInfo(const TClingDataMemberInfo &rhs)
+   TClingDataMemberInfo(const TClingDataMemberInfo &rhs):
+      fContextIdx(0)
    {
       fInterp = rhs.fInterp;
       fClassInfo = new TClingClassInfo(*rhs.fClassInfo);
@@ -101,6 +102,8 @@ public:
       fIter = rhs.fIter;
       fIterStack = rhs.fIterStack;
       fSingleDecl = rhs.fSingleDecl;
+      fContexts = rhs.fContexts;
+      fContextIdx = rhs.fContextIdx;
    }
 
    TClingDataMemberInfo &operator=(const TClingDataMemberInfo &rhs)
@@ -112,6 +115,8 @@ public:
          fFirstTime = rhs.fFirstTime;
          fIter = rhs.fIter;
          fIterStack = rhs.fIterStack;
+         fContexts = rhs.fContexts;
+         fContextIdx = rhs.fContextIdx;
       }
       return *this;
    }

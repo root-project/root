@@ -29,7 +29,6 @@ void jetcone()
    Float_t length = 300.;
 
    // -- Define palette
-   gStyle->SetPalette(1, 0);
    TEveRGBAPalette* pal = new TEveRGBAPalette(0, 500);
 
    // -----------------------------------------------------------------------

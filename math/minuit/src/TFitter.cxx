@@ -541,17 +541,6 @@ void TFitter::ReleaseParameter(Int_t ipar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Specify the address of the fitting algorithm (from the interpreter)
-
-void TFitter::SetFCN(void *fcn)
-{
-   if (fCovar)  {delete [] fCovar; fCovar = 0;}
-   TVirtualFitter::SetFCN(fcn);
-   fMinuit->SetFCN(fcn);
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Specify the address of the fitting algorithm
 
 void TFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t))

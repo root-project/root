@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Getting Contours From TH2D.
 ///
 /// #### Image produced by `.x ContourList.C`
@@ -62,7 +63,6 @@ TCanvas *ContourList(){
       }
    }
 
-   gStyle->SetPalette(1);
    gStyle->SetOptStat(0);
    gStyle->SetTitleW(0.99);
    gStyle->SetTitleH(0.08);
@@ -115,23 +115,23 @@ TCanvas *ContourList(){
    2, -2, 2, 2, 0, 6.5);
 
    hr->Draw();
-   Double_t x0, y0, z0;
+   Double_t xval0, yval0, zval0;
    TLatex l;
    l.SetTextSize(0.03);
    char val[20];
 
    for(i = 0; i < TotalConts; i++){
       contLevel = (TList*)conts->At(i);
-      if (i<3) z0 = contours[2-i];
-      else     z0 = contours[i];
-      printf("Z-Level Passed in as:  Z = %f\n", z0);
+      if (i<3) zval0 = contours[2-i];
+      else     zval0 = contours[i];
+      printf("Z-Level Passed in as:  Z = %f\n", zval0);
 
       // Get first graph from list on curves on this level
       curv = (TGraph*)contLevel->First();
       for(j = 0; j < contLevel->GetSize(); j++){
-         curv->GetPoint(0, x0, y0);
-         if (z0<0) curv->SetLineColor(kRed);
-         if (z0>0) curv->SetLineColor(kBlue);
+         curv->GetPoint(0, xval0, yval0);
+         if (zval0<0) curv->SetLineColor(kRed);
+         if (zval0>0) curv->SetLineColor(kBlue);
          nGraphs ++;
          printf("\tGraph: %d  -- %d Elements\n", nGraphs,curv->GetN());
 
@@ -140,8 +140,8 @@ TCanvas *ContourList(){
          gc = (TGraph*)curv->Clone();
          gc->Draw("C");
 
-         sprintf(val,"%g",z0);
-         l.DrawLatex(x0,y0,val);
+         sprintf(val,"%g",zval0);
+         l.DrawLatex(xval0,yval0,val);
          curv = (TGraph*)contLevel->After(curv); // Get Next graph
       }
    }

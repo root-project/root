@@ -3,7 +3,7 @@
 ///
 /// Usage:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root [0] .L stressThreadPool.C++
 /// root [1] stressThreadPool(5, true)
 /// ~~~

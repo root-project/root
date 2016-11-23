@@ -43,16 +43,21 @@ TMVAH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivat
 		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
 		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
 		VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h
+TMVADNN      :=  $(wildcard $(MODDIRI)/TMVA/DNN/*.h) $(wildcard $(MODDIRI)/TMVA/DNN/Architectures/*.h) \
+		$(wildcard $(MODDIRI)/TMVA/DNN/Architectures/*/*.h)
 
 TMVAH1       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH1))
 TMVAH2       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH2))
 TMVAH3       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH3))
 TMVAH4       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH4))
+
 TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.h))
 TMVAINCH     := $(patsubst $(MODDIRI)/TMVA/%.h,include/TMVA/%.h,$(TMVAH))
-TMVAINCI     := $(patsubst $(MODDIRI)/TMVA/%.icc,include/TMVA/%.icc,$(MODDIRI)/TMVA/NeuralNet.icc)
+TMVAINCI     := $(patsubst $(MODDIRI)/TMVA/%.icc,include/TMVA/%.icc,$(MODDIRI)/TMVA/NeuralNet.icc) \
+		$(patsubst $(MODDIRI)/TMVA/DNN/%,include/TMVA/DNN/%,$(TMVADNN))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))
+TMVADNNS     := $(MODDIRS)/DNN/Architectures/Reference.cxx
+TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))  $(call stripsrc,$(TMVADNNS:.cxx=.o))
 
 TMVADEP      := $(TMVAO:.o=.d) $(TMVADO:.o=.d)
 
@@ -69,6 +74,13 @@ INCLUDEFILES += $(TMVADEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
+include/TMVA/DNN/%.h: $(TMVADIRI)/TMVA/DNN/%.h
+		@(if [ ! -d "include/TMVA/DNN/Architectures/Cpu" ]; then     \
+		  mkdir -p include/TMVA/DNN/Architectures/Cpu;               \
+		  mkdir -p include/TMVA/DNN/Architectures/Cuda;              \
+		fi)
+		cp $< $@
 
 include/TMVA/%.h: $(TMVADIRI)/TMVA/%.h
 		@(if [ ! -d "include/TMVA" ]; then     \

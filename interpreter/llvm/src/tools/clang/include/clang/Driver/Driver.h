@@ -18,10 +18,11 @@
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
-#include "llvm/Support/Path.h" // FIXME: Kill when CompilationInfo
-#include <memory>
-                              // lands.
+#include "llvm/Support/Path.h" // FIXME: Kill when CompilationInfo lands.
+
 #include <list>
+#include <map>
+#include <memory>
 #include <set>
 #include <string>
 
@@ -36,16 +37,29 @@ namespace opt {
 }
 
 namespace clang {
+
+namespace vfs {
+class FileSystem;
+}
+
 namespace driver {
 
   class Action;
   class Command;
   class Compilation;
   class InputInfo;
-  class Job;
+  class JobList;
   class JobAction;
   class SanitizerArgs;
   class ToolChain;
+
+/// Describes the kind of LTO mode selected via -f(no-)?lto(=.*)? options.
+enum LTOKind {
+  LTOK_None,
+  LTOK_Full,
+  LTOK_Thin,
+  LTOK_Unknown
+};
 
 /// Driver - Encapsulate logic for constructing compilation processes
 /// from a set of gcc-driver-like command line arguments.
@@ -54,12 +68,29 @@ class Driver {
 
   DiagnosticsEngine &Diags;
 
+  IntrusiveRefCntPtr<vfs::FileSystem> VFS;
+
   enum DriverMode {
     GCCMode,
     GXXMode,
     CPPMode,
     CLMode
   } Mode;
+
+  enum SaveTempsMode {
+    SaveTempsNone,
+    SaveTempsCwd,
+    SaveTempsObj
+  } SaveTemps;
+
+  enum BitcodeEmbedMode {
+    EmbedNone,
+    EmbedMarker,
+    EmbedBitcode
+  } BitcodeEmbed;
+
+  /// LTO mode selected via -f(no-)?lto(=.*)? options.
+  LTOKind LTOMode;
 
 public:
   // Diag - Forwarding function for diagnostics.
@@ -85,7 +116,7 @@ public:
   /// The path to the compiler resource directory.
   std::string ResourceDir;
 
-  /// A prefix directory used to emulated a limited subset of GCC's '-Bprefix'
+  /// A prefix directory used to emulate a limited subset of GCC's '-Bprefix'
   /// functionality.
   /// FIXME: This type of customization should be removed in favor of the
   /// universal driver when it is ready.
@@ -165,7 +196,7 @@ public:
 
 private:
   /// Certain options suppress the 'no input files' warning.
-  bool SuppressMissingInputWarning : 1;
+  unsigned SuppressMissingInputWarning : 1;
 
   std::list<std::string> TempFiles;
   std::list<std::string> ResultFiles;
@@ -189,15 +220,15 @@ private:
                            llvm::opt::Arg **FinalPhaseArg = nullptr) const;
 
   // Before executing jobs, sets up response files for commands that need them.
-  void setUpResponseFiles(Compilation &C, Job &J);
+  void setUpResponseFiles(Compilation &C, Command &Cmd);
 
   void generatePrefixedToolNames(const char *Tool, const ToolChain &TC,
                                  SmallVectorImpl<std::string> &Names) const;
 
 public:
-  Driver(StringRef _ClangExecutable,
-         StringRef _DefaultTargetTriple,
-         DiagnosticsEngine &_Diags);
+  Driver(StringRef ClangExecutable, StringRef DefaultTargetTriple,
+         DiagnosticsEngine &Diags,
+         IntrusiveRefCntPtr<vfs::FileSystem> VFS = nullptr);
   ~Driver();
 
   /// @name Accessors
@@ -210,12 +241,14 @@ public:
 
   const DiagnosticsEngine &getDiags() const { return Diags; }
 
+  vfs::FileSystem &getVFS() const { return *VFS; }
+
   bool getCheckInputsExist() const { return CheckInputsExist; }
 
   void setCheckInputsExist(bool Value) { CheckInputsExist = Value; }
 
   const std::string &getTitle() { return DriverTitle; }
-  void setTitle(std::string Value) { DriverTitle = Value; }
+  void setTitle(std::string Value) { DriverTitle = std::move(Value); }
 
   /// \brief Get the path to the main clang executable.
   const char *getClangProgramPath() const {
@@ -232,9 +265,20 @@ public:
     InstalledDir = Value;
   }
 
+  bool isSaveTempsEnabled() const { return SaveTemps != SaveTempsNone; }
+  bool isSaveTempsObj() const { return SaveTemps == SaveTempsObj; }
+
+  bool embedBitcodeEnabled() const { return BitcodeEmbed == EmbedBitcode; }
+  bool embedBitcodeMarkerOnly() const { return BitcodeEmbed == EmbedMarker; }
+
   /// @}
   /// @name Primary Functionality
   /// @{
+
+  /// CreateOffloadingDeviceToolChains - create all the toolchains required to
+  /// support offloading devices given the programming models specified in the
+  /// current compilation. Also, update the host tool chain kind accordingly.
+  void CreateOffloadingDeviceToolChains(Compilation &C, InputList &Inputs);
 
   /// BuildCompilation - Construct a compilation object for a command
   /// line argument vector.
@@ -253,7 +297,7 @@ public:
 
   /// ParseArgStrings - Parse the given list of strings into an
   /// ArgList.
-  llvm::opt::InputArgList *ParseArgStrings(ArrayRef<const char *> Args);
+  llvm::opt::InputArgList ParseArgStrings(ArrayRef<const char *> Args);
 
   /// BuildInputs - Construct the list of inputs and their types from 
   /// the given arguments.
@@ -268,22 +312,19 @@ public:
   /// BuildActions - Construct the list of actions to perform for the
   /// given arguments, which are only done for a single architecture.
   ///
-  /// \param TC - The default host tool chain.
+  /// \param C - The compilation that is being built.
   /// \param Args - The input arguments.
   /// \param Actions - The list to store the resulting actions onto.
-  void BuildActions(const ToolChain &TC, llvm::opt::DerivedArgList &Args,
+  void BuildActions(Compilation &C, llvm::opt::DerivedArgList &Args,
                     const InputList &Inputs, ActionList &Actions) const;
 
   /// BuildUniversalActions - Construct the list of actions to perform
   /// for the given arguments, which may require a universal build.
   ///
+  /// \param C - The compilation that is being built.
   /// \param TC - The default host tool chain.
-  /// \param Args - The input arguments.
-  /// \param Actions - The list to store the resulting actions onto.
-  void BuildUniversalActions(const ToolChain &TC,
-                             llvm::opt::DerivedArgList &Args,
-                             const InputList &BAInputs,
-                             ActionList &Actions) const;
+  void BuildUniversalActions(Compilation &C, const ToolChain &TC,
+                             const InputList &BAInputs) const;
 
   /// BuildJobs - Bind actions to concrete tools and translate
   /// arguments to form the list of jobs to run.
@@ -347,20 +388,18 @@ public:
   /// ConstructAction - Construct the appropriate action to do for
   /// \p Phase on the \p Input, taking in to account arguments
   /// like -fsyntax-only or --analyze.
-  std::unique_ptr<Action>
-  ConstructPhaseAction(const llvm::opt::ArgList &Args, phases::ID Phase,
-                       std::unique_ptr<Action> Input) const;
+  Action *ConstructPhaseAction(Compilation &C, const llvm::opt::ArgList &Args,
+                               phases::ID Phase, Action *Input) const;
 
-  /// BuildJobsForAction - Construct the jobs to perform for the
-  /// action \p A.
-  void BuildJobsForAction(Compilation &C,
-                          const Action *A,
-                          const ToolChain *TC,
-                          const char *BoundArch,
-                          bool AtTopLevel,
-                          bool MultipleArchs,
-                          const char *LinkingOutput,
-                          InputInfo &Result) const;
+  /// BuildJobsForAction - Construct the jobs to perform for the action \p A and
+  /// return an InputInfo for the result of running \p A.  Will only construct
+  /// jobs for a given (Action, ToolChain, BoundArch) tuple once.
+  InputInfo BuildJobsForAction(Compilation &C, const Action *A,
+                               const ToolChain *TC, const char *BoundArch,
+                               bool AtTopLevel, bool MultipleArchs,
+                               const char *LinkingOutput,
+                               std::map<std::pair<const Action *, std::string>,
+                                        InputInfo> &CachedResults) const;
 
   /// Returns the default name for linked images (e.g., "a.out").
   const char *getDefaultImageName() const;
@@ -389,25 +428,46 @@ public:
   /// GCC goes to extra lengths here to be a bit more robust.
   std::string GetTemporaryPath(StringRef Prefix, const char *Suffix) const;
 
+  /// Return the pathname of the pch file in clang-cl mode.
+  std::string GetClPchPath(Compilation &C, StringRef BaseName) const;
+
   /// ShouldUseClangCompiler - Should the clang compiler be used to
   /// handle this action.
   bool ShouldUseClangCompiler(const JobAction &JA) const;
 
-  bool IsUsingLTO(const llvm::opt::ArgList &Args) const;
+  /// Returns true if we are performing any kind of LTO.
+  bool isUsingLTO() const { return LTOMode != LTOK_None; }
+
+  /// Get the specific kind of LTO being performed.
+  LTOKind getLTOMode() const { return LTOMode; }
 
 private:
-  /// \brief Retrieves a ToolChain for a particular target triple.
+  /// Parse the \p Args list for LTO options and record the type of LTO
+  /// compilation based on which -f(no-)?lto(=.*)? option occurs last.
+  void setLTOMode(const llvm::opt::ArgList &Args);
+
+  /// \brief Retrieves a ToolChain for a particular \p Target triple.
   ///
   /// Will cache ToolChains for the life of the driver object, and create them
   /// on-demand.
   const ToolChain &getToolChain(const llvm::opt::ArgList &Args,
-                                StringRef DarwinArchName = "") const;
+                                const llvm::Triple &Target) const;
 
   /// @}
 
   /// \brief Get bitmasks for which option flags to include and exclude based on
   /// the driver mode.
   std::pair<unsigned, unsigned> getIncludeExcludeOptionFlagMasks() const;
+
+  /// Helper used in BuildJobsForAction.  Doesn't use the cache when building
+  /// jobs specifically for the given action, but will use the cache when
+  /// building jobs for the Action's inputs.
+  InputInfo BuildJobsForActionNoCache(
+      Compilation &C, const Action *A, const ToolChain *TC,
+      const char *BoundArch, bool AtTopLevel, bool MultipleArchs,
+      const char *LinkingOutput,
+      std::map<std::pair<const Action *, std::string>, InputInfo>
+          &CachedResults) const;
 
 public:
   /// GetReleaseVersion - Parse (([0-9]+)(.([0-9]+)(.([0-9]+)?))?)? and
@@ -420,6 +480,15 @@ public:
   static bool GetReleaseVersion(const char *Str, unsigned &Major,
                                 unsigned &Minor, unsigned &Micro,
                                 bool &HadExtra);
+
+  /// Parse digits from a string \p Str and fulfill \p Digits with
+  /// the parsed numbers. This method assumes that the max number of
+  /// digits to look for is equal to Digits.size().
+  ///
+  /// \return True if the entire string was parsed and there are
+  /// no extra characters remaining at the end.
+  static bool GetReleaseVersion(const char *Str,
+                                MutableArrayRef<unsigned> Digits);
 };
 
 /// \return True if the last defined optimization level is -Ofast.

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook
 /// Save histograms in Tree branches
 ///
 /// To run this example, do
@@ -11,8 +11,10 @@
 /// root > htr2()
 /// root > htr3()
 /// ~~~
+///
 /// \macro_image
 /// \macro_code
+///
 /// \author Rene Brun
 
 void htw() {

@@ -1,11 +1,16 @@
-/**********************************************************************************
- * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
- * Package   : TMVA                                                               *
- * Exectuable: TMVAClassificationCategoryApplication                              *
- *                                                                                *
- * This macro provides a simple example on how to use the trained classifiers     *
- * (with categories) within an analysis module                                    *
- **********************************************************************************/
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook -nodraw
+/// This macro provides a simple example on how to use the trained classifiers
+/// (with categories) within an analysis module
+/// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
+/// - Package   : TMVA
+/// - Exectuable: TMVAClassificationCategoryApplication
+///
+/// \macro_output
+/// \macro_code
+/// \author Andreas Hoecker
+
 
 #include <cstdlib>
 #include <vector>
@@ -35,7 +40,7 @@ void TMVAClassificationCategoryApplication()
    // ---------------------------------------------------------------
    // default MVA methods to be trained + tested
    std::map<std::string,int> Use;
-   // ---
+   //
    Use["LikelihoodCat"] = 1;
    Use["FisherCat"]     = 1;
    // ---------------------------------------------------------------
@@ -43,9 +48,9 @@ void TMVAClassificationCategoryApplication()
    std::cout << std::endl
              << "==> Start TMVAClassificationCategoryApplication" << std::endl;
 
-   // --- Create the Reader object
+   //  Create the Reader object
 
-   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
+   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );
 
    // Create a set of variables and spectators and declare them to the reader
    // - the variable names MUST corresponds in name and type to those given in the weight file(s) used
@@ -57,13 +62,13 @@ void TMVAClassificationCategoryApplication()
 
    reader->AddSpectator( "eta", &eta );
 
-   // --- Book the MVA methods
+   // Book the MVA methods
 
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
       if (it->second) {
          TString methodName = it->first + " method";
          TString weightfile = "dataset/weights/TMVAClassificationCategory_" + TString(it->first) + ".weights.xml";
-         reader->BookMVA( methodName, weightfile ); 
+         reader->BookMVA( methodName, weightfile );
       }
    }
 
@@ -79,7 +84,7 @@ void TMVAClassificationCategoryApplication()
    //
    TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
    // if directory data not found try using tutorials dir
-   if (gSystem->AccessPathName( fname )) {
+   if (gSystem->AccessPathName( fname + "toy_sigbkg_categ_offset.root"  )) {
       fname = TString(gROOT->GetTutorialsDir()) + "/tmva/data/";
    }
    if (UseOffsetMethod) fname += "toy_sigbkg_categ_offset.root";
@@ -91,7 +96,7 @@ void TMVAClassificationCategoryApplication()
       exit(1);
    }
 
-   // --- Event loop
+   // Event loop
 
    // Prepare the tree
    // - here the variable names have to corresponds to your tree
@@ -116,19 +121,19 @@ void TMVAClassificationCategoryApplication()
 
       theTree->GetEntry(ievt);
 
-      // --- Return the MVA outputs and fill into histograms
+      // Return the MVA outputs and fill into histograms
 
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
          if (!it->second) continue;
          TString methodName = it->first + " method";
-         hist[it->first]->Fill( reader->EvaluateMVA( methodName ) );         
+         hist[it->first]->Fill( reader->EvaluateMVA( methodName ) );
       }
 
    }
    sw.Stop();
    std::cout << "--- End of event loop: "; sw.Print();
 
-   // --- Write histograms
+   // Write histograms
 
    TFile *target  = new TFile( "TMVApp.root","RECREATE" );
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++)

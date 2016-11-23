@@ -1,12 +1,17 @@
-{
-   // Histogram producer script. This script creates a memory mapped
-   // file and stores three histogram objects in it (a TH1F, a TH2F and a
-   // TProfile). It then fills, in an infinite loop (so use ctrl-c to
-   // stop this script), the three histogram objects with random numbers.
-   // Every 10 fills the objects are updated in shared memory.
-   // Use the hcons.C script to map this file and display the histograms.
-   //Author: Fons Rademakers
+/// \file
+/// \ingroup tutorial_net
+/// Histogram producer script. This script creates a memory mapped
+/// file and stores three histogram objects in it (a TH1F, a TH2F and a
+/// TProfile). It then fills, in an infinite loop (so use ctrl-c to
+/// stop this script), the three histogram objects with random numbers.
+/// Every 10 fills the objects are updated in shared memory.
+/// Use the hcons.C script to map this file and display the histograms.
+///
+/// \macro_code
+///
+/// \author Fons Rademakers
 
+{
    gROOT->Reset();
 
    // Create a new memory mapped file. The memory mapped file can be

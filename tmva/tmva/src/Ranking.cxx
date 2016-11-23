@@ -116,7 +116,7 @@ void TMVA::Ranking::Print() const
    
    TString hline = "";
    for (Int_t i=0; i<maxL+15+fRankingDiscriminatorName.Length(); i++) hline += "-";
-   Log() << kINFO << "Ranking result (top variable is best ranked)" << Endl;
+   Log() << kHEADER << "Ranking result (top variable is best ranked)" << Endl;
    Log() << kINFO << hline << Endl;
    Log() << kINFO << std::setiosflags(std::ios::left) 
          << std::setw(5) << "Rank : "

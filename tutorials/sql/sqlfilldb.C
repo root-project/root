@@ -1,7 +1,13 @@
+/// \file
+/// \ingroup tutorial_sql
+/// Fill run catalog with nfiles entries
+///
+/// \macro_code
+///
+/// \author Sergey Linev
+
 void sqlfilldb(int nfiles = 1000)
 {
-   // Fill run catalog with nfiles entries
-
    const char *ins = "INSERT INTO runcatalog VALUES ('%s', %d,"
       " %d, %d, %d, %10.2f, '%s', '%s', '1997-01-15 20:16:28',"
       " '1999-01-15 20:16:28', '%s', '%s')";

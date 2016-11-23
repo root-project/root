@@ -43,6 +43,7 @@
 #include "TMVA/SeparationBase.h"
 
 #include "TMath.h"
+#include "TString.h"
 
 #include <iostream>
 #include <limits>

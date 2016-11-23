@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "ToolChains.h"
+#include "Tools.h"
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/Version.h"
 #include "clang/Driver/Compilation.h"
@@ -18,10 +19,10 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/Option/Arg.h"
 #include "llvm/Option/ArgList.h"
+#include "llvm/Support/ConvertUTF.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Process.h"
-
 #include <cstdio>
 
 // Include the necessary headers to interface with the Windows registry and
@@ -53,12 +54,12 @@ MSVCToolChain::MSVCToolChain(const Driver &D, const llvm::Triple& Triple,
 }
 
 Tool *MSVCToolChain::buildLinker() const {
-  return new tools::visualstudio::Link(*this);
+  return new tools::visualstudio::Linker(*this);
 }
 
 Tool *MSVCToolChain::buildAssembler() const {
   if (getTriple().isOSBinFormatMachO())
-    return new tools::darwin::Assemble(*this);
+    return new tools::darwin::Assembler(*this);
   getDriver().Diag(clang::diag::err_no_external_assembler);
   return nullptr;
 }
@@ -71,6 +72,11 @@ bool MSVCToolChain::IsUnwindTablesDefault() const {
   // Emit unwind tables by default on Win64. All non-x86_32 Windows platforms
   // such as ARM and PPC actually require unwind tables, but LLVM doesn't know
   // how to generate them yet.
+
+  // Don't emit unwind tables by default for MachO targets.
+  if (getTriple().isOSBinFormatMachO())
+    return false;
+
   return getArch() == llvm::Triple::x86_64;
 }
 
@@ -89,23 +95,31 @@ bool MSVCToolChain::isPICDefaultForced() const {
 #ifdef USE_WIN32
 static bool readFullStringValue(HKEY hkey, const char *valueName,
                                 std::string &value) {
-  // FIXME: We should be using the W versions of the registry functions, but
-  // doing so requires UTF8 / UTF16 conversions similar to how we handle command
-  // line arguments.  The UTF8 conversion functions are not exposed publicly
-  // from LLVM though, so in order to do this we will probably need to create
-  // a registry abstraction in LLVMSupport that is Windows only.
+  std::wstring WideValueName;
+  if (!llvm::ConvertUTF8toWide(valueName, WideValueName))
+    return false;
+
   DWORD result = 0;
   DWORD valueSize = 0;
   DWORD type = 0;
   // First just query for the required size.
-  result = RegQueryValueEx(hkey, valueName, NULL, &type, NULL, &valueSize);
-  if (result != ERROR_SUCCESS || type != REG_SZ)
+  result = RegQueryValueExW(hkey, WideValueName.c_str(), NULL, &type, NULL,
+                            &valueSize);
+  if (result != ERROR_SUCCESS || type != REG_SZ || !valueSize)
     return false;
   std::vector<BYTE> buffer(valueSize);
-  result = RegQueryValueEx(hkey, valueName, NULL, NULL, &buffer[0], &valueSize);
-  if (result == ERROR_SUCCESS)
-    value.assign(reinterpret_cast<const char *>(buffer.data()));
-  return result;
+  result = RegQueryValueExW(hkey, WideValueName.c_str(), NULL, NULL, &buffer[0],
+                            &valueSize);
+  if (result == ERROR_SUCCESS) {
+    std::wstring WideValue(reinterpret_cast<const wchar_t *>(buffer.data()),
+                           valueSize / sizeof(wchar_t));
+    // The destination buffer must be empty as an invariant of the conversion
+    // function; but this function is sometimes called in a loop that passes in
+    // the same buffer, however. Simply clear it out so we can overwrite it.
+    value.clear();
+    return llvm::convertWideToUTF8(WideValue, value);
+  }
+  return false;
 }
 #endif
 
@@ -141,19 +155,20 @@ static bool getSystemRegistryString(const char *keyPath, const char *valueName,
       nextKey++;
     size_t partialKeyLength = keyEnd - keyPath;
     char partialKey[256];
-    if (partialKeyLength > sizeof(partialKey))
-      partialKeyLength = sizeof(partialKey);
+    if (partialKeyLength >= sizeof(partialKey))
+      partialKeyLength = sizeof(partialKey) - 1;
     strncpy(partialKey, keyPath, partialKeyLength);
     partialKey[partialKeyLength] = '\0';
     HKEY hTopKey = NULL;
-    lResult = RegOpenKeyEx(hRootKey, partialKey, 0, KEY_READ | KEY_WOW64_32KEY,
-                           &hTopKey);
+    lResult = RegOpenKeyExA(hRootKey, partialKey, 0, KEY_READ | KEY_WOW64_32KEY,
+                            &hTopKey);
     if (lResult == ERROR_SUCCESS) {
       char keyName[256];
       double bestValue = 0.0;
       DWORD index, size = sizeof(keyName) - 1;
-      for (index = 0; RegEnumKeyEx(hTopKey, index, keyName, &size, NULL,
-          NULL, NULL, NULL) == ERROR_SUCCESS; index++) {
+      for (index = 0; RegEnumKeyExA(hTopKey, index, keyName, &size, NULL, NULL,
+                                    NULL, NULL) == ERROR_SUCCESS;
+           index++) {
         const char *sp = keyName;
         while (*sp && !isDigit(*sp))
           sp++;
@@ -172,8 +187,8 @@ static bool getSystemRegistryString(const char *keyPath, const char *valueName,
           bestName = keyName;
           // Append rest of key.
           bestName.append(nextKey);
-          lResult = RegOpenKeyEx(hTopKey, bestName.c_str(), 0,
-                                 KEY_READ | KEY_WOW64_32KEY, &hKey);
+          lResult = RegOpenKeyExA(hTopKey, bestName.c_str(), 0,
+                                  KEY_READ | KEY_WOW64_32KEY, &hKey);
           if (lResult == ERROR_SUCCESS) {
             lResult = readFullStringValue(hKey, valueName, value);
             if (lResult == ERROR_SUCCESS) {
@@ -191,7 +206,7 @@ static bool getSystemRegistryString(const char *keyPath, const char *valueName,
     }
   } else {
     lResult =
-        RegOpenKeyEx(hRootKey, keyPath, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
+        RegOpenKeyExA(hRootKey, keyPath, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
     if (lResult == ERROR_SUCCESS) {
       lResult = readFullStringValue(hKey, valueName, value);
       if (lResult == ERROR_SUCCESS)
@@ -205,27 +220,103 @@ static bool getSystemRegistryString(const char *keyPath, const char *valueName,
 #endif // USE_WIN32
 }
 
+// Convert LLVM's ArchType
+// to the corresponding name of Windows SDK libraries subfolder
+static StringRef getWindowsSDKArch(llvm::Triple::ArchType Arch) {
+  switch (Arch) {
+  case llvm::Triple::x86:
+    return "x86";
+  case llvm::Triple::x86_64:
+    return "x64";
+  case llvm::Triple::arm:
+    return "arm";
+  default:
+    return "";
+  }
+}
+
+// Find the most recent version of Universal CRT or Windows 10 SDK.
+// vcvarsqueryregistry.bat from Visual Studio 2015 sorts entries in the include
+// directory by name and uses the last one of the list.
+// So we compare entry names lexicographically to find the greatest one.
+static bool getWindows10SDKVersion(const std::string &SDKPath,
+                                   std::string &SDKVersion) {
+  SDKVersion.clear();
+
+  std::error_code EC;
+  llvm::SmallString<128> IncludePath(SDKPath);
+  llvm::sys::path::append(IncludePath, "Include");
+  for (llvm::sys::fs::directory_iterator DirIt(IncludePath, EC), DirEnd;
+       DirIt != DirEnd && !EC; DirIt.increment(EC)) {
+    if (!llvm::sys::fs::is_directory(DirIt->path()))
+      continue;
+    StringRef CandidateName = llvm::sys::path::filename(DirIt->path());
+    // If WDK is installed, there could be subfolders like "wdf" in the
+    // "Include" directory.
+    // Allow only directories which names start with "10.".
+    if (!CandidateName.startswith("10."))
+      continue;
+    if (CandidateName > SDKVersion)
+      SDKVersion = CandidateName;
+  }
+
+  return !SDKVersion.empty();
+}
+
 /// \brief Get Windows SDK installation directory.
-bool MSVCToolChain::getWindowsSDKDir(std::string &path, int &major,
-                                     int &minor) const {
-  std::string sdkVersion;
+bool MSVCToolChain::getWindowsSDKDir(std::string &Path, int &Major,
+                                     std::string &WindowsSDKIncludeVersion,
+                                     std::string &WindowsSDKLibVersion) const {
+  std::string RegistrySDKVersion;
   // Try the Windows registry.
-  bool hasSDKDir = getSystemRegistryString(
-      "SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\$VERSION",
-      "InstallationFolder", path, &sdkVersion);
-  if (!sdkVersion.empty())
-    std::sscanf(sdkVersion.c_str(), "v%d.%d", &major, &minor);
-  return hasSDKDir && !path.empty();
+  if (!getSystemRegistryString(
+          "SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\$VERSION",
+          "InstallationFolder", Path, &RegistrySDKVersion))
+    return false;
+  if (Path.empty() || RegistrySDKVersion.empty())
+    return false;
+
+  WindowsSDKIncludeVersion.clear();
+  WindowsSDKLibVersion.clear();
+  Major = 0;
+  std::sscanf(RegistrySDKVersion.c_str(), "v%d.", &Major);
+  if (Major <= 7)
+    return true;
+  if (Major == 8) {
+    // Windows SDK 8.x installs libraries in a folder whose names depend on the
+    // version of the OS you're targeting.  By default choose the newest, which
+    // usually corresponds to the version of the OS you've installed the SDK on.
+    const char *Tests[] = {"winv6.3", "win8", "win7"};
+    for (const char *Test : Tests) {
+      llvm::SmallString<128> TestPath(Path);
+      llvm::sys::path::append(TestPath, "Lib", Test);
+      if (llvm::sys::fs::exists(TestPath.c_str())) {
+        WindowsSDKLibVersion = Test;
+        break;
+      }
+    }
+    return !WindowsSDKLibVersion.empty();
+  }
+  if (Major == 10) {
+    if (!getWindows10SDKVersion(Path, WindowsSDKIncludeVersion))
+      return false;
+    WindowsSDKLibVersion = WindowsSDKIncludeVersion;
+    return true;
+  }
+  // Unsupported SDK version
+  return false;
 }
 
 // Gets the library path required to link against the Windows SDK.
 bool MSVCToolChain::getWindowsSDKLibraryPath(std::string &path) const {
   std::string sdkPath;
   int sdkMajor = 0;
-  int sdkMinor = 0;
+  std::string windowsSDKIncludeVersion;
+  std::string windowsSDKLibVersion;
 
   path.clear();
-  if (!getWindowsSDKDir(sdkPath, sdkMajor, sdkMinor))
+  if (!getWindowsSDKDir(sdkPath, sdkMajor, windowsSDKIncludeVersion,
+                        windowsSDKLibVersion))
     return false;
 
   llvm::SmallString<128> libPath(sdkPath);
@@ -245,41 +336,54 @@ bool MSVCToolChain::getWindowsSDKLibraryPath(std::string &path) const {
       return false;
     }
   } else {
-    // Windows SDK 8.x installs libraries in a folder whose names depend on the
-    // version of the OS you're targeting.  By default choose the newest, which
-    // usually corresponds to the version of the OS you've installed the SDK on.
-    const char *tests[] = {"winv6.3", "win8", "win7"};
-    bool found = false;
-    for (const char *test : tests) {
-      llvm::SmallString<128> testPath(libPath);
-      llvm::sys::path::append(testPath, test);
-      if (llvm::sys::fs::exists(testPath.c_str())) {
-        libPath = testPath;
-        found = true;
-        break;
-      }
-    }
-
-    if (!found)
+    const StringRef archName = getWindowsSDKArch(getArch());
+    if (archName.empty())
       return false;
-
-    llvm::sys::path::append(libPath, "um");
-    switch (getArch()) {
-    case llvm::Triple::x86:
-      llvm::sys::path::append(libPath, "x86");
-      break;
-    case llvm::Triple::x86_64:
-      llvm::sys::path::append(libPath, "x64");
-      break;
-    case llvm::Triple::arm:
-      llvm::sys::path::append(libPath, "arm");
-      break;
-    default:
-      return false;
-    }
+    llvm::sys::path::append(libPath, windowsSDKLibVersion, "um", archName);
   }
 
   path = libPath.str();
+  return true;
+}
+
+// Check if the Include path of a specified version of Visual Studio contains
+// specific header files. If not, they are probably shipped with Universal CRT.
+bool clang::driver::toolchains::MSVCToolChain::useUniversalCRT(
+    std::string &VisualStudioDir) const {
+  llvm::SmallString<128> TestPath(VisualStudioDir);
+  llvm::sys::path::append(TestPath, "VC\\include\\stdlib.h");
+
+  return !llvm::sys::fs::exists(TestPath);
+}
+
+bool MSVCToolChain::getUniversalCRTSdkDir(std::string &Path,
+                                          std::string &UCRTVersion) const {
+  // vcvarsqueryregistry.bat for Visual Studio 2015 queries the registry
+  // for the specific key "KitsRoot10". So do we.
+  if (!getSystemRegistryString(
+          "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots", "KitsRoot10",
+          Path, nullptr))
+    return false;
+
+  return getWindows10SDKVersion(Path, UCRTVersion);
+}
+
+bool MSVCToolChain::getUniversalCRTLibraryPath(std::string &Path) const {
+  std::string UniversalCRTSdkPath;
+  std::string UCRTVersion;
+
+  Path.clear();
+  if (!getUniversalCRTSdkDir(UniversalCRTSdkPath, UCRTVersion))
+    return false;
+
+  StringRef ArchName = getWindowsSDKArch(getArch());
+  if (ArchName.empty())
+    return false;
+
+  llvm::SmallString<128> LibPath(UniversalCRTSdkPath);
+  llvm::sys::path::append(LibPath, "Lib", UCRTVersion, "ucrt", ArchName);
+
+  Path = LibPath.str();
   return true;
 }
 
@@ -313,7 +417,10 @@ bool MSVCToolChain::getVisualStudioBinariesFolder(const char *clangProgramPath,
 
         SmallString<128> FilePath(PathSegment);
         llvm::sys::path::append(FilePath, "cl.exe");
-        if (llvm::sys::fs::can_execute(FilePath.c_str()) &&
+        // Checking if cl.exe exists is a small optimization over calling
+        // can_execute, which really only checks for existence but will also do
+        // extra checks for cl.exe.exe.  These add up when walking a long path.
+        if (llvm::sys::fs::exists(FilePath.c_str()) &&
             !llvm::sys::fs::equivalent(FilePath.c_str(), clangProgramPath)) {
           // If we found it on the PATH, use it exactly as is with no
           // modifications.
@@ -361,6 +468,45 @@ bool MSVCToolChain::getVisualStudioBinariesFolder(const char *clangProgramPath,
   }
   path = BinDir.str();
   return true;
+}
+
+VersionTuple MSVCToolChain::getMSVCVersionFromExe() const {
+  VersionTuple Version;
+#ifdef USE_WIN32
+  std::string BinPath;
+  if (!getVisualStudioBinariesFolder("", BinPath))
+    return Version;
+  SmallString<128> ClExe(BinPath);
+  llvm::sys::path::append(ClExe, "cl.exe");
+
+  std::wstring ClExeWide;
+  if (!llvm::ConvertUTF8toWide(ClExe.c_str(), ClExeWide))
+    return Version;
+
+  const DWORD VersionSize = ::GetFileVersionInfoSizeW(ClExeWide.c_str(),
+                                                      nullptr);
+  if (VersionSize == 0)
+    return Version;
+
+  SmallVector<uint8_t, 4 * 1024> VersionBlock(VersionSize);
+  if (!::GetFileVersionInfoW(ClExeWide.c_str(), 0, VersionSize,
+                             VersionBlock.data()))
+    return Version;
+
+  VS_FIXEDFILEINFO *FileInfo = nullptr;
+  UINT FileInfoSize = 0;
+  if (!::VerQueryValueW(VersionBlock.data(), L"\\",
+                        reinterpret_cast<LPVOID *>(&FileInfo), &FileInfoSize) ||
+      FileInfoSize < sizeof(*FileInfo))
+    return Version;
+
+  const unsigned Major = (FileInfo->dwFileVersionMS >> 16) & 0xFFFF;
+  const unsigned Minor = (FileInfo->dwFileVersionMS      ) & 0xFFFF;
+  const unsigned Micro = (FileInfo->dwFileVersionLS >> 16) & 0xFFFF;
+
+  Version = VersionTuple(Major, Minor, Micro);
+#endif
+  return Version;
 }
 
 // Get Visual Studio installation directory.
@@ -419,13 +565,13 @@ bool MSVCToolChain::getVisualStudioInstallDir(std::string &path) const {
   return false;
 }
 
-void MSVCToolChain::AddSystemIncludeWithSubfolder(const ArgList &DriverArgs,
-                                                  ArgStringList &CC1Args,
-                                                  const std::string &folder,
-                                                  const char *subfolder) const {
+void MSVCToolChain::AddSystemIncludeWithSubfolder(
+    const ArgList &DriverArgs, ArgStringList &CC1Args,
+    const std::string &folder, const Twine &subfolder1, const Twine &subfolder2,
+    const Twine &subfolder3) const {
   llvm::SmallString<128> path(folder);
-  llvm::sys::path::append(path, subfolder);
-  addSystemInclude(DriverArgs, CC1Args, path.str());
+  llvm::sys::path::append(path, subfolder1, subfolder2, subfolder3);
+  addSystemInclude(DriverArgs, CC1Args, path);
 }
 
 void MSVCToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
@@ -434,10 +580,13 @@ void MSVCToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
     return;
 
   if (!DriverArgs.hasArg(options::OPT_nobuiltininc)) {
-    SmallString<128> P(getDriver().ResourceDir);
-    llvm::sys::path::append(P, "include");
-    addSystemInclude(DriverArgs, CC1Args, P.str());
+    AddSystemIncludeWithSubfolder(DriverArgs, CC1Args, getDriver().ResourceDir,
+                                  "include");
   }
+
+  // Add %INCLUDE%-like directories from the -imsvc flag.
+  for (const auto &Path : DriverArgs.getAllArgValues(options::OPT__SLASH_imsvc))
+    addSystemInclude(DriverArgs, CC1Args, Path);
 
   if (DriverArgs.hasArg(options::OPT_nostdlibinc))
     return;
@@ -460,16 +609,33 @@ void MSVCToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
   if (getVisualStudioInstallDir(VSDir)) {
     AddSystemIncludeWithSubfolder(DriverArgs, CC1Args, VSDir, "VC\\include");
 
+    if (useUniversalCRT(VSDir)) {
+      std::string UniversalCRTSdkPath;
+      std::string UCRTVersion;
+      if (getUniversalCRTSdkDir(UniversalCRTSdkPath, UCRTVersion)) {
+        AddSystemIncludeWithSubfolder(DriverArgs, CC1Args, UniversalCRTSdkPath,
+                                      "Include", UCRTVersion, "ucrt");
+      }
+    }
+
     std::string WindowsSDKDir;
-    int major, minor;
-    if (getWindowsSDKDir(WindowsSDKDir, major, minor)) {
+    int major;
+    std::string windowsSDKIncludeVersion;
+    std::string windowsSDKLibVersion;
+    if (getWindowsSDKDir(WindowsSDKDir, major, windowsSDKIncludeVersion,
+                         windowsSDKLibVersion)) {
       if (major >= 8) {
+        // Note: windowsSDKIncludeVersion is empty for SDKs prior to v10.
+        // Anyway, llvm::sys::path::append is able to manage it.
         AddSystemIncludeWithSubfolder(DriverArgs, CC1Args, WindowsSDKDir,
-                                      "include\\shared");
+                                      "include", windowsSDKIncludeVersion,
+                                      "shared");
         AddSystemIncludeWithSubfolder(DriverArgs, CC1Args, WindowsSDKDir,
-                                      "include\\um");
+                                      "include", windowsSDKIncludeVersion,
+                                      "um");
         AddSystemIncludeWithSubfolder(DriverArgs, CC1Args, WindowsSDKDir,
-                                      "include\\winrt");
+                                      "include", windowsSDKIncludeVersion,
+                                      "winrt");
       } else {
         AddSystemIncludeWithSubfolder(DriverArgs, CC1Args, WindowsSDKDir,
                                       "include");
@@ -495,4 +661,196 @@ void MSVCToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
 void MSVCToolChain::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
                                                  ArgStringList &CC1Args) const {
   // FIXME: There should probably be logic here to find libc++ on Windows.
+}
+
+std::string
+MSVCToolChain::ComputeEffectiveClangTriple(const ArgList &Args,
+                                           types::ID InputType) const {
+  std::string TripleStr =
+      ToolChain::ComputeEffectiveClangTriple(Args, InputType);
+  llvm::Triple Triple(TripleStr);
+  VersionTuple MSVT =
+      tools::visualstudio::getMSVCVersion(/*D=*/nullptr, *this, Triple, Args,
+                                          /*IsWindowsMSVC=*/true);
+  if (MSVT.empty())
+    return TripleStr;
+
+  MSVT = VersionTuple(MSVT.getMajor(), MSVT.getMinor().getValueOr(0),
+                      MSVT.getSubminor().getValueOr(0));
+
+  if (Triple.getEnvironment() == llvm::Triple::MSVC) {
+    StringRef ObjFmt = Triple.getEnvironmentName().split('-').second;
+    if (ObjFmt.empty())
+      Triple.setEnvironmentName((Twine("msvc") + MSVT.getAsString()).str());
+    else
+      Triple.setEnvironmentName(
+          (Twine("msvc") + MSVT.getAsString() + Twine('-') + ObjFmt).str());
+  }
+  return Triple.getTriple();
+}
+
+SanitizerMask MSVCToolChain::getSupportedSanitizers() const {
+  SanitizerMask Res = ToolChain::getSupportedSanitizers();
+  Res |= SanitizerKind::Address;
+  return Res;
+}
+
+static void TranslateOptArg(Arg *A, llvm::opt::DerivedArgList &DAL,
+                            bool SupportsForcingFramePointer,
+                            const char *ExpandChar, const OptTable &Opts) {
+  assert(A->getOption().matches(options::OPT__SLASH_O));
+
+  StringRef OptStr = A->getValue();
+  for (size_t I = 0, E = OptStr.size(); I != E; ++I) {
+    const char &OptChar = *(OptStr.data() + I);
+    switch (OptChar) {
+    default:
+      break;
+    case '1':
+    case '2':
+    case 'x':
+    case 'd':
+      if (&OptChar == ExpandChar) {
+        if (OptChar == 'd') {
+          DAL.AddFlagArg(A, Opts.getOption(options::OPT_O0));
+        } else {
+          if (OptChar == '1') {
+            DAL.AddJoinedArg(A, Opts.getOption(options::OPT_O), "s");
+          } else if (OptChar == '2' || OptChar == 'x') {
+            DAL.AddFlagArg(A, Opts.getOption(options::OPT_fbuiltin));
+            DAL.AddJoinedArg(A, Opts.getOption(options::OPT_O), "2");
+          }
+          if (SupportsForcingFramePointer &&
+              !DAL.hasArgNoClaim(options::OPT_fno_omit_frame_pointer))
+            DAL.AddFlagArg(A,
+                           Opts.getOption(options::OPT_fomit_frame_pointer));
+          if (OptChar == '1' || OptChar == '2')
+            DAL.AddFlagArg(A,
+                           Opts.getOption(options::OPT_ffunction_sections));
+        }
+      }
+      break;
+    case 'b':
+      if (I + 1 != E && isdigit(OptStr[I + 1])) {
+        switch (OptStr[I + 1]) {
+        case '0':
+          DAL.AddFlagArg(A, Opts.getOption(options::OPT_fno_inline));
+          break;
+        case '1':
+          DAL.AddFlagArg(A, Opts.getOption(options::OPT_finline_hint_functions));
+          break;
+        case '2':
+          DAL.AddFlagArg(A, Opts.getOption(options::OPT_finline_functions));
+          break;
+        }
+        ++I;
+      }
+      break;
+    case 'g':
+      break;
+    case 'i':
+      if (I + 1 != E && OptStr[I + 1] == '-') {
+        ++I;
+        DAL.AddFlagArg(A, Opts.getOption(options::OPT_fno_builtin));
+      } else {
+        DAL.AddFlagArg(A, Opts.getOption(options::OPT_fbuiltin));
+      }
+      break;
+    case 's':
+      DAL.AddJoinedArg(A, Opts.getOption(options::OPT_O), "s");
+      break;
+    case 't':
+      DAL.AddJoinedArg(A, Opts.getOption(options::OPT_O), "2");
+      break;
+    case 'y': {
+      bool OmitFramePointer = true;
+      if (I + 1 != E && OptStr[I + 1] == '-') {
+        OmitFramePointer = false;
+        ++I;
+      }
+      if (SupportsForcingFramePointer) {
+        if (OmitFramePointer)
+          DAL.AddFlagArg(A,
+                         Opts.getOption(options::OPT_fomit_frame_pointer));
+        else
+          DAL.AddFlagArg(
+              A, Opts.getOption(options::OPT_fno_omit_frame_pointer));
+      } else {
+        // Don't warn about /Oy- in 64-bit builds (where
+        // SupportsForcingFramePointer is false).  The flag having no effect
+        // there is a compiler-internal optimization, and people shouldn't have
+        // to special-case their build files for 64-bit clang-cl.
+        A->claim();
+      }
+      break;
+    }
+    }
+  }
+}
+
+static void TranslateDArg(Arg *A, llvm::opt::DerivedArgList &DAL,
+                          const OptTable &Opts) {
+  assert(A->getOption().matches(options::OPT_D));
+
+  StringRef Val = A->getValue();
+  size_t Hash = Val.find('#');
+  if (Hash == StringRef::npos || Hash > Val.find('=')) {
+    DAL.append(A);
+    return;
+  }
+
+  std::string NewVal = Val;
+  NewVal[Hash] = '=';
+  DAL.AddJoinedArg(A, Opts.getOption(options::OPT_D), NewVal);
+}
+
+llvm::opt::DerivedArgList *
+MSVCToolChain::TranslateArgs(const llvm::opt::DerivedArgList &Args,
+                             const char *BoundArch) const {
+  DerivedArgList *DAL = new DerivedArgList(Args.getBaseArgs());
+  const OptTable &Opts = getDriver().getOpts();
+
+  // /Oy and /Oy- only has an effect under X86-32.
+  bool SupportsForcingFramePointer = getArch() == llvm::Triple::x86;
+
+  // The -O[12xd] flag actually expands to several flags.  We must desugar the
+  // flags so that options embedded can be negated.  For example, the '-O2' flag
+  // enables '-Oy'.  Expanding '-O2' into its constituent flags allows us to
+  // correctly handle '-O2 -Oy-' where the trailing '-Oy-' disables a single
+  // aspect of '-O2'.
+  //
+  // Note that this expansion logic only applies to the *last* of '[12xd]'.
+
+  // First step is to search for the character we'd like to expand.
+  const char *ExpandChar = nullptr;
+  for (Arg *A : Args) {
+    if (!A->getOption().matches(options::OPT__SLASH_O))
+      continue;
+    StringRef OptStr = A->getValue();
+    for (size_t I = 0, E = OptStr.size(); I != E; ++I) {
+      char OptChar = OptStr[I];
+      char PrevChar = I > 0 ? OptStr[I - 1] : '0';
+      if (PrevChar == 'b') {
+        // OptChar does not expand; it's an argument to the previous char.
+        continue;
+      }
+      if (OptChar == '1' || OptChar == '2' || OptChar == 'x' || OptChar == 'd')
+        ExpandChar = OptStr.data() + I;
+    }
+  }
+
+  for (Arg *A : Args) {
+    if (A->getOption().matches(options::OPT__SLASH_O)) {
+      // The -O flag actually takes an amalgam of other options.  For example,
+      // '/Ogyb2' is equivalent to '/Og' '/Oy' '/Ob2'.
+      TranslateOptArg(A, *DAL, SupportsForcingFramePointer, ExpandChar, Opts);
+    } else if (A->getOption().matches(options::OPT_D)) {
+      // Translate -Dfoo#bar into -Dfoo=bar.
+      TranslateDArg(A, *DAL, Opts);
+    } else {
+      DAL->append(A);
+    }
+  }
+
+  return DAL;
 }

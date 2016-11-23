@@ -2,8 +2,8 @@
 #
 # This module defines
 # PCRE_INCLUDE_DIR, where to locate PCRE header files
-# PCRE_LIBRARIES, the libraries to link against to use Pythia6
-# PCRE_FOUND.  If false, you cannot build anything that requires Pythia6.
+# PCRE_LIBRARIES, the libraries to link against to use PCRE
+# PCRE_FOUND.  If false, you cannot build anything that requires PCRE.
 
 set(_PCRE_PATHS ${PCRE_DIR} $ENV{PCRE_DIR})
 

@@ -49,7 +49,7 @@ namespace utils {
   NestedNameSpecifier* GetFullyQualifiedNameSpecifier(const ASTContext& Ctx,
                                                       NestedNameSpecifier* scope);
 
-  bool Analyze::IsWrapper(const NamedDecl* ND) {
+  bool Analyze::IsWrapper(const FunctionDecl* ND) {
     if (!ND)
       return false;
 
@@ -145,7 +145,7 @@ namespace utils {
               newBody.insert(newBody.begin() + indexOfLastExpr, DRE);
 
               // Attach the new body (note: it does dealloc/alloc of all nodes)
-              CS->setStmts(S->getASTContext(), &newBody.front(),newBody.size());
+              CS->setStmts(S->getASTContext(), newBody);
               if (FoundAt)
                 *FoundAt = indexOfLastExpr;
               return DRE;
@@ -161,7 +161,13 @@ namespace utils {
 
   const char* const Synthesize::UniquePrefix = "__cling_Un1Qu3";
 
-  Expr* Synthesize::CStyleCastPtrExpr(Sema* S, QualType Ty, uint64_t Ptr) {
+  IntegerLiteral* Synthesize::IntegerLiteralExpr(ASTContext& C, uintptr_t Ptr) {
+    const llvm::APInt Addr(8 * sizeof(void*), Ptr);
+    return IntegerLiteral::Create(C, Addr, C.getUIntPtrType(),
+                                  SourceLocation());
+  }
+
+  Expr* Synthesize::CStyleCastPtrExpr(Sema* S, QualType Ty, uintptr_t Ptr) {
     ASTContext& Ctx = S->getASTContext();
     return CStyleCastPtrExpr(S, Ty, Synthesize::IntegerLiteralExpr(Ctx, Ptr));
   }
@@ -176,12 +182,6 @@ namespace utils {
       = S->BuildCStyleCastExpr(SourceLocation(), TSI,SourceLocation(),E).get();
     assert(Result && "Cannot create CStyleCastPtrExpr");
     return Result;
-  }
-
-  IntegerLiteral* Synthesize::IntegerLiteralExpr(ASTContext& C, uint64_t Ptr) {
-    const llvm::APInt Addr(8 * sizeof(void *), Ptr);
-    return IntegerLiteral::Create(C, Addr, C.getUIntPtrType(),
-                                  SourceLocation());
   }
 
   static bool
@@ -249,9 +249,7 @@ namespace utils {
         // Keep the argument const to be inline will all the other interfaces
         // like:  NestedNameSpecifier::Create
         ASTContext &mutableCtx( const_cast<ASTContext&>(Ctx) );
-        arg =TemplateArgument(TemplateArgument::CreatePackCopy(mutableCtx,
-                                                               desArgs.data(),
-                                                               desArgs.size()));
+        arg = TemplateArgument::CreatePackCopy(mutableCtx, desArgs);
       }
     }
     return changed;
@@ -878,9 +876,7 @@ namespace utils {
         // Keep the argument const to be inline will all the other interfaces
         // like:  NestedNameSpecifier::Create
         ASTContext &mutableCtx( const_cast<ASTContext&>(Ctx) );
-        arg =TemplateArgument(TemplateArgument::CreatePackCopy(mutableCtx,
-                                                               desArgs.data(),
-                                                               desArgs.size()));
+        arg = TemplateArgument::CreatePackCopy(mutableCtx, desArgs);
       }
     }
     return changed;

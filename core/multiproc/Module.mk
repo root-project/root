@@ -18,15 +18,8 @@ MULTIPROCDS     := $(call stripsrc,$(MODDIRS)/G__MultiProc.cxx)
 MULTIPROCDO     := $(MULTIPROCDS:.cxx=.o)
 MULTIPROCDH     := $(MULTIPROCDS:.cxx=.h)
 
-MULTIPROCH      := $(MODDIRI)/TMPClient.h $(MODDIRI)/TProcPool.h \
-                $(MODDIRI)/TMPWorker.h $(MODDIRI)/MPSendRecv.h \
-                $(MODDIRI)/TPoolWorker.h $(MODDIRI)/TPoolProcessor.h \
-                $(MODDIRI)/MPCode.h $(MODDIRI)/PoolUtils.h
-
-MULTIPROCS      := $(MODDIRS)/TMPClient.cxx $(MODDIRS)/TProcPool.cxx \
-                $(MODDIRS)/TMPWorker.cxx $(MODDIRS)/MPSendRecv.cxx \
-                $(MODDIRS)/TPoolWorker.cxx $(MODDIRS)/TPoolProcessor.cxx
-
+MULTIPROCH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h $(MODDIRI)/ROOT/*.hxx))
+MULTIPROCS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MULTIPROCO      := $(call stripsrc,$(MULTIPROCS:.cxx=.o))
 
 MULTIPROCDEP    := $(MULTIPROCO:.o=.d) $(MULTIPROCDO:.o=.d)
@@ -35,7 +28,7 @@ MULTIPROCLIB    := $(LPATH)/libMultiProc.$(SOEXT)
 MULTIPROCMAP    := $(MULTIPROCLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MULTIPROCH) $(MULTIPROCH_EXT))
+ALLHDRS      += $(patsubst $(MODDIRI)/%,include/%,$(MULTIPROCH) $(MULTIPROCH_EXT))
 ALLLIBS      += $(MULTIPROCLIB)
 ALLMAPS      += $(MULTIPROCMAP)
 
@@ -51,6 +44,10 @@ INCLUDEFILES += $(MULTIPROCDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(MULTIPROCDIRI)/%.h
+		cp $< $@
+
+include/%.hxx:  $(MULTIPROCDIRI)/%.hxx
+		mkdir -p include/ROOT
 		cp $< $@
 
 $(MULTIPROCLIB):   $(MULTIPROCO) $(MULTIPROCDO) $(ORDER_) $(MAINLIBS) $(MULTIPROCLIBDEP)

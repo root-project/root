@@ -286,8 +286,6 @@ public: // Public Interface
    virtual void*  FindSym(const char* entry) const;
    virtual void   GenericError(const char* error) const;
    virtual Long_t GetExecByteCode() const;
-   virtual Long_t Getgvp() const;
-   virtual const char* Getp2f2funcname(void* receiver) const;
    virtual const char* GetTopLevelMacroName() const;
    virtual const char* GetCurrentMacroName() const;
    virtual int    GetSecurityError() const;
@@ -300,12 +298,12 @@ public: // Public Interface
    virtual int    SetClassAutoparsing(int) ;
            Bool_t IsAutoParsingSuspended() const { return fIsAutoParsingSuspended; }
    virtual void   SetErrmsgcallback(void* p) const;
-   virtual void   Setgvp(Long_t) const;
-   virtual void   SetRTLD_NOW() const;
-   virtual void   SetRTLD_LAZY() const;
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char* path) const;
 
+   void               CodeComplete(const std::string&, size_t&,
+                                   std::vector<std::string>&);
+   virtual int Evaluate(const char*, TInterpreterValue&);
    TInterpreterValue *CreateTemporary();
    void               RegisterTemporary(const TInterpreterValue& value);
    void               RegisterTemporary(const cling::Value& value);

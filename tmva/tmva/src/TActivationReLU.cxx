@@ -20,17 +20,16 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
-  
 
-#include <iostream>
+#include "TMVA/TActivationReLU.h"
+
+#include "TMVA/TActivation.h"
 
 #include "TFormula.h"
-#include "TString.h"
 #include "TMath.h"
+#include "TString.h"
 
-#ifndef ROOT_TMVA_TActivationReLU
-#include "TMVA/TActivationReLU.h"
-#endif
+#include <iostream>
 
 ClassImp(TMVA::TActivationReLU)
 

@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Use a THStack to show a 2-D hist with cells with different colors.
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  root > .x multicolor.C
 ///  root > .x multicolor.C(1)
 /// ~~~
@@ -15,7 +16,7 @@
 #include "THStack.h"
 #include "TRandom.h"
 
-void multicolor(Int_t stack=0) {
+void multicolor(Int_t isStack=0) {
    TCanvas *c1 = new TCanvas;
    Int_t nbins = 20;
    TH2F *h1 = new TH2F("h1","h1",nbins,-4,4,nbins,-4,4);
@@ -37,12 +38,12 @@ void multicolor(Int_t stack=0) {
       Int_t bin = h1->GetBin(ix,iy);
       Double_t val = h1->GetBinContent(bin);
       if (val <= 0) continue;
-      if (!stack) h1->SetBinContent(bin,0);
+      if (!isStack) h1->SetBinContent(bin,0);
       if (r.Rndm() > 0.5) {
-         if (!stack) h2->SetBinContent(bin,0);
+         if (!isStack) h2->SetBinContent(bin,0);
          h3->SetBinContent(bin,val);
       } else {
-         if (!stack) h3->SetBinContent(bin,0);
+         if (!isStack) h3->SetBinContent(bin,0);
          h2->SetBinContent(bin,val);
       }
    }

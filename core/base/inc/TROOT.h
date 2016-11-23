@@ -69,6 +69,26 @@ namespace Internal {
    class TROOTAllocator;
 
    TROOT *GetROOT2();
+
+   // Manage parallel branch processing
+   void EnableParBranchProcessing();
+   void DisableParBranchProcessing();
+   Bool_t IsParBranchProcessingEnabled();
+   class TParBranchProcessingRAII {
+   public:
+      TParBranchProcessingRAII()  { EnableParBranchProcessing();  }
+      ~TParBranchProcessingRAII() { DisableParBranchProcessing(); }
+   };
+      
+   // Manage parallel tree processing
+   void EnableParTreeProcessing();
+   void DisableParTreeProcessing();
+   Bool_t IsParTreeProcessingEnabled();
+   class TParTreeProcessingRAII {
+   public:
+      TParTreeProcessingRAII()  { EnableParTreeProcessing();  }
+      ~TParTreeProcessingRAII() { DisableParTreeProcessing(); }
+   };
 } } // End ROOT::Internal
 
 namespace ROOT {

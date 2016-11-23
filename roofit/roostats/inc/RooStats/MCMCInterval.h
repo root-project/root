@@ -55,7 +55,7 @@ namespace RooStats {
    confidence level is reached within an acceptable neighborhood as defined by
    SetEpsilon(). More specifically: we calculate the following for different
    cutoff values C until we reach the target confidence level: \f$\int_{ F >= C } F
-   d{normset} \$.
+   d{normset} \f$.
    Important note: this is not the default method because of a bug in constructing
    the RooNDKeysPdf from a weighted data set.  Configure to use this method by
    calling SetUseKeys(true), and the data set will be interpreted without weights.
@@ -101,7 +101,7 @@ namespace RooStats {
       enum IntervalType {kShortest, kTailFraction};
 
       virtual ~MCMCInterval();
-        
+
       /// determine whether this point is in the confidence interval
       virtual Bool_t IsInInterval(const RooArgSet& point) const;
 
@@ -115,7 +115,7 @@ namespace RooStats {
 
       /// get the desired confidence level (see GetActualConfidenceLevel())
       virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
- 
+
       /// return a set containing the parameters of this interval
       /// the caller owns the returned RooArgSet*
       virtual RooArgSet* GetParameters() const;
@@ -296,12 +296,16 @@ namespace RooStats {
       /// to N dimensions
       virtual void SetIntervalType(enum IntervalType intervalType)
       { fIntervalType = intervalType; }
+      virtual void SetShortestInterval() { SetIntervalType(kShortest); }
 
       /// Return the type of this interval
       virtual enum IntervalType GetIntervalType() { return fIntervalType; }
 
       /// set the left-side tail fraction for a tail-fraction interval
-      virtual void SetLeftSideTailFraction(Double_t a) { fLeftSideTF = a; }
+      virtual void SetLeftSideTailFraction(Double_t a) {
+         fIntervalType = kTailFraction;
+         fLeftSideTF = a;
+      }
 
       /// kbelasco: The inner-workings of the class really should not be exposed
       /// like this in a comment, but it seems to be the only way to give
@@ -394,7 +398,7 @@ namespace RooStats {
       inline virtual Double_t CalcConfLevel(Double_t cutoff, Double_t full);
 
       ClassDef(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
-      
+
    };
 }
 

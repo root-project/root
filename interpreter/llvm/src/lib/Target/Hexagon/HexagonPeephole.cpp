@@ -67,14 +67,15 @@ static cl::opt<bool> DisablePNotP("disable-hexagon-pnotp",
     cl::desc("Disable Optimization of PNotP"));
 
 static cl::opt<bool> DisableOptSZExt("disable-hexagon-optszext",
-    cl::Hidden, cl::ZeroOrMore, cl::init(false),
+    cl::Hidden, cl::ZeroOrMore, cl::init(true),
     cl::desc("Disable Optimization of Sign/Zero Extends"));
 
 static cl::opt<bool> DisableOptExtTo64("disable-hexagon-opt-ext-to-64",
-    cl::Hidden, cl::ZeroOrMore, cl::init(false),
+    cl::Hidden, cl::ZeroOrMore, cl::init(true),
     cl::desc("Disable Optimization of extensions to i64."));
 
 namespace llvm {
+  FunctionPass *createHexagonPeephole();
   void initializeHexagonPeepholePass(PassRegistry&);
 }
 
@@ -111,8 +112,11 @@ INITIALIZE_PASS(HexagonPeephole, "hexagon-peephole", "Hexagon Peephole",
                 false, false)
 
 bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
+  if (skipFunction(*MF.getFunction()))
+    return false;
+
   QII = static_cast<const HexagonInstrInfo *>(MF.getSubtarget().getInstrInfo());
-  QRI = MF.getTarget().getSubtarget<HexagonSubtarget>().getRegisterInfo();
+  QRI = MF.getSubtarget<HexagonSubtarget>().getRegisterInfo();
   MRI = &MF.getRegInfo();
 
   DenseMap<unsigned, unsigned> PeepholeMap;
@@ -123,7 +127,7 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
   // Loop over all of the basic blocks.
   for (MachineFunction::iterator MBBb = MF.begin(), MBBe = MF.end();
        MBBb != MBBe; ++MBBb) {
-    MachineBasicBlock* MBB = MBBb;
+    MachineBasicBlock *MBB = &*MBBb;
     PeepholeMap.clear();
     PeepholeDoubleRegsMap.clear();
 
@@ -179,7 +183,7 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
         unsigned DstReg = Dst.getReg();
         unsigned SrcReg = Src1.getReg();
         PeepholeDoubleRegsMap[DstReg] =
-          std::make_pair(*&SrcReg, 1/*Hexagon::subreg_hireg*/);
+          std::make_pair(*&SrcReg, Hexagon::subreg_hireg);
       }
 
       // Look for P=NOT(P).
@@ -242,7 +246,7 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
       // Look for Predicated instructions.
       if (!DisablePNotP) {
         bool Done = false;
-        if (QII->isPredicated(MI)) {
+        if (QII->isPredicated(*MI)) {
           MachineOperand &Op0 = MI->getOperand(0);
           unsigned Reg0 = Op0.getReg();
           const TargetRegisterClass *RC0 = MRI->getRegClass(Reg0);
@@ -271,14 +275,7 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
           switch (Op) {
             case Hexagon::C2_mux:
             case Hexagon::C2_muxii:
-            case Hexagon::TFR_condset_ii:
               NewOp = Op;
-              break;
-            case Hexagon::TFR_condset_ri:
-              NewOp = Hexagon::TFR_condset_ir;
-              break;
-            case Hexagon::TFR_condset_ir:
-              NewOp = Hexagon::TFR_condset_ri;
               break;
             case Hexagon::C2_muxri:
               NewOp = Hexagon::C2_muxir;
@@ -314,6 +311,7 @@ void HexagonPeephole::ChangeOpInto(MachineOperand &Dst, MachineOperand &Src) {
     case MachineOperand::MO_Register:
       if (Src.isReg()) {
         Dst.setReg(Src.getReg());
+        Dst.setSubReg(Src.getSubReg());
       } else if (Src.isImm()) {
         Dst.ChangeToImmediate(Src.getImm());
       } else {
@@ -328,6 +326,7 @@ void HexagonPeephole::ChangeOpInto(MachineOperand &Dst, MachineOperand &Src) {
         Dst.ChangeToRegister(Src.getReg(), Src.isDef(), Src.isImplicit(),
                              Src.isKill(), Src.isDead(), Src.isUndef(),
                              Src.isDebug());
+        Dst.setSubReg(Src.getSubReg());
       } else {
         llvm_unreachable("Unexpected src operand type");
       }

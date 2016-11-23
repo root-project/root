@@ -37,13 +37,6 @@ templateClassImp(RooCFunction2Ref)
 #endif 
 
 
-template<> RooCFunction2Map<double,double,double>* RooCFunction2Ref<double,double,double>::_fmap = 0 ;
-template<> RooCFunction2Map<double,int,double> *RooCFunction2Ref<double,int,double>::_fmap = 0 ;
-template<> RooCFunction2Map<double,unsigned int,double> *RooCFunction2Ref<double,unsigned int,double>::_fmap = 0 ;
-template<> RooCFunction2Map<double,double,int> *RooCFunction2Ref<double,double,int>::_fmap = 0 ;
-template<> RooCFunction2Map<double,int,int> *RooCFunction2Ref<double,int,int>::_fmap = 0 ;
-
-
 namespace RooFit {
 
   RooAbsReal* bindFunction(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) {

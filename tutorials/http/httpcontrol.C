@@ -1,3 +1,22 @@
+/// \file
+/// \ingroup tutorial_http
+///  This program demonstrates simple application control via THttpServer
+///  Two histogram are filled within endless loop.
+///  Via published commands one can enable/disable histograms filling
+///  There are also command to clear histograms content
+///
+///  After macro started, open in browser with url
+/// ~~~
+///      http://localhost:8080
+/// ~~~
+///
+///  Histograms will be automatically displayed and
+///  monitoring with interval 2000 ms started
+///
+/// \macro_code
+///
+/// \author
+
 #include "TH1.h"
 #include "TH2.h"
 #include "TRandom3.h"
@@ -8,17 +27,6 @@ Bool_t bFillHist = kTRUE;
 
 void httpcontrol()
 {
-//  This program demonstrates simple application control via THttpServer
-//  Two histogram are filled within endless loop.
-//  Via published commands one can enable/disable histograms filling
-//  There are also command to clear histograms content
-//
-//  After macro started, open in browser with url
-//      http://localhost:8080
-//
-//  Histograms will be automatically displayed and
-//  monitoring with interval 2000 ms started
-
    // create histograms
    TH1D *hpx = new TH1D("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);

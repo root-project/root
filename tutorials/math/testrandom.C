@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)
 /// Tests the generator TRandom3 against some ref values
 /// and creates a timing table against TRandom, TRandom1 and TRandom2.
@@ -31,7 +32,7 @@
 ///
 /// Note that this tutorial can be executed in interpreted or compiled mode
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///  Root > .x testrandom.C
 ///  Root > .x testrandom.C++
 /// ~~~
@@ -44,6 +45,7 @@
 #include <TRandom1.h>
 #include <TRandom2.h>
 #include <TRandom3.h>
+#include <TRandomGen.h>
 #include <TStopwatch.h>
 #include <TF1.h>
 #include <TUnuran.h>
@@ -61,10 +63,15 @@ void testAll() {
   TRandom *r1 = new TRandom1();
   TRandom *r2 = new TRandom2();
   TRandom *r3 = new TRandom3();
+  TRandom *r4 = new TRandomMixMax();
+  TRandom *r5 = new TRandomMixMax256();
+  TRandom *r6 = new TRandomMixMax17();
+  TRandom *r7 = new TRandomMT64();
+  TRandom *r8 = new TRandomRanlux48();
 
   TStopwatch sw;
   printf("Distribution            nanoseconds/call\n");
-  printf("                    TRandom  TRandom1 TRandom2 TRandom3\n");
+  printf("                    TRandom  TRandom1 TRandom2 TRandom3 MixMax240 MixMax256_2 MixMax17 MT_64 Ranlux48\n");
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -85,8 +92,42 @@ void testAll() {
   for (i=0;i<N;i++) {
      x = r3->Rndm(i);
   }
-  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  // new random generators
 
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r4->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r5->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r6->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r7->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r8->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  printf("\n\n");
+
+  
   const int NR = 1000;
   double rn[NR];
   sw.Start();
@@ -661,11 +702,11 @@ int testRandom3() {
      if (rc2 != 0) printf("state restoration failed\n");
 
      return rc1 + rc2;
-   }
+}
 
 
-void testrandom(double /* scale */ =0.1)
+void testrandom()
 {
-  testRandom3();
-  testAll();
+   testRandom3();
+   testAll();
 }

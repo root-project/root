@@ -27,6 +27,7 @@
 #define LLVM_IR_CALLSITE_H
 
 #include "llvm/ADT/PointerIntPair.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Instructions.h"
@@ -37,8 +38,10 @@ class CallInst;
 class InvokeInst;
 
 template <typename FunTy = const Function,
+          typename BBTy = const BasicBlock,
           typename ValTy = const Value,
           typename UserTy = const User,
+          typename UseTy = const Use,
           typename InstrTy = const Instruction,
           typename CallTy = const CallInst,
           typename InvokeTy = const InvokeInst,
@@ -46,12 +49,13 @@ template <typename FunTy = const Function,
 class CallSiteBase {
 protected:
   PointerIntPair<InstrTy*, 1, bool> I;
-public:
+
   CallSiteBase() : I(nullptr, false) {}
   CallSiteBase(CallTy *CI) : I(CI, true) { assert(CI); }
   CallSiteBase(InvokeTy *II) : I(II, false) { assert(II); }
-  CallSiteBase(ValTy *II) { *this = get(II); }
-protected:
+  explicit CallSiteBase(ValTy *II) { *this = get(II); }
+
+private:
   /// CallSiteBase::get - This static method is sort of like a constructor.  It
   /// will create an appropriate call site for a Call or Invoke instruction, but
   /// it can also create a null initialized CallSiteBase object for something
@@ -66,6 +70,7 @@ protected:
     }
     return CallSiteBase();
   }
+
 public:
   /// isCall - true if a CallInst is enclosed.
   /// Note that !isCall() does not mean it is an InvokeInst enclosed,
@@ -78,7 +83,10 @@ public:
 
   InstrTy *getInstruction() const { return I.getPointer(); }
   InstrTy *operator->() const { return I.getPointer(); }
-  LLVM_EXPLICIT operator bool() const { return I.getPointer(); }
+  explicit operator bool() const { return I.getPointer(); }
+
+  /// Get the basic block containing the call site
+  BBTy* getParent() const { return getInstruction()->getParent(); }
 
   /// getCalledValue - Return the pointer to function that is being called.
   ///
@@ -110,6 +118,43 @@ public:
   /// Determine whether this Use is the callee operand's Use.
   bool isCallee(const Use *U) const { return getCallee() == U; }
 
+  /// \brief Determine whether the passed iterator points to an argument
+  /// operand.
+  bool isArgOperand(Value::const_user_iterator UI) const {
+    return isArgOperand(&UI.getUse());
+  }
+
+  /// \brief Determine whether the passed use points to an argument operand.
+  bool isArgOperand(const Use *U) const {
+    assert(getInstruction() == U->getUser());
+    return arg_begin() <= U && U < arg_end();
+  }
+
+  /// \brief Determine whether the passed iterator points to a bundle operand.
+  bool isBundleOperand(Value::const_user_iterator UI) const {
+    return isBundleOperand(&UI.getUse());
+  }
+
+  /// \brief Determine whether the passed use points to a bundle operand.
+  bool isBundleOperand(const Use *U) const {
+    assert(getInstruction() == U->getUser());
+    if (!hasOperandBundles())
+      return false;
+    unsigned OperandNo = U - (*this)->op_begin();
+    return getBundleOperandsStartIndex() <= OperandNo &&
+           OperandNo < getBundleOperandsEndIndex();
+  }
+
+  /// \brief Determine whether the passed iterator points to a data operand.
+  bool isDataOperand(Value::const_user_iterator UI) const {
+    return isDataOperand(&UI.getUse());
+  }
+
+  /// \brief Determine whether the passed use points to a data operand.
+  bool isDataOperand(const Use *U) const {
+    return data_operands_begin() <= U && U < data_operands_end();
+  }
+
   ValTy *getArgument(unsigned ArgNo) const {
     assert(arg_begin() + ArgNo < arg_end() && "Argument # out of range!");
     return *(arg_begin() + ArgNo);
@@ -131,8 +176,7 @@ public:
   /// it.
   unsigned getArgumentNo(const Use *U) const {
     assert(getInstruction() && "Not a call or invoke instruction!");
-    assert(arg_begin() <= U && U < arg_end()
-           && "Argument # out of range!");
+    assert(isArgOperand(U) && "Argument # out of range!");
     return U - arg_begin();
   }
 
@@ -140,18 +184,55 @@ public:
   /// arguments at this call site.
   typedef IterTy arg_iterator;
 
-  /// arg_begin/arg_end - Return iterators corresponding to the actual argument
-  /// list for a call site.
-  IterTy arg_begin() const {
-    assert(getInstruction() && "Not a call or invoke instruction!");
-    // Skip non-arguments
-    return (*this)->op_begin();
+  iterator_range<IterTy> args() const {
+    return make_range(arg_begin(), arg_end());
   }
-
-  IterTy arg_end() const { return (*this)->op_end() - getArgumentEndOffset(); }
   bool arg_empty() const { return arg_end() == arg_begin(); }
   unsigned arg_size() const { return unsigned(arg_end() - arg_begin()); }
-  
+
+  /// Given a value use iterator, returns the data operand that corresponds to
+  /// it.
+  /// Iterator must actually correspond to a data operand.
+  unsigned getDataOperandNo(Value::const_user_iterator UI) const {
+    return getDataOperandNo(&UI.getUse());
+  }
+
+  /// Given a use for a data operand, get the data operand number that
+  /// corresponds to it.
+  unsigned getDataOperandNo(const Use *U) const {
+    assert(getInstruction() && "Not a call or invoke instruction!");
+    assert(isDataOperand(U) && "Data operand # out of range!");
+    return U - data_operands_begin();
+  }
+
+  /// Type of iterator to use when looping over data operands at this call site
+  /// (see below).
+  typedef IterTy data_operand_iterator;
+
+  /// data_operands_begin/data_operands_end - Return iterators iterating over
+  /// the call / invoke argument list and bundle operands.  For invokes, this is
+  /// the set of instruction operands except the invoke target and the two
+  /// successor blocks; and for calls this is the set of instruction operands
+  /// except the call target.
+
+  IterTy data_operands_begin() const {
+    assert(getInstruction() && "Not a call or invoke instruction!");
+    return (*this)->op_begin();
+  }
+  IterTy data_operands_end() const {
+    assert(getInstruction() && "Not a call or invoke instruction!");
+    return (*this)->op_end() - (isCall() ? 1 : 3);
+  }
+  iterator_range<IterTy> data_ops() const {
+    return make_range(data_operands_begin(), data_operands_end());
+  }
+  bool data_operands_empty() const {
+    return data_operands_end() == data_operands_begin();
+  }
+  unsigned data_operands_size() const {
+    return std::distance(data_operands_begin(), data_operands_end());
+  }
+
   /// getType - Return the type of the instruction that generated this call site
   ///
   Type *getType() const { return (*this)->getType(); }
@@ -184,6 +265,20 @@ public:
   else                                   \
     cast<InvokeInst>(II)->METHOD
 
+  unsigned getNumArgOperands() const {
+    CALLSITE_DELEGATE_GETTER(getNumArgOperands());
+  }
+
+  ValTy *getArgOperand(unsigned i) const {
+    CALLSITE_DELEGATE_GETTER(getArgOperand(i));
+  }
+
+  bool isInlineAsm() const {
+    if (isCall())
+      return cast<CallInst>(getInstruction())->isInlineAsm();
+    return false;
+  }
+
   /// getCallingConv/setCallingConv - get or set the calling convention of the
   /// call.
   CallingConv::ID getCallingConv() const {
@@ -191,6 +286,14 @@ public:
   }
   void setCallingConv(CallingConv::ID CC) {
     CALLSITE_DELEGATE_SETTER(setCallingConv(CC));
+  }
+
+  FunctionType *getFunctionType() const {
+    CALLSITE_DELEGATE_GETTER(getFunctionType());
+  }
+
+  void mutateFunctionType(FunctionType *Ty) const {
+    CALLSITE_DELEGATE_SETTER(mutateFunctionType(Ty));
   }
 
   /// getAttributes/setAttributes - get or set the parameter attributes of
@@ -202,14 +305,62 @@ public:
     CALLSITE_DELEGATE_SETTER(setAttributes(PAL));
   }
 
+  void addAttribute(unsigned i, Attribute::AttrKind Kind) {
+    CALLSITE_DELEGATE_SETTER(addAttribute(i, Kind));
+  }
+
+  void addAttribute(unsigned i, StringRef Kind, StringRef Value) {
+    CALLSITE_DELEGATE_SETTER(addAttribute(i, Kind, Value));
+  }
+
+  void addAttribute(unsigned i, Attribute Attr) {
+    CALLSITE_DELEGATE_SETTER(addAttribute(i, Attr));
+  }
+
+  void removeAttribute(unsigned i, Attribute::AttrKind Kind) {
+    CALLSITE_DELEGATE_SETTER(removeAttribute(i, Kind));
+  }
+
+  void removeAttribute(unsigned i, StringRef Kind) {
+    CALLSITE_DELEGATE_SETTER(removeAttribute(i, Kind));
+  }
+
+  void removeAttribute(unsigned i, Attribute Attr) {
+    CALLSITE_DELEGATE_SETTER(removeAttribute(i, Attr));
+  }
+
   /// \brief Return true if this function has the given attribute.
-  bool hasFnAttr(Attribute::AttrKind A) const {
-    CALLSITE_DELEGATE_GETTER(hasFnAttr(A));
+  bool hasFnAttr(Attribute::AttrKind Kind) const {
+    CALLSITE_DELEGATE_GETTER(hasFnAttr(Kind));
+  }
+
+  /// \brief Return true if this function has the given attribute.
+  bool hasFnAttr(StringRef Kind) const {
+    CALLSITE_DELEGATE_GETTER(hasFnAttr(Kind));
   }
 
   /// \brief Return true if the call or the callee has the given attribute.
-  bool paramHasAttr(unsigned i, Attribute::AttrKind A) const {
-    CALLSITE_DELEGATE_GETTER(paramHasAttr(i, A));
+  bool paramHasAttr(unsigned i, Attribute::AttrKind Kind) const {
+    CALLSITE_DELEGATE_GETTER(paramHasAttr(i, Kind));
+  }
+
+  Attribute getAttribute(unsigned i, Attribute::AttrKind Kind) const {
+    CALLSITE_DELEGATE_GETTER(getAttribute(i, Kind));
+  }
+
+  Attribute getAttribute(unsigned i, StringRef Kind) const {
+    CALLSITE_DELEGATE_GETTER(getAttribute(i, Kind));
+  }
+
+  /// \brief Return true if the data operand at index \p i directly or
+  /// indirectly has the attribute \p A.
+  ///
+  /// Normal call or invoke arguments have per operand attributes, as specified
+  /// in the attribute set attached to this instruction, while operand bundle
+  /// operands may have some attributes implied by the type of its containing
+  /// operand bundle.
+  bool dataOperandHasImpliedAttr(unsigned i, Attribute::AttrKind Kind) const {
+    CALLSITE_DELEGATE_GETTER(dataOperandHasImpliedAttr(i, Kind));
   }
 
   /// @brief Extract the alignment for a call or parameter (0=unknown).
@@ -221,6 +372,19 @@ public:
   /// parameter (0=unknown).
   uint64_t getDereferenceableBytes(uint16_t i) const {
     CALLSITE_DELEGATE_GETTER(getDereferenceableBytes(i));
+  }
+
+  /// @brief Extract the number of dereferenceable_or_null bytes for a call or
+  /// parameter (0=unknown).
+  uint64_t getDereferenceableOrNullBytes(uint16_t i) const {
+    CALLSITE_DELEGATE_GETTER(getDereferenceableOrNullBytes(i));
+  }
+
+  /// @brief Determine if the parameter or return value is marked with NoAlias
+  /// attribute.
+  /// @param n The parameter to check. 1 is the first parameter, 0 is the return
+  bool doesNotAlias(unsigned n) const {
+    CALLSITE_DELEGATE_GETTER(doesNotAlias(n));
   }
 
   /// \brief Return true if the call should not be treated as a call to a
@@ -253,6 +417,23 @@ public:
     CALLSITE_DELEGATE_SETTER(setOnlyReadsMemory());
   }
 
+  /// @brief Determine if the call does not access or only writes memory.
+  bool doesNotReadMemory() const {
+    CALLSITE_DELEGATE_GETTER(doesNotReadMemory());
+  }
+  void setDoesNotReadMemory() {
+    CALLSITE_DELEGATE_SETTER(setDoesNotReadMemory());
+  }
+
+  /// @brief Determine if the call can access memmory only using pointers based
+  /// on its arguments.
+  bool onlyAccessesArgMemory() const {
+    CALLSITE_DELEGATE_GETTER(onlyAccessesArgMemory());
+  }
+  void setOnlyAccessesArgMemory() {
+    CALLSITE_DELEGATE_SETTER(setOnlyAccessesArgMemory());
+  }
+
   /// @brief Determine if the call cannot return.
   bool doesNotReturn() const {
     CALLSITE_DELEGATE_GETTER(doesNotReturn());
@@ -269,12 +450,85 @@ public:
     CALLSITE_DELEGATE_SETTER(setDoesNotThrow());
   }
 
+  /// @brief Determine if the call can be duplicated.
+  bool cannotDuplicate() const {
+    CALLSITE_DELEGATE_GETTER(cannotDuplicate());
+  }
+  void setCannotDuplicate() {
+    CALLSITE_DELEGATE_GETTER(setCannotDuplicate());
+  }
+
+  /// @brief Determine if the call is convergent.
+  bool isConvergent() const {
+    CALLSITE_DELEGATE_GETTER(isConvergent());
+  }
+  void setConvergent() {
+    CALLSITE_DELEGATE_SETTER(setConvergent());
+  }
+  void setNotConvergent() {
+    CALLSITE_DELEGATE_SETTER(setNotConvergent());
+  }
+
+  unsigned getNumOperandBundles() const {
+    CALLSITE_DELEGATE_GETTER(getNumOperandBundles());
+  }
+
+  bool hasOperandBundles() const {
+    CALLSITE_DELEGATE_GETTER(hasOperandBundles());
+  }
+
+  unsigned getBundleOperandsStartIndex() const {
+    CALLSITE_DELEGATE_GETTER(getBundleOperandsStartIndex());
+  }
+
+  unsigned getBundleOperandsEndIndex() const {
+    CALLSITE_DELEGATE_GETTER(getBundleOperandsEndIndex());
+  }
+
+  unsigned getNumTotalBundleOperands() const {
+    CALLSITE_DELEGATE_GETTER(getNumTotalBundleOperands());
+  }
+
+  OperandBundleUse getOperandBundleAt(unsigned Index) const {
+    CALLSITE_DELEGATE_GETTER(getOperandBundleAt(Index));
+  }
+
+  Optional<OperandBundleUse> getOperandBundle(StringRef Name) const {
+    CALLSITE_DELEGATE_GETTER(getOperandBundle(Name));
+  }
+
+  Optional<OperandBundleUse> getOperandBundle(uint32_t ID) const {
+    CALLSITE_DELEGATE_GETTER(getOperandBundle(ID));
+  }
+
+  unsigned countOperandBundlesOfType(uint32_t ID) const {
+    CALLSITE_DELEGATE_GETTER(countOperandBundlesOfType(ID));
+  }
+
+  IterTy arg_begin() const {
+    CALLSITE_DELEGATE_GETTER(arg_begin());
+  }
+
+  IterTy arg_end() const {
+    CALLSITE_DELEGATE_GETTER(arg_end());
+  }
+
 #undef CALLSITE_DELEGATE_GETTER
 #undef CALLSITE_DELEGATE_SETTER
 
-  /// @brief Determine whether this argument is not captured.
-  bool doesNotCapture(unsigned ArgNo) const {
-    return paramHasAttr(ArgNo + 1, Attribute::NoCapture);
+  void getOperandBundlesAsDefs(SmallVectorImpl<OperandBundleDef> &Defs) const {
+    const Instruction *II = getInstruction();
+    // Since this is actually a getter that "looks like" a setter, don't use the
+    // above macros to avoid confusion.
+    if (isCall())
+      cast<CallInst>(II)->getOperandBundlesAsDefs(Defs);
+    else
+      cast<InvokeInst>(II)->getOperandBundlesAsDefs(Defs);
+  }
+
+  /// @brief Determine whether this data operand is not captured.
+  bool doesNotCapture(unsigned OpNo) const {
+    return dataOperandHasImpliedAttr(OpNo + 1, Attribute::NoCapture);
   }
 
   /// @brief Determine whether this argument is passed by value.
@@ -299,13 +553,13 @@ public:
     return paramHasAttr(arg_size(), Attribute::InAlloca);
   }
 
-  bool doesNotAccessMemory(unsigned ArgNo) const {
-    return paramHasAttr(ArgNo + 1, Attribute::ReadNone);
+  bool doesNotAccessMemory(unsigned OpNo) const {
+    return dataOperandHasImpliedAttr(OpNo + 1, Attribute::ReadNone);
   }
 
-  bool onlyReadsMemory(unsigned ArgNo) const {
-    return paramHasAttr(ArgNo + 1, Attribute::ReadOnly) ||
-           paramHasAttr(ArgNo + 1, Attribute::ReadNone);
+  bool onlyReadsMemory(unsigned OpNo) const {
+    return dataOperandHasImpliedAttr(OpNo + 1, Attribute::ReadOnly) ||
+           dataOperandHasImpliedAttr(OpNo + 1, Attribute::ReadNone);
   }
 
   /// @brief Return true if the return value is known to be not null.
@@ -332,13 +586,6 @@ public:
   }
 
 private:
-  unsigned getArgumentEndOffset() const {
-    if (isCall())
-      return 1; // Skip Callee
-    else
-      return 3; // Skip BB, BB, Callee
-  }
-
   IterTy getCallee() const {
     if (isCall()) // Skip Callee
       return cast<CallInst>(getInstruction())->op_end() - 1;
@@ -347,17 +594,16 @@ private:
   }
 };
 
-class CallSite : public CallSiteBase<Function, Value, User, Instruction,
-                                     CallInst, InvokeInst, User::op_iterator> {
-  typedef CallSiteBase<Function, Value, User, Instruction,
-                       CallInst, InvokeInst, User::op_iterator> Base;
+class CallSite : public CallSiteBase<Function, BasicBlock, Value, User, Use,
+                                     Instruction, CallInst, InvokeInst,
+                                     User::op_iterator> {
 public:
   CallSite() {}
-  CallSite(Base B) : Base(B) {}
-  CallSite(Value* V) : Base(V) {}
-  CallSite(CallInst *CI) : Base(CI) {}
-  CallSite(InvokeInst *II) : Base(II) {}
-  CallSite(Instruction *II) : Base(II) {}
+  CallSite(CallSiteBase B) : CallSiteBase(B) {}
+  CallSite(CallInst *CI) : CallSiteBase(CI) {}
+  CallSite(InvokeInst *II) : CallSiteBase(II) {}
+  explicit CallSite(Instruction *II) : CallSiteBase(II) {}
+  explicit CallSite(Value *V) : CallSiteBase(V) {}
 
   bool operator==(const CallSite &CS) const { return I == CS.I; }
   bool operator!=(const CallSite &CS) const { return I != CS.I; }
@@ -371,13 +617,13 @@ private:
 
 /// ImmutableCallSite - establish a view to a call site for examination
 class ImmutableCallSite : public CallSiteBase<> {
-  typedef CallSiteBase<> Base;
 public:
-  ImmutableCallSite(const Value* V) : Base(V) {}
-  ImmutableCallSite(const CallInst *CI) : Base(CI) {}
-  ImmutableCallSite(const InvokeInst *II) : Base(II) {}
-  ImmutableCallSite(const Instruction *II) : Base(II) {}
-  ImmutableCallSite(CallSite CS) : Base(CS.getInstruction()) {}
+  ImmutableCallSite() {}
+  ImmutableCallSite(const CallInst *CI) : CallSiteBase(CI) {}
+  ImmutableCallSite(const InvokeInst *II) : CallSiteBase(II) {}
+  explicit ImmutableCallSite(const Instruction *II) : CallSiteBase(II) {}
+  explicit ImmutableCallSite(const Value *V) : CallSiteBase(V) {}
+  ImmutableCallSite(CallSite CS) : CallSiteBase(CS.getInstruction()) {}
 };
 
 } // End llvm namespace

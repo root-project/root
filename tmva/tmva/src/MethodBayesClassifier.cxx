@@ -30,13 +30,17 @@
 // ... description of bayesian classifiers ...
 //_______________________________________________________________________
 
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodBase.h"
 #include "TMVA/MethodBayesClassifier.h"
+
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+
 #include "Riostream.h"
+#include "TString.h"
 
 REGISTER_METHOD(BayesClassifier)
 
@@ -48,9 +52,8 @@ ClassImp(TMVA::MethodBayesClassifier)
    TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
                                                        const TString& methodTitle,
                                                        DataSetInfo& theData, 
-                                                       const TString& theOption,
-                                                       TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kBayesClassifier, methodTitle, theData, theOption, theTargetDir )
+                                                       const TString& theOption ) :
+   TMVA::MethodBase( jobName, Types::kBayesClassifier, methodTitle, theData, theOption)
 {
 }
 
@@ -58,9 +61,8 @@ ClassImp(TMVA::MethodBayesClassifier)
 /// constructor from weight file
 
 TMVA::MethodBayesClassifier::MethodBayesClassifier( DataSetInfo& theData, 
-                                                    const TString& theWeightFile,  
-                                                    TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kBayesClassifier, theData, theWeightFile, theTargetDir ) 
+                                                    const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kBayesClassifier, theData, theWeightFile) 
 {
 }
 

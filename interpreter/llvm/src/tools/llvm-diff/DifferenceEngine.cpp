@@ -16,7 +16,6 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/CallSite.h"
@@ -210,7 +209,8 @@ class FunctionDifferenceEngine {
       if (!LeftI->use_empty())
         TentativeValues.insert(std::make_pair(LeftI, RightI));
 
-      ++LI, ++RI;
+      ++LI;
+      ++RI;
     } while (LI != LE); // This is sufficient: we can't get equality of
                         // terminators if there are residual instructions.
 
@@ -555,7 +555,9 @@ void FunctionDifferenceEngine::runBlockDiff(BasicBlock::iterator LStart,
     PI = Path.begin(), PE = Path.end();
   while (PI != PE && *PI == DC_match) {
     unify(&*LI, &*RI);
-    ++PI, ++LI, ++RI;
+    ++PI;
+    ++LI;
+    ++RI;
   }
 
   for (; PI != PE; ++PI) {
@@ -589,7 +591,8 @@ void FunctionDifferenceEngine::runBlockDiff(BasicBlock::iterator LStart,
   while (LI != LE) {
     assert(RI != RE);
     unify(&*LI, &*RI);
-    ++LI, ++RI;
+    ++LI;
+    ++RI;
   }
 
   // If the terminators have different kinds, but one is an invoke and the
@@ -599,7 +602,7 @@ void FunctionDifferenceEngine::runBlockDiff(BasicBlock::iterator LStart,
   TerminatorInst *RTerm = RStart->getParent()->getTerminator();
   if (isa<BranchInst>(LTerm) && isa<InvokeInst>(RTerm)) {
     if (cast<BranchInst>(LTerm)->isConditional()) return;
-    BasicBlock::iterator I = LTerm;
+    BasicBlock::iterator I = LTerm->getIterator();
     if (I == LStart->getParent()->begin()) return;
     --I;
     if (!isa<CallInst>(*I)) return;
@@ -612,7 +615,7 @@ void FunctionDifferenceEngine::runBlockDiff(BasicBlock::iterator LStart,
     tryUnify(LTerm->getSuccessor(0), RInvoke->getNormalDest());
   } else if (isa<InvokeInst>(LTerm) && isa<BranchInst>(RTerm)) {
     if (cast<BranchInst>(RTerm)->isConditional()) return;
-    BasicBlock::iterator I = RTerm;
+    BasicBlock::iterator I = RTerm->getIterator();
     if (I == RStart->getParent()->begin()) return;
     --I;
     if (!isa<CallInst>(*I)) return;

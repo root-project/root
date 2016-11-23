@@ -282,6 +282,7 @@ int TClingDataMemberInfo::InternalNext()
          // We have an enum, recurse into these.
          // Note: For C++11 we will have to check for a transparent context.
          fIterStack.push_back(fIter);
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          fIter = llvm::dyn_cast<clang::DeclContext>(*fIter)->decls_begin();
          increment = false; // avoid the next incrementation
          continue;
@@ -308,11 +309,10 @@ long TClingDataMemberInfo::Offset()
    ASTContext& C = D->getASTContext();
    if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
       // The current member is a non-static data member.
-      clang::ASTContext &Context = FldD->getASTContext();
       const clang::RecordDecl *RD = FldD->getParent();
-      const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
+      const clang::ASTRecordLayout &Layout = C.getASTRecordLayout(RD);
       uint64_t bits = Layout.getFieldOffset(FldD->getFieldIndex());
-      int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
+      int64_t offset = C.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
    }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
@@ -321,10 +321,9 @@ long TClingDataMemberInfo::Offset()
       //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
 
-      if (VD->hasInit() && VD->checkInitIsICE()) {
-         // FIXME: We might want in future to printout the reason why the eval
-         // failed.
-         const APValue* val = VD->evaluateValue();
+      if (long addr = reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
+         return addr;
+      if (const APValue* val = VD->evaluateValue()) {
          if (VD->getType()->isIntegralType(C)) {
             return reinterpret_cast<long>(val->getInt().getRawData());
          } else {
@@ -355,7 +354,6 @@ long TClingDataMemberInfo::Offset()
             // fall-through
          }
       }
-      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD)));
    }
    // FIXME: We have to explicitly check for not enum constant because the
    // implementation of getAddressOfGlobal relies on mangling the name and in

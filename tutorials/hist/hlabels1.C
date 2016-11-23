@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// 1-D histograms with alphanumeric labels
 ///
 /// \macro_image

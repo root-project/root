@@ -242,7 +242,8 @@ TCutG::~TCutG()
 {
    delete fObjectX;
    delete fObjectY;
-   gROOT->GetListOfSpecials()->Remove(this);
+   if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) )
+      gROOT->GetListOfSpecials()->Remove(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

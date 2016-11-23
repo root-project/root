@@ -8,29 +8,95 @@
 //===----------------------------------------------------------------------===//
 
 #include "SystemZTargetMachine.h"
+#include "SystemZTargetTransformInfo.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/TargetPassConfig.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 
 using namespace llvm;
 
+extern cl::opt<bool> MISchedPostRA;
 extern "C" void LLVMInitializeSystemZTarget() {
   // Register the target.
   RegisterTargetMachine<SystemZTargetMachine> X(TheSystemZTarget);
 }
 
-SystemZTargetMachine::SystemZTargetMachine(const Target &T, StringRef TT,
+// Determine whether we use the vector ABI.
+static bool UsesVectorABI(StringRef CPU, StringRef FS) {
+  // We use the vector ABI whenever the vector facility is avaiable.
+  // This is the case by default if CPU is z13 or later, and can be
+  // overridden via "[+-]vector" feature string elements.
+  bool VectorABI = true;
+  if (CPU.empty() || CPU == "generic" ||
+      CPU == "z10" || CPU == "z196" || CPU == "zEC12")
+    VectorABI = false;
+
+  SmallVector<StringRef, 3> Features;
+  FS.split(Features, ',', -1, false /* KeepEmpty */);
+  for (auto &Feature : Features) {
+    if (Feature == "vector" || Feature == "+vector")
+      VectorABI = true;
+    if (Feature == "-vector")
+      VectorABI = false;
+  }
+
+  return VectorABI;
+}
+
+static std::string computeDataLayout(const Triple &TT, StringRef CPU,
+                                     StringRef FS) {
+  bool VectorABI = UsesVectorABI(CPU, FS);
+  std::string Ret = "";
+
+  // Big endian.
+  Ret += "E";
+
+  // Data mangling.
+  Ret += DataLayout::getManglingComponent(TT);
+
+  // Make sure that global data has at least 16 bits of alignment by
+  // default, so that we can refer to it using LARL.  We don't have any
+  // special requirements for stack variables though.
+  Ret += "-i1:8:16-i8:8:16";
+
+  // 64-bit integers are naturally aligned.
+  Ret += "-i64:64";
+
+  // 128-bit floats are aligned only to 64 bits.
+  Ret += "-f128:64";
+
+  // When using the vector ABI, 128-bit vectors are also aligned to 64 bits.
+  if (VectorABI)
+    Ret += "-v128:64";
+
+  // We prefer 16 bits of aligned for all globals; see above.
+  Ret += "-a:8:16";
+
+  // Integer registers are 32 or 64 bits.
+  Ret += "-n32:64";
+
+  return Ret;
+}
+
+static Reloc::Model getEffectiveRelocModel(Optional<Reloc::Model> RM) {
+  // Static code is suitable for use in a dynamic executable; there is no
+  // separate DynamicNoPIC model.
+  if (!RM.hasValue() || *RM == Reloc::DynamicNoPIC)
+    return Reloc::Static;
+  return *RM;
+}
+
+SystemZTargetMachine::SystemZTargetMachine(const Target &T, const Triple &TT,
                                            StringRef CPU, StringRef FS,
                                            const TargetOptions &Options,
-                                           Reloc::Model RM, CodeModel::Model CM,
+                                           Optional<Reloc::Model> RM,
+                                           CodeModel::Model CM,
                                            CodeGenOpt::Level OL)
-    : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
+    : LLVMTargetMachine(T, computeDataLayout(TT, CPU, FS), TT, CPU, FS, Options,
+                        getEffectiveRelocModel(RM), CM, OL),
       TLOF(make_unique<TargetLoweringObjectFileELF>()),
-      // Make sure that global data has at least 16 bits of alignment by
-      // default, so that we can refer to it using LARL.  We don't have any
-      // special requirements for stack variables though.
-      DL("E-m:e-i1:8:16-i8:8:16-i64:64-f128:64-a:8:16-n32:64"),
       Subtarget(TT, CPU, FS, *this) {
   initAsmInfo();
 }
@@ -61,16 +127,26 @@ void SystemZPassConfig::addIRPasses() {
 
 bool SystemZPassConfig::addInstSelector() {
   addPass(createSystemZISelDag(getSystemZTargetMachine(), getOptLevel()));
+
+ if (getOptLevel() != CodeGenOpt::None)
+    addPass(createSystemZLDCleanupPass(getSystemZTargetMachine()));
+
   return false;
 }
 
 void SystemZPassConfig::addPreSched2() {
-  if (getOptLevel() != CodeGenOpt::None &&
-      getSystemZTargetMachine().getSubtargetImpl()->hasLoadStoreOnCond())
+  if (getOptLevel() != CodeGenOpt::None)
     addPass(&IfConverterID);
 }
 
 void SystemZPassConfig::addPreEmitPass() {
+
+  // Do instruction shortening before compare elimination because some
+  // vector instructions will be shortened into opcodes that compare
+  // elimination recognizes.
+  if (getOptLevel() != CodeGenOpt::None)
+    addPass(createSystemZShortenInstPass(getSystemZTargetMachine()), false);
+
   // We eliminate comparisons here rather than earlier because some
   // transformations can change the set of available CC values and we
   // generally want those transformations to have priority.  This is
@@ -96,11 +172,25 @@ void SystemZPassConfig::addPreEmitPass() {
   // preventing that would be a win or not.
   if (getOptLevel() != CodeGenOpt::None)
     addPass(createSystemZElimComparePass(getSystemZTargetMachine()), false);
-  if (getOptLevel() != CodeGenOpt::None)
-    addPass(createSystemZShortenInstPass(getSystemZTargetMachine()), false);
   addPass(createSystemZLongBranchPass(getSystemZTargetMachine()));
+
+  // Do final scheduling after all other optimizations, to get an
+  // optimal input for the decoder (branch relaxation must happen
+  // after block placement).
+  if (getOptLevel() != CodeGenOpt::None) {
+    if (MISchedPostRA)
+      addPass(&PostMachineSchedulerID);
+    else
+      addPass(&PostRASchedulerID);
+  }
 }
 
 TargetPassConfig *SystemZTargetMachine::createPassConfig(PassManagerBase &PM) {
   return new SystemZPassConfig(this, PM);
+}
+
+TargetIRAnalysis SystemZTargetMachine::getTargetIRAnalysis() {
+  return TargetIRAnalysis([this](const Function &F) {
+    return TargetTransformInfo(SystemZTTIImpl(this, F));
+  });
 }

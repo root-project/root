@@ -9,6 +9,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 // Some useful constants and functions
 
@@ -57,7 +58,7 @@ Int_t mtbb101_fillNtuples()
    };
 
    // Create the pool of workers
-   ThreadPool pool(nThreads);
+   ROOT::TThreadExecutor pool(nThreads);
 
    // Fill the pool with work
    pool.Map(workItem, ROOT::TSeqI(nThreads));

@@ -13,6 +13,7 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/Option/Arg.h"
 #include "llvm/Option/Option.h"
+#include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
@@ -31,9 +32,6 @@ void arg_iterator::SkipToNextArg() {
         (Id2.isValid() && O.matches(Id2)))
       break;
   }
-}
-
-ArgList::~ArgList() {
 }
 
 void ArgList::append(Arg *A) {
@@ -59,6 +57,26 @@ Arg *ArgList::getLastArgNoClaim(OptSpecifier Id0, OptSpecifier Id1) const {
   for (const_reverse_iterator it = rbegin(), ie = rend(); it != ie; ++it)
     if ((*it)->getOption().matches(Id0) ||
         (*it)->getOption().matches(Id1))
+      return *it;
+  return nullptr;
+}
+
+Arg *ArgList::getLastArgNoClaim(OptSpecifier Id0, OptSpecifier Id1,
+                                OptSpecifier Id2) const {
+  // FIXME: Make search efficient?
+  for (const_reverse_iterator it = rbegin(), ie = rend(); it != ie; ++it)
+    if ((*it)->getOption().matches(Id0) || (*it)->getOption().matches(Id1) ||
+        (*it)->getOption().matches(Id2))
+      return *it;
+  return nullptr;
+}
+
+Arg *ArgList::getLastArgNoClaim(OptSpecifier Id0, OptSpecifier Id1,
+                                OptSpecifier Id2, OptSpecifier Id3) const {
+  // FIXME: Make search efficient?
+  for (const_reverse_iterator it = rbegin(), ie = rend(); it != ie; ++it)
+    if ((*it)->getOption().matches(Id0) || (*it)->getOption().matches(Id1) ||
+        (*it)->getOption().matches(Id2) || (*it)->getOption().matches(Id3))
       return *it;
   return nullptr;
 }
@@ -241,6 +259,21 @@ void ArgList::AddLastArg(ArgStringList &Output, OptSpecifier Id0,
   }
 }
 
+void ArgList::AddAllArgs(ArgStringList &Output,
+                         ArrayRef<OptSpecifier> Ids) const {
+  for (const Arg *Arg : Args) {
+    for (OptSpecifier Id : Ids) {
+      if (Arg->getOption().matches(Id)) {
+        Arg->claim();
+        Arg->render(*this, Output);
+        break;
+      }
+    }
+  }
+}
+
+/// This 3-opt variant of AddAllArgs could be eliminated in favor of one
+/// that accepts a single specifier, given the above which accepts any number.
 void ArgList::AddAllArgs(ArgStringList &Output, OptSpecifier Id0,
                          OptSpecifier Id1, OptSpecifier Id2) const {
   for (auto Arg: filtered(Id0, Id1, Id2)) {
@@ -253,8 +286,8 @@ void ArgList::AddAllArgValues(ArgStringList &Output, OptSpecifier Id0,
                               OptSpecifier Id1, OptSpecifier Id2) const {
   for (auto Arg : filtered(Id0, Id1, Id2)) {
     Arg->claim();
-    for (unsigned i = 0, e = Arg->getNumValues(); i != e; ++i)
-      Output.push_back(Arg->getValue(i));
+    const auto &Values = Arg->getValues();
+    Output.append(Values.begin(), Values.end());
   }
 }
 
@@ -285,11 +318,6 @@ void ArgList::ClaimAllArgs() const {
       (*it)->claim();
 }
 
-const char *ArgList::MakeArgString(const Twine &T) const {
-  SmallString<256> Str;
-  return MakeArgString(T.toStringRef(Str));
-}
-
 const char *ArgList::GetOrMakeJoinedArgString(unsigned Index,
                                               StringRef LHS,
                                               StringRef RHS) const {
@@ -301,18 +329,27 @@ const char *ArgList::GetOrMakeJoinedArgString(unsigned Index,
   return MakeArgString(LHS + RHS);
 }
 
+void ArgList::print(raw_ostream &O) const {
+  for (Arg *A : *this) {
+    O << "* ";
+    A->print(O);
+  }
+}
+
+LLVM_DUMP_METHOD void ArgList::dump() const { print(dbgs()); }
+
 //
+
+void InputArgList::releaseMemory() {
+  // An InputArgList always owns its arguments.
+  for (Arg *A : *this)
+    delete A;
+}
 
 InputArgList::InputArgList(const char* const *ArgBegin,
                            const char* const *ArgEnd)
   : NumInputArgStrings(ArgEnd - ArgBegin) {
   ArgStrings.append(ArgBegin, ArgEnd);
-}
-
-InputArgList::~InputArgList() {
-  // An InputArgList always owns its arguments.
-  for (iterator it = begin(), ie = end(); it != ie; ++it)
-    delete *it;
 }
 
 unsigned InputArgList::MakeIndex(StringRef String0) const {
@@ -334,19 +371,16 @@ unsigned InputArgList::MakeIndex(StringRef String0,
   return Index0;
 }
 
-const char *InputArgList::MakeArgString(StringRef Str) const {
+const char *InputArgList::MakeArgStringRef(StringRef Str) const {
   return getArgString(MakeIndex(Str));
 }
 
 //
 
-DerivedArgList::DerivedArgList(const InputArgList &_BaseArgs)
-  : BaseArgs(_BaseArgs) {
-}
+DerivedArgList::DerivedArgList(const InputArgList &BaseArgs)
+    : BaseArgs(BaseArgs) {}
 
-DerivedArgList::~DerivedArgList() {}
-
-const char *DerivedArgList::MakeArgString(StringRef Str) const {
+const char *DerivedArgList::MakeArgStringRef(StringRef Str) const {
   return BaseArgs.MakeArgString(Str);
 }
 
@@ -381,7 +415,7 @@ Arg *DerivedArgList::MakeSeparateArg(const Arg *BaseArg, const Option Opt,
 
 Arg *DerivedArgList::MakeJoinedArg(const Arg *BaseArg, const Option Opt,
                                    StringRef Value) const {
-  unsigned Index = BaseArgs.MakeIndex(Opt.getName().str() + Value.str());
+  unsigned Index = BaseArgs.MakeIndex((Opt.getName() + Value).str());
   SynthesizedArgs.push_back(make_unique<Arg>(
       Opt, MakeArgString(Opt.getPrefix() + Opt.getName()), Index,
       BaseArgs.getArgString(Index) + Opt.getName().size(), BaseArg));

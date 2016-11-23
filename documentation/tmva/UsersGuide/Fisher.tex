@@ -1,0 +1,125 @@
+\subsection{Fisher discriminants (linear discriminant 
+            analysis\index{Linear Discriminant Analysis})}
+\label{sec:fisher}
+
+In the method of Fisher discriminants\index{Fisher discriminant}~\cite{Fisher} 
+event selection is performed in a transformed variable space with zero
+linear correlations, by distinguishing the mean values of the signal
+and background distributions.
+The linear discriminant analysis\index{Linear Discriminant Analysis}
+determines an axis in the (correlated) hyperspace of the input
+variables such that, when projecting the output classes (signal and
+background) upon this axis, they are pushed as far as possible away
+from each other, while events of a same class are confined in a close
+vicinity. The linearity property of this classifier is reflected in the
+metric with which "far apart" and "close vicinity" are determined: the
+covariance matrix of the discriminating variable space.
+
+\subsubsection{Booking options}
+
+The Fisher discriminant is booked via the command:
+\begin{codeexample}
+\begin{tmvacode}
+factory->BookMethod( Types::kFisher, "Fisher", "<options>" );
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Booking of the Fisher discriminant: the first 
+		   argument is a predefined enumerator, the second argument is a user-defined 
+		   string identifier, and the third argument is the configuration options string.
+         Individual options are separated by a ':'. 
+         See Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
+\end{codeexample}
+The configuration options for the Fisher discriminant are given in Option Table~\ref{opt:mva::fisher}.
+
+% ======= input option table ==========================================
+\begin{option}[t]
+\input optiontables/MVA__Fisher.tex
+\caption[.]{\optionCaptionSize 
+     Configuration options reference for MVA method: {\em Fisher}.
+     Values given are defaults. If predefined categories exist, the default category is marked by a '$star$'. The options in Option Table~ref{opt:mva::methodbase} on page~pageref{opt:mva::methodbase} can also be configured.
+     
+}
+\label{opt:mva::fisher}
+\end{option}
+% =====================================================================
+
+\subsubsection{Description and implementation}
+
+The classification of the events in signal and background classes relies 
+on the following characteristics: the overall sample means $\overline x_k$
+for each input variable $k=1,\dots,\Nvar$, the class-specific sample means
+$\overline x_{S(B),k}$, and total covariance matrix $C$ of the 
+sample. The covariance matrix can be decomposed into the sum of a {\em within-}
+($W$) and a {\em between-class matrix} ($B$). They respectively describe 
+the dispersion of events relative to the means of their own 
+class (within-class matrix), and relative to the overall sample means 
+(between-class matrix)\footnote
+{
+	The within-class matrix is given by
+	\beqns
+		W_{k\ell} = \sum_{U=S,B}\langle x_{U,k}-\overline x_{U,k}\rangle
+                                \langle x_{U,\ell}-\overline x_{U,\ell}\rangle
+					 = C_{S,k\ell} + C_{B,k\ell}\,,
+	\eeqns
+	where $C_{S(B)}$ is the covariance matrix of the signal (background)
+	sample. The between-class matrix is obtained by
+	\beqns
+		B_{k\ell} = \frac{1}{2}\sum_{U=S,B}
+                  \left(\overline x_{U,k} - \overline x_{k}\right)
+                  \left(\overline x_{U,\ell} - \overline x_{\ell}\right)\,,
+	\eeqns
+	where $\overline x_{S(B),k}$ is the average of variable $x_{k}$ for the 
+   signal (background) sample, and $\overline x_{k}$ denotes the average for 
+   the entire sample.
+}. 
+
+The {\em Fisher coefficients}, $F_k$, are then given by 
+\beq
+\label{eq:Fisher}
+	F_k = \frac{\sqrt{\NS \NB}}{\NS+\NB}
+		   \sum_{\ell=1}^{\Nvar}W_{k\ell}^{-1}
+         \left(\overline x_{S,\ell} - \overline x_{B,\ell}\right)\,,
+\eeq
+where $\NSB$ are the number of signal (background) events in the 
+training sample. The Fisher discriminant $\Fisher(i)$ for event $i$ 
+is given by
+\beq
+	\Fisher(i) = F_0 + \sum_{k=1}^{\Nvar}F_k x_k(i)\,.
+\eeq
+The offset $F_0$ centers the sample mean $\FisherMean$ of
+all $\NS+\NB$ events at zero. 
+
+Instead of using the within-class matrix, the Mahalanobis\index{Mahalanobis distance} 
+variant determines the Fisher coefficients as follows~\cite{Mahalanobis}
+\beq
+\label{eq:Mahalanobis}
+	F_k = \frac{\sqrt{\NS \NB}}{\NS+\NB}
+		   \sum_{\ell=1}^{\Nvar}C_{k\ell}^{-1}
+         \left(\overline x_{S,\ell} - \overline x_{B,\ell}\right)\,,
+\eeq
+where $C_{k\ell}=W_{k\ell}+B_{k\ell}$.
+
+\subsubsection{Variable ranking}
+
+The Fisher discriminant analysis aims at simultaneously maximising the 
+between-class separation while minimising the within-class dispersion. 
+A useful measure of the discrimination power of a variable is therefore
+given by the diagonal quantity $B_{kk}/C_{kk}$, which is used for the 
+ranking of the input variables.
+
+\subsubsection{Performance}
+
+In spite of the simplicity of the classifier, Fisher discriminants can 
+be competitive with likelihood and nonlinear discriminants
+in certain cases. In particular, Fisher discriminants are 
+optimal for Gaussian distributed variables with linear correlations
+(\cf\  the standard toy example that comes with TMVA). 
+
+On the other hand, no discrimination at all is achieved when a variable 
+has the same sample mean for signal and background, even if the shapes
+of the distributions are very different. Thus, Fisher discriminants 
+often benefit from suitable transformations 
+of the input variables. For example, if a variable $x\in[-1,1]$ has a 
+a signal distributions of the form $x^2$, and a uniform background
+distributions, their mean value is zero in both cases, leading to no 
+separation. The simple transformation $x\to |x|$ renders this variable 
+powerful for the use in a Fisher discriminant.

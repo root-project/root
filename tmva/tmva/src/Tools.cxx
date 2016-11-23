@@ -336,22 +336,22 @@ TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
 
 const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
 {
+ 
    if (covMat == 0) return 0;
-
    // sanity check
    Int_t nvar = covMat->GetNrows();
    if (nvar != covMat->GetNcols())
       Log() << kFATAL << "<GetCorrelationMatrix> input matrix not quadratic" << Endl;
 
+   Log() << kWARNING;
    TMatrixD* corrMat = new TMatrixD( nvar, nvar );
-
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       for (Int_t jvar=0; jvar<nvar; jvar++) {
          if (ivar != jvar) {
             Double_t d = (*covMat)(ivar, ivar)*(*covMat)(jvar, jvar);
             if (d > 1E-20) (*corrMat)(ivar, jvar) = (*covMat)(ivar, jvar)/TMath::Sqrt(d);
-            else {
-               Log() << kWARNING << "<GetCorrelationMatrix> zero variances for variables "
+	    else {
+	      Log() <<  "<GetCorrelationMatrix> zero variances for variables "
                      << "(" << ivar << ", " << jvar << ")" << Endl;
                (*corrMat)(ivar, jvar) = 0;
             }
@@ -368,8 +368,8 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
          else (*corrMat)(ivar, ivar) = 1.0;
       }
    }
-
    return corrMat;
+   Log() << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1323,8 +1323,8 @@ void TMVA::Tools::TMVAWelcomeMessage()
 
 void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
 {
-   logger << "___________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE
-          << "" << Endl;
+   logger << "___________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE 
+	  << "" << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1340,7 +1340,8 @@ void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
    Int_t   imonth = (idatqq/100)%100;
    Int_t   iyear  = (idatqq/10000);
    TString versionDate = Form("%s %d, %4d",months[imonth-1],iday,iyear);
-
+   
+   logger << kHEADER ;
    logger << "You are running ROOT Version: " << gROOT->GetVersion() << ", " << versionDate << Endl;
 }
 
@@ -1480,8 +1481,8 @@ void TMVA::Tools::TMVACitation( MsgLogger& logger, ECitation citType )
       break;
 
    case kHtmlLink:
-      logger << kINFO << "  " << Endl;
-      logger << kINFO << gTools().Color("bold")
+      //  logger << kINFO << "  " << Endl;
+      logger << kHEADER << gTools().Color("bold")
              << "Thank you for using TMVA!" << gTools().Color("reset") << Endl;
       logger << kINFO << gTools().Color("bold")
              << "For citation information, please visit: http://tmva.sf.net/citeTMVA.html"

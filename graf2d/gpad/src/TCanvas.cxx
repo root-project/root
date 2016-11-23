@@ -2173,6 +2173,9 @@ Bool_t TCanvas::SupportAlpha()
                    gPad->GetGLDevice() != -1);
 }
 
+extern "C" void ROOT_TCanvas_Update(void* TheCanvas) {
+   static_cast<TCanvas*>(TheCanvas)->Update();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update canvas pad buffers.
@@ -2183,15 +2186,25 @@ void TCanvas::Update()
 
    if (fPixmapID == -1) return;
 
+   static const union CastFromFuncToVoidPtr_t {
+      CastFromFuncToVoidPtr_t(): fFuncPtr(ROOT_TCanvas_Update) {}
+      void (*fFuncPtr)(void*);
+      void* fVoidPtr;
+   } castFromFuncToVoidPtr;
+
    if (gThreadXAR) {
-      void *arr[2];
+      void *arr[3];
       arr[1] = this;
-      if ((*gThreadXAR)("CUPD", 2, arr, 0)) return;
+      arr[2] = castFromFuncToVoidPtr.fVoidPtr;
+      if ((*gThreadXAR)("CUPD", 3, arr, 0)) return;
    }
 
    if (!fCanvasImp) return;
 
    if (!gVirtualX->IsCmdThread()) {
+      // Why do we have this (which uses the interpreter to funnel the Update()
+      // through the main thread) when the gThreadXAR mechanism does seemingly
+      // the same?
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
    }

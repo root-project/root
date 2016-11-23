@@ -299,7 +299,9 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
       Bool_t hasMaskedEntries = GetInput( ev, input, mask );
       if( hasMaskedEntries ){
          Log() << kWARNING << "Incomplete event" << Endl;
-         ev->Print(Log());
+         std::ostringstream oss;
+         ev->Print(oss);
+         Log() << oss.str();
          Log() << kFATAL << "Targets or variables masked by transformation. Apparently (a) value(s) is/are missing in this event." << Endl;
       }
          

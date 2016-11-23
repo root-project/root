@@ -34,9 +34,7 @@ namespace clang {
 }
 
 namespace cling {
-  class BackendPasses;
   class CompilationOptions;
-  class CIFactory;
   class DeclCollector;
   class ExecutionContext;
   class Interpreter;
@@ -61,9 +59,6 @@ namespace cling {
 
     // parser (incremental)
     std::unique_ptr<clang::Parser> m_Parser;
-
-    // optimizer etc passes
-    std::unique_ptr<BackendPasses> m_BackendPasses;
 
     // One buffer for each command line, owner by the source file manager
     std::deque<std::pair<llvm::MemoryBuffer*, clang::FileID>> m_MemoryBuffers;
@@ -101,8 +96,7 @@ namespace cling {
     };
     typedef llvm::PointerIntPair<Transaction*, 2, EParseResult>
       ParseResultTransaction;
-    IncrementalParser(Interpreter* interp, int argc, const char* const *argv,
-                      const char* llvmdir, bool isChildInterpreter);
+    IncrementalParser(Interpreter* interp, const char* llvmdir);
     ~IncrementalParser();
 
     void Initialize(llvm::SmallVectorImpl<ParseResultTransaction>& result,
@@ -130,7 +124,7 @@ namespace cling {
     ///\param[in] PRT - the transaction (ParseResultTransaction, really) to be
     /// committed
     ///
-    void commitTransaction(ParseResultTransaction PRT);
+    void commitTransaction(ParseResultTransaction& PRT);
 
     ///\brief Runs the consumers (e.g. CodeGen) on a non-parsed transaction.
     ///
@@ -138,15 +132,11 @@ namespace cling {
     ///
     void emitTransaction(Transaction* T);
 
-    ///\brief Reverts the interpreter into its previous state.
-    ///
-    /// If one of the declarations caused error in clang it is rolled back from
-    /// the AST. This is essential feature for the error recovery subsystem.
-    /// Also this is a key entry point for the code unloading.
+    ///\brief Remove a Transaction from the collection of Transactions.
     ///
     ///\param[in] T - The transaction to be reverted from the AST
     ///
-    void rollbackTransaction(Transaction* T);
+    void deregisterTransaction(Transaction& T);
 
     ///\brief Returns the first transaction the incremental parser saw.
     ///
@@ -196,25 +186,7 @@ namespace cling {
     ///
     ParseResultTransaction Compile(llvm::StringRef input, const CompilationOptions& Opts);
 
-    ///\brief Parses the given input without calling the custom consumers and
-    /// code generation.
-    ///
-    /// I.e changes to the decls in the transaction commiting it will cause
-    /// different executable code.
-    ///
-    ///\param[in] input - The code to parse.
-    ///\param[in] Opts - The compilation options to use.
-    ///\returns The transaction corresponding to the input.
-    ///
-    ParseResultTransaction Parse(llvm::StringRef input, const CompilationOptions& Opts);
-
     void printTransactionStructure() const;
-
-    ///\brief Adds a UsedAttr to all decls in the transaction.
-    ///
-    ///\param[in] T - the transaction for which all decls will get a UsedAttr.
-    ///
-    void markWholeTransactionAsUsed(Transaction* T) const;
 
     ///\brief Runs the static initializers created by codegening a transaction.
     ///
@@ -232,12 +204,6 @@ namespace cling {
     ///\param[in] T - the transaction to be finalized
     ///
     void codeGenTransaction(Transaction* T);
-
-    ///\brief Runs IR transformers on a transaction.
-    ///
-    ///\param[in] T - the transaction to be transformed.
-    ///
-    bool transformTransactionIR(Transaction* T);
 
     ///\brief Initializes a virtual file, which will be able to produce valid
     /// source locations, with the proper offsets.

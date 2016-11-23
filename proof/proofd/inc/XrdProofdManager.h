@@ -47,13 +47,16 @@ class XrdProofGroupMgr;
 class XrdProofSched;
 class XrdProofdProofServ;
 class XrdProofWorker;
+class XrdProtocol;
 class XrdROOT;
 class XrdROOTMgr;
+
+class XrdSysPlugin;
 
 class XrdProofdManager : public XrdProofdConfig {
 
  public:
-   XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest);
+   XrdProofdManager(char *parms, XrdProtocol_Config *pi, XrdSysError *edest);
    virtual ~XrdProofdManager();
 
    XrdSysRecMutex   *Mutex() { return &fMutex; }
@@ -115,6 +118,8 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdProofdPriorityMgr *PriorityMgr() const { return fPriorityMgr; }
    XrdScheduler     *Sched() const { return fSched; }
 
+   XrdProtocol      *Xrootd() const { return fXrootd; }
+
    // Request processor
    int               Process(XrdProofdProtocol *p);
 
@@ -155,6 +160,10 @@ class XrdProofdManager : public XrdProofdConfig {
    rpdunixsrv       *fRootdUnixSrv;   // Unix socket for rootd callbacks
    bool              fRootdFork;      // If true use fork to start rootd
 
+   XrdProtocol      *fXrootd;         // Reference instance of XrdXrootdProtocol 
+   XrdOucString      fXrootdLibPath;  // Path to 'xrootd' plug-in
+   XrdSysPlugin     *fXrootdPlugin;   // 'xrootd' plug-in handler
+
    // Services
    XrdProofdClientMgr    *fClientMgr;  // Client manager
    XrdProofGroupMgr      *fGroupsMgr;  // Groups manager
@@ -184,6 +193,11 @@ class XrdProofdManager : public XrdProofdConfig {
    std::list<XrdOucString *> fMastersAllowed; // list of master (domains) allowed
    std::list<XrdProofdDSInfo *> fDataSetSrcs; // sources of dataset info
 
+   // Temporary storage: not to be trusted after construction
+   char               *fParms; 
+   XrdProtocol_Config *fPi;
+
+
    int               DoDirectiveAllow(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedGroups(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedUsers(char *, XrdOucStream *, bool);
@@ -199,11 +213,13 @@ class XrdProofdManager : public XrdProofdConfig {
    int               DoDirectiveRootd(char *, XrdOucStream *, bool);
    int               DoDirectiveRootdAllow(char *, XrdOucStream *, bool);
    int               DoDirectiveTrace(char *, XrdOucStream *, bool);
+   int               DoDirectiveXrootd(char *, XrdOucStream *, bool);
 
    bool              ValidateLocalDataSetSrc(XrdOucString &url, bool &local);
 
-   // Scheduling service
+   // Load services
    XrdProofSched    *LoadScheduler();
+   XrdProtocol      *LoadXrootd(char *parms, XrdProtocol_Config *pi, XrdSysError *edest);
 };
 
 // Aux structures

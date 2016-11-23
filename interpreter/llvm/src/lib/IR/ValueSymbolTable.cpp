@@ -24,12 +24,30 @@ using namespace llvm;
 // Class destructor
 ValueSymbolTable::~ValueSymbolTable() {
 #ifndef NDEBUG   // Only do this in -g mode...
-  for (iterator VI = vmap.begin(), VE = vmap.end(); VI != VE; ++VI)
+  for (const auto &VI : vmap)
     dbgs() << "Value still in symbol table! Type = '"
-           << *VI->getValue()->getType() << "' Name = '"
-           << VI->getKeyData() << "'\n";
+           << *VI.getValue()->getType() << "' Name = '" << VI.getKeyData()
+           << "'\n";
   assert(vmap.empty() && "Values remain in symbol table!");
 #endif
+}
+
+ValueName *ValueSymbolTable::makeUniqueName(Value *V,
+                                            SmallString<256> &UniqueName) {
+  unsigned BaseSize = UniqueName.size();
+  while (1) {
+    // Trim any suffix off and append the next number.
+    UniqueName.resize(BaseSize);
+    raw_svector_ostream S(UniqueName);
+    if (isa<GlobalValue>(V))
+      S << ".";
+    S << ++LastUnique;
+
+    // Try insert the vmap entry with this suffix.
+    auto IterBool = vmap.insert(std::make_pair(UniqueName, V));
+    if (IterBool.second)
+      return &*IterBool.first;
+  }
 }
 
 // Insert a value into the symbol table with the specified name...
@@ -49,21 +67,8 @@ void ValueSymbolTable::reinsertValue(Value* V) {
   // The name is too already used, just free it so we can allocate a new name.
   V->getValueName()->Destroy();
 
-  unsigned BaseSize = UniqueName.size();
-  while (1) {
-    // Trim any suffix off and append the next number.
-    UniqueName.resize(BaseSize);
-    raw_svector_ostream(UniqueName) << ++LastUnique;
-
-    // Try insert the vmap entry with this suffix.
-    auto IterBool = vmap.insert(std::make_pair(UniqueName, V));
-    if (IterBool.second) {
-      // Newly inserted name.  Success!
-      V->setValueName(&*IterBool.first);
-     //DEBUG(dbgs() << " Inserted value: " << UniqueName << ": " << *V << "\n");
-      return;
-    }
-  }
+  ValueName *VN = makeUniqueName(V, UniqueName);
+  V->setValueName(VN);
 }
 
 void ValueSymbolTable::removeValueName(ValueName *V) {
@@ -86,30 +91,17 @@ ValueName *ValueSymbolTable::createValueName(StringRef Name, Value *V) {
   
   // Otherwise, there is a naming conflict.  Rename this value.
   SmallString<256> UniqueName(Name.begin(), Name.end());
-  
-  while (1) {
-    // Trim any suffix off and append the next number.
-    UniqueName.resize(Name.size());
-    raw_svector_ostream(UniqueName) << ++LastUnique;
-    
-    // Try insert the vmap entry with this suffix.
-    auto IterBool = vmap.insert(std::make_pair(UniqueName, V));
-    if (IterBool.second) {
-      // DEBUG(dbgs() << " Inserted value: " << UniqueName << ": " << *V <<
-      //       "\n");
-      return &*IterBool.first;
-    }
-  }
+  return makeUniqueName(V, UniqueName);
 }
 
 
 // dump - print out the symbol table
 //
-void ValueSymbolTable::dump() const {
+LLVM_DUMP_METHOD void ValueSymbolTable::dump() const {
   //DEBUG(dbgs() << "ValueSymbolTable:\n");
-  for (const_iterator I = begin(), E = end(); I != E; ++I) {
+  for (const auto &I : *this) {
     //DEBUG(dbgs() << "  '" << I->getKeyData() << "' = ");
-    I->getValue()->dump();
+    I.getValue()->dump();
     //DEBUG(dbgs() << "\n");
   }
 }

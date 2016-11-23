@@ -28,6 +28,7 @@ End_Macro
 #include "TDirectoryFile.h"
 #include "TFile.h"
 #include "TBufferFile.h"
+#include "TBufferJSON.h"
 #include "TMapFile.h"
 #include "TClassTable.h"
 #include "TInterpreter.h"
@@ -1481,6 +1482,10 @@ void TDirectoryFile::Save()
 /// If the operation is successful, it returns the number of bytes written to the file
 /// otherwise it returns 0.
 /// By default a message is printed. Use option "q" to not print the message.
+/// If filename contains ".json" extension, JSON representation of the object
+/// will be created and saved in the text file. Such file can be used in
+/// JavaScript ROOT (https://root.cern.ch/js/) to display object in web browser
+/// When creating JSON file, option string may contain compression level from 0 to 3 (default 0)
 
 Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
 {
@@ -1490,11 +1495,16 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
    if (!filename || !filename[0]) {
       fname.Form("%s.root",obj->GetName());
    }
-   TFile *local = TFile::Open(fname.Data(),"recreate");
-   if (!local) return 0;
-   Int_t nbytes = obj->Write();
-   delete local;
-   if (dirsav) dirsav->cd();
+   Int_t nbytes = 0;
+   if (fname.Index(".json") > 0) {
+      nbytes = TBufferJSON::ExportToFile(fname, obj, option);
+   } else {
+      TFile *local = TFile::Open(fname.Data(),"recreate");
+      if (!local) return 0;
+      nbytes = obj->Write();
+      delete local;
+      if (dirsav) dirsav->cd();
+   }
    TString opt = option;
    opt.ToLower();
    if (!opt.Contains("q")) {
@@ -1907,7 +1917,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 /// TopClass *top = ....;
 /// directory->WriteObject(top,"name of object")
 /// ~~~
-/// See laso remarks in TDirectoryFile::WriteTObject
+/// See also remarks in TDirectoryFile::WriteTObject
 
 Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
 {

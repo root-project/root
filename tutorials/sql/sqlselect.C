@@ -1,8 +1,14 @@
-#ifndef __CINT__
+/// \file
+/// \ingroup tutorial_sql
+///
+/// \macro_code
+///
+/// \author Sergey Linev
+
 #include <TSQLServer.h>
 #include <TSQLResult.h>
 #include <TSQLRow.h>
-#endif
+
 
 void sqlselect()
 {

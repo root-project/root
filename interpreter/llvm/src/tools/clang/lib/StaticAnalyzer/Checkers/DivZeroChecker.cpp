@@ -29,19 +29,19 @@ class DivZeroChecker : public Checker< check::PreStmt<BinaryOperator> > {
                  CheckerContext &C) const ;
 public:
   void checkPreStmt(const BinaryOperator *B, CheckerContext &C) const;
-};  
+};
 } // end anonymous namespace
 
 void DivZeroChecker::reportBug(const char *Msg,
                                ProgramStateRef StateZero,
                                CheckerContext &C) const {
-  if (ExplodedNode *N = C.generateSink(StateZero)) {
+  if (ExplodedNode *N = C.generateErrorNode(StateZero)) {
     if (!BT)
       BT.reset(new BuiltinBug(this, "Division by zero"));
 
-    BugReport *R = new BugReport(*BT, Msg, N);
+    auto R = llvm::make_unique<BugReport>(*BT, Msg, N);
     bugreporter::trackNullOrUndefValue(N, bugreporter::GetDenomExpr(N), *R);
-    C.emitReport(R);
+    C.emitReport(std::move(R));
   }
 }
 

@@ -32,11 +32,13 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           ${macosx_objects}
                           ${unix_objects}
                           ${winnt_objects}
-                          LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                          LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
                                     ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
 
-add_dependencies(rootcling CLING LLVMRES)
+# The dependency on Cling was added to prevent Cling (libCling) and
+# rootcling from being linked in parallel.
+add_dependencies(rootcling CLING LLVMRES Cling)
 
 ROOT_EXECUTABLE(rlibmap src/rlibmap.cxx)
 

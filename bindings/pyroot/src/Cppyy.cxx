@@ -137,6 +137,27 @@ std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope )
    return "";
 }
 
+std::string Cppyy::GetName( const std::string& name )
+{
+   if( name.size() == 0) return name; 
+   // need to deal with template paremeters that can have scopes themselves
+   Int_t tpl_open = 0;
+   for ( std::string::size_type pos = name.size() - 1; pos > 0; pos-- ) {
+      std::string::value_type c = name[pos];
+      // count '<' and '>' to be able to skip template contents
+      if ( c == '>' )
+         ++tpl_open;
+      else if ( c == '<' )
+         --tpl_open;
+      // by only checking for "::" the last part (class name) is dropped
+      else if ( tpl_open == 0 && c == ':'&& name[ pos - 1 ] == ':' ) {
+      // found a new scope part
+         return name.substr( pos+1 );
+      }
+   }
+   return name;
+}
+
 std::string Cppyy::ResolveName( const std::string& cppitem_name )
 {
 // Fully resolve the given name to the final type name.
@@ -473,7 +494,8 @@ Cppyy::TCppObject_t Cppyy::CallO( TCppMethod_t method,
       TCppObject_t self, void* args, TCppType_t result_type )
 {
    TClassRef& cr = type_from_handle( result_type );
-   void* obj = malloc( cr->Size() );
+   size_t s = gInterpreter->ClassInfo_Size(cr->GetClassInfo());
+   void* obj = malloc( s );
    if ( FastCall( method, args, self, obj ) )
       return (TCppObject_t)obj;
    return (TCppObject_t)0;

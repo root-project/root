@@ -1,11 +1,14 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook -js
 /// Using TExec to handle keyboard events and TComplex to draw the Mandelbrot set.
 ///
 /// Pressing the keys 'z' and 'u' will zoom and unzoom the picture
 /// near the mouse location, 'r' will reset to the default view.
 ///
 /// Try it (in compiled mode!) with:   `root mandelbrot.C+`
+///
+/// \macro_image
 ///
 /// ### Details
 ///

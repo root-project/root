@@ -218,7 +218,7 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
                   fSelectionRules->AddClassSelectionRule(csr2);
                }
             }
-         } else if (identifier == "typedef" || identifier == "typedef"){
+         } else if (identifier == "typedefs" || identifier == "typedef") {
             // Silently ignore
          } else {
             ROOT::TMetaUtils::Warning("Unimplemented pragma statement: %s\n",identifier.c_str());
@@ -915,6 +915,7 @@ public:
 
       if (tok.isNot(clang::tok::semi)) {
          Error("Error: missing ; at end of rule", tok, false);
+         delete options;
          return;
       }
 

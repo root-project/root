@@ -68,10 +68,10 @@ ClassImp(TMVA::Configurable)
 /// constructor
 
 TMVA::Configurable::Configurable( const TString& theOption)
-: fOptions                    ( theOption ),
+: TNamed("Configurable","Configurable"),
+   fOptions                    ( theOption ),
    fLooseOptionCheckingEnabled ( kTRUE ),
    fLastDeclaredOption         ( 0 ),
-   fConfigName                 ( "Configurable" ), // must be replaced by name of class that uses the configurable
    fConfigDescription          ( "No description" ),
    fReferenceFile              ( "None" ),
    fLogger                     ( new MsgLogger(this) )
@@ -308,7 +308,12 @@ void TMVA::Configurable::PrintOptions() const
    Log() << kVERBOSE << "- By User:" << Endl;
    Bool_t found = kFALSE;
    while (OptionBase* opt = (OptionBase *) optIt()) {
-      if (opt->IsSet()) { Log() << kVERBOSE << "    "; opt->Print(Log()); Log() << Endl; found = kTRUE; }
+      if (opt->IsSet()) { 
+          Log() << kVERBOSE << "    "; 
+          std::ostringstream oss;
+          opt->Print(oss);
+          Log() << oss.str();
+          Log() << Endl; found = kTRUE; }
    }
    if (!found) Log() << kVERBOSE << "    <none>" << Endl;
 
@@ -316,7 +321,12 @@ void TMVA::Configurable::PrintOptions() const
    Log() << kVERBOSE << "- Default:" << Endl;
    found = kFALSE;
    while (OptionBase* opt = (OptionBase *) optIt()) {
-      if (!opt->IsSet()) { Log() << kVERBOSE << "    "; opt->Print(Log()); Log() << Endl; found = kTRUE; }
+      if (!opt->IsSet()) { 
+          Log() << kVERBOSE << "    "; 
+          std::ostringstream oss;
+          opt->Print(oss);
+          Log() << oss.str();
+          Log() << Endl; found = kTRUE; }
    }
    if (!found) Log() << kVERBOSE << "    <none>" << Endl;
 }

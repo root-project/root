@@ -9,6 +9,8 @@
     padding: 0;
     margin: 0;
     font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+    box-sizing: content-box;
+    line-height: 14px
 }
 
 .jsroot .h_tree img {
@@ -43,6 +45,11 @@
 
 .jsroot .h_value_num {
     color: blue;
+}
+
+.jsroot .h_line {
+   height: 18px;
+   display: block;
 }
 
 .jsroot .h_item {
@@ -247,6 +254,13 @@
     background-image: url("data:image/gif;base64,R0lGODlhEgASALMAAP/////MzP+Zmf9mZv8zM/8AAMzM/8zMzJmZ/5mZmWZm/2ZmZjMz/zMzMwAA/////yH5BAUUAA8ALAAAAAASABIAAARo8MlJq73SKGSwdSDjUQoIjhNYOujDnGAnFXRBZKoBIpMw1ICHaaigBAq/AUK1CVEIhcfPNFlRbAEBEvWr0VDYQLYgkCQWh8XiAfgRymPyoTFRa2uPO009maP8ZmsjAHxnBygLDQ1zihEAOw==");
 }
 
+.jsroot .img_task {
+    display: inline-block;
+    height: 18px;
+    width: 18px;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAVCAAAAACMfPpKAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAATklEQVQY05XQUQoAIAgD0N3JY3fIChWttKR9xYvBCj0J0FsI3VVKQflwV22J0oyo3LOCc6pHW4dqi56v2CebbpMLtcmr+uTizz6UYpBnADSS8gvhaL5WAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTA0LTA3VDA5OjQyOjQ4KzAyOjAwMgzRmQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOCswMTowMJ0LlncAAAAASUVORK5CYII=');
+}
+
 .jsroot .img_pavetext {
     display: inline-block;
     height: 18px;
@@ -375,8 +389,8 @@
     z-index: 11;
     overflow: visible;
     font-size: 11px;
+    line-height: 16px;
 }
-
 
 .jsroot .fast_command {
     width: 28px;
@@ -411,13 +425,23 @@
     overflow: hidden;
     width: 100%;
     height: calc(100% - 26px);
+    background: white;
 }
 
-.jsroot .flex-resizable-helper {
+.jsroot-flex-resizable-helper {
     border: 2px dotted #00F;
 }
 
-
+/* stylesheet for floating browser */
+.jsroot .float_browser {
+    position: absolute;
+    bottom: 35px;
+    top: 5px;
+    width: 300px;
+    background: #E6E6FA;
+    padding: 5px;
+    overflow: auto;
+}
 
 /*--------------------------------------------------
   progress message
@@ -451,19 +475,6 @@
     left: 2px;
     z-index: 1001;
     background: rgba(255, 255, 255, 0.7);
-}
-
-.jsroot .toolbar--hover {
-    opacity: 0;
-    -webkit-transition: opacity 0.3s ease 0s;
-    -moz-transition: opacity 0.3s ease 0s;
-    -ms-transition: opacity 0.3s ease 0s;
-    -o-transition: opacity 0.3s ease 0s;
-    transition: opacity 0.3s ease 0s;
-}
-
-.jsroot .toolbar--hover:hover {
-    opacity: 1;
 }
 
 .jsroot .toolbar-group {
@@ -536,4 +547,15 @@
     white-space: nowrap;
     margin-left: -18px;
     border-radius: 2px;
+}
+
+/* stylesheet for embedded toolbar buttons */
+.jsroot .svg_toolbar_btn {
+    fill: steelblue;
+    cursor: pointer;
+    opacity: 0.3;
+}
+
+.jsroot .svg_toolbar_btn:hover {
+    opacity: 1.0;
 }

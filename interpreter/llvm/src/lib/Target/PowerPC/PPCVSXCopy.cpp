@@ -13,11 +13,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "PPCInstrInfo.h"
-#include "MCTargetDesc/PPCPredicates.h"
 #include "PPC.h"
+#include "MCTargetDesc/PPCPredicates.h"
 #include "PPCHazardRecognizers.h"
 #include "PPCInstrBuilder.h"
+#include "PPCInstrInfo.h"
 #include "PPCMachineFunctionInfo.h"
 #include "PPCTargetMachine.h"
 #include "llvm/ADT/STLExtras.h"
@@ -28,7 +28,6 @@
 #include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/MC/MCAsmInfo.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TargetRegistry.h"
@@ -77,6 +76,14 @@ namespace {
       return IsRegInClass(Reg, &PPC::F8RCRegClass, MRI);
     }
 
+    bool IsVSFReg(unsigned Reg, MachineRegisterInfo &MRI) {
+      return IsRegInClass(Reg, &PPC::VSFRCRegClass, MRI);
+    }
+
+    bool IsVSSReg(unsigned Reg, MachineRegisterInfo &MRI) {
+      return IsRegInClass(Reg, &PPC::VSSRCRegClass, MRI);
+    }
+
 protected:
     bool processBlock(MachineBasicBlock &MBB) {
       bool Changed = false;
@@ -100,7 +107,9 @@ protected:
             IsVRReg(SrcMO.getReg(), MRI) ? &PPC::VSHRCRegClass :
                                            &PPC::VSLRCRegClass;
           assert((IsF8Reg(SrcMO.getReg(), MRI) ||
-                  IsVRReg(SrcMO.getReg(), MRI)) &&
+                  IsVRReg(SrcMO.getReg(), MRI) ||
+                  IsVSSReg(SrcMO.getReg(), MRI) ||
+                  IsVSFReg(SrcMO.getReg(), MRI)) &&
                  "Unknown source for a VSX copy");
 
           unsigned NewVReg = MRI.createVirtualRegister(SrcRC);
@@ -123,6 +132,8 @@ protected:
             IsVRReg(DstMO.getReg(), MRI) ? &PPC::VSHRCRegClass :
                                            &PPC::VSLRCRegClass;
           assert((IsF8Reg(DstMO.getReg(), MRI) ||
+                  IsVSFReg(DstMO.getReg(), MRI) ||
+                  IsVSSReg(DstMO.getReg(), MRI) ||
                   IsVRReg(DstMO.getReg(), MRI)) &&
                  "Unknown destination for a VSX copy");
 

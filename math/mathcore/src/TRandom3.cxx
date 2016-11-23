@@ -91,7 +91,7 @@ TRandom3::~TRandom3()
 ///  Produces uniformly-distributed floating points in (0,1)
 ///  Method: Mersenne Twister
 
-Double_t TRandom3::Rndm(Int_t)
+Double_t TRandom3::Rndm()
 {
    UInt_t y;
 
@@ -198,7 +198,7 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
 /// with many zero in the bit pattern (like 2**28).
 /// see http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
 
-void TRandom3::SetSeed(UInt_t seed)
+void TRandom3::SetSeed(ULong_t seed)
 {
    TRandom::SetSeed(seed);
    fCount624 = 624;

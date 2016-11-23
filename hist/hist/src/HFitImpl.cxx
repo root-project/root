@@ -1007,6 +1007,7 @@ double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, bool 
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
+   if (usePL) opt.fUseEmpty=true; 
    ROOT::Fit::DataRange range;
    // get range of function
    if (useRange) HFit::GetFunctionRange(f1,range);

@@ -1,4 +1,12 @@
-#include "TGeoVGShape.h"
+// Author: Mihaela Gheata   30/03/16
+/*************************************************************************
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoVGShape - bridge class for using a VecGeom solid as TGeoShape.             //
@@ -24,6 +32,7 @@
 #include "volumes/UnplacedPolycone.h"
 #include "volumes/UnplacedScaledShape.h"
 #include "volumes/UnplacedGenTrap.h"
+#include "volumes/UnplacedSExtruVolume.h"
 #include "TError.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -44,6 +53,7 @@
 #include "TGeoScaledShape.h"
 #include "TGeoTorus.h"
 #include "TGeoEltu.h"
+#include "TGeoXtru.h"
 
 //_____________________________________________________________________________
 TGeoVGShape::TGeoVGShape(TGeoShape *shape,  vecgeom::cxx::VPlacedVolume *vgshape)
@@ -114,14 +124,15 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
    // THE TUBE
    if (shape->IsA() == TGeoTube::Class()) {
       TGeoTube const *const tube = static_cast<TGeoTube const *>(shape);
-      unplaced_volume = new UnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), 0., kTwoPi);
+      unplaced_volume            = new GenericUnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), 0., kTwoPi);
    }
 
    // THE TUBESEG
    if (shape->IsA() == TGeoTubeSeg::Class()) {
       TGeoTubeSeg const *const tube = static_cast<TGeoTubeSeg const *>(shape);
-      unplaced_volume = new UnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), kDegToRad * tube->GetPhi1(),
-                                         kDegToRad * (tube->GetPhi2() - tube->GetPhi1()));
+      unplaced_volume =
+          new GenericUnplacedTube(tube->GetRmin(), tube->GetRmax(), tube->GetDz(), kDegToRad * tube->GetPhi1(),
+                                  kDegToRad * (tube->GetPhi2() - tube->GetPhi1()));
    }
 
    // THE CONESEG
@@ -193,7 +204,7 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
          unplaced_volume = new UnplacedOrb(p->GetRmax());
       } else {
          unplaced_volume = new UnplacedSphere(p->GetRmin(), p->GetRmax(), p->GetPhi1() * kDegToRad,
-                                             (p->GetPhi2() - p->GetPhi1()) * kDegToRad, p->GetTheta1(),
+                                             (p->GetPhi2() - p->GetPhi1()) * kDegToRad, p->GetTheta1() * kDegToRad,
                                            (p->GetTheta2() - p->GetTheta1()) * kDegToRad);
       }
    }
@@ -265,7 +276,7 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
       TGeoEltu const *const p = static_cast<TGeoEltu const *>(shape);
       // Create the corresponding unplaced tube, with:
       //   rmin=0, rmax=A, dz=dz, which is scaled with (1., A/B, 1.)
-      UnplacedTube *tubeUnplaced = new UnplacedTube(0, p->GetA(), p->GetDZ(), 0, kTwoPi);
+      GenericUnplacedTube *tubeUnplaced = new GenericUnplacedTube(0, p->GetA(), p->GetDZ(), 0, kTwoPi);
       unplaced_volume = new UnplacedScaledShape(tubeUnplaced, 1., p->GetB() / p->GetA(), 1.);
    }
 
@@ -281,6 +292,31 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
          verticesy[ivert] = vertices[2 * ivert + 1];
       }
       unplaced_volume = new UnplacedGenTrap(verticesx, verticesy, p->GetDz());
+   }
+
+   // THE SIMPLE XTRU
+   if (shape->IsA() == TGeoXtru::Class()) {
+      TGeoXtru *p = (TGeoXtru *)(shape);
+      // analyse convertability
+      if (p->GetNz() == 2) {
+         // add check on scaling and distortions
+         size_t Nvert = (size_t)p->GetNvert();
+         double *x    = new double[Nvert];
+         double *y    = new double[Nvert];
+         for (size_t i = 0; i < Nvert; ++i) {
+            x[i] = p->GetX(i);
+            y[i] = p->GetY(i);
+         }
+         // check in which orientation the polygon in given
+         if (PlanarPolygon::GetOrientation(x, y, Nvert) > 0.) {
+            // std::cerr << "Points not given in clockwise order ... reordering \n";
+            for (size_t i = 0; i < Nvert; ++i) {
+               x[Nvert - 1 - i] = p->GetX(i);
+               y[Nvert - 1 - i] = p->GetY(i);
+            }
+         }
+         unplaced_volume = new UnplacedSExtruVolume(p->GetNvert(), x, y, p->GetZ()[0], p->GetZ()[1]);
+      }
    }
 
    // New volumes should be implemented here...

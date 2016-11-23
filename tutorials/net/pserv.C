@@ -1,14 +1,19 @@
+/// \file
+/// \ingroup tutorial_net
+/// Server program to test parallel sockets.
+///
+/// To run this demo do the following:
+///   - Open two windows
+///   - Start ROOT in all two windows
+///   - Execute in the first window: .x pserv.C
+///   - Execute in the second window: .x pclient.C
+///
+/// \macro_code
+///
+/// \author Fons Rademakers
+
 void pserv()
 {
-   // Server program to test parallel sockets.
-   //
-   // To run this demo do the following:
-   //   - Open two windows
-   //   - Start ROOT in all two windows
-   //   - Execute in the first window: .x pserv.C
-   //   - Execute in the second window: .x pclient.C
-   //Author: Fons Rademakers
-
    // Open a parallel server socket looking for connections on a named
    // service or on a specified port.
    //TPServerSocket *ss = new TServerSocket("rootserv", kTRUE);

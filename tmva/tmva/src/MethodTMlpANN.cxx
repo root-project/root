@@ -49,20 +49,11 @@
 
 #include "TMVA/MethodTMlpANN.h"
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-
-#include "Riostream.h"
-#include "TLeaf.h"
-#include "TEventList.h"
-#include "TObjString.h"
-#include "TROOT.h"
-#include "TMultiLayerPerceptron.h"
-
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
@@ -72,6 +63,18 @@
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
+
+#include "Riostream.h"
+#include "TLeaf.h"
+#include "TEventList.h"
+#include "TObjString.h"
+#include "TROOT.h"
+#include "TMultiLayerPerceptron.h"
+
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+
 
 using std::atoi;
 
@@ -94,9 +97,8 @@ ClassImp(TMVA::MethodTMlpANN)
    TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
                                        const TString& methodTitle,
                                        DataSetInfo& theData,
-                                       const TString& theOption,
-                                       TDirectory* theTargetDir) :
-   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
+                                       const TString& theOption) :
+   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),
@@ -109,9 +111,8 @@ ClassImp(TMVA::MethodTMlpANN)
 /// constructor from weight file
 
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile, theTargetDir ),
+                                    const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile),
    fMLP(0),
    fLocalTrainingTree(0),
    fNcycles(100),
@@ -308,7 +309,7 @@ void TMVA::MethodTMlpANN::Train( void )
    TString testList  = TString("!(") + trainList + ")";
 
    // print the requirements
-   Log() << kINFO << "Requirement for training   events: \"" << trainList << "\"" << Endl;
+   Log() << kHEADER << "Requirement for training   events: \"" << trainList << "\"" << Endl;
    Log() << kINFO << "Requirement for validation events: \"" << testList << "\"" << Endl;
 
    // localTrainingTree->Print();
@@ -341,7 +342,7 @@ void TMVA::MethodTMlpANN::Train( void )
    fMLP->SetLearningMethod( learningMethod );
 
    // train NN
-   fMLP->Train(fNcycles, "text,update=50" );
+   fMLP->Train(fNcycles, "" ); //"text,update=50" );
 
    // write weights to File;
    // this is not nice, but fMLP gets deleted at the end of Train()

@@ -21,6 +21,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/ExprObjC.h"
+#include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/StmtCXX.h"
 #include "clang/AST/StmtObjC.h"
 #include "clang/Analysis/Analyses/FormatString.h"
@@ -35,9 +36,12 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/Support/Format.h"
+#include "llvm/Support/Locale.h"
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/Support/raw_ostream.h"
 #include <limits>
+
 using namespace clang;
 using namespace sema;
 
@@ -108,6 +112,39 @@ static bool SemaBuiltinAddressof(Sema &S, CallExpr *TheCall) {
 
   TheCall->setArg(0, Arg.get());
   TheCall->setType(ResultType);
+  return false;
+}
+
+static bool SemaBuiltinOverflow(Sema &S, CallExpr *TheCall) {
+  if (checkArgCount(S, TheCall, 3))
+    return true;
+
+  // First two arguments should be integers.
+  for (unsigned I = 0; I < 2; ++I) {
+    Expr *Arg = TheCall->getArg(I);
+    QualType Ty = Arg->getType();
+    if (!Ty->isIntegerType()) {
+      S.Diag(Arg->getLocStart(), diag::err_overflow_builtin_must_be_int)
+          << Ty << Arg->getSourceRange();
+      return true;
+    }
+  }
+
+  // Third argument should be a pointer to a non-const integer.
+  // IRGen correctly handles volatile, restrict, and address spaces, and
+  // the other qualifiers aren't possible.
+  {
+    Expr *Arg = TheCall->getArg(2);
+    QualType Ty = Arg->getType();
+    const auto *PtrTy = Ty->getAs<PointerType>();
+    if (!(PtrTy && PtrTy->getPointeeType()->isIntegerType() &&
+          !PtrTy->getPointeeType().isConstQualified())) {
+      S.Diag(Arg->getLocStart(), diag::err_overflow_builtin_must_be_ptr_int)
+          << Ty << Arg->getSourceRange();
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -184,7 +221,7 @@ static bool SemaBuiltinCallWithStaticChain(Sema &S, CallExpr *BuiltinCall) {
     return true;
   }
 
-  QualType ReturnTy = CE->getCallReturnType();
+  QualType ReturnTy = CE->getCallReturnType(S.Context);
   QualType ArgTys[2] = { ReturnTy, ChainResult.get()->getType() };
   QualType BuiltinTy = S.Context.getFunctionType(
       ReturnTy, ArgTys, FunctionProtoType::ExtProtoInfo());
@@ -220,6 +257,459 @@ static bool SemaBuiltinSEHScopeCheck(Sema &SemaRef, CallExpr *TheCall,
         << DRE->getDecl()->getIdentifier();
     return true;
   }
+
+  return false;
+}
+
+static inline bool isBlockPointer(Expr *Arg) {
+  return Arg->getType()->isBlockPointerType();
+}
+
+/// OpenCL C v2.0, s6.13.17.2 - Checks that the block parameters are all local
+/// void*, which is a requirement of device side enqueue.
+static bool checkOpenCLBlockArgs(Sema &S, Expr *BlockArg) {
+  const BlockPointerType *BPT =
+      cast<BlockPointerType>(BlockArg->getType().getCanonicalType());
+  ArrayRef<QualType> Params =
+      BPT->getPointeeType()->getAs<FunctionProtoType>()->getParamTypes();
+  unsigned ArgCounter = 0;
+  bool IllegalParams = false;
+  // Iterate through the block parameters until either one is found that is not
+  // a local void*, or the block is valid.
+  for (ArrayRef<QualType>::iterator I = Params.begin(), E = Params.end();
+       I != E; ++I, ++ArgCounter) {
+    if (!(*I)->isPointerType() || !(*I)->getPointeeType()->isVoidType() ||
+        (*I)->getPointeeType().getQualifiers().getAddressSpace() !=
+            LangAS::opencl_local) {
+      // Get the location of the error. If a block literal has been passed
+      // (BlockExpr) then we can point straight to the offending argument,
+      // else we just point to the variable reference.
+      SourceLocation ErrorLoc;
+      if (isa<BlockExpr>(BlockArg)) {
+        BlockDecl *BD = cast<BlockExpr>(BlockArg)->getBlockDecl();
+        ErrorLoc = BD->getParamDecl(ArgCounter)->getLocStart();
+      } else if (isa<DeclRefExpr>(BlockArg)) {
+        ErrorLoc = cast<DeclRefExpr>(BlockArg)->getLocStart();
+      }
+      S.Diag(ErrorLoc,
+             diag::err_opencl_enqueue_kernel_blocks_non_local_void_args);
+      IllegalParams = true;
+    }
+  }
+
+  return IllegalParams;
+}
+
+/// OpenCL C v2.0, s6.13.17.6 - Check the argument to the
+/// get_kernel_work_group_size
+/// and get_kernel_preferred_work_group_size_multiple builtin functions.
+static bool SemaOpenCLBuiltinKernelWorkGroupSize(Sema &S, CallExpr *TheCall) {
+  if (checkArgCount(S, TheCall, 1))
+    return true;
+
+  Expr *BlockArg = TheCall->getArg(0);
+  if (!isBlockPointer(BlockArg)) {
+    S.Diag(BlockArg->getLocStart(),
+           diag::err_opencl_enqueue_kernel_expected_type) << "block";
+    return true;
+  }
+  return checkOpenCLBlockArgs(S, BlockArg);
+}
+
+static bool checkOpenCLEnqueueLocalSizeArgs(Sema &S, CallExpr *TheCall,
+                                            unsigned Start, unsigned End);
+
+/// OpenCL v2.0, s6.13.17.1 - Check that sizes are provided for all
+/// 'local void*' parameter of passed block.
+static bool checkOpenCLEnqueueVariadicArgs(Sema &S, CallExpr *TheCall,
+                                           Expr *BlockArg,
+                                           unsigned NumNonVarArgs) {
+  const BlockPointerType *BPT =
+      cast<BlockPointerType>(BlockArg->getType().getCanonicalType());
+  unsigned NumBlockParams =
+      BPT->getPointeeType()->getAs<FunctionProtoType>()->getNumParams();
+  unsigned TotalNumArgs = TheCall->getNumArgs();
+
+  // For each argument passed to the block, a corresponding uint needs to
+  // be passed to describe the size of the local memory.
+  if (TotalNumArgs != NumBlockParams + NumNonVarArgs) {
+    S.Diag(TheCall->getLocStart(),
+           diag::err_opencl_enqueue_kernel_local_size_args);
+    return true;
+  }
+
+  // Check that the sizes of the local memory are specified by integers.
+  return checkOpenCLEnqueueLocalSizeArgs(S, TheCall, NumNonVarArgs,
+                                         TotalNumArgs - 1);
+}
+
+/// OpenCL C v2.0, s6.13.17 - Enqueue kernel function contains four different
+/// overload formats specified in Table 6.13.17.1.
+/// int enqueue_kernel(queue_t queue,
+///                    kernel_enqueue_flags_t flags,
+///                    const ndrange_t ndrange,
+///                    void (^block)(void))
+/// int enqueue_kernel(queue_t queue,
+///                    kernel_enqueue_flags_t flags,
+///                    const ndrange_t ndrange,
+///                    uint num_events_in_wait_list,
+///                    clk_event_t *event_wait_list,
+///                    clk_event_t *event_ret,
+///                    void (^block)(void))
+/// int enqueue_kernel(queue_t queue,
+///                    kernel_enqueue_flags_t flags,
+///                    const ndrange_t ndrange,
+///                    void (^block)(local void*, ...),
+///                    uint size0, ...)
+/// int enqueue_kernel(queue_t queue,
+///                    kernel_enqueue_flags_t flags,
+///                    const ndrange_t ndrange,
+///                    uint num_events_in_wait_list,
+///                    clk_event_t *event_wait_list,
+///                    clk_event_t *event_ret,
+///                    void (^block)(local void*, ...),
+///                    uint size0, ...)
+static bool SemaOpenCLBuiltinEnqueueKernel(Sema &S, CallExpr *TheCall) {
+  unsigned NumArgs = TheCall->getNumArgs();
+
+  if (NumArgs < 4) {
+    S.Diag(TheCall->getLocStart(), diag::err_typecheck_call_too_few_args);
+    return true;
+  }
+
+  Expr *Arg0 = TheCall->getArg(0);
+  Expr *Arg1 = TheCall->getArg(1);
+  Expr *Arg2 = TheCall->getArg(2);
+  Expr *Arg3 = TheCall->getArg(3);
+
+  // First argument always needs to be a queue_t type.
+  if (!Arg0->getType()->isQueueT()) {
+    S.Diag(TheCall->getArg(0)->getLocStart(),
+           diag::err_opencl_enqueue_kernel_expected_type)
+        << S.Context.OCLQueueTy;
+    return true;
+  }
+
+  // Second argument always needs to be a kernel_enqueue_flags_t enum value.
+  if (!Arg1->getType()->isIntegerType()) {
+    S.Diag(TheCall->getArg(1)->getLocStart(),
+           diag::err_opencl_enqueue_kernel_expected_type)
+        << "'kernel_enqueue_flags_t' (i.e. uint)";
+    return true;
+  }
+
+  // Third argument is always an ndrange_t type.
+  if (!Arg2->getType()->isNDRangeT()) {
+    S.Diag(TheCall->getArg(2)->getLocStart(),
+           diag::err_opencl_enqueue_kernel_expected_type)
+        << S.Context.OCLNDRangeTy;
+    return true;
+  }
+
+  // With four arguments, there is only one form that the function could be
+  // called in: no events and no variable arguments.
+  if (NumArgs == 4) {
+    // check that the last argument is the right block type.
+    if (!isBlockPointer(Arg3)) {
+      S.Diag(Arg3->getLocStart(), diag::err_opencl_enqueue_kernel_expected_type)
+          << "block";
+      return true;
+    }
+    // we have a block type, check the prototype
+    const BlockPointerType *BPT =
+        cast<BlockPointerType>(Arg3->getType().getCanonicalType());
+    if (BPT->getPointeeType()->getAs<FunctionProtoType>()->getNumParams() > 0) {
+      S.Diag(Arg3->getLocStart(),
+             diag::err_opencl_enqueue_kernel_blocks_no_args);
+      return true;
+    }
+    return false;
+  }
+  // we can have block + varargs.
+  if (isBlockPointer(Arg3))
+    return (checkOpenCLBlockArgs(S, Arg3) ||
+            checkOpenCLEnqueueVariadicArgs(S, TheCall, Arg3, 4));
+  // last two cases with either exactly 7 args or 7 args and varargs.
+  if (NumArgs >= 7) {
+    // check common block argument.
+    Expr *Arg6 = TheCall->getArg(6);
+    if (!isBlockPointer(Arg6)) {
+      S.Diag(Arg6->getLocStart(), diag::err_opencl_enqueue_kernel_expected_type)
+          << "block";
+      return true;
+    }
+    if (checkOpenCLBlockArgs(S, Arg6))
+      return true;
+
+    // Forth argument has to be any integer type.
+    if (!Arg3->getType()->isIntegerType()) {
+      S.Diag(TheCall->getArg(3)->getLocStart(),
+             diag::err_opencl_enqueue_kernel_expected_type)
+          << "integer";
+      return true;
+    }
+    // check remaining common arguments.
+    Expr *Arg4 = TheCall->getArg(4);
+    Expr *Arg5 = TheCall->getArg(5);
+
+    // Fith argument is always passed as pointers to clk_event_t.
+    if (!Arg4->getType()->getPointeeOrArrayElementType()->isClkEventT()) {
+      S.Diag(TheCall->getArg(4)->getLocStart(),
+             diag::err_opencl_enqueue_kernel_expected_type)
+          << S.Context.getPointerType(S.Context.OCLClkEventTy);
+      return true;
+    }
+
+    // Sixth argument is always passed as pointers to clk_event_t.
+    if (!(Arg5->getType()->isPointerType() &&
+          Arg5->getType()->getPointeeType()->isClkEventT())) {
+      S.Diag(TheCall->getArg(5)->getLocStart(),
+             diag::err_opencl_enqueue_kernel_expected_type)
+          << S.Context.getPointerType(S.Context.OCLClkEventTy);
+      return true;
+    }
+
+    if (NumArgs == 7)
+      return false;
+
+    return checkOpenCLEnqueueVariadicArgs(S, TheCall, Arg6, 7);
+  }
+
+  // None of the specific case has been detected, give generic error
+  S.Diag(TheCall->getLocStart(),
+         diag::err_opencl_enqueue_kernel_incorrect_args);
+  return true;
+}
+
+/// Returns OpenCL access qual.
+static OpenCLAccessAttr *getOpenCLArgAccess(const Decl *D) {
+    return D->getAttr<OpenCLAccessAttr>();
+}
+
+/// Returns true if pipe element type is different from the pointer.
+static bool checkOpenCLPipeArg(Sema &S, CallExpr *Call) {
+  const Expr *Arg0 = Call->getArg(0);
+  // First argument type should always be pipe.
+  if (!Arg0->getType()->isPipeType()) {
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_first_arg)
+        << Call->getDirectCallee() << Arg0->getSourceRange();
+    return true;
+  }
+  OpenCLAccessAttr *AccessQual =
+      getOpenCLArgAccess(cast<DeclRefExpr>(Arg0)->getDecl());
+  // Validates the access qualifier is compatible with the call.
+  // OpenCL v2.0 s6.13.16 - The access qualifiers for pipe should only be
+  // read_only and write_only, and assumed to be read_only if no qualifier is
+  // specified.
+  switch (Call->getDirectCallee()->getBuiltinID()) {
+  case Builtin::BIread_pipe:
+  case Builtin::BIreserve_read_pipe:
+  case Builtin::BIcommit_read_pipe:
+  case Builtin::BIwork_group_reserve_read_pipe:
+  case Builtin::BIsub_group_reserve_read_pipe:
+  case Builtin::BIwork_group_commit_read_pipe:
+  case Builtin::BIsub_group_commit_read_pipe:
+    if (!(!AccessQual || AccessQual->isReadOnly())) {
+      S.Diag(Arg0->getLocStart(),
+             diag::err_opencl_builtin_pipe_invalid_access_modifier)
+          << "read_only" << Arg0->getSourceRange();
+      return true;
+    }
+    break;
+  case Builtin::BIwrite_pipe:
+  case Builtin::BIreserve_write_pipe:
+  case Builtin::BIcommit_write_pipe:
+  case Builtin::BIwork_group_reserve_write_pipe:
+  case Builtin::BIsub_group_reserve_write_pipe:
+  case Builtin::BIwork_group_commit_write_pipe:
+  case Builtin::BIsub_group_commit_write_pipe:
+    if (!(AccessQual && AccessQual->isWriteOnly())) {
+      S.Diag(Arg0->getLocStart(),
+             diag::err_opencl_builtin_pipe_invalid_access_modifier)
+          << "write_only" << Arg0->getSourceRange();
+      return true;
+    }
+    break;
+  default:
+    break;
+  }
+  return false;
+}
+
+/// Returns true if pipe element type is different from the pointer.
+static bool checkOpenCLPipePacketType(Sema &S, CallExpr *Call, unsigned Idx) {
+  const Expr *Arg0 = Call->getArg(0);
+  const Expr *ArgIdx = Call->getArg(Idx);
+  const PipeType *PipeTy = cast<PipeType>(Arg0->getType());
+  const QualType EltTy = PipeTy->getElementType();
+  const PointerType *ArgTy = ArgIdx->getType()->getAs<PointerType>();
+  // The Idx argument should be a pointer and the type of the pointer and
+  // the type of pipe element should also be the same.
+  if (!ArgTy ||
+      !S.Context.hasSameType(
+          EltTy, ArgTy->getPointeeType()->getCanonicalTypeInternal())) {
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_invalid_arg)
+        << Call->getDirectCallee() << S.Context.getPointerType(EltTy)
+        << ArgIdx->getType() << ArgIdx->getSourceRange();
+    return true;
+  }
+  return false;
+}
+
+// \brief Performs semantic analysis for the read/write_pipe call.
+// \param S Reference to the semantic analyzer.
+// \param Call A pointer to the builtin call.
+// \return True if a semantic error has been found, false otherwise.
+static bool SemaBuiltinRWPipe(Sema &S, CallExpr *Call) {
+  // OpenCL v2.0 s6.13.16.2 - The built-in read/write
+  // functions have two forms.
+  switch (Call->getNumArgs()) {
+  case 2: {
+    if (checkOpenCLPipeArg(S, Call))
+      return true;
+    // The call with 2 arguments should be
+    // read/write_pipe(pipe T, T*).
+    // Check packet type T.
+    if (checkOpenCLPipePacketType(S, Call, 1))
+      return true;
+  } break;
+
+  case 4: {
+    if (checkOpenCLPipeArg(S, Call))
+      return true;
+    // The call with 4 arguments should be
+    // read/write_pipe(pipe T, reserve_id_t, uint, T*).
+    // Check reserve_id_t.
+    if (!Call->getArg(1)->getType()->isReserveIDT()) {
+      S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_invalid_arg)
+          << Call->getDirectCallee() << S.Context.OCLReserveIDTy
+          << Call->getArg(1)->getType() << Call->getArg(1)->getSourceRange();
+      return true;
+    }
+
+    // Check the index.
+    const Expr *Arg2 = Call->getArg(2);
+    if (!Arg2->getType()->isIntegerType() &&
+        !Arg2->getType()->isUnsignedIntegerType()) {
+      S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_invalid_arg)
+          << Call->getDirectCallee() << S.Context.UnsignedIntTy
+          << Arg2->getType() << Arg2->getSourceRange();
+      return true;
+    }
+
+    // Check packet type T.
+    if (checkOpenCLPipePacketType(S, Call, 3))
+      return true;
+  } break;
+  default:
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_arg_num)
+        << Call->getDirectCallee() << Call->getSourceRange();
+    return true;
+  }
+
+  return false;
+}
+
+// \brief Performs a semantic analysis on the {work_group_/sub_group_
+//        /_}reserve_{read/write}_pipe
+// \param S Reference to the semantic analyzer.
+// \param Call The call to the builtin function to be analyzed.
+// \return True if a semantic error was found, false otherwise.
+static bool SemaBuiltinReserveRWPipe(Sema &S, CallExpr *Call) {
+  if (checkArgCount(S, Call, 2))
+    return true;
+
+  if (checkOpenCLPipeArg(S, Call))
+    return true;
+
+  // Check the reserve size.
+  if (!Call->getArg(1)->getType()->isIntegerType() &&
+      !Call->getArg(1)->getType()->isUnsignedIntegerType()) {
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_invalid_arg)
+        << Call->getDirectCallee() << S.Context.UnsignedIntTy
+        << Call->getArg(1)->getType() << Call->getArg(1)->getSourceRange();
+    return true;
+  }
+
+  return false;
+}
+
+// \brief Performs a semantic analysis on {work_group_/sub_group_
+//        /_}commit_{read/write}_pipe
+// \param S Reference to the semantic analyzer.
+// \param Call The call to the builtin function to be analyzed.
+// \return True if a semantic error was found, false otherwise.
+static bool SemaBuiltinCommitRWPipe(Sema &S, CallExpr *Call) {
+  if (checkArgCount(S, Call, 2))
+    return true;
+
+  if (checkOpenCLPipeArg(S, Call))
+    return true;
+
+  // Check reserve_id_t.
+  if (!Call->getArg(1)->getType()->isReserveIDT()) {
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_invalid_arg)
+        << Call->getDirectCallee() << S.Context.OCLReserveIDTy
+        << Call->getArg(1)->getType() << Call->getArg(1)->getSourceRange();
+    return true;
+  }
+
+  return false;
+}
+
+// \brief Performs a semantic analysis on the call to built-in Pipe
+//        Query Functions.
+// \param S Reference to the semantic analyzer.
+// \param Call The call to the builtin function to be analyzed.
+// \return True if a semantic error was found, false otherwise.
+static bool SemaBuiltinPipePackets(Sema &S, CallExpr *Call) {
+  if (checkArgCount(S, Call, 1))
+    return true;
+
+  if (!Call->getArg(0)->getType()->isPipeType()) {
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_pipe_first_arg)
+        << Call->getDirectCallee() << Call->getArg(0)->getSourceRange();
+    return true;
+  }
+
+  return false;
+}
+// \brief OpenCL v2.0 s6.13.9 - Address space qualifier functions.
+// \brief Performs semantic analysis for the to_global/local/private call.
+// \param S Reference to the semantic analyzer.
+// \param BuiltinID ID of the builtin function.
+// \param Call A pointer to the builtin call.
+// \return True if a semantic error has been found, false otherwise.
+static bool SemaOpenCLBuiltinToAddr(Sema &S, unsigned BuiltinID,
+                                    CallExpr *Call) {
+  if (Call->getNumArgs() != 1) {
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_to_addr_arg_num)
+        << Call->getDirectCallee() << Call->getSourceRange();
+    return true;
+  }
+
+  auto RT = Call->getArg(0)->getType();
+  if (!RT->isPointerType() || RT->getPointeeType()
+      .getAddressSpace() == LangAS::opencl_constant) {
+    S.Diag(Call->getLocStart(), diag::err_opencl_builtin_to_addr_invalid_arg)
+        << Call->getArg(0) << Call->getDirectCallee() << Call->getSourceRange();
+    return true;
+  }
+
+  RT = RT->getPointeeType();
+  auto Qual = RT.getQualifiers();
+  switch (BuiltinID) {
+  case Builtin::BIto_global:
+    Qual.setAddressSpace(LangAS::opencl_global);
+    break;
+  case Builtin::BIto_local:
+    Qual.setAddressSpace(LangAS::opencl_local);
+    break;
+  default:
+    Qual.removeAddressSpace();
+  }
+  Call->setType(S.Context.getPointerType(S.Context.getQualifiedType(
+      RT.getUnqualifiedType(), Qual)));
 
   return false;
 }
@@ -318,6 +808,15 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
   case Builtin::BI__builtin_longjmp:
     if (SemaBuiltinLongjmp(TheCall))
       return ExprError();
+    break;
+  case Builtin::BI__builtin_setjmp:
+    if (SemaBuiltinSetjmp(TheCall))
+      return ExprError();
+    break;
+  case Builtin::BI_setjmp:
+  case Builtin::BI_setjmpex:
+    if (checkArgCount(*this, TheCall, 1))
+      return true;
     break;
 
   case Builtin::BI__builtin_classify_type:
@@ -431,6 +930,9 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
   case Builtin::BI__sync_swap_8:
   case Builtin::BI__sync_swap_16:
     return SemaBuiltinAtomicOverloaded(TheCallResult);
+  case Builtin::BI__builtin_nontemporal_load:
+  case Builtin::BI__builtin_nontemporal_store:
+    return SemaBuiltinNontemporalOverloaded(TheCallResult);
 #define BUILTIN(ID, TYPE, ATTRS)
 #define ATOMIC_BUILTIN(ID, TYPE, ATTRS) \
   case Builtin::BI##ID: \
@@ -442,6 +944,12 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     break;
   case Builtin::BI__builtin_addressof:
     if (SemaBuiltinAddressof(*this, TheCall))
+      return ExprError();
+    break;
+  case Builtin::BI__builtin_add_overflow:
+  case Builtin::BI__builtin_sub_overflow:
+  case Builtin::BI__builtin_mul_overflow:
+    if (SemaBuiltinOverflow(*this, TheCall))
       return ExprError();
     break;
   case Builtin::BI__builtin_operator_new:
@@ -478,32 +986,89 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
   case Builtin::BI__builtin___vsnprintf_chk:
     SemaBuiltinMemChkCall(*this, FDecl, TheCall, 1, 3);
     break;
-
   case Builtin::BI__builtin_call_with_static_chain:
     if (SemaBuiltinCallWithStaticChain(*this, TheCall))
       return ExprError();
     break;
-
   case Builtin::BI__exception_code:
-  case Builtin::BI_exception_code: {
+  case Builtin::BI_exception_code:
     if (SemaBuiltinSEHScopeCheck(*this, TheCall, Scope::SEHExceptScope,
                                  diag::err_seh___except_block))
       return ExprError();
     break;
-  }
   case Builtin::BI__exception_info:
-  case Builtin::BI_exception_info: {
+  case Builtin::BI_exception_info:
     if (SemaBuiltinSEHScopeCheck(*this, TheCall, Scope::SEHFilterScope,
                                  diag::err_seh___except_filter))
       return ExprError();
     break;
-  }
+  case Builtin::BI__GetExceptionInfo:
+    if (checkArgCount(*this, TheCall, 1))
+      return ExprError();
 
+    if (CheckCXXThrowOperand(
+            TheCall->getLocStart(),
+            Context.getExceptionObjectType(FDecl->getParamDecl(0)->getType()),
+            TheCall))
+      return ExprError();
+
+    TheCall->setType(Context.VoidPtrTy);
+    break;
+  // OpenCL v2.0, s6.13.16 - Pipe functions
+  case Builtin::BIread_pipe:
+  case Builtin::BIwrite_pipe:
+    // Since those two functions are declared with var args, we need a semantic
+    // check for the argument.
+    if (SemaBuiltinRWPipe(*this, TheCall))
+      return ExprError();
+    break;
+  case Builtin::BIreserve_read_pipe:
+  case Builtin::BIreserve_write_pipe:
+  case Builtin::BIwork_group_reserve_read_pipe:
+  case Builtin::BIwork_group_reserve_write_pipe:
+  case Builtin::BIsub_group_reserve_read_pipe:
+  case Builtin::BIsub_group_reserve_write_pipe:
+    if (SemaBuiltinReserveRWPipe(*this, TheCall))
+      return ExprError();
+    // Since return type of reserve_read/write_pipe built-in function is
+    // reserve_id_t, which is not defined in the builtin def file , we used int
+    // as return type and need to override the return type of these functions.
+    TheCall->setType(Context.OCLReserveIDTy);
+    break;
+  case Builtin::BIcommit_read_pipe:
+  case Builtin::BIcommit_write_pipe:
+  case Builtin::BIwork_group_commit_read_pipe:
+  case Builtin::BIwork_group_commit_write_pipe:
+  case Builtin::BIsub_group_commit_read_pipe:
+  case Builtin::BIsub_group_commit_write_pipe:
+    if (SemaBuiltinCommitRWPipe(*this, TheCall))
+      return ExprError();
+    break;
+  case Builtin::BIget_pipe_num_packets:
+  case Builtin::BIget_pipe_max_packets:
+    if (SemaBuiltinPipePackets(*this, TheCall))
+      return ExprError();
+    break;
+  case Builtin::BIto_global:
+  case Builtin::BIto_local:
+  case Builtin::BIto_private:
+    if (SemaOpenCLBuiltinToAddr(*this, BuiltinID, TheCall))
+      return ExprError();
+    break;
+  // OpenCL v2.0, s6.13.17 - Enqueue kernel functions.
+  case Builtin::BIenqueue_kernel:
+    if (SemaOpenCLBuiltinEnqueueKernel(*this, TheCall))
+      return ExprError();
+    break;
+  case Builtin::BIget_kernel_work_group_size:
+  case Builtin::BIget_kernel_preferred_work_group_size_multiple:
+    if (SemaOpenCLBuiltinKernelWorkGroupSize(*this, TheCall))
+      return ExprError();
   }
 
   // Since the target specific builtins for each arch overlap, only check those
   // of the arch we are compiling for.
-  if (BuiltinID >= Builtin::FirstTSBuiltin) {
+  if (Context.BuiltinInfo.isTSBuiltin(BuiltinID)) {
     switch (Context.getTargetInfo().getTriple().getArch()) {
       case llvm::Triple::arm:
       case llvm::Triple::armeb:
@@ -524,9 +1089,19 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
         if (CheckMipsBuiltinFunctionCall(BuiltinID, TheCall))
           return ExprError();
         break;
+      case llvm::Triple::systemz:
+        if (CheckSystemZBuiltinFunctionCall(BuiltinID, TheCall))
+          return ExprError();
+        break;
       case llvm::Triple::x86:
       case llvm::Triple::x86_64:
         if (CheckX86BuiltinFunctionCall(BuiltinID, TheCall))
+          return ExprError();
+        break;
+      case llvm::Triple::ppc:
+      case llvm::Triple::ppc64:
+      case llvm::Triple::ppc64le:
+        if (CheckPPCBuiltinFunctionCall(BuiltinID, TheCall))
           return ExprError();
         break;
       default:
@@ -591,7 +1166,10 @@ static QualType getNeonEltType(NeonTypeFlags Flags, ASTContext &Context,
   case NeonTypeFlags::Poly16:
     return IsPolyUnsigned ? Context.UnsignedShortTy : Context.ShortTy;
   case NeonTypeFlags::Poly64:
-    return Context.UnsignedLongTy;
+    if (IsInt64Long)
+      return Context.UnsignedLongTy;
+    else
+      return Context.UnsignedLongLongTy;
   case NeonTypeFlags::Poly128:
     break;
   case NeonTypeFlags::Float16:
@@ -765,7 +1343,6 @@ bool Sema::CheckARMBuiltinExclusiveCall(unsigned BuiltinID, CallExpr *TheCall,
     return true;
   }
 
-
   if (IsLdrex) {
     TheCall->setType(ValType);
     return false;
@@ -800,6 +1377,16 @@ bool Sema::CheckARMBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
     return SemaBuiltinConstantArgRange(TheCall, 1, 0, 1) ||
       SemaBuiltinConstantArgRange(TheCall, 2, 0, 1);
   }
+
+  if (BuiltinID == ARM::BI__builtin_arm_rsr64 ||
+      BuiltinID == ARM::BI__builtin_arm_wsr64)
+    return SemaBuiltinARMSpecialReg(BuiltinID, TheCall, 0, 3, false);
+
+  if (BuiltinID == ARM::BI__builtin_arm_rsr ||
+      BuiltinID == ARM::BI__builtin_arm_rsrp ||
+      BuiltinID == ARM::BI__builtin_arm_wsr ||
+      BuiltinID == ARM::BI__builtin_arm_wsrp)
+    return SemaBuiltinARMSpecialReg(BuiltinID, TheCall, 0, 5, true);
 
   if (CheckNeonBuiltinFunctionCall(BuiltinID, TheCall))
     return true;
@@ -841,6 +1428,16 @@ bool Sema::CheckAArch64BuiltinFunctionCall(unsigned BuiltinID,
       SemaBuiltinConstantArgRange(TheCall, 4, 0, 1);
   }
 
+  if (BuiltinID == AArch64::BI__builtin_arm_rsr64 ||
+      BuiltinID == AArch64::BI__builtin_arm_wsr64)
+    return SemaBuiltinARMSpecialReg(BuiltinID, TheCall, 0, 5, true);
+
+  if (BuiltinID == AArch64::BI__builtin_arm_rsr ||
+      BuiltinID == AArch64::BI__builtin_arm_rsrp ||
+      BuiltinID == AArch64::BI__builtin_arm_wsr ||
+      BuiltinID == AArch64::BI__builtin_arm_wsrp)
+    return SemaBuiltinARMSpecialReg(BuiltinID, TheCall, 0, 5, true);
+
   if (CheckNeonBuiltinFunctionCall(BuiltinID, TheCall))
     return true;
 
@@ -873,27 +1470,179 @@ bool Sema::CheckMipsBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
   return SemaBuiltinConstantArgRange(TheCall, i, l, u);
 }
 
-bool Sema::CheckX86BuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
+bool Sema::CheckPPCBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
+  unsigned i = 0, l = 0, u = 0;
+  bool Is64BitBltin = BuiltinID == PPC::BI__builtin_divde ||
+                      BuiltinID == PPC::BI__builtin_divdeu ||
+                      BuiltinID == PPC::BI__builtin_bpermd;
+  bool IsTarget64Bit = Context.getTargetInfo()
+                              .getTypeWidth(Context
+                                            .getTargetInfo()
+                                            .getIntPtrType()) == 64;
+  bool IsBltinExtDiv = BuiltinID == PPC::BI__builtin_divwe ||
+                       BuiltinID == PPC::BI__builtin_divweu ||
+                       BuiltinID == PPC::BI__builtin_divde ||
+                       BuiltinID == PPC::BI__builtin_divdeu;
+
+  if (Is64BitBltin && !IsTarget64Bit)
+      return Diag(TheCall->getLocStart(), diag::err_64_bit_builtin_32_bit_tgt)
+             << TheCall->getSourceRange();
+
+  if ((IsBltinExtDiv && !Context.getTargetInfo().hasFeature("extdiv")) ||
+      (BuiltinID == PPC::BI__builtin_bpermd &&
+       !Context.getTargetInfo().hasFeature("bpermd")))
+    return Diag(TheCall->getLocStart(), diag::err_ppc_builtin_only_on_pwr7)
+           << TheCall->getSourceRange();
+
+  switch (BuiltinID) {
+  default: return false;
+  case PPC::BI__builtin_altivec_crypto_vshasigmaw:
+  case PPC::BI__builtin_altivec_crypto_vshasigmad:
+    return SemaBuiltinConstantArgRange(TheCall, 1, 0, 1) ||
+           SemaBuiltinConstantArgRange(TheCall, 2, 0, 15);
+  case PPC::BI__builtin_tbegin:
+  case PPC::BI__builtin_tend: i = 0; l = 0; u = 1; break;
+  case PPC::BI__builtin_tsr: i = 0; l = 0; u = 7; break;
+  case PPC::BI__builtin_tabortwc:
+  case PPC::BI__builtin_tabortdc: i = 0; l = 0; u = 31; break;
+  case PPC::BI__builtin_tabortwci:
+  case PPC::BI__builtin_tabortdci:
+    return SemaBuiltinConstantArgRange(TheCall, 0, 0, 31) ||
+           SemaBuiltinConstantArgRange(TheCall, 2, 0, 31);
+  }
+  return SemaBuiltinConstantArgRange(TheCall, i, l, u);
+}
+
+bool Sema::CheckSystemZBuiltinFunctionCall(unsigned BuiltinID,
+                                           CallExpr *TheCall) {
+  if (BuiltinID == SystemZ::BI__builtin_tabort) {
+    Expr *Arg = TheCall->getArg(0);
+    llvm::APSInt AbortCode(32);
+    if (Arg->isIntegerConstantExpr(AbortCode, Context) &&
+        AbortCode.getSExtValue() >= 0 && AbortCode.getSExtValue() < 256)
+      return Diag(Arg->getLocStart(), diag::err_systemz_invalid_tabort_code)
+             << Arg->getSourceRange();
+  }
+
+  // For intrinsics which take an immediate value as part of the instruction,
+  // range check them here.
   unsigned i = 0, l = 0, u = 0;
   switch (BuiltinID) {
   default: return false;
-  case X86::BI_mm_prefetch: i = 1; l = 0; u = 3; break;
-  case X86::BI__builtin_ia32_vextractf128_pd256:
-  case X86::BI__builtin_ia32_vextractf128_ps256:
-  case X86::BI__builtin_ia32_vextractf128_si256:
-  case X86::BI__builtin_ia32_extract128i256: i = 1, l = 0, u = 1; break;
-  case X86::BI__builtin_ia32_vinsertf128_pd256:
-  case X86::BI__builtin_ia32_vinsertf128_ps256:
-  case X86::BI__builtin_ia32_vinsertf128_si256:
-  case X86::BI__builtin_ia32_insert128i256:
-  case X86::BI__builtin_ia32_blendpd: i = 2, l = 0; u = 1; break;
-  case X86::BI__builtin_ia32_blendps:
-  case X86::BI__builtin_ia32_blendpd256:
-  case X86::BI__builtin_ia32_sha1rnds4: i = 2, l = 0; u = 3; break;
+  case SystemZ::BI__builtin_s390_lcbb: i = 1; l = 0; u = 15; break;
+  case SystemZ::BI__builtin_s390_verimb:
+  case SystemZ::BI__builtin_s390_verimh:
+  case SystemZ::BI__builtin_s390_verimf:
+  case SystemZ::BI__builtin_s390_verimg: i = 3; l = 0; u = 255; break;
+  case SystemZ::BI__builtin_s390_vfaeb:
+  case SystemZ::BI__builtin_s390_vfaeh:
+  case SystemZ::BI__builtin_s390_vfaef:
+  case SystemZ::BI__builtin_s390_vfaebs:
+  case SystemZ::BI__builtin_s390_vfaehs:
+  case SystemZ::BI__builtin_s390_vfaefs:
+  case SystemZ::BI__builtin_s390_vfaezb:
+  case SystemZ::BI__builtin_s390_vfaezh:
+  case SystemZ::BI__builtin_s390_vfaezf:
+  case SystemZ::BI__builtin_s390_vfaezbs:
+  case SystemZ::BI__builtin_s390_vfaezhs:
+  case SystemZ::BI__builtin_s390_vfaezfs: i = 2; l = 0; u = 15; break;
+  case SystemZ::BI__builtin_s390_vfidb:
+    return SemaBuiltinConstantArgRange(TheCall, 1, 0, 15) ||
+           SemaBuiltinConstantArgRange(TheCall, 2, 0, 15);
+  case SystemZ::BI__builtin_s390_vftcidb: i = 1; l = 0; u = 4095; break;
+  case SystemZ::BI__builtin_s390_vlbb: i = 1; l = 0; u = 15; break;
+  case SystemZ::BI__builtin_s390_vpdi: i = 2; l = 0; u = 15; break;
+  case SystemZ::BI__builtin_s390_vsldb: i = 2; l = 0; u = 15; break;
+  case SystemZ::BI__builtin_s390_vstrcb:
+  case SystemZ::BI__builtin_s390_vstrch:
+  case SystemZ::BI__builtin_s390_vstrcf:
+  case SystemZ::BI__builtin_s390_vstrczb:
+  case SystemZ::BI__builtin_s390_vstrczh:
+  case SystemZ::BI__builtin_s390_vstrczf:
+  case SystemZ::BI__builtin_s390_vstrcbs:
+  case SystemZ::BI__builtin_s390_vstrchs:
+  case SystemZ::BI__builtin_s390_vstrcfs:
+  case SystemZ::BI__builtin_s390_vstrczbs:
+  case SystemZ::BI__builtin_s390_vstrczhs:
+  case SystemZ::BI__builtin_s390_vstrczfs: i = 3; l = 0; u = 15; break;
+  }
+  return SemaBuiltinConstantArgRange(TheCall, i, l, u);
+}
+
+/// SemaBuiltinCpuSupports - Handle __builtin_cpu_supports(char *).
+/// This checks that the target supports __builtin_cpu_supports and
+/// that the string argument is constant and valid.
+static bool SemaBuiltinCpuSupports(Sema &S, CallExpr *TheCall) {
+  Expr *Arg = TheCall->getArg(0);
+
+  // Check if the argument is a string literal.
+  if (!isa<StringLiteral>(Arg->IgnoreParenImpCasts()))
+    return S.Diag(TheCall->getLocStart(), diag::err_expr_not_string_literal)
+           << Arg->getSourceRange();
+
+  // Check the contents of the string.
+  StringRef Feature =
+      cast<StringLiteral>(Arg->IgnoreParenImpCasts())->getString();
+  if (!S.Context.getTargetInfo().validateCpuSupports(Feature))
+    return S.Diag(TheCall->getLocStart(), diag::err_invalid_cpu_supports)
+           << Arg->getSourceRange();
+  return false;
+}
+
+bool Sema::CheckX86BuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
+  int i = 0, l = 0, u = 0;
+  switch (BuiltinID) {
+  default:
+    return false;
+  case X86::BI__builtin_cpu_supports:
+    return SemaBuiltinCpuSupports(*this, TheCall);
+  case X86::BI__builtin_ms_va_start:
+    return SemaBuiltinMSVAStart(TheCall);
+  case X86::BI__builtin_ia32_extractf64x4_mask:
+  case X86::BI__builtin_ia32_extracti64x4_mask:
+  case X86::BI__builtin_ia32_extractf32x8_mask:
+  case X86::BI__builtin_ia32_extracti32x8_mask:
+  case X86::BI__builtin_ia32_extractf64x2_256_mask:
+  case X86::BI__builtin_ia32_extracti64x2_256_mask:
+  case X86::BI__builtin_ia32_extractf32x4_256_mask:
+  case X86::BI__builtin_ia32_extracti32x4_256_mask:
+    i = 1; l = 0; u = 1;
+    break;
+  case X86::BI_mm_prefetch:
+  case X86::BI__builtin_ia32_extractf32x4_mask:
+  case X86::BI__builtin_ia32_extracti32x4_mask:
+  case X86::BI__builtin_ia32_extractf64x2_512_mask:
+  case X86::BI__builtin_ia32_extracti64x2_512_mask:
+    i = 1; l = 0; u = 3;
+    break;
+  case X86::BI__builtin_ia32_insertf32x8_mask:
+  case X86::BI__builtin_ia32_inserti32x8_mask:
+  case X86::BI__builtin_ia32_insertf64x4_mask:
+  case X86::BI__builtin_ia32_inserti64x4_mask:
+  case X86::BI__builtin_ia32_insertf64x2_256_mask:
+  case X86::BI__builtin_ia32_inserti64x2_256_mask:
+  case X86::BI__builtin_ia32_insertf32x4_256_mask:
+  case X86::BI__builtin_ia32_inserti32x4_256_mask:
+    i = 2; l = 0; u = 1;
+    break;
+  case X86::BI__builtin_ia32_sha1rnds4:
+  case X86::BI__builtin_ia32_shuf_f32x4_256_mask:
+  case X86::BI__builtin_ia32_shuf_f64x2_256_mask:
+  case X86::BI__builtin_ia32_shuf_i32x4_256_mask:
+  case X86::BI__builtin_ia32_shuf_i64x2_256_mask:
+  case X86::BI__builtin_ia32_shufpd128_mask:
+  case X86::BI__builtin_ia32_insertf64x2_512_mask:
+  case X86::BI__builtin_ia32_inserti64x2_512_mask:
+  case X86::BI__builtin_ia32_insertf32x4_mask:
+  case X86::BI__builtin_ia32_inserti32x4_mask:
+    i = 2; l = 0; u = 3;
+    break;
   case X86::BI__builtin_ia32_vpermil2pd:
   case X86::BI__builtin_ia32_vpermil2pd256:
   case X86::BI__builtin_ia32_vpermil2ps:
-  case X86::BI__builtin_ia32_vpermil2ps256: i = 3, l = 0; u = 3; break;
+  case X86::BI__builtin_ia32_vpermil2ps256:
+    i = 3; l = 0; u = 3;
+    break;
   case X86::BI__builtin_ia32_cmpb128_mask:
   case X86::BI__builtin_ia32_cmpw128_mask:
   case X86::BI__builtin_ia32_cmpd128_mask:
@@ -917,21 +1666,211 @@ bool Sema::CheckX86BuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
   case X86::BI__builtin_ia32_ucmpb512_mask:
   case X86::BI__builtin_ia32_ucmpw512_mask:
   case X86::BI__builtin_ia32_ucmpd512_mask:
-  case X86::BI__builtin_ia32_ucmpq512_mask: i = 2; l = 0; u = 7; break;
+  case X86::BI__builtin_ia32_ucmpq512_mask:
+  case X86::BI__builtin_ia32_vpcomub:
+  case X86::BI__builtin_ia32_vpcomuw:
+  case X86::BI__builtin_ia32_vpcomud:
+  case X86::BI__builtin_ia32_vpcomuq:
+  case X86::BI__builtin_ia32_vpcomb:
+  case X86::BI__builtin_ia32_vpcomw:
+  case X86::BI__builtin_ia32_vpcomd:
+  case X86::BI__builtin_ia32_vpcomq:
+    i = 2; l = 0; u = 7;
+    break;
   case X86::BI__builtin_ia32_roundps:
   case X86::BI__builtin_ia32_roundpd:
   case X86::BI__builtin_ia32_roundps256:
-  case X86::BI__builtin_ia32_roundpd256: i = 1, l = 0; u = 15; break;
+  case X86::BI__builtin_ia32_roundpd256:
+    i = 1; l = 0; u = 15;
+    break;
   case X86::BI__builtin_ia32_roundss:
-  case X86::BI__builtin_ia32_roundsd: i = 2, l = 0; u = 15; break;
+  case X86::BI__builtin_ia32_roundsd:
+  case X86::BI__builtin_ia32_rangepd128_mask:
+  case X86::BI__builtin_ia32_rangepd256_mask:
+  case X86::BI__builtin_ia32_rangepd512_mask:
+  case X86::BI__builtin_ia32_rangeps128_mask:
+  case X86::BI__builtin_ia32_rangeps256_mask:
+  case X86::BI__builtin_ia32_rangeps512_mask:
+  case X86::BI__builtin_ia32_getmantsd_round_mask:
+  case X86::BI__builtin_ia32_getmantss_round_mask:
+  case X86::BI__builtin_ia32_shufpd256_mask:
+    i = 2; l = 0; u = 15;
+    break;
   case X86::BI__builtin_ia32_cmpps:
   case X86::BI__builtin_ia32_cmpss:
   case X86::BI__builtin_ia32_cmppd:
   case X86::BI__builtin_ia32_cmpsd:
   case X86::BI__builtin_ia32_cmpps256:
   case X86::BI__builtin_ia32_cmppd256:
+  case X86::BI__builtin_ia32_cmpps128_mask:
+  case X86::BI__builtin_ia32_cmppd128_mask:
+  case X86::BI__builtin_ia32_cmpps256_mask:
+  case X86::BI__builtin_ia32_cmppd256_mask:
   case X86::BI__builtin_ia32_cmpps512_mask:
-  case X86::BI__builtin_ia32_cmppd512_mask: i = 2; l = 0; u = 31; break;
+  case X86::BI__builtin_ia32_cmppd512_mask:
+  case X86::BI__builtin_ia32_cmpsd_mask:
+  case X86::BI__builtin_ia32_cmpss_mask:
+    i = 2; l = 0; u = 31;
+    break;
+  case X86::BI__builtin_ia32_xabort:
+    i = 0; l = -128; u = 255;
+    break;
+  case X86::BI__builtin_ia32_pshufw:
+  case X86::BI__builtin_ia32_aeskeygenassist128:
+    i = 1; l = -128; u = 255;
+    break;
+  case X86::BI__builtin_ia32_vcvtps2ph:
+  case X86::BI__builtin_ia32_vcvtps2ph256:
+  case X86::BI__builtin_ia32_vcvtps2ph512:
+  case X86::BI__builtin_ia32_rndscaleps_128_mask:
+  case X86::BI__builtin_ia32_rndscalepd_128_mask:
+  case X86::BI__builtin_ia32_rndscaleps_256_mask:
+  case X86::BI__builtin_ia32_rndscalepd_256_mask:
+  case X86::BI__builtin_ia32_rndscaleps_mask:
+  case X86::BI__builtin_ia32_rndscalepd_mask:
+  case X86::BI__builtin_ia32_reducepd128_mask:
+  case X86::BI__builtin_ia32_reducepd256_mask:
+  case X86::BI__builtin_ia32_reducepd512_mask:
+  case X86::BI__builtin_ia32_reduceps128_mask:
+  case X86::BI__builtin_ia32_reduceps256_mask:
+  case X86::BI__builtin_ia32_reduceps512_mask:
+  case X86::BI__builtin_ia32_prold512_mask:
+  case X86::BI__builtin_ia32_prolq512_mask:
+  case X86::BI__builtin_ia32_prold128_mask:
+  case X86::BI__builtin_ia32_prold256_mask:
+  case X86::BI__builtin_ia32_prolq128_mask:
+  case X86::BI__builtin_ia32_prolq256_mask:
+  case X86::BI__builtin_ia32_prord128_mask:
+  case X86::BI__builtin_ia32_prord256_mask:
+  case X86::BI__builtin_ia32_prorq128_mask:
+  case X86::BI__builtin_ia32_prorq256_mask:
+  case X86::BI__builtin_ia32_psllwi512_mask:
+  case X86::BI__builtin_ia32_psllwi128_mask:
+  case X86::BI__builtin_ia32_psllwi256_mask:
+  case X86::BI__builtin_ia32_psrldi128_mask:
+  case X86::BI__builtin_ia32_psrldi256_mask:
+  case X86::BI__builtin_ia32_psrldi512_mask:
+  case X86::BI__builtin_ia32_psrlqi128_mask:
+  case X86::BI__builtin_ia32_psrlqi256_mask:
+  case X86::BI__builtin_ia32_psrlqi512_mask:
+  case X86::BI__builtin_ia32_psrawi512_mask:
+  case X86::BI__builtin_ia32_psrawi128_mask:
+  case X86::BI__builtin_ia32_psrawi256_mask:
+  case X86::BI__builtin_ia32_psrlwi512_mask:
+  case X86::BI__builtin_ia32_psrlwi128_mask:
+  case X86::BI__builtin_ia32_psrlwi256_mask:
+  case X86::BI__builtin_ia32_psradi128_mask:
+  case X86::BI__builtin_ia32_psradi256_mask:
+  case X86::BI__builtin_ia32_psradi512_mask:
+  case X86::BI__builtin_ia32_psraqi128_mask:
+  case X86::BI__builtin_ia32_psraqi256_mask:
+  case X86::BI__builtin_ia32_psraqi512_mask:
+  case X86::BI__builtin_ia32_pslldi128_mask:
+  case X86::BI__builtin_ia32_pslldi256_mask:
+  case X86::BI__builtin_ia32_pslldi512_mask:
+  case X86::BI__builtin_ia32_psllqi128_mask:
+  case X86::BI__builtin_ia32_psllqi256_mask:
+  case X86::BI__builtin_ia32_psllqi512_mask:
+  case X86::BI__builtin_ia32_fpclasspd128_mask:
+  case X86::BI__builtin_ia32_fpclasspd256_mask:
+  case X86::BI__builtin_ia32_fpclassps128_mask:
+  case X86::BI__builtin_ia32_fpclassps256_mask:
+  case X86::BI__builtin_ia32_fpclassps512_mask:
+  case X86::BI__builtin_ia32_fpclasspd512_mask:
+  case X86::BI__builtin_ia32_fpclasssd_mask:
+  case X86::BI__builtin_ia32_fpclassss_mask:
+    i = 1; l = 0; u = 255;
+    break;
+  case X86::BI__builtin_ia32_palignr:
+  case X86::BI__builtin_ia32_insertps128:
+  case X86::BI__builtin_ia32_dpps:
+  case X86::BI__builtin_ia32_dppd:
+  case X86::BI__builtin_ia32_dpps256:
+  case X86::BI__builtin_ia32_mpsadbw128:
+  case X86::BI__builtin_ia32_mpsadbw256:
+  case X86::BI__builtin_ia32_pcmpistrm128:
+  case X86::BI__builtin_ia32_pcmpistri128:
+  case X86::BI__builtin_ia32_pcmpistria128:
+  case X86::BI__builtin_ia32_pcmpistric128:
+  case X86::BI__builtin_ia32_pcmpistrio128:
+  case X86::BI__builtin_ia32_pcmpistris128:
+  case X86::BI__builtin_ia32_pcmpistriz128:
+  case X86::BI__builtin_ia32_pclmulqdq128:
+  case X86::BI__builtin_ia32_vperm2f128_pd256:
+  case X86::BI__builtin_ia32_vperm2f128_ps256:
+  case X86::BI__builtin_ia32_vperm2f128_si256:
+  case X86::BI__builtin_ia32_permti256:
+    i = 2; l = -128; u = 255;
+    break;
+  case X86::BI__builtin_ia32_palignr128:
+  case X86::BI__builtin_ia32_palignr256:
+  case X86::BI__builtin_ia32_palignr128_mask:
+  case X86::BI__builtin_ia32_palignr256_mask:
+  case X86::BI__builtin_ia32_palignr512_mask:
+  case X86::BI__builtin_ia32_alignq512_mask:
+  case X86::BI__builtin_ia32_alignd512_mask:
+  case X86::BI__builtin_ia32_alignd128_mask:
+  case X86::BI__builtin_ia32_alignd256_mask:
+  case X86::BI__builtin_ia32_alignq128_mask:
+  case X86::BI__builtin_ia32_alignq256_mask:
+  case X86::BI__builtin_ia32_vcomisd:
+  case X86::BI__builtin_ia32_vcomiss:
+  case X86::BI__builtin_ia32_shuf_f32x4_mask:
+  case X86::BI__builtin_ia32_shuf_f64x2_mask:
+  case X86::BI__builtin_ia32_shuf_i32x4_mask:
+  case X86::BI__builtin_ia32_shuf_i64x2_mask:
+  case X86::BI__builtin_ia32_shufpd512_mask:
+  case X86::BI__builtin_ia32_shufps128_mask:
+  case X86::BI__builtin_ia32_shufps256_mask:
+  case X86::BI__builtin_ia32_shufps512_mask:
+  case X86::BI__builtin_ia32_dbpsadbw128_mask:
+  case X86::BI__builtin_ia32_dbpsadbw256_mask:
+  case X86::BI__builtin_ia32_dbpsadbw512_mask:
+    i = 2; l = 0; u = 255;
+    break;
+  case X86::BI__builtin_ia32_fixupimmpd512_mask:
+  case X86::BI__builtin_ia32_fixupimmpd512_maskz:
+  case X86::BI__builtin_ia32_fixupimmps512_mask:
+  case X86::BI__builtin_ia32_fixupimmps512_maskz:
+  case X86::BI__builtin_ia32_fixupimmsd_mask:
+  case X86::BI__builtin_ia32_fixupimmsd_maskz:
+  case X86::BI__builtin_ia32_fixupimmss_mask:
+  case X86::BI__builtin_ia32_fixupimmss_maskz:
+  case X86::BI__builtin_ia32_fixupimmpd128_mask:
+  case X86::BI__builtin_ia32_fixupimmpd128_maskz:
+  case X86::BI__builtin_ia32_fixupimmpd256_mask:
+  case X86::BI__builtin_ia32_fixupimmpd256_maskz:
+  case X86::BI__builtin_ia32_fixupimmps128_mask:
+  case X86::BI__builtin_ia32_fixupimmps128_maskz:
+  case X86::BI__builtin_ia32_fixupimmps256_mask:
+  case X86::BI__builtin_ia32_fixupimmps256_maskz:
+  case X86::BI__builtin_ia32_pternlogd512_mask:
+  case X86::BI__builtin_ia32_pternlogd512_maskz:
+  case X86::BI__builtin_ia32_pternlogq512_mask:
+  case X86::BI__builtin_ia32_pternlogq512_maskz:
+  case X86::BI__builtin_ia32_pternlogd128_mask:
+  case X86::BI__builtin_ia32_pternlogd128_maskz:
+  case X86::BI__builtin_ia32_pternlogd256_mask:
+  case X86::BI__builtin_ia32_pternlogd256_maskz:
+  case X86::BI__builtin_ia32_pternlogq128_mask:
+  case X86::BI__builtin_ia32_pternlogq128_maskz:
+  case X86::BI__builtin_ia32_pternlogq256_mask:
+  case X86::BI__builtin_ia32_pternlogq256_maskz:
+    i = 3; l = 0; u = 255;
+    break;
+  case X86::BI__builtin_ia32_pcmpestrm128:
+  case X86::BI__builtin_ia32_pcmpestri128:
+  case X86::BI__builtin_ia32_pcmpestria128:
+  case X86::BI__builtin_ia32_pcmpestric128:
+  case X86::BI__builtin_ia32_pcmpestrio128:
+  case X86::BI__builtin_ia32_pcmpestris128:
+  case X86::BI__builtin_ia32_pcmpestriz128:
+    i = 4; l = -128; u = 255;
+    break;
+  case X86::BI__builtin_ia32_rndscalesd_round_mask:
+  case X86::BI__builtin_ia32_rndscaless_round_mask:
+    i = 4; l = 0; u = 255;
+    break;
   }
   return SemaBuiltinConstantArgRange(TheCall, i, l, u);
 }
@@ -962,8 +1901,14 @@ bool Sema::getFormatStringInfo(const FormatAttr *Format, bool IsCXXMember,
 /// Checks if a the given expression evaluates to null.
 ///
 /// \brief Returns true if the value evaluates to null.
-static bool CheckNonNullExpr(Sema &S,
-                             const Expr *Expr) {
+static bool CheckNonNullExpr(Sema &S, const Expr *Expr) {
+  // If the expression has non-null type, it doesn't evaluate to null.
+  if (auto nullability
+        = Expr->IgnoreImplicit()->getType()->getNullability(S.Context)) {
+    if (*nullability == NullabilityKind::NonNull)
+      return false;
+  }
+
   // As a special case, transparent unions initialized with zero are
   // considered null for the purposes of the nonnull attribute.
   if (const RecordType *UT = Expr->getType()->getAsUnionType()) {
@@ -985,7 +1930,8 @@ static void CheckNonNullArgument(Sema &S,
                                  const Expr *ArgExpr,
                                  SourceLocation CallSiteLoc) {
   if (CheckNonNullExpr(S, ArgExpr))
-    S.Diag(CallSiteLoc, diag::warn_null_arg) << ArgExpr->getSourceRange();
+    S.DiagRuntimeBehavior(CallSiteLoc, ArgExpr,
+           S.PDiag(diag::warn_null_arg) << ArgExpr->getSourceRange());
 }
 
 bool Sema::GetFormatNSStringIdx(const FormatAttr *Format, unsigned &Idx) {
@@ -1039,56 +1985,111 @@ DiagnoseCStringFormatDirectiveInCFAPI(Sema &S,
   }
 }
 
+/// Determine whether the given type has a non-null nullability annotation.
+static bool isNonNullType(ASTContext &ctx, QualType type) {
+  if (auto nullability = type->getNullability(ctx))
+    return *nullability == NullabilityKind::NonNull;
+     
+  return false;
+}
+
 static void CheckNonNullArguments(Sema &S,
                                   const NamedDecl *FDecl,
+                                  const FunctionProtoType *Proto,
                                   ArrayRef<const Expr *> Args,
                                   SourceLocation CallSiteLoc) {
+  assert((FDecl || Proto) && "Need a function declaration or prototype");
+
   // Check the attributes attached to the method/function itself.
   llvm::SmallBitVector NonNullArgs;
-  for (const auto *NonNull : FDecl->specific_attrs<NonNullAttr>()) {
-    if (!NonNull->args_size()) {
-      // Easy case: all pointer arguments are nonnull.
-      for (const auto *Arg : Args)
-        if (S.isValidPointerAttrType(Arg->getType()))
-          CheckNonNullArgument(S, Arg, CallSiteLoc);
-      return;
-    }
+  if (FDecl) {
+    // Handle the nonnull attribute on the function/method declaration itself.
+    for (const auto *NonNull : FDecl->specific_attrs<NonNullAttr>()) {
+      if (!NonNull->args_size()) {
+        // Easy case: all pointer arguments are nonnull.
+        for (const auto *Arg : Args)
+          if (S.isValidPointerAttrType(Arg->getType()))
+            CheckNonNullArgument(S, Arg, CallSiteLoc);
+        return;
+      }
 
-    for (unsigned Val : NonNull->args()) {
-      if (Val >= Args.size())
-        continue;
-      if (NonNullArgs.empty())
-        NonNullArgs.resize(Args.size());
-      NonNullArgs.set(Val);
+      for (unsigned Val : NonNull->args()) {
+        if (Val >= Args.size())
+          continue;
+        if (NonNullArgs.empty())
+          NonNullArgs.resize(Args.size());
+        NonNullArgs.set(Val);
+      }
     }
   }
 
-  // Check the attributes on the parameters.
-  ArrayRef<ParmVarDecl*> parms;
-  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(FDecl))
-    parms = FD->parameters();
-  else if (const ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(FDecl))
-    parms = MD->parameters();
+  if (FDecl && (isa<FunctionDecl>(FDecl) || isa<ObjCMethodDecl>(FDecl))) {
+    // Handle the nonnull attribute on the parameters of the
+    // function/method.
+    ArrayRef<ParmVarDecl*> parms;
+    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(FDecl))
+      parms = FD->parameters();
+    else
+      parms = cast<ObjCMethodDecl>(FDecl)->parameters();
+    
+    unsigned ParamIndex = 0;
+    for (ArrayRef<ParmVarDecl*>::iterator I = parms.begin(), E = parms.end();
+         I != E; ++I, ++ParamIndex) {
+      const ParmVarDecl *PVD = *I;
+      if (PVD->hasAttr<NonNullAttr>() || 
+          isNonNullType(S.Context, PVD->getType())) {
+        if (NonNullArgs.empty())
+          NonNullArgs.resize(Args.size());
 
-  unsigned ArgIndex = 0;
-  for (ArrayRef<ParmVarDecl*>::iterator I = parms.begin(), E = parms.end();
-       I != E; ++I, ++ArgIndex) {
-    const ParmVarDecl *PVD = *I;
-    if (PVD->hasAttr<NonNullAttr>() ||
-        (ArgIndex < NonNullArgs.size() && NonNullArgs[ArgIndex]))
-      CheckNonNullArgument(S, Args[ArgIndex], CallSiteLoc);
+        NonNullArgs.set(ParamIndex);
+      }
+    }
+  } else {
+    // If we have a non-function, non-method declaration but no
+    // function prototype, try to dig out the function prototype.
+    if (!Proto) {
+      if (const ValueDecl *VD = dyn_cast<ValueDecl>(FDecl)) {
+        QualType type = VD->getType().getNonReferenceType();
+        if (auto pointerType = type->getAs<PointerType>())
+          type = pointerType->getPointeeType();
+        else if (auto blockType = type->getAs<BlockPointerType>())
+          type = blockType->getPointeeType();
+        // FIXME: data member pointers?
+
+        // Dig out the function prototype, if there is one.
+        Proto = type->getAs<FunctionProtoType>();
+      } 
+    }
+
+    // Fill in non-null argument information from the nullability
+    // information on the parameter types (if we have them).
+    if (Proto) {
+      unsigned Index = 0;
+      for (auto paramType : Proto->getParamTypes()) {
+        if (isNonNullType(S.Context, paramType)) {
+          if (NonNullArgs.empty())
+            NonNullArgs.resize(Args.size());
+          
+          NonNullArgs.set(Index);
+        }
+        
+        ++Index;
+      }
+    }
   }
 
-  // In case this is a variadic call, check any remaining arguments.
-  for (/**/; ArgIndex < NonNullArgs.size(); ++ArgIndex)
+  // Check for non-null arguments.
+  for (unsigned ArgIndex = 0, ArgIndexEnd = NonNullArgs.size(); 
+       ArgIndex != ArgIndexEnd; ++ArgIndex) {
     if (NonNullArgs[ArgIndex])
       CheckNonNullArgument(S, Args[ArgIndex], CallSiteLoc);
+  }
 }
 
 /// Handles the checks for format strings, non-POD arguments to vararg
 /// functions, and NULL arguments passed to non-NULL parameters.
-void Sema::checkCall(NamedDecl *FDecl, ArrayRef<const Expr *> Args,
-                     unsigned NumParams, bool IsMemberFunction,
+void Sema::checkCall(NamedDecl *FDecl, const FunctionProtoType *Proto,
+                     ArrayRef<const Expr *> Args, bool IsMemberFunction,
                      SourceLocation Loc, SourceRange Range,
                      VariadicCallType CallType) {
   // FIXME: We should check as much as we can in the template definition.
@@ -1110,6 +2111,13 @@ void Sema::checkCall(NamedDecl *FDecl, ArrayRef<const Expr *> Args,
   // Refuse POD arguments that weren't caught by the format string
   // checks above.
   if (CallType != VariadicDoesNotApply) {
+    unsigned NumParams = Proto ? Proto->getNumParams()
+                       : FDecl && isa<FunctionDecl>(FDecl)
+                           ? cast<FunctionDecl>(FDecl)->getNumParams()
+                       : FDecl && isa<ObjCMethodDecl>(FDecl)
+                           ? cast<ObjCMethodDecl>(FDecl)->param_size()
+                       : 0;
+
     for (unsigned ArgIdx = NumParams; ArgIdx < Args.size(); ++ArgIdx) {
       // Args[ArgIdx] can be null in malformed code.
       if (const Expr *Arg = Args[ArgIdx]) {
@@ -1119,12 +2127,14 @@ void Sema::checkCall(NamedDecl *FDecl, ArrayRef<const Expr *> Args,
     }
   }
 
-  if (FDecl) {
-    CheckNonNullArguments(*this, FDecl, Args, Loc);
+  if (FDecl || Proto) {
+    CheckNonNullArguments(*this, FDecl, Proto, Args, Loc);
 
     // Type safety checking.
-    for (const auto *I : FDecl->specific_attrs<ArgumentWithTypeTagAttr>())
-      CheckArgumentWithTypeTag(I, Args.data());
+    if (FDecl) {
+      for (const auto *I : FDecl->specific_attrs<ArgumentWithTypeTagAttr>())
+        CheckArgumentWithTypeTag(I, Args.data());
+    }
   }
 }
 
@@ -1136,8 +2146,8 @@ void Sema::CheckConstructorCall(FunctionDecl *FDecl,
                                 SourceLocation Loc) {
   VariadicCallType CallType =
     Proto->isVariadic() ? VariadicConstructor : VariadicDoesNotApply;
-  checkCall(FDecl, Args, Proto->getNumParams(),
-            /*IsMemberFunction=*/true, Loc, SourceRange(), CallType);
+  checkCall(FDecl, Proto, Args, /*IsMemberFunction=*/true, Loc, SourceRange(), 
+            CallType);
 }
 
 /// CheckFunctionCall - Check a direct function call for various correctness
@@ -1150,7 +2160,6 @@ bool Sema::CheckFunctionCall(FunctionDecl *FDecl, CallExpr *TheCall,
                           IsMemberOperatorCall;
   VariadicCallType CallType = getVariadicCallType(FDecl, Proto,
                                                   TheCall->getCallee());
-  unsigned NumParams = Proto ? Proto->getNumParams() : 0;
   Expr** Args = TheCall->getArgs();
   unsigned NumArgs = TheCall->getNumArgs();
   if (IsMemberOperatorCall) {
@@ -1160,7 +2169,7 @@ bool Sema::CheckFunctionCall(FunctionDecl *FDecl, CallExpr *TheCall,
     ++Args;
     --NumArgs;
   }
-  checkCall(FDecl, llvm::makeArrayRef(Args, NumArgs), NumParams,
+  checkCall(FDecl, Proto, llvm::makeArrayRef(Args, NumArgs), 
             IsMemberFunction, TheCall->getRParenLoc(),
             TheCall->getCallee()->getSourceRange(), CallType);
 
@@ -1194,21 +2203,25 @@ bool Sema::CheckObjCMethodCall(ObjCMethodDecl *Method, SourceLocation lbrac,
   VariadicCallType CallType =
       Method->isVariadic() ? VariadicMethod : VariadicDoesNotApply;
 
-  checkCall(Method, Args, Method->param_size(),
-            /*IsMemberFunction=*/false,
-            lbrac, Method->getSourceRange(), CallType);
+  checkCall(Method, nullptr, Args,
+            /*IsMemberFunction=*/false, lbrac, Method->getSourceRange(), 
+            CallType);
 
   return false;
 }
 
 bool Sema::CheckPointerCall(NamedDecl *NDecl, CallExpr *TheCall,
                             const FunctionProtoType *Proto) {
-  const VarDecl *V = dyn_cast<VarDecl>(NDecl);
-  if (!V)
+  QualType Ty;
+  if (const auto *V = dyn_cast<VarDecl>(NDecl))
+    Ty = V->getType().getNonReferenceType();
+  else if (const auto *F = dyn_cast<FieldDecl>(NDecl))
+    Ty = F->getType().getNonReferenceType();
+  else
     return false;
 
-  QualType Ty = V->getType();
-  if (!Ty->isBlockPointerType() && !Ty->isFunctionPointerType())
+  if (!Ty->isBlockPointerType() && !Ty->isFunctionPointerType() &&
+      !Ty->isFunctionProtoType())
     return false;
 
   VariadicCallType CallType;
@@ -1219,11 +2232,10 @@ bool Sema::CheckPointerCall(NamedDecl *NDecl, CallExpr *TheCall,
   } else { // Ty->isFunctionPointerType()
     CallType = VariadicFunction;
   }
-  unsigned NumParams = Proto ? Proto->getNumParams() : 0;
 
-  checkCall(NDecl, llvm::makeArrayRef(TheCall->getArgs(),
-                                      TheCall->getNumArgs()),
-            NumParams, /*IsMemberFunction=*/false, TheCall->getRParenLoc(),
+  checkCall(NDecl, Proto,
+            llvm::makeArrayRef(TheCall->getArgs(), TheCall->getNumArgs()),
+            /*IsMemberFunction=*/false, TheCall->getRParenLoc(),
             TheCall->getCallee()->getSourceRange(), CallType);
 
   return false;
@@ -1234,21 +2246,19 @@ bool Sema::CheckPointerCall(NamedDecl *NDecl, CallExpr *TheCall,
 bool Sema::CheckOtherCall(CallExpr *TheCall, const FunctionProtoType *Proto) {
   VariadicCallType CallType = getVariadicCallType(/*FDecl=*/nullptr, Proto,
                                                   TheCall->getCallee());
-  unsigned NumParams = Proto ? Proto->getNumParams() : 0;
-
-  checkCall(/*FDecl=*/nullptr,
+  checkCall(/*FDecl=*/nullptr, Proto,
             llvm::makeArrayRef(TheCall->getArgs(), TheCall->getNumArgs()),
-            NumParams, /*IsMemberFunction=*/false, TheCall->getRParenLoc(),
+            /*IsMemberFunction=*/false, TheCall->getRParenLoc(),
             TheCall->getCallee()->getSourceRange(), CallType);
 
   return false;
 }
 
 static bool isValidOrderingForOp(int64_t Ordering, AtomicExpr::AtomicOp Op) {
-  if (Ordering < AtomicExpr::AO_ABI_memory_order_relaxed ||
-      Ordering > AtomicExpr::AO_ABI_memory_order_seq_cst)
+  if (!llvm::isValidAtomicOrderingCABI(Ordering))
     return false;
 
+  auto OrderingCABI = (llvm::AtomicOrderingCABI)Ordering;
   switch (Op) {
   case AtomicExpr::AO__c11_atomic_init:
     llvm_unreachable("There is no ordering argument for an init");
@@ -1256,15 +2266,15 @@ static bool isValidOrderingForOp(int64_t Ordering, AtomicExpr::AtomicOp Op) {
   case AtomicExpr::AO__c11_atomic_load:
   case AtomicExpr::AO__atomic_load_n:
   case AtomicExpr::AO__atomic_load:
-    return Ordering != AtomicExpr::AO_ABI_memory_order_release &&
-           Ordering != AtomicExpr::AO_ABI_memory_order_acq_rel;
+    return OrderingCABI != llvm::AtomicOrderingCABI::release &&
+           OrderingCABI != llvm::AtomicOrderingCABI::acq_rel;
 
   case AtomicExpr::AO__c11_atomic_store:
   case AtomicExpr::AO__atomic_store:
   case AtomicExpr::AO__atomic_store_n:
-    return Ordering != AtomicExpr::AO_ABI_memory_order_consume &&
-           Ordering != AtomicExpr::AO_ABI_memory_order_acquire &&
-           Ordering != AtomicExpr::AO_ABI_memory_order_acq_rel;
+    return OrderingCABI != llvm::AtomicOrderingCABI::consume &&
+           OrderingCABI != llvm::AtomicOrderingCABI::acquire &&
+           OrderingCABI != llvm::AtomicOrderingCABI::acq_rel;
 
   default:
     return true;
@@ -1283,6 +2293,8 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
     // C    __c11_atomic_load(A *, int)
     Load,
     // void __atomic_load(A *, CP, int)
+    LoadCopy,
+    // void __atomic_store(A *, CP, int)
     Copy,
     // C    __c11_atomic_add(A *, M, int)
     Arithmetic,
@@ -1295,8 +2307,8 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
     // bool __atomic_compare_exchange(A *, C *, CP, bool, int, int)
     GNUCmpXchg
   } Form = Init;
-  const unsigned NumArgs[] = { 2, 2, 3, 3, 3, 4, 5, 6 };
-  const unsigned NumVals[] = { 1, 0, 1, 1, 1, 2, 2, 3 };
+  const unsigned NumArgs[] = { 2, 2, 3, 3, 3, 3, 4, 5, 6 };
+  const unsigned NumVals[] = { 1, 0, 1, 1, 1, 1, 2, 2, 3 };
   // where:
   //   C is an appropriate type,
   //   A is volatile _Atomic(C) for __c11 builtins and is C for GNU builtins,
@@ -1304,9 +2316,10 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
   //   M is C if C is an integer, and ptrdiff_t if C is a pointer, and
   //   the int parameters are for orderings.
 
-  assert(AtomicExpr::AO__c11_atomic_init == 0 &&
-         AtomicExpr::AO__c11_atomic_fetch_xor + 1 == AtomicExpr::AO__atomic_load
-         && "need to update code for modified C11 atomics");
+  static_assert(AtomicExpr::AO__c11_atomic_init == 0 &&
+                    AtomicExpr::AO__c11_atomic_fetch_xor + 1 ==
+                        AtomicExpr::AO__atomic_load,
+                "need to update code for modified C11 atomics");
   bool IsC11 = Op >= AtomicExpr::AO__c11_atomic_init &&
                Op <= AtomicExpr::AO__c11_atomic_fetch_xor;
   bool IsN = Op == AtomicExpr::AO__atomic_load_n ||
@@ -1325,8 +2338,11 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
     Form = Load;
     break;
 
-  case AtomicExpr::AO__c11_atomic_store:
   case AtomicExpr::AO__atomic_load:
+    Form = LoadCopy;
+    break;
+
+  case AtomicExpr::AO__c11_atomic_store:
   case AtomicExpr::AO__atomic_store:
   case AtomicExpr::AO__atomic_store_n:
     Form = Copy;
@@ -1413,6 +2429,12 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
       return ExprError();
     }
     ValType = AtomTy->getAs<AtomicType>()->getValueType();
+  } else if (Form != Load && Form != LoadCopy) {
+    if (ValType.isConstQualified()) {
+      Diag(DRE->getLocStart(), diag::err_atomic_op_needs_non_const_pointer)
+        << Ptr->getType() << Ptr->getSourceRange();
+      return ExprError();
+    }
   }
 
   // For an arithmetic operation, the implied arithmetic must be well-formed.
@@ -1450,9 +2472,6 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
     return ExprError();
   }
 
-  // FIXME: For any builtin other than a load, the ValType must not be
-  // const-qualified.
-
   switch (ValType.getObjCLifetime()) {
   case Qualifiers::OCL_None:
   case Qualifiers::OCL_ExplicitNone:
@@ -1469,8 +2488,13 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
     return ExprError();
   }
 
+  // atomic_fetch_or takes a pointer to a volatile 'A'.  We shouldn't let the
+  // volatile-ness of the pointee-type inject itself into the result or the
+  // other operands. Similarly atomic_load can take a pointer to a const 'A'.
+  ValType.removeLocalVolatile();
+  ValType.removeLocalConst();
   QualType ResultType = ValType;
-  if (Form == Copy || Form == GNUXchg || Form == Init)
+  if (Form == Copy || Form == LoadCopy || Form == GNUXchg || Form == Init)
     ResultType = Context.VoidTy;
   else if (Form == C11CmpXchg || Form == GNUCmpXchg)
     ResultType = Context.BoolTy;
@@ -1500,8 +2524,17 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
           Ty = ByValType;
         else if (Form == Arithmetic)
           Ty = Context.getPointerDiffType();
-        else
-          Ty = Context.getPointerType(ValType.getUnqualifiedType());
+        else {
+          Expr *ValArg = TheCall->getArg(i);
+          unsigned AS = 0;
+          // Keep address space of non-atomic pointer type.
+          if (const PointerType *PtrTy =
+                  ValArg->getType()->getAs<PointerType>()) {
+            AS = PtrTy->getPointeeType().getAddressSpace();
+          }
+          Ty = Context.getPointerType(
+              Context.getAddrSpaceQualType(ValType.getUnqualifiedType(), AS));
+        }
         break;
       case 2:
         // The third argument to compare_exchange / GNU exchange is a
@@ -1538,6 +2571,7 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
   case Load:
     SubExprs.push_back(TheCall->getArg(1)); // Order
     break;
+  case LoadCopy:
   case Copy:
   case Arithmetic:
   case Xchg:
@@ -1586,7 +2620,6 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
 
   return AE;
 }
-
 
 /// checkBuiltinArgument - Given a call to a builtin function, perform
 /// normal type-checking on the given argument, updating the call in
@@ -1913,7 +2946,7 @@ Sema::SemaBuiltinAtomicOverloaded(ExprResult TheCallResult) {
   // Get the decl for the concrete builtin from this, we can tell what the
   // concrete integer type we should convert to is.
   unsigned NewBuiltinID = BuiltinIndices[BuiltinIndex][SizeIndex];
-  const char *NewBuiltinName = Context.BuiltinInfo.GetName(NewBuiltinID);
+  const char *NewBuiltinName = Context.BuiltinInfo.getName(NewBuiltinID);
   FunctionDecl *NewBuiltinDecl;
   if (NewBuiltinID == BuiltinID)
     NewBuiltinDecl = FDecl;
@@ -1980,6 +3013,78 @@ Sema::SemaBuiltinAtomicOverloaded(ExprResult TheCallResult) {
   return TheCallResult;
 }
 
+/// SemaBuiltinNontemporalOverloaded - We have a call to
+/// __builtin_nontemporal_store or __builtin_nontemporal_load, which is an
+/// overloaded function based on the pointer type of its last argument.
+///
+/// This function goes through and does final semantic checking for these
+/// builtins.
+ExprResult Sema::SemaBuiltinNontemporalOverloaded(ExprResult TheCallResult) {
+  CallExpr *TheCall = (CallExpr *)TheCallResult.get();
+  DeclRefExpr *DRE =
+      cast<DeclRefExpr>(TheCall->getCallee()->IgnoreParenCasts());
+  FunctionDecl *FDecl = cast<FunctionDecl>(DRE->getDecl());
+  unsigned BuiltinID = FDecl->getBuiltinID();
+  assert((BuiltinID == Builtin::BI__builtin_nontemporal_store ||
+          BuiltinID == Builtin::BI__builtin_nontemporal_load) &&
+         "Unexpected nontemporal load/store builtin!");
+  bool isStore = BuiltinID == Builtin::BI__builtin_nontemporal_store;
+  unsigned numArgs = isStore ? 2 : 1;
+
+  // Ensure that we have the proper number of arguments.
+  if (checkArgCount(*this, TheCall, numArgs))
+    return ExprError();
+
+  // Inspect the last argument of the nontemporal builtin.  This should always
+  // be a pointer type, from which we imply the type of the memory access.
+  // Because it is a pointer type, we don't have to worry about any implicit
+  // casts here.
+  Expr *PointerArg = TheCall->getArg(numArgs - 1);
+  ExprResult PointerArgResult =
+      DefaultFunctionArrayLvalueConversion(PointerArg);
+
+  if (PointerArgResult.isInvalid())
+    return ExprError();
+  PointerArg = PointerArgResult.get();
+  TheCall->setArg(numArgs - 1, PointerArg);
+
+  const PointerType *pointerType = PointerArg->getType()->getAs<PointerType>();
+  if (!pointerType) {
+    Diag(DRE->getLocStart(), diag::err_nontemporal_builtin_must_be_pointer)
+        << PointerArg->getType() << PointerArg->getSourceRange();
+    return ExprError();
+  }
+
+  QualType ValType = pointerType->getPointeeType();
+
+  // Strip any qualifiers off ValType.
+  ValType = ValType.getUnqualifiedType();
+  if (!ValType->isIntegerType() && !ValType->isAnyPointerType() &&
+      !ValType->isBlockPointerType() && !ValType->isFloatingType() &&
+      !ValType->isVectorType()) {
+    Diag(DRE->getLocStart(),
+         diag::err_nontemporal_builtin_must_be_pointer_intfltptr_or_vector)
+        << PointerArg->getType() << PointerArg->getSourceRange();
+    return ExprError();
+  }
+
+  if (!isStore) {
+    TheCall->setType(ValType);
+    return TheCallResult;
+  }
+
+  ExprResult ValArg = TheCall->getArg(0);
+  InitializedEntity Entity = InitializedEntity::InitializeParameter(
+      Context, ValType, /*consume*/ false);
+  ValArg = PerformCopyInitialization(Entity, SourceLocation(), ValArg);
+  if (ValArg.isInvalid())
+    return ExprError();
+
+  TheCall->setArg(0, ValArg.get());
+  TheCall->setType(Context.VoidTy);
+  return TheCallResult;
+}
+
 /// CheckObjCString - Checks that the argument to the builtin
 /// CFString constructor is correct
 /// Note: It might also make sense to do the UTF-16 conversion here (would
@@ -2012,9 +3117,10 @@ bool Sema::CheckObjCString(Expr *Arg) {
   return false;
 }
 
-/// SemaBuiltinVAStart - Check the arguments to __builtin_va_start for validity.
-/// Emit an error and return true on failure, return false on success.
-bool Sema::SemaBuiltinVAStart(CallExpr *TheCall) {
+/// Check the arguments to '__builtin_va_start' or '__builtin_ms_va_start'
+/// for validity.  Emit an error and return true on failure; return false
+/// on success.
+bool Sema::SemaBuiltinVAStartImpl(CallExpr *TheCall) {
   Expr *Fn = TheCall->getCallee();
   if (TheCall->getNumArgs() > 2) {
     Diag(TheCall->getArg(2)->getLocStart(),
@@ -2060,6 +3166,7 @@ bool Sema::SemaBuiltinVAStart(CallExpr *TheCall) {
   // block.
   QualType Type;
   SourceLocation ParamLoc;
+  bool IsCRegister = false;
 
   if (const DeclRefExpr *DR = dyn_cast<DeclRefExpr>(Arg)) {
     if (const ParmVarDecl *PV = dyn_cast<ParmVarDecl>(DR->getDecl())) {
@@ -2067,29 +3174,77 @@ bool Sema::SemaBuiltinVAStart(CallExpr *TheCall) {
       // Get the last formal in the current function.
       const ParmVarDecl *LastArg;
       if (CurBlock)
-        LastArg = *(CurBlock->TheDecl->param_end()-1);
+        LastArg = CurBlock->TheDecl->parameters().back();
       else if (FunctionDecl *FD = getCurFunctionDecl())
-        LastArg = *(FD->param_end()-1);
+        LastArg = FD->parameters().back();
       else
-        LastArg = *(getCurMethodDecl()->param_end()-1);
+        LastArg = getCurMethodDecl()->parameters().back();
       SecondArgIsLastNamedArgument = PV == LastArg;
 
       Type = PV->getType();
       ParamLoc = PV->getLocation();
+      IsCRegister =
+          PV->getStorageClass() == SC_Register && !getLangOpts().CPlusPlus;
     }
   }
 
   if (!SecondArgIsLastNamedArgument)
     Diag(TheCall->getArg(1)->getLocStart(),
-         diag::warn_second_parameter_of_va_start_not_last_named_argument);
-  else if (Type->isReferenceType()) {
-    Diag(Arg->getLocStart(),
-         diag::warn_va_start_of_reference_type_is_undefined);
+         diag::warn_second_arg_of_va_start_not_last_named_param);
+  else if (IsCRegister || Type->isReferenceType() ||
+           Type->isPromotableIntegerType() ||
+           Type->isSpecificBuiltinType(BuiltinType::Float)) {
+    unsigned Reason = 0;
+    if (Type->isReferenceType())  Reason = 1;
+    else if (IsCRegister)         Reason = 2;
+    Diag(Arg->getLocStart(), diag::warn_va_start_type_is_undefined) << Reason;
     Diag(ParamLoc, diag::note_parameter_type) << Type;
   }
 
   TheCall->setType(Context.VoidTy);
   return false;
+}
+
+/// Check the arguments to '__builtin_va_start' for validity, and that
+/// it was called from a function of the native ABI.
+/// Emit an error and return true on failure; return false on success.
+bool Sema::SemaBuiltinVAStart(CallExpr *TheCall) {
+  // On x86-64 Unix, don't allow this in Win64 ABI functions.
+  // On x64 Windows, don't allow this in System V ABI functions.
+  // (Yes, that means there's no corresponding way to support variadic
+  // System V ABI functions on Windows.)
+  if (Context.getTargetInfo().getTriple().getArch() == llvm::Triple::x86_64) {
+    unsigned OS = Context.getTargetInfo().getTriple().getOS();
+    clang::CallingConv CC = CC_C;
+    if (const FunctionDecl *FD = getCurFunctionDecl())
+      CC = FD->getType()->getAs<FunctionType>()->getCallConv();
+    if ((OS == llvm::Triple::Win32 && CC == CC_X86_64SysV) ||
+        (OS != llvm::Triple::Win32 && CC == CC_X86_64Win64))
+      return Diag(TheCall->getCallee()->getLocStart(),
+                  diag::err_va_start_used_in_wrong_abi_function)
+             << (OS != llvm::Triple::Win32);
+  }
+  return SemaBuiltinVAStartImpl(TheCall);
+}
+
+/// Check the arguments to '__builtin_ms_va_start' for validity, and that
+/// it was called from a Win64 ABI function.
+/// Emit an error and return true on failure; return false on success.
+bool Sema::SemaBuiltinMSVAStart(CallExpr *TheCall) {
+  // This only makes sense for x86-64.
+  const llvm::Triple &TT = Context.getTargetInfo().getTriple();
+  Expr *Callee = TheCall->getCallee();
+  if (TT.getArch() != llvm::Triple::x86_64)
+    return Diag(Callee->getLocStart(), diag::err_x86_builtin_32_bit_tgt);
+  // Don't allow this in System V ABI functions.
+  clang::CallingConv CC = CC_C;
+  if (const FunctionDecl *FD = getCurFunctionDecl())
+    CC = FD->getType()->getAs<FunctionType>()->getCallConv();
+  if (CC == CC_X86_64SysV ||
+      (TT.getOS() != llvm::Triple::Win32 && CC != CC_X86_64Win64))
+    return Diag(Callee->getLocStart(),
+                diag::err_ms_va_start_used_in_sysv_function);
+  return SemaBuiltinVAStartImpl(TheCall);
 }
 
 bool Sema::SemaBuiltinVAStartARM(CallExpr *Call) {
@@ -2123,7 +3278,7 @@ bool Sema::SemaBuiltinVAStartARM(CallExpr *Call) {
   if (checkBuiltinArgument(*this, Call, 0))
     return true;
 
-  static const struct {
+  const struct {
     unsigned ArgNo;
     QualType Type;
   } ArgumentTypes[] = {
@@ -2237,8 +3392,7 @@ ExprResult Sema::SemaBuiltinShuffleVector(CallExpr *TheCall) {
 
   // Determine which of the following types of shufflevector we're checking:
   // 1) unary, vector mask: (lhs, mask)
-  // 2) binary, vector mask: (lhs, rhs, mask)
-  // 3) binary, scalar mask: (lhs, rhs, index, ..., index)
+  // 2) binary, scalar mask: (lhs, rhs, index, ..., index)
   QualType resType = TheCall->getArg(0)->getType();
   unsigned numElements = 0;
 
@@ -2370,7 +3524,7 @@ bool Sema::SemaBuiltinAssume(CallExpr *TheCall) {
   if (Arg->isInstantiationDependent()) return false;
 
   if (Arg->HasSideEffects(Context))
-    return Diag(Arg->getLocStart(), diag::warn_assume_side_effects)
+    Diag(Arg->getLocStart(), diag::warn_assume_side_effects)
       << Arg->getSourceRange()
       << cast<FunctionDecl>(TheCall->getCalleeDecl())->getIdentifier();
 
@@ -2454,9 +3608,115 @@ bool Sema::SemaBuiltinConstantArgRange(CallExpr *TheCall, int ArgNum,
   return false;
 }
 
+/// SemaBuiltinARMSpecialReg - Handle a check if argument ArgNum of CallExpr
+/// TheCall is an ARM/AArch64 special register string literal.
+bool Sema::SemaBuiltinARMSpecialReg(unsigned BuiltinID, CallExpr *TheCall,
+                                    int ArgNum, unsigned ExpectedFieldNum,
+                                    bool AllowName) {
+  bool IsARMBuiltin = BuiltinID == ARM::BI__builtin_arm_rsr64 ||
+                      BuiltinID == ARM::BI__builtin_arm_wsr64 ||
+                      BuiltinID == ARM::BI__builtin_arm_rsr ||
+                      BuiltinID == ARM::BI__builtin_arm_rsrp ||
+                      BuiltinID == ARM::BI__builtin_arm_wsr ||
+                      BuiltinID == ARM::BI__builtin_arm_wsrp;
+  bool IsAArch64Builtin = BuiltinID == AArch64::BI__builtin_arm_rsr64 ||
+                          BuiltinID == AArch64::BI__builtin_arm_wsr64 ||
+                          BuiltinID == AArch64::BI__builtin_arm_rsr ||
+                          BuiltinID == AArch64::BI__builtin_arm_rsrp ||
+                          BuiltinID == AArch64::BI__builtin_arm_wsr ||
+                          BuiltinID == AArch64::BI__builtin_arm_wsrp;
+  assert((IsARMBuiltin || IsAArch64Builtin) && "Unexpected ARM builtin.");
+
+  // We can't check the value of a dependent argument.
+  Expr *Arg = TheCall->getArg(ArgNum);
+  if (Arg->isTypeDependent() || Arg->isValueDependent())
+    return false;
+
+  // Check if the argument is a string literal.
+  if (!isa<StringLiteral>(Arg->IgnoreParenImpCasts()))
+    return Diag(TheCall->getLocStart(), diag::err_expr_not_string_literal)
+           << Arg->getSourceRange();
+
+  // Check the type of special register given.
+  StringRef Reg = cast<StringLiteral>(Arg->IgnoreParenImpCasts())->getString();
+  SmallVector<StringRef, 6> Fields;
+  Reg.split(Fields, ":");
+
+  if (Fields.size() != ExpectedFieldNum && !(AllowName && Fields.size() == 1))
+    return Diag(TheCall->getLocStart(), diag::err_arm_invalid_specialreg)
+           << Arg->getSourceRange();
+
+  // If the string is the name of a register then we cannot check that it is
+  // valid here but if the string is of one the forms described in ACLE then we
+  // can check that the supplied fields are integers and within the valid
+  // ranges.
+  if (Fields.size() > 1) {
+    bool FiveFields = Fields.size() == 5;
+
+    bool ValidString = true;
+    if (IsARMBuiltin) {
+      ValidString &= Fields[0].startswith_lower("cp") ||
+                     Fields[0].startswith_lower("p");
+      if (ValidString)
+        Fields[0] =
+          Fields[0].drop_front(Fields[0].startswith_lower("cp") ? 2 : 1);
+
+      ValidString &= Fields[2].startswith_lower("c");
+      if (ValidString)
+        Fields[2] = Fields[2].drop_front(1);
+
+      if (FiveFields) {
+        ValidString &= Fields[3].startswith_lower("c");
+        if (ValidString)
+          Fields[3] = Fields[3].drop_front(1);
+      }
+    }
+
+    SmallVector<int, 5> Ranges;
+    if (FiveFields)
+      Ranges.append({IsAArch64Builtin ? 1 : 15, 7, 7, 15, 15});
+    else
+      Ranges.append({15, 7, 15});
+
+    for (unsigned i=0; i<Fields.size(); ++i) {
+      int IntField;
+      ValidString &= !Fields[i].getAsInteger(10, IntField);
+      ValidString &= (IntField >= 0 && IntField <= Ranges[i]);
+    }
+
+    if (!ValidString)
+      return Diag(TheCall->getLocStart(), diag::err_arm_invalid_specialreg)
+             << Arg->getSourceRange();
+
+  } else if (IsAArch64Builtin && Fields.size() == 1) {
+    // If the register name is one of those that appear in the condition below
+    // and the special register builtin being used is one of the write builtins,
+    // then we require that the argument provided for writing to the register
+    // is an integer constant expression. This is because it will be lowered to
+    // an MSR (immediate) instruction, so we need to know the immediate at
+    // compile time.
+    if (TheCall->getNumArgs() != 2)
+      return false;
+
+    std::string RegLower = Reg.lower();
+    if (RegLower != "spsel" && RegLower != "daifset" && RegLower != "daifclr" &&
+        RegLower != "pan" && RegLower != "uao")
+      return false;
+
+    return SemaBuiltinConstantArgRange(TheCall, 1, 0, 15);
+  }
+
+  return false;
+}
+
 /// SemaBuiltinLongjmp - Handle __builtin_longjmp(void *env[5], int val).
-/// This checks that val is a constant 1.
+/// This checks that the target supports __builtin_longjmp and
+/// that val is a constant 1.
 bool Sema::SemaBuiltinLongjmp(CallExpr *TheCall) {
+  if (!Context.getTargetInfo().hasSjLjLowering())
+    return Diag(TheCall->getLocStart(), diag::err_builtin_longjmp_unsupported)
+             << SourceRange(TheCall->getLocStart(), TheCall->getLocEnd());
+
   Expr *Arg = TheCall->getArg(1);
   llvm::APSInt Result;
 
@@ -2471,13 +3731,78 @@ bool Sema::SemaBuiltinLongjmp(CallExpr *TheCall) {
   return false;
 }
 
+/// SemaBuiltinSetjmp - Handle __builtin_setjmp(void *env[5]).
+/// This checks that the target supports __builtin_setjmp.
+bool Sema::SemaBuiltinSetjmp(CallExpr *TheCall) {
+  if (!Context.getTargetInfo().hasSjLjLowering())
+    return Diag(TheCall->getLocStart(), diag::err_builtin_setjmp_unsupported)
+             << SourceRange(TheCall->getLocStart(), TheCall->getLocEnd());
+  return false;
+}
+
 namespace {
+class UncoveredArgHandler {
+  enum { Unknown = -1, AllCovered = -2 };
+  signed FirstUncoveredArg;
+  SmallVector<const Expr *, 4> DiagnosticExprs;
+
+public:
+  UncoveredArgHandler() : FirstUncoveredArg(Unknown) { }
+
+  bool hasUncoveredArg() const {
+    return (FirstUncoveredArg >= 0);
+  }
+
+  unsigned getUncoveredArg() const {
+    assert(hasUncoveredArg() && "no uncovered argument");
+    return FirstUncoveredArg;
+  }
+
+  void setAllCovered() {
+    // A string has been found with all arguments covered, so clear out
+    // the diagnostics.
+    DiagnosticExprs.clear();
+    FirstUncoveredArg = AllCovered;
+  }
+
+  void Update(signed NewFirstUncoveredArg, const Expr *StrExpr) {
+    assert(NewFirstUncoveredArg >= 0 && "Outside range");
+
+    // Don't update if a previous string covers all arguments.
+    if (FirstUncoveredArg == AllCovered)
+      return;
+
+    // UncoveredArgHandler tracks the highest uncovered argument index
+    // and with it all the strings that match this index.
+    if (NewFirstUncoveredArg == FirstUncoveredArg)
+      DiagnosticExprs.push_back(StrExpr);
+    else if (NewFirstUncoveredArg > FirstUncoveredArg) {
+      DiagnosticExprs.clear();
+      DiagnosticExprs.push_back(StrExpr);
+      FirstUncoveredArg = NewFirstUncoveredArg;
+    }
+  }
+
+  void Diagnose(Sema &S, bool IsFunctionCall, const Expr *ArgExpr);
+};
+
 enum StringLiteralCheckType {
   SLCT_NotALiteral,
   SLCT_UncheckedLiteral,
   SLCT_CheckedLiteral
 };
-}
+} // end anonymous namespace
+
+static void CheckFormatString(Sema &S, const StringLiteral *FExpr,
+                              const Expr *OrigFormatExpr,
+                              ArrayRef<const Expr *> Args,
+                              bool HasVAListArg, unsigned format_idx,
+                              unsigned firstDataArg,
+                              Sema::FormatStringType Type,
+                              bool inFunctionCall,
+                              Sema::VariadicCallType CallType,
+                              llvm::SmallBitVector &CheckedVarArgs,
+                              UncoveredArgHandler &UncoveredArg);
 
 // Determine if an expression is a string literal or constant string.
 // If this function returns false on the arguments to a function expecting a
@@ -2488,7 +3813,8 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
                       bool HasVAListArg, unsigned format_idx,
                       unsigned firstDataArg, Sema::FormatStringType Type,
                       Sema::VariadicCallType CallType, bool InFunctionCall,
-                      llvm::SmallBitVector &CheckedVarArgs) {
+                      llvm::SmallBitVector &CheckedVarArgs,
+                      UncoveredArgHandler &UncoveredArg) {
  tryAgain:
   if (E->isTypeDependent() || E->isValueDependent())
     return SLCT_NotALiteral;
@@ -2509,17 +3835,39 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
     // completely checked only if both sub-expressions were checked.
     const AbstractConditionalOperator *C =
         cast<AbstractConditionalOperator>(E);
-    StringLiteralCheckType Left =
-        checkFormatStringExpr(S, C->getTrueExpr(), Args,
-                              HasVAListArg, format_idx, firstDataArg,
-                              Type, CallType, InFunctionCall, CheckedVarArgs);
-    if (Left == SLCT_NotALiteral)
-      return SLCT_NotALiteral;
+
+    // Determine whether it is necessary to check both sub-expressions, for
+    // example, because the condition expression is a constant that can be
+    // evaluated at compile time.
+    bool CheckLeft = true, CheckRight = true;
+
+    bool Cond;
+    if (C->getCond()->EvaluateAsBooleanCondition(Cond, S.getASTContext())) {
+      if (Cond)
+        CheckRight = false;
+      else
+        CheckLeft = false;
+    }
+
+    StringLiteralCheckType Left;
+    if (!CheckLeft)
+      Left = SLCT_UncheckedLiteral;
+    else {
+      Left = checkFormatStringExpr(S, C->getTrueExpr(), Args,
+                                   HasVAListArg, format_idx, firstDataArg,
+                                   Type, CallType, InFunctionCall,
+                                   CheckedVarArgs, UncoveredArg);
+      if (Left == SLCT_NotALiteral || !CheckRight)
+        return Left;
+    }
+
     StringLiteralCheckType Right =
         checkFormatStringExpr(S, C->getFalseExpr(), Args,
                               HasVAListArg, format_idx, firstDataArg,
-                              Type, CallType, InFunctionCall, CheckedVarArgs);
-    return Left < Right ? Left : Right;
+                              Type, CallType, InFunctionCall, CheckedVarArgs,
+                              UncoveredArg);
+
+    return (CheckLeft && Left < Right) ? Left : Right;
   }
 
   case Stmt::ImplicitCastExprClass: {
@@ -2570,7 +3918,8 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
           return checkFormatStringExpr(S, Init, Args,
                                        HasVAListArg, format_idx,
                                        firstDataArg, Type, CallType,
-                                       /*InFunctionCall*/false, CheckedVarArgs);
+                                       /*InFunctionCall*/false, CheckedVarArgs,
+                                       UncoveredArg);
         }
       }
 
@@ -2625,7 +3974,7 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
         return checkFormatStringExpr(S, Arg, Args,
                                      HasVAListArg, format_idx, firstDataArg,
                                      Type, CallType, InFunctionCall,
-                                     CheckedVarArgs);
+                                     CheckedVarArgs, UncoveredArg);
       } else if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(ND)) {
         unsigned BuiltinID = FD->getBuiltinID();
         if (BuiltinID == Builtin::BI__builtin___CFStringMakeConstantString ||
@@ -2634,7 +3983,8 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
           return checkFormatStringExpr(S, Arg, Args,
                                        HasVAListArg, format_idx,
                                        firstDataArg, Type, CallType,
-                                       InFunctionCall, CheckedVarArgs);
+                                       InFunctionCall, CheckedVarArgs,
+                                       UncoveredArg);
         }
       }
     }
@@ -2651,8 +4001,9 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
       StrE = cast<StringLiteral>(E);
 
     if (StrE) {
-      S.CheckFormatString(StrE, E, Args, HasVAListArg, format_idx, firstDataArg,
-                          Type, InFunctionCall, CallType, CheckedVarArgs);
+      CheckFormatString(S, StrE, E, Args, HasVAListArg, format_idx,
+                        firstDataArg, Type, InFunctionCall, CallType,
+                        CheckedVarArgs, UncoveredArg);
       return SLCT_CheckedLiteral;
     }
 
@@ -2672,6 +4023,8 @@ Sema::FormatStringType Sema::GetFormatStringType(const FormatAttr *Format) {
   .Case("strftime", FST_Strftime)
   .Case("strfmon", FST_Strfmon)
   .Cases("kprintf", "cmn_err", "vcmn_err", "zcmn_err", FST_Kprintf)
+  .Case("freebsd_kprintf", FST_FreeBSDKPrintf)
+  .Case("os_trace", FST_OSTrace)
   .Default(FST_Unknown);
 }
 
@@ -2718,10 +4071,20 @@ bool Sema::CheckFormatArguments(ArrayRef<const Expr *> Args,
   // C string (e.g. "%d")
   // ObjC string uses the same format specifiers as C string, so we can use
   // the same format string checking logic for both ObjC and C strings.
+  UncoveredArgHandler UncoveredArg;
   StringLiteralCheckType CT =
       checkFormatStringExpr(*this, OrigFormatExpr, Args, HasVAListArg,
                             format_idx, firstDataArg, Type, CallType,
-                            /*IsFunctionCall*/true, CheckedVarArgs);
+                            /*IsFunctionCall*/true, CheckedVarArgs,
+                            UncoveredArg);
+
+  // Generate a diagnostic where an uncovered argument is detected.
+  if (UncoveredArg.hasUncoveredArg()) {
+    unsigned ArgIdx = UncoveredArg.getUncoveredArg() + firstDataArg;
+    assert(ArgIdx < Args.size() && "ArgIdx outside bounds");
+    UncoveredArg.Diagnose(*this, /*IsFunctionCall*/true, Args[ArgIdx]);
+  }
+
   if (CT != SLCT_NotALiteral)
     // Literal format string found, check done!
     return CT == SLCT_CheckedLiteral;
@@ -2735,20 +4098,33 @@ bool Sema::CheckFormatArguments(ArrayRef<const Expr *> Args,
   // format is either NSString or CFString. This is a hack to prevent
   // diag when using the NSLocalizedString and CFCopyLocalizedString macros
   // which are usually used in place of NS and CF string literals.
-  if (Type == FST_NSString &&
-      SourceMgr.isInSystemMacro(Args[format_idx]->getLocStart()))
+  SourceLocation FormatLoc = Args[format_idx]->getLocStart();
+  if (Type == FST_NSString && SourceMgr.isInSystemMacro(FormatLoc))
     return false;
 
   // If there are no arguments specified, warn with -Wformat-security, otherwise
   // warn only with -Wformat-nonliteral.
-  if (Args.size() == firstDataArg)
-    Diag(Args[format_idx]->getLocStart(),
-         diag::warn_format_nonliteral_noargs)
+  if (Args.size() == firstDataArg) {
+    Diag(FormatLoc, diag::warn_format_nonliteral_noargs)
       << OrigFormatExpr->getSourceRange();
-  else
-    Diag(Args[format_idx]->getLocStart(),
-         diag::warn_format_nonliteral)
-           << OrigFormatExpr->getSourceRange();
+    switch (Type) {
+    default:
+      break;
+    case FST_Kprintf:
+    case FST_FreeBSDKPrintf:
+    case FST_Printf:
+      Diag(FormatLoc, diag::note_format_security_fixit)
+        << FixItHint::CreateInsertion(FormatLoc, "\"%s\", ");
+      break;
+    case FST_NSString:
+      Diag(FormatLoc, diag::note_format_security_fixit)
+        << FixItHint::CreateInsertion(FormatLoc, "@\"%@\", ");
+      break;
+    }
+  } else {
+    Diag(FormatLoc, diag::warn_format_nonliteral)
+      << OrigFormatExpr->getSourceRange();
+  }
   return false;
 }
 
@@ -2770,6 +4146,8 @@ protected:
   bool inFunctionCall;
   Sema::VariadicCallType CallType;
   llvm::SmallBitVector &CheckedVarArgs;
+  UncoveredArgHandler &UncoveredArg;
+
 public:
   CheckFormatHandler(Sema &s, const StringLiteral *fexpr,
                      const Expr *origFormatExpr, unsigned firstDataArg,
@@ -2777,14 +4155,15 @@ public:
                      ArrayRef<const Expr *> Args,
                      unsigned formatIdx, bool inFunctionCall,
                      Sema::VariadicCallType callType,
-                     llvm::SmallBitVector &CheckedVarArgs)
+                     llvm::SmallBitVector &CheckedVarArgs,
+                     UncoveredArgHandler &UncoveredArg)
     : S(s), FExpr(fexpr), OrigFormatExpr(origFormatExpr),
       FirstDataArg(firstDataArg), NumDataArgs(numDataArgs),
       Beg(beg), HasVAListArg(hasVAListArg),
       Args(Args), FormatIdx(formatIdx),
       usesPositionalArgs(false), atFirstArg(true),
       inFunctionCall(inFunctionCall), CallType(callType),
-      CheckedVarArgs(CheckedVarArgs) {
+      CheckedVarArgs(CheckedVarArgs), UncoveredArg(UncoveredArg) {
     CoveredArgs.resize(numDataArgs);
     CoveredArgs.reset();
   }
@@ -2819,12 +4198,11 @@ public:
   void HandleNullChar(const char *nullCharacter) override;
 
   template <typename Range>
-  static void EmitFormatDiagnostic(Sema &S, bool inFunctionCall,
-                                   const Expr *ArgumentExpr,
-                                   PartialDiagnostic PDiag,
-                                   SourceLocation StringLoc,
-                                   bool IsStringLocation, Range StringRange,
-                                   ArrayRef<FixItHint> Fixit = None);
+  static void
+  EmitFormatDiagnostic(Sema &S, bool inFunctionCall, const Expr *ArgumentExpr,
+                       const PartialDiagnostic &PDiag, SourceLocation StringLoc,
+                       bool IsStringLocation, Range StringRange,
+                       ArrayRef<FixItHint> Fixit = None);
 
 protected:
   bool HandleInvalidConversionSpecifier(unsigned argIndex, SourceLocation Loc,
@@ -2853,7 +4231,7 @@ protected:
                             bool IsStringLocation, Range StringRange,
                             ArrayRef<FixItHint> Fixit = None);
 };
-}
+} // end anonymous namespace
 
 SourceRange CheckFormatHandler::getFormatStringRange() {
   return OrigFormatExpr->getSourceRange();
@@ -3015,24 +4393,42 @@ const Expr *CheckFormatHandler::getDataArg(unsigned i) const {
 }
 
 void CheckFormatHandler::DoneProcessing() {
-    // Does the number of data arguments exceed the number of
-    // format conversions in the format string?
+  // Does the number of data arguments exceed the number of
+  // format conversions in the format string?
   if (!HasVAListArg) {
       // Find any arguments that weren't covered.
     CoveredArgs.flip();
     signed notCoveredArg = CoveredArgs.find_first();
     if (notCoveredArg >= 0) {
       assert((unsigned)notCoveredArg < NumDataArgs);
-      if (const Expr *E = getDataArg((unsigned) notCoveredArg)) {
-        SourceLocation Loc = E->getLocStart();
-        if (!S.getSourceManager().isInSystemMacro(Loc)) {
-          EmitFormatDiagnostic(S.PDiag(diag::warn_printf_data_arg_not_used),
-                               Loc, /*IsStringLocation*/false,
-                               getFormatStringRange());
-        }
-      }
+      UncoveredArg.Update(notCoveredArg, OrigFormatExpr);
+    } else {
+      UncoveredArg.setAllCovered();
     }
   }
+}
+
+void UncoveredArgHandler::Diagnose(Sema &S, bool IsFunctionCall,
+                                   const Expr *ArgExpr) {
+  assert(hasUncoveredArg() && DiagnosticExprs.size() > 0 &&
+         "Invalid state");
+
+  if (!ArgExpr)
+    return;
+
+  SourceLocation Loc = ArgExpr->getLocStart();
+
+  if (S.getSourceManager().isInSystemMacro(Loc))
+    return;
+
+  PartialDiagnostic PDiag = S.PDiag(diag::warn_printf_data_arg_not_used);
+  for (auto E : DiagnosticExprs)
+    PDiag << E->getSourceRange();
+
+  CheckFormatHandler::EmitFormatDiagnostic(
+                                  S, IsFunctionCall, DiagnosticExprs[0],
+                                  PDiag, Loc, /*IsStringLocation*/false,
+                                  DiagnosticExprs[0]->getSourceRange());
 }
 
 bool
@@ -3042,7 +4438,6 @@ CheckFormatHandler::HandleInvalidConversionSpecifier(unsigned argIndex,
                                                      unsigned specifierLen,
                                                      const char *csStart,
                                                      unsigned csLen) {
-  
   bool keepGoing = true;
   if (argIndex < NumDataArgs) {
     // Consider the argument coverered, even though the specifier doesn't
@@ -3057,12 +4452,41 @@ CheckFormatHandler::HandleInvalidConversionSpecifier(unsigned argIndex,
     // gibberish when trying to match arguments.
     keepGoing = false;
   }
-  
-  EmitFormatDiagnostic(S.PDiag(diag::warn_format_invalid_conversion)
-                         << StringRef(csStart, csLen),
-                       Loc, /*IsStringLocation*/true,
-                       getSpecifierRange(startSpec, specifierLen));
-  
+
+  StringRef Specifier(csStart, csLen);
+
+  // If the specifier in non-printable, it could be the first byte of a UTF-8
+  // sequence. In that case, print the UTF-8 code point. If not, print the byte
+  // hex value.
+  std::string CodePointStr;
+  if (!llvm::sys::locale::isPrint(*csStart)) {
+    UTF32 CodePoint;
+    const UTF8 **B = reinterpret_cast<const UTF8 **>(&csStart);
+    const UTF8 *E =
+        reinterpret_cast<const UTF8 *>(csStart + csLen);
+    ConversionResult Result =
+        llvm::convertUTF8Sequence(B, E, &CodePoint, strictConversion);
+
+    if (Result != conversionOK) {
+      unsigned char FirstChar = *csStart;
+      CodePoint = (UTF32)FirstChar;
+    }
+
+    llvm::raw_string_ostream OS(CodePointStr);
+    if (CodePoint < 256)
+      OS << "\\x" << llvm::format("%02x", CodePoint);
+    else if (CodePoint <= 0xFFFF)
+      OS << "\\u" << llvm::format("%04x", CodePoint);
+    else
+      OS << "\\U" << llvm::format("%08x", CodePoint);
+    OS.flush();
+    Specifier = CodePointStr;
+  }
+
+  EmitFormatDiagnostic(
+      S.PDiag(diag::warn_format_invalid_conversion) << Specifier, Loc,
+      /*IsStringLocation*/ true, getSpecifierRange(startSpec, specifierLen));
+
   return keepGoing;
 }
 
@@ -3089,6 +4513,10 @@ CheckFormatHandler::CheckNumArgs(
     EmitFormatDiagnostic(
       PDiag, getLocationOfByte(CS.getStart()), /*IsStringLocation*/true,
       getSpecifierRange(startSpecifier, specifierLen));
+
+    // Since more arguments than conversion tokens are given, by extension
+    // all arguments are covered, so mark this as so.
+    UncoveredArg.setAllCovered();
     return false;
   }
   return true;
@@ -3131,21 +4559,15 @@ void CheckFormatHandler::EmitFormatDiagnostic(PartialDiagnostic PDiag,
 /// templated so it can accept either a CharSourceRange or a SourceRange.
 ///
 /// \param FixIt optional fix it hint for the format string.
-template<typename Range>
-void CheckFormatHandler::EmitFormatDiagnostic(Sema &S, bool InFunctionCall,
-                                              const Expr *ArgumentExpr,
-                                              PartialDiagnostic PDiag,
-                                              SourceLocation Loc,
-                                              bool IsStringLocation,
-                                              Range StringRange,
-                                              ArrayRef<FixItHint> FixIt) {
+template <typename Range>
+void CheckFormatHandler::EmitFormatDiagnostic(
+    Sema &S, bool InFunctionCall, const Expr *ArgumentExpr,
+    const PartialDiagnostic &PDiag, SourceLocation Loc, bool IsStringLocation,
+    Range StringRange, ArrayRef<FixItHint> FixIt) {
   if (InFunctionCall) {
     const Sema::SemaDiagnosticBuilder &D = S.Diag(Loc, PDiag);
     D << StringRange;
-    for (ArrayRef<FixItHint>::iterator I = FixIt.begin(), E = FixIt.end();
-         I != E; ++I) {
-      D << *I;
-    }
+    D << FixIt;
   } else {
     S.Diag(IsStringLocation ? ArgumentExpr->getExprLoc() : Loc, PDiag)
       << ArgumentExpr->getSourceRange();
@@ -3155,10 +4577,7 @@ void CheckFormatHandler::EmitFormatDiagnostic(Sema &S, bool InFunctionCall,
              diag::note_format_string_defined);
 
     Note << StringRange;
-    for (ArrayRef<FixItHint>::iterator I = FixIt.begin(), E = FixIt.end();
-         I != E; ++I) {
-      Note << *I;
-    }
+    Note << FixIt;
   }
 }
 
@@ -3167,6 +4586,7 @@ void CheckFormatHandler::EmitFormatDiagnostic(Sema &S, bool InFunctionCall,
 namespace {
 class CheckPrintfHandler : public CheckFormatHandler {
   bool ObjCContext;
+
 public:
   CheckPrintfHandler(Sema &s, const StringLiteral *fexpr,
                      const Expr *origFormatExpr, unsigned firstDataArg,
@@ -3175,13 +4595,14 @@ public:
                      ArrayRef<const Expr *> Args,
                      unsigned formatIdx, bool inFunctionCall,
                      Sema::VariadicCallType CallType,
-                     llvm::SmallBitVector &CheckedVarArgs)
+                     llvm::SmallBitVector &CheckedVarArgs,
+                     UncoveredArgHandler &UncoveredArg)
     : CheckFormatHandler(s, fexpr, origFormatExpr, firstDataArg,
                          numDataArgs, beg, hasVAListArg, Args,
-                         formatIdx, inFunctionCall, CallType, CheckedVarArgs),
+                         formatIdx, inFunctionCall, CallType, CheckedVarArgs,
+                         UncoveredArg),
       ObjCContext(isObjC)
   {}
-
 
   bool HandleInvalidPrintfConversionSpecifier(
                                       const analyze_printf::PrintfSpecifier &FS,
@@ -3211,9 +4632,19 @@ public:
                          const char *startSpecifier, unsigned specifierLen);
   bool checkForCStrMembers(const analyze_printf::ArgType &AT,
                            const Expr *E);
+                           
+  void HandleEmptyObjCModifierFlag(const char *startFlag,
+                                   unsigned flagLen) override;
 
-};  
-}
+  void HandleInvalidObjCModifierFlag(const char *startFlag,
+                                            unsigned flagLen) override;
+
+  void HandleObjCFlagsWithNonObjCConversion(const char *flagsStart,
+                                           const char *flagsEnd,
+                                           const char *conversionPosition) 
+                                             override;
+};
+} // end anonymous namespace
 
 bool CheckPrintfHandler::HandleInvalidPrintfConversionSpecifier(
                                       const analyze_printf::PrintfSpecifier &FS,
@@ -3232,7 +4663,6 @@ bool CheckPrintfHandler::HandleAmount(
                                const analyze_format_string::OptionalAmount &Amt,
                                unsigned k, const char *startSpecifier,
                                unsigned specifierLen) {
-
   if (Amt.hasDataArgument()) {
     if (!HasVAListArg) {
       unsigned argIndex = Amt.getArgIndex();
@@ -3332,6 +4762,41 @@ void CheckPrintfHandler::HandleIgnoredFlag(
                          getSpecifierRange(ignoredFlag.getPosition(), 1)));
 }
 
+//  void EmitFormatDiagnostic(PartialDiagnostic PDiag, SourceLocation StringLoc,
+//                            bool IsStringLocation, Range StringRange,
+//                            ArrayRef<FixItHint> Fixit = None);
+                            
+void CheckPrintfHandler::HandleEmptyObjCModifierFlag(const char *startFlag,
+                                                     unsigned flagLen) {
+  // Warn about an empty flag.
+  EmitFormatDiagnostic(S.PDiag(diag::warn_printf_empty_objc_flag),
+                       getLocationOfByte(startFlag),
+                       /*IsStringLocation*/true,
+                       getSpecifierRange(startFlag, flagLen));
+}
+
+void CheckPrintfHandler::HandleInvalidObjCModifierFlag(const char *startFlag,
+                                                       unsigned flagLen) {
+  // Warn about an invalid flag.
+  auto Range = getSpecifierRange(startFlag, flagLen);
+  StringRef flag(startFlag, flagLen);
+  EmitFormatDiagnostic(S.PDiag(diag::warn_printf_invalid_objc_flag) << flag,
+                      getLocationOfByte(startFlag),
+                      /*IsStringLocation*/true,
+                      Range, FixItHint::CreateRemoval(Range));
+}
+
+void CheckPrintfHandler::HandleObjCFlagsWithNonObjCConversion(
+    const char *flagsStart, const char *flagsEnd, const char *conversionPosition) {
+    // Warn about using '[...]' without a '@' conversion.
+    auto Range = getSpecifierRange(flagsStart, flagsEnd - flagsStart + 1);
+    auto diag = diag::warn_printf_ObjCflags_without_ObjCConversion;
+    EmitFormatDiagnostic(S.PDiag(diag) << StringRef(conversionPosition, 1),
+                         getLocationOfByte(conversionPosition),
+                         /*IsStringLocation*/true,
+                         Range, FixItHint::CreateRemoval(Range));
+}
+
 // Determines if the specified is a C++ class or struct containing
 // a member with the specified name and kind (e.g. a CXXMethodDecl named
 // "c_str()").
@@ -3409,7 +4874,6 @@ CheckPrintfHandler::HandlePrintfSpecifier(const analyze_printf::PrintfSpecifier
                                             &FS,
                                           const char *startSpecifier,
                                           unsigned specifierLen) {
-
   using namespace analyze_format_string;
   using namespace analyze_printf;  
   const PrintfConversionSpecifier &CS = FS.getConversionSpecifier();
@@ -3451,6 +4915,43 @@ CheckPrintfHandler::HandlePrintfSpecifier(const analyze_printf::PrintfSpecifier
     // We set the bit here because we may exit early from this
     // function if we encounter some other error.
     CoveredArgs.set(argIndex);
+  }
+
+  // FreeBSD kernel extensions.
+  if (CS.getKind() == ConversionSpecifier::FreeBSDbArg ||
+      CS.getKind() == ConversionSpecifier::FreeBSDDArg) {
+    // We need at least two arguments.
+    if (!CheckNumArgs(FS, CS, startSpecifier, specifierLen, argIndex + 1))
+      return false;
+
+    // Claim the second argument.
+    CoveredArgs.set(argIndex + 1);
+
+    // Type check the first argument (int for %b, pointer for %D)
+    const Expr *Ex = getDataArg(argIndex);
+    const analyze_printf::ArgType &AT =
+      (CS.getKind() == ConversionSpecifier::FreeBSDbArg) ?
+        ArgType(S.Context.IntTy) : ArgType::CPointerTy;
+    if (AT.isValid() && !AT.matchesType(S.Context, Ex->getType()))
+      EmitFormatDiagnostic(
+        S.PDiag(diag::warn_format_conversion_argument_type_mismatch)
+        << AT.getRepresentativeTypeName(S.Context) << Ex->getType()
+        << false << Ex->getSourceRange(),
+        Ex->getLocStart(), /*IsStringLocation*/false,
+        getSpecifierRange(startSpecifier, specifierLen));
+
+    // Type check the second argument (char * for both %b and %D)
+    Ex = getDataArg(argIndex + 1);
+    const analyze_printf::ArgType &AT2 = ArgType::CStrTy;
+    if (AT2.isValid() && !AT2.matchesType(S.Context, Ex->getType()))
+      EmitFormatDiagnostic(
+        S.PDiag(diag::warn_format_conversion_argument_type_mismatch)
+        << AT2.getRepresentativeTypeName(S.Context) << Ex->getType()
+        << false << Ex->getSourceRange(),
+        Ex->getLocStart(), /*IsStringLocation*/false,
+        getSpecifierRange(startSpecifier, specifierLen));
+
+     return true;
   }
 
   // Check for using an Objective-C specific conversion specifier
@@ -3631,8 +5132,11 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
     ExprTy = TET->getUnderlyingExpr()->getType();
   }
 
-  if (AT.matchesType(S.Context, ExprTy))
+  analyze_printf::ArgType::MatchKind match = AT.matchesType(S.Context, ExprTy);
+
+  if (match == analyze_printf::ArgType::Match) {
     return true;
+  }
 
   // Look through argument promotions for our error message's reported type.
   // This includes the integral and floating promotions, but excludes array
@@ -3727,17 +5231,18 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
     CharSourceRange SpecRange = getSpecifierRange(StartSpecifier, SpecifierLen);
 
     if (IntendedTy == ExprTy && !ShouldNotPrintDirectly) {
+      unsigned diag = diag::warn_format_conversion_argument_type_mismatch;
+      if (match == analyze_format_string::ArgType::NoMatchPedantic) {
+        diag = diag::warn_format_conversion_argument_type_mismatch_pedantic;
+      }
       // In this case, the specifier is wrong and should be changed to match
       // the argument.
-      EmitFormatDiagnostic(
-        S.PDiag(diag::warn_format_conversion_argument_type_mismatch)
-          << AT.getRepresentativeTypeName(S.Context) << IntendedTy << IsEnum
-          << E->getSourceRange(),
-        E->getLocStart(),
-        /*IsStringLocation*/false,
-        SpecRange,
-        FixItHint::CreateReplacement(SpecRange, os.str()));
-
+      EmitFormatDiagnostic(S.PDiag(diag)
+                               << AT.getRepresentativeTypeName(S.Context)
+                               << IntendedTy << IsEnum << E->getSourceRange(),
+                           E->getLocStart(),
+                           /*IsStringLocation*/ false, SpecRange,
+                           FixItHint::CreateReplacement(SpecRange, os.str()));
     } else {
       // The canonical type for formatting this value is different from the
       // actual type of the expression. (This occurs, for example, with Darwin's
@@ -3810,15 +5315,18 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
     // arguments here.
     switch (S.isValidVarArgType(ExprTy)) {
     case Sema::VAK_Valid:
-    case Sema::VAK_ValidInCXX11:
-      EmitFormatDiagnostic(
-        S.PDiag(diag::warn_format_conversion_argument_type_mismatch)
-          << AT.getRepresentativeTypeName(S.Context) << ExprTy << IsEnum
-          << CSR
-          << E->getSourceRange(),
-        E->getLocStart(), /*IsStringLocation*/false, CSR);
-      break;
+    case Sema::VAK_ValidInCXX11: {
+      unsigned diag = diag::warn_format_conversion_argument_type_mismatch;
+      if (match == analyze_printf::ArgType::NoMatchPedantic) {
+        diag = diag::warn_format_conversion_argument_type_mismatch_pedantic;
+      }
 
+      EmitFormatDiagnostic(
+          S.PDiag(diag) << AT.getRepresentativeTypeName(S.Context) << ExprTy
+                        << IsEnum << CSR << E->getSourceRange(),
+          E->getLocStart(), /*IsStringLocation*/ false, CSR);
+      break;
+    }
     case Sema::VAK_Undefined:
     case Sema::VAK_MSVCUndefined:
       EmitFormatDiagnostic(
@@ -3873,11 +5381,12 @@ public:
                     ArrayRef<const Expr *> Args,
                     unsigned formatIdx, bool inFunctionCall,
                     Sema::VariadicCallType CallType,
-                    llvm::SmallBitVector &CheckedVarArgs)
+                    llvm::SmallBitVector &CheckedVarArgs,
+                    UncoveredArgHandler &UncoveredArg)
     : CheckFormatHandler(s, fexpr, origFormatExpr, firstDataArg,
                          numDataArgs, beg, hasVAListArg,
                          Args, formatIdx, inFunctionCall, CallType,
-                         CheckedVarArgs)
+                         CheckedVarArgs, UncoveredArg)
   {}
   
   bool HandleScanfSpecifier(const analyze_scanf::ScanfSpecifier &FS,
@@ -3891,7 +5400,7 @@ public:
 
   void HandleIncompleteScanList(const char *start, const char *end) override;
 };
-}
+} // end anonymous namespace
 
 void CheckScanfHandler::HandleIncompleteScanList(const char *start,
                                                  const char *end) {
@@ -3918,7 +5427,6 @@ bool CheckScanfHandler::HandleScanfSpecifier(
                                        const analyze_scanf::ScanfSpecifier &FS,
                                        const char *startSpecifier,
                                        unsigned specifierLen) {
-  
   using namespace analyze_scanf;
   using namespace analyze_format_string;  
 
@@ -3950,13 +5458,13 @@ bool CheckScanfHandler::HandleScanfSpecifier(
                            FixItHint::CreateRemoval(R));
     }
   }
-  
+
   if (!FS.consumesDataArgument()) {
     // FIXME: Technically specifying a precision or field width here
     // makes no sense.  Worth issuing a warning at some point.
     return true;
   }
-  
+
   // Consume the argument.
   unsigned argIndex = FS.getArgIndex();
   if (argIndex < NumDataArgs) {
@@ -3965,7 +5473,7 @@ bool CheckScanfHandler::HandleScanfSpecifier(
       // function if we encounter some other error.
     CoveredArgs.set(argIndex);
   }
-  
+
   // Check the length modifier is valid with the given conversion specifier.
   if (!FS.hasValidLengthModifier(S.getASTContext().getTargetInfo()))
     HandleInvalidLengthModifier(FS, CS, startSpecifier, specifierLen,
@@ -3982,74 +5490,87 @@ bool CheckScanfHandler::HandleScanfSpecifier(
   // The remaining checks depend on the data arguments.
   if (HasVAListArg)
     return true;
-  
+
   if (!CheckNumArgs(FS, CS, startSpecifier, specifierLen, argIndex))
     return false;
-  
+
   // Check that the argument type matches the format specifier.
   const Expr *Ex = getDataArg(argIndex);
   if (!Ex)
     return true;
 
   const analyze_format_string::ArgType &AT = FS.getArgType(S.Context);
-  if (AT.isValid() && !AT.matchesType(S.Context, Ex->getType())) {
-    ScanfSpecifier fixedFS = FS;
-    bool success = fixedFS.fixType(Ex->getType(),
-                                   Ex->IgnoreImpCasts()->getType(),
-                                   S.getLangOpts(), S.Context);
 
-    if (success) {
-      // Get the fix string from the fixed format specifier.
-      SmallString<128> buf;
-      llvm::raw_svector_ostream os(buf);
-      fixedFS.toString(os);
+  if (!AT.isValid()) {
+    return true;
+  }
 
-      EmitFormatDiagnostic(
-        S.PDiag(diag::warn_format_conversion_argument_type_mismatch)
-          << AT.getRepresentativeTypeName(S.Context) << Ex->getType() << false
-          << Ex->getSourceRange(),
+  analyze_format_string::ArgType::MatchKind match =
+      AT.matchesType(S.Context, Ex->getType());
+  if (match == analyze_format_string::ArgType::Match) {
+    return true;
+  }
+
+  ScanfSpecifier fixedFS = FS;
+  bool success = fixedFS.fixType(Ex->getType(), Ex->IgnoreImpCasts()->getType(),
+                                 S.getLangOpts(), S.Context);
+
+  unsigned diag = diag::warn_format_conversion_argument_type_mismatch;
+  if (match == analyze_format_string::ArgType::NoMatchPedantic) {
+    diag = diag::warn_format_conversion_argument_type_mismatch_pedantic;
+  }
+
+  if (success) {
+    // Get the fix string from the fixed format specifier.
+    SmallString<128> buf;
+    llvm::raw_svector_ostream os(buf);
+    fixedFS.toString(os);
+
+    EmitFormatDiagnostic(
+        S.PDiag(diag) << AT.getRepresentativeTypeName(S.Context)
+                      << Ex->getType() << false << Ex->getSourceRange(),
         Ex->getLocStart(),
-        /*IsStringLocation*/false,
+        /*IsStringLocation*/ false,
         getSpecifierRange(startSpecifier, specifierLen),
         FixItHint::CreateReplacement(
-          getSpecifierRange(startSpecifier, specifierLen),
-          os.str()));
-    } else {
-      EmitFormatDiagnostic(
-        S.PDiag(diag::warn_format_conversion_argument_type_mismatch)
-          << AT.getRepresentativeTypeName(S.Context) << Ex->getType() << false
-          << Ex->getSourceRange(),
-        Ex->getLocStart(),
-        /*IsStringLocation*/false,
-        getSpecifierRange(startSpecifier, specifierLen));
-    }
+            getSpecifierRange(startSpecifier, specifierLen), os.str()));
+  } else {
+    EmitFormatDiagnostic(S.PDiag(diag)
+                             << AT.getRepresentativeTypeName(S.Context)
+                             << Ex->getType() << false << Ex->getSourceRange(),
+                         Ex->getLocStart(),
+                         /*IsStringLocation*/ false,
+                         getSpecifierRange(startSpecifier, specifierLen));
   }
 
   return true;
 }
 
-void Sema::CheckFormatString(const StringLiteral *FExpr,
-                             const Expr *OrigFormatExpr,
-                             ArrayRef<const Expr *> Args,
-                             bool HasVAListArg, unsigned format_idx,
-                             unsigned firstDataArg, FormatStringType Type,
-                             bool inFunctionCall, VariadicCallType CallType,
-                             llvm::SmallBitVector &CheckedVarArgs) {
-  
+static void CheckFormatString(Sema &S, const StringLiteral *FExpr,
+                              const Expr *OrigFormatExpr,
+                              ArrayRef<const Expr *> Args,
+                              bool HasVAListArg, unsigned format_idx,
+                              unsigned firstDataArg,
+                              Sema::FormatStringType Type,
+                              bool inFunctionCall,
+                              Sema::VariadicCallType CallType,
+                              llvm::SmallBitVector &CheckedVarArgs,
+                              UncoveredArgHandler &UncoveredArg) {
   // CHECK: is the format string a wide literal?
   if (!FExpr->isAscii() && !FExpr->isUTF8()) {
     CheckFormatHandler::EmitFormatDiagnostic(
-      *this, inFunctionCall, Args[format_idx],
-      PDiag(diag::warn_format_string_is_wide_literal), FExpr->getLocStart(),
+      S, inFunctionCall, Args[format_idx],
+      S.PDiag(diag::warn_format_string_is_wide_literal), FExpr->getLocStart(),
       /*IsStringLocation*/true, OrigFormatExpr->getSourceRange());
     return;
   }
-  
+
   // Str - The format string.  NOTE: this is NOT null-terminated!
   StringRef StrRef = FExpr->getString();
   const char *Str = StrRef.data();
   // Account for cases where the string literal is truncated in a declaration.
-  const ConstantArrayType *T = Context.getAsConstantArrayType(FExpr->getType());
+  const ConstantArrayType *T =
+    S.Context.getAsConstantArrayType(FExpr->getType());
   assert(T && "String literal not of constant array type!");
   size_t TypeSize = T->getSize().getZExtValue();
   size_t StrLen = std::min(std::max(TypeSize, size_t(1)) - 1, StrRef.size());
@@ -4060,8 +5581,8 @@ void Sema::CheckFormatString(const StringLiteral *FExpr,
   if (TypeSize <= StrRef.size() &&
       StrRef.substr(0, TypeSize).find('\0') == StringRef::npos) {
     CheckFormatHandler::EmitFormatDiagnostic(
-        *this, inFunctionCall, Args[format_idx],
-        PDiag(diag::warn_printf_format_string_not_null_terminated),
+        S, inFunctionCall, Args[format_idx],
+        S.PDiag(diag::warn_printf_format_string_not_null_terminated),
         FExpr->getLocStart(),
         /*IsStringLocation=*/true, OrigFormatExpr->getSourceRange());
     return;
@@ -4070,30 +5591,35 @@ void Sema::CheckFormatString(const StringLiteral *FExpr,
   // CHECK: empty format string?
   if (StrLen == 0 && numDataArgs > 0) {
     CheckFormatHandler::EmitFormatDiagnostic(
-      *this, inFunctionCall, Args[format_idx],
-      PDiag(diag::warn_empty_format_string), FExpr->getLocStart(),
+      S, inFunctionCall, Args[format_idx],
+      S.PDiag(diag::warn_empty_format_string), FExpr->getLocStart(),
       /*IsStringLocation*/true, OrigFormatExpr->getSourceRange());
     return;
   }
-  
-  if (Type == FST_Printf || Type == FST_NSString) {
-    CheckPrintfHandler H(*this, FExpr, OrigFormatExpr, firstDataArg,
-                         numDataArgs, (Type == FST_NSString),
+
+  if (Type == Sema::FST_Printf || Type == Sema::FST_NSString ||
+      Type == Sema::FST_FreeBSDKPrintf || Type == Sema::FST_OSTrace) {
+    CheckPrintfHandler H(S, FExpr, OrigFormatExpr, firstDataArg,
+                         numDataArgs, (Type == Sema::FST_NSString ||
+                                       Type == Sema::FST_OSTrace),
                          Str, HasVAListArg, Args, format_idx,
-                         inFunctionCall, CallType, CheckedVarArgs);
-  
+                         inFunctionCall, CallType, CheckedVarArgs,
+                         UncoveredArg);
+
     if (!analyze_format_string::ParsePrintfString(H, Str, Str + StrLen,
-                                                  getLangOpts(),
-                                                  Context.getTargetInfo()))
+                                                  S.getLangOpts(),
+                                                  S.Context.getTargetInfo(),
+                                            Type == Sema::FST_FreeBSDKPrintf))
       H.DoneProcessing();
-  } else if (Type == FST_Scanf) {
-    CheckScanfHandler H(*this, FExpr, OrigFormatExpr, firstDataArg, numDataArgs,
+  } else if (Type == Sema::FST_Scanf) {
+    CheckScanfHandler H(S, FExpr, OrigFormatExpr, firstDataArg, numDataArgs,
                         Str, HasVAListArg, Args, format_idx,
-                        inFunctionCall, CallType, CheckedVarArgs);
-    
+                        inFunctionCall, CallType, CheckedVarArgs,
+                        UncoveredArg);
+
     if (!analyze_format_string::ParseScanfString(H, Str, Str + StrLen,
-                                                 getLangOpts(),
-                                                 Context.getTargetInfo()))
+                                                 S.getLangOpts(),
+                                                 S.Context.getTargetInfo()))
       H.DoneProcessing();
   } // TODO: handle other formats
 }
@@ -4370,7 +5896,7 @@ static void emitReplacement(Sema &S, SourceLocation Loc, SourceRange Range,
       }
     }
   } else {
-    FunctionName = S.Context.BuiltinInfo.GetName(AbsKind);
+    FunctionName = S.Context.BuiltinInfo.getName(AbsKind);
     HeaderName = S.Context.BuiltinInfo.getHeaderName(AbsKind);
 
     if (HeaderName) {
@@ -4446,11 +5972,24 @@ void Sema::CheckAbsoluteValueFunction(const CallExpr *Call,
   // function call.
   if (ArgType->isUnsignedIntegerType()) {
     const char *FunctionName =
-        IsStdAbs ? "std::abs" : Context.BuiltinInfo.GetName(AbsKind);
+        IsStdAbs ? "std::abs" : Context.BuiltinInfo.getName(AbsKind);
     Diag(Call->getExprLoc(), diag::warn_unsigned_abs) << ArgType << ParamType;
     Diag(Call->getExprLoc(), diag::note_remove_abs)
         << FunctionName
         << FixItHint::CreateRemoval(Call->getCallee()->getSourceRange());
+    return;
+  }
+
+  // Taking the absolute value of a pointer is very suspicious, they probably
+  // wanted to index into an array, dereference a pointer, call a function, etc.
+  if (ArgType->isPointerType() || ArgType->canDecayToPointerType()) {
+    unsigned DiagType = 0;
+    if (ArgType->isFunctionType())
+      DiagType = 1;
+    else if (ArgType->isArrayType())
+      DiagType = 2;
+
+    Diag(Call->getExprLoc(), diag::warn_pointer_abs) << DiagType << ArgType;
     return;
   }
 
@@ -4493,7 +6032,6 @@ void Sema::CheckAbsoluteValueFunction(const CallExpr *Call,
 
   emitReplacement(*this, Call->getExprLoc(),
                   Call->getCallee()->getSourceRange(), NewAbsKind, ArgType);
-  return;
 }
 
 //===--- CHECK: Standard memory functions ---------------------------------===//
@@ -4539,7 +6077,7 @@ static const CXXRecordDecl *getContainedDynamicClass(QualType T,
 
   const CXXRecordDecl *RD = Ty->getAsCXXRecordDecl();
   RD = RD ? RD->getDefinition() : nullptr;
-  if (!RD)
+  if (!RD || RD->isInvalidDecl())
     return nullptr;
 
   if (RD->isDynamicClass())
@@ -4562,7 +6100,7 @@ static const CXXRecordDecl *getContainedDynamicClass(QualType T,
 
 /// \brief If E is a sizeof expression, returns its argument expression,
 /// otherwise returns NULL.
-static const Expr *getSizeOfExprArg(const Expr* E) {
+static const Expr *getSizeOfExprArg(const Expr *E) {
   if (const UnaryExprOrTypeTraitExpr *SizeOf =
       dyn_cast<UnaryExprOrTypeTraitExpr>(E))
     if (SizeOf->getKind() == clang::UETT_SizeOf && !SizeOf->isArgumentType())
@@ -4572,7 +6110,7 @@ static const Expr *getSizeOfExprArg(const Expr* E) {
 }
 
 /// \brief If E is a sizeof expression, returns its argument type.
-static QualType getSizeOfArgType(const Expr* E) {
+static QualType getSizeOfArgType(const Expr *E) {
   if (const UnaryExprOrTypeTraitExpr *SizeOf =
       dyn_cast<UnaryExprOrTypeTraitExpr>(E))
     if (SizeOf->getKind() == clang::UETT_SizeOf)
@@ -4618,8 +6156,9 @@ void Sema::CheckMemaccessArguments(const CallExpr *Call,
     SourceRange ArgRange = Call->getArg(ArgIdx)->getSourceRange();
 
     QualType DestTy = Dest->getType();
+    QualType PointeeTy;
     if (const PointerType *DestPtrTy = DestTy->getAs<PointerType>()) {
-      QualType PointeeTy = DestPtrTy->getPointeeType();
+      PointeeTy = DestPtrTy->getPointeeType();
 
       // Never warn about void type pointers. This can be used to suppress
       // false positives.
@@ -4699,46 +6238,51 @@ void Sema::CheckMemaccessArguments(const CallExpr *Call,
           break;
         }
       }
+    } else if (DestTy->isArrayType()) {
+      PointeeTy = DestTy;
+    }
 
-      // Always complain about dynamic classes.
-      bool IsContained;
-      if (const CXXRecordDecl *ContainedRD =
-              getContainedDynamicClass(PointeeTy, IsContained)) {
+    if (PointeeTy == QualType())
+      continue;
 
-        unsigned OperationType = 0;
-        // "overwritten" if we're warning about the destination for any call
-        // but memcmp; otherwise a verb appropriate to the call.
-        if (ArgIdx != 0 || BId == Builtin::BImemcmp) {
-          if (BId == Builtin::BImemcpy)
-            OperationType = 1;
-          else if(BId == Builtin::BImemmove)
-            OperationType = 2;
-          else if (BId == Builtin::BImemcmp)
-            OperationType = 3;
-        }
-          
-        DiagRuntimeBehavior(
-          Dest->getExprLoc(), Dest,
-          PDiag(diag::warn_dyn_class_memaccess)
-            << (BId == Builtin::BImemcmp ? ArgIdx + 2 : ArgIdx)
-            << FnName << IsContained << ContainedRD << OperationType
-            << Call->getCallee()->getSourceRange());
-      } else if (PointeeTy.hasNonTrivialObjCLifetime() &&
-               BId != Builtin::BImemset)
-        DiagRuntimeBehavior(
-          Dest->getExprLoc(), Dest,
-          PDiag(diag::warn_arc_object_memaccess)
-            << ArgIdx << FnName << PointeeTy
-            << Call->getCallee()->getSourceRange());
-      else
-        continue;
+    // Always complain about dynamic classes.
+    bool IsContained;
+    if (const CXXRecordDecl *ContainedRD =
+            getContainedDynamicClass(PointeeTy, IsContained)) {
 
+      unsigned OperationType = 0;
+      // "overwritten" if we're warning about the destination for any call
+      // but memcmp; otherwise a verb appropriate to the call.
+      if (ArgIdx != 0 || BId == Builtin::BImemcmp) {
+        if (BId == Builtin::BImemcpy)
+          OperationType = 1;
+        else if(BId == Builtin::BImemmove)
+          OperationType = 2;
+        else if (BId == Builtin::BImemcmp)
+          OperationType = 3;
+      }
+        
       DiagRuntimeBehavior(
         Dest->getExprLoc(), Dest,
-        PDiag(diag::note_bad_memaccess_silence)
-          << FixItHint::CreateInsertion(ArgRange.getBegin(), "(void*)"));
-      break;
-    }
+        PDiag(diag::warn_dyn_class_memaccess)
+          << (BId == Builtin::BImemcmp ? ArgIdx + 2 : ArgIdx)
+          << FnName << IsContained << ContainedRD << OperationType
+          << Call->getCallee()->getSourceRange());
+    } else if (PointeeTy.hasNonTrivialObjCLifetime() &&
+             BId != Builtin::BImemset)
+      DiagRuntimeBehavior(
+        Dest->getExprLoc(), Dest,
+        PDiag(diag::warn_arc_object_memaccess)
+          << ArgIdx << FnName << PointeeTy
+          << Call->getCallee()->getSourceRange());
+    else
+      continue;
+
+    DiagRuntimeBehavior(
+      Dest->getExprLoc(), Dest,
+      PDiag(diag::note_bad_memaccess_silence)
+        << FixItHint::CreateInsertion(ArgRange.getBegin(), "(void*)"));
+    break;
   }
 }
 
@@ -4954,10 +6498,12 @@ void Sema::CheckStrncatArguments(const CallExpr *CE,
 
 //===--- CHECK: Return Address of Stack Variable --------------------------===//
 
-static Expr *EvalVal(Expr *E, SmallVectorImpl<DeclRefExpr *> &refVars,
-                     Decl *ParentDecl);
-static Expr *EvalAddr(Expr* E, SmallVectorImpl<DeclRefExpr *> &refVars,
-                      Decl *ParentDecl);
+static const Expr *EvalVal(const Expr *E,
+                           SmallVectorImpl<const DeclRefExpr *> &refVars,
+                           const Decl *ParentDecl);
+static const Expr *EvalAddr(const Expr *E,
+                            SmallVectorImpl<const DeclRefExpr *> &refVars,
+                            const Decl *ParentDecl);
 
 /// CheckReturnStackAddr - Check if a return statement returns the address
 ///   of a stack variable.
@@ -4965,8 +6511,8 @@ static void
 CheckReturnStackAddr(Sema &S, Expr *RetValExp, QualType lhsType,
                      SourceLocation ReturnLoc) {
 
-  Expr *stackE = nullptr;
-  SmallVector<DeclRefExpr *, 8> refVars;
+  const Expr *stackE = nullptr;
+  SmallVector<const DeclRefExpr *, 8> refVars;
 
   // Perform checking for returned stack addresses, local blocks,
   // label addresses or references to temporaries.
@@ -4994,29 +6540,28 @@ CheckReturnStackAddr(Sema &S, Expr *RetValExp, QualType lhsType,
     diagRange = refVars[0]->getSourceRange();
   }
 
-  if (DeclRefExpr *DR = dyn_cast<DeclRefExpr>(stackE)) { //address of local var.
-    S.Diag(diagLoc, lhsType->isReferenceType() ? diag::warn_ret_stack_ref
-                                             : diag::warn_ret_stack_addr)
+  if (const DeclRefExpr *DR = dyn_cast<DeclRefExpr>(stackE)) {
+    // address of local var
+    S.Diag(diagLoc, diag::warn_ret_stack_addr_ref) << lhsType->isReferenceType()
      << DR->getDecl()->getDeclName() << diagRange;
   } else if (isa<BlockExpr>(stackE)) { // local block.
     S.Diag(diagLoc, diag::err_ret_local_block) << diagRange;
   } else if (isa<AddrLabelExpr>(stackE)) { // address of label.
     S.Diag(diagLoc, diag::warn_ret_addr_label) << diagRange;
   } else { // local temporary.
-    S.Diag(diagLoc, lhsType->isReferenceType() ? diag::warn_ret_local_temp_ref
-                                               : diag::warn_ret_local_temp_addr)
-     << diagRange;
+    S.Diag(diagLoc, diag::warn_ret_local_temp_addr_ref)
+     << lhsType->isReferenceType() << diagRange;
   }
 
   // Display the "trail" of reference variables that we followed until we
   // found the problematic expression using notes.
   for (unsigned i = 0, e = refVars.size(); i != e; ++i) {
-    VarDecl *VD = cast<VarDecl>(refVars[i]->getDecl());
+    const VarDecl *VD = cast<VarDecl>(refVars[i]->getDecl());
     // If this var binds to another reference var, show the range of the next
     // var, otherwise the var binds to the problematic expression, in which case
     // show the range of the expression.
-    SourceRange range = (i < e-1) ? refVars[i+1]->getSourceRange()
-                                  : stackE->getSourceRange();
+    SourceRange range = (i < e - 1) ? refVars[i + 1]->getSourceRange()
+                                    : stackE->getSourceRange();
     S.Diag(VD->getLocation(), diag::note_ref_var_local_bind)
         << VD->getDeclName() << range;
   }
@@ -5048,8 +6593,9 @@ CheckReturnStackAddr(Sema &S, Expr *RetValExp, QualType lhsType,
 ///   * arbitrary interplay between "&" and "*" operators
 ///   * pointer arithmetic from an address of a stack variable
 ///   * taking the address of an array element where the array is on the stack
-static Expr *EvalAddr(Expr *E, SmallVectorImpl<DeclRefExpr *> &refVars,
-                      Decl *ParentDecl) {
+static const Expr *EvalAddr(const Expr *E,
+                            SmallVectorImpl<const DeclRefExpr *> &refVars,
+                            const Decl *ParentDecl) {
   if (E->isTypeDependent())
     return nullptr;
 
@@ -5066,13 +6612,13 @@ static Expr *EvalAddr(Expr *E, SmallVectorImpl<DeclRefExpr *> &refVars,
   // EvalAddr and EvalVal appropriately.
   switch (E->getStmtClass()) {
   case Stmt::DeclRefExprClass: {
-    DeclRefExpr *DR = cast<DeclRefExpr>(E);
+    const DeclRefExpr *DR = cast<DeclRefExpr>(E);
 
     // If we leave the immediate function, the lifetime isn't about to end.
     if (DR->refersToEnclosingVariableOrCapture())
       return nullptr;
 
-    if (VarDecl *V = dyn_cast<VarDecl>(DR->getDecl()))
+    if (const VarDecl *V = dyn_cast<VarDecl>(DR->getDecl()))
       // If this is a reference variable, follow through to the expression that
       // it points to.
       if (V->hasLocalStorage() &&
@@ -5088,44 +6634,44 @@ static Expr *EvalAddr(Expr *E, SmallVectorImpl<DeclRefExpr *> &refVars,
   case Stmt::UnaryOperatorClass: {
     // The only unary operator that make sense to handle here
     // is AddrOf.  All others don't make sense as pointers.
-    UnaryOperator *U = cast<UnaryOperator>(E);
+    const UnaryOperator *U = cast<UnaryOperator>(E);
 
     if (U->getOpcode() == UO_AddrOf)
       return EvalVal(U->getSubExpr(), refVars, ParentDecl);
-    else
-      return nullptr;
+    return nullptr;
   }
 
   case Stmt::BinaryOperatorClass: {
     // Handle pointer arithmetic.  All other binary operators are not valid
     // in this context.
-    BinaryOperator *B = cast<BinaryOperator>(E);
+    const BinaryOperator *B = cast<BinaryOperator>(E);
     BinaryOperatorKind op = B->getOpcode();
 
     if (op != BO_Add && op != BO_Sub)
       return nullptr;
 
-    Expr *Base = B->getLHS();
+    const Expr *Base = B->getLHS();
 
     // Determine which argument is the real pointer base.  It could be
     // the RHS argument instead of the LHS.
-    if (!Base->getType()->isPointerType()) Base = B->getRHS();
+    if (!Base->getType()->isPointerType())
+      Base = B->getRHS();
 
-    assert (Base->getType()->isPointerType());
+    assert(Base->getType()->isPointerType());
     return EvalAddr(Base, refVars, ParentDecl);
   }
 
   // For conditional operators we need to see if either the LHS or RHS are
   // valid DeclRefExpr*s.  If one of them is valid, we return it.
   case Stmt::ConditionalOperatorClass: {
-    ConditionalOperator *C = cast<ConditionalOperator>(E);
+    const ConditionalOperator *C = cast<ConditionalOperator>(E);
 
     // Handle the GNU extension for missing LHS.
     // FIXME: That isn't a ConditionalOperator, so doesn't get here.
-    if (Expr *LHSExpr = C->getLHS()) {
+    if (const Expr *LHSExpr = C->getLHS()) {
       // In C++, we can have a throw-expression, which has 'void' type.
       if (!LHSExpr->getType()->isVoidType())
-        if (Expr *LHS = EvalAddr(LHSExpr, refVars, ParentDecl))
+        if (const Expr *LHS = EvalAddr(LHSExpr, refVars, ParentDecl))
           return LHS;
     }
 
@@ -5158,7 +6704,7 @@ static Expr *EvalAddr(Expr *E, SmallVectorImpl<DeclRefExpr *> &refVars,
   case Stmt::CXXDynamicCastExprClass:
   case Stmt::CXXConstCastExprClass:
   case Stmt::CXXReinterpretCastExprClass: {
-    Expr* SubExpr = cast<CastExpr>(E)->getSubExpr();
+    const Expr* SubExpr = cast<CastExpr>(E)->getSubExpr();
     switch (cast<CastExpr>(E)->getCastKind()) {
     case CK_LValueToRValue:
     case CK_NoOp:
@@ -5188,152 +6734,161 @@ static Expr *EvalAddr(Expr *E, SmallVectorImpl<DeclRefExpr *> &refVars,
   }
 
   case Stmt::MaterializeTemporaryExprClass:
-    if (Expr *Result = EvalAddr(
-                         cast<MaterializeTemporaryExpr>(E)->GetTemporaryExpr(),
-                                refVars, ParentDecl))
+    if (const Expr *Result =
+            EvalAddr(cast<MaterializeTemporaryExpr>(E)->GetTemporaryExpr(),
+                     refVars, ParentDecl))
       return Result;
-      
     return E;
-      
+
   // Everything else: we simply don't reason about them.
   default:
     return nullptr;
   }
 }
 
-
 ///  EvalVal - This function is complements EvalAddr in the mutual recursion.
 ///   See the comments for EvalAddr for more details.
-static Expr *EvalVal(Expr *E, SmallVectorImpl<DeclRefExpr *> &refVars,
-                     Decl *ParentDecl) {
-do {
-  // We should only be called for evaluating non-pointer expressions, or
-  // expressions with a pointer type that are not used as references but instead
-  // are l-values (e.g., DeclRefExpr with a pointer type).
+static const Expr *EvalVal(const Expr *E,
+                           SmallVectorImpl<const DeclRefExpr *> &refVars,
+                           const Decl *ParentDecl) {
+  do {
+    // We should only be called for evaluating non-pointer expressions, or
+    // expressions with a pointer type that are not used as references but
+    // instead
+    // are l-values (e.g., DeclRefExpr with a pointer type).
 
-  // Our "symbolic interpreter" is just a dispatch off the currently
-  // viewed AST node.  We then recursively traverse the AST by calling
-  // EvalAddr and EvalVal appropriately.
+    // Our "symbolic interpreter" is just a dispatch off the currently
+    // viewed AST node.  We then recursively traverse the AST by calling
+    // EvalAddr and EvalVal appropriately.
 
-  E = E->IgnoreParens();
-  switch (E->getStmtClass()) {
-  case Stmt::ImplicitCastExprClass: {
-    ImplicitCastExpr *IE = cast<ImplicitCastExpr>(E);
-    if (IE->getValueKind() == VK_LValue) {
-      E = IE->getSubExpr();
-      continue;
-    }
-    return nullptr;
-  }
-
-  case Stmt::ExprWithCleanupsClass:
-    return EvalVal(cast<ExprWithCleanups>(E)->getSubExpr(), refVars,ParentDecl);
-
-  case Stmt::DeclRefExprClass: {
-    // When we hit a DeclRefExpr we are looking at code that refers to a
-    // variable's name. If it's not a reference variable we check if it has
-    // local storage within the function, and if so, return the expression.
-    DeclRefExpr *DR = cast<DeclRefExpr>(E);
-
-    // If we leave the immediate function, the lifetime isn't about to end.
-    if (DR->refersToEnclosingVariableOrCapture())
+    E = E->IgnoreParens();
+    switch (E->getStmtClass()) {
+    case Stmt::ImplicitCastExprClass: {
+      const ImplicitCastExpr *IE = cast<ImplicitCastExpr>(E);
+      if (IE->getValueKind() == VK_LValue) {
+        E = IE->getSubExpr();
+        continue;
+      }
       return nullptr;
+    }
 
-    if (VarDecl *V = dyn_cast<VarDecl>(DR->getDecl())) {
-      // Check if it refers to itself, e.g. "int& i = i;".
-      if (V == ParentDecl)
-        return DR;
+    case Stmt::ExprWithCleanupsClass:
+      return EvalVal(cast<ExprWithCleanups>(E)->getSubExpr(), refVars,
+                     ParentDecl);
 
-      if (V->hasLocalStorage()) {
-        if (!V->getType()->isReferenceType())
+    case Stmt::DeclRefExprClass: {
+      // When we hit a DeclRefExpr we are looking at code that refers to a
+      // variable's name. If it's not a reference variable we check if it has
+      // local storage within the function, and if so, return the expression.
+      const DeclRefExpr *DR = cast<DeclRefExpr>(E);
+
+      // If we leave the immediate function, the lifetime isn't about to end.
+      if (DR->refersToEnclosingVariableOrCapture())
+        return nullptr;
+
+      if (const VarDecl *V = dyn_cast<VarDecl>(DR->getDecl())) {
+        // Check if it refers to itself, e.g. "int& i = i;".
+        if (V == ParentDecl)
           return DR;
 
-        // Reference variable, follow through to the expression that
-        // it points to.
-        if (V->hasInit()) {
-          // Add the reference variable to the "trail".
-          refVars.push_back(DR);
-          return EvalVal(V->getInit(), refVars, V);
+        if (V->hasLocalStorage()) {
+          if (!V->getType()->isReferenceType())
+            return DR;
+
+          // Reference variable, follow through to the expression that
+          // it points to.
+          if (V->hasInit()) {
+            // Add the reference variable to the "trail".
+            refVars.push_back(DR);
+            return EvalVal(V->getInit(), refVars, V);
+          }
         }
       }
+
+      return nullptr;
     }
 
-    return nullptr;
-  }
+    case Stmt::UnaryOperatorClass: {
+      // The only unary operator that make sense to handle here
+      // is Deref.  All others don't resolve to a "name."  This includes
+      // handling all sorts of rvalues passed to a unary operator.
+      const UnaryOperator *U = cast<UnaryOperator>(E);
 
-  case Stmt::UnaryOperatorClass: {
-    // The only unary operator that make sense to handle here
-    // is Deref.  All others don't resolve to a "name."  This includes
-    // handling all sorts of rvalues passed to a unary operator.
-    UnaryOperator *U = cast<UnaryOperator>(E);
+      if (U->getOpcode() == UO_Deref)
+        return EvalAddr(U->getSubExpr(), refVars, ParentDecl);
 
-    if (U->getOpcode() == UO_Deref)
-      return EvalAddr(U->getSubExpr(), refVars, ParentDecl);
+      return nullptr;
+    }
 
-    return nullptr;
-  }
+    case Stmt::ArraySubscriptExprClass: {
+      // Array subscripts are potential references to data on the stack.  We
+      // retrieve the DeclRefExpr* for the array variable if it indeed
+      // has local storage.
+      const auto *ASE = cast<ArraySubscriptExpr>(E);
+      if (ASE->isTypeDependent())
+        return nullptr;
+      return EvalAddr(ASE->getBase(), refVars, ParentDecl);
+    }
 
-  case Stmt::ArraySubscriptExprClass: {
-    // Array subscripts are potential references to data on the stack.  We
-    // retrieve the DeclRefExpr* for the array variable if it indeed
-    // has local storage.
-    return EvalAddr(cast<ArraySubscriptExpr>(E)->getBase(), refVars,ParentDecl);
-  }
+    case Stmt::OMPArraySectionExprClass: {
+      return EvalAddr(cast<OMPArraySectionExpr>(E)->getBase(), refVars,
+                      ParentDecl);
+    }
 
-  case Stmt::ConditionalOperatorClass: {
-    // For conditional operators we need to see if either the LHS or RHS are
-    // non-NULL Expr's.  If one is non-NULL, we return it.
-    ConditionalOperator *C = cast<ConditionalOperator>(E);
+    case Stmt::ConditionalOperatorClass: {
+      // For conditional operators we need to see if either the LHS or RHS are
+      // non-NULL Expr's.  If one is non-NULL, we return it.
+      const ConditionalOperator *C = cast<ConditionalOperator>(E);
 
-    // Handle the GNU extension for missing LHS.
-    if (Expr *LHSExpr = C->getLHS()) {
+      // Handle the GNU extension for missing LHS.
+      if (const Expr *LHSExpr = C->getLHS()) {
+        // In C++, we can have a throw-expression, which has 'void' type.
+        if (!LHSExpr->getType()->isVoidType())
+          if (const Expr *LHS = EvalVal(LHSExpr, refVars, ParentDecl))
+            return LHS;
+      }
+
       // In C++, we can have a throw-expression, which has 'void' type.
-      if (!LHSExpr->getType()->isVoidType())
-        if (Expr *LHS = EvalVal(LHSExpr, refVars, ParentDecl))
-          return LHS;
+      if (C->getRHS()->getType()->isVoidType())
+        return nullptr;
+
+      return EvalVal(C->getRHS(), refVars, ParentDecl);
     }
 
-    // In C++, we can have a throw-expression, which has 'void' type.
-    if (C->getRHS()->getType()->isVoidType())
-      return nullptr;
+    // Accesses to members are potential references to data on the stack.
+    case Stmt::MemberExprClass: {
+      const MemberExpr *M = cast<MemberExpr>(E);
 
-    return EvalVal(C->getRHS(), refVars, ParentDecl);
-  }
+      // Check for indirect access.  We only want direct field accesses.
+      if (M->isArrow())
+        return nullptr;
 
-  // Accesses to members are potential references to data on the stack.
-  case Stmt::MemberExprClass: {
-    MemberExpr *M = cast<MemberExpr>(E);
+      // Check whether the member type is itself a reference, in which case
+      // we're not going to refer to the member, but to what the member refers
+      // to.
+      if (M->getMemberDecl()->getType()->isReferenceType())
+        return nullptr;
 
-    // Check for indirect access.  We only want direct field accesses.
-    if (M->isArrow())
-      return nullptr;
+      return EvalVal(M->getBase(), refVars, ParentDecl);
+    }
 
-    // Check whether the member type is itself a reference, in which case
-    // we're not going to refer to the member, but to what the member refers to.
-    if (M->getMemberDecl()->getType()->isReferenceType())
-      return nullptr;
-
-    return EvalVal(M->getBase(), refVars, ParentDecl);
-  }
-
-  case Stmt::MaterializeTemporaryExprClass:
-    if (Expr *Result = EvalVal(
-                          cast<MaterializeTemporaryExpr>(E)->GetTemporaryExpr(),
-                               refVars, ParentDecl))
-      return Result;
-      
-    return E;
-
-  default:
-    // Check that we don't return or take the address of a reference to a
-    // temporary. This is only useful in C++.
-    if (!E->isTypeDependent() && E->isRValue())
+    case Stmt::MaterializeTemporaryExprClass:
+      if (const Expr *Result =
+              EvalVal(cast<MaterializeTemporaryExpr>(E)->GetTemporaryExpr(),
+                      refVars, ParentDecl))
+        return Result;
       return E;
 
-    // Everything else: we simply don't reason about them.
-    return nullptr;
-  }
-} while (true);
+    default:
+      // Check that we don't return or take the address of a reference to a
+      // temporary. This is only useful in C++.
+      if (!E->isTypeDependent() && E->isRValue())
+        return E;
+
+      // Everything else: we simply don't reason about them.
+      return nullptr;
+    }
+  } while (true);
 }
 
 void
@@ -5345,7 +6900,8 @@ Sema::CheckReturnValExpr(Expr *RetValExp, QualType lhsType,
   CheckReturnStackAddr(*this, RetValExp, lhsType, ReturnLoc);
 
   // Check if the return value is null but should not be.
-  if (Attrs && hasSpecificAttr<ReturnsNonNullAttr>(*Attrs) &&
+  if (((Attrs && hasSpecificAttr<ReturnsNonNullAttr>(*Attrs)) ||
+       (!isObjCMethod && isNonNullType(Context, lhsType))) &&
       CheckNonNullExpr(*this, RetValExp))
     Diag(ReturnLoc, diag::warn_null_ret)
       << (isObjCMethod ? 1 : 0) << RetValExp->getSourceRange();
@@ -5383,7 +6939,6 @@ void Sema::CheckFloatComparison(SourceLocation Loc, Expr* LHS, Expr *RHS) {
     if (DeclRefExpr* DRR = dyn_cast<DeclRefExpr>(RightExprSansParen))
       if (DRL->getDecl() == DRR->getDecl())
         return;
-
 
   // Special case: check for comparisons against literals that can be exactly
   //  represented by APFloat.  In such cases, do not emit a warning.  This
@@ -5510,8 +7065,7 @@ struct IntRange {
   }
 };
 
-static IntRange GetValueRange(ASTContext &C, llvm::APSInt &value,
-                              unsigned MaxWidth) {
+IntRange GetValueRange(ASTContext &C, llvm::APSInt &value, unsigned MaxWidth) {
   if (value.isSigned() && value.isNegative())
     return IntRange(value.getMinSignedBits(), false);
 
@@ -5523,8 +7077,8 @@ static IntRange GetValueRange(ASTContext &C, llvm::APSInt &value,
   return IntRange(value.getActiveBits(), true);
 }
 
-static IntRange GetValueRange(ASTContext &C, APValue &result, QualType Ty,
-                              unsigned MaxWidth) {
+IntRange GetValueRange(ASTContext &C, APValue &result, QualType Ty,
+                       unsigned MaxWidth) {
   if (result.isInt())
     return GetValueRange(C, result.getInt(), MaxWidth);
 
@@ -5552,7 +7106,7 @@ static IntRange GetValueRange(ASTContext &C, APValue &result, QualType Ty,
   return IntRange(MaxWidth, Ty->isUnsignedIntegerOrEnumerationType());
 }
 
-static QualType GetExprType(Expr *E) {
+QualType GetExprType(const Expr *E) {
   QualType Ty = E->getType();
   if (const AtomicType *AtomicRHS = Ty->getAs<AtomicType>())
     Ty = AtomicRHS->getValueType();
@@ -5563,7 +7117,7 @@ static QualType GetExprType(Expr *E) {
 /// range of values it might take.
 ///
 /// \param MaxWidth - the width to which the value will be truncated
-static IntRange GetExprRange(ASTContext &C, Expr *E, unsigned MaxWidth) {
+IntRange GetExprRange(ASTContext &C, const Expr *E, unsigned MaxWidth) {
   E = E->IgnoreParens();
 
   // Try a full evaluation first.
@@ -5574,13 +7128,14 @@ static IntRange GetExprRange(ASTContext &C, Expr *E, unsigned MaxWidth) {
   // I think we only want to look through implicit casts here; if the
   // user has an explicit widening cast, we should treat the value as
   // being of the new, wider type.
-  if (ImplicitCastExpr *CE = dyn_cast<ImplicitCastExpr>(E)) {
+  if (const auto *CE = dyn_cast<ImplicitCastExpr>(E)) {
     if (CE->getCastKind() == CK_NoOp || CE->getCastKind() == CK_LValueToRValue)
       return GetExprRange(C, CE->getSubExpr(), MaxWidth);
 
     IntRange OutputTypeRange = IntRange::forValueOfType(C, GetExprType(CE));
 
-    bool isIntegerCast = (CE->getCastKind() == CK_IntegralCast);
+    bool isIntegerCast = CE->getCastKind() == CK_IntegralCast ||
+                         CE->getCastKind() == CK_BooleanToSignedIntegral;
 
     // Assume that non-integer casts can span the full range of the type.
     if (!isIntegerCast)
@@ -5600,7 +7155,7 @@ static IntRange GetExprRange(ASTContext &C, Expr *E, unsigned MaxWidth) {
                     SubRange.NonNegative || OutputTypeRange.NonNegative);
   }
 
-  if (ConditionalOperator *CO = dyn_cast<ConditionalOperator>(E)) {
+  if (const auto *CO = dyn_cast<ConditionalOperator>(E)) {
     // If we can fold the condition, just take that operand.
     bool CondResult;
     if (CO->getCond()->EvaluateAsBooleanCondition(CondResult, C))
@@ -5614,7 +7169,7 @@ static IntRange GetExprRange(ASTContext &C, Expr *E, unsigned MaxWidth) {
     return IntRange::join(L, R);
   }
 
-  if (BinaryOperator *BO = dyn_cast<BinaryOperator>(E)) {
+  if (const auto *BO = dyn_cast<BinaryOperator>(E)) {
     switch (BO->getOpcode()) {
 
     // Boolean-valued operations are single-bit and positive.
@@ -5754,7 +7309,7 @@ static IntRange GetExprRange(ASTContext &C, Expr *E, unsigned MaxWidth) {
     return IntRange::join(L, R);
   }
 
-  if (UnaryOperator *UO = dyn_cast<UnaryOperator>(E)) {
+  if (const auto *UO = dyn_cast<UnaryOperator>(E)) {
     switch (UO->getOpcode()) {
     // Boolean-valued operations are white-listed.
     case UO_LNot:
@@ -5770,26 +7325,26 @@ static IntRange GetExprRange(ASTContext &C, Expr *E, unsigned MaxWidth) {
     }
   }
 
-  if (OpaqueValueExpr *OVE = dyn_cast<OpaqueValueExpr>(E))
+  if (const auto *OVE = dyn_cast<OpaqueValueExpr>(E))
     return GetExprRange(C, OVE->getSourceExpr(), MaxWidth);
 
-  if (FieldDecl *BitField = E->getSourceBitField())
+  if (const auto *BitField = E->getSourceBitField())
     return IntRange(BitField->getBitWidthValue(C),
                     BitField->getType()->isUnsignedIntegerOrEnumerationType());
 
   return IntRange::forValueOfType(C, GetExprType(E));
 }
 
-static IntRange GetExprRange(ASTContext &C, Expr *E) {
+IntRange GetExprRange(ASTContext &C, const Expr *E) {
   return GetExprRange(C, E, C.getIntWidth(GetExprType(E)));
 }
 
 /// Checks whether the given value, which currently has the given
 /// source semantics, has the same value when coerced through the
 /// target semantics.
-static bool IsSameFloatAfterCast(const llvm::APFloat &value,
-                                 const llvm::fltSemantics &Src,
-                                 const llvm::fltSemantics &Tgt) {
+bool IsSameFloatAfterCast(const llvm::APFloat &value,
+                          const llvm::fltSemantics &Src,
+                          const llvm::fltSemantics &Tgt) {
   llvm::APFloat truncated = value;
 
   bool ignored;
@@ -5804,9 +7359,9 @@ static bool IsSameFloatAfterCast(const llvm::APFloat &value,
 /// target semantics.
 ///
 /// The value might be a vector of floats (or a complex number).
-static bool IsSameFloatAfterCast(const APValue &value,
-                                 const llvm::fltSemantics &Src,
-                                 const llvm::fltSemantics &Tgt) {
+bool IsSameFloatAfterCast(const APValue &value,
+                          const llvm::fltSemantics &Src,
+                          const llvm::fltSemantics &Tgt) {
   if (value.isFloat())
     return IsSameFloatAfterCast(value.getFloat(), Src, Tgt);
 
@@ -5822,9 +7377,9 @@ static bool IsSameFloatAfterCast(const APValue &value,
           IsSameFloatAfterCast(value.getComplexFloatImag(), Src, Tgt));
 }
 
-static void AnalyzeImplicitConversions(Sema &S, Expr *E, SourceLocation CC);
+void AnalyzeImplicitConversions(Sema &S, Expr *E, SourceLocation CC);
 
-static bool IsZero(Sema &S, Expr *E) {
+bool IsZero(Sema &S, Expr *E) {
   // Suppress cases where we are comparing against an enum constant.
   if (const DeclRefExpr *DR =
       dyn_cast<DeclRefExpr>(E->IgnoreParenImpCasts()))
@@ -5839,7 +7394,7 @@ static bool IsZero(Sema &S, Expr *E) {
   return E->isIntegerConstantExpr(Value, S.Context) && Value == 0;
 }
 
-static bool HasEnumType(Expr *E) {
+bool HasEnumType(Expr *E) {
   // Strip off implicit integral promotions.
   while (ImplicitCastExpr *ICE = dyn_cast<ImplicitCastExpr>(E)) {
     if (ICE->getCastKind() != CK_IntegralCast &&
@@ -5851,7 +7406,7 @@ static bool HasEnumType(Expr *E) {
   return E->getType()->isEnumeralType();
 }
 
-static void CheckTrivialUnsignedComparison(Sema &S, BinaryOperator *E) {
+void CheckTrivialUnsignedComparison(Sema &S, BinaryOperator *E) {
   // Disable warning in template instantiations.
   if (!S.ActiveTemplateInstantiations.empty())
     return;
@@ -5879,10 +7434,9 @@ static void CheckTrivialUnsignedComparison(Sema &S, BinaryOperator *E) {
   }
 }
 
-static void DiagnoseOutOfRangeComparison(Sema &S, BinaryOperator *E,
-                                         Expr *Constant, Expr *Other,
-                                         llvm::APSInt Value,
-                                         bool RhsConstant) {
+void DiagnoseOutOfRangeComparison(Sema &S, BinaryOperator *E, Expr *Constant,
+                                  Expr *Other, const llvm::APSInt &Value,
+                                  bool RhsConstant) {
   // Disable warning in template instantiations.
   if (!S.ActiveTemplateInstantiations.empty())
     return;
@@ -5890,7 +7444,7 @@ static void DiagnoseOutOfRangeComparison(Sema &S, BinaryOperator *E,
   // TODO: Investigate using GetExprRange() to get tighter bounds
   // on the bit ranges.
   QualType OtherT = Other->getType();
-  if (const AtomicType *AT = dyn_cast<AtomicType>(OtherT))
+  if (const auto *AT = OtherT->getAs<AtomicType>())
     OtherT = AT->getValueType();
   IntRange OtherRange = IntRange::forValueOfType(S.Context, OtherT);
   unsigned OtherWidth = OtherRange.Width;
@@ -6090,7 +7644,7 @@ static void DiagnoseOutOfRangeComparison(Sema &S, BinaryOperator *E,
 
 /// Analyze the operands of the given comparison.  Implements the
 /// fallback case from AnalyzeComparison.
-static void AnalyzeImpConvsInComparison(Sema &S, BinaryOperator *E) {
+void AnalyzeImpConvsInComparison(Sema &S, BinaryOperator *E) {
   AnalyzeImplicitConversions(S, E->getLHS(), E->getOperatorLoc());
   AnalyzeImplicitConversions(S, E->getRHS(), E->getOperatorLoc());
 }
@@ -6098,7 +7652,7 @@ static void AnalyzeImpConvsInComparison(Sema &S, BinaryOperator *E) {
 /// \brief Implements -Wsign-compare.
 ///
 /// \param E the binary operator to check for warnings
-static void AnalyzeComparison(Sema &S, BinaryOperator *E) {
+void AnalyzeComparison(Sema &S, BinaryOperator *E) {
   // The type the comparison is being performed in.
   QualType T = E->getLHS()->getType();
 
@@ -6199,8 +7753,8 @@ static void AnalyzeComparison(Sema &S, BinaryOperator *E) {
 /// Analyzes an attempt to assign the given value to a bitfield.
 ///
 /// Returns true if there was something fishy about the attempt.
-static bool AnalyzeBitFieldAssignment(Sema &S, FieldDecl *Bitfield, Expr *Init,
-                                      SourceLocation InitLoc) {
+bool AnalyzeBitFieldAssignment(Sema &S, FieldDecl *Bitfield, Expr *Init,
+                               SourceLocation InitLoc) {
   assert(Bitfield->isBitField());
   if (Bitfield->isInvalidDecl())
     return false;
@@ -6254,7 +7808,7 @@ static bool AnalyzeBitFieldAssignment(Sema &S, FieldDecl *Bitfield, Expr *Init,
 
 /// Analyze the given simple or compound assignment for warning-worthy
 /// operations.
-static void AnalyzeAssignment(Sema &S, BinaryOperator *E) {
+void AnalyzeAssignment(Sema &S, BinaryOperator *E) {
   // Just recurse on the LHS.
   AnalyzeImplicitConversions(S, E->getLHS(), E->getOperatorLoc());
 
@@ -6273,9 +7827,9 @@ static void AnalyzeAssignment(Sema &S, BinaryOperator *E) {
 }
 
 /// Diagnose an implicit cast;  purely a helper for CheckImplicitConversion.
-static void DiagnoseImpCast(Sema &S, Expr *E, QualType SourceType, QualType T, 
-                            SourceLocation CContext, unsigned diag,
-                            bool pruneControlFlow = false) {
+void DiagnoseImpCast(Sema &S, Expr *E, QualType SourceType, QualType T, 
+                     SourceLocation CContext, unsigned diag,
+                     bool pruneControlFlow = false) {
   if (pruneControlFlow) {
     S.DiagRuntimeBehavior(E->getExprLoc(), E,
                           S.PDiag(diag)
@@ -6288,25 +7842,75 @@ static void DiagnoseImpCast(Sema &S, Expr *E, QualType SourceType, QualType T,
 }
 
 /// Diagnose an implicit cast;  purely a helper for CheckImplicitConversion.
-static void DiagnoseImpCast(Sema &S, Expr *E, QualType T,
-                            SourceLocation CContext, unsigned diag,
-                            bool pruneControlFlow = false) {
+void DiagnoseImpCast(Sema &S, Expr *E, QualType T, SourceLocation CContext,
+                     unsigned diag, bool pruneControlFlow = false) {
   DiagnoseImpCast(S, E, E->getType(), T, CContext, diag, pruneControlFlow);
 }
 
-/// Diagnose an implicit cast from a literal expression. Does not warn when the
-/// cast wouldn't lose information.
-void DiagnoseFloatingLiteralImpCast(Sema &S, FloatingLiteral *FL, QualType T,
-                                    SourceLocation CContext) {
-  // Try to convert the literal exactly to an integer. If we can, don't warn.
+
+/// Diagnose an implicit cast from a floating point value to an integer value.
+void DiagnoseFloatingImpCast(Sema &S, Expr *E, QualType T,
+
+                             SourceLocation CContext) {
+  const bool IsBool = T->isSpecificBuiltinType(BuiltinType::Bool);
+  const bool PruneWarnings = !S.ActiveTemplateInstantiations.empty();
+
+  Expr *InnerE = E->IgnoreParenImpCasts();
+  // We also want to warn on, e.g., "int i = -1.234"
+  if (UnaryOperator *UOp = dyn_cast<UnaryOperator>(InnerE))
+    if (UOp->getOpcode() == UO_Minus || UOp->getOpcode() == UO_Plus)
+      InnerE = UOp->getSubExpr()->IgnoreParenImpCasts();
+
+  const bool IsLiteral =
+      isa<FloatingLiteral>(E) || isa<FloatingLiteral>(InnerE);
+
+  llvm::APFloat Value(0.0);
+  bool IsConstant =
+    E->EvaluateAsFloat(Value, S.Context, Expr::SE_AllowSideEffects);
+  if (!IsConstant) {
+    return DiagnoseImpCast(S, E, T, CContext,
+                           diag::warn_impcast_float_integer, PruneWarnings);
+  }
+
   bool isExact = false;
-  const llvm::APFloat &Value = FL->getValue();
+
   llvm::APSInt IntegerValue(S.Context.getIntWidth(T),
                             T->hasUnsignedIntegerRepresentation());
-  if (Value.convertToInteger(IntegerValue,
-                             llvm::APFloat::rmTowardZero, &isExact)
-      == llvm::APFloat::opOK && isExact)
-    return;
+  if (Value.convertToInteger(IntegerValue, llvm::APFloat::rmTowardZero,
+                             &isExact) == llvm::APFloat::opOK &&
+      isExact) {
+    if (IsLiteral) return;
+    return DiagnoseImpCast(S, E, T, CContext, diag::warn_impcast_float_integer,
+                           PruneWarnings);
+  }
+
+  unsigned DiagID = 0;
+  if (IsLiteral) {
+    // Warn on floating point literal to integer.
+    DiagID = diag::warn_impcast_literal_float_to_integer;
+  } else if (IntegerValue == 0) {
+    if (Value.isZero()) {  // Skip -0.0 to 0 conversion.
+      return DiagnoseImpCast(S, E, T, CContext,
+                             diag::warn_impcast_float_integer, PruneWarnings);
+    }
+    // Warn on non-zero to zero conversion.
+    DiagID = diag::warn_impcast_float_to_integer_zero;
+  } else {
+    if (IntegerValue.isUnsigned()) {
+      if (!IntegerValue.isMaxValue()) {
+        return DiagnoseImpCast(S, E, T, CContext,
+                               diag::warn_impcast_float_integer, PruneWarnings);
+      }
+    } else {  // IntegerValue.isSigned()
+      if (!IntegerValue.isMaxSignedValue() &&
+          !IntegerValue.isMinSignedValue()) {
+        return DiagnoseImpCast(S, E, T, CContext,
+                               diag::warn_impcast_float_integer, PruneWarnings);
+      }
+    }
+    // Warn on evaluatable floating point expression to integer conversion.
+    DiagID = diag::warn_impcast_float_to_integer;
+  }
 
   // FIXME: Force the precision of the source value down so we don't print
   // digits which are usually useless (we don't really care here if we
@@ -6319,14 +7923,22 @@ void DiagnoseFloatingLiteralImpCast(Sema &S, FloatingLiteral *FL, QualType T,
   Value.toString(PrettySourceValue, precision);
 
   SmallString<16> PrettyTargetValue;
-  if (T->isSpecificBuiltinType(BuiltinType::Bool))
-    PrettyTargetValue = IntegerValue == 0 ? "false" : "true";
+  if (IsBool)
+    PrettyTargetValue = Value.isZero() ? "false" : "true";
   else
     IntegerValue.toString(PrettyTargetValue);
 
-  S.Diag(FL->getExprLoc(), diag::warn_impcast_literal_float_to_integer)
-    << FL->getType() << T.getUnqualifiedType() << PrettySourceValue
-    << PrettyTargetValue << FL->getSourceRange() << SourceRange(CContext);
+  if (PruneWarnings) {
+    S.DiagRuntimeBehavior(E->getExprLoc(), E,
+                          S.PDiag(DiagID)
+                              << E->getType() << T.getUnqualifiedType()
+                              << PrettySourceValue << PrettyTargetValue
+                              << E->getSourceRange() << SourceRange(CContext));
+  } else {
+    S.Diag(E->getExprLoc(), DiagID)
+        << E->getType() << T.getUnqualifiedType() << PrettySourceValue
+        << PrettyTargetValue << E->getSourceRange() << SourceRange(CContext);
+  }
 }
 
 std::string PrettyPrintInRange(const llvm::APSInt &Value, IntRange Range) {
@@ -6338,7 +7950,7 @@ std::string PrettyPrintInRange(const llvm::APSInt &Value, IntRange Range) {
   return ValueInRange.toString(10);
 }
 
-static bool IsImplicitBoolFloatConversion(Sema &S, Expr *Ex, bool ToBool) {
+bool IsImplicitBoolFloatConversion(Sema &S, Expr *Ex, bool ToBool) {
   if (!isa<ImplicitCastExpr>(Ex))
     return false;
 
@@ -6378,10 +7990,13 @@ void CheckImplicitArgumentConversions(Sema &S, CallExpr *TheCall,
   }
 }
 
-static void DiagnoseNullConversion(Sema &S, Expr *E, QualType T,
-                                   SourceLocation CC) {
+void DiagnoseNullConversion(Sema &S, Expr *E, QualType T, SourceLocation CC) {
   if (S.Diags.isIgnored(diag::warn_impcast_null_pointer_to_integer,
                         E->getExprLoc()))
+    return;
+
+  // Don't warn on functions which have return type nullptr_t.
+  if (isa<CallExpr>(E))
     return;
 
   // Check for NULL (GNUNull) or nullptr (CXX11_nullptr).
@@ -6397,9 +8012,20 @@ static void DiagnoseNullConversion(Sema &S, Expr *E, QualType T,
 
   SourceLocation Loc = E->getSourceRange().getBegin();
 
+  // Venture through the macro stacks to get to the source of macro arguments.
+  // The new location is a better location than the complete location that was
+  // passed in.
+  while (S.SourceMgr.isMacroArgExpansion(Loc))
+    Loc = S.SourceMgr.getImmediateMacroCallerLoc(Loc);
+
+  while (S.SourceMgr.isMacroArgExpansion(CC))
+    CC = S.SourceMgr.getImmediateMacroCallerLoc(CC);
+
   // __null is usually wrapped in a macro.  Go up a macro if that is the case.
-  if (NullKind == Expr::NPCK_GNUNull) {
-    if (Loc.isMacroID())
+  if (NullKind == Expr::NPCK_GNUNull && Loc.isMacroID()) {
+    StringRef MacroName = Lexer::getImmediateMacroNameForDiagnostics(
+        Loc, S.SourceMgr, S.getLangOpts());
+    if (MacroName == "NULL")
       Loc = S.SourceMgr.getImmediateExpansionRange(Loc).first;
   }
 
@@ -6411,6 +8037,124 @@ static void DiagnoseNullConversion(Sema &S, Expr *E, QualType T,
       << (NullKind == Expr::NPCK_CXX11_nullptr) << T << clang::SourceRange(CC)
       << FixItHint::CreateReplacement(Loc,
                                       S.getFixItZeroLiteralForType(T, Loc));
+}
+
+void checkObjCArrayLiteral(Sema &S, QualType TargetType,
+                           ObjCArrayLiteral *ArrayLiteral);
+void checkObjCDictionaryLiteral(Sema &S, QualType TargetType,
+                                ObjCDictionaryLiteral *DictionaryLiteral);
+
+/// Check a single element within a collection literal against the
+/// target element type.
+void checkObjCCollectionLiteralElement(Sema &S, QualType TargetElementType,
+                                       Expr *Element, unsigned ElementKind) {
+  // Skip a bitcast to 'id' or qualified 'id'.
+  if (auto ICE = dyn_cast<ImplicitCastExpr>(Element)) {
+    if (ICE->getCastKind() == CK_BitCast &&
+        ICE->getSubExpr()->getType()->getAs<ObjCObjectPointerType>())
+      Element = ICE->getSubExpr();
+  }
+
+  QualType ElementType = Element->getType();
+  ExprResult ElementResult(Element);
+  if (ElementType->getAs<ObjCObjectPointerType>() &&
+      S.CheckSingleAssignmentConstraints(TargetElementType,
+                                         ElementResult,
+                                         false, false)
+        != Sema::Compatible) {
+    S.Diag(Element->getLocStart(),
+           diag::warn_objc_collection_literal_element)
+      << ElementType << ElementKind << TargetElementType
+      << Element->getSourceRange();
+  }
+
+  if (auto ArrayLiteral = dyn_cast<ObjCArrayLiteral>(Element))
+    checkObjCArrayLiteral(S, TargetElementType, ArrayLiteral);
+  else if (auto DictionaryLiteral = dyn_cast<ObjCDictionaryLiteral>(Element))
+    checkObjCDictionaryLiteral(S, TargetElementType, DictionaryLiteral);
+}
+
+/// Check an Objective-C array literal being converted to the given
+/// target type.
+void checkObjCArrayLiteral(Sema &S, QualType TargetType,
+                           ObjCArrayLiteral *ArrayLiteral) {
+  if (!S.NSArrayDecl)
+    return;
+
+  const auto *TargetObjCPtr = TargetType->getAs<ObjCObjectPointerType>();
+  if (!TargetObjCPtr)
+    return;
+
+  if (TargetObjCPtr->isUnspecialized() ||
+      TargetObjCPtr->getInterfaceDecl()->getCanonicalDecl()
+        != S.NSArrayDecl->getCanonicalDecl())
+    return;
+
+  auto TypeArgs = TargetObjCPtr->getTypeArgs();
+  if (TypeArgs.size() != 1)
+    return;
+
+  QualType TargetElementType = TypeArgs[0];
+  for (unsigned I = 0, N = ArrayLiteral->getNumElements(); I != N; ++I) {
+    checkObjCCollectionLiteralElement(S, TargetElementType,
+                                      ArrayLiteral->getElement(I),
+                                      0);
+  }
+}
+
+/// Check an Objective-C dictionary literal being converted to the given
+/// target type.
+void checkObjCDictionaryLiteral(Sema &S, QualType TargetType,
+                                ObjCDictionaryLiteral *DictionaryLiteral) {
+  if (!S.NSDictionaryDecl)
+    return;
+
+  const auto *TargetObjCPtr = TargetType->getAs<ObjCObjectPointerType>();
+  if (!TargetObjCPtr)
+    return;
+
+  if (TargetObjCPtr->isUnspecialized() ||
+      TargetObjCPtr->getInterfaceDecl()->getCanonicalDecl()
+        != S.NSDictionaryDecl->getCanonicalDecl())
+    return;
+
+  auto TypeArgs = TargetObjCPtr->getTypeArgs();
+  if (TypeArgs.size() != 2)
+    return;
+
+  QualType TargetKeyType = TypeArgs[0];
+  QualType TargetObjectType = TypeArgs[1];
+  for (unsigned I = 0, N = DictionaryLiteral->getNumElements(); I != N; ++I) {
+    auto Element = DictionaryLiteral->getKeyValueElement(I);
+    checkObjCCollectionLiteralElement(S, TargetKeyType, Element.Key, 1);
+    checkObjCCollectionLiteralElement(S, TargetObjectType, Element.Value, 2);
+  }
+}
+
+// Helper function to filter out cases for constant width constant conversion.
+// Don't warn on char array initialization or for non-decimal values.
+bool isSameWidthConstantConversion(Sema &S, Expr *E, QualType T,
+                                   SourceLocation CC) {
+  // If initializing from a constant, and the constant starts with '0',
+  // then it is a binary, octal, or hexadecimal.  Allow these constants
+  // to fill all the bits, even if there is a sign change.
+  if (auto *IntLit = dyn_cast<IntegerLiteral>(E->IgnoreParenImpCasts())) {
+    const char FirstLiteralCharacter =
+        S.getSourceManager().getCharacterData(IntLit->getLocStart())[0];
+    if (FirstLiteralCharacter == '0')
+      return false;
+  }
+
+  // If the CC location points to a '{', and the type is char, then assume
+  // assume it is an array initialization.
+  if (CC.isValid() && T->isCharType()) {
+    const char FirstContextCharacter =
+        S.getSourceManager().getCharacterData(CC)[0];
+    if (FirstContextCharacter == '{')
+      return false;
+  }
+
+  return true;
 }
 
 void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
@@ -6451,6 +8195,13 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
                                      SourceRange(CC));
     }
   }
+
+  // Check implicit casts from Objective-C collection literals to specialized
+  // collection types, e.g., NSArray<NSString *> *.
+  if (auto *ArrayLiteral = dyn_cast<ObjCArrayLiteral>(E))
+    checkObjCArrayLiteral(S, QualType(Target, 0), ArrayLiteral);
+  else if (auto *DictionaryLiteral = dyn_cast<ObjCDictionaryLiteral>(E))
+    checkObjCDictionaryLiteral(S, QualType(Target, 0), DictionaryLiteral);
 
   // Strip vector types.
   if (isa<VectorType>(Source)) {
@@ -6511,41 +8262,42 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
 
         DiagnoseImpCast(S, E, T, CC, diag::warn_impcast_float_precision);
       }
+      // ... or possibly if we're increasing rank, too
+      else if (TargetBT->getKind() > SourceBT->getKind()) {
+        if (S.SourceMgr.isInSystemMacro(CC))
+          return;
+
+        DiagnoseImpCast(S, E, T, CC, diag::warn_impcast_double_promotion);
+      }
       return;
     }
 
-    // If the target is integral, always warn.    
+    // If the target is integral, always warn.
     if (TargetBT && TargetBT->isInteger()) {
       if (S.SourceMgr.isInSystemMacro(CC))
         return;
-      
-      Expr *InnerE = E->IgnoreParenImpCasts();
-      // We also want to warn on, e.g., "int i = -1.234"
-      if (UnaryOperator *UOp = dyn_cast<UnaryOperator>(InnerE))
-        if (UOp->getOpcode() == UO_Minus || UOp->getOpcode() == UO_Plus)
-          InnerE = UOp->getSubExpr()->IgnoreParenImpCasts();
 
-      if (FloatingLiteral *FL = dyn_cast<FloatingLiteral>(InnerE)) {
-        DiagnoseFloatingLiteralImpCast(S, FL, T, CC);
-      } else {
-        DiagnoseImpCast(S, E, T, CC, diag::warn_impcast_float_integer);
-      }
+      DiagnoseFloatingImpCast(S, E, T, CC);
     }
 
-    // If the target is bool, warn if expr is a function or method call.
-    if (Target->isSpecificBuiltinType(BuiltinType::Bool) &&
-        isa<CallExpr>(E)) {
+    // Detect the case where a call result is converted from floating-point to
+    // to bool, and the final argument to the call is converted from bool, to
+    // discover this typo:
+    //
+    //    bool b = fabs(x < 1.0);  // should be "bool b = fabs(x) < 1.0;"
+    //
+    // FIXME: This is an incredibly special case; is there some more general
+    // way to detect this class of misplaced-parentheses bug?
+    if (Target->isBooleanType() && isa<CallExpr>(E)) {
       // Check last argument of function call to see if it is an
       // implicit cast from a type matching the type the result
       // is being cast to.
       CallExpr *CEx = cast<CallExpr>(E);
-      unsigned NumArgs = CEx->getNumArgs();
-      if (NumArgs > 0) {
+      if (unsigned NumArgs = CEx->getNumArgs()) {
         Expr *LastA = CEx->getArg(NumArgs - 1);
         Expr *InnerE = LastA->IgnoreParenImpCasts();
-        const Type *InnerType =
-          S.Context.getCanonicalType(InnerE->getType()).getTypePtr();
-        if (isa<ImplicitCastExpr>(LastA) && (InnerType == Target)) {
+        if (isa<ImplicitCastExpr>(LastA) &&
+            InnerE->getType()->isBooleanType()) {
           // Warn on this floating-point to bool conversion
           DiagnoseImpCast(S, E, T, CC,
                           diag::warn_impcast_floating_point_to_bool);
@@ -6572,7 +8324,7 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
     // If the source is a constant, use a default-on diagnostic.
     // TODO: this should happen for bitfield stores, too.
     llvm::APSInt Value(32);
-    if (E->isIntegerConstantExpr(Value, S.Context)) {
+    if (E->EvaluateAsInt(Value, S.Context, Expr::SE_AllowSideEffects)) {
       if (S.SourceMgr.isInSystemMacro(CC))
         return;
 
@@ -6597,10 +8349,34 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
     return DiagnoseImpCast(S, E, T, CC, diag::warn_impcast_integer_precision);
   }
 
+  if (TargetRange.Width == SourceRange.Width && !TargetRange.NonNegative &&
+      SourceRange.NonNegative && Source->isSignedIntegerType()) {
+    // Warn when doing a signed to signed conversion, warn if the positive
+    // source value is exactly the width of the target type, which will
+    // cause a negative value to be stored.
+
+    llvm::APSInt Value;
+    if (E->EvaluateAsInt(Value, S.Context, Expr::SE_AllowSideEffects) &&
+        !S.SourceMgr.isInSystemMacro(CC)) {
+      if (isSameWidthConstantConversion(S, E, T, CC)) {
+        std::string PrettySourceValue = Value.toString(10);
+        std::string PrettyTargetValue = PrettyPrintInRange(Value, TargetRange);
+
+        S.DiagRuntimeBehavior(
+            E->getExprLoc(), E,
+            S.PDiag(diag::warn_impcast_integer_precision_constant)
+                << PrettySourceValue << PrettyTargetValue << E->getType() << T
+                << E->getSourceRange() << clang::SourceRange(CC));
+        return;
+      }
+    }
+
+    // Fall through for non-constants to give a sign conversion warning.
+  }
+
   if ((TargetRange.NonNegative && !SourceRange.NonNegative) ||
       (!TargetRange.NonNegative && SourceRange.NonNegative &&
        SourceRange.Width == TargetRange.Width)) {
-        
     if (S.SourceMgr.isInSystemMacro(CC))
       return;
 
@@ -6643,8 +8419,6 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
         return DiagnoseImpCast(S, E, SourceType, T, CC, 
                                diag::warn_impcast_different_enum_types);
       }
-  
-  return;
 }
 
 void CheckConditionalOperator(Sema &S, ConditionalOperator *E,
@@ -6660,7 +8434,6 @@ void CheckConditionalOperand(Sema &S, Expr *E, QualType T,
   AnalyzeImplicitConversions(S, E, CC);
   if (E->getType() != T)
     return CheckImplicitConversion(S, E, T, CC, &ICContext);
-  return;
 }
 
 void CheckConditionalOperator(Sema &S, ConditionalOperator *E,
@@ -6693,7 +8466,7 @@ void CheckConditionalOperator(Sema &S, ConditionalOperator *E,
 
 /// CheckBoolLikeConversion - Check conversion of given expression to boolean.
 /// Input argument E is a logical expression.
-static void CheckBoolLikeConversion(Sema &S, Expr *E, SourceLocation CC) {
+void CheckBoolLikeConversion(Sema &S, Expr *E, SourceLocation CC) {
   if (S.getLangOpts().Bool)
     return;
   CheckImplicitConversion(S, E->IgnoreParenImpCasts(), S.Context.BoolTy, CC);
@@ -6728,15 +8501,16 @@ void AnalyzeImplicitConversions(Sema &S, Expr *OrigE, SourceLocation CC) {
     CheckImplicitConversion(S, E, T, CC);
 
   // Now continue drilling into this expression.
-  
-  if (PseudoObjectExpr * POE = dyn_cast<PseudoObjectExpr>(E)) {
-    if (POE->getResultExpr())
-      E = POE->getResultExpr();
+
+  if (PseudoObjectExpr *POE = dyn_cast<PseudoObjectExpr>(E)) {
+    // The bound subexpressions in a PseudoObjectExpr are not reachable
+    // as transitive children.
+    // FIXME: Use a more uniform representation for this.
+    for (auto *SE : POE->semantics())
+      if (auto *OVE = dyn_cast<OpaqueValueExpr>(SE))
+        AnalyzeImplicitConversions(S, OVE->getSourceExpr(), CC);
   }
-  
-  if (const OpaqueValueExpr *OVE = dyn_cast<OpaqueValueExpr>(E))
-    return AnalyzeImplicitConversions(S, OVE->getSourceExpr(), CC);
-  
+
   // Skip past explicit casts.
   if (isa<ExplicitCastExpr>(E)) {
     E = cast<ExplicitCastExpr>(E)->getSubExpr()->IgnoreParenImpCasts();
@@ -6766,8 +8540,8 @@ void AnalyzeImplicitConversions(Sema &S, Expr *OrigE, SourceLocation CC) {
   CC = E->getExprLoc();
   BinaryOperator *BO = dyn_cast<BinaryOperator>(E);
   bool IsLogicalAndOperator = BO && BO->getOpcode() == BO_LAnd;
-  for (Stmt::child_range I = E->children(); I; ++I) {
-    Expr *ChildExpr = dyn_cast_or_null<Expr>(*I);
+  for (Stmt *SubStmt : E->children()) {
+    Expr *ChildExpr = dyn_cast_or_null<Expr>(SubStmt);
     if (!ChildExpr)
       continue;
 
@@ -6796,16 +8570,31 @@ void AnalyzeImplicitConversions(Sema &S, Expr *OrigE, SourceLocation CC) {
 
 } // end anonymous namespace
 
-enum {
-  AddressOf,
-  FunctionPointer,
-  ArrayPointer
-};
+static bool checkOpenCLEnqueueLocalSizeArgs(Sema &S, CallExpr *TheCall,
+                                            unsigned Start, unsigned End) {
+  bool IllegalParams = false;
+  for (unsigned I = Start; I <= End; ++I) {
+    QualType Ty = TheCall->getArg(I)->getType();
+    // Taking into account implicit conversions,
+    // allow any integer within 32 bits range
+    if (!Ty->isIntegerType() ||
+        S.Context.getTypeSizeInChars(Ty).getQuantity() > 4) {
+      S.Diag(TheCall->getArg(I)->getLocStart(),
+             diag::err_opencl_enqueue_kernel_invalid_local_size_type);
+      IllegalParams = true;
+    }
+    // Potentially emit standard warnings for implicit conversions if enabled
+    // using -Wconversion.
+    CheckImplicitConversion(S, TheCall->getArg(I), S.Context.UnsignedIntTy,
+                            TheCall->getArg(I)->getLocStart());
+  }
+  return IllegalParams;
+}
 
 // Helper function for Sema::DiagnoseAlwaysNonNullPointer.
 // Returns true when emitting a warning about taking the address of a reference.
 static bool CheckForReference(Sema &SemaRef, const Expr *E,
-                              PartialDiagnostic PD) {
+                              const PartialDiagnostic &PD) {
   E = E->IgnoreParenImpCasts();
 
   const FunctionDecl *FD = nullptr;
@@ -6817,7 +8606,7 @@ static bool CheckForReference(Sema &SemaRef, const Expr *E,
     if (!M->getMemberDecl()->getType()->isReferenceType())
       return false;
   } else if (const CallExpr *Call = dyn_cast<CallExpr>(E)) {
-    if (!Call->getCallReturnType()->isReferenceType())
+    if (!Call->getCallReturnType(SemaRef.Context)->isReferenceType())
       return false;
     FD = Call->getDirectCallee();
   } else {
@@ -6900,6 +8689,28 @@ void Sema::DiagnoseAlwaysNonNullPointer(Expr *E,
     }
   }
 
+  auto ComplainAboutNonnullParamOrCall = [&](const Attr *NonnullAttr) {
+    bool IsParam = isa<NonNullAttr>(NonnullAttr);
+    std::string Str;
+    llvm::raw_string_ostream S(Str);
+    E->printPretty(S, nullptr, getPrintingPolicy());
+    unsigned DiagID = IsCompare ? diag::warn_nonnull_expr_compare
+                                : diag::warn_cast_nonnull_to_bool;
+    Diag(E->getExprLoc(), DiagID) << IsParam << S.str()
+      << E->getSourceRange() << Range << IsEqual;
+    Diag(NonnullAttr->getLocation(), diag::note_declared_nonnull) << IsParam;
+  };
+
+  // If we have a CallExpr that is tagged with returns_nonnull, we can complain.
+  if (auto *Call = dyn_cast<CallExpr>(E->IgnoreParenImpCasts())) {
+    if (auto *Callee = Call->getDirectCallee()) {
+      if (const Attr *A = Callee->getAttr<ReturnsNonNullAttr>()) {
+        ComplainAboutNonnullParamOrCall(A);
+        return;
+      }
+    }
+  }
+
   // Expect to find a single Decl.  Skip anything more complicated.
   ValueDecl *D = nullptr;
   if (DeclRefExpr *R = dyn_cast<DeclRefExpr>(E)) {
@@ -6911,40 +8722,38 @@ void Sema::DiagnoseAlwaysNonNullPointer(Expr *E,
   // Weak Decls can be null.
   if (!D || D->isWeak())
     return;
-  
+
   // Check for parameter decl with nonnull attribute
-  if (const ParmVarDecl* PV = dyn_cast<ParmVarDecl>(D)) {
-    if (getCurFunction() && !getCurFunction()->ModifiedNonNullParams.count(PV))
-      if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(PV->getDeclContext())) {
-        unsigned NumArgs = FD->getNumParams();
-        llvm::SmallBitVector AttrNonNull(NumArgs);
+  if (const auto* PV = dyn_cast<ParmVarDecl>(D)) {
+    if (getCurFunction() &&
+        !getCurFunction()->ModifiedNonNullParams.count(PV)) {
+      if (const Attr *A = PV->getAttr<NonNullAttr>()) {
+        ComplainAboutNonnullParamOrCall(A);
+        return;
+      }
+
+      if (const auto *FD = dyn_cast<FunctionDecl>(PV->getDeclContext())) {
+        auto ParamIter = llvm::find(FD->parameters(), PV);
+        assert(ParamIter != FD->param_end());
+        unsigned ParamNo = std::distance(FD->param_begin(), ParamIter);
+
         for (const auto *NonNull : FD->specific_attrs<NonNullAttr>()) {
           if (!NonNull->args_size()) {
-            AttrNonNull.set(0, NumArgs);
-            break;
+              ComplainAboutNonnullParamOrCall(NonNull);
+              return;
           }
-          for (unsigned Val : NonNull->args()) {
-            if (Val >= NumArgs)
-              continue;
-            AttrNonNull.set(Val);
-          }
-        }
-        if (!AttrNonNull.empty())
-          for (unsigned i = 0; i < NumArgs; ++i)
-            if (FD->getParamDecl(i) == PV &&
-                (AttrNonNull[i] || PV->hasAttr<NonNullAttr>())) {
-              std::string Str;
-              llvm::raw_string_ostream S(Str);
-              E->printPretty(S, nullptr, getPrintingPolicy());
-              unsigned DiagID = IsCompare ? diag::warn_nonnull_parameter_compare
-                                          : diag::warn_cast_nonnull_to_bool;
-              Diag(E->getExprLoc(), DiagID) << S.str() << E->getSourceRange()
-                << Range << IsEqual;
+
+          for (unsigned ArgNo : NonNull->args()) {
+            if (ArgNo == ParamNo) {
+              ComplainAboutNonnullParamOrCall(NonNull);
               return;
             }
+          }
+        }
       }
     }
-  
+  }
+
   QualType T = D->getType();
   const bool IsArray = T->isArrayType();
   const bool IsFunction = T->isFunctionType();
@@ -6965,7 +8774,11 @@ void Sema::DiagnoseAlwaysNonNullPointer(Expr *E,
 
   unsigned DiagID = IsCompare ? diag::warn_null_pointer_compare
                               : diag::warn_impcast_pointer_to_bool;
-  unsigned DiagType;
+  enum {
+    AddressOf,
+    FunctionPointer,
+    ArrayPointer
+  } DiagType;
   if (IsAddressOf)
     DiagType = AddressOf;
   else if (IsFunction)
@@ -7014,7 +8827,6 @@ void Sema::DiagnoseAlwaysNonNullPointer(Expr *E,
       << FixItHint::CreateInsertion(getLocForEndOfToken(E->getLocEnd()), "()");
 }
 
-
 /// Diagnoses "dangerous" implicit conversions within the given
 /// expression (which is a full expression).  Implements -Wconversion
 /// and -Wsign-compare.
@@ -7049,8 +8861,20 @@ void Sema::CheckBoolLikeConversion(Expr *E, SourceLocation CC) {
 /// Diagnose when expression is an integer constant expression and its evaluation
 /// results in integer overflow
 void Sema::CheckForIntOverflow (Expr *E) {
-  if (isa<BinaryOperator>(E->IgnoreParenCasts()))
-    E->IgnoreParenCasts()->EvaluateForOverflow(Context);
+  // Use a work list to deal with nested struct initializers.
+  SmallVector<Expr *, 2> Exprs(1, E);
+
+  do {
+    Expr *E = Exprs.pop_back_val();
+
+    if (isa<BinaryOperator>(E->IgnoreParenCasts())) {
+      E->IgnoreParenCasts()->EvaluateForOverflow(Context);
+      continue;
+    }
+
+    if (auto InitList = dyn_cast<InitListExpr>(E))
+      Exprs.append(InitList->inits().begin(), InitList->inits().end());
+  } while (!Exprs.empty());
 }
 
 namespace {
@@ -7180,12 +9004,11 @@ class SequenceChecker : public EvaluatedExprVisitor<SequenceChecker> {
       Self.ModAsSideEffect = &ModAsSideEffect;
     }
     ~SequencedSubexpression() {
-      for (auto MI = ModAsSideEffect.rbegin(), ME = ModAsSideEffect.rend();
-           MI != ME; ++MI) {
-        UsageInfo &U = Self.UsageMap[MI->first];
+      for (auto &M : llvm::reverse(ModAsSideEffect)) {
+        UsageInfo &U = Self.UsageMap[M.first];
         auto &SideEffectUsage = U.Uses[UK_ModAsSideEffect];
-        Self.addUsage(U, MI->first, SideEffectUsage.Use, UK_ModAsValue);
-        SideEffectUsage = MI->second;
+        Self.addUsage(U, M.first, SideEffectUsage.Use, UK_ModAsValue);
+        SideEffectUsage = M.second;
       }
       Self.ModAsSideEffect = OldModAsSideEffect;
     }
@@ -7388,6 +9211,7 @@ public:
     notePostMod(O, BO, SemaRef.getLangOpts().CPlusPlus ? UK_ModAsValue
                                                        : UK_ModAsSideEffect);
   }
+
   void VisitCompoundAssignOperator(CompoundAssignOperator *CAO) {
     VisitBinAssign(CAO);
   }
@@ -7537,7 +9361,7 @@ public:
       Tree.merge(Elts[I]);
   }
 };
-}
+} // end anonymous namespace
 
 void Sema::CheckUnsequencedOperations(Expr *E) {
   SmallVector<Expr *, 8> WorkList;
@@ -7562,18 +9386,44 @@ void Sema::CheckBitFieldInitialization(SourceLocation InitLoc,
   (void) AnalyzeBitFieldAssignment(*this, BitField, Init, InitLoc);
 }
 
+static void diagnoseArrayStarInParamType(Sema &S, QualType PType,
+                                         SourceLocation Loc) {
+  if (!PType->isVariablyModifiedType())
+    return;
+  if (const auto *PointerTy = dyn_cast<PointerType>(PType)) {
+    diagnoseArrayStarInParamType(S, PointerTy->getPointeeType(), Loc);
+    return;
+  }
+  if (const auto *ReferenceTy = dyn_cast<ReferenceType>(PType)) {
+    diagnoseArrayStarInParamType(S, ReferenceTy->getPointeeType(), Loc);
+    return;
+  }
+  if (const auto *ParenTy = dyn_cast<ParenType>(PType)) {
+    diagnoseArrayStarInParamType(S, ParenTy->getInnerType(), Loc);
+    return;
+  }
+
+  const ArrayType *AT = S.Context.getAsArrayType(PType);
+  if (!AT)
+    return;
+
+  if (AT->getSizeModifier() != ArrayType::Star) {
+    diagnoseArrayStarInParamType(S, AT->getElementType(), Loc);
+    return;
+  }
+
+  S.Diag(Loc, diag::err_array_star_in_function_definition);
+}
+
 /// CheckParmsForFunctionDef - Check that the parameters of the given
 /// function are appropriate for the definition of a function. This
 /// takes care of any checks that cannot be performed on the
 /// declaration itself, e.g., that the types of each of the function
 /// parameters are complete.
-bool Sema::CheckParmsForFunctionDef(ParmVarDecl *const *P,
-                                    ParmVarDecl *const *PEnd,
+bool Sema::CheckParmsForFunctionDef(ArrayRef<ParmVarDecl *> Parameters,
                                     bool CheckParameterNames) {
   bool HasInvalidParm = false;
-  for (; P != PEnd; ++P) {
-    ParmVarDecl *Param = *P;
-    
+  for (ParmVarDecl *Param : Parameters) {
     // C99 6.7.5.3p4: the parameters in a parameter type list in a
     // function declarator that is part of a function definition of
     // that function shall not have incomplete type.
@@ -7600,15 +9450,9 @@ bool Sema::CheckParmsForFunctionDef(ParmVarDecl *const *P,
     //   notation in their sequences of declarator specifiers to specify
     //   variable length array types.
     QualType PType = Param->getOriginalType();
-    while (const ArrayType *AT = Context.getAsArrayType(PType)) {
-      if (AT->getSizeModifier() == ArrayType::Star) {
-        // FIXME: This diagnostic should point the '[*]' if source-location
-        // information is added for it.
-        Diag(Param->getLocation(), diag::err_array_star_in_function_definition);
-        break;
-      }
-      PType= AT->getElementType();
-    }
+    // FIXME: This diagnostic should point the '[*]' if source-location
+    // information is added for it.
+    diagnoseArrayStarInParamType(*this, PType, Param->getLocation());
 
     // MSVC destroys objects passed by value in the callee.  Therefore a
     // function definition which takes such a parameter must be able to call the
@@ -7630,6 +9474,15 @@ bool Sema::CheckParmsForFunctionDef(ParmVarDecl *const *P,
         }
       }
     }
+
+    // Parameters with the pass_object_size attribute only need to be marked
+    // constant at function definitions. Because we lack information about
+    // whether we're on a declaration or definition when we're instantiating the
+    // attribute, we need to check for constness here.
+    if (const auto *Attr = Param->getAttr<PassObjectSizeAttr>())
+      if (!Param->getType().isConstQualified())
+        Diag(Param->getLocation(), diag::err_attribute_pointers_only)
+            << Attr->getSpelling() << 1;
   }
 
   return HasInvalidParm;
@@ -7678,21 +9531,12 @@ void Sema::CheckCastAlign(Expr *Op, QualType T, SourceRange TRange) {
     << TRange << Op->getSourceRange();
 }
 
-static const Type* getElementType(const Expr *BaseExpr) {
-  const Type* EltType = BaseExpr->getType().getTypePtr();
-  if (EltType->isAnyPointerType())
-    return EltType->getPointeeType().getTypePtr();
-  else if (EltType->isArrayType())
-    return EltType->getBaseElementTypeUnsafe();
-  return EltType;
-}
-
 /// \brief Check whether this array fits the idiom of a size-one tail padded
 /// array member of a struct.
 ///
 /// We avoid emitting out-of-bounds access warnings for such arrays as they are
 /// commonly used to emulate flexible arrays in C89 code.
-static bool IsTailPaddedMemberArray(Sema &S, llvm::APInt Size,
+static bool IsTailPaddedMemberArray(Sema &S, const llvm::APInt &Size,
                                     const NamedDecl *ND) {
   if (Size != 1 || !ND) return false;
 
@@ -7741,7 +9585,8 @@ void Sema::CheckArrayAccess(const Expr *BaseExpr, const Expr *IndexExpr,
   if (IndexExpr->isValueDependent())
     return;
 
-  const Type *EffectiveType = getElementType(BaseExpr);
+  const Type *EffectiveType =
+      BaseExpr->getType()->getPointeeOrArrayElementType();
   BaseExpr = BaseExpr->IgnoreParenCasts();
   const ConstantArrayType *ArrayTy =
     Context.getAsConstantArrayType(BaseExpr->getType());
@@ -7749,7 +9594,7 @@ void Sema::CheckArrayAccess(const Expr *BaseExpr, const Expr *IndexExpr,
     return;
 
   llvm::APSInt index;
-  if (!IndexExpr->EvaluateAsInt(index, Context))
+  if (!IndexExpr->EvaluateAsInt(index, Context, Expr::SE_AllowSideEffects))
     return;
   if (IndexNegated)
     index = -index;
@@ -7765,7 +9610,7 @@ void Sema::CheckArrayAccess(const Expr *BaseExpr, const Expr *IndexExpr,
     if (!size.isStrictlyPositive())
       return;
 
-    const Type* BaseType = getElementType(BaseExpr);
+    const Type *BaseType = BaseExpr->getType()->getPointeeOrArrayElementType();
     if (BaseType != EffectiveType) {
       // Make sure we're comparing apples to apples when comparing index to size
       uint64_t ptrarith_typesize = Context.getTypeSize(EffectiveType);
@@ -7863,6 +9708,13 @@ void Sema::CheckArrayAccess(const Expr *expr) {
                          AllowOnePastEnd > 0);
         return;
       }
+      case Stmt::OMPArraySectionExprClass: {
+        const OMPArraySectionExpr *ASE = cast<OMPArraySectionExpr>(expr);
+        if (ASE->getLowerBound())
+          CheckArrayAccess(ASE->getBase(), ASE->getLowerBound(),
+                           /*ASE=*/nullptr, AllowOnePastEnd > 0);
+        return;
+      }
       case Stmt::UnaryOperatorClass: {
         // Only unwrap the * and & unary operators
         const UnaryOperator *UO = cast<UnaryOperator>(expr);
@@ -7908,7 +9760,7 @@ namespace {
       Range = e->getSourceRange();
     }
   };
-}
+} // end anonymous namespace
 
 /// Consider whether capturing the given variable can possibly lead to
 /// a retain cycle.
@@ -8054,7 +9906,7 @@ namespace {
       }
     }
   };
-}
+} // end anonymous namespace
 
 /// Check whether the given argument is a block which captures a
 /// variable.
@@ -8124,6 +9976,172 @@ static bool isSetterLikeSelector(Selector sel) {
 
   if (str.empty()) return true;
   return !isLowercase(str.front());
+}
+
+static Optional<int> GetNSMutableArrayArgumentIndex(Sema &S,
+                                                    ObjCMessageExpr *Message) {
+  bool IsMutableArray = S.NSAPIObj->isSubclassOfNSClass(
+                                                Message->getReceiverInterface(),
+                                                NSAPI::ClassId_NSMutableArray);
+  if (!IsMutableArray) {
+    return None;
+  }
+
+  Selector Sel = Message->getSelector();
+
+  Optional<NSAPI::NSArrayMethodKind> MKOpt =
+    S.NSAPIObj->getNSArrayMethodKind(Sel);
+  if (!MKOpt) {
+    return None;
+  }
+
+  NSAPI::NSArrayMethodKind MK = *MKOpt;
+
+  switch (MK) {
+    case NSAPI::NSMutableArr_addObject:
+    case NSAPI::NSMutableArr_insertObjectAtIndex:
+    case NSAPI::NSMutableArr_setObjectAtIndexedSubscript:
+      return 0;
+    case NSAPI::NSMutableArr_replaceObjectAtIndex:
+      return 1;
+
+    default:
+      return None;
+  }
+
+  return None;
+}
+
+static
+Optional<int> GetNSMutableDictionaryArgumentIndex(Sema &S,
+                                                  ObjCMessageExpr *Message) {
+  bool IsMutableDictionary = S.NSAPIObj->isSubclassOfNSClass(
+                                            Message->getReceiverInterface(),
+                                            NSAPI::ClassId_NSMutableDictionary);
+  if (!IsMutableDictionary) {
+    return None;
+  }
+
+  Selector Sel = Message->getSelector();
+
+  Optional<NSAPI::NSDictionaryMethodKind> MKOpt =
+    S.NSAPIObj->getNSDictionaryMethodKind(Sel);
+  if (!MKOpt) {
+    return None;
+  }
+
+  NSAPI::NSDictionaryMethodKind MK = *MKOpt;
+
+  switch (MK) {
+    case NSAPI::NSMutableDict_setObjectForKey:
+    case NSAPI::NSMutableDict_setValueForKey:
+    case NSAPI::NSMutableDict_setObjectForKeyedSubscript:
+      return 0;
+
+    default:
+      return None;
+  }
+
+  return None;
+}
+
+static Optional<int> GetNSSetArgumentIndex(Sema &S, ObjCMessageExpr *Message) {
+  bool IsMutableSet = S.NSAPIObj->isSubclassOfNSClass(
+                                                Message->getReceiverInterface(),
+                                                NSAPI::ClassId_NSMutableSet);
+
+  bool IsMutableOrderedSet = S.NSAPIObj->isSubclassOfNSClass(
+                                            Message->getReceiverInterface(),
+                                            NSAPI::ClassId_NSMutableOrderedSet);
+  if (!IsMutableSet && !IsMutableOrderedSet) {
+    return None;
+  }
+
+  Selector Sel = Message->getSelector();
+
+  Optional<NSAPI::NSSetMethodKind> MKOpt = S.NSAPIObj->getNSSetMethodKind(Sel);
+  if (!MKOpt) {
+    return None;
+  }
+
+  NSAPI::NSSetMethodKind MK = *MKOpt;
+
+  switch (MK) {
+    case NSAPI::NSMutableSet_addObject:
+    case NSAPI::NSOrderedSet_setObjectAtIndex:
+    case NSAPI::NSOrderedSet_setObjectAtIndexedSubscript:
+    case NSAPI::NSOrderedSet_insertObjectAtIndex:
+      return 0;
+    case NSAPI::NSOrderedSet_replaceObjectAtIndexWithObject:
+      return 1;
+  }
+
+  return None;
+}
+
+void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
+  if (!Message->isInstanceMessage()) {
+    return;
+  }
+
+  Optional<int> ArgOpt;
+
+  if (!(ArgOpt = GetNSMutableArrayArgumentIndex(*this, Message)) &&
+      !(ArgOpt = GetNSMutableDictionaryArgumentIndex(*this, Message)) &&
+      !(ArgOpt = GetNSSetArgumentIndex(*this, Message))) {
+    return;
+  }
+
+  int ArgIndex = *ArgOpt;
+
+  Expr *Arg = Message->getArg(ArgIndex)->IgnoreImpCasts();
+  if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Arg)) {
+    Arg = OE->getSourceExpr()->IgnoreImpCasts();
+  }
+
+  if (Message->getReceiverKind() == ObjCMessageExpr::SuperInstance) {
+    if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
+      if (ArgRE->isObjCSelfExpr()) {
+        Diag(Message->getSourceRange().getBegin(),
+             diag::warn_objc_circular_container)
+          << ArgRE->getDecl()->getName() << StringRef("super");
+      }
+    }
+  } else {
+    Expr *Receiver = Message->getInstanceReceiver()->IgnoreImpCasts();
+
+    if (OpaqueValueExpr *OE = dyn_cast<OpaqueValueExpr>(Receiver)) {
+      Receiver = OE->getSourceExpr()->IgnoreImpCasts();
+    }
+
+    if (DeclRefExpr *ReceiverRE = dyn_cast<DeclRefExpr>(Receiver)) {
+      if (DeclRefExpr *ArgRE = dyn_cast<DeclRefExpr>(Arg)) {
+        if (ReceiverRE->getDecl() == ArgRE->getDecl()) {
+          ValueDecl *Decl = ReceiverRE->getDecl();
+          Diag(Message->getSourceRange().getBegin(),
+               diag::warn_objc_circular_container)
+            << Decl->getName() << Decl->getName();
+          if (!ArgRE->isObjCSelfExpr()) {
+            Diag(Decl->getLocation(),
+                 diag::note_objc_circular_container_declared_here)
+              << Decl->getName();
+          }
+        }
+      }
+    } else if (ObjCIvarRefExpr *IvarRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
+      if (ObjCIvarRefExpr *IvarArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
+        if (IvarRE->getDecl() == IvarArgRE->getDecl()) {
+          ObjCIvarDecl *Decl = IvarRE->getDecl();
+          Diag(Message->getSourceRange().getBegin(),
+               diag::warn_objc_circular_container)
+            << Decl->getName() << Decl->getName();
+          Diag(Decl->getLocation(),
+               diag::note_objc_circular_container_declared_here)
+            << Decl->getName();
+        }
+      }
+    }
+  }
 }
 
 /// Check a message send to see if it's likely to cause a retain cycle.
@@ -8310,7 +10328,7 @@ bool ShouldDiagnoseEmptyStmtBody(const SourceManager &SourceMgr,
 
   // Get line numbers of statement and body.
   bool StmtLineInvalid;
-  unsigned StmtLine = SourceMgr.getSpellingLineNumber(StmtLoc,
+  unsigned StmtLine = SourceMgr.getPresumedLineNumber(StmtLoc,
                                                       &StmtLineInvalid);
   if (StmtLineInvalid)
     return false;
@@ -8327,7 +10345,7 @@ bool ShouldDiagnoseEmptyStmtBody(const SourceManager &SourceMgr,
 
   return true;
 }
-} // Unnamed namespace
+} // end anonymous namespace
 
 void Sema::DiagnoseEmptyStmtBody(SourceLocation StmtLoc,
                                  const Stmt *Body,
@@ -8423,7 +10441,6 @@ void Sema::DiagnoseEmptyLoopBody(const Stmt *S,
 /// DiagnoseSelfMove - Emits a warning if a value is moved to itself.
 void Sema::DiagnoseSelfMove(const Expr *LHSExpr, const Expr *RHSExpr,
                              SourceLocation OpLoc) {
-
   if (Diags.isIgnored(diag::warn_sizeof_pointer_expr_memaccess, OpLoc))
     return;
 
@@ -8662,7 +10679,7 @@ bool isLayoutCompatible(ASTContext &C, QualType T1, QualType T2) {
 
   return false;
 }
-}
+} // end anonymous namespace
 
 //===--- CHECK: pointer_with_type_tag attribute: datatypes should match ----//
 
@@ -8793,7 +10810,7 @@ bool GetMatchingCType(
   TypeInfo = I->second;
   return true;
 }
-} // unnamed namespace
+} // end anonymous namespace
 
 void Sema::RegisterTypeTagForDatatype(const IdentifierInfo *ArgumentKind,
                                       uint64_t MagicValue, QualType Type,
@@ -8826,7 +10843,7 @@ bool IsSameCharType(QualType T1, QualType T2) {
          (T1Kind == BuiltinType::Char_U && T2Kind == BuiltinType::UChar) ||
          (T1Kind == BuiltinType::Char_S && T2Kind == BuiltinType::SChar);
 }
-} // unnamed namespace
+} // end anonymous namespace
 
 void Sema::CheckArgumentWithTypeTag(const ArgumentWithTypeTagAttr *Attr,
                                     const Expr * const *ExprArgs) {
@@ -8906,4 +10923,3 @@ void Sema::CheckArgumentWithTypeTag(const ArgumentWithTypeTagAttr *Attr,
         << ArgumentExpr->getSourceRange()
         << TypeTagExpr->getSourceRange();
 }
-

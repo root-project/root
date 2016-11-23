@@ -40,6 +40,7 @@
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/Pass.h"
 #include <memory>
+#include <utility>
 
 namespace llvm {
 class AsmPrinter;
@@ -54,7 +55,7 @@ struct GCPoint {
   DebugLoc Loc;
 
   GCPoint(GC::PointKind K, MCSymbol *L, DebugLoc DL)
-      : Kind(K), Label(L), Loc(DL) {}
+      : Kind(K), Label(L), Loc(std::move(DL)) {}
 };
 
 /// GCRoot - Metadata for a pointer to an object managed by the garbage
@@ -120,8 +121,8 @@ public:
   /// addSafePoint - Notes the existence of a safe point. Num is the ID of the
   /// label just prior to the safe point (if the code generator is using
   /// MachineModuleInfo).
-  void addSafePoint(GC::PointKind Kind, MCSymbol *Label, DebugLoc DL) {
-    SafePoints.push_back(GCPoint(Kind, Label, DL));
+  void addSafePoint(GC::PointKind Kind, MCSymbol *Label, const DebugLoc &DL) {
+    SafePoints.emplace_back(Kind, Label, DL);
   }
 
   /// getFrameSize/setFrameSize - Records the function's frame size.
@@ -160,9 +161,9 @@ class GCModuleInfo : public ImmutablePass {
 public:
   /// Lookup the GCStrategy object associated with the given gc name.
   /// Objects are owned internally; No caller should attempt to delete the
-  /// returned objects. 
+  /// returned objects.
   GCStrategy *getGCStrategy(const StringRef Name);
-  
+
   /// List of per function info objects.  In theory, Each of these
   /// may be associated with a different GC.
   typedef std::vector<std::unique_ptr<GCFunctionInfo>> FuncInfoVec;

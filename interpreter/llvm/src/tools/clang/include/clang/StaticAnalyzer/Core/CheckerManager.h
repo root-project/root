@@ -20,6 +20,7 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/Store.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
+#include <utility>
 #include <vector>
 
 namespace clang {
@@ -47,69 +48,16 @@ namespace ento {
 
 template <typename T> class CheckerFn;
 
-template <typename RET, typename P1, typename P2, typename P3, typename P4,
-          typename P5>
-class CheckerFn<RET(P1, P2, P3, P4, P5)> {
-  typedef RET (*Func)(void *, P1, P2, P3, P4, P5);
+template <typename RET, typename... Ps>
+class CheckerFn<RET(Ps...)> {
+  typedef RET (*Func)(void *, Ps...);
   Func Fn;
 public:
   CheckerBase *Checker;
   CheckerFn(CheckerBase *checker, Func fn) : Fn(fn), Checker(checker) { }
-  RET operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) const {
-    return Fn(Checker, p1, p2, p3, p4, p5);
+  RET operator()(Ps... ps) const {
+    return Fn(Checker, ps...);
   }
-};
-
-template <typename RET, typename P1, typename P2, typename P3, typename P4>
-class CheckerFn<RET(P1, P2, P3, P4)> {
-  typedef RET (*Func)(void *, P1, P2, P3, P4);
-  Func Fn;
-public:
-  CheckerBase *Checker;
-  CheckerFn(CheckerBase *checker, Func fn) : Fn(fn), Checker(checker) { }
-  RET operator()(P1 p1, P2 p2, P3 p3, P4 p4) const { 
-    return Fn(Checker, p1, p2, p3, p4);
-  } 
-};
-
-template <typename RET, typename P1, typename P2, typename P3>
-class CheckerFn<RET(P1, P2, P3)> {
-  typedef RET (*Func)(void *, P1, P2, P3);
-  Func Fn;
-public:
-  CheckerBase *Checker;
-  CheckerFn(CheckerBase *checker, Func fn) : Fn(fn), Checker(checker) { }
-  RET operator()(P1 p1, P2 p2, P3 p3) const { return Fn(Checker, p1, p2, p3); } 
-};
-
-template <typename RET, typename P1, typename P2>
-class CheckerFn<RET(P1, P2)> {
-  typedef RET (*Func)(void *, P1, P2);
-  Func Fn;
-public:
-  CheckerBase *Checker;
-  CheckerFn(CheckerBase *checker, Func fn) : Fn(fn), Checker(checker) { }
-  RET operator()(P1 p1, P2 p2) const { return Fn(Checker, p1, p2); } 
-};
-
-template <typename RET, typename P1>
-class CheckerFn<RET(P1)> {
-  typedef RET (*Func)(void *, P1);
-  Func Fn;
-public:
-  CheckerBase *Checker;
-  CheckerFn(CheckerBase *checker, Func fn) : Fn(fn), Checker(checker) { }
-  RET operator()(P1 p1) const { return Fn(Checker, p1); } 
-};
-
-template <typename RET>
-class CheckerFn<RET()> {
-  typedef RET (*Func)(void *);
-  Func Fn;
-public:
-  CheckerBase *Checker;
-  CheckerFn(CheckerBase *checker, Func fn) : Fn(fn), Checker(checker) { }
-  RET operator()() const { return Fn(Checker); } 
 };
 
 /// \brief Describes the different reasons a pointer escapes
@@ -142,9 +90,14 @@ class CheckName {
   explicit CheckName(StringRef Name) : Name(Name) {}
 
 public:
-  CheckName() {}
-  CheckName(const CheckName &Other) : Name(Other.Name) {}
+  CheckName() = default;
   StringRef getName() const { return Name; }
+};
+
+enum class ObjCMessageVisitKind {
+  Pre,
+  Post,
+  MessageNil
 };
 
 class CheckerManager {
@@ -153,10 +106,8 @@ class CheckerManager {
   CheckName CurrentCheckName;
 
 public:
-  CheckerManager(const LangOptions &langOpts,
-                 AnalyzerOptionsRef AOptions)
-    : LangOpts(langOpts),
-      AOptions(AOptions) {}
+  CheckerManager(const LangOptions &langOpts, AnalyzerOptionsRef AOptions)
+      : LangOpts(langOpts), AOptions(std::move(AOptions)) {}
 
   ~CheckerManager();
 
@@ -265,7 +216,7 @@ public:
                                     const ExplodedNodeSet &Src,
                                     const ObjCMethodCall &msg,
                                     ExprEngine &Eng) {
-    runCheckersForObjCMessage(/*isPreVisit=*/true, Dst, Src, msg, Eng);
+    runCheckersForObjCMessage(ObjCMessageVisitKind::Pre, Dst, Src, msg, Eng);
   }
 
   /// \brief Run checkers for post-visiting obj-c messages.
@@ -274,12 +225,22 @@ public:
                                      const ObjCMethodCall &msg,
                                      ExprEngine &Eng,
                                      bool wasInlined = false) {
-    runCheckersForObjCMessage(/*isPreVisit=*/false, Dst, Src, msg, Eng,
+    runCheckersForObjCMessage(ObjCMessageVisitKind::Post, Dst, Src, msg, Eng,
                               wasInlined);
   }
 
+  /// \brief Run checkers for visiting an obj-c message to nil.
+  void runCheckersForObjCMessageNil(ExplodedNodeSet &Dst,
+                                    const ExplodedNodeSet &Src,
+                                    const ObjCMethodCall &msg,
+                                    ExprEngine &Eng) {
+    runCheckersForObjCMessage(ObjCMessageVisitKind::MessageNil, Dst, Src, msg,
+                              Eng);
+  }
+
+
   /// \brief Run checkers for visiting obj-c messages.
-  void runCheckersForObjCMessage(bool isPreVisit,
+  void runCheckersForObjCMessage(ObjCMessageVisitKind visitKind,
                                  ExplodedNodeSet &Dst,
                                  const ExplodedNodeSet &Src,
                                  const ObjCMethodCall &msg, ExprEngine &Eng,
@@ -324,6 +285,12 @@ public:
   /// \brief Run checkers for end of analysis.
   void runCheckersForEndAnalysis(ExplodedGraph &G, BugReporter &BR,
                                  ExprEngine &Eng);
+
+  /// \brief Run checkers on begining of function.
+  void runCheckersForBeginFunction(ExplodedNodeSet &Dst,
+                                   const BlockEdge &L,
+                                   ExplodedNode *Pred,
+                                   ExprEngine &Eng);
 
   /// \brief Run checkers on end of function.
   void runCheckersForEndFunction(NodeBuilderContext &BC,
@@ -463,7 +430,10 @@ public:
   
   typedef CheckerFn<void (ExplodedGraph &, BugReporter &, ExprEngine &)>
       CheckEndAnalysisFunc;
-  
+
+  typedef CheckerFn<void (CheckerContext &)>
+      CheckBeginFunctionFunc;
+
   typedef CheckerFn<void (CheckerContext &)>
       CheckEndFunctionFunc;
   
@@ -511,6 +481,8 @@ public:
   void _registerForPreObjCMessage(CheckObjCMessageFunc checkfn);
   void _registerForPostObjCMessage(CheckObjCMessageFunc checkfn);
 
+  void _registerForObjCMessageNil(CheckObjCMessageFunc checkfn);
+
   void _registerForPreCall(CheckCallFunc checkfn);
   void _registerForPostCall(CheckCallFunc checkfn);
 
@@ -520,6 +492,7 @@ public:
 
   void _registerForEndAnalysis(CheckEndAnalysisFunc checkfn);
 
+  void _registerForBeginFunction(CheckEndFunctionFunc checkfn);
   void _registerForEndFunction(CheckEndFunctionFunc checkfn);
 
   void _registerForBranchCondition(CheckBranchConditionFunc checkfn);
@@ -611,8 +584,14 @@ private:
   const CachedStmtCheckers &getCachedStmtCheckersFor(const Stmt *S,
                                                      bool isPreVisit);
 
+  /// Returns the checkers that have registered for callbacks of the
+  /// given \p Kind.
+  const std::vector<CheckObjCMessageFunc> &
+  getObjCMessageCheckers(ObjCMessageVisitKind Kind);
+
   std::vector<CheckObjCMessageFunc> PreObjCMessageCheckers;
   std::vector<CheckObjCMessageFunc> PostObjCMessageCheckers;
+  std::vector<CheckObjCMessageFunc> ObjCMessageNilCheckers;
 
   std::vector<CheckCallFunc> PreCallCheckers;
   std::vector<CheckCallFunc> PostCallCheckers;
@@ -623,6 +602,7 @@ private:
 
   std::vector<CheckEndAnalysisFunc> EndAnalysisCheckers;
 
+  std::vector<CheckBeginFunctionFunc> BeginFunctionCheckers;
   std::vector<CheckEndFunctionFunc> EndFunctionCheckers;
 
   std::vector<CheckBranchConditionFunc> BranchConditionCheckers;

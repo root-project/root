@@ -22,17 +22,18 @@ namespace llvm {
 
 class SparcTargetMachine : public LLVMTargetMachine {
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
-  const DataLayout DL;
   SparcSubtarget Subtarget;
+  bool is64Bit;
+  mutable StringMap<std::unique_ptr<SparcSubtarget>> SubtargetMap;
 public:
-  SparcTargetMachine(const Target &T, StringRef TT,
-                     StringRef CPU, StringRef FS, const TargetOptions &Options,
-                     Reloc::Model RM, CodeModel::Model CM,
+  SparcTargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                     StringRef FS, const TargetOptions &Options,
+                     Optional<Reloc::Model> RM, CodeModel::Model CM,
                      CodeGenOpt::Level OL, bool is64bit);
   ~SparcTargetMachine() override;
 
-  const DataLayout *getDataLayout() const override { return &DL; }
-  const SparcSubtarget *getSubtargetImpl() const override { return &Subtarget; }
+  const SparcSubtarget *getSubtargetImpl() const { return &Subtarget; }
+  const SparcSubtarget *getSubtargetImpl(const Function &) const override;
 
   // Pass Pipeline Configuration
   TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
@@ -41,27 +42,35 @@ public:
   }
 };
 
-/// SparcV8TargetMachine - Sparc 32-bit target machine
+/// Sparc 32-bit target machine
 ///
 class SparcV8TargetMachine : public SparcTargetMachine {
   virtual void anchor();
 public:
-  SparcV8TargetMachine(const Target &T, StringRef TT,
-                       StringRef CPU, StringRef FS,
-                       const TargetOptions &Options,
-                       Reloc::Model RM, CodeModel::Model CM,
+  SparcV8TargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                       StringRef FS, const TargetOptions &Options,
+                       Optional<Reloc::Model> RM, CodeModel::Model CM,
                        CodeGenOpt::Level OL);
 };
 
-/// SparcV9TargetMachine - Sparc 64-bit target machine
+/// Sparc 64-bit target machine
 ///
 class SparcV9TargetMachine : public SparcTargetMachine {
   virtual void anchor();
 public:
-  SparcV9TargetMachine(const Target &T, StringRef TT,
-                       StringRef CPU, StringRef FS,
-                       const TargetOptions &Options,
-                       Reloc::Model RM, CodeModel::Model CM,
+  SparcV9TargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                       StringRef FS, const TargetOptions &Options,
+                       Optional<Reloc::Model> RM, CodeModel::Model CM,
+                       CodeGenOpt::Level OL);
+};
+
+class SparcelTargetMachine : public SparcTargetMachine {
+  virtual void anchor();
+
+public:
+  SparcelTargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                       StringRef FS, const TargetOptions &Options,
+                       Optional<Reloc::Model> RM, CodeModel::Model CM,
                        CodeGenOpt::Level OL);
 };
 

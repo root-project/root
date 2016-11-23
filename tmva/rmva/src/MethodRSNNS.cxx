@@ -51,9 +51,8 @@ Bool_t MethodRSNNS::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("R
 MethodRSNNS::MethodRSNNS(const TString &jobName,
                          const TString &methodTitle,
                          DataSetInfo &dsi,
-                         const TString &theOption,
-                         TDirectory *theTargetDir) :
-   RMethodBase(jobName, Types::kRSNNS, methodTitle, dsi, theOption, theTargetDir),
+                         const TString &theOption) :
+   RMethodBase(jobName, Types::kRSNNS, methodTitle, dsi, theOption),
    fMvaCounter(0),
    predict("predict"),
    mlp("mlp"),
@@ -87,12 +86,11 @@ MethodRSNNS::MethodRSNNS(const TString &jobName,
    fPruneFunc = "NULL";
    fPruneFuncParams = "NULL";
 
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 //_______________________________________________________________________
-MethodRSNNS::MethodRSNNS(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : RMethodBase(Types::kRSNNS, theData, theWeightFile, theTargetDir),
+MethodRSNNS::MethodRSNNS(DataSetInfo &theData, const TString &theWeightFile)
+   : RMethodBase(Types::kRSNNS, theData, theWeightFile),
      fMvaCounter(0),
      predict("predict"),
      mlp("mlp"),
@@ -126,8 +124,6 @@ MethodRSNNS::MethodRSNNS(DataSetInfo &theData, const TString &theWeightFile, TDi
    fLinOut = kFALSE;
    fPruneFunc = "NULL";
    fPruneFuncParams = "NULL";
-
-   SetWeightFileDir(gConfig().GetIONames().fWeightFileDir);
 }
 
 
@@ -189,12 +185,16 @@ void MethodRSNNS::Train()
                        ROOT::R::Label["pruneFunc"] = PruneFunc,
                        ROOT::R::Label["pruneFuncParams"] = r.Eval(fPruneFuncParams));
       fModel = new ROOT::R::TRObject(Model);
-      TString path = GetWeightFileDir() + "/RMLPModel.RData";
-      Log() << Endl;
-      Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-      Log() << Endl;
-      r["RMLPModel"] << Model;
-      r << "save(RMLPModel,file='" + path + "')";
+      //if model persistence is enabled saving it is R serialziation.
+      if (IsModelPersistence())  
+      {
+            TString path = GetWeightFileDir() + "/RMLPModel.RData";
+            Log() << Endl;
+            Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+            Log() << Endl;
+            r["RMLPModel"] << Model;
+            r << "save(RMLPModel,file='" + path + "')";
+      }
    }
 }
 
@@ -261,9 +261,8 @@ Double_t MethodRSNNS::GetMvaValue(Double_t *errLower, Double_t *errUpper)
       fDfEvent[DataInfo().GetListOfVariables()[i].Data()] = ev->GetValues()[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadModelFromFile();
-   }
+   if (IsModelPersistence()) ReadModelFromFile();
+   
    TVectorD result = predict(*fModel, fDfEvent, ROOT::R::Label["type"] = "prob");
    mvaValue = result[0]; //returning signal prob
    return mvaValue;
@@ -310,9 +309,7 @@ std::vector<Double_t> MethodRSNNS::GetMvaValues(Long64_t firstEvt, Long64_t last
       evtData[DataInfo().GetListOfVariables()[i].Data()] = inputData[i];
    }
    //if using persistence model
-   if (!fModel) {
-      ReadModelFromFile();
-   }
+   if (IsModelPersistence()) ReadModelFromFile();
 
    std::vector<Double_t> mvaValues(nEvents);
    ROOT::R::TRObject result = predict(*fModel, evtData, ROOT::R::Label["type"] = "prob");

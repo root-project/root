@@ -73,10 +73,6 @@ void closed(Int_t id)
 
 void threadsh1()
 {
-#ifdef __CINT__
-   printf("This script can only be executed via ACliC: .x threadsh1.C++\n");
-   return;
-#endif
 
    finished = kFALSE;
    //gDebug = 1;

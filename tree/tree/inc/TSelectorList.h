@@ -37,7 +37,7 @@ private:
    Bool_t CheckDuplicateName(TObject *obj);
 
 public:
-   TSelectorList() : THashList() { SetOwner(); }
+   TSelectorList() : THashList() { SetOwner();}
 
    void AddFirst(TObject *obj);
    void AddFirst(TObject *obj, Option_t *opt);

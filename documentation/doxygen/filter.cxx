@@ -8,7 +8,7 @@
 ///
 /// ### `Begin_Macro` and `End_Macro`
 /// The two tags where used the THtml version to generate images from ROOT code.
-/// The genererated picture is inlined exactly at the place where the macro is
+/// The generated picture is inlined exactly at the place where the macro is
 /// defined. The Macro can be defined in two way:
 ///  - by direct in-lining of the the C++ code
 ///  - by a reference to a C++ file
@@ -23,6 +23,7 @@
 /// ~~~ {.cpp}
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Getting Contours From TH2D.
 ///
 /// #### Image produced by `.x ContourList.C`
@@ -39,7 +40,7 @@
 /// \authors  Josh de Bever, Olivier Couet
 /// ~~~
 ///
-/// This example shows that three new directives have been implemented:
+/// This example shows that four new directives have been implemented:
 ///
 ///  1. `\macro_image`
 ///  The images produced by this macro are shown. A caption can be added to document
@@ -51,6 +52,10 @@
 ///  3. `\macro_output`
 ///  The output produced by this macro is shown. A caption can be added:
 ///  `\macro_output This the macro output`
+///
+///  4. `\notebook`
+///    To generate the corresponding jupyter notebook. In case the tutorial does
+///    not generate any graphics output, the option `-nodraw` should be added.
 ///
 /// Note that the doxygen directive `\authors` or `\author` must be the last one
 /// of the macro header.
@@ -161,13 +166,15 @@ void FilterClass()
 
    // Source file.
    if (gSource) {
+      size_t spos = 0;
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
 
-         if (gLineString.find("End_Macro") != string::npos) {
+         if (gInMacro && gLineString.find("End_Macro") != string::npos) {
             ReplaceAll(gLineString,"End_Macro","");
             gImageSource = false;
             gInMacro = 0;
+            spos = 0;
             if (m) {
                fclose(m);
                m = 0;
@@ -180,6 +187,7 @@ void FilterClass()
          }
 
          if (gInMacro) {
+            if (spos) gLineString = gLineString.substr(spos);
             if (gInMacro == 1) {
                if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos)) {
                   ExecuteMacro();
@@ -211,14 +219,27 @@ void FilterClass()
             }
          }
 
-         if (gLineString.find("Begin_Macro") != string::npos) {
+         if (gLineString.find("Begin_Macro") != string::npos &&
+             gLineString.find("End_Macro") == string::npos) {
+            if (BeginsWith(gLineString, "///")) {
+               spos = gLineString.find_first_not_of(' ', 3);
+            }
             if (gLineString.find("source") != string::npos) gImageSource = true;
             gImageID++;
             gInMacro++;
             gLineString = "\n";
          }
 
-         printf("%s",gLineString.c_str());
+         size_t l = gLineString.length();
+         size_t b = 0;
+         do {
+            size_t e = gLineString.find('\n', b);
+            if (e != string::npos) e++;
+            if (spos) printf("%-*s%s", (int)spos, "///",
+                              gLineString.substr(b, e - b).c_str());
+            else printf("%s", gLineString.substr(b, e - b).c_str());
+            b = e;
+         } while (b < l);
       }
       fclose(f);
       return;
@@ -283,6 +304,20 @@ void FilterTutorial()
          ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
       }
 
+      // notebook found
+      if (gLineString.find("\\notebook") != string::npos) {
+         ExecuteCommand(StringFormat("python converttonotebook.py %s %s/notebooks/",
+                                          gFileName.c_str(), gOutDir.c_str()));
+
+         if (gPython){
+             gLineString = "## ";
+         }
+         else{
+             gLineString = "/// ";
+         }
+         gLineString += StringFormat( "\\htmlonly <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"http://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1em\" ></a> \\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
+
+      }
       // \macro_output found
       if (gLineString.find("\\macro_output") != string::npos) {
          if (!gPython) ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
@@ -317,37 +352,21 @@ void GetClassName()
    int i1 = 0;
    int i2 = 0;
 
-   FILE *f = fopen(gFileName.c_str(),"r");
-
    // File header.
    if (gHeader) {
-      while (fgets(gLine,255,f)) {
-         gLineString = gLine;
-         if (gLineString.find("ClassDef") != string::npos) {
-            i1         = gLineString.find("(")+1;
-            i2         = gLineString.find(",")-1;
-            gClassName = gLineString.substr(i1,i2-i1+1);
-            fclose(f);
-            return;
-         }
-      }
+      i1         = gFileName.find_last_of("/")+1;
+      i2         = gFileName.find(".h")-1;
+      gClassName = gFileName.substr(i1,i2-i1+1);
    }
 
    // Source file.
    if (gSource) {
-      while (fgets(gLine,255,f)) {
-         gLineString = gLine;
-         if (gLineString.find("ClassImp") != string::npos) {
-            i1         = gLineString.find("(")+1;
-            i2         = gLineString.find(")")-1;
-            gClassName = gLineString.substr(i1,i2-i1+1);
-            fclose(f);
-            return;
-         }
-      }
+      i1         = gFileName.find_last_of("/")+1;
+      i2         = gFileName.find(".cxx")-1;
+      gClassName = gFileName.substr(i1,i2-i1+1);
    }
 
-   fclose(f);
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -369,12 +388,8 @@ void ExecuteMacro()
    gMacroName = gLineString.substr(i1,i2-i1+1);
 
    // Build the ROOT command to be executed.
-   bool ts = false;
-   if (BeginsWith(gLineString,"///")) ts = true;
-   if (ts) ReplaceAll(gLineString,"///", "");
-   if (ts) ReplaceAll(gLineString," ", "");
    gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
-   int l = gLineString.length();
+   size_t l = gLineString.length();
    gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
 
    // Execute the macro
@@ -382,11 +397,9 @@ void ExecuteMacro()
 
    // Inline the directives to show the picture and/or the code
    if (gImageSource) {
-      if (ts) gLineString = StringFormat("/// \\include %s\n/// \\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
-      else    gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
+      gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
    } else {
-      if (ts) gLineString = StringFormat("\n/// \\image html pict1_%s\n", gImageName.c_str());
-      else    gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
+      gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
    }
 }
 

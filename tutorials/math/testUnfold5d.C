@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_unfold5
-///
+/// \notebook
 /// Version 17.0 example for multi-dimensional unfolding
 ///
 /// \macro_image

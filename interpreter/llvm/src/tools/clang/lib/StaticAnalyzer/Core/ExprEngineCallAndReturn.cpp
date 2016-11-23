@@ -37,32 +37,35 @@ STATISTIC(NumInlinedCalls,
 STATISTIC(NumReachedInlineCountMax,
   "The # of times we reached inline count maximum");
 
-void ExprEngine::processCallEnter(CallEnter CE, ExplodedNode *Pred) {
+void ExprEngine::processCallEnter(NodeBuilderContext& BC, CallEnter CE,
+                                  ExplodedNode *Pred) {
   // Get the entry block in the CFG of the callee.
   const StackFrameContext *calleeCtx = CE.getCalleeContext();
   PrettyStackTraceLocationContext CrashInfo(calleeCtx);
+  const CFGBlock *Entry = CE.getEntry();
 
-  const CFG *CalleeCFG = calleeCtx->getCFG();
-  const CFGBlock *Entry = &(CalleeCFG->getEntry());
-  
   // Validate the CFG.
   assert(Entry->empty());
   assert(Entry->succ_size() == 1);
-  
+
   // Get the solitary successor.
   const CFGBlock *Succ = *(Entry->succ_begin());
-  
+
   // Construct an edge representing the starting location in the callee.
   BlockEdge Loc(Entry, Succ, calleeCtx);
 
   ProgramStateRef state = Pred->getState();
-  
-  // Construct a new node and add it to the worklist.
+
+  // Construct a new node, notify checkers that analysis of the function has
+  // begun, and add the resultant nodes to the worklist.
   bool isNew;
   ExplodedNode *Node = G.getNode(Loc, state, false, &isNew);
   Node->addPredecessor(Pred, G);
-  if (isNew)
-    Engine.getWorkList()->enqueue(Node);
+  if (isNew) {
+    ExplodedNodeSet DstBegin;
+    processBeginOfFunction(BC, Node, DstBegin, Loc);
+    Engine.enqueue(DstBegin);
+  }
 }
 
 // Find the last statement on the path to the exploded node and the
@@ -207,8 +210,8 @@ static bool isTemporaryPRValue(const CXXConstructExpr *E, SVal V) {
   return isa<CXXTempObjectRegion>(MR);
 }
 
-/// The call exit is simulated with a sequence of nodes, which occur between 
-/// CallExitBegin and CallExitEnd. The following operations occur between the 
+/// The call exit is simulated with a sequence of nodes, which occur between
+/// CallExitBegin and CallExitEnd. The following operations occur between the
 /// two program points:
 /// 1. CallExitBegin (triggers the start of call exit sequence)
 /// 2. Bind the return value
@@ -220,12 +223,12 @@ void ExprEngine::processCallExit(ExplodedNode *CEBNode) {
   PrettyStackTraceLocationContext CrashInfo(CEBNode->getLocationContext());
   const StackFrameContext *calleeCtx =
       CEBNode->getLocationContext()->getCurrentStackFrame();
-  
+
   // The parent context might not be a stack frame, so make sure we
   // look up the first enclosing stack frame.
   const StackFrameContext *callerCtx =
     calleeCtx->getParent()->getCurrentStackFrame();
-  
+
   const Stmt *CE = calleeCtx->getCallSite();
   ProgramStateRef state = CEBNode->getState();
   // Find the last statement in the function and the corresponding basic block.
@@ -379,22 +382,6 @@ void ExprEngine::examineStackFrames(const Decl *D, const LocationContext *LCtx,
     }
     LCtx = LCtx->getParent();
   }
-
-}
-
-static bool IsInStdNamespace(const FunctionDecl *FD) {
-  const DeclContext *DC = FD->getEnclosingNamespaceContext();
-  const NamespaceDecl *ND = dyn_cast<NamespaceDecl>(DC);
-  if (!ND)
-    return false;
-
-  while (const DeclContext *Parent = ND->getParent()) {
-    if (!isa<NamespaceDecl>(Parent))
-      break;
-    ND = cast<NamespaceDecl>(Parent);
-  }
-
-  return ND->isStdNamespace();
 }
 
 // The GDM component containing the dynamic dispatch bifurcation info. When
@@ -408,7 +395,8 @@ namespace {
     DynamicDispatchModeInlined = 1,
     DynamicDispatchModeConservative
   };
-}
+} // end anonymous namespace
+
 REGISTER_TRAIT_WITH_PROGRAMSTATE(DynamicDispatchBifurcationMap,
                                  CLANG_ENTO_PROGRAMSTATE_MAP(const MemRegion *,
                                                              unsigned))
@@ -421,7 +409,8 @@ bool ExprEngine::inlineCall(const CallEvent &Call, const Decl *D,
   const LocationContext *CurLC = Pred->getLocationContext();
   const StackFrameContext *CallerSFC = CurLC->getCurrentStackFrame();
   const LocationContext *ParentOfCallee = CallerSFC;
-  if (Call.getKind() == CE_Block) {
+  if (Call.getKind() == CE_Block &&
+      !cast<BlockCall>(Call).isConversionFromLambda()) {
     const BlockDataRegion *BR = cast<BlockCall>(Call).getBlockRegion();
     assert(BR && "If we have the block definition we should have its region");
     AnalysisDeclContext *BlockCtx = AMgr.getAnalysisDeclContext(D);
@@ -429,7 +418,7 @@ bool ExprEngine::inlineCall(const CallEvent &Call, const Decl *D,
                                                          cast<BlockDecl>(D),
                                                          BR);
   }
-  
+
   // This may be NULL, but that's fine.
   const Expr *CallE = Call.getOriginExpr();
 
@@ -439,8 +428,7 @@ bool ExprEngine::inlineCall(const CallEvent &Call, const Decl *D,
     CalleeADC->getStackFrame(ParentOfCallee, CallE,
                              currBldrCtx->getBlock(),
                              currStmtIdx);
-  
-    
+
   CallEnter Loc(CallE, CalleeSFC, CurLC);
 
   // Construct a new state which contains the mapping from actual to
@@ -690,9 +678,11 @@ static bool hasMember(const ASTContext &Ctx, const CXXRecordDecl *RD,
     return true;
 
   CXXBasePaths Paths(false, false, false);
-  if (RD->lookupInBases(&CXXRecordDecl::FindOrdinaryMember,
-                        DeclName.getAsOpaquePtr(),
-                        Paths))
+  if (RD->lookupInBases(
+          [DeclName](const CXXBaseSpecifier *Specifier, CXXBasePath &Path) {
+            return CXXRecordDecl::FindOrdinaryMember(Specifier, Path, DeclName);
+          },
+          Paths))
     return true;
 
   return false;
@@ -758,7 +748,7 @@ static bool mayInlineDecl(AnalysisDeclContext *CalleeADC,
       // Conditionally control the inlining of C++ standard library functions.
       if (!Opts.mayInlineCXXStandardLibrary())
         if (Ctx.getSourceManager().isInSystemHeader(FD->getLocation()))
-          if (IsInStdNamespace(FD))
+          if (AnalysisDeclContext::isInStdNamespace(FD))
             return false;
 
       // Conditionally control the inlining of methods on objects that look
@@ -767,7 +757,7 @@ static bool mayInlineDecl(AnalysisDeclContext *CalleeADC,
         if (!Ctx.getSourceManager().isInMainFile(FD->getLocation()))
           if (isContainerMethod(Ctx, FD))
             return false;
-            
+
       // Conditionally control the inlining of the destructor of C++ shared_ptr.
       // We don't currently do a good job modeling shared_ptr because we can't
       // see the reference count, so treating as opaque is probably the best
@@ -775,7 +765,6 @@ static bool mayInlineDecl(AnalysisDeclContext *CalleeADC,
       if (!Opts.mayInlineCXXSharedPtrDtor())
         if (isCXXSharedPtrDtor(FD))
           return false;
-
     }
   }
 
@@ -868,7 +857,8 @@ bool ExprEngine::shouldInlineCall(const CallEvent &Call, const Decl *D,
   // Do not inline large functions too many times.
   if ((Engine.FunctionSummaries->getNumTimesInlined(D) >
        Opts.getMaxTimesInlineLarge()) &&
-      CalleeCFG->getNumBlockIDs() > 13) {
+       CalleeCFG->getNumBlockIDs() >=
+       Opts.getMinCFGSizeTreatFunctionsAsLarge()) {
     NumReachedInlineCountMax++;
     return false;
   }
@@ -984,18 +974,15 @@ void ExprEngine::BifurcateCall(const MemRegion *BifurReg,
   conservativeEvalCall(Call, Bldr, Pred, NoIState);
 
   NumOfDynamicDispatchPathSplits++;
-  return;
 }
-
 
 void ExprEngine::VisitReturnStmt(const ReturnStmt *RS, ExplodedNode *Pred,
                                  ExplodedNodeSet &Dst) {
-  
   ExplodedNodeSet dstPreVisit;
   getCheckerManager().runCheckersForPreStmt(dstPreVisit, Pred, RS, *this);
 
   StmtNodeBuilder B(dstPreVisit, Dst, *currBldrCtx);
-  
+
   if (RS->getRetValue()) {
     for (ExplodedNodeSet::iterator it = dstPreVisit.begin(),
                                   ei = dstPreVisit.end(); it != ei; ++it) {

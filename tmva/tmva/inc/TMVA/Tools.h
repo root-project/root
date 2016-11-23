@@ -73,9 +73,10 @@
 #include "TMVA/VariableTransformBase.h"
 #endif
 
+#include "TString.h"
+
 class TList;
 class TTree;
-class TString;
 class TH1;
 class TH2;
 class TH2F;

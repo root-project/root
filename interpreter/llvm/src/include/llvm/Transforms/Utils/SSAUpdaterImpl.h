@@ -17,6 +17,7 @@
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/Debug.h"
@@ -378,7 +379,7 @@ public:
   void FindExistingPHI(BlkT *BB, BlockListTy *BlockList) {
     for (typename BlkT::iterator BBI = BB->begin(), BBE = BB->end();
          BBI != BBE; ++BBI) {
-      PhiT *SomePHI = Traits::InstrIsPHI(BBI);
+      PhiT *SomePHI = Traits::InstrIsPHI(&*BBI);
       if (!SomePHI)
         break;
       if (CheckIfPHIMatches(SomePHI)) {

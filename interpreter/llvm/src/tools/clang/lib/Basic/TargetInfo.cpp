@@ -30,12 +30,14 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : TargetOpts(), Triple(T) {
   BigEndian = true;
   TLSSupported = true;
   NoAsmVariants = false;
+  HasFloat128 = false;
   PointerWidth = PointerAlign = 32;
   BoolWidth = BoolAlign = 8;
   IntWidth = IntAlign = 32;
   LongWidth = LongAlign = 32;
   LongLongWidth = LongLongAlign = 64;
   SuitableAlign = 64;
+  DefaultAlignForAttributeAligned = 128;
   MinGlobalAlign = 0;
   HalfWidth = 16;
   HalfAlign = 16;
@@ -45,10 +47,13 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : TargetOpts(), Triple(T) {
   DoubleAlign = 64;
   LongDoubleWidth = 64;
   LongDoubleAlign = 64;
+  Float128Align = 128;
   LargeArrayMinWidth = 0;
   LargeArrayAlign = 0;
   MaxAtomicPromoteWidth = MaxAtomicInlineWidth = 0;
   MaxVectorAlign = 0;
+  MaxTLSAlign = 0;
+  SimdDefaultAlign = 0;
   SizeType = UnsignedLong;
   PtrDiffType = SignedLong;
   IntMaxType = SignedLongLong;
@@ -63,17 +68,18 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : TargetOpts(), Triple(T) {
   UseSignedCharForObjCBool = true;
   UseBitFieldTypeAlignment = true;
   UseZeroLengthBitfieldAlignment = false;
+  UseExplicitBitFieldAlignment = true;
   ZeroLengthBitfieldBoundary = 0;
   HalfFormat = &llvm::APFloat::IEEEhalf;
   FloatFormat = &llvm::APFloat::IEEEsingle;
   DoubleFormat = &llvm::APFloat::IEEEdouble;
   LongDoubleFormat = &llvm::APFloat::IEEEdouble;
-  DescriptionString = nullptr;
-  UserLabelPrefix = "_";
+  Float128Format = &llvm::APFloat::IEEEquad;
   MCountName = "mcount";
   RegParmMax = 0;
   SSERegParmMax = 0;
   HasAlignMac68kSupport = false;
+  HasBuiltinMSVaList = false;
 
   // Default to no types using fpret.
   RealTypeUsesObjCFPRet = 0;
@@ -220,6 +226,8 @@ TargetInfo::RealType TargetInfo::getRealTypeByWidth(unsigned BitWidth) const {
     if (&getLongDoubleFormat() == &llvm::APFloat::PPCDoubleDouble ||
         &getLongDoubleFormat() == &llvm::APFloat::IEEEquad)
       return LongDouble;
+    if (hasFloat128Type())
+      return Float128;
     break;
   }
 
@@ -272,6 +280,10 @@ void TargetInfo::adjust(const LangOptions &Opts) {
     UseBitFieldTypeAlignment = false;
   if (Opts.ShortWChar)
     WCharType = UnsignedShort;
+  if (Opts.AlignDouble) {
+    DoubleAlign = LongLongAlign = 64;
+    LongDoubleAlign = 64;
+  }
 
   if (Opts.OpenCL) {
     // OpenCL C requires specific widths for types, irrespective of
@@ -283,9 +295,9 @@ void TargetInfo::adjust(const LangOptions &Opts) {
     LongLongWidth = LongLongAlign = 128;
     HalfWidth = HalfAlign = 16;
     FloatWidth = FloatAlign = 32;
-    
-    // Embedded 32-bit targets (OpenCL EP) might have double C type 
-    // defined as float. Let's not override this as it might lead 
+
+    // Embedded 32-bit targets (OpenCL EP) might have double C type
+    // defined as float. Let's not override this as it might lead
     // to generating illegal code that uses 64bit doubles.
     if (DoubleWidth != FloatWidth) {
       DoubleWidth = DoubleAlign = 64;
@@ -308,6 +320,18 @@ void TargetInfo::adjust(const LangOptions &Opts) {
   }
 }
 
+bool TargetInfo::initFeatureMap(
+    llvm::StringMap<bool> &Features, DiagnosticsEngine &Diags, StringRef CPU,
+    const std::vector<std::string> &FeatureVec) const {
+  for (const auto &F : FeatureVec) {
+    StringRef Name = F;
+    // Apply the feature via the target.
+    bool Enabled = Name[0] == '+';
+    setFeatureEnabled(Features, Name.substr(1), Enabled);
+  }
+  return true;
+}
+
 //===----------------------------------------------------------------------===//
 
 
@@ -323,7 +347,7 @@ static StringRef removeGCCRegisterPrefix(StringRef Name) {
 /// Sema.
 bool TargetInfo::isValidClobber(StringRef Name) const {
   return (isValidGCCRegisterName(Name) ||
-	  Name == "memory" || Name == "cc");
+          Name == "memory" || Name == "cc");
 }
 
 /// isValidGCCRegisterName - Returns whether the passed in string
@@ -333,56 +357,43 @@ bool TargetInfo::isValidGCCRegisterName(StringRef Name) const {
   if (Name.empty())
     return false;
 
-  const char * const *Names;
-  unsigned NumNames;
-
   // Get rid of any register prefix.
   Name = removeGCCRegisterPrefix(Name);
   if (Name.empty())
-      return false;
+    return false;
 
-  getGCCRegNames(Names, NumNames);
+  ArrayRef<const char *> Names = getGCCRegNames();
 
   // If we have a number it maps to an entry in the register name array.
   if (isDigit(Name[0])) {
-    int n;
+    unsigned n;
     if (!Name.getAsInteger(0, n))
-      return n >= 0 && (unsigned)n < NumNames;
+      return n < Names.size();
   }
 
   // Check register names.
-  for (unsigned i = 0; i < NumNames; i++) {
-    if (Name == Names[i])
-      return true;
-  }
+  if (std::find(Names.begin(), Names.end(), Name) != Names.end())
+    return true;
 
   // Check any additional names that we have.
-  const AddlRegName *AddlNames;
-  unsigned NumAddlNames;
-  getGCCAddlRegNames(AddlNames, NumAddlNames);
-  for (unsigned i = 0; i < NumAddlNames; i++)
-    for (unsigned j = 0; j < llvm::array_lengthof(AddlNames[i].Names); j++) {
-      if (!AddlNames[i].Names[j])
-	break;
+  for (const AddlRegName &ARN : getGCCAddlRegNames())
+    for (const char *AN : ARN.Names) {
+      if (!AN)
+        break;
       // Make sure the register that the additional name is for is within
       // the bounds of the register names from above.
-      if (AddlNames[i].Names[j] == Name && AddlNames[i].RegNum < NumNames)
-	return true;
-  }
-
-  // Now check aliases.
-  const GCCRegAlias *Aliases;
-  unsigned NumAliases;
-
-  getGCCRegAliases(Aliases, NumAliases);
-  for (unsigned i = 0; i < NumAliases; i++) {
-    for (unsigned j = 0 ; j < llvm::array_lengthof(Aliases[i].Aliases); j++) {
-      if (!Aliases[i].Aliases[j])
-        break;
-      if (Aliases[i].Aliases[j] == Name)
+      if (AN == Name && ARN.RegNum < Names.size())
         return true;
     }
-  }
+
+  // Now check aliases.
+  for (const GCCRegAlias &GRA : getGCCRegAliases())
+    for (const char *A : GRA.Aliases) {
+      if (!A)
+        break;
+      if (A == Name)
+        return true;
+    }
 
   return false;
 }
@@ -394,48 +405,36 @@ TargetInfo::getNormalizedGCCRegisterName(StringRef Name) const {
   // Get rid of any register prefix.
   Name = removeGCCRegisterPrefix(Name);
 
-  const char * const *Names;
-  unsigned NumNames;
-
-  getGCCRegNames(Names, NumNames);
+  ArrayRef<const char *> Names = getGCCRegNames();
 
   // First, check if we have a number.
   if (isDigit(Name[0])) {
-    int n;
+    unsigned n;
     if (!Name.getAsInteger(0, n)) {
-      assert(n >= 0 && (unsigned)n < NumNames &&
-             "Out of bounds register number!");
+      assert(n < Names.size() && "Out of bounds register number!");
       return Names[n];
     }
   }
 
   // Check any additional names that we have.
-  const AddlRegName *AddlNames;
-  unsigned NumAddlNames;
-  getGCCAddlRegNames(AddlNames, NumAddlNames);
-  for (unsigned i = 0; i < NumAddlNames; i++)
-    for (unsigned j = 0; j < llvm::array_lengthof(AddlNames[i].Names); j++) {
-      if (!AddlNames[i].Names[j])
-	break;
+  for (const AddlRegName &ARN : getGCCAddlRegNames())
+    for (const char *AN : ARN.Names) {
+      if (!AN)
+        break;
       // Make sure the register that the additional name is for is within
       // the bounds of the register names from above.
-      if (AddlNames[i].Names[j] == Name && AddlNames[i].RegNum < NumNames)
-	return Name;
+      if (AN == Name && ARN.RegNum < Names.size())
+        return Name;
     }
 
   // Now check aliases.
-  const GCCRegAlias *Aliases;
-  unsigned NumAliases;
-
-  getGCCRegAliases(Aliases, NumAliases);
-  for (unsigned i = 0; i < NumAliases; i++) {
-    for (unsigned j = 0 ; j < llvm::array_lengthof(Aliases[i].Aliases); j++) {
-      if (!Aliases[i].Aliases[j])
+  for (const GCCRegAlias &RA : getGCCRegAliases())
+    for (const char *A : RA.Aliases) {
+      if (!A)
         break;
-      if (Aliases[i].Aliases[j] == Name)
-        return Aliases[i].Register;
+      if (A == Name)
+        return RA.Register;
     }
-  }
 
   return Name;
 }
@@ -510,8 +509,7 @@ bool TargetInfo::validateOutputConstraint(ConstraintInfo &Info) const {
 }
 
 bool TargetInfo::resolveSymbolicName(const char *&Name,
-                                     ConstraintInfo *OutputConstraints,
-                                     unsigned NumOutputs,
+                                     ArrayRef<ConstraintInfo> OutputConstraints,
                                      unsigned &Index) const {
   assert(*Name == '[' && "Symbolic name did not start with '['");
   Name++;
@@ -526,16 +524,16 @@ bool TargetInfo::resolveSymbolicName(const char *&Name,
 
   std::string SymbolicName(Start, Name - Start);
 
-  for (Index = 0; Index != NumOutputs; ++Index)
+  for (Index = 0; Index != OutputConstraints.size(); ++Index)
     if (SymbolicName == OutputConstraints[Index].getName())
       return true;
 
   return false;
 }
 
-bool TargetInfo::validateInputConstraint(ConstraintInfo *OutputConstraints,
-                                         unsigned NumOutputs,
-                                         ConstraintInfo &Info) const {
+bool TargetInfo::validateInputConstraint(
+                              MutableArrayRef<ConstraintInfo> OutputConstraints,
+                              ConstraintInfo &Info) const {
   const char *Name = Info.ConstraintStr.c_str();
 
   if (!*Name)
@@ -556,13 +554,13 @@ bool TargetInfo::validateInputConstraint(ConstraintInfo *OutputConstraints,
           return false;
 
         // Check if matching constraint is out of bounds.
-        if (i >= NumOutputs) return false;
+        if (i >= OutputConstraints.size()) return false;
 
         // A number must refer to an output only operand.
         if (OutputConstraints[i].isReadWrite())
           return false;
 
-        // If the constraint is already tied, it must be tied to the 
+        // If the constraint is already tied, it must be tied to the
         // same operand referenced to by the number.
         if (Info.hasTiedOperand() && Info.getTiedOperand() != i)
           return false;
@@ -579,10 +577,10 @@ bool TargetInfo::validateInputConstraint(ConstraintInfo *OutputConstraints,
       break;
     case '[': {
       unsigned Index = 0;
-      if (!resolveSymbolicName(Name, OutputConstraints, NumOutputs, Index))
+      if (!resolveSymbolicName(Name, OutputConstraints, Index))
         return false;
 
-      // If the constraint is already tied, it must be tied to the 
+      // If the constraint is already tied, it must be tied to the
       // same operand referenced to by the number.
       if (Info.hasTiedOperand() && Info.getTiedOperand() != Index)
         return false;
@@ -645,19 +643,5 @@ bool TargetInfo::validateInputConstraint(ConstraintInfo *OutputConstraints,
     Name++;
   }
 
-  return true;
-}
-
-bool TargetCXXABI::tryParse(llvm::StringRef name) {
-  const Kind unknown = static_cast<Kind>(-1);
-  Kind kind = llvm::StringSwitch<Kind>(name)
-    .Case("arm", GenericARM)
-    .Case("ios", iOS)
-    .Case("itanium", GenericItanium)
-    .Case("microsoft", Microsoft)
-    .Default(unknown);
-  if (kind == unknown) return false;
-
-  set(kind);
   return true;
 }

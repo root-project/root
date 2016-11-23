@@ -37,10 +37,33 @@ A Pave (see TPave) with text, lines or/and boxes inside.
 Line (and boxes) are positioned in the pave using coordinates relative to
 the pave (%).
 
+The text lines are added in order using the AddText method. Also line separators
+can be added, in order too, using the AddLine method.
+
+AddText returns a TText corresponding to the line added to the pave. This
+return value can be used to modify the text attributes.
+
+Once the TPaveText is build the text of each line can be retrieved using
+GetLine or GetLineWith as a TText wich is useful to modify the text attributes
+of a line.
+
 Example:
 Begin_Macro(source)
 ../../../tutorials/graphics/pavetext.C
 End_Macro
+
+GetListOfLines can also be used to retrieve all the lines in the TPaveText as
+a TList:
+
+Begin_Macro(source)
+{
+   TPaveText *t = new TPaveText(.05,.3,.95,.6);
+   t->AddText("This line is blue"); ((TText*)t->GetListOfLines()->Last())->SetTextColor(kBlue);
+   t->AddText("This line is red");  ((TText*)t->GetListOfLines()->Last())->SetTextColor(kRed);
+   t->Draw();
+}
+End_Macro
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -21,14 +21,12 @@
 //
 //
 //===----------------------------------------------------------------------===//
-#include "llvm/PassSupport.h"
 #include "Hexagon.h"
 #include "HexagonInstrInfo.h"
 #include "HexagonMachineFunctionInfo.h"
 #include "HexagonRegisterInfo.h"
 #include "HexagonSubtarget.h"
 #include "HexagonTargetMachine.h"
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/LiveVariables.h"
 #include "llvm/CodeGen/MachineFunctionAnalysis.h"
@@ -37,13 +35,13 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/ScheduleDAGInstrs.h"
+#include "llvm/PassSupport.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetRegisterInfo.h"
-#include <map>
 using namespace llvm;
 
 #define DEBUG_TYPE "hexagon-nvj"
@@ -59,6 +57,7 @@ static cl::opt<bool> DisableNewValueJumps("disable-nvjump", cl::Hidden,
     cl::desc("Disable New Value Jumps"));
 
 namespace llvm {
+  FunctionPass *createHexagonNewValueJump();
   void initializeHexagonNewValueJumpPass(PassRegistry&);
 }
 
@@ -85,11 +84,16 @@ namespace {
     }
 
     bool runOnMachineFunction(MachineFunction &Fn) override;
+    MachineFunctionProperties getRequiredProperties() const override {
+      return MachineFunctionProperties().set(
+          MachineFunctionProperties::Property::AllVRegsAllocated);
+    }
 
   private:
     /// \brief A handle to the branch probability pass.
     const MachineBranchProbabilityInfo *MBPI;
 
+    bool isNewValueJumpCandidate(const MachineInstr *MI) const;
   };
 
 } // end of anonymous namespace
@@ -113,7 +117,7 @@ static bool canBeFeederToNewValueJump(const HexagonInstrInfo *QII,
                                       MachineFunction &MF) {
 
   // Predicated instruction can not be feeder to NVJ.
-  if (QII->isPredicated(II))
+  if (QII->isPredicated(*II))
     return false;
 
   // Bail out if feederReg is a paired register (double regs in
@@ -199,10 +203,7 @@ static bool commonChecksToProhibitNewValueJump(bool afterRA,
     // of registers by individual passes in the backend. At this time,
     // we don't know the scope of usage and definitions of these
     // instructions.
-    if (MII->getOpcode() == Hexagon::TFR_condset_ii ||
-        MII->getOpcode() == Hexagon::TFR_condset_ri ||
-        MII->getOpcode() == Hexagon::TFR_condset_ir ||
-        MII->getOpcode() == Hexagon::LDriw_pred     ||
+    if (MII->getOpcode() == Hexagon::LDriw_pred     ||
         MII->getOpcode() == Hexagon::STriw_pred)
       return false;
   }
@@ -281,9 +282,9 @@ static bool canCompareBeNewValueJump(const HexagonInstrInfo *QII,
   return true;
 }
 
-// Given a compare operator, return a matching New Value Jump
-// compare operator. Make sure that MI here is included in
-// HexagonInstrInfo.cpp::isNewValueJumpCandidate
+
+// Given a compare operator, return a matching New Value Jump compare operator.
+// Make sure that MI here is included in isNewValueJumpCandidate.
 static unsigned getNewValueJumpOpcode(MachineInstr *MI, int reg,
                                       bool secondRegNewified,
                                       MachineBasicBlock *jmpTarget,
@@ -299,48 +300,66 @@ static unsigned getNewValueJumpOpcode(MachineInstr *MI, int reg,
 
   switch (MI->getOpcode()) {
     case Hexagon::C2_cmpeq:
-      return taken ? Hexagon::CMPEQrr_t_Jumpnv_t_V4
-                   : Hexagon::CMPEQrr_t_Jumpnv_nt_V4;
+      return taken ? Hexagon::J4_cmpeq_t_jumpnv_t
+                   : Hexagon::J4_cmpeq_t_jumpnv_nt;
 
     case Hexagon::C2_cmpeqi: {
       if (reg >= 0)
-        return taken ? Hexagon::CMPEQri_t_Jumpnv_t_V4
-                     : Hexagon::CMPEQri_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmpeqi_t_jumpnv_t
+                     : Hexagon::J4_cmpeqi_t_jumpnv_nt;
       else
-        return taken ? Hexagon::CMPEQn1_t_Jumpnv_t_V4
-                     : Hexagon::CMPEQn1_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmpeqn1_t_jumpnv_t
+                     : Hexagon::J4_cmpeqn1_t_jumpnv_nt;
     }
 
     case Hexagon::C2_cmpgt: {
       if (secondRegNewified)
-        return taken ? Hexagon::CMPLTrr_t_Jumpnv_t_V4
-                     : Hexagon::CMPLTrr_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmplt_t_jumpnv_t
+                     : Hexagon::J4_cmplt_t_jumpnv_nt;
       else
-        return taken ? Hexagon::CMPGTrr_t_Jumpnv_t_V4
-                     : Hexagon::CMPGTrr_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmpgt_t_jumpnv_t
+                     : Hexagon::J4_cmpgt_t_jumpnv_nt;
     }
 
     case Hexagon::C2_cmpgti: {
       if (reg >= 0)
-        return taken ? Hexagon::CMPGTri_t_Jumpnv_t_V4
-                     : Hexagon::CMPGTri_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmpgti_t_jumpnv_t
+                     : Hexagon::J4_cmpgti_t_jumpnv_nt;
       else
-        return taken ? Hexagon::CMPGTn1_t_Jumpnv_t_V4
-                     : Hexagon::CMPGTn1_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmpgtn1_t_jumpnv_t
+                     : Hexagon::J4_cmpgtn1_t_jumpnv_nt;
     }
 
     case Hexagon::C2_cmpgtu: {
       if (secondRegNewified)
-        return taken ? Hexagon::CMPLTUrr_t_Jumpnv_t_V4
-                     : Hexagon::CMPLTUrr_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmpltu_t_jumpnv_t
+                     : Hexagon::J4_cmpltu_t_jumpnv_nt;
       else
-        return taken ? Hexagon::CMPGTUrr_t_Jumpnv_t_V4
-                     : Hexagon::CMPGTUrr_t_Jumpnv_nt_V4;
+        return taken ? Hexagon::J4_cmpgtu_t_jumpnv_t
+                     : Hexagon::J4_cmpgtu_t_jumpnv_nt;
     }
 
     case Hexagon::C2_cmpgtui:
-      return taken ? Hexagon::CMPGTUri_t_Jumpnv_t_V4
-                   : Hexagon::CMPGTUri_t_Jumpnv_nt_V4;
+      return taken ? Hexagon::J4_cmpgtui_t_jumpnv_t
+                   : Hexagon::J4_cmpgtui_t_jumpnv_nt;
+
+    case Hexagon::C4_cmpneq:
+      return taken ? Hexagon::J4_cmpeq_f_jumpnv_t
+                   : Hexagon::J4_cmpeq_f_jumpnv_nt;
+
+    case Hexagon::C4_cmplte:
+      if (secondRegNewified)
+        return taken ? Hexagon::J4_cmplt_f_jumpnv_t
+                     : Hexagon::J4_cmplt_f_jumpnv_nt;
+      return taken ? Hexagon::J4_cmpgt_f_jumpnv_t
+                   : Hexagon::J4_cmpgt_f_jumpnv_nt;
+
+    case Hexagon::C4_cmplteu:
+      if (secondRegNewified)
+        return taken ? Hexagon::J4_cmpltu_f_jumpnv_t
+                     : Hexagon::J4_cmpltu_f_jumpnv_nt;
+      return taken ? Hexagon::J4_cmpgtu_f_jumpnv_t
+                   : Hexagon::J4_cmpgtu_f_jumpnv_nt;
 
     default:
        llvm_unreachable("Could not find matching New Value Jump instruction.");
@@ -349,25 +368,44 @@ static unsigned getNewValueJumpOpcode(MachineInstr *MI, int reg,
   return 0;
 }
 
+bool HexagonNewValueJump::isNewValueJumpCandidate(const MachineInstr *MI)
+      const {
+  switch (MI->getOpcode()) {
+    case Hexagon::C2_cmpeq:
+    case Hexagon::C2_cmpeqi:
+    case Hexagon::C2_cmpgt:
+    case Hexagon::C2_cmpgti:
+    case Hexagon::C2_cmpgtu:
+    case Hexagon::C2_cmpgtui:
+    case Hexagon::C4_cmpneq:
+    case Hexagon::C4_cmplte:
+    case Hexagon::C4_cmplteu:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
+
 bool HexagonNewValueJump::runOnMachineFunction(MachineFunction &MF) {
 
   DEBUG(dbgs() << "********** Hexagon New Value Jump **********\n"
                << "********** Function: "
                << MF.getName() << "\n");
 
-#if 0
-  // for now disable this, if we move NewValueJump before register
-  // allocation we need this information.
-  LiveVariables &LVs = getAnalysis<LiveVariables>();
-#endif
+  if (skipFunction(*MF.getFunction()))
+    return false;
+
+  // If we move NewValueJump before register allocation we'll need live variable
+  // analysis here too.
 
   QII = static_cast<const HexagonInstrInfo *>(MF.getSubtarget().getInstrInfo());
   QRI = static_cast<const HexagonRegisterInfo *>(
       MF.getSubtarget().getRegisterInfo());
   MBPI = &getAnalysis<MachineBranchProbabilityInfo>();
 
-  if (!QRI->Subtarget.hasV4TOps() ||
-      DisableNewValueJumps) {
+  if (DisableNewValueJumps) {
     return false;
   }
 
@@ -377,7 +415,7 @@ bool HexagonNewValueJump::runOnMachineFunction(MachineFunction &MF) {
   // Loop through all the bb's of the function
   for (MachineFunction::iterator MBBb = MF.begin(), MBBe = MF.end();
         MBBb != MBBe; ++MBBb) {
-    MachineBasicBlock* MBB = MBBb;
+    MachineBasicBlock *MBB = &*MBBb;
 
     DEBUG(dbgs() << "** dumping bb ** "
                  << MBB->getNumber() << "\n");
@@ -451,6 +489,8 @@ bool HexagonNewValueJump::runOnMachineFunction(MachineFunction &MF) {
         if (predLive)
           break;
 
+        if (!MI->getOperand(1).isMBB())
+          continue;
         jmpTarget = MI->getOperand(1).getMBB();
         foundJump = true;
         if (MI->getOpcode() == Hexagon::J2_jumpf ||
@@ -473,7 +513,7 @@ bool HexagonNewValueJump::runOnMachineFunction(MachineFunction &MF) {
           MI->getOperand(0).getReg() == predReg) {
 
         // Not all compares can be new value compare. Arch Spec: 7.6.1.1
-        if (QII->isNewValueJumpCandidate(MI)) {
+        if (isNewValueJumpCandidate(MI)) {
 
           assert((MI->getDesc().isCompare()) &&
               "Only compare instruction can be collapsed into New Value Jump");
@@ -596,8 +636,8 @@ bool HexagonNewValueJump::runOnMachineFunction(MachineFunction &MF) {
           DebugLoc dl = MI->getDebugLoc();
           MachineInstr *NewMI;
 
-           assert((QII->isNewValueJumpCandidate(cmpInstr)) &&
-                      "This compare is not a New Value Jump candidate.");
+          assert((isNewValueJumpCandidate(cmpInstr)) &&
+                 "This compare is not a New Value Jump candidate.");
           unsigned opc = getNewValueJumpOpcode(cmpInstr, cmpOp2,
                                                isSecondOpNewified,
                                                jmpTarget, MBPI);

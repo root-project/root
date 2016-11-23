@@ -39,6 +39,7 @@ class CppCompleter(object):
     TH1
     TH1C
     TH1D
+    TH1Editor
     TH1F
     TH1I
     TH1K
@@ -48,6 +49,7 @@ class CppCompleter(object):
     TH2
     TH2C
     TH2D
+    TH2Editor
     TH2F
     TH2GL
     TH2I

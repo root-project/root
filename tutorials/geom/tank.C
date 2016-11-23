@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_geom
 /// Drawing a fine tank, using ROOT geometry class.
-/// Author: Dong Gyu Lee (ravirus@hanmail.net), Dept. of Physics, Univ. of Seoul
+///
 /// Reviewed by Sunman Kim (sunman98@hanmail.net)
 /// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
 ///
@@ -12,7 +12,7 @@
 ///
 /// \macro_code
 ///
-/// \author Andrei Gheata
+/// \author Dong Gyu Lee (ravirus@hanmail.net), Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"
 
@@ -81,10 +81,6 @@ void tank()
    top->AddNodeOverlap(stp,1,new TGeoTranslation(-120,-35,-108));
    top->AddNodeOverlap(stp1,1,new TGeoCombiTrans(-185,-35,-168,new TGeoRotation("stp1",90,40,0)));
 
-
-
-
-
 //The Main Gun1 with AddNodeOverlap
    TGeoVolume *mg1=geom->MakeCone("mg1",Iron,160,4,5,4,7);
    mg1->SetLineColor(12);
@@ -148,7 +144,7 @@ void tank()
       top->AddNodeOverlap(who,1,new TGeoCombiTrans(-195+(15*i),113,-123, new TGeoRotation("who",-15,0,0)));
 
    }
-   //chain connetor
+   //chain connector
    TGeoVolume *WHl = geom->MakeBox(name,Iron,187.5,5,1);
    WHl->SetLineColor(12);
    top->AddNodeOverlap(WHl,1,new TGeoTranslation(-7.5,-129,-125));
@@ -156,9 +152,7 @@ void tank()
    top->AddNodeOverlap(WHl,1,new TGeoTranslation(-7.5,111,-125));
    top->AddNodeOverlap(WHl,1,new TGeoTranslation(-7.5,129,-125));
 
-//just one side
-
-
+   //just one side
    top->AddNodeOverlap(WH,1,new TGeoCombiTrans(180+(25*sin(34*(3.14/180))),-120,-150+(25*cos(34*(3.14/180))), new TGeoRotation("who",90,34,-90)));
    top->AddNodeOverlap(WH,1,new TGeoCombiTrans(180+(25*sin(68*(3.14/180))),-120,-150+(25*cos(68*(3.14/180))), new TGeoRotation("who",90,68,-90)));
    top->AddNodeOverlap(WH,1,new TGeoCombiTrans(180+(25*sin(102*(3.14/180))),-120,-150+(25*cos(102*(3.14/180))), new TGeoRotation("who",90,102,-90)));

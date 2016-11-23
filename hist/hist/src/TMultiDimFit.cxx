@@ -23,7 +23,7 @@
  dependence of the momentum on the observations.
 
  This explicit function of the observations can be obtained by a
- <I>least squares</I> fitting procedure applied to a representive
+ <I>least squares</I> fitting procedure applied to a representative
  sample of the data, for which the dependent quantity (e.g., momentum)
  and the independent observations are known. The function can then be
  used to compute the quantity of interest for new observations of the
@@ -42,7 +42,7 @@
  class is based on Winds discussion, and I refer these two excellents
  text for more information.
 
- And example of usage is given in $ROOTSYS/tutorials/fit/multidimfit.C.
+ And example of usage is given in multidimfit.C.
 
  ## The Method
  Let \f$ D \f$ by the dependent quantity of interest, which depends smoothly
@@ -288,7 +288,7 @@
 
  ## Considerations
  It's important to realize that the training sample should be
- representive of the problem at hand, in particular along the borders
+ representative of the problem at hand, in particular along the borders
  of the region of interest. This is because the algorithm presented
  here, is a *interpolation*, rather then a *extrapolation* [5].
 
@@ -322,17 +322,17 @@
  \f$Q_i = P_i / P^\prime_i\, i = 1, \ldots, 5\f$, to get linear
  indenpendent (among themselves, but not independent of \f$\mathbf{x}\f$) quantities
  \f$\mathbf{Q}^\prime\f$
- 7. For each component \f$Q^\prime_i\f$ make a mutlidimensional fit,
- using \f$\mathbf{x}^\prime\f$ as the variables, thus determing a set of
- coefficents \f$\mathbf{c}_i\f$.
+ 7. For each component \f$Q^\prime_i\f$ make a multidimensional fit,
+ using \f$\mathbf{x}^\prime\f$ as the variables, thus determining a set of
+ coefficients \f$\mathbf{c}_i\f$.
 
  To process data, using this parameterisation, do
  1. Test wether the observation \f$\mathbf{x}\f$ within the domain of
  the parameterization, using the result from the Principal Component
  Analysis.
  2. Determine \f$\mathbf{P}^\prime\f$ as before.
- 3. Detetmine \f$\mathbf{x}^\prime\f$ as before.
- 4. Use the result of the fit to determind \f$\mathbf{Q}^\prime\f$.
+ 3. Determine \f$\mathbf{x}^\prime\f$ as before.
+ 4. Use the result of the fit to determine \f$\mathbf{Q}^\prime\f$.
  5. Transform back to \f$\mathbf{P}\f$ from \f$\mathbf{Q}^\prime\f$, using
  the result from the Principal Component Analysis.
 
@@ -356,7 +356,7 @@
  \f]
  should not be to low or high compared to \f$ R\f$ from the training
  sample. Also, multiple correlation coefficient from both samples should
- be fairly close, otherwise one of the samples is not representive of
+ be fairly close, otherwise one of the samples is not representative of
  the problem. A large difference in the reduced \f$ \chi^2\f$ over the two
  samples indicate an over fit, and the maximum number of terms in the
  parameterisation should be reduced.
@@ -370,7 +370,7 @@
    the Physical Sciences*. McGraw-Hill, 2 edition, 1992.
  - <a name="mudifi"></a> R. Brun et al. *Long writeup DD/75-23*, CERN, 1980.
  - Gene H. Golub and Charles F. van Loan. *Matrix Computations*.
-   John Hopkins Univeristy Press, Baltimore, 3 edition, 1996.
+   John Hopkins University Press, Baltimore, 3 edition, 1996.
  - <a name="minuit"></a>F. James. *Minuit*. Long writeup D506, CERN, 1998.
  - <a name="wind72"></a>H. Wind. *Function parameterization*. Proceedings of the 1972 CERN Computing and Data Processing
    School, volume 72-21 of Yellow report. CERN, 1972.
@@ -599,11 +599,11 @@ TMultiDimFit::~TMultiDimFit()
 /// parameterization.
 /// The mean of the variables and quantity is calculated on the fly,
 /// as outlined in TPrincipal::AddRow.
-/// This sample should be representive of the problem at hand.
+/// This sample should be representative of the problem at hand.
 /// Please note, that if no error is given Poisson statistics is
 /// assumed and the square error is set to the value of dependent
 /// quantity.  See also the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
 {
@@ -678,11 +678,11 @@ void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
 /// known, dependent quantity, and optionally, the square error in
 /// the dependent quantity, to the test sample to be used for the
 /// test of the parameterization.
-/// This sample needn't be representive of the problem at hand.
+/// This sample needn't be representative of the problem at hand.
 /// Please note, that if no error is given Poisson statistics is
 /// assumed and the square error is set to the value of dependent
 /// quantity.  See also the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
 {
@@ -986,7 +986,7 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x) const
 ///     None so far
 ///
 /// For detailed description of what this entails, please refer to the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::FindParameterization(Option_t *)
 {
@@ -1005,7 +1005,7 @@ void TMultiDimFit::FindParameterization(Option_t *)
 ///     M     use Minuit to improve coefficients
 ///
 /// Also, refer to
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::Fit(Option_t *option)
 {
@@ -1051,7 +1051,7 @@ void TMultiDimFit::Fit(Option_t *option)
 
    fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
    if (!fFitter) {
-      Error("Fit", "Vannot create Fitter");
+      Error("Fit", "Cannot create Fitter");
       delete [] x;
       return;
    }
@@ -1097,7 +1097,7 @@ TMultiDimFit* TMultiDimFit::Instance()
 /// PRIVATE METHOD:
 /// Create list of candidate functions for the parameterisation. See
 /// also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::MakeCandidates()
 {
@@ -1354,7 +1354,7 @@ void TMultiDimFit::MakeCoefficientErrors()
 /// PRIVATE METHOD:
 /// Invert the model matrix B, and compute final coefficients. For a
 /// more thorough discussion of what this means, please refer to the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 ///
 /// First we invert the lower triangle matrix fOrthCurvatureMatrix
 /// and store the inverted matrix in the upper triangle.
@@ -1496,7 +1496,7 @@ void TMultiDimFit::MakeCorrelation()
 /// Make Gram-Schmidt orthogonalisation. The class description gives
 /// a thorough account of this algorithm, as well as
 /// references. Please refer to the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
 {
@@ -1589,7 +1589,7 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
 ///     R4        Residuals computed on test sample
 ///
 /// For a description of these quantities, refer to
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::MakeHistograms(Option_t *option)
 {
@@ -1800,7 +1800,7 @@ void TMultiDimFit::MakeNormalized()
 /// PRIVATE METHOD:
 /// Find the parameterization over the training sample. A full account
 /// of the algorithm is given in the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::MakeParameterization()
 {
@@ -2365,7 +2365,7 @@ Bool_t TMultiDimFit::Select(const Int_t *)
 /// be fitted, and the new candidate function to be included in the
 /// fit.  By default it is 0, which automatically chooses another
 /// selection criteria. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMaxAngle(Double_t ang)
 {
@@ -2381,7 +2381,7 @@ void TMultiDimFit::SetMaxAngle(Double_t ang)
 /// Set the min angle (in degrees) between a new candidate function
 /// and the subspace spanned by the previously accepted
 /// functions. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMinAngle(Double_t ang)
 {
@@ -2401,7 +2401,7 @@ void TMultiDimFit::SetMinAngle(Double_t ang)
 /// Where N is the dimension of the data sample, L is the number of
 /// terms (given in terms) and the first number, labels the term, the
 /// second the variable.  More information is given in the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
 {
@@ -2421,7 +2421,7 @@ void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
 /// Set the user parameter for the function selection. The bigger the
 /// limit, the more functions are used. The meaning of this variable
 /// is defined in the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetPowerLimit(Double_t limit)
 {
@@ -2431,7 +2431,7 @@ void TMultiDimFit::SetPowerLimit(Double_t limit)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum power to be considered in the fit for each
 /// variable. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMaxPowers(const Int_t* powers)
 {
@@ -2446,7 +2446,7 @@ void TMultiDimFit::SetMaxPowers(const Int_t* powers)
 /// Set the acceptable relative error for when sum of square
 /// residuals is considered minimized. For a full account, refer to
 /// the
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 void TMultiDimFit::SetMinRelativeError(Double_t error)
 {
@@ -2458,7 +2458,7 @@ void TMultiDimFit::SetMinRelativeError(Double_t error)
 /// PRIVATE METHOD:
 /// Test whether the currently considered function contributes to the
 /// fit. See also
-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
+/// <a href="#TMultiDimFit:description">class description</a>
 
 Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
                                   Double_t dResidur)

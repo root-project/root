@@ -37,13 +37,6 @@ templateClassImp(RooCFunction3Ref)
 #endif 
 
 
-template<> RooCFunction3Map<double,double,double,double>* RooCFunction3Ref<double,double,double,double>::_fmap = 0 ;
-template<> RooCFunction3Map<double,double,double,bool>* RooCFunction3Ref<double,double,double,bool>::_fmap = 0 ;
-template<> RooCFunction3Map<double,double,int,int>* RooCFunction3Ref<double,double,int,int>::_fmap = 0 ;
-template<> RooCFunction3Map<double,unsigned int,double,unsigned int>* RooCFunction3Ref<double,unsigned int,double,unsigned int>::_fmap = 0 ;
-template<> RooCFunction3Map<double,unsigned int,double,double>* RooCFunction3Ref<double,unsigned int,double,double>::_fmap = 0 ;
-template<> RooCFunction3Map<double,unsigned int,unsigned int,double>* RooCFunction3Ref<double,unsigned int,unsigned int,double>::_fmap = 0 ;
-
 namespace RooFit {
 
   RooAbsReal* bindFunction(const char* name,CFUNCD3DDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {

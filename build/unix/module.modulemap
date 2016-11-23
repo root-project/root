@@ -1514,184 +1514,29 @@ module "TMD5.h" { header "TMD5.h" export * }
 module "TMLPAnalyzer.h" { header "TMLPAnalyzer.h" export * }
 module "TMPClient.h" { header "TMPClient.h" export * }
 module "TMPWorker.h" { header "TMPWorker.h" export * }
-module "TMVA/BDT.h" { header "TMVA/BDT.h" export * }
-module "TMVA/BDTControlPlots.h" { header "TMVA/BDTControlPlots.h" export * }
-module "TMVA/BDTEventWrapper.h" { header "TMVA/BDTEventWrapper.h" export * }
-module "TMVA/BDT_Reg.h" { header "TMVA/BDT_Reg.h" export * }
-module "TMVA/BinarySearchTree.h" { header "TMVA/BinarySearchTree.h" export * }
-module "TMVA/BinarySearchTreeNode.h" { header "TMVA/BinarySearchTreeNode.h" export * }
-module "TMVA/BinaryTree.h" { header "TMVA/BinaryTree.h" export * }
-module "TMVA/BoostControlPlots.h" { header "TMVA/BoostControlPlots.h" export * }
-module "TMVA/CCPruner.h" { header "TMVA/CCPruner.h" export * }
-module "TMVA/CCTreeWrapper.h" { header "TMVA/CCTreeWrapper.h" export * }
-module "TMVA/ClassInfo.h" { header "TMVA/ClassInfo.h" export * }
-module "TMVA/ClassifierFactory.h" { header "TMVA/ClassifierFactory.h" export * }
-module "TMVA/Config.h" { header "TMVA/Config.h" export * }
-module "TMVA/Configurable.h" { header "TMVA/Configurable.h" export * }
-module "TMVA/ConvergenceTest.h" { header "TMVA/ConvergenceTest.h" export * }
-module "TMVA/CorrGui.h" { header "TMVA/CorrGui.h" export * }
-module "TMVA/CorrGuiMultiClass.h" { header "TMVA/CorrGuiMultiClass.h" export * }
-module "TMVA/CostComplexityPruneTool.h" { header "TMVA/CostComplexityPruneTool.h" export * }
-module "TMVA/CrossEntropy.h" { header "TMVA/CrossEntropy.h" export * }
-module "TMVA/DataInputHandler.h" { header "TMVA/DataInputHandler.h" export * }
-module "TMVA/DataSet.h" { header "TMVA/DataSet.h" export * }
-module "TMVA/DataSetFactory.h" { header "TMVA/DataSetFactory.h" export * }
-module "TMVA/DataSetInfo.h" { header "TMVA/DataSetInfo.h" export * }
-module "TMVA/DataSetManager.h" { header "TMVA/DataSetManager.h" export * }
-module "TMVA/DecisionTree.h" { header "TMVA/DecisionTree.h" export * }
-module "TMVA/DecisionTreeNode.h" { header "TMVA/DecisionTreeNode.h" export * }
-module "TMVA/Event.h" { header "TMVA/Event.h" export * }
-module "TMVA/ExpectedErrorPruneTool.h" { header "TMVA/ExpectedErrorPruneTool.h" export * }
-module "TMVA/Factory.h" { header "TMVA/Factory.h" export * }
-module "TMVA/FitterBase.h" { header "TMVA/FitterBase.h" export * }
-module "TMVA/GeneticAlgorithm.h" { header "TMVA/GeneticAlgorithm.h" export * }
-module "TMVA/GeneticFitter.h" { header "TMVA/GeneticFitter.h" export * }
-module "TMVA/GeneticGenes.h" { header "TMVA/GeneticGenes.h" export * }
-module "TMVA/GeneticPopulation.h" { header "TMVA/GeneticPopulation.h" export * }
-module "TMVA/GeneticRange.h" { header "TMVA/GeneticRange.h" export * }
-module "TMVA/GiniIndex.h" { header "TMVA/GiniIndex.h" export * }
-module "TMVA/GiniIndexWithLaplace.h" { header "TMVA/GiniIndexWithLaplace.h" export * }
-module "TMVA/IFitterTarget.h" { header "TMVA/IFitterTarget.h" export * }
-module "TMVA/IMethod.h" { header "TMVA/IMethod.h" export * }
-module "TMVA/IPruneTool.h" { header "TMVA/IPruneTool.h" export * }
-module "TMVA/Interval.h" { header "TMVA/Interval.h" export * }
-module "TMVA/KDEKernel.h" { header "TMVA/KDEKernel.h" export * }
-module "TMVA/LDA.h" { header "TMVA/LDA.h" export * }
-module "TMVA/LogInterval.h" { header "TMVA/LogInterval.h" export * }
-module "TMVA/MCFitter.h" { header "TMVA/MCFitter.h" export * }
-module "TMVA/MethodANNBase.h" { header "TMVA/MethodANNBase.h" export * }
-module "TMVA/MethodBDT.h" { header "TMVA/MethodBDT.h" export * }
-module "TMVA/MethodBase.h" { header "TMVA/MethodBase.h" export * }
-module "TMVA/MethodBayesClassifier.h" { header "TMVA/MethodBayesClassifier.h" export * }
-module "TMVA/MethodBoost.h" { header "TMVA/MethodBoost.h" export * }
-module "TMVA/MethodCFMlpANN.h" { header "TMVA/MethodCFMlpANN.h" export * }
-module "TMVA/MethodCFMlpANN_Utils.h" { header "TMVA/MethodCFMlpANN_Utils.h" export * }
-module "TMVA/MethodCFMlpANN_def.h" { header "TMVA/MethodCFMlpANN_def.h" export * }
-module "TMVA/MethodCategory.h" { header "TMVA/MethodCategory.h" export * }
-module "TMVA/MethodCompositeBase.h" { header "TMVA/MethodCompositeBase.h" export * }
-module "TMVA/MethodCuts.h" { header "TMVA/MethodCuts.h" export * }
-module "TMVA/MethodDT.h" { header "TMVA/MethodDT.h" export * }
-module "TMVA/MethodFDA.h" { header "TMVA/MethodFDA.h" export * }
-module "TMVA/MethodFisher.h" { header "TMVA/MethodFisher.h" export * }
-module "TMVA/MethodHMatrix.h" { header "TMVA/MethodHMatrix.h" export * }
-module "TMVA/MethodKNN.h" { header "TMVA/MethodKNN.h" export * }
-module "TMVA/MethodLD.h" { header "TMVA/MethodLD.h" export * }
-module "TMVA/MethodLikelihood.h" { header "TMVA/MethodLikelihood.h" export * }
-module "TMVA/MethodMLP.h" { header "TMVA/MethodMLP.h" export * }
-module "TMVA/MethodPDEFoam.h" { header "TMVA/MethodPDEFoam.h" export * }
-module "TMVA/MethodPDERS.h" { header "TMVA/MethodPDERS.h" export * }
-module "TMVA/MethodRuleFit.h" { header "TMVA/MethodRuleFit.h" export * }
-module "TMVA/MethodSVM.h" { header "TMVA/MethodSVM.h" export * }
-module "TMVA/MethodTMlpANN.h" { header "TMVA/MethodTMlpANN.h" export * }
-module "TMVA/MinuitFitter.h" { header "TMVA/MinuitFitter.h" export * }
-module "TMVA/MinuitWrapper.h" { header "TMVA/MinuitWrapper.h" export * }
-module "TMVA/MisClassificationError.h" { header "TMVA/MisClassificationError.h" export * }
-module "TMVA/ModulekNN.h" { header "TMVA/ModulekNN.h" export * }
-module "TMVA/MovieMaker.h" { header "TMVA/MovieMaker.h" export * }
-module "TMVA/MsgLogger.h" { header "TMVA/MsgLogger.h" export * }
-module "TMVA/Node.h" { header "TMVA/Node.h" export * }
-module "TMVA/NodekNN.h" { header "TMVA/NodekNN.h" export * }
-module "TMVA/OptimizeConfigParameters.h" { header "TMVA/OptimizeConfigParameters.h" export * }
-module "TMVA/Option.h" { header "TMVA/Option.h" export * }
-module "TMVA/PDEFoam.h" { header "TMVA/PDEFoam.h" export * }
-module "TMVA/PDEFoamCell.h" { header "TMVA/PDEFoamCell.h" export * }
-module "TMVA/PDEFoamDecisionTree.h" { header "TMVA/PDEFoamDecisionTree.h" export * }
-module "TMVA/PDEFoamDecisionTreeDensity.h" { header "TMVA/PDEFoamDecisionTreeDensity.h" export * }
-module "TMVA/PDEFoamDensityBase.h" { header "TMVA/PDEFoamDensityBase.h" export * }
-module "TMVA/PDEFoamDiscriminant.h" { header "TMVA/PDEFoamDiscriminant.h" export * }
-module "TMVA/PDEFoamDiscriminantDensity.h" { header "TMVA/PDEFoamDiscriminantDensity.h" export * }
-module "TMVA/PDEFoamEvent.h" { header "TMVA/PDEFoamEvent.h" export * }
-module "TMVA/PDEFoamEventDensity.h" { header "TMVA/PDEFoamEventDensity.h" export * }
-module "TMVA/PDEFoamKernelBase.h" { header "TMVA/PDEFoamKernelBase.h" export * }
-module "TMVA/PDEFoamKernelGauss.h" { header "TMVA/PDEFoamKernelGauss.h" export * }
-module "TMVA/PDEFoamKernelLinN.h" { header "TMVA/PDEFoamKernelLinN.h" export * }
-module "TMVA/PDEFoamKernelTrivial.h" { header "TMVA/PDEFoamKernelTrivial.h" export * }
-module "TMVA/PDEFoamMultiTarget.h" { header "TMVA/PDEFoamMultiTarget.h" export * }
-module "TMVA/PDEFoamTarget.h" { header "TMVA/PDEFoamTarget.h" export * }
-module "TMVA/PDEFoamTargetDensity.h" { header "TMVA/PDEFoamTargetDensity.h" export * }
-module "TMVA/PDEFoamVect.h" { header "TMVA/PDEFoamVect.h" export * }
-module "TMVA/PDF.h" { header "TMVA/PDF.h" export * }
-module "TMVA/PlotFoams.h" { header "TMVA/PlotFoams.h" export * }
-module "TMVA/QuickMVAProbEstimator.h" { header "TMVA/QuickMVAProbEstimator.h" export * }
-module "TMVA/ROCCalc.h" { header "TMVA/ROCCalc.h" export * }
-module "TMVA/Ranking.h" { header "TMVA/Ranking.h" export * }
-module "TMVA/Reader.h" { header "TMVA/Reader.h" export * }
-module "TMVA/RegressionVariance.h" { header "TMVA/RegressionVariance.h" export * }
-module "TMVA/Results.h" { header "TMVA/Results.h" export * }
-module "TMVA/ResultsClassification.h" { header "TMVA/ResultsClassification.h" export * }
-module "TMVA/ResultsMulticlass.h" { header "TMVA/ResultsMulticlass.h" export * }
-module "TMVA/ResultsRegression.h" { header "TMVA/ResultsRegression.h" export * }
-module "TMVA/RootFinder.h" { header "TMVA/RootFinder.h" export * }
-module "TMVA/Rule.h" { header "TMVA/Rule.h" export * }
-module "TMVA/RuleCut.h" { header "TMVA/RuleCut.h" export * }
-module "TMVA/RuleEnsemble.h" { header "TMVA/RuleEnsemble.h" export * }
-module "TMVA/RuleFit.h" { header "TMVA/RuleFit.h" export * }
-module "TMVA/RuleFitAPI.h" { header "TMVA/RuleFitAPI.h" export * }
-module "TMVA/RuleFitParams.h" { header "TMVA/RuleFitParams.h" export * }
-module "TMVA/SVEvent.h" { header "TMVA/SVEvent.h" export * }
-module "TMVA/SVKernelFunction.h" { header "TMVA/SVKernelFunction.h" export * }
-module "TMVA/SVKernelMatrix.h" { header "TMVA/SVKernelMatrix.h" export * }
-module "TMVA/SVWorkingSet.h" { header "TMVA/SVWorkingSet.h" export * }
-module "TMVA/SdivSqrtSplusB.h" { header "TMVA/SdivSqrtSplusB.h" export * }
-module "TMVA/SeparationBase.h" { header "TMVA/SeparationBase.h" export * }
-module "TMVA/SimulatedAnnealing.h" { header "TMVA/SimulatedAnnealing.h" export * }
-module "TMVA/SimulatedAnnealingFitter.h" { header "TMVA/SimulatedAnnealingFitter.h" export * }
-module "TMVA/TActivation.h" { header "TMVA/TActivation.h" export * }
-module "TMVA/TActivationChooser.h" { header "TMVA/TActivationChooser.h" export * }
-module "TMVA/TActivationIdentity.h" { header "TMVA/TActivationIdentity.h" export * }
-module "TMVA/TActivationRadial.h" { header "TMVA/TActivationRadial.h" export * }
-module "TMVA/TActivationReLU.h" { header "TMVA/TActivationReLU.h" export * }
-module "TMVA/TActivationSigmoid.h" { header "TMVA/TActivationSigmoid.h" export * }
-module "TMVA/TActivationTanh.h" { header "TMVA/TActivationTanh.h" export * }
-module "TMVA/TMVAGui.h" { header "TMVA/TMVAGui.h" export * }
-module "TMVA/TMVAMultiClassGui.h" { header "TMVA/TMVAMultiClassGui.h" export * }
-module "TMVA/TMVARegGui.h" { header "TMVA/TMVARegGui.h" export * }
-module "TMVA/TNeuron.h" { header "TMVA/TNeuron.h" export * }
-module "TMVA/TNeuronInput.h" { header "TMVA/TNeuronInput.h" export * }
-module "TMVA/TNeuronInputAbs.h" { header "TMVA/TNeuronInputAbs.h" export * }
-module "TMVA/TNeuronInputChooser.h" { header "TMVA/TNeuronInputChooser.h" export * }
-module "TMVA/TNeuronInputSqSum.h" { header "TMVA/TNeuronInputSqSum.h" export * }
-module "TMVA/TNeuronInputSum.h" { header "TMVA/TNeuronInputSum.h" export * }
-module "TMVA/TSpline1.h" { header "TMVA/TSpline1.h" export * }
-module "TMVA/TSpline2.h" { header "TMVA/TSpline2.h" export * }
-module "TMVA/TSynapse.h" { header "TMVA/TSynapse.h" export * }
-module "TMVA/Timer.h" { header "TMVA/Timer.h" export * }
-module "TMVA/Tools.h" { header "TMVA/Tools.h" export * }
-module "TMVA/TransformationHandler.h" { header "TMVA/TransformationHandler.h" export * }
-module "TMVA/Types.h" { header "TMVA/Types.h" export * }
-module "TMVA/VariableDecorrTransform.h" { header "TMVA/VariableDecorrTransform.h" export * }
-module "TMVA/VariableGaussTransform.h" { header "TMVA/VariableGaussTransform.h" export * }
-module "TMVA/VariableIdentityTransform.h" { header "TMVA/VariableIdentityTransform.h" export * }
-module "TMVA/VariableInfo.h" { header "TMVA/VariableInfo.h" export * }
-module "TMVA/VariableNormalizeTransform.h" { header "TMVA/VariableNormalizeTransform.h" export * }
-module "TMVA/VariablePCATransform.h" { header "TMVA/VariablePCATransform.h" export * }
-module "TMVA/VariableRearrangeTransform.h" { header "TMVA/VariableRearrangeTransform.h" export * }
-module "TMVA/VariableTransformBase.h" { header "TMVA/VariableTransformBase.h" export * }
-module "TMVA/Version.h" { header "TMVA/Version.h" export * }
-module "TMVA/Volume.h" { header "TMVA/Volume.h" export * }
-module "TMVA/annconvergencetest.h" { header "TMVA/annconvergencetest.h" export * }
-module "TMVA/compareanapp.h" { header "TMVA/compareanapp.h" export * }
-module "TMVA/correlations.h" { header "TMVA/correlations.h" export * }
-module "TMVA/correlationsMultiClass.h" { header "TMVA/correlationsMultiClass.h" export * }
-module "TMVA/correlationscatters.h" { header "TMVA/correlationscatters.h" export * }
-module "TMVA/correlationscattersMultiClass.h" { header "TMVA/correlationscattersMultiClass.h" export * }
-module "TMVA/deviations.h" { header "TMVA/deviations.h" export * }
-module "TMVA/efficiencies.h" { header "TMVA/efficiencies.h" export * }
-module "TMVA/likelihoodrefs.h" { header "TMVA/likelihoodrefs.h" export * }
-module "TMVA/mvaeffs.h" { header "TMVA/mvaeffs.h" export * }
-module "TMVA/mvas.h" { header "TMVA/mvas.h" export * }
-module "TMVA/mvasMulticlass.h" { header "TMVA/mvasMulticlass.h" export * }
-module "TMVA/mvaweights.h" { header "TMVA/mvaweights.h" export * }
-module "TMVA/network.h" { header "TMVA/network.h" export * }
-module "TMVA/paracoor.h" { header "TMVA/paracoor.h" export * }
-module "TMVA/probas.h" { header "TMVA/probas.h" export * }
-module "TMVA/regression_averagedevs.h" { header "TMVA/regression_averagedevs.h" export * }
-module "TMVA/rulevis.h" { header "TMVA/rulevis.h" export * }
-module "TMVA/rulevisCorr.h" { header "TMVA/rulevisCorr.h" export * }
-module "TMVA/rulevisHists.h" { header "TMVA/rulevisHists.h" export * }
-module "TMVA/tmvaglob.h" { header "TMVA/tmvaglob.h" export * }
-module "TMVA/variables.h" { header "TMVA/variables.h" export * }
-module "TMVA/variablesMultiClass.h" { header "TMVA/variablesMultiClass.h" export * }
+/*module "TMVA" {
+  requires cplusplus
+  umbrella "TMVA"
+  module * { export * }
+
+  // FIXME: Remove headers which depend on cuda or tbb since they are not well
+  // protected in the cases where tbb or cuda are not present on the system.
+  exclude header "TMVA/DNN/Architectures/Cuda.h"
+  exclude header "TMVA/DNN/Architectures/Cuda/CudaBuffers.h"
+  exclude header "TMVA/DNN/Architectures/Cuda/CudaMatrix.h"
+  exclude header "TMVA/DNN/Architectures/Cuda/Device.h"
+  exclude header "TMVA/DNN/Architectures/Cpu.h"
+  exclude header "TMVA/DNN/Architectures/Cpu/CpuMatrix.h"
+
+  // FIXME: Optional PyMVA gets installed in $ROOTSYS/TMVA. PyMVA* depend on
+  // numpy, whose -I path gets passed only when building the related to PyMVA
+  // sources. I.e. we cannot generate this module implicitly if it included
+  // PyMVA, because we don't have always the relevant -I passed to the compiler.
+  exclude header "TMVA/PyMethodBase.h"
+  exclude header "TMVA/MethodPyAdaBoost.h"
+  exclude header "TMVA/MethodPyGTB.h"
+  exclude header "TMVA/MethodPyRandomForest.h"
+}*/
 module "TMacOSXSystem.h" { header "TMacOSXSystem.h" export * }
 module "TMacro.h" { header "TMacro.h" export * }
 module "TMakeProject.h" { header "TMakeProject.h" export * }
@@ -2199,7 +2044,6 @@ module "config.h" { header "config.h" export * }
 module "mmalloc.h" { header "mmalloc.h" export * }
 module "mmconfig.h" { header "mmconfig.h" export * }
 module "mmprivate.h" { header "mmprivate.h" export * }
-module "module.modulemap" { header "module.modulemap" export * }
 module "pq2actions.h" { header "pq2actions.h" export * }
 module "pq2ping.h" { header "pq2ping.h" export * }
 module "pq2wrappers.h" { header "pq2wrappers.h" export * }
@@ -2219,19 +2063,11 @@ module "rsalib.h" { header "rsalib.h" export * }
 module "snprintf.h" { header "snprintf.h" export * }
 module "strlcpy.h" { header "strlcpy.h" export * }
 module "tableDescriptor.h" { header "tableDescriptor.h" export * }
-module "v5/TF1Data.h" { header "v5/TF1Data.h" export * }
-module "v5/TFormula.h" { header "v5/TFormula.h" export * }
-module "v5/TFormulaPrimitive.h" { header "v5/TFormulaPrimitive.h" export * }
-module "vdt/asin.h" { header "vdt/asin.h" export * }
-module "vdt/atan.h" { header "vdt/atan.h" export * }
-module "vdt/atan2.h" { header "vdt/atan2.h" export * }
-module "vdt/cos.h" { header "vdt/cos.h" export * }
-module "vdt/exp.h" { header "vdt/exp.h" export * }
-module "vdt/inv.h" { header "vdt/inv.h" export * }
-module "vdt/log.h" { header "vdt/log.h" export * }
-module "vdt/sin.h" { header "vdt/sin.h" export * }
-module "vdt/sincos.h" { header "vdt/sincos.h" export * }
-module "vdt/sqrt.h" { header "vdt/sqrt.h" export * }
-module "vdt/tan.h" { header "vdt/tan.h" export * }
-module "vdt/vdtMath.h" { header "vdt/vdtMath.h" export * }
-module "vdt/vdtcore_common.h" { header "vdt/vdtcore_common.h" export * }
+module v5 {
+  umbrella "v5"
+  module * { export * }
+}
+module vdt {
+  umbrella "vdt"
+  module * { export * }
+}

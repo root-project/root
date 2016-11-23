@@ -1356,9 +1356,8 @@ execution of the read block, one can initialize some non persistent
 members. There are two reasons why you would need to write your own
 Streamer: 1) if you have a non-persistent data member that you want to
 initialize to a value depending on the read data members; 2) if you want
-or need to handle the schema evolution on your own. In addition, the
-automatic `Streamer `does not support C-structures. It is best to
-convert the structure to a class definition.
+or need to handle the schema evolution on your own.  Note that an alternative
+for those cases is to consider write a schema evolution rule.
 
 First, you need to tell `rootcling` not to build a `Streamer `for you.
 The input to the `rootcling` command (in the `makefile`) is a list of

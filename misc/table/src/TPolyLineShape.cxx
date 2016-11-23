@@ -47,8 +47,8 @@
 //           V               v      v                     v      v                  //
 //      TPolyLineShape     TBRIK  TTUBE                 TPCON  TTRD1                //
 //       |        ^                                                                 //
-//       |        |       begin_html <a href="http://root.cern.ch/root/html/TShape.html#TShape:description">R  O  O  T        S  H  A  P  E  S</a>end_html                          //
-//       V        |       (see begin_html <a href="http://wwwinfo.cern.ch/asdoc/geant_html3/node109.html#SECTION041000000000000000000000">GEANT 3.21 shapes</a>end_html as well)                           //
+//       |        |       <a href="http://root.cern.ch/root/html/TShape.html#TShape:description">R  O  O  T        S  H  A  P  E  S</a>                          //
+//       V        |       (see <a href="https://cern-tex.web.cern.ch/cern-tex/geant_html3/node109.html#SECTION041000000000000000000000">GEANT 3.21 shapes</a> as well)                           //
 // St_PolyLine3D  |                                                                 //
 //                |                                                                 //
 //           TPoints3DABC                                                           //
@@ -467,7 +467,7 @@ void TPolyLineShape::PaintPolyMarker(Int_t n, Float_t *, Marker_t, Option_t *)
    TView *view = gPad->GetView();      //Get current 3-D view
    if(!view) return;                   //Check if `view` is valid
 
-   //Create temorary storage
+   //Create temporary storage
    TPoint *pxy = new TPoint[n];
    Float_t *x  = new Float_t[n];
    Float_t *y  = new Float_t[n];

@@ -390,7 +390,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                gSystem->FreeDirectory(dirHandle);
                if (maxIdx + 1 != numReuseCanvases)
                   // bad: the number of canvases to reuse noes not correspond to the highest index we saw.
-                  // we will need to regenerate evrything.
+                  // we will need to regenerate everything.
                   numReuseCanvases = 0;
             }
          } // infile can be stat'ed
@@ -1031,7 +1031,7 @@ void TDocOutput::CreateModuleIndex()
             ++iDep;
          }
       } // for library dependencies of module in library
-   } // for libaries
+   } // for libraries
 
    iLib.Reset();
    while ((libinfo = (TLibraryDocInfo*)iLib())) {
@@ -2278,7 +2278,7 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char* /*dir*/,
 ///
 /// Allows optional user provided footer to be written. Root.Html.Footer holds
 /// the file name for this footer. For details see THtml::WriteHtmlHeader (here,
-/// the "+" means the user's footer is written in front of Root's!) Occurences
+/// the "+" means the user's footer is written in front of Root's!) Occurrences
 /// of %AUTHOR%, %CHANGED%, %GENERATED%, and %COPYRIGHT% in the user's file are replaced by
 /// their corresponding values (author, lastUpdate, today, and copyright) before
 /// written to out.
@@ -2463,7 +2463,7 @@ void TDocOutput::WriteLocation(std::ostream& out, TModuleDocInfo* module, const 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the first part of the links shown ontop of each doc page;
-/// one <div> has to be closed by caller so additional items can still
+/// one \<div\> has to be closed by caller so additional items can still
 /// be added.
 
 void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname,

@@ -33,6 +33,7 @@
 
 #include "TMVA/SimulatedAnnealingFitter.h"
 
+#include "TMVA/Configurable.h"
 #include "TMVA/FitterBase.h"
 #include "TMVA/Interval.h"
 #include "TMVA/MsgLogger.h"
@@ -133,7 +134,7 @@ void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    maxCalls,
 
 Double_t TMVA::SimulatedAnnealingFitter::Run( std::vector<Double_t>& pars )
 {
-   Log() << kINFO << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
+   Log() << kHEADER << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
    Log() << kINFO << "(progress timing may be inaccurate for SA)" << Endl;
 
    SimulatedAnnealing sa( GetFitterTarget(), fRanges );
@@ -142,6 +143,11 @@ Double_t TMVA::SimulatedAnnealingFitter::Run( std::vector<Double_t>& pars )
    sa.SetOptions( fMaxCalls, fInitialTemperature, fMinTemperature, fEps, fKernelTemperatureS,
                   fTemperatureScale, fAdaptiveSpeed, fTemperatureAdaptiveStep, 
                   fUseDefaultScale, fUseDefaultTemperature );
+
+  if (fIPyMaxIter){
+     *fIPyMaxIter = fMaxCalls;
+     sa.SetIPythonInteractive(fExitFromTraining, fIPyCurrentIter);
+   }
    // minimise
    Double_t fcn = sa.Minimize( pars );
 

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook
 /// Test the TMath::BetaDist and TMath::BetaDistI functions
 ///
 /// \macro_image

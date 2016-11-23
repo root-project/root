@@ -24,11 +24,19 @@ Using Clang as a Compiler
    AddressSanitizer
    ThreadSanitizer
    MemorySanitizer
+   UndefinedBehaviorSanitizer
    DataFlowSanitizer
    LeakSanitizer
+   SanitizerCoverage
+   SanitizerStats
    SanitizerSpecialCaseList
+   ControlFlowIntegrity
+   LTOVisibility
+   SafeStack
+   SourceBasedCodeCoverage
    Modules
    MSVCCompatibility
+   CommandGuide/index
    FAQ
 
 Using Clang as a Library
@@ -70,6 +78,7 @@ Design Documents
    DriverInternals
    PTHInternals
    PCHInternals
+   ItaniumMangleAbiTags
 
 
 Indices and tables

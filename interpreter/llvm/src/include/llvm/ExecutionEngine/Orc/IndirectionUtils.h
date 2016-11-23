@@ -14,271 +14,407 @@
 #ifndef LLVM_EXECUTIONENGINE_ORC_INDIRECTIONUTILS_H
 #define LLVM_EXECUTIONENGINE_ORC_INDIRECTIONUTILS_H
 
+#include "JITSymbol.h"
+#include "LambdaResolver.h"
+#include "llvm/ExecutionEngine/RuntimeDyld.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Mangler.h"
 #include "llvm/IR/Module.h"
-#include <sstream>
+#include "llvm/Support/Process.h"
+#include "llvm/Transforms/Utils/ValueMapper.h"
 
 namespace llvm {
+namespace orc {
 
-/// @brief Persistent name mangling.
-///
-///   This class provides name mangling that can outlive a Module (and its
-/// DataLayout).
-class PersistentMangler {
+/// @brief Target-independent base class for compile callback management.
+class JITCompileCallbackManager {
 public:
-  PersistentMangler(DataLayout DL) : DL(std::move(DL)), M(&this->DL) {}
+  typedef std::function<TargetAddress()> CompileFtor;
 
-  std::string getMangledName(StringRef Name) const {
-    std::string MangledName;
-    {
-      raw_string_ostream MangledNameStream(MangledName);
-      M.getNameWithPrefix(MangledNameStream, Name);
+  /// @brief Handle to a newly created compile callback. Can be used to get an
+  ///        IR constant representing the address of the trampoline, and to set
+  ///        the compile action for the callback.
+  class CompileCallbackInfo {
+  public:
+    CompileCallbackInfo(TargetAddress Addr, CompileFtor &Compile)
+        : Addr(Addr), Compile(Compile) {}
+
+    TargetAddress getAddress() const { return Addr; }
+    void setCompileAction(CompileFtor Compile) {
+      this->Compile = std::move(Compile);
     }
-    return MangledName;
+
+  private:
+    TargetAddress Addr;
+    CompileFtor &Compile;
+  };
+
+  /// @brief Construct a JITCompileCallbackManager.
+  /// @param ErrorHandlerAddress The address of an error handler in the target
+  ///                            process to be used if a compile callback fails.
+  JITCompileCallbackManager(TargetAddress ErrorHandlerAddress)
+      : ErrorHandlerAddress(ErrorHandlerAddress) {}
+
+  virtual ~JITCompileCallbackManager() {}
+
+  /// @brief Execute the callback for the given trampoline id. Called by the JIT
+  ///        to compile functions on demand.
+  TargetAddress executeCompileCallback(TargetAddress TrampolineAddr) {
+    auto I = ActiveTrampolines.find(TrampolineAddr);
+    // FIXME: Also raise an error in the Orc error-handler when we finally have
+    //        one.
+    if (I == ActiveTrampolines.end())
+      return ErrorHandlerAddress;
+
+    // Found a callback handler. Yank this trampoline out of the active list and
+    // put it back in the available trampolines list, then try to run the
+    // handler's compile and update actions.
+    // Moving the trampoline ID back to the available list first means there's
+    // at
+    // least one available trampoline if the compile action triggers a request
+    // for
+    // a new one.
+    auto Compile = std::move(I->second);
+    ActiveTrampolines.erase(I);
+    AvailableTrampolines.push_back(TrampolineAddr);
+
+    if (auto Addr = Compile())
+      return Addr;
+
+    return ErrorHandlerAddress;
+  }
+
+  /// @brief Reserve a compile callback.
+  CompileCallbackInfo getCompileCallback() {
+    TargetAddress TrampolineAddr = getAvailableTrampolineAddr();
+    auto &Compile = this->ActiveTrampolines[TrampolineAddr];
+    return CompileCallbackInfo(TrampolineAddr, Compile);
+  }
+
+  /// @brief Get a CompileCallbackInfo for an existing callback.
+  CompileCallbackInfo getCompileCallbackInfo(TargetAddress TrampolineAddr) {
+    auto I = ActiveTrampolines.find(TrampolineAddr);
+    assert(I != ActiveTrampolines.end() && "Not an active trampoline.");
+    return CompileCallbackInfo(I->first, I->second);
+  }
+
+  /// @brief Release a compile callback.
+  ///
+  ///   Note: Callbacks are auto-released after they execute. This method should
+  /// only be called to manually release a callback that is not going to
+  /// execute.
+  void releaseCompileCallback(TargetAddress TrampolineAddr) {
+    auto I = ActiveTrampolines.find(TrampolineAddr);
+    assert(I != ActiveTrampolines.end() && "Not an active trampoline.");
+    ActiveTrampolines.erase(I);
+    AvailableTrampolines.push_back(TrampolineAddr);
+  }
+
+protected:
+  TargetAddress ErrorHandlerAddress;
+
+  typedef std::map<TargetAddress, CompileFtor> TrampolineMapT;
+  TrampolineMapT ActiveTrampolines;
+  std::vector<TargetAddress> AvailableTrampolines;
+
+private:
+  TargetAddress getAvailableTrampolineAddr() {
+    if (this->AvailableTrampolines.empty())
+      grow();
+    assert(!this->AvailableTrampolines.empty() &&
+           "Failed to grow available trampolines.");
+    TargetAddress TrampolineAddr = this->AvailableTrampolines.back();
+    this->AvailableTrampolines.pop_back();
+    return TrampolineAddr;
+  }
+
+  // Create new trampolines - to be implemented in subclasses.
+  virtual void grow() = 0;
+
+  virtual void anchor();
+};
+
+/// @brief Manage compile callbacks for in-process JITs.
+template <typename TargetT>
+class LocalJITCompileCallbackManager : public JITCompileCallbackManager {
+public:
+  /// @brief Construct a InProcessJITCompileCallbackManager.
+  /// @param ErrorHandlerAddress The address of an error handler in the target
+  ///                            process to be used if a compile callback fails.
+  LocalJITCompileCallbackManager(TargetAddress ErrorHandlerAddress)
+      : JITCompileCallbackManager(ErrorHandlerAddress) {
+
+    /// Set up the resolver block.
+    std::error_code EC;
+    ResolverBlock = sys::OwningMemoryBlock(sys::Memory::allocateMappedMemory(
+        TargetT::ResolverCodeSize, nullptr,
+        sys::Memory::MF_READ | sys::Memory::MF_WRITE, EC));
+    assert(!EC && "Failed to allocate resolver block");
+
+    TargetT::writeResolverCode(static_cast<uint8_t *>(ResolverBlock.base()),
+                               &reenter, this);
+
+    EC = sys::Memory::protectMappedMemory(ResolverBlock.getMemoryBlock(),
+                                          sys::Memory::MF_READ |
+                                              sys::Memory::MF_EXEC);
+    assert(!EC && "Failed to mprotect resolver block");
   }
 
 private:
-  DataLayout DL;
-  Mangler M;
+  static TargetAddress reenter(void *CCMgr, void *TrampolineId) {
+    JITCompileCallbackManager *Mgr =
+        static_cast<JITCompileCallbackManager *>(CCMgr);
+    return Mgr->executeCompileCallback(
+        static_cast<TargetAddress>(reinterpret_cast<uintptr_t>(TrampolineId)));
+  }
+
+  void grow() override {
+    assert(this->AvailableTrampolines.empty() && "Growing prematurely?");
+
+    std::error_code EC;
+    auto TrampolineBlock =
+        sys::OwningMemoryBlock(sys::Memory::allocateMappedMemory(
+            sys::Process::getPageSize(), nullptr,
+            sys::Memory::MF_READ | sys::Memory::MF_WRITE, EC));
+    assert(!EC && "Failed to allocate trampoline block");
+
+    unsigned NumTrampolines =
+        (sys::Process::getPageSize() - TargetT::PointerSize) /
+        TargetT::TrampolineSize;
+
+    uint8_t *TrampolineMem = static_cast<uint8_t *>(TrampolineBlock.base());
+    TargetT::writeTrampolines(TrampolineMem, ResolverBlock.base(),
+                              NumTrampolines);
+
+    for (unsigned I = 0; I < NumTrampolines; ++I)
+      this->AvailableTrampolines.push_back(
+          static_cast<TargetAddress>(reinterpret_cast<uintptr_t>(
+              TrampolineMem + (I * TargetT::TrampolineSize))));
+
+    EC = sys::Memory::protectMappedMemory(TrampolineBlock.getMemoryBlock(),
+                                          sys::Memory::MF_READ |
+                                              sys::Memory::MF_EXEC);
+    assert(!EC && "Failed to mprotect trampoline block");
+
+    TrampolineBlocks.push_back(std::move(TrampolineBlock));
+  }
+
+  sys::OwningMemoryBlock ResolverBlock;
+  std::vector<sys::OwningMemoryBlock> TrampolineBlocks;
 };
 
-/// @brief Handle callbacks from the JIT process requesting the definitions of
-///        symbols.
-///
-///   This utility is intended to be used to support compile-on-demand for
-/// functions.
-class JITResolveCallbackHandler {
-private:
-  typedef std::vector<std::string> FuncNameList;
-
+/// @brief Base class for managing collections of named indirect stubs.
+class IndirectStubsManager {
 public:
-  typedef FuncNameList::size_type StubIndex;
+  /// @brief Map type for initializing the manager. See init.
+  typedef StringMap<std::pair<TargetAddress, JITSymbolFlags>> StubInitsMap;
 
-public:
-  /// @brief Create a JITResolveCallbackHandler with the given functors for
-  ///        looking up symbols and updating their use-sites.
-  ///
-  /// @return A JITResolveCallbackHandler instance that will invoke the
-  ///         Lookup and Update functors as needed to resolve missing symbol
-  ///         definitions.
-  template <typename LookupFtor, typename UpdateFtor>
-  static std::unique_ptr<JITResolveCallbackHandler> create(LookupFtor Lookup,
-                                                           UpdateFtor Update);
+  virtual ~IndirectStubsManager() {}
 
-  /// @brief Destroy instance. Does not modify existing emitted symbols.
-  ///
-  ///   Not-yet-emitted symbols will need to be resolved some other way after
-  /// this class is destroyed.
-  virtual ~JITResolveCallbackHandler() {}
+  /// @brief Create a single stub with the given name, target address and flags.
+  virtual Error createStub(StringRef StubName, TargetAddress StubAddr,
+                           JITSymbolFlags StubFlags) = 0;
 
-  /// @brief Add a function to be resolved on demand.
-  void addFuncName(std::string Name) { FuncNames.push_back(std::move(Name)); }
+  /// @brief Create StubInits.size() stubs with the given names, target
+  ///        addresses, and flags.
+  virtual Error createStubs(const StubInitsMap &StubInits) = 0;
 
-  /// @brief Get the name associated with the given index.
-  const std::string &getFuncName(StubIndex Idx) const { return FuncNames[Idx]; }
+  /// @brief Find the stub with the given name. If ExportedStubsOnly is true,
+  ///        this will only return a result if the stub's flags indicate that it
+  ///        is exported.
+  virtual JITSymbol findStub(StringRef Name, bool ExportedStubsOnly) = 0;
 
-  /// @brief Returns the number of symbols being managed by this instance.
-  StubIndex getNumFuncs() const { return FuncNames.size(); }
+  /// @brief Find the implementation-pointer for the stub.
+  virtual JITSymbol findPointer(StringRef Name) = 0;
 
-  /// @brief Get the address for the symbol associated with the given index.
-  ///
-  ///   This is expected to be called by code in the JIT process itself, in
-  /// order to resolve a function.
-  virtual uint64_t resolve(StubIndex StubIdx) = 0;
+  /// @brief Change the value of the implementation pointer for the stub.
+  virtual Error updatePointer(StringRef Name, TargetAddress NewAddr) = 0;
 
 private:
-  FuncNameList FuncNames;
+  virtual void anchor();
 };
 
-// Implementation class for JITResolveCallbackHandler.
-template <typename LookupFtor, typename UpdateFtor>
-class JITResolveCallbackHandlerImpl : public JITResolveCallbackHandler {
+/// @brief IndirectStubsManager implementation for the host architecture, e.g.
+///        OrcX86_64. (See OrcArchitectureSupport.h).
+template <typename TargetT>
+class LocalIndirectStubsManager : public IndirectStubsManager {
 public:
-  JITResolveCallbackHandlerImpl(LookupFtor Lookup, UpdateFtor Update)
-      : Lookup(std::move(Lookup)), Update(std::move(Update)) {}
+  Error createStub(StringRef StubName, TargetAddress StubAddr,
+                   JITSymbolFlags StubFlags) override {
+    if (auto Err = reserveStubs(1))
+      return Err;
 
-  uint64_t resolve(StubIndex StubIdx) override {
-    const std::string &FuncName = getFuncName(StubIdx);
-    uint64_t Addr = Lookup(FuncName);
-    Update(FuncName, Addr);
-    return Addr;
+    createStubInternal(StubName, StubAddr, StubFlags);
+
+    return Error::success();
+  }
+
+  Error createStubs(const StubInitsMap &StubInits) override {
+    if (auto Err = reserveStubs(StubInits.size()))
+      return Err;
+
+    for (auto &Entry : StubInits)
+      createStubInternal(Entry.first(), Entry.second.first,
+                         Entry.second.second);
+
+    return Error::success();
+  }
+
+  JITSymbol findStub(StringRef Name, bool ExportedStubsOnly) override {
+    auto I = StubIndexes.find(Name);
+    if (I == StubIndexes.end())
+      return nullptr;
+    auto Key = I->second.first;
+    void *StubAddr = IndirectStubsInfos[Key.first].getStub(Key.second);
+    assert(StubAddr && "Missing stub address");
+    auto StubTargetAddr =
+        static_cast<TargetAddress>(reinterpret_cast<uintptr_t>(StubAddr));
+    auto StubSymbol = JITSymbol(StubTargetAddr, I->second.second);
+    if (ExportedStubsOnly && !StubSymbol.isExported())
+      return nullptr;
+    return StubSymbol;
+  }
+
+  JITSymbol findPointer(StringRef Name) override {
+    auto I = StubIndexes.find(Name);
+    if (I == StubIndexes.end())
+      return nullptr;
+    auto Key = I->second.first;
+    void *PtrAddr = IndirectStubsInfos[Key.first].getPtr(Key.second);
+    assert(PtrAddr && "Missing pointer address");
+    auto PtrTargetAddr =
+        static_cast<TargetAddress>(reinterpret_cast<uintptr_t>(PtrAddr));
+    return JITSymbol(PtrTargetAddr, I->second.second);
+  }
+
+  Error updatePointer(StringRef Name, TargetAddress NewAddr) override {
+    auto I = StubIndexes.find(Name);
+    assert(I != StubIndexes.end() && "No stub pointer for symbol");
+    auto Key = I->second.first;
+    *IndirectStubsInfos[Key.first].getPtr(Key.second) =
+        reinterpret_cast<void *>(static_cast<uintptr_t>(NewAddr));
+    return Error::success();
   }
 
 private:
-  LookupFtor Lookup;
-  UpdateFtor Update;
-};
+  Error reserveStubs(unsigned NumStubs) {
+    if (NumStubs <= FreeStubs.size())
+      return Error::success();
 
-template <typename LookupFtor, typename UpdateFtor>
-std::unique_ptr<JITResolveCallbackHandler>
-JITResolveCallbackHandler::create(LookupFtor Lookup, UpdateFtor Update) {
-  typedef JITResolveCallbackHandlerImpl<LookupFtor, UpdateFtor> Impl;
-  return make_unique<Impl>(std::move(Lookup), std::move(Update));
-}
-
-/// @brief Holds a list of the function names that were indirected, plus
-///        mappings from each of these names to (a) the name of function
-///        providing the implementation for that name (GetImplNames), and
-///        (b) the name of the global variable holding the address of the
-///        implementation.
-///
-///   This data structure can be used with a JITCallbackHandler to look up and
-/// update function implementations when lazily compiling.
-class JITIndirections {
-public:
-  JITIndirections(std::vector<std::string> IndirectedNames,
-                  std::function<std::string(StringRef)> GetImplName,
-                  std::function<std::string(StringRef)> GetAddrName)
-      : IndirectedNames(std::move(IndirectedNames)),
-        GetImplName(std::move(GetImplName)),
-        GetAddrName(std::move(GetAddrName)) {}
-
-  std::vector<std::string> IndirectedNames;
-  std::function<std::string(StringRef Name)> GetImplName;
-  std::function<std::string(StringRef Name)> GetAddrName;
-};
-
-/// @brief Indirect all calls to functions matching the predicate
-///        ShouldIndirect through a global variable containing the address
-///        of the implementation.
-///
-/// @return An indirection structure containing the functions that had their
-///         call-sites re-written.
-///
-///   For each function 'F' that meets the ShouldIndirect predicate, and that
-/// is called in this Module, add a common-linkage global variable to the
-/// module that will hold the address of the implementation of that function.
-/// Rewrite all call-sites of 'F' to be indirect calls (via the global).
-/// This allows clients, either directly or via a JITCallbackHandler, to
-/// change the address of the implementation of 'F' at runtime.
-///
-/// Important notes:
-///
-///   Single indirection does not preserve pointer equality for 'F'. If the
-/// program was already calling 'F' indirectly through function pointers, or
-/// if it was taking the address of 'F' for the purpose of pointer comparisons
-/// or arithmetic double indirection should be used instead.
-///
-///   This method does *not* initialize the function implementation addresses.
-/// The client must do this prior to running any call-sites that have been
-/// indirected.
-JITIndirections makeCallsSingleIndirect(
-    llvm::Module &M,
-    const std::function<bool(const Function &)> &ShouldIndirect,
-    const char *JITImplSuffix, const char *JITAddrSuffix);
-
-/// @brief Replace the body of functions matching the predicate ShouldIndirect
-///        with indirect calls to the implementation.
-///
-/// @return An indirections structure containing the functions that had their
-///         implementations re-written.
-///
-///   For each function 'F' that meets the ShouldIndirect predicate, add a
-/// common-linkage global variable to the module that will hold the address of
-/// the implementation of that function and rewrite the implementation of 'F'
-/// to call through to the implementation indirectly (via the global).
-/// This allows clients, either directly or via a JITCallbackHandler, to
-/// change the address of the implementation of 'F' at runtime.
-///
-/// Important notes:
-///
-///   Double indirection is slower than single indirection, but preserves
-/// function pointer relation tests and correct behavior for function pointers
-/// (all calls to 'F', direct or indirect) go the address stored in the global
-/// variable at the time of the call.
-///
-///   This method does *not* initialize the function implementation addresses.
-/// The client must do this prior to running any call-sites that have been
-/// indirected.
-JITIndirections makeCallsDoubleIndirect(
-    llvm::Module &M,
-    const std::function<bool(const Function &)> &ShouldIndirect,
-    const char *JITImplSuffix, const char *JITAddrSuffix);
-
-/// @brief Given a set of indirections and a symbol lookup functor, create a
-///        JITResolveCallbackHandler instance that will resolve the
-///        implementations for the indirected symbols on demand.
-template <typename SymbolLookupFtor>
-std::unique_ptr<JITResolveCallbackHandler>
-createCallbackHandlerFromJITIndirections(const JITIndirections &Indirs,
-                                         const PersistentMangler &NM,
-                                         SymbolLookupFtor Lookup) {
-  auto GetImplName = Indirs.GetImplName;
-  auto GetAddrName = Indirs.GetAddrName;
-
-  std::unique_ptr<JITResolveCallbackHandler> J =
-      JITResolveCallbackHandler::create(
-          [=](const std::string &S) {
-            return Lookup(NM.getMangledName(GetImplName(S)));
-          },
-          [=](const std::string &S, uint64_t Addr) {
-            void *ImplPtr = reinterpret_cast<void *>(
-                Lookup(NM.getMangledName(GetAddrName(S))));
-            memcpy(ImplPtr, &Addr, sizeof(uint64_t));
-          });
-
-  for (const auto &FuncName : Indirs.IndirectedNames)
-    J->addFuncName(FuncName);
-
-  return J;
-}
-
-/// @brief Insert callback asm into module M for the symbols managed by
-///        JITResolveCallbackHandler J.
-void insertX86CallbackAsm(Module &M, JITResolveCallbackHandler &J);
-
-/// @brief Initialize global indirects to point into the callback asm.
-template <typename LookupFtor>
-void initializeFuncAddrs(JITResolveCallbackHandler &J,
-                         const JITIndirections &Indirs,
-                         const PersistentMangler &NM, LookupFtor Lookup) {
-  // Forward declare so that we can access this, even though it's an
-  // implementation detail.
-  std::string getJITResolveCallbackIndexLabel(unsigned I);
-
-  if (J.getNumFuncs() == 0)
-    return;
-
-  //   Force a look up one of the global addresses for a function that has been
-  // indirected. We need to do this to trigger the emission of the module
-  // holding the callback asm. We can't rely on that emission happening
-  // automatically when we look up the callback asm symbols, since lazy-emitting
-  // layers can't see those.
-  Lookup(NM.getMangledName(Indirs.GetAddrName(J.getFuncName(0))));
-
-  // Now update indirects to point to the JIT resolve callback asm.
-  for (JITResolveCallbackHandler::StubIndex I = 0; I < J.getNumFuncs(); ++I) {
-    uint64_t ResolveCallbackIdxAddr =
-        Lookup(getJITResolveCallbackIndexLabel(I));
-    void *AddrPtr = reinterpret_cast<void *>(
-        Lookup(NM.getMangledName(Indirs.GetAddrName(J.getFuncName(I)))));
-    assert(AddrPtr && "Can't find stub addr global to initialize.");
-    memcpy(AddrPtr, &ResolveCallbackIdxAddr, sizeof(uint64_t));
+    unsigned NewStubsRequired = NumStubs - FreeStubs.size();
+    unsigned NewBlockId = IndirectStubsInfos.size();
+    typename TargetT::IndirectStubsInfo ISI;
+    if (auto Err =
+            TargetT::emitIndirectStubsBlock(ISI, NewStubsRequired, nullptr))
+      return Err;
+    for (unsigned I = 0; I < ISI.getNumStubs(); ++I)
+      FreeStubs.push_back(std::make_pair(NewBlockId, I));
+    IndirectStubsInfos.push_back(std::move(ISI));
+    return Error::success();
   }
-}
 
-/// @brief Extract all functions matching the predicate ShouldExtract in to
-///        their own modules. (Does not modify the original module.)
-///
-/// @return A set of modules, the first containing all symbols (including
-///         globals and aliases) that did not pass ShouldExtract, and each
-///         subsequent module containing one of the functions that did meet
-///         ShouldExtract.
-///
-///   By adding the resulting modules separately (not as a set) to a
-/// LazyEmittingLayer instance, compilation can be deferred until symbols are
-/// actually needed.
-std::vector<std::unique_ptr<llvm::Module>>
-explode(const llvm::Module &OrigMod,
-        const std::function<bool(const Function &)> &ShouldExtract);
+  void createStubInternal(StringRef StubName, TargetAddress InitAddr,
+                          JITSymbolFlags StubFlags) {
+    auto Key = FreeStubs.back();
+    FreeStubs.pop_back();
+    *IndirectStubsInfos[Key.first].getPtr(Key.second) =
+        reinterpret_cast<void *>(static_cast<uintptr_t>(InitAddr));
+    StubIndexes[StubName] = std::make_pair(Key, StubFlags);
+  }
 
-/// @brief Given a module that has been indirectified, break each function
-///        that has been indirected out into its own module. (Does not modify
-///        the original module).
+  std::vector<typename TargetT::IndirectStubsInfo> IndirectStubsInfos;
+  typedef std::pair<uint16_t, uint16_t> StubKey;
+  std::vector<StubKey> FreeStubs;
+  StringMap<std::pair<StubKey, JITSymbolFlags>> StubIndexes;
+};
+
+/// @brief Create a local compile callback manager.
 ///
-/// @returns A set of modules covering the symbols provided by OrigMod.
-std::vector<std::unique_ptr<llvm::Module>>
-explode(const llvm::Module &OrigMod, const JITIndirections &Indirections);
-}
+/// The given target triple will determine the ABI, and the given
+/// ErrorHandlerAddress will be used by the resulting compile callback
+/// manager if a compile callback fails.
+std::unique_ptr<JITCompileCallbackManager>
+createLocalCompileCallbackManager(const Triple &T,
+                                  TargetAddress ErrorHandlerAddress);
+
+/// @brief Create a local indriect stubs manager builder.
+///
+/// The given target triple will determine the ABI.
+std::function<std::unique_ptr<IndirectStubsManager>()>
+createLocalIndirectStubsManagerBuilder(const Triple &T);
+
+/// @brief Build a function pointer of FunctionType with the given constant
+///        address.
+///
+///   Usage example: Turn a trampoline address into a function pointer constant
+/// for use in a stub.
+Constant *createIRTypedAddress(FunctionType &FT, TargetAddress Addr);
+
+/// @brief Create a function pointer with the given type, name, and initializer
+///        in the given Module.
+GlobalVariable *createImplPointer(PointerType &PT, Module &M, const Twine &Name,
+                                  Constant *Initializer);
+
+/// @brief Turn a function declaration into a stub function that makes an
+///        indirect call using the given function pointer.
+void makeStub(Function &F, Value &ImplPointer);
+
+/// @brief Raise linkage types and rename as necessary to ensure that all
+///        symbols are accessible for other modules.
+///
+///   This should be called before partitioning a module to ensure that the
+/// partitions retain access to each other's symbols.
+void makeAllSymbolsExternallyAccessible(Module &M);
+
+/// @brief Clone a function declaration into a new module.
+///
+///   This function can be used as the first step towards creating a callback
+/// stub (see makeStub), or moving a function body (see moveFunctionBody).
+///
+///   If the VMap argument is non-null, a mapping will be added between F and
+/// the new declaration, and between each of F's arguments and the new
+/// declaration's arguments. This map can then be passed in to moveFunction to
+/// move the function body if required. Note: When moving functions between
+/// modules with these utilities, all decls should be cloned (and added to a
+/// single VMap) before any bodies are moved. This will ensure that references
+/// between functions all refer to the versions in the new module.
+Function *cloneFunctionDecl(Module &Dst, const Function &F,
+                            ValueToValueMapTy *VMap = nullptr);
+
+/// @brief Move the body of function 'F' to a cloned function declaration in a
+///        different module (See related cloneFunctionDecl).
+///
+///   If the target function declaration is not supplied via the NewF parameter
+/// then it will be looked up via the VMap.
+///
+///   This will delete the body of function 'F' from its original parent module,
+/// but leave its declaration.
+void moveFunctionBody(Function &OrigF, ValueToValueMapTy &VMap,
+                      ValueMaterializer *Materializer = nullptr,
+                      Function *NewF = nullptr);
+
+/// @brief Clone a global variable declaration into a new module.
+GlobalVariable *cloneGlobalVariableDecl(Module &Dst, const GlobalVariable &GV,
+                                        ValueToValueMapTy *VMap = nullptr);
+
+/// @brief Move global variable GV from its parent module to cloned global
+///        declaration in a different module.
+///
+///   If the target global declaration is not supplied via the NewGV parameter
+/// then it will be looked up via the VMap.
+///
+///   This will delete the initializer of GV from its original parent module,
+/// but leave its declaration.
+void moveGlobalVariableInitializer(GlobalVariable &OrigGV,
+                                   ValueToValueMapTy &VMap,
+                                   ValueMaterializer *Materializer = nullptr,
+                                   GlobalVariable *NewGV = nullptr);
+
+/// @brief Clone
+GlobalAlias *cloneGlobalAliasDecl(Module &Dst, const GlobalAlias &OrigA,
+                                  ValueToValueMapTy &VMap);
+
+} // End namespace orc.
+} // End namespace llvm.
 
 #endif // LLVM_EXECUTIONENGINE_ORC_INDIRECTIONUTILS_H

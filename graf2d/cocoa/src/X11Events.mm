@@ -16,6 +16,7 @@
 
 #include <Cocoa/Cocoa.h>
 
+#include "CocoaConstants.h"
 #include "ROOTOpenGLView.h"
 #include "QuartzWindow.h"
 #include "CocoaUtils.h"
@@ -97,9 +98,6 @@ struct KeySymPair {
 void MapUnicharToKeySym(unichar key, char *buf, Int_t /*len*/, UInt_t &rootKeySym)
 {
    assert(buf != 0 && "MapUnicharToKeySym, parameter 'buf' is null");
-
-   //TODO: something really weird :)
-   //read how XLookupString actually works? ;)
 
    static const KeySymPair<unichar, EKeySym> keyMap[] = {
         {NSEnterCharacter, kKey_Enter},
@@ -265,15 +263,15 @@ NSUInteger GetCocoaKeyModifiersFromROOTKeyModifiers(UInt_t rootModifiers)
    NSUInteger cocoaModifiers = 0;
 
    if (rootModifiers & kKeyLockMask)
-      cocoaModifiers |= NSAlphaShiftKeyMask;
+      cocoaModifiers |= Details::kAlphaShiftKeyMask;
    if (rootModifiers & kKeyShiftMask)
-      cocoaModifiers |= NSShiftKeyMask;
+      cocoaModifiers |= Details::kShiftKeyMask;
    if (rootModifiers & kKeyControlMask)
-      cocoaModifiers |= NSControlKeyMask;
+      cocoaModifiers |= Details::kControlKeyMask;
    if (rootModifiers & kKeyMod1Mask)
-      cocoaModifiers |= NSAlternateKeyMask;
+      cocoaModifiers |= Details::kAlternateKeyMask;
    if (rootModifiers & kKeyMod2Mask)
-      cocoaModifiers |= NSCommandKeyMask;
+      cocoaModifiers |= Details::kCommandKeyMask;
 
    return cocoaModifiers;
 }
@@ -284,15 +282,15 @@ UInt_t GetKeyboardModifiers()
    const NSUInteger modifiers = [NSEvent modifierFlags];
 
    UInt_t rootModifiers = 0;
-   if (modifiers & NSAlphaShiftKeyMask)
+   if (modifiers & Details::kAlphaShiftKeyMask)
       rootModifiers |= kKeyLockMask;
-   if (modifiers & NSShiftKeyMask)
+   if (modifiers & Details::kShiftKeyMask)
       rootModifiers |= kKeyShiftMask;
-   if (modifiers & NSControlKeyMask)
+   if (modifiers & Details::kControlKeyMask)
       rootModifiers |= kKeyControlMask;
-   if (modifiers & NSAlternateKeyMask)
+   if (modifiers & Details::kAlternateKeyMask)
       rootModifiers |= kKeyMod1Mask;
-   if (modifiers & NSCommandKeyMask)
+   if (modifiers & Details::kCommandKeyMask)
       rootModifiers |= kKeyMod2Mask;
 
    return rootModifiers;
@@ -323,7 +321,7 @@ Time_t TimeForCocoaEvent(NSEvent *theEvent)
    //1. Event is not nil.
    assert(theEvent != nil && "TimeForCocoaEvent, parameter 'theEvent' is nil");
 
-   return [theEvent timestamp] * 1000;//TODO: check this!
+   return [theEvent timestamp] * 1000;
 }
 
 //______________________________________________________________________________
@@ -349,7 +347,6 @@ void ConvertEventLocationToROOTXY(NSEvent *cocoaEvent, NSView<X11Window> *eventV
    assert(eventView != nil && "ConvertEventLocationToROOTXY, parameter 'eventView' is nil");
    assert(rootEvent != 0 && "ConvertEventLocationToROOTXY, parameter 'rootEvent' is null");
 
-   //TODO: can [event window] be nil? (this can probably happen with mouse grabs).
    if (![cocoaEvent window])
       NSLog(@"Error in ConvertEventLocationToROOTXY, window property"
              " of event is nil, can not convert coordinates correctly");
@@ -375,15 +372,15 @@ unsigned GetKeyboardModifiersFromCocoaEvent(NSEvent *theEvent)
 
    const NSUInteger modifiers = [theEvent modifierFlags];
    unsigned rootModifiers = 0;
-   if (modifiers & NSAlphaShiftKeyMask)
+   if (modifiers & Details::kAlphaShiftKeyMask)
       rootModifiers |= kKeyLockMask;
-   if (modifiers & NSShiftKeyMask)
+   if (modifiers & Details::kShiftKeyMask)
       rootModifiers |= kKeyShiftMask;
-   if (modifiers & NSControlKeyMask)
+   if (modifiers & Details::kControlKeyMask)
       rootModifiers |= kKeyControlMask;
-   if (modifiers & NSAlternateKeyMask)
+   if (modifiers & Details::kAlternateKeyMask)
       rootModifiers |= kKeyMod1Mask;
-   if (modifiers & NSCommandKeyMask)
+   if (modifiers & Details::kCommandKeyMask)
       rootModifiers |= kKeyMod2Mask;
 
    return rootModifiers;
@@ -1197,7 +1194,6 @@ void EventTranslator::GenerateExposeEvent(NSView<X11Window> *view, const NSRect 
 void EventTranslator::GenerateCrossingEvent(NSEvent *theEvent)
 {
    //View parameter can be nil.
-   //TODO: change interface, it looks like I do not need the 'view' parameter.
    assert(theEvent != nil && "GenerateCrossingEvent, parameter 'event' is nil");
 
    fPointerGrabType == kPGNoGrab ? GenerateCrossingEventNoGrab(theEvent) :
@@ -1349,7 +1345,6 @@ void EventTranslator::SetPointerGrab(NSView<X11Window> *grabView, unsigned event
    if (fButtonGrabView) {
       //This can happen with X11, does this happen with ROOT's GUI?
       //Hm, should I send leave notify to the previous grab???
-      //TODO: check this!
       [fButtonGrabView cancelGrab];
    }
 
@@ -1483,9 +1478,6 @@ void EventTranslator::CheckUnmappedView(Window_t winID)
    //Window was unmapped, check, if it's the same window as the current grab,
    //or focus window, or key grabbing window and if so - do cleanup.
 
-   //TODO: This is quite rough implementation - not sure, if this also has to
-   //generate some additional events.
-
    if (fButtonGrabView) {
       for (NSView<X11Window> *view = fButtonGrabView; view; view = view.fParentView) {
          if (view.fID == winID) {
@@ -1520,8 +1512,8 @@ void EventTranslator::CheckUnmappedView(Window_t winID)
       }
    }
 
-   ClearPointerIfViewIsRelated(fFocusView, winID);//TODO: send event to this view first?
-   ClearPointerIfViewIsRelated(fKeyGrabView, winID);//TODO: send event to this view first??
+   ClearPointerIfViewIsRelated(fFocusView, winID);
+   ClearPointerIfViewIsRelated(fKeyGrabView, winID);
 }
 
 //______________________________________________________________________________
@@ -1550,8 +1542,6 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(NSEvent *theEvent)
    //In case of button press (this is either passive->active or implicit grab),
    //Cocoa has it's own grab, so view (and window) can be not under cursor (but still
    //it receives events). So I can not simple use eventView here.
-
-   //TODO: change interface? - remove eventView parameter declaration.
 
    if (!fButtonGrabView)//Implicit grab when nobody has PressButtonMask
       return;
@@ -1622,8 +1612,6 @@ void EventTranslator::GenerateButtonPressEventActiveGrab(NSView<X11Window> * /*v
                                                          EMouseButton btn)
 {
    //Generate button press event in the presence of activated pointer grab.
-
-   //TODO: change interface? remove view parameter from declaration.
 
    //assert(view != nil && "GenerateButtonPressEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonPressEventActiveGrab, parameter 'theEvent' is nil");
@@ -1721,14 +1709,12 @@ void EventTranslator::GenerateKeyPressEventNoGrab(NSView<X11Window> *eventView, 
    if (!fKeyGrabView) {
       NSView<X11Window> *candidateView = fFocusView;
       if (Detail::IsParent(fFocusView, eventView)) {
-         //TODO: test theEvent.type? Can it be neither NSKeyDown nor NSKeyUp?
          NSView<X11Window> * const testView = Detail::FindViewToPropagateEvent(eventView, kKeyPressMask);
 
          if (testView && (testView == fFocusView || Detail::IsParent(fFocusView, testView)))
             candidateView = testView;
       }
 
-      //TODO: test if focus (if it's chosen) want the event?
       GenerateKeyEventForView(candidateView, theEvent);
    } else
       GenerateKeyEventForView(fKeyGrabView, theEvent);
@@ -1741,8 +1727,7 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, N
    assert(theEvent != nil && "GenerateKeyEventActiveGrab, parameter 'theEvent' is nil");
    assert(fFocusView != nil && "GenerateKeyEventActiveGrab, fFocusView is nil");
 
-   //TODO: assert on possible event types?
-   const Mask_t eventMask = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
+   const Mask_t eventMask = theEvent.type == Details::kKeyDown ? kKeyPressMask : kKeyReleaseMask;
 
    if (Detail::IsParent(fFocusView, eventView) || fFocusView == eventView) {
       NSView<X11Window> * const testView = Detail::FindViewToPropagateEvent(eventView, eventMask);
@@ -1751,7 +1736,7 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, N
    } else
       GenerateKeyEventForView(fFocusView, theEvent);//Should I check the mask???
 
-   if (theEvent.type == NSKeyUp && fKeyGrabView) {
+   if (theEvent.type == Details::kKeyUp && fKeyGrabView) {
       //Cancel grab?
 
       //NSString *characters = [theEvent charactersIgnoringModifiers];
@@ -1782,7 +1767,6 @@ void EventTranslator::GenerateKeyReleaseEventNoGrab(NSView<X11Window> *eventView
          candidateView = testView;
    }
 
-   //TODO: do I have to check if focus (if it was chosen) has a corresponding mask?
    GenerateKeyEventForView(candidateView, theEvent);
 }
 
@@ -1792,12 +1776,11 @@ void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *
    //Generate key press event for a view without grab.
    assert(view != nil && "GenerateKeyEventForView, parameter 'view' is nil");
    assert(theEvent != nil && "GenerateKeyEventForView, parameter 'theEvent' is nil");
-   assert(theEvent.type == NSKeyDown || theEvent.type == NSKeyUp &&
+   assert((theEvent.type == Details::kKeyDown || theEvent.type == Details::kKeyUp) &&
           "GenerateKeyEvenForView, event's type must be keydown or keyup");
 
-   const Mask_t eventType = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
+   const Mask_t eventType = theEvent.type == Details::kKeyDown ? kKeyPressMask : kKeyReleaseMask;
 
-   //TODO: this is not implemented, do I need it? (can require interface changes then).
    NSView<X11Window> *childView = nil;
 
    NSPoint mousePosition = {};
@@ -1869,7 +1852,7 @@ void EventTranslator::FindKeyGrabView(NSView<X11Window> *eventView, NSEvent *the
    assert([characters length] > 0 && "FindKeyGrabView, characters is an empty string");
 
    const unichar keyCode = [characters characterAtIndex : 0];
-   const NSUInteger modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+   const NSUInteger modifiers = [theEvent modifierFlags] & Details::kDeviceIndependentModifierFlagsMask;
 
    NSView<X11Window> *currentView = fFocusView;
    if (eventView != fFocusView && Detail::IsParent(fFocusView, eventView))

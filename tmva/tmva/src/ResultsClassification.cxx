@@ -28,6 +28,7 @@
 #include "TMVA/ResultsClassification.h"
 
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Results.h"
 #include "TMVA/Types.h"
 
 #include "TString.h"
@@ -37,6 +38,8 @@
 namespace TMVA {
    class DataSetInfo;
 }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 

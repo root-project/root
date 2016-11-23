@@ -359,10 +359,9 @@ Double_t TMath::Gamma(Double_t z)
 /// Handbook of Mathematical Functions by Abramowitz and Stegun, formula 6.5.1 on page 260 .
 /// Its normalization is such that TMath::Gamma(a,+infinity) = 1 .
 ///
-///  Begin_Latex
-///  P(a, x) = #frac{1}{#Gamma(a) } #int_{0}^{x} t^{a-1} e^{-t} dt
-///   End_Latex
-///
+///  \f[
+///  P(a, x) = \frac{1}{\Gamma(a)} \int_{0}^{x} t^{a-1} e^{-t} dt
+///  \f]
 ///
 ///--- Nve 14-nov-1998 UU-SAP Utrecht
 
@@ -463,10 +462,10 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma, Bool_t norm)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The LANDAU function.
-/// mu is a location parameter and correspond approximatly to the most probable value
+/// mu is a location parameter and correspond approximately to the most probable value
 /// and sigma is a scale parameter (not the sigma of the full distribution which is not defined)
 /// Note that for mu=0 and sigma=1 (default values) the exact location of the maximum of the distribution
-/// (most proble value) is at x = -0.22278
+/// (most proper value) is at x = -0.22278
 /// This function has been adapted from the CERNLIB routine G110 denlan.
 /// If norm=kTRUE (default is kFALSE) the result is divided by sigma
 
@@ -552,22 +551,25 @@ Double_t TMath::Normalize(Double_t v[3])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute the Poisson distribution function for (x,par)
+/// Compute the Poisson distribution function for (x,par)
 /// The Poisson PDF is implemented by means of Euler's Gamma-function
 /// (for the factorial), so for any x integer argument it is correct.
 /// BUT for non-integer x values, it IS NOT equal to the Poisson distribution.
 /// see TMath::PoissonI to get a non-smooth function.
 /// Note that for large values of par, it is better to call
+///
 ///     TMath::Gaus(x,par,sqrt(par),kTRUE)
-///Begin_Html
+///
+/// Begin_Macro
+/// {
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
+///   TF1 *poisson = new TF1("poisson", "TMath::Poisson(x, 5)", 0, 15);
+///   poisson->Draw("L");
+/// }
+/// End_Macro
 
 Double_t TMath::Poisson(Double_t x, Double_t par)
 {
-/*
-<img src="gif/Poisson.gif">
-*/
-//End_Html
-
    if (x<0)
       return 0;
    else if (x == 0.0)
@@ -587,15 +589,18 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 /// compute the Poisson distribution function for (x,par)
 /// This is a non-smooth function.
 /// This function is equivalent to ROOT::Math::poisson_pdf
-///Begin_Html
+///
+/// Begin_Macro
+/// {
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
+///   TF1 *poissoni = new TF1("poissoni", "TMath::PoissonI(x, 5)", 0, 15);
+///   poissoni->SetNpx(1000);
+///   poissoni->Draw("L");
+/// }
+/// End_Macro
 
 Double_t TMath::PoissonI(Double_t x, Double_t par)
 {
-/*
-<img src="gif/PoissonI.gif">
-*/
-//End_Html
-
    Int_t ix = Int_t(x);
    return Poisson(ix,par);
 }
@@ -630,36 +635,35 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates the Kolmogorov distribution function,
-///Begin_Html
+///
+/// \f[
+/// P(z) = 2 \sum_{j=1}^{\infty} (-1)^{j-1} e^{-2 j^2 z^2}
+/// \f]
+///
+/// which gives the probability that Kolmogorov's test statistic will exceed
+/// the value z assuming the null hypothesis. This gives a very powerful
+/// test for comparing two one-dimensional distributions.
+/// see, for example, Eadie et al, "statistical Methods in Experimental
+/// Physics', pp 269-270).
+///
+/// This function returns the confidence level for the null hypothesis, where:
+///   z = dn*sqrt(n), and
+///   dn  is the maximum deviation between a hypothetical distribution
+///       function and an experimental distribution with
+///   n   events
+///
+/// NOTE: To compare two experimental distributions with m and n events,
+///       use z = sqrt(m*n/(m+n))*dn
+///
+/// Accuracy: The function is far too accurate for any imaginable application.
+///           Probabilities less than 10^-15 are returned as zero.
+///           However, remember that the formula is only valid for "large" n.
+/// Theta function inversion formula is used for z <= 1
+///
+/// This function was translated by Rene Brun from PROBKL in CERNLIB.
 
 Double_t TMath::KolmogorovProb(Double_t z)
 {
-   /*
-   <img src="gif/kolmogorov.gif">
-   */
-   //End_Html
-   // which gives the probability that Kolmogorov's test statistic will exceed
-   // the value z assuming the null hypothesis. This gives a very powerful
-   // test for comparing two one-dimensional distributions.
-   // see, for example, Eadie et al, "statistocal Methods in Experimental
-   // Physics', pp 269-270).
-   //
-   // This function returns the confidence level for the null hypothesis, where:
-   //   z = dn*sqrt(n), and
-   //   dn  is the maximum deviation between a hypothetical distribution
-   //       function and an experimental distribution with
-   //   n    events
-   //
-   // NOTE: To compare two experimental distributions with m and n events,
-   //       use z = sqrt(m*n/(m+n))*dn
-   //
-   // Accuracy: The function is far too accurate for any imaginable application.
-   //           Probabilities less than 10^-15 are returned as zero.
-   //           However, remember that the formula is only valid for "large" n.
-   // Theta function inversion formula is used for z <= 1
-   //
-   // This function was translated by Rene Brun from PROBKL in CERNLIB.
-
    Double_t fj[4] = {-2,-8,-18,-32}, r[4];
    const Double_t w = 2.50662827;
    // c1 - -pi**2/8, c2 = 9*c1, c3 = 25*c1
@@ -1268,7 +1272,7 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
 /// an index in order to do more useful things than the standard built
 /// in functions.
 /// *arr1 is unchanged;
-/// *arr2 is the array of indicies corresponding to the decending value
+/// *arr2 is the array of indicies corresponding to the descending value
 /// of arr1 with arr2[0] corresponding to the largest arr1 value and
 /// arr2[Narr] the smallest.
 ///
@@ -1350,9 +1354,9 @@ void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates hash index from any char string.
-/// Based on precalculated table of 256 specially selected numbers.
+/// Based on pre-calculated table of 256 specially selected numbers.
 /// These numbers are selected in such a way, that for string
-/// length == 4 (integer number) the hash is unambigous, i.e.
+/// length == 4 (integer number) the hash is unambiguous, i.e.
 /// from hash value we can recalculate input (no degeneration).
 ///
 /// The quality of hash method is good enough, that
@@ -2084,7 +2088,7 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Suppose an event occurs with probability _p_ per trial
-/// Then the probability P of its occuring _k_ or more times
+/// Then the probability P of its occurring _k_ or more times
 /// in _n_ trials is termed a cumulative binomial probability
 /// the formula is P = sum_from_j=k_to_n(TMath::Binomial(n, j)*
 /// *TMath::Power(p, j)*TMath::Power(1-p, n-j)
@@ -2254,15 +2258,41 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 /// The definition can be found in "Engineering Statistics Handbook" on site
 /// http://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm
 /// use now implementation in ROOT::Math::gamma_pdf
-///Begin_Html
+///
+/// Begin_Macro
+/// {
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
+///
+///   c1->SetLogy();
+///   c1->SetGridx();
+///   c1->SetGridy();
+///
+///   TF1 *gdist = new TF1("gdist", "TMath::GammaDist(x, [0], [1], [2])", 0, 10);
+///
+///   gdist->SetParameters(0.5, 0., 1.);
+///   gdist->SetLineColor(2);
+///   TF1 *gdist1 = gdist->DrawCopy("L");
+///   gdist->SetParameters(1.0, 0., 1.);
+///   gdist->SetLineColor(3);
+///   TF1 *gdist2 = gdist->DrawCopy("LSAME");
+///   gdist->SetParameters(2.0, 0., 1.);
+///   gdist->SetLineColor(4);
+///   TF1 *gdist3 = gdist->DrawCopy("LSAME");
+///   gdist->SetParameters(5.0, 0., 1.);
+///   gdist->SetLineColor(6);
+///   TF1 *gdist4 = gdist->DrawCopy("LSAME");
+///
+///   legend = new TLegend(0.15, 0.15, 0.5, 0.35);
+///   legend->AddEntry(gdist1, "gamma = 0.5, mu = 0, beta = 1", "L");
+///   legend->AddEntry(gdist2, "gamma = 1.0, mu = 0, beta = 1", "L");
+///   legend->AddEntry(gdist3, "gamma = 2.0, mu = 0, beta = 1", "L");
+///   legend->AddEntry(gdist4, "gamma = 5.0, mu = 0, beta = 1", "L");
+///   legend->Draw();
+/// }
+/// End_Macro
 
 Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta)
 {
-   /*
-   <img src="gif/gammadist.gif">
-   */
-   //End_Html
-
    if ((x<mu) || (gamma<=0) || (beta <=0)) {
       Error("TMath::GammaDist", "illegal parameter values x = %f , gamma = %f beta = %f",x,gamma,beta);
       return 0;
@@ -2308,21 +2338,49 @@ Double_t TMath::LaplaceDistI(Double_t x, Double_t alpha, Double_t beta)
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the density of LogNormal distribution at point x.
 /// Variable X has lognormal distribution if Y=Ln(X) has normal distribution
-/// sigma is the shape parameter
-/// theta is the location parameter
-/// m is the scale parameter
+///  - sigma is the shape parameter
+///  - theta is the location parameter
+///  - m is the scale parameter
+///
 /// The formula was taken from "Engineering Statistics Handbook" on site
 /// http://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm
 /// Implementation using ROOT::Math::lognormal_pdf
-///Begin_Html
+///
+/// Begin_Macro
+/// {
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
+///
+///   c1->SetLogy();
+///   c1->SetGridx();
+///   c1->SetGridy();
+///
+///   TF1 *logn = new TF1("logn", "TMath::LogNormal(x, [0], [1], [2])", 0, 5);
+///   logn->SetMinimum(1e-3);
+///
+///   logn->SetParameters(0.5, 0., 1.);
+///   logn->SetLineColor(2);
+///   TF1 *logn1 = logn->DrawCopy("L");
+///   logn->SetParameters(1.0, 0., 1.);
+///   logn->SetLineColor(3);
+///   TF1 *logn2 = logn->DrawCopy("LSAME");
+///   logn->SetParameters(2.0, 0., 1.);
+///   logn->SetLineColor(4);
+///   TF1 *logn3 = logn->DrawCopy("LSAME");
+///   logn->SetParameters(5.0, 0., 1.);
+///   logn->SetLineColor(6);
+///   TF1 *logn4 = logn->DrawCopy("LSAME");
+///
+///   legend = new TLegend(0.15, 0.15, 0.5, 0.35);
+///   legend->AddEntry(logn1, "sigma = 0.5, theta = 0, m = 1", "L");
+///   legend->AddEntry(logn2, "sigma = 1.0, theta = 0, m = 1", "L");
+///   legend->AddEntry(logn3, "sigma = 2.0, theta = 0, m = 1", "L");
+///   legend->AddEntry(logn4, "sigma = 5.0, theta = 0, m = 1", "L");
+///   legend->Draw();
+/// }
+/// End_Macro
 
 Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m)
 {
-   /*
-   <img src="gif/lognormal.gif">
-   */
-   //End_Html
-
    if ((x<theta) || (sigma<=0) || (m<=0)) {
       Error("TMath::Lognormal", "illegal parameter values");
       return 0;
@@ -2603,27 +2661,52 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the value of the Vavilov density function
-///Parameters: 1st - the point were the density function is evaluated
-///            2nd - value of kappa (distribution parameter)
-///            3rd - value of beta2 (distribution parameter)
-///The algorithm was taken from the CernLib function vavden(G115)
-///Reference: A.Rotondi and P.Montagna, Fast Calculation of Vavilov distribution
-///Nucl.Instr. and Meth. B47(1990), 215-224
-///Accuracy: quote from the reference above:
-///"The resuls of our code have been compared with the values of the Vavilov
-///density function computed numerically in an accurate way: our approximation
-///shows a difference of less than 3% around the peak of the density function, slowly
-///increasing going towards the extreme tails to the right and to the left"
-///Begin_Html
+/// Returns the value of the Vavilov density function
+/// Parameters: 1st - the point were the density function is evaluated
+///             2nd - value of kappa (distribution parameter)
+///             3rd - value of beta2 (distribution parameter)
+/// The algorithm was taken from the CernLib function vavden(G115)
+/// Reference: A.Rotondi and P.Montagna, Fast Calculation of Vavilov distribution
+/// Nucl.Instr. and Meth. B47(1990), 215-224
+/// Accuracy: quote from the reference above:
+/// "The resuls of our code have been compared with the values of the Vavilov
+/// density function computed numerically in an accurate way: our approximation
+/// shows a difference of less than 3% around the peak of the density function, slowly
+/// increasing going towards the extreme tails to the right and to the left"
+///
+/// Begin_Macro
+/// {
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
+///
+///   c1->SetGridx();
+///   c1->SetGridy();
+///
+///   TF1 *vavilov = new TF1("vavilov", "TMath::Vavilov(x, [0], [1])", -3, 11);
+///
+///   vavilov->SetParameters(0.5, 0.);
+///   vavilov->SetLineColor(2);
+///   TF1 *vavilov1 = vavilov->DrawCopy("L");
+///   vavilov->SetParameters(0.3, 0.);
+///   vavilov->SetLineColor(3);
+///   TF1 *vavilov2 = vavilov->DrawCopy("LSAME");
+///   vavilov->SetParameters(0.2, 0.);
+///   vavilov->SetLineColor(4);
+///   TF1 *vavilov3 = vavilov->DrawCopy("LSAME");
+///   vavilov->SetParameters(0.1, 0.);
+///   vavilov->SetLineColor(6);
+///   TF1 *vavilov4 = vavilov->DrawCopy("LSAME");
+///
+///   legend = new TLegend(0.5, 0.65, 0.85, 0.85);
+///   legend->AddEntry(vavilov1, "kappa = 0.5, beta2 = 0", "L");
+///   legend->AddEntry(vavilov2, "kappa = 0.3, beta2 = 0", "L");
+///   legend->AddEntry(vavilov3, "kappa = 0.2, beta2 = 0", "L");
+///   legend->AddEntry(vavilov4, "kappa = 0.1, beta2 = 0", "L");
+///   legend->Draw();
+/// }
+/// End_Macro
 
 Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 {
-/*
-<img src="gif/Vavilov.gif">
-*/
-//End_Html
-
    Double_t *ac = new Double_t[14];
    Double_t *hc = new Double_t[9];
 

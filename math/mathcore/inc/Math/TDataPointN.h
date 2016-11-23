@@ -62,6 +62,8 @@ private:
    value_type    m_fWeight;
 };
 
+template<> UInt_t TDataPointN<Float_t>::kDimension = 0;
+template<> UInt_t TDataPointN<Double_t>::kDimension = 0;
 
 }//namespace Math
 }//namespace ROOT

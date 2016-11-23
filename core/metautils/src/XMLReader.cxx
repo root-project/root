@@ -71,7 +71,7 @@ void XMLReader::PopulateMap(){
  */
 bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount)
 {
-   char c;
+   int c;
    std::string str;
    bool angleBraceLevel = false;
    bool quotes = false;
@@ -81,9 +81,9 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
    bool tagIsXMLDecl = false;   // like <?xml version="1.0" encoding="ISO-8859-1"?>
    bool isCR=false;
    bool isInlineComment = false ; // Support comments like in c++ "// Mycomment"
-   char charMinus1= '@';
-   char charMinus2= '@';
-   char charMinus3= '@';
+   int charMinus1= '@';
+   int charMinus2= '@';
+   int charMinus3= '@';
    while(file.good())
    {
       c = file.get();
@@ -524,6 +524,7 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                   inClass = true;
                }
                csr.reset(new ClassSelectionRule(fCount++, fInterp, fileName.c_str(), lineNum)); // create new class selection rule
+               csr->SetRequestStreamerInfo(true);
                bsr = csr.get(); // we could access it through the base class pointer
                break;
             }

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
-/// Parallel fill of a histogram
+/// Parallel fill of a histogram.
 /// This tutorial shows how a histogram can be filled in parallel
 /// with a multithreaded approach. The difference with the multiprocess case,
 /// see mp201, is that here we cannot count on the copy-on-write mechanism, but
@@ -11,17 +11,19 @@
 ///
 /// \macro_image
 /// \macro_code
+///
 /// \author Danilo Piparo
+/// \date January 2016
 
 const UInt_t poolSize = 4U;
 
 Int_t mt201_parallelHistoFill()
 {
-   TH1::AddDirectory(false);
+   ROOT::EnableThreadSafety();
 
-   // The concrete histogram instances are concretely created in each thread
+   // The concrete histogram instances are created in each thread
    // lazily, i.e. only if a method is invoked.
-   auto ts_h = ROOT::MakeThreaded<TH1F>("myHist", "Filled in parallel", 128, -8, 8);
+   ROOT::TThreadedObject<TH1F> ts_h("myHist", "Filled in parallel", 128, -8, 8);
 
    // The function used to fill the histograms in each thread.
    auto fillRandomHisto = [&](int seed = 0) {

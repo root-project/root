@@ -24,7 +24,6 @@
 #include "llvm/CodeGen/ResourcePriorityQueue.h"
 #include "llvm/CodeGen/ScheduleDAGInstrs.h"
 #include "llvm/CodeGen/ScheduleHazardRecognizer.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
@@ -54,11 +53,9 @@ class VLIWResourceModel {
   unsigned TotalPackets;
 
 public:
-VLIWResourceModel(const TargetMachine &TM, const TargetSchedModel *SM) :
-    SchedModel(SM), TotalPackets(0) {
-  ResourcesModel =
-      TM.getSubtargetImpl()->getInstrInfo()->CreateTargetScheduleState(
-          *TM.getSubtargetImpl());
+  VLIWResourceModel(const TargetSubtargetInfo &STI, const TargetSchedModel *SM)
+      : SchedModel(SM), TotalPackets(0) {
+  ResourcesModel = STI.getInstrInfo()->CreateTargetScheduleState(STI);
 
     // This hard requirement could be relaxed,
     // but for now do not let it proceed.

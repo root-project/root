@@ -17,4 +17,4 @@ Several documents describing these classes are listed below:
 It is a combination of CLHEPs Vector package written by
 Leif Lonnblad, Andreas Nilsson and Evgueni Tcherniaev
 and a ROOT package written by Pasha Murat.
-for CLHEP see:  http://wwwinfo.cern.ch/asd/lhc++/clhep/
+for CLHEP see:  http://www.cern.ch/clhep/

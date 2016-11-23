@@ -14,8 +14,9 @@
 #include "BPF.h"
 #include "BPFTargetMachine.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/TargetPassConfig.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetOptions.h"
@@ -23,21 +24,33 @@ using namespace llvm;
 
 extern "C" void LLVMInitializeBPFTarget() {
   // Register the target.
-  RegisterTargetMachine<BPFTargetMachine> X(TheBPFTarget);
+  RegisterTargetMachine<BPFTargetMachine> X(TheBPFleTarget);
+  RegisterTargetMachine<BPFTargetMachine> Y(TheBPFbeTarget);
+  RegisterTargetMachine<BPFTargetMachine> Z(TheBPFTarget);
 }
 
-// DataLayout --> Little-endian, 64-bit pointer/ABI/alignment
-// The stack is always 8 byte aligned
-// On function prologue, the stack is created by decrementing
-// its pointer. Once decremented, all references are done with positive
-// offset from the stack/frame pointer.
-BPFTargetMachine::BPFTargetMachine(const Target &T, StringRef TT, StringRef CPU,
-                                   StringRef FS, const TargetOptions &Options,
-                                   Reloc::Model RM, CodeModel::Model CM,
-                                   CodeGenOpt::Level OL)
-    : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
+// DataLayout: little or big endian
+static std::string computeDataLayout(const Triple &TT) {
+  if (TT.getArch() == Triple::bpfeb)
+    return "E-m:e-p:64:64-i64:64-n32:64-S128";
+  else
+    return "e-m:e-p:64:64-i64:64-n32:64-S128";
+}
+
+static Reloc::Model getEffectiveRelocModel(Optional<Reloc::Model> RM) {
+  if (!RM.hasValue())
+    return Reloc::PIC_;
+  return *RM;
+}
+
+BPFTargetMachine::BPFTargetMachine(const Target &T, const Triple &TT,
+                                   StringRef CPU, StringRef FS,
+                                   const TargetOptions &Options,
+                                   Optional<Reloc::Model> RM,
+                                   CodeModel::Model CM, CodeGenOpt::Level OL)
+    : LLVMTargetMachine(T, computeDataLayout(TT), TT, CPU, FS, Options,
+                        getEffectiveRelocModel(RM), CM, OL),
       TLOF(make_unique<TargetLoweringObjectFileELF>()),
-      DL("e-m:e-p:64:64-i64:64-n32:64-S128"),
       Subtarget(TT, CPU, FS, *this) {
   initAsmInfo();
 }

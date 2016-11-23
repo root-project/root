@@ -52,8 +52,9 @@
 
 #include "TMVA/PDEFoamMultiTarget.h"
 
-#include "TMVA/PDEFoam.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoam.h"
+#include "TMVA/PDEFoamEvent.h"
 #include "TMVA/Types.h"
 
 #include "Rtypes.h"

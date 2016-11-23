@@ -26,13 +26,15 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
-#include <sstream>
-#include <iomanip>
-
 #include "TMVA/VariableInfo.h"
+
 #include "TMVA/Tools.h"
 
 #include "TMath.h"
+#include "TNamed.h"
+
+#include <iomanip>
+#include <sstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -41,15 +43,16 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
                                   Int_t varCounter,
                                   char varType, void* external,
                                   Double_t min, Double_t max, Bool_t normalized )
-   : fExpression  ( expression ),
-     fTitle       ( title ),
-     fUnit        ( unit ),
-     fVarType     ( varType ),
-     fXmeanNorm   ( 0 ),
-     fXrmsNorm    ( 0 ),
-     fNormalized  ( normalized ),
-     fExternalData( external ),
-     fVarCounter  ( varCounter )
+     : TNamed(title.Data(),title.Data()),
+     fExpression   ( expression ),
+     fUnit         ( unit ),
+     fVarType      ( varType ),
+     fXmeanNorm    ( 0 ),
+     fXrmsNorm     ( 0 ),
+     fXvarianceNorm( 0 ),
+     fNormalized   ( normalized ),
+     fExternalData ( external ),
+     fVarCounter   ( varCounter )
 {
    if ( TMath::Abs(max - min) <= FLT_MIN ) {
       fXminNorm =  FLT_MAX;
@@ -59,7 +62,6 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
       fXminNorm =  min;
       fXmaxNorm =  max;
    }
-
    // if a label is set, than retrieve the label and the 
    if (expression.Contains(":=")) {
       Ssiz_t index  = expression.Index(":=");
@@ -77,18 +79,21 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
 /// default constructor
 
 TMVA::VariableInfo::VariableInfo() 
-   : fExpression  (""),
-     fVarType     ('\0'),
-     fXmeanNorm   ( 0 ),
-     fXrmsNorm    ( 0 ),
-     fNormalized  ( kFALSE ),
-     fExternalData( 0 ),
-     fVarCounter  ( 0 )
+   : TNamed(),
+     fExpression   (""),
+     fVarType      ('\0'),
+     fXmeanNorm    ( 0 ),
+     fXrmsNorm     ( 0 ),
+     fXvarianceNorm( 0 ),
+     fNormalized   ( kFALSE ),
+     fExternalData ( 0 ),
+     fVarCounter   ( 0 )
 {
    fXminNorm     =  1e30;
    fXmaxNorm     = -1e30;
    fLabel        = GetExpression();
    fTitle        = fLabel;
+   fName         = fTitle;
    fUnit         = "";
    fInternalName = gTools().ReplaceRegularExpressions( fLabel, "_" );   
 }
@@ -97,19 +102,20 @@ TMVA::VariableInfo::VariableInfo()
 /// copy constructor
 
 TMVA::VariableInfo::VariableInfo( const VariableInfo& other ) 
-   : fExpression  ( other.fExpression ),
-     fInternalName( other.fInternalName ),
-     fLabel       ( other.fLabel ),
-     fTitle       ( other.fTitle ),
-     fUnit        ( other.fUnit ),
-     fVarType     ( other.fVarType ),
-     fXminNorm    ( other.fXminNorm ),
-     fXmaxNorm    ( other.fXmaxNorm ),
-     fXmeanNorm   ( other.fXmeanNorm ),
-     fXrmsNorm    ( other.fXrmsNorm ),
-     fNormalized  ( other.fNormalized ),
-     fExternalData( other.fExternalData ),
-     fVarCounter  ( other.fVarCounter )
+   : TNamed(other),
+     fExpression   ( other.fExpression ),
+     fInternalName ( other.fInternalName ),
+     fLabel        ( other.fLabel ),
+     fUnit         ( other.fUnit ),
+     fVarType      ( other.fVarType ),
+     fXminNorm     ( other.fXminNorm ),
+     fXmaxNorm     ( other.fXmaxNorm ),
+     fXmeanNorm    ( other.fXmeanNorm ),
+     fXrmsNorm     ( other.fXrmsNorm ),
+     fXvarianceNorm( other.fXvarianceNorm ),
+     fNormalized   ( other.fNormalized ),
+     fExternalData ( other.fExternalData ),
+     fVarCounter   ( other.fVarCounter )
 {
 }
 
@@ -124,6 +130,8 @@ TMVA::VariableInfo& TMVA::VariableInfo::operator=(const VariableInfo& rhs)
       fVarType          = rhs.fVarType;
       fXminNorm         = rhs.fXminNorm;
       fXmaxNorm         = rhs.fXmaxNorm;
+      fTitle            = rhs.fTitle;
+      fName             = rhs.fName;
    }
    return *this;
 }

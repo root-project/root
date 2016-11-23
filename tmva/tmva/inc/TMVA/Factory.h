@@ -93,6 +93,9 @@ namespace TMVA {
       // no default  constructor
       Factory( TString theJobName, TFile* theTargetFile, TString theOption = "" );
 
+      // contructor to work without file
+      Factory( TString theJobName, TString theOption = "" );
+
       // default destructor
       virtual ~Factory();
 
@@ -126,9 +129,6 @@ namespace TMVA {
   
       TH1F* EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
 
-      float CrossValidate(DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "", bool optParams = false, int NumFolds = 5, bool remakeDataSet = true, float *
-      rocIntegrals = nullptr);
-
       // delete all methods and reset the method vector
       void DeleteAllMethods( void );
 
@@ -150,9 +150,10 @@ namespace TMVA {
       // classifiers are printed
       void PrintHelpMessage(const TString& datasetname , const TString& methodTitle = "" ) const;
 
-      static TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
+      TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
 
-      static Bool_t IsSilentFile();
+      Bool_t IsSilentFile();
+      Bool_t IsModelPersistence();
       
       Double_t GetROCIntegral(DataLoader *loader,TString theMethodName);
       Double_t GetROCIntegral(TString  datasetname,TString theMethodName);
@@ -180,9 +181,6 @@ namespace TMVA {
       
       TH1F* GetImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
       
-      //method to do a copy of TTrees in subseeds in Variable Importance
-      void VIDataLoaderCopy(DataLoader *des,DataLoader *src);
-      
       void WriteDataInformation(DataSetInfo&     fDataSetInfo);
 
       void SetInputTreesFromEventAssignTrees();
@@ -191,7 +189,7 @@ namespace TMVA {
 
       // data members
 
-      static TFile*                             fgTargetFile;     //! ROOT output file
+      TFile*                             fgTargetFile;     //! ROOT output file
 
 
       std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     //! list of transformations on default DataSet
@@ -202,24 +200,14 @@ namespace TMVA {
       Bool_t                                    fVerbose;         //! verbose mode
       Bool_t                                    fCorrelations;    //! enable to calculate corelations
       Bool_t                                    fROC;             //! enable to calculate ROC values
-      static Bool_t                             fSilentFile;      //! enable to reduce the output file
+      Bool_t                                    fSilentFile;      //! used in contructor wihtout file 
 
       TString                                   fJobName;         //! jobname, used as extension in weight file names
 
-      // flag determining the way training and test data are assigned to Factory
-      enum DataAssignType { kUndefined = 0, 
-                            kAssignTrees,
-                            kAssignEvents };
-      DataAssignType                            fDataAssignType;  //! flags for data assigning
-      std::vector<TTree*>                       fTrainAssignTree; //! for each class: tmp tree if user wants to assign the events directly
-      std::vector<TTree*>                       fTestAssignTree;  //! for each class: tmp tree if user wants to assign the events directly
-
-      Int_t                                     fATreeType;          // type of event (=classIndex)
-      Float_t                                   fATreeWeight;        // weight of the event
-      Float_t*                                  fATreeEvent;         // event variables
-
       Types::EAnalysisType                      fAnalysisType;    //! the training type
-
+      Bool_t                                    fModelPersistence;//!option to save the trained model in xml file or using serialization
+      
+      
    protected:
 
       ClassDef(Factory,0);  // The factory creates all MVA methods, and performs their training and testing

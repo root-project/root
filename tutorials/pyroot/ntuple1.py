@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook
 ## Ntuple drawing example.
 ##
 ## \macro_code

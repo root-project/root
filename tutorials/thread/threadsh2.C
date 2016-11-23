@@ -147,11 +147,6 @@ void tryclosing(Int_t id)
 
 void threadsh2()
 {
-#ifdef __CINT__
-   printf("This script can only be executed via ACliC: .x threadsh2.C++\n");
-   return;
-#endif
-
    if (gROOT->IsBatch()) {
       return;
    }

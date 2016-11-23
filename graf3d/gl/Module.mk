@@ -42,6 +42,13 @@ GLH1         := $(MODDIRI)/CsgOps.h \
 # Used by rootcint
 GLH2         := $(filter-out $(GLH1), $(GLH))
 
+ifeq ($(BUILTINGL2PS),yes)
+GL2PSFLAGS   := -I$(MODDIRS)/gl2ps
+else
+GLS          := $(filter-out $(MODDIRS)/gl2ps.cxx, $(GLS))
+GL2PSFLAGS   := $(GL2PSINCDIR:%=-I%)
+endif
+
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 $(XLIBS) -lm
@@ -78,6 +85,7 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
+		    $(GL2PSLIBDIR) $(GL2PSLIB) \
 		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
 $(call pcmrule,GL)
@@ -107,14 +115,14 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 ifeq ($(ARCH),win32)
 $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
-                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
-                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
 else
 # We need to disallow the direct use of gl.h. This way people will see the error
 # and the suggested fix. This happens by providing our own "fake" system gl.h.
-$(GLO) $(GLDO): CXXFLAGS += -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/ $(OPENGLINCDIR:%=-I%)
-$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLO) $(GLDO): CXXFLAGS += -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/ $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
+$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
 endif
 
 $(call stripsrc,$(GLDIRS)/TGLText.o): $(FREETYPEDEP)

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Histogram smoothing.
 ///
 /// \macro_image

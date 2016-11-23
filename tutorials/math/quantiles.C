@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -js
 /// Demo for quantiles
 ///
 /// \macro_image
@@ -29,7 +30,6 @@ void quantiles() {
 
    //show the original histogram in the top pad
    TCanvas *c1 = new TCanvas("c1","demo quantiles",10,10,600,900);
-   c1->SetFillColor(41);
    c1->Divide(1,3);
    c1->cd(1);
    h->SetFillColor(38);
@@ -37,7 +37,6 @@ void quantiles() {
 
    // show the final quantiles in the middle pad
    c1->cd(2);
-   gPad->SetFrameFillColor(33);
    gPad->SetGrid();
    TGraph *gr = new TGraph(nq,xq,yq);
    gr->SetTitle("final quantiles");
@@ -48,7 +47,6 @@ void quantiles() {
 
    // show the evolution of some  quantiles in the bottom pad
    c1->cd(3);
-   gPad->SetFrameFillColor(17);
    gPad->DrawFrame(0,0,nshots+1,3.2);
    gPad->SetGrid();
    gr98->SetMarkerStyle(22);

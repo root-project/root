@@ -10,14 +10,15 @@
 #ifndef CLING_INCREMENTAL_EXECUTOR_H
 #define CLING_INCREMENTAL_EXECUTOR_H
 
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/StringRef.h"
-
 #include "IncrementalJIT.h"
+#include "BackendPasses.h"
 
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
+
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringRef.h"
 
 #include <vector>
 #include <set>
@@ -28,6 +29,7 @@
 namespace clang {
   class DiagnosticsEngine;
   class CodeGenOptions;
+  class CompilerInstance;
 }
 
 namespace llvm {
@@ -37,8 +39,8 @@ namespace llvm {
 }
 
 namespace cling {
-  class Value;
   class IncrementalJIT;
+  class Value;
 
   class IncrementalExecutor {
   public:
@@ -48,6 +50,9 @@ namespace cling {
     ///\brief Our JIT interface.
     ///
     std::unique_ptr<IncrementalJIT> m_JIT;
+
+    // optimizer etc passes
+    std::unique_ptr<BackendPasses> m_BackendPasses;
 
     ///\brier A pointer to the IncrementalExecutor of the parent Interpreter.
     ///
@@ -144,7 +149,7 @@ namespace cling {
     };
 
     IncrementalExecutor(clang::DiagnosticsEngine& diags,
-                        const clang::CodeGenOptions& CGOpt);
+                        const clang::CompilerInstance& CI);
 
     ~IncrementalExecutor();
 
@@ -164,13 +169,13 @@ namespace cling {
     }
 
     ///\brief Unload a set of JIT symbols.
-    void unloadFromJIT(llvm::Module* M,
-                       Transaction::ExeUnloadHandle H) {
+    bool unloadFromJIT(llvm::Module* M, Transaction::ExeUnloadHandle H) {
       auto iMod = std::find(m_ModulesToJIT.begin(), m_ModulesToJIT.end(), M);
       if (iMod != m_ModulesToJIT.end())
         m_ModulesToJIT.erase(iMod);
       else
         m_JIT->removeModules((size_t)H.m_Opaque);
+      return true;
     }
 
     ///\brief Run the static initializers of all modules collected to far.
@@ -213,7 +218,11 @@ namespace cling {
     ///\brief Add a llvm::Module to the JIT.
     ///
     /// @param[in] module - The module to pass to the execution engine.
-    void addModule(llvm::Module* module) { m_ModulesToJIT.push_back(module); }
+    void addModule(llvm::Module* module) {
+      if (m_BackendPasses)
+        m_BackendPasses->runOnModule(*module);
+      m_ModulesToJIT.push_back(module);
+    }
 
     ///\brief Tells the execution context that we are shutting down the system.
     ///

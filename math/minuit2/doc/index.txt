@@ -13,7 +13,7 @@ ROOT::Math::Minimizer from <a href="http://www.cern.ch/mathlibs/sw/html/MathCore
 <p>
 <ol>
 <li>
-F. James, <em>Fortran MINUIT Reference Manual</em> (<a href="http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/minmain.html">html</a>); </li>
+F. James, <em>Fortran MINUIT Reference Manual</em> (<a href="https://cern-tex.web.cern.ch/cern-tex/minuit/minmain.html">html</a>); </li>
 <li>
 F. James and M. Winkler, <em>C++ MINUIT User's Guide</em> (<a href="http://seal.cern.ch/documents/minuit/mnusersguide.pdf">pdf</a>); </li>
 <li>

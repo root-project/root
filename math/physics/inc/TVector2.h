@@ -96,7 +96,8 @@ public:
    TVector2 Rotate (Double_t phi) const;
 
                                         // returns phi angle in the interval [0,2*PI)
-   static Double_t Phi_0_2pi(Double_t x);                                                                               // returns phi angle in the interval
+   static Double_t Phi_0_2pi(Double_t x);
+
                                         // returns phi angle in the interval [-PI,PI)
    static Double_t Phi_mpi_pi(Double_t x);
 

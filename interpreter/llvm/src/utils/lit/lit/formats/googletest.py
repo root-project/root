@@ -43,6 +43,12 @@ class GoogleTest(TestFormat):
             if not ln.strip():
                 continue
 
+            if 'Running main() from gtest_main.cc' in ln:
+                # Upstream googletest prints this to stdout prior to running
+                # tests. LLVM removed that print statement in r61540, but we
+                # handle it here in case upstream googletest is being used.
+                continue
+
             prefix = ''
             index = 0
             while ln[index*2:index*2+2] == '  ':
@@ -53,6 +59,11 @@ class GoogleTest(TestFormat):
             ln = ln[index*2:]
             if ln.endswith('.'):
                 nested_tests.append(ln)
+            elif any([name.startswith('DISABLED_')
+                      for name in nested_tests + [ln]]):
+                # Gtest will internally skip these tests. No need to launch a
+                # child process for it.
+                continue
             else:
                 yield ''.join(nested_tests) + ln
 
@@ -95,7 +106,7 @@ class GoogleTest(TestFormat):
             # Handle GTest parametrized and typed tests, whose name includes
             # some '/'s.
             testPath, namePrefix = os.path.split(testPath)
-            testName = os.path.join(namePrefix, testName)
+            testName = namePrefix + '/' + testName
 
         cmd = [testPath, '--gtest_filter=' + testName]
         if litConfig.useValgrind:
@@ -104,10 +115,24 @@ class GoogleTest(TestFormat):
         if litConfig.noExecute:
             return lit.Test.PASS, ''
 
-        out, err, exitCode = lit.util.executeCommand(
-            cmd, env=test.config.environment)
+        try:
+            out, err, exitCode = lit.util.executeCommand(
+                cmd, env=test.config.environment,
+                timeout=litConfig.maxIndividualTestTime)
+        except lit.util.ExecuteCommandTimeoutException:
+            return (lit.Test.TIMEOUT,
+                    'Reached timeout of {} seconds'.format(
+                        litConfig.maxIndividualTestTime)
+                   )
 
-        if not exitCode:
-            return lit.Test.PASS,''
+        if exitCode:
+            return lit.Test.FAIL, out + err
 
-        return lit.Test.FAIL, out + err
+        passing_test_line = '[  PASSED  ] 1 test.'
+        if passing_test_line not in out:
+            msg = ('Unable to find %r in gtest output:\n\n%s%s' %
+                   (passing_test_line, out, err))
+            return lit.Test.UNRESOLVED, msg
+
+        return lit.Test.PASS,''
+

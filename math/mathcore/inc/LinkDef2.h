@@ -41,14 +41,57 @@
 #pragma link C++ class ROOT::Math::TRandomEngine+;
 #pragma link C++ class ROOT::Math::LCGEngine+;
 #pragma link C++ class ROOT::Math::MersenneTwisterEngine+;
-#pragma link C++ class ROOT::Math::MixMaxEngine+;
+#pragma link C++ class ROOT::Math::MixMaxEngine<240,0>+;
+#pragma link C++ class ROOT::Math::MixMaxEngine<256,2>+;
+#pragma link C++ class ROOT::Math::MixMaxEngine<17,1>+;
+//#pragma link C++ class mixmax::mixmax_engine<240>+;
+//#pragma link C++ class mixmax::mixmax_engine<256>+;
+//#pragma link C++ class mixmax::mixmax_engine<17>+;
+//#pragma link C++ struct mixmax::mixmax_engine<240>::rng_state_st+;
+//#pragma link C++ struct mixmax::mixmax_engine<256>::rng_state_st+;
+//#pragma link C++ struct mixmax::mixmax_engine<17>::rng_state_st+;
+//#pragma link C++ struct mixmax::_Generator<ULong64_t,0,2305843009213693951>+;
+//#pragma link C++ class std::mt19937_64+;
+//#pragma link C++ class std::ranlux48+;
+
+#pragma link C++ class std::mersenne_twister_engine< uint_fast64_t, 64, 312, 156, 31, 0xb5026f5aa96619e9ULL, 29, 0x5555555555555555ULL, 17, 0x71d67fffeda60000ULL, 37, 0xfff7eee000000000ULL, 43, 6364136223846793005ULL >+;
+
+#pragma link C++ class std::subtract_with_carry_engine<std::uint_fast64_t, 48, 5, 12>+;
+#pragma link C++ class std::discard_block_engine<std::ranlux48_base, 389, 11>+;
+
+#pragma link C++ typedef std::mt19937_64;
+#pragma link C++ typedef std::ranlux48;
+
+
+#pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<240,0>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<256,0>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<256,2>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<256,4>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<17,0>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<17,1>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::StdEngine<std::mt19937_64>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::StdEngine<std::ranlux48>>+;
+
+
+#pragma link C++ class ROOT::Math::StdRandomEngine+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::LCGEngine>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::MersenneTwisterEngine>+;
-#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine<240,0>>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine<256,0>>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine<256,2>>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine<256,4>>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine<17,0>>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine<17,1>>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine<17,2>>+;
 
+// #pragma link C++ typedef ROOT::Math::RandomMT19937;
+// #pragma link C++ typedef ROOT::Math::RandomMT64;
+// #pragma link C++ typedef ROOT::Math::RandomRanlux48;
+// #pragma link C++ typedef TRandomMixMax;
+// #pragma link C++ typedef TRandomMixMax256;
+// #pragma link C++ typedef TRandomMT64;
+// #pragma link C++ typedef TRandomRanlux48;
 
-#pragma link C++ typedef ROOT::Math::RandomMixMax;
-#pragma link C++ typedef ROOT::Math::RandomMT19937;
 
 // #pragma link C++ class TRandomNew3+;
 

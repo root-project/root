@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Display all possible types of ROOT/Postscript characters.
 ///
 /// \macro_code

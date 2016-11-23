@@ -19,8 +19,10 @@
 #include "llvm/Support/Format.h"
 #include "llvm/Support/MemoryObject.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <system_error>
+
 using namespace llvm;
 
 //===----------------------------------------------------------------------===//
@@ -103,7 +105,7 @@ bool GCOVFile::readGCDA(GCOVBuffer &Buffer) {
 }
 
 /// dump - Dump GCOVFile content to dbgs() for debugging purposes.
-void GCOVFile::dump() const {
+LLVM_DUMP_METHOD void GCOVFile::dump() const {
   for (const auto &FPtr : Functions)
     FPtr->dump();
 }
@@ -246,9 +248,11 @@ bool GCOVFunction::readGCNO(GCOVBuffer &Buff, GCOV::GCOVVersion Version) {
 /// readGCDA - Read a function from the GCDA buffer. Return false if an error
 /// occurs.
 bool GCOVFunction::readGCDA(GCOVBuffer &Buff, GCOV::GCOVVersion Version) {
-  uint32_t Dummy;
-  if (!Buff.readInt(Dummy))
+  uint32_t HeaderLength;
+  if (!Buff.readInt(HeaderLength))
     return false; // Function header length
+
+  uint64_t EndPos = Buff.getCursor() + HeaderLength * sizeof(uint32_t);
 
   uint32_t GCDAIdent;
   if (!Buff.readInt(GCDAIdent))
@@ -279,13 +283,15 @@ bool GCOVFunction::readGCDA(GCOVBuffer &Buff, GCOV::GCOVVersion Version) {
     }
   }
 
-  StringRef GCDAName;
-  if (!Buff.readString(GCDAName))
-    return false;
-  if (Name != GCDAName) {
-    errs() << "Function names do not match: " << Name << " != " << GCDAName
-           << ".\n";
-    return false;
+  if (Buff.getCursor() < EndPos) {
+    StringRef GCDAName;
+    if (!Buff.readString(GCDAName))
+      return false;
+    if (Name != GCDAName) {
+      errs() << "Function names do not match: " << Name << " != " << GCDAName
+             << ".\n";
+      return false;
+    }
   }
 
   if (!Buff.readArcTag()) {
@@ -302,10 +308,12 @@ bool GCOVFunction::readGCDA(GCOVBuffer &Buff, GCOV::GCOVVersion Version) {
   // required to combine the edge counts that are contained in the GCDA file.
   for (uint32_t BlockNo = 0; Count > 0; ++BlockNo) {
     // The last block is always reserved for exit block
-    if (BlockNo >= Blocks.size() - 1) {
+    if (BlockNo >= Blocks.size()) {
       errs() << "Unexpected number of edges (in " << Name << ").\n";
       return false;
     }
+    if (BlockNo == Blocks.size() - 1)
+      errs() << "(" << Name << ") has arcs from exit block.\n";
     GCOVBlock &Block = *Blocks[BlockNo];
     for (size_t EdgeNo = 0, End = Block.getNumDstEdges(); EdgeNo < End;
          ++EdgeNo) {
@@ -337,7 +345,7 @@ uint64_t GCOVFunction::getExitCount() const {
 }
 
 /// dump - Dump GCOVFunction content to dbgs() for debugging purposes.
-void GCOVFunction::dump() const {
+LLVM_DUMP_METHOD void GCOVFunction::dump() const {
   dbgs() << "===== " << Name << " (" << Ident << ") @ " << Filename << ":"
          << LineNumber << "\n";
   for (const auto &Block : Blocks)
@@ -394,7 +402,7 @@ void GCOVBlock::collectLineCounts(FileInfo &FI) {
 }
 
 /// dump - Dump GCOVBlock content to dbgs() for debugging purposes.
-void GCOVBlock::dump() const {
+LLVM_DUMP_METHOD void GCOVBlock::dump() const {
   dbgs() << "Block : " << Number << " Counter : " << Counter << "\n";
   if (!SrcEdges.empty()) {
     dbgs() << "\tSource Edges : ";
@@ -443,8 +451,9 @@ static uint32_t branchDiv(uint64_t Numerator, uint64_t Divisor) {
   return Res;
 }
 
+namespace {
 struct formatBranchInfo {
-  formatBranchInfo(const GCOVOptions &Options, uint64_t Count, uint64_t Total)
+  formatBranchInfo(const GCOV::Options &Options, uint64_t Count, uint64_t Total)
       : Options(Options), Count(Count), Total(Total) {}
 
   void print(raw_ostream &OS) const {
@@ -456,7 +465,7 @@ struct formatBranchInfo {
       OS << "taken " << branchDiv(Count, Total) << "%";
   }
 
-  const GCOVOptions &Options;
+  const GCOV::Options &Options;
   uint64_t Count;
   uint64_t Total;
 };
@@ -466,7 +475,6 @@ static raw_ostream &operator<<(raw_ostream &OS, const formatBranchInfo &FBI) {
   return OS;
 }
 
-namespace {
 class LineConsumer {
   std::unique_ptr<MemoryBuffer> Buffer;
   StringRef Remaining;
@@ -493,7 +501,7 @@ public:
     OS << format("%5u:", LineNum) << Line << "\n";
   }
 };
-}
+} // end anonymous namespace
 
 /// Convert a path to a gcov filename. If PreservePaths is true, this
 /// translates "/" to "#", ".." to "^", and drops ".", to match gcov.
@@ -552,7 +560,7 @@ FileInfo::openCoveragePath(StringRef CoveragePath) {
     return llvm::make_unique<raw_null_ostream>();
 
   std::error_code EC;
-  auto OS = llvm::make_unique<raw_fd_ostream>(CoveragePath.str(), EC,
+  auto OS = llvm::make_unique<raw_fd_ostream>(CoveragePath, EC,
                                               sys::fs::F_Text);
   if (EC) {
     errs() << EC.message() << "\n";
@@ -680,7 +688,6 @@ void FileInfo::print(raw_ostream &InfoOS, StringRef MainFilename,
   if (Options.FuncCoverage)
     printFuncCoverage(InfoOS);
   printFileCoverage(InfoOS);
-  return;
 }
 
 /// printFunctionSummary - Print function and block summary.

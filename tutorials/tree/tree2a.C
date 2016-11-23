@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook
 /// This example is the same as tree2.C, but uses a class instead of a C-struct.
 /// In this example, we are mapping a class to one of the Geant3
 /// common blocks /gctrak/. In the real life, this common will be filled

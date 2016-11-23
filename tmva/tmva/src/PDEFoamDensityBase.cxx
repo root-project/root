@@ -67,16 +67,17 @@
 
 #include "TMVA/PDEFoamDensityBase.h"
 
-#include <functional>
-#include <numeric>
-#include <vector>
-
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
 #include "RtypesCore.h"
 #include "Rtypes.h"
+#include "TObject.h"
+
+#include <functional>
+#include <numeric>
+#include <vector>
 
 ClassImp(TMVA::PDEFoamDensityBase)
 

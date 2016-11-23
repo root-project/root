@@ -20,6 +20,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/raw_ostream.h"
+#include <utility>
 
 namespace llvm {
 class MemoryBuffer;
@@ -45,14 +46,18 @@ public:
 public:
   Status() : Type(llvm::sys::fs::file_type::status_error) {}
   Status(const llvm::sys::fs::file_status &Status);
-  Status(StringRef Name, StringRef RealName, llvm::sys::fs::UniqueID UID,
+  Status(StringRef Name, llvm::sys::fs::UniqueID UID,
          llvm::sys::TimeValue MTime, uint32_t User, uint32_t Group,
          uint64_t Size, llvm::sys::fs::file_type Type,
          llvm::sys::fs::perms Perms);
 
+  /// Get a copy of a Status with a different name.
+  static Status copyWithNewName(const Status &In, StringRef NewName);
+  static Status copyWithNewName(const llvm::sys::fs::file_status &In,
+                                StringRef NewName);
+
   /// \brief Returns the name that should be used for this file or directory.
   StringRef getName() const { return Name; }
-  void setName(StringRef N) { Name = N; }
 
   /// @name Status interface from llvm::sys::fs
   /// @{
@@ -63,8 +68,6 @@ public:
   uint32_t getUser() const { return User; }
   uint32_t getGroup() const { return Group; }
   uint64_t getSize() const { return Size; }
-  void setType(llvm::sys::fs::file_type v) { Type = v; }
-  void setPermissions(llvm::sys::fs::perms p) { Perms = p; }
   /// @}
   /// @name Status queries
   /// These are static queries in llvm::sys::fs.
@@ -88,14 +91,19 @@ public:
   virtual ~File();
   /// \brief Get the status of the file.
   virtual llvm::ErrorOr<Status> status() = 0;
+  /// \brief Get the name of the file
+  virtual llvm::ErrorOr<std::string> getName() {
+    if (auto Status = status())
+      return Status->getName().str();
+    else
+      return Status.getError();
+  }
   /// \brief Get the contents of the file as a \p MemoryBuffer.
   virtual llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>>
   getBuffer(const Twine &Name, int64_t FileSize = -1,
             bool RequiresNullTerminator = true, bool IsVolatile = false) = 0;
   /// \brief Closes the file.
   virtual std::error_code close() = 0;
-  /// \brief Sets the name to use for this file.
-  virtual void setName(StringRef Name) = 0;
 };
 
 namespace detail {
@@ -116,7 +124,8 @@ class directory_iterator {
   std::shared_ptr<detail::DirIterImpl> Impl; // Input iterator semantics on copy
 
 public:
-  directory_iterator(std::shared_ptr<detail::DirIterImpl> I) : Impl(I) {
+  directory_iterator(std::shared_ptr<detail::DirIterImpl> I)
+      : Impl(std::move(I)) {
     assert(Impl.get() != nullptr && "requires non-null implementation");
     if (!Impl->CurrentEntry.isStatusKnown())
       Impl.reset(); // Normalize the end iterator to Impl == nullptr.
@@ -176,6 +185,11 @@ public:
   bool operator!=(const recursive_directory_iterator &RHS) const {
     return !(*this == RHS);
   }
+  /// \brief Gets the current level. Starting path is at level 0.
+  int level() const {
+    assert(State->size() && "Cannot get level without any iteration state");
+    return State->size()-1;
+  }
 };
 
 /// \brief The virtual file system interface.
@@ -199,6 +213,28 @@ public:
   /// \note The 'end' iterator is directory_iterator().
   virtual directory_iterator dir_begin(const Twine &Dir,
                                        std::error_code &EC) = 0;
+
+  /// Set the working directory. This will affect all following operations on
+  /// this file system and may propagate down for nested file systems.
+  virtual std::error_code setCurrentWorkingDirectory(const Twine &Path) = 0;
+  /// Get the working directory of this file system.
+  virtual llvm::ErrorOr<std::string> getCurrentWorkingDirectory() const = 0;
+
+  /// Check whether a file exists. Provided for convenience.
+  bool exists(const Twine &Path);
+
+  /// Make \a Path an absolute path.
+  ///
+  /// Makes \a Path absolute using the current directory if it is not already.
+  /// An empty \a Path will result in the current directory.
+  ///
+  /// /absolute/path   => /absolute/path
+  /// relative/../path => <current-directory>/relative/../path
+  ///
+  /// \param Path A path that is modified to be an absolute path.
+  /// \returns success if \a path has been made absolute, otherwise a
+  ///          platform-specific error_code.
+  std::error_code makeAbsolute(SmallVectorImpl<char> &Path) const;
 };
 
 /// \brief Gets an \p vfs::FileSystem for the 'real' file system, as seen by
@@ -230,6 +266,8 @@ public:
   llvm::ErrorOr<std::unique_ptr<File>>
   openFileForRead(const Twine &Path) override;
   directory_iterator dir_begin(const Twine &Dir, std::error_code &EC) override;
+  llvm::ErrorOr<std::string> getCurrentWorkingDirectory() const override;
+  std::error_code setCurrentWorkingDirectory(const Twine &Path) override;
 
   typedef FileSystemList::reverse_iterator iterator;
   
@@ -241,6 +279,43 @@ public:
   iterator overlays_end() { return FSList.rend(); }
 };
 
+namespace detail {
+class InMemoryDirectory;
+} // end namespace detail
+
+/// An in-memory file system.
+class InMemoryFileSystem : public FileSystem {
+  std::unique_ptr<detail::InMemoryDirectory> Root;
+  std::string WorkingDirectory;
+  bool UseNormalizedPaths = true;
+
+public:
+  explicit InMemoryFileSystem(bool UseNormalizedPaths = true);
+  ~InMemoryFileSystem() override;
+  /// Add a buffer to the VFS with a path. The VFS owns the buffer.
+  /// \return true if the file was successfully added, false if the file already
+  /// exists in the file system with different contents.
+  bool addFile(const Twine &Path, time_t ModificationTime,
+               std::unique_ptr<llvm::MemoryBuffer> Buffer);
+  /// Add a buffer to the VFS with a path. The VFS does not own the buffer.
+  /// \return true if the file was successfully added, false if the file already
+  /// exists in the file system with different contents.
+  bool addFileNoOwn(const Twine &Path, time_t ModificationTime,
+                    llvm::MemoryBuffer *Buffer);
+  std::string toString() const;
+  /// Return true if this file system normalizes . and .. in paths.
+  bool useNormalizedPaths() const { return UseNormalizedPaths; }
+
+  llvm::ErrorOr<Status> status(const Twine &Path) override;
+  llvm::ErrorOr<std::unique_ptr<File>>
+  openFileForRead(const Twine &Path) override;
+  directory_iterator dir_begin(const Twine &Dir, std::error_code &EC) override;
+  llvm::ErrorOr<std::string> getCurrentWorkingDirectory() const override {
+    return WorkingDirectory;
+  }
+  std::error_code setCurrentWorkingDirectory(const Twine &Path) override;
+};
+
 /// \brief Get a globally unique ID for a virtual file or directory.
 llvm::sys::fs::UniqueID getNextVirtualUniqueID();
 
@@ -249,6 +324,7 @@ llvm::sys::fs::UniqueID getNextVirtualUniqueID();
 IntrusiveRefCntPtr<FileSystem>
 getVFSFromYAML(std::unique_ptr<llvm::MemoryBuffer> Buffer,
                llvm::SourceMgr::DiagHandlerTy DiagHandler,
+               StringRef YAMLFilePath,
                void *DiagContext = nullptr,
                IntrusiveRefCntPtr<FileSystem> ExternalFS = getRealFileSystem());
 
@@ -262,6 +338,9 @@ struct YAMLVFSEntry {
 class YAMLVFSWriter {
   std::vector<YAMLVFSEntry> Mappings;
   Optional<bool> IsCaseSensitive;
+  Optional<bool> IsOverlayRelative;
+  Optional<bool> UseExternalNames;
+  std::string OverlayDir;
 
 public:
   YAMLVFSWriter() {}
@@ -269,6 +348,14 @@ public:
   void setCaseSensitivity(bool CaseSensitive) {
     IsCaseSensitive = CaseSensitive;
   }
+  void setUseExternalNames(bool UseExtNames) {
+    UseExternalNames = UseExtNames;
+  }
+  void setOverlayDir(StringRef OverlayDirectory) {
+    IsOverlayRelative = true;
+    OverlayDir.assign(OverlayDirectory.str());
+  }
+
   void write(llvm::raw_ostream &OS);
 };
 

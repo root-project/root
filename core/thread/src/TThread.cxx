@@ -1092,8 +1092,12 @@ void TThread::XAction()
 
       case kCUPD:
          //((TCanvas *)fgXArr[1])->Update();
-         cmd = Form("((TCanvas *)0x%lx)->Update();",(Long_t)fgXArr[1]);
-         gROOT->ProcessLine(cmd);
+         union CastFromFuncToVoidPtr_t {
+            void (*fFuncPtr)(void*);
+            void* fVoidPtr;
+         } castFromFuncToVoidPtr;
+         castFromFuncToVoidPtr.fVoidPtr = fgXArr[2];
+         (*castFromFuncToVoidPtr.fFuncPtr)(fgXArr[1]); // aka TCanvas::Update()
          break;
 
       case kCANV:

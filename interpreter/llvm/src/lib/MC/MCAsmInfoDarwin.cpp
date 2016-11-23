@@ -16,7 +16,6 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCSectionMachO.h"
-#include "llvm/MC/MCStreamer.h"
 using namespace llvm;
 
 bool MCAsmInfoDarwin::isSectionAtomizableBySymbols(
@@ -33,6 +32,10 @@ bool MCAsmInfoDarwin::isSectionAtomizableBySymbols(
   if (SMO.getSegmentName() == "__DATA" && SMO.getSectionName() == "__cfstring")
     return false;
 
+  if (SMO.getSegmentName() == "__DATA" &&
+      SMO.getSectionName() == "__objc_classrefs")
+    return false;
+
   switch (SMO.getType()) {
   default:
     return true;
@@ -45,6 +48,7 @@ bool MCAsmInfoDarwin::isSectionAtomizableBySymbols(
   case MachO::S_LITERAL_POINTERS:
   case MachO::S_NON_LAZY_SYMBOL_POINTERS:
   case MachO::S_LAZY_SYMBOL_POINTERS:
+  case MachO::S_THREAD_LOCAL_VARIABLE_POINTERS:
   case MachO::S_MOD_INIT_FUNC_POINTERS:
   case MachO::S_MOD_TERM_FUNC_POINTERS:
   case MachO::S_INTERPOSING:
@@ -85,6 +89,7 @@ MCAsmInfoDarwin::MCAsmInfoDarwin() {
 
   HasDotTypeDotSizeDirective = false;
   HasNoDeadStrip = true;
+  HasAltEntry = true;
 
   DwarfUsesRelocationsAcrossSections = false;
 

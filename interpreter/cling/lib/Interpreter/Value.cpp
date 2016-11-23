@@ -174,16 +174,16 @@ namespace cling {
     return isValid() && Ctx.hasSameType(getType(), Ctx.VoidTy);
   }
 
-  unsigned long Value::GetNumberOfElements() const {
+  size_t Value::GetNumberOfElements() const {
     if (const clang::ConstantArrayType* ArrTy
         = llvm::dyn_cast<clang::ConstantArrayType>(getType())) {
-      llvm::APInt arrSize(sizeof(unsigned long)*8, 1);
+      llvm::APInt arrSize(sizeof(size_t)*8, 1);
       do {
         arrSize *= ArrTy->getSize();
         ArrTy = llvm::dyn_cast<clang::ConstantArrayType>(ArrTy->getElementType()
                                                          .getTypePtr());
       } while (ArrTy);
-      return (unsigned long)arrSize.getZExtValue();
+      return static_cast<size_t>(arrSize.getZExtValue());
     }
     return 1;
   }
@@ -249,7 +249,7 @@ namespace cling {
     std::string valueStr = cling::valuePrinterInternal::printValueInternal(*this);
 
     // Print the type and the value:
-    Out << typeStr + " " + valueStr << "\n";
+    Out << typeStr << " " << valueStr << '\n';
   }
 
   void Value::dump() const {
@@ -257,9 +257,7 @@ namespace cling {
     // using llvm::outs. Keeping file descriptor open we will be able to use
     // the results in pipes (Savannah #99234).
 
-    // Alternatively we could use llvm::errs()
-    std::unique_ptr<llvm::raw_ostream> Out;
-    Out.reset(new llvm::raw_os_ostream(std::cout));
-    print(*Out.get());
+    llvm::raw_os_ostream Out(std::cout);
+    print(Out);
   }
 } // end namespace cling

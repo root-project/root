@@ -29,14 +29,16 @@
 
 #include "TMVA/MinuitFitter.h"
 
-#include "TFitter.h"
-
+#include "TMVA/Configurable.h"
 #include "TMVA/FitterBase.h"
+#include "TMVA/IFitterTarget.h"
 #include "TMVA/Interval.h"
 #include "TMVA/MinuitWrapper.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Types.h"
+
+#include "TFitter.h"
 
 ClassImp(TMVA::MinuitFitter)
 

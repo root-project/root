@@ -1,13 +1,8 @@
-/* include/llvm/Config/config.h.cmake corresponding to config.h.in. */
-
 #ifndef CONFIG_H
 #define CONFIG_H
 
 /* Exported configuration */
 #include "llvm/Config/llvm-config.h"
-
-/* Patch version of the LLVM API */
-#cmakedefine LLVM_VERSION_PATCH ${LLVM_VERSION_PATCH}
 
 /* Bug report URL. */
 #define BUG_REPORT_URL "${BUG_REPORT_URL}"
@@ -18,14 +13,8 @@
 /* Define to enable crash overrides */
 #cmakedefine ENABLE_CRASH_OVERRIDES
 
-/* Define to disable C++ atexit */
-#cmakedefine DISABLE_LLVM_DYLIB_ATEXIT
-
 /* Define if position independent code is enabled */
 #cmakedefine ENABLE_PIC
-
-/* Define if timestamp information (e.g., __DATE__) is allowed */
-#cmakedefine ENABLE_TIMESTAMPS ${ENABLE_TIMESTAMPS}
 
 /* Define to 1 if you have the `arc4random' function. */
 #cmakedefine HAVE_DECL_ARC4RANDOM ${HAVE_DECL_ARC4RANDOM}
@@ -35,9 +24,6 @@
 
 /* Define to 1 if you have the `bcopy' function. */
 #undef HAVE_BCOPY
-
-/* Define to 1 if you have the `ceilf' function. */
-#cmakedefine HAVE_CEILF ${HAVE_CEILF}
 
 /* Define to 1 if you have the `closedir' function. */
 #cmakedefine HAVE_CLOSEDIR ${HAVE_CLOSEDIR}
@@ -54,6 +40,9 @@
 /* Define to 1 if you have the declaration of `strerror_s', and to 0 if you
    don't. */
 #cmakedefine01 HAVE_DECL_STRERROR_S
+
+/* Define to 1 if you have the DIA SDK installed, and to 0 if you don't. */
+#cmakedefine HAVE_DIA_SDK ${HAVE_DIA_SDK}
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -95,33 +84,6 @@
 /* Define to 1 if you have the <ffi.h> header file. */
 #cmakedefine HAVE_FFI_H ${HAVE_FFI_H}
 
-/* Set to 1 if the finite function is found in <ieeefp.h> */
-#cmakedefine HAVE_FINITE_IN_IEEEFP_H ${HAVE_FINITE_IN_IEEEFP_H}
-
-/* Define to 1 if you have the `floorf' function. */
-#cmakedefine HAVE_FLOORF ${HAVE_FLOORF}
-
-/* Define to 1 if you have the `log' function. */
-#cmakedefine HAVE_LOG ${HAVE_LOG}
-
-/* Define to 1 if you have the `log2' function. */
-#cmakedefine HAVE_LOG2 ${HAVE_LOG2}
-
-/* Define to 1 if you have the `log10' function. */
-#cmakedefine HAVE_LOG10 ${HAVE_LOG10}
-
-/* Define to 1 if you have the `exp' function. */
-#cmakedefine HAVE_EXP ${HAVE_EXP}
-
-/* Define to 1 if you have the `exp2' function. */
-#cmakedefine HAVE_EXP2 ${HAVE_EXP2}
-
-/* Define to 1 if you have the `exp10' function. */
-#cmakedefine HAVE_EXP10 ${HAVE_EXP10}
-
-/* Define to 1 if you have the `fmodf' function. */
-#cmakedefine HAVE_FMODF ${HAVE_FMODF}
-
 /* Define to 1 if you have the `futimes' function. */
 #cmakedefine HAVE_FUTIMES ${HAVE_FUTIMES}
 
@@ -152,26 +114,14 @@
 /* Define to 1 if you have the `isatty' function. */
 #cmakedefine HAVE_ISATTY 1
 
-/* Set to 1 if the isinf function is found in <cmath> */
-#cmakedefine HAVE_ISINF_IN_CMATH ${HAVE_ISINF_IN_CMATH}
-
-/* Set to 1 if the isinf function is found in <math.h> */
-#cmakedefine HAVE_ISINF_IN_MATH_H ${HAVE_ISINF_IN_MATH_H}
-
-/* Set to 1 if the isnan function is found in <cmath> */
-#cmakedefine HAVE_ISNAN_IN_CMATH ${HAVE_ISNAN_IN_CMATH}
-
-/* Set to 1 if the isnan function is found in <math.h> */
-#cmakedefine HAVE_ISNAN_IN_MATH_H ${HAVE_ISNAN_IN_MATH_H}
-
 /* Define if you have the libdl library or equivalent. */
 #cmakedefine HAVE_LIBDL ${HAVE_LIBDL}
 
-/* Define to 1 if you have the `imagehlp' library (-limagehlp). */
-#cmakedefine HAVE_LIBIMAGEHLP ${HAVE_LIBIMAGEHLP}
-
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
+
+/* Define to 1 if you have the `ole32' library (-lole32). */
+#undef HAVE_LIBOLE32
 
 /* Define to 1 if you have the `psapi' library (-lpsapi). */
 #cmakedefine HAVE_LIBPSAPI ${HAVE_LIBPSAPI}
@@ -222,6 +172,9 @@
 /* Define to 1 if you have the `malloc_zone_statistics' function. */
 #cmakedefine HAVE_MALLOC_ZONE_STATISTICS ${HAVE_MALLOC_ZONE_STATISTICS}
 
+/* Define to 1 if you have the `mallctl` function. */
+#cmakedefine HAVE_MALLCTL ${HAVE_MALLCTL}
+
 /* Define to 1 if you have the `mkdtemp' function. */
 #cmakedefine HAVE_MKDTEMP ${HAVE_MKDTEMP}
 
@@ -244,17 +197,11 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #cmakedefine HAVE_NDIR_H ${HAVE_NDIR_H}
 
-/* Define to 1 if you have the `nearbyintf' function. */
-#cmakedefine HAVE_NEARBYINTF ${HAVE_NEARBYINTF}
-
 /* Define to 1 if you have the `opendir' function. */
 #cmakedefine HAVE_OPENDIR ${HAVE_OPENDIR}
 
 /* Define to 1 if you have the `posix_spawn' function. */
 #cmakedefine HAVE_POSIX_SPAWN ${HAVE_POSIX_SPAWN}
-
-/* Define to 1 if you have the `powf' function. */
-#cmakedefine HAVE_POWF ${HAVE_POWF}
 
 /* Define to 1 if you have the `pread' function. */
 #cmakedefine HAVE_PREAD ${HAVE_PREAD}
@@ -286,15 +233,6 @@
 /* Define to 1 if you have the `realpath' function. */
 #cmakedefine HAVE_REALPATH ${HAVE_REALPATH}
 
-/* Define to 1 if you have the `rintf' function. */
-#undef HAVE_RINTF
-
-/* Define to 1 if you have the `round' function. */
-#cmakedefine HAVE_ROUND ${HAVE_ROUND}
-
-/* Define to 1 if you have the `roundf' function. */
-#undef HAVE_ROUNDF
-
 /* Define to 1 if you have the `sbrk' function. */
 #cmakedefine HAVE_SBRK ${HAVE_SBRK}
 
@@ -309,6 +247,9 @@
 
 /* Define if you have the shl_load function. */
 #undef HAVE_SHL_LOAD
+
+/* Define to 1 if you have the `sigaltstack' function. */
+#cmakedefine HAVE_SIGALTSTACK ${HAVE_SIGALTSTACK}
 
 /* Define to 1 if you have the `siglongjmp' function. */
 #cmakedefine HAVE_SIGLONGJMP ${HAVE_SIGLONGJMP}
@@ -336,9 +277,6 @@
 
 /* Define to 1 if you have the `strerror_r' function. */
 #cmakedefine HAVE_STRERROR_R ${HAVE_STRERROR_R}
-
-/* Define to 1 if you have the `strtof' function. */
-#cmakedefine HAVE_STRTOF ${HAVE_STRTOF}
 
 /* Define to 1 if you have the `strtoll' function. */
 #cmakedefine HAVE_STRTOLL ${HAVE_STRTOLL}
@@ -381,11 +319,11 @@
 /* Define to 1 if you have the <sys/uio.h> header file. */
 #cmakedefine HAVE_SYS_UIO_H ${HAVE_SYS_UIO_H}
 
-/* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
-#cmakedefine HAVE_SYS_WAIT_H ${HAVE_SYS_WAIT_H}
-
 /* Define if the setupterm() function is supported this platform. */
 #cmakedefine HAVE_TERMINFO ${HAVE_TERMINFO}
+
+/* Define if the xar_open() function is supported this platform. */
+#cmakedefine HAVE_LIBXAR ${HAVE_LIBXAR}
 
 /* Define to 1 if you have the <termios.h> header file. */
 #cmakedefine HAVE_TERMIOS_H ${HAVE_TERMIOS_H}
@@ -395,6 +333,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}
+
+/* Define to 1 if you have the `_Unwind_Backtrace' function. */
+#cmakedefine HAVE_UNWIND_BACKTRACE ${HAVE_UNWIND_BACKTRACE}
 
 /* Define to 1 if you have the <utime.h> header file. */
 #cmakedefine HAVE_UTIME_H ${HAVE_UTIME_H}
@@ -468,11 +409,107 @@
 /* Have host's ___chkstk_ms */
 #cmakedefine HAVE____CHKSTK_MS ${HAVE____CHKSTK_MS}
 
-/* Define if we link Polly to the tools */
-#cmakedefine LINK_POLLY_INTO_TOOLS
+/* Linker version detected at compile time. */
+#undef HOST_LINK_VERSION
+
+/* Installation directory for binary executables */
+#cmakedefine LLVM_BINDIR "${LLVM_BINDIR}"
+
+/* Time at which LLVM was configured */
+#cmakedefine LLVM_CONFIGTIME "${LLVM_CONFIGTIME}"
+
+/* Installation directory for data files */
+#cmakedefine LLVM_DATADIR "${LLVM_DATADIR}"
+
+/* Target triple LLVM will generate code for by default
+ * Doesn't use `cmakedefine` because it is allowed to be empty.
+ */
+#define LLVM_DEFAULT_TARGET_TRIPLE "${LLVM_DEFAULT_TARGET_TRIPLE}"
+
+/* Installation directory for documentation */
+#cmakedefine LLVM_DOCSDIR "${LLVM_DOCSDIR}"
+
+/* Define if LLVM is built with asserts and checks that change the layout of
+   client-visible data structures.  */
+#cmakedefine LLVM_ENABLE_ABI_BREAKING_CHECKS
+
+/* Define if threads enabled */
+#cmakedefine01 LLVM_ENABLE_THREADS
 
 /* Define if zlib compression is available */
 #cmakedefine01 LLVM_ENABLE_ZLIB
+
+/* Installation directory for config files */
+#cmakedefine LLVM_ETCDIR "${LLVM_ETCDIR}"
+
+/* Has gcc/MSVC atomic intrinsics */
+#cmakedefine01 LLVM_HAS_ATOMICS
+
+/* Host triple LLVM will be executed on */
+#cmakedefine LLVM_HOST_TRIPLE "${LLVM_HOST_TRIPLE}"
+
+/* Installation directory for include files */
+#cmakedefine LLVM_INCLUDEDIR "${LLVM_INCLUDEDIR}"
+
+/* Installation directory for .info files */
+#cmakedefine LLVM_INFODIR "${LLVM_INFODIR}"
+
+/* Installation directory for man pages */
+#cmakedefine LLVM_MANDIR "${LLVM_MANDIR}"
+
+/* LLVM architecture name for the native architecture, if available */
+#cmakedefine LLVM_NATIVE_ARCH ${LLVM_NATIVE_ARCH}
+
+/* LLVM name for the native AsmParser init function, if available */
+#cmakedefine LLVM_NATIVE_ASMPARSER LLVMInitialize${LLVM_NATIVE_ARCH}AsmParser
+
+/* LLVM name for the native AsmPrinter init function, if available */
+#cmakedefine LLVM_NATIVE_ASMPRINTER LLVMInitialize${LLVM_NATIVE_ARCH}AsmPrinter
+
+/* LLVM name for the native Disassembler init function, if available */
+#cmakedefine LLVM_NATIVE_DISASSEMBLER LLVMInitialize${LLVM_NATIVE_ARCH}Disassembler
+
+/* LLVM name for the native Target init function, if available */
+#cmakedefine LLVM_NATIVE_TARGET LLVMInitialize${LLVM_NATIVE_ARCH}Target
+
+/* LLVM name for the native TargetInfo init function, if available */
+#cmakedefine LLVM_NATIVE_TARGETINFO LLVMInitialize${LLVM_NATIVE_ARCH}TargetInfo
+
+/* LLVM name for the native target MC init function, if available */
+#cmakedefine LLVM_NATIVE_TARGETMC LLVMInitialize${LLVM_NATIVE_ARCH}TargetMC
+
+/* Define if this is Unixish platform */
+#cmakedefine LLVM_ON_UNIX ${LLVM_ON_UNIX}
+
+/* Define if this is Win32ish platform */
+#cmakedefine LLVM_ON_WIN32 ${LLVM_ON_WIN32}
+
+/* Installation prefix directory */
+#cmakedefine LLVM_PREFIX "${LLVM_PREFIX}"
+
+/* Define if we have the Intel JIT API runtime support library */
+#cmakedefine LLVM_USE_INTEL_JITEVENTS 1
+
+/* Define if we have the oprofile JIT-support library */
+#cmakedefine LLVM_USE_OPROFILE 1
+
+/* Major version of the LLVM API */
+#define LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR}
+
+/* Minor version of the LLVM API */
+#define LLVM_VERSION_MINOR ${LLVM_VERSION_MINOR}
+
+/* Patch version of the LLVM API */
+#define LLVM_VERSION_PATCH ${LLVM_VERSION_PATCH}
+
+/* LLVM version string */
+#define LLVM_VERSION_STRING "${PACKAGE_VERSION}"
+
+/* LLVM version information */
+#cmakedefine LLVM_VERSION_INFO "${LLVM_VERSION_INFO}"
+
+/* Define if we link Polly to the tools */
+#cmakedefine LINK_POLLY_INTO_TOOLS
 
 /* Define if the OS needs help to load dependent libraries for dlopen(). */
 #cmakedefine LTDL_DLOPEN_DEPLIBS ${LTDL_DLOPEN_DEPLIBS}
@@ -509,6 +546,9 @@
 /* Define to the version of this package. */
 #cmakedefine PACKAGE_VERSION "${PACKAGE_VERSION}"
 
+/* Define to the vendor of this package. */
+#cmakedefine PACKAGE_VENDOR "${PACKAGE_VENDOR}"
+
 /* Define as the return type of signal handlers (`int' or `void'). */
 #cmakedefine RETSIGTYPE ${RETSIGTYPE}
 
@@ -523,9 +563,6 @@
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
-
-/* Type of 1st arg on ELM Callback */
-#cmakedefine WIN32_ELMCB_PCSTR ${WIN32_ELMCB_PCSTR}
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t

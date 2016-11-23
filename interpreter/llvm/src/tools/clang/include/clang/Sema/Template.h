@@ -178,8 +178,8 @@ namespace clang {
   class LocalInstantiationScope {
   public:
     /// \brief A set of declarations.
-    typedef SmallVector<Decl *, 4> DeclArgumentPack;
-    
+    typedef SmallVector<ParmVarDecl *, 4> DeclArgumentPack;
+
   private:
     /// \brief Reference to the semantic analysis that is performing
     /// this template instantiation.
@@ -239,8 +239,8 @@ namespace clang {
 
     // This class is non-copyable
     LocalInstantiationScope(
-      const LocalInstantiationScope &) LLVM_DELETED_FUNCTION;
-    void operator=(const LocalInstantiationScope &) LLVM_DELETED_FUNCTION;
+      const LocalInstantiationScope &) = delete;
+    void operator=(const LocalInstantiationScope &) = delete;
 
   public:
     LocalInstantiationScope(Sema &SemaRef, bool CombineWithOuterScope = false)
@@ -273,6 +273,11 @@ namespace clang {
     /// outermost scope.
     LocalInstantiationScope *cloneScopes(LocalInstantiationScope *Outermost) {
       if (this == Outermost) return this;
+
+      // Save the current scope from SemaRef since the LocalInstantiationScope
+      // will overwrite it on construction
+      LocalInstantiationScope *oldScope = SemaRef.CurrentInstantiationScope;
+
       LocalInstantiationScope *newScope =
         new LocalInstantiationScope(SemaRef, CombineWithOuterScope);
 
@@ -299,6 +304,8 @@ namespace clang {
           newScope->ArgumentPacks.push_back(NewPack);
         }
       }
+      // Restore the saved scope to SemaRef
+      SemaRef.CurrentInstantiationScope = oldScope;
       return newScope;
     }
 
@@ -325,7 +332,7 @@ namespace clang {
     findInstantiationOf(const Decl *D);
 
     void InstantiatedLocal(const Decl *D, Decl *Inst);
-    void InstantiatedLocalPackArg(const Decl *D, Decl *Inst);
+    void InstantiatedLocalPackArg(const Decl *D, ParmVarDecl *Inst);
     void MakeInstantiatedLocalArgPack(const Decl *D);
     
     /// \brief Note that the given parameter pack has been partially substituted
@@ -406,6 +413,7 @@ namespace clang {
 #define LINKAGESPEC(DERIVED, BASE)
 #define OBJCCOMPATIBLEALIAS(DERIVED, BASE)
 #define OBJCMETHOD(DERIVED, BASE)
+#define OBJCTYPEPARAM(DERIVED, BASE)
 #define OBJCIVAR(DERIVED, BASE)
 #define OBJCPROPERTY(DERIVED, BASE)
 #define OBJCPROPERTYIMPL(DERIVED, BASE)

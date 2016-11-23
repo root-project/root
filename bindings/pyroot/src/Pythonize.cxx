@@ -2301,7 +2301,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( HasAttrDirect( pyclass, PyStrings::gBegin ) && HasAttrDirect( pyclass, PyStrings::gEnd ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
-      PyObject* pyfullname = PyObject_GetAttr( pyclass, PyStrings::gName );
+      PyObject* pyfullname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
+      if ( ! pyfullname ) pyfullname = PyObject_GetAttr( pyclass, PyStrings::gName );
       TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( pyfullname ) );
       Py_DECREF( pyfullname );
 

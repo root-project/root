@@ -44,7 +44,7 @@ def INT3 : I<0xcc, RawFrm, (outs), (ins), "int3",
 
 let SchedRW = [WriteSystem] in {
 
-def INT : Ii8<0xcd, RawFrm, (outs), (ins i8imm:$trap), "int\t$trap",
+def INT : Ii8<0xcd, RawFrm, (outs), (ins u8imm:$trap), "int\t$trap",
               [(int_x86_int imm:$trap)], IIC_INT>;
 
 
@@ -60,12 +60,6 @@ def SYSEXIT   : I<0x35, RawFrm, (outs), (ins), "sysexit{l}", [],
                  IIC_SYS_ENTER_EXIT>, TB;
 def SYSEXIT64 :RI<0x35, RawFrm, (outs), (ins), "sysexit{q}", [],
                  IIC_SYS_ENTER_EXIT>, TB, Requires<[In64BitMode]>;
-
-def IRET16 : I<0xcf, RawFrm, (outs), (ins), "iret{w}", [], IIC_IRET>, OpSize16;
-def IRET32 : I<0xcf, RawFrm, (outs), (ins), "iret{l|d}", [], IIC_IRET>,
-             OpSize32;
-def IRET64 : RI<0xcf, RawFrm, (outs), (ins), "iretq", [], IIC_IRET>,
-             Requires<[In64BitMode]>;
 } // SchedRW
 
 def : Pat<(debugtrap),
@@ -88,13 +82,13 @@ def IN32rr : I<0xED, RawFrm, (outs), (ins),
                "in{l}\t{%dx, %eax|eax, dx}", [], IIC_IN_RR>, OpSize32;
 
 let Defs = [AL] in
-def IN8ri  : Ii8<0xE4, RawFrm, (outs), (ins i8imm:$port),
+def IN8ri  : Ii8<0xE4, RawFrm, (outs), (ins u8imm:$port),
                   "in{b}\t{$port, %al|al, $port}", [], IIC_IN_RI>;
 let Defs = [AX] in
-def IN16ri : Ii8<0xE5, RawFrm, (outs), (ins i8imm:$port),
+def IN16ri : Ii8<0xE5, RawFrm, (outs), (ins u8imm:$port),
                   "in{w}\t{$port, %ax|ax, $port}", [], IIC_IN_RI>, OpSize16;
 let Defs = [EAX] in
-def IN32ri : Ii8<0xE5, RawFrm, (outs), (ins i8imm:$port),
+def IN32ri : Ii8<0xE5, RawFrm, (outs), (ins u8imm:$port),
                   "in{l}\t{$port, %eax|eax, $port}", [], IIC_IN_RI>, OpSize32;
 
 let Uses = [DX, AL] in
@@ -108,13 +102,13 @@ def OUT32rr : I<0xEF, RawFrm, (outs), (ins),
                 "out{l}\t{%eax, %dx|dx, eax}", [], IIC_OUT_RR>, OpSize32;
 
 let Uses = [AL] in
-def OUT8ir  : Ii8<0xE6, RawFrm, (outs), (ins i8imm:$port),
+def OUT8ir  : Ii8<0xE6, RawFrm, (outs), (ins u8imm:$port),
                    "out{b}\t{%al, $port|$port, al}", [], IIC_OUT_IR>;
 let Uses = [AX] in
-def OUT16ir : Ii8<0xE7, RawFrm, (outs), (ins i8imm:$port),
+def OUT16ir : Ii8<0xE7, RawFrm, (outs), (ins u8imm:$port),
                    "out{w}\t{%ax, $port|$port, ax}", [], IIC_OUT_IR>, OpSize16;
 let Uses = [EAX] in
-def OUT32ir : Ii8<0xE7, RawFrm, (outs), (ins i8imm:$port),
+def OUT32ir : Ii8<0xE7, RawFrm, (outs), (ins u8imm:$port),
                   "out{l}\t{%eax, $port|$port, eax}", [], IIC_OUT_IR>, OpSize32;
 
 } // SchedRW
@@ -180,11 +174,11 @@ def MOV32rs : I<0x8C, MRMDestReg, (outs GR32:$dst), (ins SEGMENT_REG:$src),
 def MOV64rs : RI<0x8C, MRMDestReg, (outs GR64:$dst), (ins SEGMENT_REG:$src),
                  "mov{q}\t{$src, $dst|$dst, $src}", [], IIC_MOV_REG_SR>;
 
-def MOV16ms : I<0x8C, MRMDestMem, (outs i16mem:$dst), (ins SEGMENT_REG:$src),
+def MOV16ms : I<0x8C, MRMDestMem, (outs), (ins i16mem:$dst, SEGMENT_REG:$src),
                 "mov{w}\t{$src, $dst|$dst, $src}", [], IIC_MOV_MEM_SR>, OpSize16;
-def MOV32ms : I<0x8C, MRMDestMem, (outs i32mem:$dst), (ins SEGMENT_REG:$src),
+def MOV32ms : I<0x8C, MRMDestMem, (outs), (ins i32mem:$dst, SEGMENT_REG:$src),
                 "mov{l}\t{$src, $dst|$dst, $src}", [], IIC_MOV_MEM_SR>, OpSize32;
-def MOV64ms : RI<0x8C, MRMDestMem, (outs i64mem:$dst), (ins SEGMENT_REG:$src),
+def MOV64ms : RI<0x8C, MRMDestMem, (outs), (ins i64mem:$dst, SEGMENT_REG:$src),
                  "mov{q}\t{$src, $dst|$dst, $src}", [], IIC_MOV_MEM_SR>;
 
 def MOV16sr : I<0x8E, MRMSrcReg, (outs SEGMENT_REG:$dst), (ins GR16:$src),
@@ -254,7 +248,7 @@ def STR32r : I<0x00, MRM1r, (outs GR32:$dst), (ins),
                "str{l}\t$dst", [], IIC_STR>, TB, OpSize32;
 def STR64r : RI<0x00, MRM1r, (outs GR64:$dst), (ins),
                 "str{q}\t$dst", [], IIC_STR>, TB;
-def STRm   : I<0x00, MRM1m, (outs i16mem:$dst), (ins),
+def STRm   : I<0x00, MRM1m, (outs), (ins i16mem:$dst),
                "str{w}\t$dst", [], IIC_STR>, TB;
 
 def LTRr : I<0x00, MRM3r, (outs), (ins GR16:$src),
@@ -345,9 +339,11 @@ def POPGS64 : I<0xa9, RawFrm, (outs), (ins),
 
 
 def LDS16rm : I<0xc5, MRMSrcMem, (outs GR16:$dst), (ins opaque32mem:$src),
-                "lds{w}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize16;
+                "lds{w}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize16,
+                Requires<[Not64BitMode]>;
 def LDS32rm : I<0xc5, MRMSrcMem, (outs GR32:$dst), (ins opaque48mem:$src),
-                "lds{l}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize32;
+                "lds{l}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize32,
+                Requires<[Not64BitMode]>;
 
 def LSS16rm : I<0xb2, MRMSrcMem, (outs GR16:$dst), (ins opaque32mem:$src),
                 "lss{w}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, TB, OpSize16;
@@ -357,9 +353,11 @@ def LSS64rm : RI<0xb2, MRMSrcMem, (outs GR64:$dst), (ins opaque80mem:$src),
                  "lss{q}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, TB;
 
 def LES16rm : I<0xc4, MRMSrcMem, (outs GR16:$dst), (ins opaque32mem:$src),
-                "les{w}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize16;
+                "les{w}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize16,
+                Requires<[Not64BitMode]>;
 def LES32rm : I<0xc4, MRMSrcMem, (outs GR32:$dst), (ins opaque48mem:$src),
-                "les{l}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize32;
+                "les{l}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize32,
+                Requires<[Not64BitMode]>;
 
 def LFS16rm : I<0xb4, MRMSrcMem, (outs GR16:$dst), (ins opaque32mem:$src),
                 "lfs{w}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, TB, OpSize16;
@@ -391,21 +389,21 @@ def VERWm : I<0x00, MRM5m, (outs), (ins i16mem:$seg),
 // Descriptor-table support instructions
 
 let SchedRW = [WriteSystem] in {
-def SGDT16m : I<0x01, MRM0m, (outs opaque48mem:$dst), (ins),
+def SGDT16m : I<0x01, MRM0m, (outs), (ins opaque48mem:$dst),
               "sgdt{w}\t$dst", [], IIC_SGDT>, TB, OpSize16, Requires<[Not64BitMode]>;
-def SGDT32m : I<0x01, MRM0m, (outs opaque48mem:$dst), (ins),
+def SGDT32m : I<0x01, MRM0m, (outs), (ins opaque48mem:$dst),
               "sgdt{l}\t$dst", [], IIC_SGDT>, OpSize32, TB, Requires <[Not64BitMode]>;
-def SGDT64m : I<0x01, MRM0m, (outs opaque80mem:$dst), (ins),
+def SGDT64m : I<0x01, MRM0m, (outs), (ins opaque80mem:$dst),
               "sgdt{q}\t$dst", [], IIC_SGDT>, TB, Requires <[In64BitMode]>;
-def SIDT16m : I<0x01, MRM1m, (outs opaque48mem:$dst), (ins),
+def SIDT16m : I<0x01, MRM1m, (outs), (ins opaque48mem:$dst),
               "sidt{w}\t$dst", [], IIC_SIDT>, TB, OpSize16, Requires<[Not64BitMode]>;
-def SIDT32m : I<0x01, MRM1m, (outs opaque48mem:$dst), (ins),
+def SIDT32m : I<0x01, MRM1m, (outs), (ins opaque48mem:$dst),
               "sidt{l}\t$dst", []>, OpSize32, TB, Requires <[Not64BitMode]>;
-def SIDT64m : I<0x01, MRM1m, (outs opaque80mem:$dst), (ins),
+def SIDT64m : I<0x01, MRM1m, (outs), (ins opaque80mem:$dst),
               "sidt{q}\t$dst", []>, TB, Requires <[In64BitMode]>;
 def SLDT16r : I<0x00, MRM0r, (outs GR16:$dst), (ins),
                 "sldt{w}\t$dst", [], IIC_SLDT>, TB, OpSize16;
-def SLDT16m : I<0x00, MRM0m, (outs i16mem:$dst), (ins),
+def SLDT16m : I<0x00, MRM0m, (outs), (ins i16mem:$dst),
                 "sldt{w}\t$dst", [], IIC_SLDT>, TB;
 def SLDT32r : I<0x00, MRM0r, (outs GR32:$dst), (ins),
                 "sldt{l}\t$dst", [], IIC_SLDT>, OpSize32, TB;
@@ -414,7 +412,7 @@ def SLDT32r : I<0x00, MRM0r, (outs GR32:$dst), (ins),
 //   extension.
 def SLDT64r : RI<0x00, MRM0r, (outs GR64:$dst), (ins),
                  "sldt{q}\t$dst", [], IIC_SLDT>, TB;
-def SLDT64m : RI<0x00, MRM0m, (outs i16mem:$dst), (ins),
+def SLDT64m : RI<0x00, MRM0m, (outs), (ins i16mem:$dst),
                  "sldt{q}\t$dst", [], IIC_SLDT>, TB;
 
 def LGDT16m : I<0x01, MRM2m, (outs), (ins opaque48mem:$src),
@@ -438,7 +436,9 @@ def LLDT16m : I<0x00, MRM2m, (outs), (ins i16mem:$src),
 //===----------------------------------------------------------------------===//
 // Specialized register support
 let SchedRW = [WriteSystem] in {
+let Uses = [EAX, ECX, EDX] in
 def WRMSR : I<0x30, RawFrm, (outs), (ins), "wrmsr", [], IIC_WRMSR>, TB;
+let Defs = [EAX, EDX], Uses = [ECX] in
 def RDMSR : I<0x32, RawFrm, (outs), (ins), "rdmsr", [], IIC_RDMSR>, TB;
 
 let Defs = [RAX, RDX], Uses = [ECX] in
@@ -454,7 +454,7 @@ def SMSW64r : RI<0x01, MRM4r, (outs GR64:$dst), (ins),
                  "smsw{q}\t$dst", [], IIC_SMSW>, TB;
 
 // For memory operands, there is only a 16-bit form
-def SMSW16m : I<0x01, MRM4m, (outs i16mem:$dst), (ins),
+def SMSW16m : I<0x01, MRM4m, (outs), (ins i16mem:$dst),
                 "smsw{w}\t$dst", [], IIC_SMSW>, TB;
 
 def LMSW16r : I<0x01, MRM6r, (outs), (ins GR16:$src),
@@ -476,26 +476,60 @@ def WBINVD : I<0x09, RawFrm, (outs), (ins), "wbinvd", [], IIC_INVD>, TB;
 //===----------------------------------------------------------------------===//
 // XSAVE instructions
 let SchedRW = [WriteSystem] in {
+let Predicates = [HasXSAVE] in {
 let Defs = [EDX, EAX], Uses = [ECX] in
   def XGETBV : I<0x01, MRM_D0, (outs), (ins), "xgetbv", []>, TB;
 
 let Uses = [EDX, EAX, ECX] in
   def XSETBV : I<0x01, MRM_D1, (outs), (ins), "xsetbv", []>, TB;
-
-let Uses = [RDX, RAX] in {
-  def XSAVE : I<0xAE, MRM4m, (outs opaque512mem:$dst), (ins),
-               "xsave\t$dst", []>, TB;
-  def XSAVE64 : RI<0xAE, MRM4m, (outs opaque512mem:$dst), (ins),
-                 "xsave{q|64}\t$dst", []>, TB, Requires<[In64BitMode]>;
-  def XRSTOR : I<0xAE, MRM5m, (outs), (ins opaque512mem:$dst),
-               "xrstor\t$dst", []>, TB;
-  def XRSTOR64 : RI<0xAE, MRM5m, (outs), (ins opaque512mem:$dst),
-                 "xrstor{q|64}\t$dst", []>, TB, Requires<[In64BitMode]>;
-  def XSAVEOPT : I<0xAE, MRM6m, (outs opaque512mem:$dst), (ins),
-                  "xsaveopt\t$dst", []>, TB;
-  def XSAVEOPT64 : RI<0xAE, MRM6m, (outs opaque512mem:$dst), (ins),
-                    "xsaveopt{q|64}\t$dst", []>, TB, Requires<[In64BitMode]>;
 }
+
+let Uses = [EDX, EAX] in {
+let Predicates = [HasXSAVE] in {
+  def XSAVE : I<0xAE, MRM4m, (outs), (ins opaque512mem:$dst),
+                "xsave\t$dst",
+                [(int_x86_xsave addr:$dst, EDX, EAX)]>, TB;
+  def XSAVE64 : RI<0xAE, MRM4m, (outs), (ins opaque512mem:$dst),
+                   "xsave64\t$dst",
+                   [(int_x86_xsave64 addr:$dst, EDX, EAX)]>, TB, Requires<[In64BitMode]>;
+  def XRSTOR : I<0xAE, MRM5m, (outs), (ins opaque512mem:$dst),
+                 "xrstor\t$dst",
+                 [(int_x86_xrstor addr:$dst, EDX, EAX)]>, TB;
+  def XRSTOR64 : RI<0xAE, MRM5m, (outs), (ins opaque512mem:$dst),
+                    "xrstor64\t$dst",
+                    [(int_x86_xrstor64 addr:$dst, EDX, EAX)]>, TB, Requires<[In64BitMode]>;
+}
+let Predicates = [HasXSAVEOPT] in {
+  def XSAVEOPT : I<0xAE, MRM6m, (outs), (ins opaque512mem:$dst),
+                   "xsaveopt\t$dst",
+                   [(int_x86_xsaveopt addr:$dst, EDX, EAX)]>, PS;
+  def XSAVEOPT64 : RI<0xAE, MRM6m, (outs), (ins opaque512mem:$dst),
+                      "xsaveopt64\t$dst",
+                      [(int_x86_xsaveopt64 addr:$dst, EDX, EAX)]>, PS, Requires<[In64BitMode]>;
+}
+let Predicates = [HasXSAVEC] in {
+  def XSAVEC : I<0xC7, MRM4m, (outs), (ins opaque512mem:$dst),
+                 "xsavec\t$dst",
+                 [(int_x86_xsavec addr:$dst, EDX, EAX)]>, TB;
+  def XSAVEC64 : RI<0xC7, MRM4m, (outs), (ins opaque512mem:$dst),
+                   "xsavec64\t$dst",
+                   [(int_x86_xsavec64 addr:$dst, EDX, EAX)]>, TB, Requires<[In64BitMode]>;
+}
+let Predicates = [HasXSAVES] in {
+  def XSAVES : I<0xC7, MRM5m, (outs), (ins opaque512mem:$dst),
+                 "xsaves\t$dst",
+                 [(int_x86_xsaves addr:$dst, EDX, EAX)]>, TB;
+  def XSAVES64 : RI<0xC7, MRM5m, (outs), (ins opaque512mem:$dst),
+                    "xsaves64\t$dst",
+                    [(int_x86_xsaves64 addr:$dst, EDX, EAX)]>, TB, Requires<[In64BitMode]>;
+  def XRSTORS : I<0xC7, MRM3m, (outs), (ins opaque512mem:$dst),
+                  "xrstors\t$dst",
+                  [(int_x86_xrstors addr:$dst, EDX, EAX)]>, TB;
+  def XRSTORS64 : RI<0xC7, MRM3m, (outs), (ins opaque512mem:$dst),
+                     "xrstors64\t$dst",
+                     [(int_x86_xrstors64 addr:$dst, EDX, EAX)]>, TB, Requires<[In64BitMode]>;
+}
+} // Uses
 } // SchedRW
 
 //===----------------------------------------------------------------------===//
@@ -519,6 +553,19 @@ let Defs = [RAX, RSI, RDI], Uses = [RAX, RSI, RDI] in {
 }
 let Defs = [RAX, RDX, RSI], Uses = [RAX, RSI] in
   def MONTMUL : I<0xa6, MRM_C0, (outs), (ins), "montmul", []>, TB;
+//==-----------------------------------------------------------------------===//
+// PKU  - enable protection key
+let usesCustomInserter = 1 in {
+  def WRPKRU : PseudoI<(outs), (ins GR32:$src),
+                [(int_x86_wrpkru GR32:$src)]>;
+  def RDPKRU : PseudoI<(outs GR32:$dst), (ins),
+                [(set GR32:$dst, (int_x86_rdpkru))]>;
+}
+
+let Defs = [EAX, EDX], Uses = [ECX] in
+  def RDPKRUr : I<0x01, MRM_EE, (outs), (ins), "rdpkru", []>, TB;
+let Uses = [EAX, ECX, EDX] in
+  def WRPKRUr : I<0x01, MRM_EF, (outs), (ins), "wrpkru", []>, TB;
 
 //===----------------------------------------------------------------------===//
 // FS/GS Base Instructions
@@ -560,7 +607,13 @@ def INVPCID64 : I<0x82, MRMSrcMem, (outs), (ins GR64:$src1, i128mem:$src2),
 
 //===----------------------------------------------------------------------===//
 // SMAP Instruction
-let Predicates = [HasSMAP], Defs = [EFLAGS] in {
+let Defs = [EFLAGS] in {
   def CLAC : I<0x01, MRM_CA, (outs), (ins), "clac", []>, TB;
   def STAC : I<0x01, MRM_CB, (outs), (ins), "stac", []>, TB;
+}
+
+//===----------------------------------------------------------------------===//
+// SMX Instruction
+let Uses = [RAX, RBX, RCX, RDX], Defs = [RAX, RBX, RCX] in {
+  def GETSEC : I<0x37, RawFrm, (outs), (ins), "getsec", []>, TB;
 }

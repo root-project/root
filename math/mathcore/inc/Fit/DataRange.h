@@ -97,6 +97,17 @@ public:
    std::pair<double, double> operator() (unsigned int icoord = 0,unsigned int irange = 0) const;
 
    /**
+      get the i-th range for given coordinate. If range does not exist
+      return -inf, +inf
+    */
+   void GetRange(unsigned int irange, unsigned int icoord, double & xmin, double & xmax) const {
+      if (Size(icoord)<= irange) GetInfRange(xmin,xmax);
+      else {
+         xmin = fRanges[icoord][irange].first;
+         xmax = fRanges[icoord][irange].second;
+      }
+   }
+   /**
       get the first range for given coordinate. If range does not exist
       return -inf, +inf
     */
@@ -110,25 +121,25 @@ public:
    /**
       get first range for the x - coordinate
     */
-   void GetRange(double & xmin, double & xmax) const {  GetRange(0,xmin,xmax); }
+   void GetRange(double & xmin, double & xmax,unsigned int irange = 0) const {  GetRange(irange,0,xmin,xmax); }
    /**
-      get first range for the x and y coordinates
+      get range for the x and y coordinates
     */
-   void GetRange(double & xmin, double & xmax, double & ymin, double & ymax) const {
-      GetRange(0,xmin,xmax); GetRange(1,ymin,ymax);
+   void GetRange(double & xmin, double & xmax, double & ymin, double & ymax,unsigned int irange = 0) const {
+      GetRange(irange,0,xmin,xmax); GetRange(irange,1,ymin,ymax);
    }
    /**
-      get first range for the x and y and z coordinates
+      get range for the x and y and z coordinates
     */
-   void GetRange(double & xmin, double & xmax, double & ymin, double & ymax, double & zmin, double & zmax) const {
-      GetRange(0,xmin,xmax); GetRange(1,ymin,ymax); GetRange(2,zmin,zmax);
+   void GetRange(double & xmin, double & xmax, double & ymin, double & ymax, double & zmin, double & zmax,unsigned int irange=0) const {
+      GetRange(irange,0,xmin,xmax); GetRange(irange,1,ymin,ymax); GetRange(irange,2,zmin,zmax);
    }
    /**
-      get first range for coordinates and fill the vector
+      get range for coordinates and fill the vector
     */
-   void GetRange(double * xmin, double * xmax)   const {
+   void GetRange(double * xmin, double * xmax, unsigned int irange = 0)   const {
       for (unsigned int i = 0; i < fRanges.size(); ++i)
-         GetRange(i,xmin[i],xmax[i]);
+         GetRange(irange,i,xmin[i],xmax[i]);
    }
 
    /**
@@ -192,6 +203,18 @@ public:
       check if a point is inside the range for the given coordinate
     */
    bool IsInside(double x, unsigned int icoord = 0) const;
+
+   /**
+      check if a multi-dimpoint is inside the range 
+    */
+   bool IsInside(const double *x) const {
+      bool ret = true;
+      for (unsigned int idim = 0; idim < fRanges.size(); ++idim) { 
+         ret &= IsInside(x[idim],idim);
+         if (!ret) return ret;
+      }
+      return ret; 
+   }
 
 protected:
    /**

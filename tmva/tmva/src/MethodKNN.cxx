@@ -33,26 +33,25 @@
 
 #include "TMVA/MethodKNN.h"
 
-// C/C++
-#include <cmath>
-#include <string>
-#include <cstdlib>
-
-// ROOT
-#include "TFile.h"
-#include "TMath.h"
-#include "TTree.h"
-
-// TMVA
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
 #include "TMVA/LDA.h"
+#include "TMVA/IMethod.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
+
+#include "TFile.h"
+#include "TMath.h"
+#include "TTree.h"
+
+#include <cmath>
+#include <string>
+#include <cstdlib>
 
 REGISTER_METHOD(KNN)
 
@@ -64,9 +63,8 @@ ClassImp(TMVA::MethodKNN)
    TMVA::MethodKNN::MethodKNN( const TString& jobName,
                                const TString& methodTitle,
                                DataSetInfo& theData, 
-                               const TString& theOption,
-                               TDirectory* theTargetDir ) 
-   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption, theTargetDir)
+                               const TString& theOption ) 
+   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
    , fModule(0)
@@ -86,9 +84,8 @@ ClassImp(TMVA::MethodKNN)
 /// constructor from weight file
 
 TMVA::MethodKNN::MethodKNN( DataSetInfo& theData, 
-                            const TString& theWeightFile,  
-                            TDirectory* theTargetDir ) 
-   : TMVA::MethodBase( Types::kKNN, theData, theWeightFile, theTargetDir)
+                            const TString& theWeightFile) 
+   : TMVA::MethodBase( Types::kKNN, theData, theWeightFile)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
    , fModule(0)
@@ -237,7 +234,7 @@ void TMVA::MethodKNN::MakeKNN()
 
 void TMVA::MethodKNN::Train()
 {
-   Log() << kINFO << "<Train> start..." << Endl;
+   Log() << kHEADER << "<Train> start..." << Endl;
 
    if (IsNormalised()) {
       Log() << kINFO << "Input events are normalized - setting ScaleFrac to 0" << Endl;
@@ -290,6 +287,8 @@ void TMVA::MethodKNN::Train()
 
    // create kd-tree (binary tree) structure
    MakeKNN();
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

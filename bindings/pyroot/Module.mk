@@ -12,16 +12,6 @@ PYROOTDIR    := $(MODDIR)
 PYROOTDIRS   := $(PYROOTDIR)/src
 PYROOTDIRI   := $(PYROOTDIR)/inc
 
-##### python64 #####
-ifeq ($(ARCH),macosx64)
-ifeq ($(MACOSX_MINOR),5)
-PYTHON64S    := $(MODDIRS)/python64.c
-PYTHON64O    := $(call stripsrc,$(PYTHON64S:.c=.o))
-PYTHON64     := bin/python64
-PYTHON64DEP  := $(PYTHON64O:.o=.d)
-endif
-endif
-
 ##### libPyROOT #####
 PYROOTL      := $(MODDIRI)/LinkDef.h
 PYROOTDS     := $(call stripsrc,$(MODDIRS)/G__PyROOT.cxx)
@@ -75,9 +65,6 @@ ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
 ALLLIBS      += $(PYROOTLIB)
 ALLMAPS      += $(PYROOTMAP)
 
-ALLEXECS     += $(PYTHON64)
-INCLUDEFILES += $(PYTHON64DEP)
-
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)
 
@@ -125,37 +112,32 @@ $(PYROOTMAP):   $(PYROOTH) $(PYROOTL) $(ROOTCLINGEXE) $(call pcmdep,PYROOT)
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE2) -r $(PYROOTDS) $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
 
-$(PYTHON64):    $(PYTHON64O)
-		$(CC) $(LDFLAGS) -o $@ $(PYTHON64O) \
-		   $(PYTHONLIBDIR) $(PYTHONLIB)
-
-all-$(MODNAME): $(PYROOTLIB) $(PYTHON64)
+all-$(MODNAME): $(PYROOTLIB)
 
 clean-$(MODNAME):
-		@rm -f $(PYROOTO) $(PYROOTDO) $(PYTHON64O)
+		@rm -f $(PYROOTO) $(PYROOTDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
 		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO) $(PYROOTMAP) \
-		   $(PYROOTPYD) $(PYTHON64DEP) $(PYTHON64)
+		   $(PYROOTPYD)
 		@rm -rf $(LPATH)/ROOTaaS bin/ROOTaaS
 
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)
-$(PYTHON64O): CFLAGS += $(PYTHONINCDIR:%=-I%)
 ifeq ($(GCC_MAJOR),4)
 $(PYROOTO): CXXFLAGS += -fno-strict-aliasing
 endif
 ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
 # Building with clang or GCC
-$(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-error=format 
+$(PYROOTO) $(PYROOTDO): CXXFLAGS += -Wno-error=format
 endif
 
 ifneq ($(CLANG_MAJOR),)
-# Building with clang 
-$(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-ignored-attributes
+# Building with clang
+$(PYROOTO) $(PYROOTDO): CXXFLAGS += -Wno-ignored-attributes
 endif

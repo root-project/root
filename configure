@@ -11,6 +11,12 @@
 # this easily.
 #
 ######################################################################
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
+
 #
 ### echo %%% Some global variables
 #
@@ -53,8 +59,10 @@ options="                    \
    enable_builtin_afterimage \
    enable_builtin_ftgl       \
    enable_builtin_freetype   \
+   enable_builtin_gl2ps      \
    enable_builtin_glew       \
    enable_builtin_pcre       \
+   enable_builtin_unuran     \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
    enable_builtin_llvm       \
@@ -114,7 +122,6 @@ options="                    \
    enable_tmva               \
    enable_unuran             \
    enable_vc                 \
-   enable_vdt                \
    enable_werror             \
    enable_winrtdebug         \
    enable_x11                \
@@ -185,8 +192,10 @@ enable_werror=no
 enable_winrtdebug=
 enable_builtin_freetype=no
 enable_builtin_ftgl=no
+enable_builtin_gl2ps=no
 enable_builtin_glew=no
 enable_builtin_pcre=no
+enable_builtin_unuran=no
 enable_builtin_zlib=no
 enable_builtin_lzma=no
 enable_builtin_llvm=yes
@@ -205,8 +214,7 @@ if test "x$ENABLEALL" = "xyes"; then
     enable_table=yes
     enable_unuran=yes
     enable_vc=yes
-    enable_vdt=yes
-    #enable_r=yes
+    enable_r=yes
 fi
 
 # Remove old log file
@@ -1085,8 +1093,13 @@ include ${ac_srcdir}/config/Makefile.${arch}
 CC  = ${altcc}
 CXX = ${altcxx}
 LD  = ${altld}
+GCCTOOLCHAIN_OPT =
+ifneq (${gcctoolchain},)
+GCCTOOLCHAIN_OPT = --gcc-toolchain=${gcctoolchain}
+endif
+
 conftest: conftest.cxx
-	\$(CXX) \$(CFLAGS) $cxxopt \$(LDFLAGS) \$< -o \$@
+	\$(CXX) \$(CFLAGS) \$(GCCTOOLCHAIN_OPT) $cxxopt \$(LDFLAGS) \$< -o \$@
 
 conftest.cxx:
 	echo "int main() { return 0; }" > \$@
@@ -1707,8 +1720,10 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-afterimage Build included libAfterImage, or use system libAfterImage
   builtin-ftgl       Build included libFTGL, or use system libftgl
   builtin-freetype   Build included libfreetype, or use system libfreetype
+  builtin-gl2ps      Build included libgl2ps, or use system libgl2ps
   builtin-glew       Build included libGLEW, or use system libGLEW
   builtin-pcre       Build included libpcre, or use system libpcre
+  builtin-unuran     Build included libunuran, or use system libunuran
   builtin-zlib       Build included libz, or use system libz
   builtin-lzma       Build included liblzma, or use system liblzma
   libcxx             Build using libc++, required by clang option (MacOS X only, for the time being)
@@ -2049,14 +2064,15 @@ ios*)
    export IOSVERS=$iosvers
    enable_genvector="no"
    enable_tmva="no"
-   enable_vdt="no"
    ;;
 win32)
    logmsg "Will use by default builtin versions of libraries on Win32"
    enable_builtin_freetype="yes"
    enable_builtin_ftgl="yes"
+   enable_builtin_gl2ps="yes"
    enable_builtin_glew="yes"
    enable_builtin_pcre="yes"
+   enable_builtin_unuran="yes"
    enable_builtin_zlib="yes"
    enable_builtin_lzma="yes"
    top_builddir=`cygpath -u $top_builddir`
@@ -2303,7 +2319,7 @@ if test $# -gt 0 ; then
         f=`echo $1 | sed -e 's/--//' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
-        if test ! "x`echo ${deprecated_options} | grep ${f}`" = "x"; then
+        if test ! "x`echo ${deprecated_options}' ' | grep ${f}' '`" = "x"; then
             echo "WARNING: option $1 is deprecated and ignored"'!'
         else
             if test "${prev}:${prev_expl}" = "yes:"; then
@@ -2333,7 +2349,7 @@ if test $# -gt 0 ; then
         f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
-        if test ! "x`echo ${deprecated_options} | grep ${f}`" = "x"; then
+        if test ! "x`echo ${deprecated_options}' ' | grep ${f}' '`" = "x"; then
             echo "WARNING: option $1 is deprecated and ignored"'!'
         else
             if test "${prev}:${prev_expl}" = "xno:"; then
@@ -2809,6 +2825,38 @@ fi
 
 ######################################################################
 #
+### echo %%% invoke, apply - determine which invoke / apply implementation to use
+#
+
+hasstdapply="undef"
+if test "x$usecxx14" = "xdefine" ; then
+    message "Checking for apply implementation"
+    check_code '#include <tuple>
+int main() { std::tuple<int> tup;std::apply(tup, [](int){}); return 0;}' '$(CXX11FLAGS)'
+    if test $include_result -eq 1 ; then
+        hasstdapply="define"
+        result 'std::apply'
+    else
+        result "using builtin apply"
+    fi
+fi
+
+hasstdinvoke="undef"
+if test "x$usecxx14" = "xdefine" ; then
+    message "Checking for invoke implementation"
+    check_code '#include <functional>
+int main() { return std::invoke([](int i){return i;}, 0); }' '$(CXX11FLAGS)'
+    if test $include_result -eq 1 ; then
+        hasstdinvoke="define"
+        result 'std::invoke'
+    else
+        result "using builtin invoke"
+    fi
+fi
+
+
+######################################################################
+#
 ### echo %%% Check for linker's support of --no-ctors-in-init-array
 #
 ### This changes the sequence for static initialization to be right
@@ -3220,6 +3268,38 @@ result "$enable_builtin_freetype"
 
 ######################################################################
 #
+### echo %%% libgl2ps (builtin or system)
+#
+if test "x$enable_builtin_gl2ps" = "xno" ; then
+    check_header "gl2ps.h" "" \
+        $GL2PS ${GL2PS:+$GL2PS/include} /usr/include
+    if test "x$found_dir" = "x" ; then
+        enable_builtin_gl2ps=yes
+    else
+        gl2psinc=$found_hdr
+        gl2psincdir=$found_dir
+    fi
+
+    check_library "libgl2ps" "$enable_shared" "" \
+        $GL2PS ${GL2PS:+$GL2PS/lib} /usr/lib
+    if test "x$found_lib" = "x" ; then
+        gl2pslib=""
+        gl2pslibdir=""
+        enable_builtin_gl2ps="yes"
+    else
+        gl2pslib="$found_lib"
+        gl2pslibdir="$found_dir"
+    fi
+
+    if test "x$gl2psincdir" = "x" || test "x$gl2pslib" = "x"; then
+        enable_builtin_gl2ps="yes"
+    fi
+fi
+message "Checking whether to build included gl2ps"
+result "$enable_builtin_gl2ps"
+
+######################################################################
+#
 ### echo %%% libpcre (builtin or system) - Mandatory lib
 #
 # Mandatory test, must succeed (see http://www.pcre.org/)
@@ -3251,6 +3331,38 @@ if test "x$enable_builtin_pcre" = "x" || \
 fi
 message "Checking whether to build included libpcre"
 result "$enable_builtin_pcre"
+
+######################################################################
+#
+### echo %%% libunuran (builtin or system)
+#
+if test "x$enable_builtin_unuran" = "xno" ; then
+    check_header "unuran.h" "" \
+        $UNURAN ${UNURAN:+$UNURAN/include} /usr/include
+    if test "x$found_dir" = "x" ; then
+        enable_builtin_unuran=yes
+    else
+        unuraninc=$found_hdr
+        unuranincdir=$found_dir
+    fi
+
+    check_library "libunuran" "$enable_shared" "" \
+        $UNURAN ${UNURAN:+$UNURAN/lib} /usr/lib
+    if test "x$found_lib" = "x" ; then
+        unuranlib=""
+        unuranlibdir=""
+        enable_builtin_unuran="yes"
+    else
+        unuranlib="$found_lib"
+        unuranlibdir="$found_dir"
+    fi
+
+    if test "x$unuranincdir" = "x" || test "x$unuranlib" = "x"; then
+        enable_builtin_unuran="yes"
+    fi
+fi
+message "Checking whether to build included unuran"
+result "$enable_builtin_unuran"
 
 ######################################################################
 #
@@ -6993,20 +7105,6 @@ else
     result "no"
     hasvc="undef"
 fi
-######################################################################
-#
-### echo %%% VDT Library - Contributed library
-#
-message "Checking whether to install VDT"
-if test "x$enable_vdt" = "xyes" || test ! "x$VC" = "x"; then
-    enable_vdt="yes"
-    result "yes"
-    hasvdt="define"
-else
-    enable_vdt=""
-    result "no"
-    hasvdt="undef"
-fi
 
 ######################################################################
 #
@@ -7153,7 +7251,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_mathmore" = "xyes" && pl="$pl libroot-math-mathmore"
     test "x$enable_unuran"   = "xyes" && pl="$pl libroot-math-unuran"
     test "x$enable_vc"       = "xyes" && pl="$pl libroot-math-vc"
-    test "x$enable_vdt"      = "xyes" && pl="$pl libroot-math-vdt"
     test "x$enable_table"    = "xyes" && pl="$pl libroot-misc-table"
     test "x$enable_ldap"     = "xyes" && pl="$pl libroot-net-ldap"
     test "x$enable_roofit"   = "xyes" && pl="$pl libroot-roofit"
@@ -7670,6 +7767,11 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@ftglincdir@|$ftglincdir|"            \
     -e "s|@ftgllibdir@|$ftgllibdir|"            \
     -e "s|@ftgllibs@|$ftgllibs|"                \
+    -e "s|@builtingl2ps@|$enable_builtin_gl2ps|" \
+    -e "s|@gcctoolchain@|$gcctoolchain|"        \
+    -e "s|@gl2psincdir@|$gl2psincdir|"          \
+    -e "s|@gl2pslib@|$gl2pslib|"                \
+    -e "s|@gl2pslibdir@|$gl2pslibdir|"          \
     -e "s|@glewincdir@|$glewincdir|"            \
     -e "s|@glewlibdir@|$glewlibdir|"            \
     -e "s|@glewlibs@|$glewlibs|"                \
@@ -7689,7 +7791,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildunuran@|$enable_unuran|"        \
     -e "s|@buildvc@|$enable_vc|"                \
-    -e "s|@buildvdt@|$enable_vdt|"              \
     -e "s|@buildgdml@|$enable_gdml|"            \
     -e "s|@buildgeocad@|$enable_geocad|"        \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
@@ -7840,6 +7941,10 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@top_srcdir@|$top_srcdir|"            \
     -e "s|@ttffontdir@|$fontdir|"               \
     -e "s|@tutdir@|$tutdir|"                    \
+    -e "s|@builtinunuran@|$enable_builtin_unuran|" \
+    -e "s|@unuranincdir@|$unuranincdir|"        \
+    -e "s|@unuranlib@|$unuranlib|"              \
+    -e "s|@unuranlibdir@|$unuranlibdir|"        \
     -e "s|@winrtdebug@|$enable_winrtdebug|"     \
     -e "s|@xmlincdir@|$xmlincdir|"              \
     -e "s|@xmllib@|$xmllib|"                    \
@@ -7966,6 +8071,8 @@ sed \
     -e "s|@hasstdstringview@|$hasstdstringview|"       \
     -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \
     -e "s|@hasstodstringview@|$hasstodstringview|" \
+    -e "s|@hasstdapply@|$hasstdapply|" \
+    -e "s|@hasstdinvoke@|$hasstdinvoke|" \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
     -e "s|@useimt@|$useimt|"               \
@@ -8081,6 +8188,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@etcdir@|$etcdir2|"              \
+    -e "s|@top_srcdir@|$top_srcdir|"       \
     -e "s|@features@|$features|"           \
     -e "s|@winrtdebug@|$enable_winrtdebug|"\
     -e "s|@configargs@|$configargs|"       \
@@ -8359,5 +8467,10 @@ if [ "x$run_maintainer_clean" = "xyes" ]; then
    $gnumake maintainer-clean
    $0 `cat config.status 2>/dev/null`
 fi
+
+echo "****************************************************************************************************************"
+echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
+echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
+echo "****************************************************************************************************************"
 
 exit 0

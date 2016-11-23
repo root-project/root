@@ -11,6 +11,25 @@
 //
 //===----------------------------------------------------------------------===//
 
+class R6MMR6Rel;
+
+def MipsR62MicroMipsR6 : InstrMapping {
+  let FilterClass = "R6MMR6Rel";
+  // Instructions with the same BaseOpcode and isNVStore values form a row.
+  let RowFields = ["BaseOpcode"];
+  // Instructions with the same predicate sense form a column.
+  let ColFields = ["Arch"];
+  // The key column is the unpredicated instructions.
+  let KeyCol = ["mipsr6"];
+  // Value columns are PredSense=true and PredSense=false
+  let ValueCols = [["mipsr6"], ["micromipsr6"]];
+}
+
+class MipsR6Arch<string opstr> {
+  string Arch = "mipsr6";
+  string BaseOpcode = opstr;
+}
+
 class MipsR6Inst : MipsInst<(outs), (ins), "", [], NoItinerary, FrmOther>,
                    PredicateControl {
   let DecoderNamespace = "Mips32r6_64r6";
@@ -341,7 +360,7 @@ class SPECIAL_SDBBP_FM : MipsR6Inst {
 }
 
 // This class is ambiguous with other branches:
-//   BEQC/BNEC require that rs > rt
+//   BEQC/BNEC require that rs < rt && rs != 0
 class CMP_BRANCH_2R_OFF16_FM<OPGROUP funct> : MipsR6Inst {
   bits<5> rs;
   bits<5> rt;

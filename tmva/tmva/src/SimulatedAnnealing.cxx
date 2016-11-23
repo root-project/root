@@ -349,6 +349,8 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    Timer timer( fMaxCalls, fLogger->GetSource().c_str() );
 
    for (Int_t sample = 0; sample < generalCalls; sample++) {
+     if (fIPyCurrentIter) *fIPyCurrentIter = sample;
+     if (fExitFromTraining && *fExitFromTraining) break;
       GenerateNeighbour( parameters, oldParameters, currentTemperature );
       Double_t localFit = fFitterTarget.EstimatorFunction( parameters );
       

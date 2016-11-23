@@ -19,6 +19,7 @@
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
 // Explicitly instantiate methods in LoopInfoImpl.h for MI-level Loops.
@@ -36,7 +37,7 @@ char &llvm::MachineLoopInfoID = MachineLoopInfo::ID;
 
 bool MachineLoopInfo::runOnMachineFunction(MachineFunction &) {
   releaseMemory();
-  LI.Analyze(getAnalysis<MachineDominatorTree>().getBase());
+  LI.analyze(getAnalysis<MachineDominatorTree>().getBase());
   return false;
 }
 
@@ -49,12 +50,13 @@ void MachineLoopInfo::getAnalysisUsage(AnalysisUsage &AU) const {
 MachineBasicBlock *MachineLoop::getTopBlock() {
   MachineBasicBlock *TopMBB = getHeader();
   MachineFunction::iterator Begin = TopMBB->getParent()->begin();
-  if (TopMBB != Begin) {
-    MachineBasicBlock *PriorMBB = std::prev(MachineFunction::iterator(TopMBB));
+  if (TopMBB->getIterator() != Begin) {
+    MachineBasicBlock *PriorMBB = &*std::prev(TopMBB->getIterator());
     while (contains(PriorMBB)) {
       TopMBB = PriorMBB;
-      if (TopMBB == Begin) break;
-      PriorMBB = std::prev(MachineFunction::iterator(TopMBB));
+      if (TopMBB->getIterator() == Begin)
+        break;
+      PriorMBB = &*std::prev(TopMBB->getIterator());
     }
   }
   return TopMBB;
@@ -63,19 +65,20 @@ MachineBasicBlock *MachineLoop::getTopBlock() {
 MachineBasicBlock *MachineLoop::getBottomBlock() {
   MachineBasicBlock *BotMBB = getHeader();
   MachineFunction::iterator End = BotMBB->getParent()->end();
-  if (BotMBB != std::prev(End)) {
-    MachineBasicBlock *NextMBB = std::next(MachineFunction::iterator(BotMBB));
+  if (BotMBB->getIterator() != std::prev(End)) {
+    MachineBasicBlock *NextMBB = &*std::next(BotMBB->getIterator());
     while (contains(NextMBB)) {
       BotMBB = NextMBB;
-      if (BotMBB == std::next(MachineFunction::iterator(BotMBB))) break;
-      NextMBB = std::next(MachineFunction::iterator(BotMBB));
+      if (BotMBB == &*std::next(BotMBB->getIterator()))
+        break;
+      NextMBB = &*std::next(BotMBB->getIterator());
     }
   }
   return BotMBB;
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
-void MachineLoop::dump() const {
+LLVM_DUMP_METHOD void MachineLoop::dump() const {
   print(dbgs());
 }
 #endif

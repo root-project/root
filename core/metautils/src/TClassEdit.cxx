@@ -13,6 +13,7 @@
 // for shared_ptr
 #include <memory>
 #include "RStringView.h"
+#include <algorithm>
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
@@ -925,7 +926,7 @@ static void R__FindTrailing(std::string &full,  /*modified*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-///  Stores in output (after emptying it) the splited type.
+///  Stores in output (after emptying it) the split type.
 ///  Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
 ///  Return the number of elements stored.
 ///
@@ -1574,7 +1575,7 @@ static void ResolveTypedefImpl(const char *tname,
                cursor += 5;
                end_of_type = cursor+1;
                prevScope = end_of_type;
-               if (tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+               if ((next+5)==len || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
                   break;
                }
             } else if (next!=len && tname[next] != '*' && tname[next] != '&') {
@@ -1797,6 +1798,7 @@ string TClassEdit::InsertStd(const char *tname)
       "time_put",
       "unary_function",
       "unary_negate",
+      "unique_pointer",
       "underflow_error",
       "unordered_map",
       "unordered_multimap",
@@ -1853,6 +1855,176 @@ string TClassEdit::InsertStd(const char *tname)
    }
    return ret;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// An helper class to dismount the name and remount it changed whenever
+/// necessary
+
+class NameCleanerForIO {
+   std::string fName;
+   std::vector<std::unique_ptr<NameCleanerForIO>> fArgumentNodes = {};
+   NameCleanerForIO* fMother;
+   bool fHasChanged = false;
+   bool AreAncestorsSTLContOrArray()
+   {
+      NameCleanerForIO* mother = fMother;
+      if (!mother) return false;
+      bool isSTLContOrArray = true;
+      while (nullptr != mother){
+         auto stlType = TClassEdit::IsSTLCont(mother->fName+"<>");
+         isSTLContOrArray &= ROOT::kNotSTL != stlType || TClassEdit::IsStdArray(mother->fName+"<");
+         mother = mother->fMother;
+      }
+
+      return isSTLContOrArray;
+   }
+
+public:
+   NameCleanerForIO(const std::string& clName = "",
+                    TClassEdit::EModType mode = TClassEdit::kNone,
+                    NameCleanerForIO* mother = nullptr):fMother(mother)
+   {
+      if (clName.back() != '>') {
+         fName = clName;
+         return;
+      }
+
+      std::vector<std::string> v;
+      int dummy=0;
+      TClassEdit::GetSplit(clName.c_str(), v, dummy, mode);
+
+      // We could be in presence of templates such as A1<T1>::A2<T2>::A3<T3>
+      auto argsEnd = v.end();
+      auto argsBeginPlusOne = ++v.begin();
+      auto argPos = std::find_if(argsBeginPlusOne, argsEnd,
+                              [](std::string& arg){return arg.front() == ':';});
+      if (argPos != argsEnd) {
+         const int lenght = clName.size();
+         int wedgeBalance = 0;
+         int lastOpenWedge = 0;
+         for (int i=lenght-1;i>-1;i--) {
+            auto& c = clName.at(i);
+            if (c == '<') {
+               wedgeBalance++;
+               lastOpenWedge = i;
+            } else if (c == '>') {
+               wedgeBalance--;
+            } else if (c == ':' && 0 == wedgeBalance) {
+               // This would be A1<T1>::A2<T2>
+               auto nameToClean = clName.substr(0,i-1);
+               NameCleanerForIO node(nameToClean, mode);
+               auto cleanName = node.ToString();
+               fHasChanged = node.HasChanged();
+               // We got A1<T1>::A2<T2> cleaned
+
+               // We build the changed A1<T1>::A2<T2>::A3
+               cleanName += "::";
+               // Now we get A3 and append it
+               cleanName += clName.substr(i+1,lastOpenWedge-i-1);
+
+               // We now get the args of what in our case is A1<T1>::A2<T2>::A3
+               auto lastTemplate = &clName.data()[i+1];
+
+               // We split it
+               TClassEdit::GetSplit(lastTemplate, v, dummy, mode);
+               // We now replace the name of the template
+               v[0] = cleanName;
+               break;
+            }
+         }
+      }
+
+      fName = v.front();
+      unsigned int nargs = v.size() - 2;
+      for (unsigned int i=0;i<nargs;++i) {
+         fArgumentNodes.emplace_back(new NameCleanerForIO(v[i+1],mode,this));
+      }
+   }
+
+   bool HasChanged() const {return fHasChanged;}
+
+   std::string ToString()
+   {
+      std::string name(fName);
+
+      if (fArgumentNodes.empty()) return name;
+
+      // We have in hands a case like unique_ptr< ... >
+      // Perhaps we could treat atomics as well like this?
+      if (!fMother && TClassEdit::IsUniquePtr(fName+"<")) {
+         name = fArgumentNodes.front()->ToString();
+         fHasChanged = true;
+         return name;
+      }
+
+      // Now we treat the case of the collections of unique ptrs
+      auto stlContType = AreAncestorsSTLContOrArray();
+      if (stlContType != ROOT::kNotSTL && TClassEdit::IsUniquePtr(fName+"<")) {
+         name = fArgumentNodes.front()->ToString();
+         name += "*";
+         fHasChanged = true;
+         return name;
+      }
+
+      name += "<";
+      for (auto& node : fArgumentNodes) {
+         name += node->ToString() + ",";
+         fHasChanged |= node->HasChanged();
+      }
+      name.pop_back(); // Remove the last comma.
+      name += name.back() == '>' ? " >" : ">"; // Respect name normalisation
+      return name;
+   }
+
+   const std::string& GetName() {return fName;}
+   const std::vector<std::unique_ptr<NameCleanerForIO>>* GetChildNodes() const {return &fArgumentNodes;}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string TClassEdit::GetNameForIO(const std::string& templateInstanceName,
+                                     TClassEdit::EModType mode,
+                                     bool* hasChanged)
+{
+   // Decompose template name into pieces and remount it applying the necessary
+   // transformations necessary for the ROOT IO subsystem, namely:
+   // - Transform std::unique_ptr<T> into T (for selections) (also nested)
+   // - Transform std::COLL<std::unique_ptr<T>> into std::COLL<T*> (also nested)
+   // Name normalisation is respected (e.g. spaces).
+   // The implementation uses an internal class defined in the cxx file.
+   NameCleanerForIO node(templateInstanceName, mode);
+   auto nameForIO = node.ToString();
+   if (hasChanged) {
+      *hasChanged = node.HasChanged();
+      }
+   return nameForIO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// We could introduce a tuple as return type, but we be consistent with the rest
+// of the code.
+bool TClassEdit::GetStdArrayProperties(const char* typeName,
+                                       std::string& typeNameBuf,
+                                       std::array<int, 5>& maxIndices,
+                                       int& ndim)
+{
+   if (!IsStdArray(typeName)) return false;
+
+   // We have an array, it's worth continuing
+   NameCleanerForIO node(typeName);
+
+   // We now recurse updating the data according to what we find
+   auto childNodes = node.GetChildNodes();
+   for (ndim = 1;ndim <=5 ; ndim++) {
+      maxIndices[ndim-1] = std::atoi(childNodes->back()->GetName().c_str());
+      typeNameBuf = childNodes->front()->GetName();
+      if (! IsStdArray(typeNameBuf+"<")) return true;
+      childNodes = childNodes->front()->GetChildNodes();
+   }
+
+   return true;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Demangle in a portable way the type id name.

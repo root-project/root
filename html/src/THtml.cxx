@@ -688,9 +688,10 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
             subdir->Recurse(db, entryPath);
          } else {
             int delen = strlen(direntry);
-            // only .cxx and .h are taken
+            // only .cxx and .h, .hxx are taken
             if (strcmp(direntry + delen - 4, ".cxx")
-                && strcmp(direntry + delen - 2, ".h"))
+                && strcmp(direntry + delen - 2, ".h")
+                && strcmp(direntry + delen - 4, ".hxx"))
                continue;
             TFileSysEntry* entry = new TFileSysEntry(direntry, this);
             db->GetEntries().Add(entry);
@@ -1586,6 +1587,8 @@ void THtml::CreateListOfClasses(const char* filter)
       const char *cname = 0;
       if (i < 0) cname = "TObject";
       else cname = gClassTable->Next();
+      if (!cname)
+         continue;
 
       if (i >= 0 && !strcmp(cname, "TObject")) {
          // skip the second iteration on TObject
@@ -1596,6 +1599,8 @@ void THtml::CreateListOfClasses(const char* filter)
       if (strstr(cname, "__gnu_cxx::")) continue;
       // Work around ROOT-6016
       if (!strcmp(cname, "timespec")) continue;
+      // "tuple"s are synthetic in the interpreter
+      if (!strncmp(cname, "tuple<", 6)) continue;
 
       // get class & filename - use TROOT::GetClass, as we also
       // want those classes without decl file name!

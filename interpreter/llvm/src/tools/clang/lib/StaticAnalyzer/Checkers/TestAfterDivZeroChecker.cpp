@@ -167,18 +167,18 @@ bool TestAfterDivZeroChecker::hasDivZeroMap(SVal Var,
 }
 
 void TestAfterDivZeroChecker::reportBug(SVal Val, CheckerContext &C) const {
-  if (ExplodedNode *N = C.generateSink(C.getState())) {
+  if (ExplodedNode *N = C.generateErrorNode(C.getState())) {
     if (!DivZeroBug)
       DivZeroBug.reset(new BuiltinBug(this, "Division by zero"));
 
-    BugReport *R =
-        new BugReport(*DivZeroBug, "Value being compared against zero has "
-                                   "already been used for division",
-                      N);
+    auto R = llvm::make_unique<BugReport>(
+        *DivZeroBug, "Value being compared against zero has already been used "
+                     "for division",
+        N);
 
     R->addVisitor(llvm::make_unique<DivisionBRVisitor>(Val.getAsSymbol(),
                                                        C.getStackFrame()));
-    C.emitReport(R);
+    C.emitReport(std::move(R));
   }
 }
 

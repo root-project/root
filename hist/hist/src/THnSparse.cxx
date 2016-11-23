@@ -544,7 +544,7 @@ with linear index linidx. A possible call would be
 ## Efficiency
 TH1 and TH2 are generally faster than THnSparse for one and two dimensional
 distributions. THnSparse becomes competitive for a sparsely filled TH3
-with large numbers of bins per dimension. The tutorial hist/sparsehist.C
+with large numbers of bins per dimension. The tutorial sparsehist.C
 shows the turning point. On a AMD64 with 8GB memory, THnSparse "wins"
 starting with a TH3 with 30 bins per dimension. Using a THnSparse for a
 one-dimensional histogram is only reasonable if it has a huge number of bins.
@@ -765,8 +765,7 @@ Double_t THnSparse::GetBinContent(Long64_t idx, Int_t* coord /* = 0 */) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get square of the error of bin addressed by linidx as
-/// BEGIN_LATEX #sum weight^{2}
-/// END_LATEX
+/// \f$\sum weight^{2}\f$
 /// If errors are not enabled (via Sumw2() or CalculateErrors())
 /// return contents.
 

@@ -25,7 +25,7 @@ contain multiple objects of the same name, (but a derived
 implementation can enforce unique names). The storage of objects in
 implement through class RooLinkedList, a doubly linked list with an
 an optional hash-table lookup mechanism for fast indexing of large
-collections. 
+collections.
 **/
 
 #include <iomanip>
@@ -66,7 +66,7 @@ ClassImp(RooAbsCollection)
 
 RooAbsCollection::RooAbsCollection() :
   _list(0),
-  _ownCont(kFALSE), 
+  _ownCont(kFALSE),
   _name(),
   _allRRV(kTRUE)
 {
@@ -79,7 +79,7 @@ RooAbsCollection::RooAbsCollection() :
 
 RooAbsCollection::RooAbsCollection(const char *name) :
   _list(0),
-  _ownCont(kFALSE), 
+  _ownCont(kFALSE),
   _name(name),
   _allRRV(kTRUE)
 {
@@ -95,14 +95,14 @@ RooAbsCollection::RooAbsCollection(const char *name) :
 RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *name) :
   TObject(other),
   RooPrintable(other),
-  _list(other._list.getHashTableSize()) , 
-  _ownCont(kFALSE), 
+  _list(other._list.getHashTableSize()) ,
+  _ownCont(kFALSE),
   _name(name),
   _allRRV(other._allRRV)
 {
   RooTrace::create(this) ;
   if (!name) setName(other.GetName()) ;
-  
+
   // Transfer contents (not owned)
   RooFIter iterat= other.fwdIterator();
   RooAbsArg *arg = 0;
@@ -116,10 +116,10 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsCollection::~RooAbsCollection() 
+RooAbsCollection::~RooAbsCollection()
 {
   // Delete all variables in our list if we own them
-  if(_ownCont){ 
+  if(_ownCont){
     safeDeleteList() ;
     //_list.Delete();
   }
@@ -129,7 +129,7 @@ RooAbsCollection::~RooAbsCollection()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooLinkedListIter RooAbsCollection::iterator(Bool_t dir) const 
+RooLinkedListIter RooAbsCollection::iterator(Bool_t dir) const
 {
     return _list.iterator(dir) ;
 }
@@ -139,7 +139,7 @@ RooLinkedListIter RooAbsCollection::iterator(Bool_t dir) const
 /// delete contents in safe order: any client
 /// is deleted before a server is deleted
 
-void RooAbsCollection::safeDeleteList() 
+void RooAbsCollection::safeDeleteList()
 {
   // Handle trivial case here
   if (_list.GetSize() > 1) {
@@ -151,7 +151,7 @@ void RooAbsCollection::safeDeleteList()
         RooFIter it = _list.fwdIterator();
         RooAbsArg* arg;
         while ((arg = it.next())) {
-    	  // Check if arg depends on remainder of list      
+    	  // Check if arg depends on remainder of list
 	  if (!arg->dependsOn(*this, arg)) tmp.push_back(arg);
         }
       }
@@ -167,7 +167,7 @@ void RooAbsCollection::safeDeleteList()
 
     // Check if there are any remaining elements
     if (_list.GetSize() > 1) {
-      coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName() 
+      coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName()
 	<< ") WARNING: unable to delete following elements in client-server order " ;
       Print("1") ;
     }
@@ -181,9 +181,9 @@ void RooAbsCollection::safeDeleteList()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Take a snap shot of current collection contents:
-/// An owning collection is returned containing clones of 
-/// 
-///     - Elements in this collection 
+/// An owning collection is returned containing clones of
+///
+///     - Elements in this collection
 ///     - External dependents of all elements
 ///       and recursively any dependents of those dependents
 ///       (if deepCopy flag is set)
@@ -219,9 +219,9 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Take a snap shot of current collection contents:
-/// An owning collection is returned containing clones of 
-/// 
-///     - Elements in this collection 
+/// An owning collection is returned containing clones of
+///
+///     - Elements in this collection
 ///     - External dependents of all elements
 ///       and recursively any dependents of those dependents
 ///       (if deepCopy flag is set)
@@ -232,7 +232,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 ///
 ///
 
-Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) const 
+Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) const
 {
   // Copy contents
   RooFIter iterat= fwdIterator();
@@ -257,7 +257,7 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
   // Handle eventual error conditions
   if (error) {
     coutE(ObjectHandling) << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << endl ;
-    output._ownCont = kTRUE ;    
+    output._ownCont = kTRUE ;
     return kTRUE ;
   }
 
@@ -287,9 +287,9 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
   while ((server=sIter.next())) {
     RooAbsArg* tmp = find(*server) ;
     if (!tmp) {
-      RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;      
+      RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;
       serverClone->setAttribute("SnapShot_ExtRefClone") ;
-      _list.Add(serverClone) ;      
+      _list.Add(serverClone) ;
       if (_allRRV && dynamic_cast<RooRealVar*>(serverClone)==0) {
 	_allRRV=kFALSE ;
       }
@@ -306,7 +306,7 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
 /// The assignment operator sets the value of any argument in our set
 /// that also appears in the other set.
 
-RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other) 
+RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
 {
   if (&other==this) return *this ;
 
@@ -328,10 +328,10 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
 /// The assignment operator sets the value of any argument in our set
 /// that also appears in the other set.
 
-RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe) 
+RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe)
 {
   if (&other==this) return *this ;
-  
+
   // Short cut for 1 element assignment
   if (getSize()==1 && getSize()==other.getSize() && oneSafe) {
     other.first()->syncCache() ;
@@ -356,33 +356,33 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
 /// Functional equivalent of operator=() but assumes this and other collection
 /// have same layout. Also no attributes are copied
 
-void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDirty) 
+void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDirty)
 {
   if (&other==this) return ;
 
   RooFIter iter = _list.fwdIterator(), iter2 = other._list.fwdIterator() ;
-  
+
   if (_allRRV) {
-    
+
     RooRealVar *elem, *theirs ;
     // All contents are know to be RooRealVars - fast version of assignment
-    while((elem=(RooRealVar*)iter.next())) {      
+    while((elem=(RooRealVar*)iter.next())) {
       // Identical size of iterators is documented assumption of method
       // coverity[NULL_RETURNS]
-      theirs= (RooRealVar*)iter2.next() ;      
+      theirs= (RooRealVar*)iter2.next() ;
       elem->copyCacheFast(*theirs,setValDirty) ;
     }
 
 
   } else {
-    
+
     RooAbsArg *elem, *theirs ;
     while((elem=iter.next())) {
-      
+
       // Identical size of iterators is documented assumption of method
       // coverity[NULL_RETURNS]
       theirs= iter2.next() ;
-      
+
       theirs->syncCache() ;
       elem->copyCache(theirs,kTRUE,setValDirty) ;
     }
@@ -399,7 +399,7 @@ void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDi
 /// all of its contents, or else on an empty list (which will force the
 /// list into that mode).
 
-Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent) 
+Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
 {
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
@@ -425,7 +425,7 @@ Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
 /// this case, try add() instead.) Calling addClone() on an empty list
 /// forces it to take ownership of all its subsequent variables.
 
-RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent) 
+RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 {
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
@@ -451,7 +451,7 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 /// else kFALSE if a variable of the same name is already in the list
 /// or the list owns its variables (in this case, try addClone() or addOwned() instead).
 
-Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent) 
+Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 {
   // check that this isn't a copy of a list
   if(_ownCont && !silent) {
@@ -482,7 +482,7 @@ Bool_t RooAbsCollection::add(const RooAbsCollection& list, Bool_t silent)
     result |= add((RooAbsArg&)*list._list.At(index),silent) ;
   }
 
-  return result;  
+  return result;
 }
 
 
@@ -500,7 +500,7 @@ Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
     result |= addOwned((RooAbsArg&)*list._list.At(index),silent) ;
   }
 
-  return result;  
+  return result;
 }
 
 
@@ -523,7 +523,7 @@ void RooAbsCollection::addClone(const RooAbsCollection& list, Bool_t silent)
 /// Replace any args in our set with args of the same name from the other set
 /// and return kTRUE for success. Fails if this list is a copy of another.
 
-Bool_t RooAbsCollection::replace(const RooAbsCollection &other) 
+Bool_t RooAbsCollection::replace(const RooAbsCollection &other)
 {
   // check that this isn't a copy of a list
   if(_ownCont) {
@@ -551,7 +551,7 @@ Bool_t RooAbsCollection::replace(const RooAbsCollection &other)
 /// or if var2 is already in this set. var1 and var2 do not need to have
 /// the same name.
 
-Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2) 
+Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 {
   // check that this isn't a copy of a list
   if(_ownCont) {
@@ -599,7 +599,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 /// match is required, not just a match by name. A variable can be
 /// removed from a copied list and will be deleted at the same time.
 
-Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNameOnly) 
+Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNameOnly)
 {
   // is var already in this list?
   TString name(var.GetName()) ;
@@ -617,7 +617,7 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
 	  if (_ownCont) delete arg;
       }
   }
-  
+
   return anyFound ;
 }
 
@@ -627,7 +627,7 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
 /// Remove each argument in the input list from our list using remove(const RooAbsArg&).
 /// Return kFALSE in case of problems.
 
-Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly) 
+Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly)
 {
   Bool_t result(false) ;
 
@@ -646,7 +646,7 @@ Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Boo
 /// This effectively restores our object to the state it would have
 /// just after calling the RooAbsCollection(const char*) constructor.
 
-void RooAbsCollection::removeAll() 
+void RooAbsCollection::removeAll()
 {
   if(_ownCont) {
     safeDeleteList() ;
@@ -663,7 +663,7 @@ void RooAbsCollection::removeAll()
 /// Set given attribute in each element of the collection by
 /// calling each elements setAttribute() function.
 
-void RooAbsCollection::setAttribAll(const Text_t* name, Bool_t value) 
+void RooAbsCollection::setAttribAll(const Text_t* name, Bool_t value)
 {
   RooFIter iter= fwdIterator() ;
   RooAbsArg* arg ;
@@ -685,7 +685,7 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
   TString selName(GetName()) ;
   selName.Append("_selection") ;
   RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
-  
+
   // Scan set contents for matching attribute
   RooFIter iter= fwdIterator() ;
   RooAbsArg* arg ;
@@ -705,12 +705,12 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
 /// elements that are contained as well in the given reference collection.
 /// The caller is responsible for deleting the returned collection
 
-RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl) const 
+RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl) const
 {
   // Create output set
   TString selName(GetName()) ;
   selName.Append("_selection") ;
-  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ; 
+  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
 
   // Scan set contents for matching attribute
   RooFIter iter= fwdIterator() ;
@@ -730,12 +730,12 @@ RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl
 /// elements with names matching the wildcard expressions in nameList,
 /// supplied as a comma separated list
 
-RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t verbose) const 
+RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t verbose) const
 {
   // Create output set
   TString selName(GetName()) ;
   selName.Append("_selection") ;
-  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ; 
+  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
 
   const size_t bufSize = strlen(nameList) + 1;
   char* buf = new char[bufSize] ;
@@ -772,7 +772,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
 
 Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
 {
-  // First check equal length 
+  // First check equal length
   if (getSize() != otherColl.getSize()) return kFALSE ;
 
   // Then check that each element of our list also occurs in the other list
@@ -792,7 +792,7 @@ Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if this and other collection have common entries
 
-Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const 
+Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const
 {
   RooFIter iter = fwdIterator() ;
   RooAbsArg* arg ;
@@ -808,10 +808,10 @@ Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find object with given name in list. A null pointer 
+/// Find object with given name in list. A null pointer
 /// is returned if no object with the given name is found
 
-RooAbsArg *RooAbsCollection::find(const char *name) const 
+RooAbsArg *RooAbsCollection::find(const char *name) const
 {
   return (RooAbsArg*) _list.find(name);
 }
@@ -819,10 +819,10 @@ RooAbsArg *RooAbsCollection::find(const char *name) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find object with given name in list. A null pointer 
+/// Find object with given name in list. A null pointer
 /// is returned if no object with the given name is found
 
-RooAbsArg *RooAbsCollection::find(const RooAbsArg& arg) const 
+RooAbsArg *RooAbsCollection::find(const RooAbsArg& arg) const
 {
   return (RooAbsArg*) _list.findArg(&arg);
 }
@@ -832,7 +832,7 @@ RooAbsArg *RooAbsCollection::find(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return comma separated list of contained object names as STL string
 
-string RooAbsCollection::contentsString() const 
+string RooAbsCollection::contentsString() const
 {
   string retVal ;
   RooFIter iter = fwdIterator() ;
@@ -854,7 +854,7 @@ string RooAbsCollection::contentsString() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return collection name
 
-void RooAbsCollection::printName(ostream& os) const 
+void RooAbsCollection::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -864,7 +864,7 @@ void RooAbsCollection::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return collection title
 
-void RooAbsCollection::printTitle(ostream& os) const 
+void RooAbsCollection::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -874,7 +874,7 @@ void RooAbsCollection::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return collection class name
 
-void RooAbsCollection::printClassName(ostream& os) const 
+void RooAbsCollection::printClassName(ostream& os) const
 {
   os << IsA()->GetName() ;
 }
@@ -887,7 +887,7 @@ void RooAbsCollection::printClassName(ostream& os) const
 /// name,class name value and extras of each object. In verbose mode
 /// also add object adress, argument and title
 
-Int_t RooAbsCollection::defaultPrintContents(Option_t* opt) const 
+Int_t RooAbsCollection::defaultPrintContents(Option_t* opt) const
 {
   if (opt && TString(opt)=="I") {
     return kValue ;
@@ -919,9 +919,9 @@ void RooAbsCollection::printValue(ostream& os) const
       first2 = kFALSE ;
     }
     os << arg->GetName() ;
-    
+
   }
-  os << ")" ;  
+  os << ")" ;
 }
 
 
@@ -941,7 +941,7 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
   RooAbsArg *next = 0;
   TString deeper(indent);
   deeper.Append("     ");
-  
+
   // Adjust the with of the name field to fit the largest name, if requesed
   Int_t maxNameLen(1) ;
   Int_t nameFieldLengthSaved = RooPrintable::_nameLength ;
@@ -953,12 +953,12 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
     iterat = fwdIterator() ;
     RooPrintable::nameFieldLength(maxNameLen+1) ;
   }
-  
+
   while((0 != (next= iterat.next()))) {
     os << indent << setw(3) << ++index << ") ";
     next->printStream(os,contents,kSingleLine,"");
   }
-  
+
   // Reset name field length, if modified
   RooPrintable::nameFieldLength(nameFieldLengthSaved) ;
 }
@@ -968,7 +968,7 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
 ////////////////////////////////////////////////////////////////////////////////
 /// Base contents dumper for debugging purposes
 
-void RooAbsCollection::dump() const 
+void RooAbsCollection::dump() const
 {
   RooFIter iter = fwdIterator() ;
   RooAbsArg* arg ;
@@ -989,30 +989,30 @@ void RooAbsCollection::dump() const
 ///   Sibling(const RooAbsCollection& other) -- Define sibling list. The sibling list is assumed to have objects with the same
 ///                                             name in the same order. If this is not the case warnings will be printed. If a single
 ///                                             sibling list is specified, 3 columns will be output: the (common) name, the value of this
-///                                             list and the value in the sibling list. Multiple sibling lists can be specified by 
-///                                             repeating the Sibling() command. 
+///                                             list and the value in the sibling list. Multiple sibling lists can be specified by
+///                                             repeating the Sibling() command.
 ///   Format(const char* str)                -- Classic format string, provided for backward compatibility
 ///   Format(...)                            -- Formatting arguments, details are given below
 ///   OutputFile(const char* fname)          -- Send output to file with given name rather than standard output
 ///
 /// The Format(const char* what,...) has the following structure
 ///
-///   const char* what          -- Controls what is shown. "N" adds name, "E" adds error, 
+///   const char* what          -- Controls what is shown. "N" adds name, "E" adds error,
 ///                                "A" shows asymmetric error, "U" shows unit, "H" hides the value
 ///   FixedPrecision(int n)     -- Controls precision, set fixed number of digits
-///   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error 
+///   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error
 ///                                + n specified additional digits (1 is sensible default)
-///   VerbatimName(Bool_t flag) -- Put variable name in a \verb+   + clause.
+///   VerbatimName(Bool_t flag) -- Put variable name in a \\verb+   + clause.
 ///
 /// Example use: list.printLatex(Columns(2), Format("NEU",AutoPrecision(1),VerbatimName()) ) ;
 
 void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
-				  const RooCmdArg& arg3, const RooCmdArg& arg4,	
-				  const RooCmdArg& arg5, const RooCmdArg& arg6,	
+				  const RooCmdArg& arg3, const RooCmdArg& arg4,
+				  const RooCmdArg& arg5, const RooCmdArg& arg6,
 				  const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
 
-  
+
   // Define configuration for this method
   RooCmdConfig pc("RooAbsCollection::printLatex()") ;
   pc.defineInt("ncol","Columns",0,1) ;
@@ -1022,7 +1022,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
   pc.defineObject("siblings","Sibling",0,0,kTRUE) ;
   pc.defineInt("dummy","FormatArgs",0,0) ;
   pc.defineMutex("Format","FormatArgs") ;
- 
+
   // Stuff all arguments in a list
   RooLinkedList cmdList;
   cmdList.Add(const_cast<RooCmdArg*>(&arg1)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg2)) ;
@@ -1030,7 +1030,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
   cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
   cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
-  // Process & check varargs 
+  // Process & check varargs
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
   if (!pc.ok(kTRUE)) {
     return ;
@@ -1042,7 +1042,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(ofs,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;    
+      printLatex(ofs,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
     } else {
       printLatex(ofs,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1050,7 +1050,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(cout,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;    
+      printLatex(cout,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
     } else {
       printLatex(cout,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1063,13 +1063,13 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal implementation function of printLatex
 
-void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, Int_t sigDigit, const RooLinkedList& siblingList, const RooCmdArg* formatCmd) const 
+void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, Int_t sigDigit, const RooLinkedList& siblingList, const RooCmdArg* formatCmd) const
 {
   // Count number of rows to print
   Int_t nrow = (Int_t) (getSize() / ncol + 0.99) ;
   Int_t i,j,k ;
 
-  // Sibling list do not need to print their name as it is supposed to be the same  
+  // Sibling list do not need to print their name as it is supposed to be the same
   TString sibOption ;
   RooCmdArg sibFormatCmd ;
   if (option) {
@@ -1079,8 +1079,8 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
   } else {
     sibFormatCmd = *formatCmd ;
     TString tmp = formatCmd->_s[0] ;
-    tmp.ReplaceAll("N","") ;    
-    tmp.ReplaceAll("n","") ;    
+    tmp.ReplaceAll("N","") ;
+    tmp.ReplaceAll("n","") ;
     static char buf[100] ;
     strlcpy(buf,tmp.Data(),100) ;
     sibFormatCmd._s[0] = buf ;
@@ -1105,14 +1105,14 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
     RooArgList* list = new RooArgList ;
     RooFIter iter = col->fwdIterator() ;
     RooAbsArg* arg ;
-    while((arg=iter.next())) {    
-      
+    while((arg=iter.next())) {
+
       RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) {
 	list->add(*rrv) ;
       } else {
 	coutW(InputArguments) << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
-	     << arg->GetName() << endl ;      
+	     << arg->GetName() << endl ;
       }
       if (prevList && TString(rrv->GetName()).CompareTo(prevList->at(list->getSize()-1)->GetName())) {
 	coutW(InputArguments) << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << endl ;
@@ -1165,7 +1165,7 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
     }
     ofs << "\\\\" << endl ;
   }
-  
+
   ofs << "\\end{tabular}" << endl ;
   listListRRV.Delete() ;
 }
@@ -1227,14 +1227,14 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsCollection::makeStructureTag() 
+void RooAbsCollection::makeStructureTag()
 {
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsCollection::makeTypedStructureTag() 
+void RooAbsCollection::makeTypedStructureTag()
 {
 }
 

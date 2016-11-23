@@ -1,35 +1,43 @@
-// Author: Heiko.Scheit@mpi-hd.mpg.de
-//
-//  simple Event class example
-//
-// execute as: .x tree0.C++
-//
-//  You have to copy it first to a directory where you have write access!
-//  Note that .x tree0.C cannot work with this example
-//
-//
-///////////////////////////////
-//  Effect of ClassDef() and ClassImp() macros
-//===============================================
-//
-// After running this macro create an instance of Det and Event
-//
-//   Det d;
-//   Event e;
-//
-// now you can see the effect of the  ClassDef() and ClassImp() macros.
-// (for the Det class these commands are commented!)
-// For instance 'e' now knows who it is:
-//
-//   cout<<e.Class_Name()<<endl;
-//
-// whereas d does not.
-//
-// The methods that are added by the ClassDef()/Imp() marcro can be listed with
-// .class
-//   .class Event
-//   .class Det
-///////////////////
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -nodraw
+/// Simple Event class example
+///
+/// execute as: .x tree0.C++
+///
+///  You have to copy it first to a directory where you have write access!
+///  Note that .x tree0.C cannot work with this example
+///
+/// ### Effect of ClassDef() and ClassImp() macros
+///
+/// After running this macro create an instance of Det and Event
+///
+/// ~~~
+///   Det d;
+///   Event e;
+/// ~~~
+///
+/// now you can see the effect of the  ClassDef() and ClassImp() macros.
+/// (for the Det class these commands are commented!)
+/// For instance 'e' now knows who it is:
+///
+/// ~~~
+///   cout<<e.Class_Name()<<endl;
+/// ~~~
+///
+/// whereas d does not.
+///
+/// The methods that are added by the ClassDef()/Imp() marcro can be listed with
+///
+/// ~~~
+/// .class
+///   .class Event
+///   .class Det
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Heiko.Scheit@mpi-hd.mpg.de
 
 #include <TRandom.h>
 #include <TTree.h>
@@ -89,7 +97,6 @@ void tree0() {
   tree->StartViewer();
 
   //gROOT->SetStyle("Plain");   // uncomment to set a different style
-  gStyle->SetPalette(1);        // use precomputed color palette 1
 
   // now draw some tree variables
   TCanvas *c1 = new TCanvas();

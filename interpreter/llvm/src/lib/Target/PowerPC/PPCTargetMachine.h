@@ -21,25 +21,26 @@
 
 namespace llvm {
 
-/// PPCTargetMachine - Common code between 32-bit and 64-bit PowerPC targets.
+/// Common code between 32-bit and 64-bit PowerPC targets.
 ///
 class PPCTargetMachine : public LLVMTargetMachine {
+public:
+  enum PPCABI { PPC_ABI_UNKNOWN, PPC_ABI_ELFv1, PPC_ABI_ELFv2 };
+private:
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
-  // Calculates type size & alignment
-  const DataLayout DL;
+  PPCABI TargetABI;
   PPCSubtarget Subtarget;
 
   mutable StringMap<std::unique_ptr<PPCSubtarget>> SubtargetMap;
 
 public:
-  PPCTargetMachine(const Target &T, StringRef TT, StringRef CPU, StringRef FS,
-                   const TargetOptions &Options, Reloc::Model RM,
-                   CodeModel::Model CM, CodeGenOpt::Level OL);
+  PPCTargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                   StringRef FS, const TargetOptions &Options,
+                   Optional<Reloc::Model> RM, CodeModel::Model CM,
+                   CodeGenOpt::Level OL);
 
   ~PPCTargetMachine() override;
 
-  const DataLayout *getDataLayout() const override { return &DL; }
-  const PPCSubtarget *getSubtargetImpl() const override { return &Subtarget; }
   const PPCSubtarget *getSubtargetImpl(const Function &F) const override;
 
   // Pass Pipeline Configuration
@@ -50,27 +51,32 @@ public:
   TargetLoweringObjectFile *getObjFileLowering() const override {
     return TLOF.get();
   }
+  bool isELFv2ABI() const { return TargetABI == PPC_ABI_ELFv2; }
+  bool isPPC64() const {
+    const Triple &TT = getTargetTriple();
+    return (TT.getArch() == Triple::ppc64 || TT.getArch() == Triple::ppc64le);
+  };
 };
 
-/// PPC32TargetMachine - PowerPC 32-bit target machine.
+/// PowerPC 32-bit target machine.
 ///
 class PPC32TargetMachine : public PPCTargetMachine {
   virtual void anchor();
 public:
-  PPC32TargetMachine(const Target &T, StringRef TT,
-                     StringRef CPU, StringRef FS, const TargetOptions &Options,
-                     Reloc::Model RM, CodeModel::Model CM,
+  PPC32TargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                     StringRef FS, const TargetOptions &Options,
+                     Optional<Reloc::Model> RM, CodeModel::Model CM,
                      CodeGenOpt::Level OL);
 };
 
-/// PPC64TargetMachine - PowerPC 64-bit target machine.
+/// PowerPC 64-bit target machine.
 ///
 class PPC64TargetMachine : public PPCTargetMachine {
   virtual void anchor();
 public:
-  PPC64TargetMachine(const Target &T, StringRef TT,
-                     StringRef CPU, StringRef FS, const TargetOptions &Options,
-                     Reloc::Model RM, CodeModel::Model CM,
+  PPC64TargetMachine(const Target &T, const Triple &TT, StringRef CPU,
+                     StringRef FS, const TargetOptions &Options,
+                     Optional<Reloc::Model> RM, CodeModel::Model CM,
                      CodeGenOpt::Level OL);
 };
 

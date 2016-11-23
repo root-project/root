@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook
 /// Example illustrating divided pads and Latex.
 ///
 /// \macro_image
@@ -46,7 +47,7 @@ void quarks () {
 
    tex.SetTextColor(kBlack); tex.SetTextSize(0.8);
 
-// ------------>Create main pad and its subdivisions
+// Create main pad and its subdivisions
    TPad *pad = new TPad("pad", "pad",0.15,0.11,0.85,0.79);
    pad->Draw();
    pad->cd();

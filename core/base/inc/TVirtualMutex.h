@@ -110,11 +110,23 @@ public:
 #endif
 
 #ifdef R__USE_IMT
-#define R__LOCKGUARD_IMT(mutex)  R__LOCKGUARD(mutex)
-#define R__LOCKGUARD_IMT2(mutex) R__LOCKGUARD2(mutex)
+#define R__LOCKGUARD_IMT(mutex)  if (ROOT::Internal::IsParBranchProcessingEnabled()) R__LOCKGUARD(mutex)
+#define R__LOCKGUARD_IMT2(mutex) if (ROOT::Internal::IsParBranchProcessingEnabled()) R__LOCKGUARD2(mutex)
 #else
 #define R__LOCKGUARD_IMT(mutex)  { }
 #define R__LOCKGUARD_IMT2(mutex) { }
+#endif
+
+#ifdef R__USE_IMT
+#define R__RWLOCK_ACQUIRE_READ(rwlock)  if (ROOT::Internal::IsParTreeProcessingEnabled()) rwlock.ReadLock();
+#define R__RWLOCK_RELEASE_READ(rwlock)  if (ROOT::Internal::IsParTreeProcessingEnabled()) rwlock.ReadUnLock();
+#define R__RWLOCK_ACQUIRE_WRITE(rwlock) if (ROOT::Internal::IsParTreeProcessingEnabled()) rwlock.WriteLock();
+#define R__RWLOCK_RELEASE_WRITE(rwlock) if (ROOT::Internal::IsParTreeProcessingEnabled()) rwlock.WriteUnLock();
+#else
+#define R__RWLOCK_ACQUIRE_READ(rwlock)  { }
+#define R__RWLOCK_RELEASE_READ(rwlock)  { }
+#define R__RWLOCK_ACQUIRE_WRITE(rwlock) { }
+#define R__RWLOCK_RELEASE_WRITE(rwlock) { }
 #endif
 
 #endif

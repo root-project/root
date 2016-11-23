@@ -9,7 +9,7 @@
 
 find_path(GLOBUS_INCLUDE_DIR NAMES globus_common.h
           HINTS ${GLOBUS_DIR}/include $ENV{GLOBUS_LOCATION}/include
-                /opt/globus/include
+                /opt/globus/include /usr/include
           PATH_SUFFIXES gcc32 gcc32dbg gcc32pthr gcc32dbgpthr
                         gcc64 gcc64dbg gcc64pthr gcc64dbgpthr globus)
 
@@ -24,7 +24,7 @@ set(libraries gssapi_gsi gss_assist gsi_credential common gsi_callback proxy_ssl
               openssl gsi_proxy_core callout)
 
 foreach( lib ${libraries})
-  find_library(GLOBUS_${lib}_LIBRARY NAMES globus_${lib}_${flavour} HINTS
+  find_library(GLOBUS_${lib}_LIBRARY NAMES globus_${lib}_${flavour} globus_${lib} HINTS
                ${GLOBUS_DIR}/lib $ENV{GLOBUS_LOCATION}/lib)
   if(GLOBUS_${lib}_LIBRARY)
     set(GLOBUS_${lib}_FOUND 1)

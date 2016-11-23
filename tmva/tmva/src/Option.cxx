@@ -31,7 +31,9 @@
 #include "TMVA/Types.h"
 
 #include "ThreadLocalStorage.h"
+#include "TObject.h"
 #include "TString.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

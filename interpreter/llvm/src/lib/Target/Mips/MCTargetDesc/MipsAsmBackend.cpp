@@ -14,6 +14,7 @@
 
 #include "MCTargetDesc/MipsFixupKinds.h"
 #include "MCTargetDesc/MipsAsmBackend.h"
+#include "MCTargetDesc/MipsMCExpr.h"
 #include "MCTargetDesc/MipsMCTargetDesc.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAssembler.h"
@@ -23,7 +24,9 @@
 #include "llvm/MC/MCFixupKindInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/MC/MCValue.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/Format.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -40,9 +43,6 @@ static unsigned adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   default:
     return 0;
   case FK_Data_2:
-  case FK_GPRel_4:
-  case FK_Data_4:
-  case FK_Data_8:
   case Mips::fixup_Mips_LO16:
   case Mips::fixup_Mips_GPREL16:
   case Mips::fixup_Mips_GPOFF_HI:
@@ -57,25 +57,31 @@ static unsigned adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case Mips::fixup_MICROMIPS_GOT_OFST:
   case Mips::fixup_MICROMIPS_GOT_DISP:
   case Mips::fixup_MIPS_PCLO16:
+    Value &= 0xffff;
+    break;
+  case FK_GPRel_4:
+  case FK_Data_4:
+  case FK_Data_8:
     break;
   case Mips::fixup_Mips_PC16:
-    // So far we are only using this type for branches.
-    // For branches we start 1 instruction after the branch
-    // so the displacement will be one instruction size less.
-    Value -= 4;
     // The displacement is then divided by 4 to give us an 18 bit
     // address range. Forcing a signed division because Value can be negative.
     Value = (int64_t)Value / 4;
     // We now check if Value can be encoded as a 16-bit signed immediate.
-    if (!isIntN(16, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC16 fixup");
+    if (!isInt<16>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC16 fixup");
+      return 0;
+    }
     break;
   case Mips::fixup_MIPS_PC19_S2:
+  case Mips::fixup_MICROMIPS_PC19_S2:
     // Forcing a signed division because Value can be negative.
     Value = (int64_t)Value / 4;
     // We now check if Value can be encoded as a 19-bit signed immediate.
-    if (!isIntN(19, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC19 fixup");
+    if (!isInt<19>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC19 fixup");
+      return 0;
+    }
     break;
   case Mips::fixup_Mips_26:
     // So far we are only using this type for jumps.
@@ -84,7 +90,8 @@ static unsigned adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     Value >>= 2;
     break;
   case Mips::fixup_Mips_HI16:
-  case Mips::fixup_Mips_GOT_Local:
+  case Mips::fixup_Mips_GOT:
+  case Mips::fixup_MICROMIPS_GOT16:
   case Mips::fixup_Mips_GOT_HI16:
   case Mips::fixup_Mips_CALL_HI16:
   case Mips::fixup_MICROMIPS_HI16:
@@ -108,54 +115,96 @@ static unsigned adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     // Forcing a signed division because Value can be negative.
     Value = (int64_t) Value / 2;
     // We now check if Value can be encoded as a 7-bit signed immediate.
-    if (!isIntN(7, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC7 fixup");
+    if (!isInt<7>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC7 fixup");
+      return 0;
+    }
     break;
   case Mips::fixup_MICROMIPS_PC10_S1:
     Value -= 2;
     // Forcing a signed division because Value can be negative.
     Value = (int64_t) Value / 2;
     // We now check if Value can be encoded as a 10-bit signed immediate.
-    if (!isIntN(10, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC10 fixup");
+    if (!isInt<10>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC10 fixup");
+      return 0;
+    }
     break;
   case Mips::fixup_MICROMIPS_PC16_S1:
     Value -= 4;
     // Forcing a signed division because Value can be negative.
     Value = (int64_t)Value / 2;
     // We now check if Value can be encoded as a 16-bit signed immediate.
-    if (!isIntN(16, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC16 fixup");
+    if (!isInt<16>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC16 fixup");
+      return 0;
+    }
     break;
   case Mips::fixup_MIPS_PC18_S3:
     // Forcing a signed division because Value can be negative.
     Value = (int64_t)Value / 8;
     // We now check if Value can be encoded as a 18-bit signed immediate.
-    if (!isIntN(18, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC18 fixup");
+    if (!isInt<18>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC18 fixup");
+      return 0;
+    }
+    break;
+  case Mips::fixup_MICROMIPS_PC18_S3:
+    // Check alignment.
+    if ((Value & 7) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC18 fixup");
+    }
+    // Forcing a signed division because Value can be negative.
+    Value = (int64_t)Value / 8;
+    // We now check if Value can be encoded as a 18-bit signed immediate.
+    if (!isInt<18>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC18 fixup");
+      return 0;
+    }
     break;
   case Mips::fixup_MIPS_PC21_S2:
-    Value -= 4;
     // Forcing a signed division because Value can be negative.
     Value = (int64_t) Value / 4;
     // We now check if Value can be encoded as a 21-bit signed immediate.
-    if (!isIntN(21, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC21 fixup");
+    if (!isInt<21>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC21 fixup");
+      return 0;
+    }
     break;
   case Mips::fixup_MIPS_PC26_S2:
-    Value -= 4;
     // Forcing a signed division because Value can be negative.
     Value = (int64_t) Value / 4;
     // We now check if Value can be encoded as a 26-bit signed immediate.
-    if (!isIntN(26, Value) && Ctx)
-      Ctx->FatalError(Fixup.getLoc(), "out of range PC26 fixup");
+    if (!isInt<26>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC26 fixup");
+      return 0;
+    }
+    break;
+  case Mips::fixup_MICROMIPS_PC26_S1:
+    // Forcing a signed division because Value can be negative.
+    Value = (int64_t)Value / 2;
+    // We now check if Value can be encoded as a 26-bit signed immediate.
+    if (!isInt<26>(Value) && Ctx) {
+      Ctx->reportFatalError(Fixup.getLoc(), "out of range PC26 fixup");
+      return 0;
+    }
+    break;
+  case Mips::fixup_MICROMIPS_PC21_S1:
+    // Forcing a signed division because Value can be negative.
+    Value = (int64_t)Value / 2;
+    // We now check if Value can be encoded as a 21-bit signed immediate.
+    if (!isInt<21>(Value) && Ctx) {
+      Ctx->reportError(Fixup.getLoc(), "out of range PC21 fixup");
+      return 0;
+    }
     break;
   }
 
   return Value;
 }
 
-MCObjectWriter *MipsAsmBackend::createObjectWriter(raw_ostream &OS) const {
+MCObjectWriter *
+MipsAsmBackend::createObjectWriter(raw_pwrite_stream &OS) const {
   return createMipsELFObjectWriter(OS,
     MCELFObjectTargetWriter::getOSABI(OSType), IsLittle, Is64Bit);
 }
@@ -237,6 +286,13 @@ void MipsAsmBackend::applyFixup(const MCFixup &Fixup, char *Data,
   }
 }
 
+Optional<MCFixupKind> MipsAsmBackend::getFixupKind(StringRef Name) const {
+  return StringSwitch<Optional<MCFixupKind>>(Name)
+      .Case("R_MIPS_NONE", (MCFixupKind)Mips::fixup_Mips_NONE)
+      .Case("R_MIPS_32", FK_Data_4)
+      .Default(MCAsmBackend::getFixupKind(Name));
+}
+
 const MCFixupKindInfo &MipsAsmBackend::
 getFixupKindInfo(MCFixupKind Kind) const {
   const static MCFixupKindInfo LittleEndianInfos[Mips::NumTargetFixupKinds] = {
@@ -244,6 +300,7 @@ getFixupKindInfo(MCFixupKind Kind) const {
     // MipsFixupKinds.h.
     //
     // name                    offset  bits  flags
+    { "fixup_Mips_NONE",         0,      0,   0 },
     { "fixup_Mips_16",           0,     16,   0 },
     { "fixup_Mips_32",           0,     32,   0 },
     { "fixup_Mips_REL32",        0,     32,   0 },
@@ -252,8 +309,7 @@ getFixupKindInfo(MCFixupKind Kind) const {
     { "fixup_Mips_LO16",         0,     16,   0 },
     { "fixup_Mips_GPREL16",      0,     16,   0 },
     { "fixup_Mips_LITERAL",      0,     16,   0 },
-    { "fixup_Mips_GOT_Global",   0,     16,   0 },
-    { "fixup_Mips_GOT_Local",    0,     16,   0 },
+    { "fixup_Mips_GOT",          0,     16,   0 },
     { "fixup_Mips_PC16",         0,     16,  MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_Mips_CALL16",       0,     16,   0 },
     { "fixup_Mips_GPREL32",      0,     32,   0 },
@@ -292,6 +348,10 @@ getFixupKindInfo(MCFixupKind Kind) const {
     { "fixup_MICROMIPS_PC7_S1",  0,      7,   MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_MICROMIPS_PC10_S1", 0,     10,   MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_MICROMIPS_PC16_S1", 0,     16,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC26_S1", 0,     26,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC19_S2", 0,     19,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC18_S3", 0,     18,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC21_S1", 0,     21,   MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_MICROMIPS_CALL16",  0,     16,   0 },
     { "fixup_MICROMIPS_GOT_DISP",        0,     16,   0 },
     { "fixup_MICROMIPS_GOT_PAGE",        0,     16,   0 },
@@ -309,6 +369,7 @@ getFixupKindInfo(MCFixupKind Kind) const {
     // MipsFixupKinds.h.
     //
     // name                    offset  bits  flags
+    { "fixup_Mips_NONE",         0,      0,   0 },
     { "fixup_Mips_16",          16,     16,   0 },
     { "fixup_Mips_32",           0,     32,   0 },
     { "fixup_Mips_REL32",        0,     32,   0 },
@@ -317,8 +378,7 @@ getFixupKindInfo(MCFixupKind Kind) const {
     { "fixup_Mips_LO16",        16,     16,   0 },
     { "fixup_Mips_GPREL16",     16,     16,   0 },
     { "fixup_Mips_LITERAL",     16,     16,   0 },
-    { "fixup_Mips_GOT_Global",  16,     16,   0 },
-    { "fixup_Mips_GOT_Local",   16,     16,   0 },
+    { "fixup_Mips_GOT",         16,     16,   0 },
     { "fixup_Mips_PC16",        16,     16,  MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_Mips_CALL16",      16,     16,   0 },
     { "fixup_Mips_GPREL32",      0,     32,   0 },
@@ -357,6 +417,10 @@ getFixupKindInfo(MCFixupKind Kind) const {
     { "fixup_MICROMIPS_PC7_S1",  9,      7,   MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_MICROMIPS_PC10_S1", 6,     10,   MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_MICROMIPS_PC16_S1",16,     16,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC26_S1", 6,     26,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC19_S2",13,     19,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC18_S3",14,     18,   MCFixupKindInfo::FKF_IsPCRel },
+    { "fixup_MICROMIPS_PC21_S1",11,     21,   MCFixupKindInfo::FKF_IsPCRel },
     { "fixup_MICROMIPS_CALL16", 16,     16,   0 },
     { "fixup_MICROMIPS_GOT_DISP",        16,     16,   0 },
     { "fixup_MICROMIPS_GOT_PAGE",        16,     16,   0 },
@@ -393,12 +457,7 @@ bool MipsAsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
   // If the count is not 4-byte aligned, we must be writing data into the text
   // section (otherwise we have unaligned instructions, and thus have far
   // bigger problems), so just write zeros instead.
-  for (uint64_t i = 0, e = Count % 4; i != e; ++i)
-    OW->Write8(0);
-
-  uint64_t NumNops = Count / 4;
-  for (uint64_t i = 0; i != NumNops; ++i)
-    OW->Write32(0);
+  OW->WriteZeros(Count);
   return true;
 }
 
@@ -415,38 +474,35 @@ void MipsAsmBackend::processFixupValue(const MCAssembler &Asm,
   // we are only checking if the fixup can be applied correctly. We have
   // access to MCContext from here which allows us to report a fatal error
   // with *possibly* a source code location.
+  // The caller will also ignore any changes we make to Value
+  // (recordRelocation() overwrites it with it's own calculation).
   (void)adjustFixupValue(Fixup, Value, &Asm.getContext());
 }
 
 // MCAsmBackend
 MCAsmBackend *llvm::createMipsAsmBackendEL32(const Target &T,
                                              const MCRegisterInfo &MRI,
-                                             StringRef TT,
-                                             StringRef CPU) {
-  return new MipsAsmBackend(T, Triple(TT).getOS(),
-                            /*IsLittle*/true, /*Is64Bit*/false);
+                                             const Triple &TT, StringRef CPU) {
+  return new MipsAsmBackend(T, TT.getOS(), /*IsLittle*/ true,
+                            /*Is64Bit*/ false);
 }
 
 MCAsmBackend *llvm::createMipsAsmBackendEB32(const Target &T,
                                              const MCRegisterInfo &MRI,
-                                             StringRef TT,
-                                             StringRef CPU) {
-  return new MipsAsmBackend(T, Triple(TT).getOS(),
-                            /*IsLittle*/false, /*Is64Bit*/false);
+                                             const Triple &TT, StringRef CPU) {
+  return new MipsAsmBackend(T, TT.getOS(), /*IsLittle*/ false,
+                            /*Is64Bit*/ false);
 }
 
 MCAsmBackend *llvm::createMipsAsmBackendEL64(const Target &T,
                                              const MCRegisterInfo &MRI,
-                                             StringRef TT,
-                                             StringRef CPU) {
-  return new MipsAsmBackend(T, Triple(TT).getOS(),
-                            /*IsLittle*/true, /*Is64Bit*/true);
+                                             const Triple &TT, StringRef CPU) {
+  return new MipsAsmBackend(T, TT.getOS(), /*IsLittle*/ true, /*Is64Bit*/ true);
 }
 
 MCAsmBackend *llvm::createMipsAsmBackendEB64(const Target &T,
                                              const MCRegisterInfo &MRI,
-                                             StringRef TT,
-                                             StringRef CPU) {
-  return new MipsAsmBackend(T, Triple(TT).getOS(),
-                            /*IsLittle*/false, /*Is64Bit*/true);
+                                             const Triple &TT, StringRef CPU) {
+  return new MipsAsmBackend(T, TT.getOS(), /*IsLittle*/ false,
+                            /*Is64Bit*/ true);
 }

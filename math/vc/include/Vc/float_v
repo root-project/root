@@ -1,3 +1,0 @@
-#ifdef __GNUC__
-#warning "Use of the Vc/float_v header is deprecated. The header file will be removed in a future version of Vc."
-#endif

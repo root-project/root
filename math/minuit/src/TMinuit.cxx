@@ -340,7 +340,6 @@ into account the non-linearities much more precisely.
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TClass.h"
-#include "TInterpreter.h"
 
 TMinuit *gMinuit;
 
@@ -457,11 +456,11 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
    }
 
    fFCN = 0;
-   gMinuit = this;
    {
       R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfSpecials()->Add(gMinuit);
+      gROOT->GetListOfSpecials()->Add(this);
    }
+   gMinuit = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -484,11 +483,11 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
    SetMaxIterations();
 
    mninit(5,6,7);
-   gMinuit = this;
    {
       R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfSpecials()->Add(gMinuit);
+      gROOT->GetListOfSpecials()->Add(this);
    }
+   gMinuit = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -511,7 +510,7 @@ TMinuit::~TMinuit()
       R__LOCKGUARD2(gROOTMutex);
       if (gROOT != 0 && gROOT->GetListOfSpecials() != 0) gROOT->GetListOfSpecials()->Remove(this);
    }
-   if (gMinuit == this) gMinuit = 0;
+   if (gMinuit == this) gMinuit = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -947,27 +946,6 @@ void InteractiveFCNm(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
    m->SetParamPtrs(args);
    Double_t result;
    m->Execute(result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// To set the address of the minimization function
-///
-/// this function is called by the interpretor instead of the function above
-
-void TMinuit::SetFCN(void *fcn)
-{
-   if (!fcn) return;
-
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
-   fFCN = InteractiveFCNm;
-   {
-      R__LOCKGUARD2(gROOTMutex);
-   }
-   gMinuit = this; //required by InteractiveFCNm
 }
 
 ////////////////////////////////////////////////////////////////////////////////

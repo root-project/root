@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook
 /// This macro displays the physical ROOT file structure
 ///
 /// \macro_image

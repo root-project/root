@@ -14,7 +14,7 @@
 
 #include <string.h>
 
-/** \class
+/** \class TGLSelectRecordBase
 \ingroup opengl TGLSelectRecordBase
 Base class for select records.
 Supports initialization from a raw GL record (UInt_t*) and

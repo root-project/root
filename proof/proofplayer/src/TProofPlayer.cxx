@@ -1904,8 +1904,7 @@ TProofPlayerRemote::~TProofPlayerRemote()
    SafeDelete(fFeedbackLists);
    SafeDelete(fPacketizer);
 
-   if (fProcessMessage)
-      SafeDelete(fProcessMessage);
+   SafeDelete(fProcessMessage);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

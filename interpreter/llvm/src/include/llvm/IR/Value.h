@@ -14,12 +14,10 @@
 #ifndef LLVM_IR_VALUE_H
 #define LLVM_IR_VALUE_H
 
-#include "llvm-c/Core.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Use.h"
 #include "llvm/Support/CBindingWrapping.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/Compiler.h"
 
 namespace llvm {
 
@@ -28,9 +26,13 @@ class Argument;
 class AssemblyAnnotationWriter;
 class BasicBlock;
 class Constant;
+class ConstantData;
+class ConstantAggregate;
 class DataLayout;
 class Function;
 class GlobalAlias;
+class GlobalIFunc;
+class GlobalIndirectSymbol;
 class GlobalObject;
 class GlobalValue;
 class GlobalVariable;
@@ -38,6 +40,7 @@ class InlineAsm;
 class Instruction;
 class LLVMContext;
 class Module;
+class ModuleSlotTracker;
 class StringRef;
 class Twine;
 class Type;
@@ -69,9 +72,8 @@ class Value {
   Type *VTy;
   Use *UseList;
 
-  friend class ValueAsMetadata; // Allow access to NameAndIsUsedByMD.
+  friend class ValueAsMetadata; // Allow access to IsUsedByMD.
   friend class ValueHandleBase;
-  PointerIntPair<ValueName *, 1> NameAndIsUsedByMD;
 
   const unsigned char SubclassID;   // Subclass identifier (for isa/dyn_cast)
   unsigned char HasValueHandle : 1; // Has a ValueHandle pointing to this?
@@ -101,22 +103,27 @@ protected:
   /// This is stored here to save space in User on 64-bit hosts.  Since most
   /// instances of Value have operands, 32-bit hosts aren't significantly
   /// affected.
-  unsigned NumOperands;
+  ///
+  /// Note, this should *NOT* be used directly by any class other than User.
+  /// User uses this value to find the Use list.
+  enum : unsigned { NumUserOperandsBits = 28 };
+  unsigned NumUserOperands : NumUserOperandsBits;
+
+  // Use the same type as the bitfield above so that MSVC will pack them.
+  unsigned IsUsedByMD : 1;
+  unsigned HasName : 1;
+  unsigned HasHungOffUses : 1;
+  unsigned HasDescriptor : 1;
 
 private:
   template <typename UseT> // UseT == 'Use' or 'const Use'
   class use_iterator_impl
-      : public std::iterator<std::forward_iterator_tag, UseT *, ptrdiff_t> {
-    typedef std::iterator<std::forward_iterator_tag, UseT *, ptrdiff_t> super;
-
+      : public std::iterator<std::forward_iterator_tag, UseT *> {
     UseT *U;
     explicit use_iterator_impl(UseT *u) : U(u) {}
     friend class Value;
 
   public:
-    typedef typename super::reference reference;
-    typedef typename super::pointer pointer;
-
     use_iterator_impl() : U() {}
 
     bool operator==(const use_iterator_impl &x) const { return U == x.U; }
@@ -147,17 +154,12 @@ private:
 
   template <typename UserTy> // UserTy == 'User' or 'const User'
   class user_iterator_impl
-      : public std::iterator<std::forward_iterator_tag, UserTy *, ptrdiff_t> {
-    typedef std::iterator<std::forward_iterator_tag, UserTy *, ptrdiff_t> super;
-
+      : public std::iterator<std::forward_iterator_tag, UserTy *> {
     use_iterator_impl<Use> UI;
     explicit user_iterator_impl(Use *U) : UI(U) {}
     friend class Value;
 
   public:
-    typedef typename super::reference reference;
-    typedef typename super::pointer pointer;
-
     user_iterator_impl() {}
 
     bool operator==(const user_iterator_impl &x) const { return UI == x.UI; }
@@ -188,15 +190,10 @@ private:
     }
 
     Use &getUse() const { return *UI; }
-
-    /// \brief Return the operand # of this use in its User.
-    ///
-    /// FIXME: Replace all callers with a direct call to Use::getOperandNo.
-    unsigned getOperandNo() const { return UI->getOperandNo(); }
   };
 
-  void operator=(const Value &) LLVM_DELETED_FUNCTION;
-  Value(const Value &) LLVM_DELETED_FUNCTION;
+  void operator=(const Value &) = delete;
+  Value(const Value &) = delete;
 
 protected:
   Value(Type *Ty, unsigned scid);
@@ -207,7 +204,11 @@ public:
   void dump() const;
 
   /// \brief Implement operator<< on Value.
-  void print(raw_ostream &O) const;
+  /// @{
+  void print(raw_ostream &O, bool IsForDebug = false) const;
+  void print(raw_ostream &O, ModuleSlotTracker &MST,
+             bool IsForDebug = false) const;
+  /// @}
 
   /// \brief Print the name of this Value out to the specified raw_ostream.
   ///
@@ -215,8 +216,12 @@ public:
   /// instruction that generated it. If you specify a Module for context, then
   /// even constanst get pretty-printed; for example, the type of a null
   /// pointer is printed symbolically.
+  /// @{
   void printAsOperand(raw_ostream &O, bool PrintType = true,
                       const Module *M = nullptr) const;
+  void printAsOperand(raw_ostream &O, bool PrintType,
+                      ModuleSlotTracker &MST) const;
+  /// @}
 
   /// \brief All values are typed, get the type of this value.
   Type *getType() const { return VTy; }
@@ -225,12 +230,13 @@ public:
   LLVMContext &getContext() const;
 
   // \brief All values can potentially be named.
-  bool hasName() const { return getValueName() != nullptr; }
-  ValueName *getValueName() const { return NameAndIsUsedByMD.getPointer(); }
-  void setValueName(ValueName *VN) { NameAndIsUsedByMD.setPointer(VN); }
+  bool hasName() const { return HasName; }
+  ValueName *getValueName() const;
+  void setValueName(ValueName *VN);
 
 private:
   void destroyValueName();
+  void setNameImpl(const Twine &Name);
 
 public:
   /// \brief Return a constant reference to the value's name.
@@ -271,36 +277,93 @@ public:
   //----------------------------------------------------------------------
   // Methods for handling the chain of uses of this Value.
   //
-  bool               use_empty() const { return UseList == nullptr; }
+  // Materializing a function can introduce new uses, so these methods come in
+  // two variants:
+  // The methods that start with materialized_ check the uses that are
+  // currently known given which functions are materialized. Be very careful
+  // when using them since you might not get all uses.
+  // The methods that don't start with materialized_ assert that modules is
+  // fully materialized.
+  void assertModuleIsMaterialized() const;
 
-  typedef use_iterator_impl<Use>       use_iterator;
+  bool use_empty() const {
+    assertModuleIsMaterialized();
+    return UseList == nullptr;
+  }
+
+  typedef use_iterator_impl<Use> use_iterator;
   typedef use_iterator_impl<const Use> const_use_iterator;
-  use_iterator       use_begin()       { return use_iterator(UseList); }
-  const_use_iterator use_begin() const { return const_use_iterator(UseList); }
-  use_iterator       use_end()         { return use_iterator();   }
-  const_use_iterator use_end()   const { return const_use_iterator();   }
+  use_iterator materialized_use_begin() { return use_iterator(UseList); }
+  const_use_iterator materialized_use_begin() const {
+    return const_use_iterator(UseList);
+  }
+  use_iterator use_begin() {
+    assertModuleIsMaterialized();
+    return materialized_use_begin();
+  }
+  const_use_iterator use_begin() const {
+    assertModuleIsMaterialized();
+    return materialized_use_begin();
+  }
+  use_iterator use_end() { return use_iterator(); }
+  const_use_iterator use_end() const { return const_use_iterator(); }
+  iterator_range<use_iterator> materialized_uses() {
+    return make_range(materialized_use_begin(), use_end());
+  }
+  iterator_range<const_use_iterator> materialized_uses() const {
+    return make_range(materialized_use_begin(), use_end());
+  }
   iterator_range<use_iterator> uses() {
-    return iterator_range<use_iterator>(use_begin(), use_end());
+    assertModuleIsMaterialized();
+    return materialized_uses();
   }
   iterator_range<const_use_iterator> uses() const {
-    return iterator_range<const_use_iterator>(use_begin(), use_end());
+    assertModuleIsMaterialized();
+    return materialized_uses();
   }
 
-  bool               user_empty() const { return UseList == nullptr; }
+  bool user_empty() const {
+    assertModuleIsMaterialized();
+    return UseList == nullptr;
+  }
 
-  typedef user_iterator_impl<User>       user_iterator;
+  typedef user_iterator_impl<User> user_iterator;
   typedef user_iterator_impl<const User> const_user_iterator;
-  user_iterator       user_begin()       { return user_iterator(UseList); }
-  const_user_iterator user_begin() const { return const_user_iterator(UseList); }
-  user_iterator       user_end()         { return user_iterator();   }
-  const_user_iterator user_end()   const { return const_user_iterator();   }
-  User               *user_back()        { return *user_begin(); }
-  const User         *user_back()  const { return *user_begin(); }
+  user_iterator materialized_user_begin() { return user_iterator(UseList); }
+  const_user_iterator materialized_user_begin() const {
+    return const_user_iterator(UseList);
+  }
+  user_iterator user_begin() {
+    assertModuleIsMaterialized();
+    return materialized_user_begin();
+  }
+  const_user_iterator user_begin() const {
+    assertModuleIsMaterialized();
+    return materialized_user_begin();
+  }
+  user_iterator user_end() { return user_iterator(); }
+  const_user_iterator user_end() const { return const_user_iterator(); }
+  User *user_back() {
+    assertModuleIsMaterialized();
+    return *materialized_user_begin();
+  }
+  const User *user_back() const {
+    assertModuleIsMaterialized();
+    return *materialized_user_begin();
+  }
+  iterator_range<user_iterator> materialized_users() {
+    return make_range(materialized_user_begin(), user_end());
+  }
+  iterator_range<const_user_iterator> materialized_users() const {
+    return make_range(materialized_user_begin(), user_end());
+  }
   iterator_range<user_iterator> users() {
-    return iterator_range<user_iterator>(user_begin(), user_end());
+    assertModuleIsMaterialized();
+    return materialized_users();
   }
   iterator_range<const_user_iterator> users() const {
-    return iterator_range<const_user_iterator>(user_begin(), user_end());
+    assertModuleIsMaterialized();
+    return materialized_users();
   }
 
   /// \brief Return true if there is exactly one user of this value.
@@ -340,32 +403,12 @@ public:
   /// Value classes SubclassID field. They are used for concrete type
   /// identification.
   enum ValueTy {
-    ArgumentVal,              // This is an instance of Argument
-    BasicBlockVal,            // This is an instance of BasicBlock
-    FunctionVal,              // This is an instance of Function
-    GlobalAliasVal,           // This is an instance of GlobalAlias
-    GlobalVariableVal,        // This is an instance of GlobalVariable
-    UndefValueVal,            // This is an instance of UndefValue
-    BlockAddressVal,          // This is an instance of BlockAddress
-    ConstantExprVal,          // This is an instance of ConstantExpr
-    ConstantAggregateZeroVal, // This is an instance of ConstantAggregateZero
-    ConstantDataArrayVal,     // This is an instance of ConstantDataArray
-    ConstantDataVectorVal,    // This is an instance of ConstantDataVector
-    ConstantIntVal,           // This is an instance of ConstantInt
-    ConstantFPVal,            // This is an instance of ConstantFP
-    ConstantArrayVal,         // This is an instance of ConstantArray
-    ConstantStructVal,        // This is an instance of ConstantStruct
-    ConstantVectorVal,        // This is an instance of ConstantVector
-    ConstantPointerNullVal,   // This is an instance of ConstantPointerNull
-    MetadataAsValueVal,       // This is an instance of MetadataAsValue
-    InlineAsmVal,             // This is an instance of InlineAsm
-    InstructionVal,           // This is an instance of Instruction
-    // Enum values starting at InstructionVal are used for Instructions;
-    // don't add new values here!
+#define HANDLE_VALUE(Name) Name##Val,
+#include "llvm/IR/Value.def"
 
     // Markers:
-    ConstantFirstVal = FunctionVal,
-    ConstantLastVal  = ConstantPointerNullVal
+#define HANDLE_CONSTANT_MARKER(Marker, Constant) Marker = Constant##Val,
+#include "llvm/IR/Value.def"
   };
 
   /// \brief Return an ID for the concrete type of this object.
@@ -408,7 +451,7 @@ public:
   bool hasValueHandle() const { return HasValueHandle; }
 
   /// \brief Return true if there is metadata referencing this value.
-  bool isUsedByMetadata() const { return NameAndIsUsedByMD.getInt(); }
+  bool isUsedByMetadata() const { return IsUsedByMD; }
 
   /// \brief Strip off pointer casts, all-zero GEPs, and aliases.
   ///
@@ -461,11 +504,19 @@ public:
     return const_cast<Value*>(this)->stripInBoundsOffsets();
   }
 
-  /// \brief Check if this is always a dereferenceable pointer.
+  /// \brief Returns the number of bytes known to be dereferenceable for the
+  /// pointer value.
   ///
-  /// Test if this value is always a pointer to allocated and suitably aligned
-  /// memory for a simple load or store.
-  bool isDereferenceablePointer(const DataLayout *DL = nullptr) const;
+  /// If CanBeNull is set by this function the pointer can either be null or be
+  /// dereferenceable up to the returned number of bytes.
+  unsigned getPointerDereferenceableBytes(const DataLayout &DL,
+                                          bool &CanBeNull) const;
+
+  /// \brief Returns an alignment of the pointer value.
+  ///
+  /// Returns an alignment which is either specified explicitly, e.g. via
+  /// align attribute of a function argument, or guaranteed by DataLayout.
+  unsigned getPointerAlignment(const DataLayout &DL) const;
 
   /// \brief Translate PHI node to its predecessor from the given basic block.
   ///
@@ -484,7 +535,8 @@ public:
   ///
   /// This is the greatest alignment value supported by load, store, and alloca
   /// instructions, and global values.
-  static const unsigned MaximumAlignment = 1u << 29;
+  static const unsigned MaxAlignmentExponent = 29;
+  static const unsigned MaximumAlignment = 1u << MaxAlignmentExponent;
 
   /// \brief Mutate the type of this Value to be of the specified type.
   ///
@@ -517,7 +569,28 @@ private:
   template <class Compare>
   static Use *mergeUseLists(Use *L, Use *R, Compare Cmp) {
     Use *Merged;
-    mergeUseListsImpl(L, R, &Merged, Cmp);
+    Use **Next = &Merged;
+
+    for (;;) {
+      if (!L) {
+        *Next = R;
+        break;
+      }
+      if (!R) {
+        *Next = L;
+        break;
+      }
+      if (Cmp(*R, *L)) {
+        *Next = R;
+        Next = &R->Next;
+        R = R->Next;
+      } else {
+        *Next = L;
+        Next = &L->Next;
+        L = L->Next;
+      }
+    }
+
     return Merged;
   }
 
@@ -541,6 +614,16 @@ void Use::set(Value *V) {
   if (Val) removeFromList();
   Val = V;
   if (V) V->addUse(*this);
+}
+
+Value *Use::operator=(Value *RHS) {
+  set(RHS);
+  return RHS;
+}
+
+const Use &Use::operator=(const Use &RHS) {
+  set(RHS.Val);
+  return *this;
 }
 
 template <class Compare> void Value::sortUseList(Compare Cmp) {
@@ -610,25 +693,6 @@ template <class Compare> void Value::sortUseList(Compare Cmp) {
   }
 }
 
-template <class Compare>
-void Value::mergeUseListsImpl(Use *L, Use *R, Use **Next, Compare Cmp) {
-  if (!L) {
-    *Next = R;
-    return;
-  }
-  if (!R) {
-    *Next = L;
-    return;
-  }
-  if (Cmp(*R, *L)) {
-    *Next = R;
-    mergeUseListsImpl(L, R->Next, &R->Next, Cmp);
-    return;
-  }
-  *Next = L;
-  mergeUseListsImpl(L->Next, R, &L->Next, Cmp);
-}
-
 // isa - Provide some specializations of isa so that we don't have to include
 // the subtype header files to test to see if the value is a subclass...
 //
@@ -636,6 +700,20 @@ template <> struct isa_impl<Constant, Value> {
   static inline bool doit(const Value &Val) {
     return Val.getValueID() >= Value::ConstantFirstVal &&
       Val.getValueID() <= Value::ConstantLastVal;
+  }
+};
+
+template <> struct isa_impl<ConstantData, Value> {
+  static inline bool doit(const Value &Val) {
+    return Val.getValueID() >= Value::ConstantDataFirstVal &&
+           Val.getValueID() <= Value::ConstantDataLastVal;
+  }
+};
+
+template <> struct isa_impl<ConstantAggregate, Value> {
+  static inline bool doit(const Value &Val) {
+    return Val.getValueID() >= Value::ConstantAggregateFirstVal &&
+           Val.getValueID() <= Value::ConstantAggregateLastVal;
   }
 };
 
@@ -681,9 +759,21 @@ template <> struct isa_impl<GlobalAlias, Value> {
   }
 };
 
+template <> struct isa_impl<GlobalIFunc, Value> {
+  static inline bool doit(const Value &Val) {
+    return Val.getValueID() == Value::GlobalIFuncVal;
+  }
+};
+
+template <> struct isa_impl<GlobalIndirectSymbol, Value> {
+  static inline bool doit(const Value &Val) {
+    return isa<GlobalAlias>(Val) || isa<GlobalIFunc>(Val);
+  }
+};
+
 template <> struct isa_impl<GlobalValue, Value> {
   static inline bool doit(const Value &Val) {
-    return isa<GlobalObject>(Val) || isa<GlobalAlias>(Val);
+    return isa<GlobalObject>(Val) || isa<GlobalIndirectSymbol>(Val);
   }
 };
 
@@ -708,8 +798,7 @@ public:
 // Create wrappers for C Binding types (see CBindingWrapping.h).
 DEFINE_ISA_CONVERSION_FUNCTIONS(Value, LLVMValueRef)
 
-/* Specialized opaque value conversions.
- */
+// Specialized opaque value conversions.
 inline Value **unwrap(LLVMValueRef *Vals) {
   return reinterpret_cast<Value**>(Vals);
 }

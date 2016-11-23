@@ -32,10 +32,11 @@ MODDIR=$ROOT_SRCDIR/proof/proofbench
 MODDIRS=$MODDIR/src
 MODDIRI=$MODDIR/inc
 PBPARDIR=$ROOT_BUILDDIR/etc/proof/proofbench
+PARBLDDIR=$ROOT_BUILDDIR/proof/proofbench
 
 ##### ProofBenchDataSel PAR file #####
 if test "x$PARNAME" = "xProofBenchDataSel"; then
-   PARDIR=$MODDIRS/ProofBenchDataSel
+   PARDIR=$PARBLDDIR/ProofBenchDataSel
    PARH="$ROOT_SRCDIR/test/Event.h $MODDIRI/TProofBenchTypes.h \
         $MODDIRI/TSelEventGen.h $MODDIRI/TSelEvent.h $MODDIRI/TSelHandleDataSet.h"
    PARS="$ROOT_SRCDIR/test/Event.cxx \
@@ -45,7 +46,7 @@ if test "x$PARNAME" = "xProofBenchDataSel"; then
 ##### ProofBenchCPUSel PAR file #####
 elif test "x$PARNAME" = "xProofBenchCPUSel"; then
 
-   PARDIR=$MODDIRS/ProofBenchCPUSel
+   PARDIR=$PARBLDDIR/ProofBenchCPUSel
    PARH="$MODDIRI/TProofBenchTypes.h $MODDIRI/TSelHist.h"
    PARS=$MODDIRS/TSelHist.cxx
    PARF=$PBPARDIR/ProofBenchCPUSel.par
@@ -76,7 +77,7 @@ echo "   return 0;" >> $PARINF/SETUP.C
 echo "}" >> $PARINF/SETUP.C
 
 builddir=`pwd`
-cd $MODDIRS
+cd $PARBLDDIR
 par=`basename $PARF`
 pard=`basename $PARDIR`
 tar cf - $pard | gzip > $par || exit 1

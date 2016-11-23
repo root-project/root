@@ -61,7 +61,7 @@ char OptionKey<ValT, Base, Mem>::ID = 0;
 /// The OptionRegistry is responsible for managing lifetimes of the options and
 /// provides interfaces for option registration and reading values from options.
 /// This object is a singleton, only one instance should ever exist so that all
-/// options are registered in teh same place.
+/// options are registered in the same place.
 class OptionRegistry {
 private:
   DenseMap<void *, cl::Option *> Options;
@@ -71,7 +71,7 @@ private:
   /// \param Key unique key for option
   /// \param O option to map to \p Key
   ///
-  /// Allocated cl::Options are owened by the OptionRegistry and are deallocated
+  /// Allocated cl::Options are owned by the OptionRegistry and are deallocated
   /// on destruction or removal
   void addOption(void *Key, cl::Option *O);
 
@@ -91,7 +91,7 @@ public:
   /// Options are keyed off the template parameters to generate unique static
   /// characters. The template parameters are (1) the type of the data the
   /// option stores (\p ValT), the class that will read the option (\p Base),
-  /// and the memeber that the class will store the data into (\p Mem).
+  /// and the member that the class will store the data into (\p Mem).
   template <typename ValT, typename Base, ValT(Base::*Mem)>
   static void registerOption(const char *ArgStr, const char *Desc,
                              const ValT &InitValue) {

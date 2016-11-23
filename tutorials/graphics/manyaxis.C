@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphics
+/// \notebook -js
 /// Show several TGaxis formats.
 ///
 /// \macro_image
@@ -7,6 +8,7 @@
 ///
 /// \author  Olivier Couet
 
+void manyaxis()
 {
    c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
 

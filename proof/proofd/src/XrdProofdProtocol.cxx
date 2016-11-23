@@ -297,7 +297,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 
    static hs_response_t hsresp = {0, 0, kXR_int32(htonl(XPROOFD_VERSBIN)), 0};
 
-   XrdProofdProtocol *xp;
+   XrdProtocol *xp = nullptr;
    int dlen;
    TRACE(HDBG, "enter");
 
@@ -329,22 +329,31 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
          } else {
             lp->setEtext("link transfered");
          }
-         return (XrdProtocol *)0;
+         return xp;
       }
       TRACE(XERR, "peeked incomplete or empty information! (dlen: "<<dlen<<" bytes)");
-      return (XrdProtocol *)0;
+      return xp;
    }
 
-   // Verify that this is our protocol
+   // If this is is not our protocol, we check if it a data serving request via xrootd
    hsdata.third  = ntohl(hsdata.third);
    if (dlen != sizeof(hsdata) ||  hsdata.first || hsdata.second
-       || !(hsdata.third == 1) || hsdata.fourth || hsdata.fifth) return 0;
+       || !(hsdata.third == 1) || hsdata.fourth || hsdata.fifth) {
+
+      // Check if it is a request to open a file via 'xrootd'
+      if (fgMgr->Xrootd() && (xp = fgMgr->Xrootd()->Match(lp))) {
+         TRACE(ALL, "matched xrootd protocol on link: serving a file");
+      } else {
+         TRACE(XERR, "failed to match any known or enabled protocol");
+      }
+      return xp;
+   }
 
    // Respond to this request with the handshake response
    if (!lp->Send((char *)&hsresp, sizeof(hsresp))) {
       lp->setEtext("Match: handshake failed");
       TRACE(XERR, "handshake failed");
-      return (XrdProtocol *)0;
+      return xp;
    }
 
    // We can now read all 20 bytes and discard them (no need to wait for it)
@@ -352,27 +361,29 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    if (lp->Recv(hsbuff, len) != len) {
       lp->setEtext("Match: reread failed");
       TRACE(XERR, "reread failed");
-      return (XrdProtocol *)0;
+      return xp;
    }
 
    // Get a protocol object off the stack (if none, allocate a new one)
-   if (!(xp = fgProtStack.Pop()))
-      xp = new XrdProofdProtocol();
+   XrdProofdProtocol *xpp = nullptr;
+   if (!(xpp = fgProtStack.Pop()))
+      xpp = new XrdProofdProtocol();
 
    // Bind the protocol to the link and return the protocol
-   xp->fLink = lp;
-   snprintf(xp->fSecEntity.prot, XrdSecPROTOIDSIZE, "host");
-   xp->fSecEntity.host = strdup((char *)lp->Host());
+   xpp->fLink = lp;
+   snprintf(xpp->fSecEntity.prot, XrdSecPROTOIDSIZE, "host");
+   xpp->fSecEntity.host = strdup((char *)lp->Host());
 
    // Dummy data used by 'proofd'
    kXR_int32 dum[2];
-   if (xp->GetData("dummy",(char *)&dum[0],sizeof(dum)) != 0) {
-      xp->Recycle(0,0,0);
-      return (XrdProtocol *)0;
+   if (xpp->GetData("dummy",(char *)&dum[0],sizeof(dum)) != 0) {
+      xpp->Recycle(0,0,0);
    }
 
+   xp = (XrdProtocol *) xpp;
+
    // We are done
-   return (XrdProtocol *)xp;
+   return xp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -527,7 +538,7 @@ void XrdProofdProtocol::Reset()
 /// Function: Establish configuration at load time.
 /// Output: 1 upon success or 0 otherwise.
 
-int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
+int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
 {
    XPDLOC(ALL, "Protocol::Configure")
 
@@ -577,7 +588,7 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
 
    // Process the config file for directives meaningful to us
    // Create and Configure the manager
-   fgMgr = new XrdProofdManager(pi, &fgEDest);
+   fgMgr = new XrdProofdManager(parms, pi, &fgEDest);
    if (fgMgr->Config(0)) return 0;
    mp = "global manager created";
    TRACE(ALL, mp);

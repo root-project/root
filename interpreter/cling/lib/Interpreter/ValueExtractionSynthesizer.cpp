@@ -20,6 +20,7 @@
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Sema/SemaDiagnostic.h"
 
 using namespace clang;
 
@@ -171,7 +172,7 @@ namespace cling {
               = dyn_cast<ImplicitCastExpr>(RS->getRetValue()))
             VoidCast->setSubExpr(SVRInit);
         }
-        else
+        else if (SVRInit)
           **I = SVRInit;
       }
     }
@@ -236,7 +237,7 @@ namespace {
     }
     Expr* ETyVP
       = utils::Synthesize::CStyleCastPtrExpr(m_Sema, m_Context->VoidPtrTy,
-                                             (uint64_t)ETy.getAsOpaquePtr());
+                                             (uintptr_t)ETy.getAsOpaquePtr());
 
     // Pass whether to Value::dump() or not:
     Expr* EVPOn
@@ -264,7 +265,7 @@ namespace {
       QualType vQT = m_Context->VoidTy;
       Expr* vpQTVP
         = utils::Synthesize::CStyleCastPtrExpr(m_Sema, vpQT,
-                                               (uint64_t)vQT.getAsOpaquePtr());
+                                               (uintptr_t)vQT.getAsOpaquePtr());
       CallArgs[2] = vpQTVP;
 
 
@@ -291,14 +292,14 @@ namespace {
         CallArgs.clear();
         CallArgs.push_back(E);
         CallArgs.push_back(placement);
-        uint64_t arrSize
+        size_t arrSize
           = m_Context->getConstantArrayElementCount(constArray);
         Expr* arrSizeExpr
           = utils::Synthesize::IntegerLiteralExpr(*m_Context, arrSize);
 
         CallArgs.push_back(arrSizeExpr);
         // 2.1) arrays:
-        // call copyArray(T* src, void* placement, int size)
+        // call copyArray(T* src, void* placement, size_t size)
         Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedCopyArray,
                                      locStart, CallArgs, locEnd);
 
@@ -325,13 +326,13 @@ namespace {
                                    /*initializer*/E,
                                    /*mayContainAuto*/false
                                    );
+        // Handle possible cleanups:
+        Call = m_Sema->ActOnFinishFullExpr(Call.get());
       }
     }
-    else if (desugaredTy->isIntegralOrEnumerationType()
-             || desugaredTy->isReferenceType()
-             || desugaredTy->isPointerType()
-             || desugaredTy->isNullPtrType()
-             || desugaredTy->isFloatingType()) {
+    else {
+      // Mark the current number of arguemnts
+      const size_t nArgs = CallArgs.size();
       if (desugaredTy->isIntegralOrEnumerationType()) {
         // 1)  enum, integral, float, double, referece, pointer types :
         //      call to cling::internal::setValueNoAlloc(...);
@@ -353,7 +354,7 @@ namespace {
                                              E).get();
         CallArgs.push_back(AddrOfE);
       }
-      else if (desugaredTy->isPointerType()) {
+      else if (desugaredTy->isAnyPointerType()) {
         // function pointers need explicit void* cast.
         QualType VoidPtrTy = m_Context->VoidPtrTy;
         TypeSourceInfo* TSI
@@ -371,11 +372,20 @@ namespace {
         // case, because of the overload resolution.
         CallArgs.push_back(E);
       }
-      Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedNoAlloc,
+
+      // Test CallArgs.size to make sure an additional argument (the value)
+      // has been pushed on, if not than we didn't know how to handle the type
+      if (CallArgs.size() > nArgs) {
+        Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedNoAlloc,
                                    locStart, CallArgs, locEnd);
+      }
+      else {
+        m_Sema->Diag(locStart, diag::err_unsupported_unknown_any_decl) <<
+          utils::TypeName::GetFullyQualifiedName(desugaredTy, *m_Context) <<
+          SourceRange(locStart, locEnd);
+      }
     }
-    else
-      assert(0 && "Unhandled code path?");
+
 
     assert(!Call.isInvalid() && "Invalid Call");
 

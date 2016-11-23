@@ -39,6 +39,9 @@
     !defined(__OpenBSD__) && !defined(__Bitrig__)
 #include <malloc.h>
 #endif
+#if defined(HAVE_MALLCTL)
+#include <malloc_np.h>
+#endif
 #ifdef HAVE_MALLOC_MALLOC_H
 #include <malloc/malloc.h>
 #endif
@@ -98,6 +101,12 @@ size_t Process::GetMallocUsage() {
   malloc_statistics_t Stats;
   malloc_zone_statistics(malloc_default_zone(), &Stats);
   return Stats.size_in_use;   // darwin
+#elif defined(HAVE_MALLCTL)
+  size_t alloc, sz;
+  sz = sizeof(size_t);
+  if (mallctl("stats.allocated", &alloc, &sz, NULL, 0) == 0)
+    return alloc;
+  return 0;
 #elif defined(HAVE_SBRK)
   // Note this is only an approximation and more closely resembles
   // the value returned by mallinfo in the arena field.
@@ -105,8 +114,7 @@ size_t Process::GetMallocUsage() {
   char *EndOfMemory = (char*)sbrk(0);
   if (EndOfMemory != ((char*)-1) && StartOfMemory != ((char*)-1))
     return EndOfMemory - StartOfMemory;
-  else
-    return 0;
+  return 0;
 #else
 #warning Cannot get malloc info on this platform
   return 0;
@@ -161,6 +169,8 @@ void Process::PreventCoreFiles() {
   signal(SIGSEGV, _exit);
   signal(SIGBUS,  _exit);
 #endif
+
+  coreFilesPrevented = true;
 }
 
 Optional<std::string> Process::GetEnv(StringRef Name) {
@@ -191,8 +201,8 @@ public:
   }
 
 private:
-  FDCloser(const FDCloser &) LLVM_DELETED_FUNCTION;
-  void operator=(const FDCloser &) LLVM_DELETED_FUNCTION;
+  FDCloser(const FDCloser &) = delete;
+  void operator=(const FDCloser &) = delete;
 
   int &FD;
   bool KeepOpen;
@@ -422,13 +432,18 @@ const char *Process::ResetColor() {
 #if !defined(HAVE_DECL_ARC4RANDOM) || !HAVE_DECL_ARC4RANDOM
 static unsigned GetRandomNumberSeed() {
   // Attempt to get the initial seed from /dev/urandom, if possible.
-  if (FILE *RandomSource = ::fopen("/dev/urandom", "r")) {
+  int urandomFD = open("/dev/urandom", O_RDONLY);
+
+  if (urandomFD != -1) {
     unsigned seed;
-    int count = ::fread((void *)&seed, sizeof(seed), 1, RandomSource);
-    ::fclose(RandomSource);
+    // Don't use a buffered read to avoid reading more data
+    // from /dev/urandom than we need.
+    int count = read(urandomFD, (void *)&seed, sizeof(seed));
+
+    close(urandomFD);
 
     // Return the seed if the read was successful.
-    if (count == 1)
+    if (count == sizeof(seed))
       return seed;
   }
 
@@ -443,7 +458,7 @@ unsigned llvm::sys::Process::GetRandomNumber() {
 #if defined(HAVE_DECL_ARC4RANDOM) && HAVE_DECL_ARC4RANDOM
   return arc4random();
 #else
-  static int x = (::srand(GetRandomNumberSeed()), 0);
+  static int x = (static_cast<void>(::srand(GetRandomNumberSeed())), 0);
   (void)x;
   return ::rand();
 #endif

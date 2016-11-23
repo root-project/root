@@ -81,6 +81,12 @@ static void CallEndOfProcessCleanups()
 {
    // Insure that the files, canvases and sockets are closed.
 
+   // If we get here, the tear down has started.  We have no way to know what
+   // has or has not yet been done.  In particular on Ubuntu, this was called
+   // after the function static in TSystem.cxx has been destructed.  So we
+   // set gROOT in its end-of-life mode which prevents executing code, like
+   // autoloading libraries (!) that is pointless ...
+   gROOT->SetBit(kInvalidObject);
    gROOT->EndOfProcessCleanups();
 }
 
@@ -1262,22 +1268,20 @@ void TApplication::SetEchoMode(Bool_t)
 void TApplication::CreateApplication()
 {
    R__LOCKGUARD2(gROOTMutex);
+   // gApplication is set at the end of 'new TApplication.
    if (!gApplication) {
-      // gApplication is set at the end of 'new TApplication.
-      if (!gApplication) {
-         char *a = StrDup("RootApp");
-         char *b = StrDup("-b");
-         char *argv[2];
-         Int_t argc = 2;
-         argv[0] = a;
-         argv[1] = b;
-         new TApplication("RootApp", &argc, argv, 0, 0);
-         if (gDebug > 0)
-            Printf("<TApplication::CreateApplication>: "
-                   "created default TApplication");
-         delete [] a; delete [] b;
-         gApplication->SetBit(kDefaultApplication);
-      }
+      char *a = StrDup("RootApp");
+      char *b = StrDup("-b");
+      char *argv[2];
+      Int_t argc = 2;
+      argv[0] = a;
+      argv[1] = b;
+      new TApplication("RootApp", &argc, argv, 0, 0);
+      if (gDebug > 0)
+         Printf("<TApplication::CreateApplication>: "
+                "created default TApplication");
+      delete [] a; delete [] b;
+      gApplication->SetBit(kDefaultApplication);
    }
 }
 

@@ -26,6 +26,7 @@
 #pragma link C++ class TTreePerfStats+;
 #pragma link C++ class TTreeReader+;
 #pragma link C++ class TTreeTableInterface;
+#pragma link C++ class TSimpleAnalysis+;
 
 #pragma link C++ namespace ROOT;
 

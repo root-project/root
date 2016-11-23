@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_xml
+/// \notebook -nodraw
 /// ROOT implementation of a XML DOM Parser
 ///
 /// This is an example of how Dom Parser works. It will parse the xml file
@@ -7,7 +8,7 @@
 /// A DTD validation will be run on this example.
 ///
 /// To run this program
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// .x DOMParsePerson.C+
 /// ~~~
 ///
@@ -233,7 +234,7 @@ void DOMParsePerson()
 {
    PersonList personlist;
    gROOT->ProcessLine(".O 0");
-   TString dir = gSystem->DirName(__FILE__);
-   if (personlist.ParseFile(dir+"/person.xml") == 0)
+   TString dir = gROOT->GetTutorialsDir();
+   if (personlist.ParseFile(dir+"/xml/person.xml") == 0)
       cout << personlist << endl;
 }

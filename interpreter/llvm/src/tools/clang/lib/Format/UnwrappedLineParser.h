@@ -65,8 +65,7 @@ public:
                       ArrayRef<FormatToken *> Tokens,
                       UnwrappedLineConsumer &Callback);
 
-  /// Returns true in case of a structural error.
-  bool parse();
+  void parse();
 
 private:
   void reset();
@@ -82,6 +81,7 @@ private:
   void parsePPElse();
   void parsePPEndIf();
   void parsePPUnknown();
+  void readTokenWithJavaScriptASI();
   void parseStructuralElement();
   bool tryToParseBracedList();
   bool parseBracedList(bool ContinueOnSemicolons = false);
@@ -95,24 +95,27 @@ private:
   void parseCaseLabel();
   void parseSwitch();
   void parseNamespace();
+  void parseNew();
   void parseAccessSpecifier();
-  void parseEnum();
+  bool parseEnum();
   void parseJavaEnumBody();
   void parseRecord();
   void parseObjCProtocolList();
   void parseObjCUntilAtEnd();
   void parseObjCInterfaceOrImplementation();
   void parseObjCProtocol();
+  void parseJavaScriptEs6ImportExport();
   bool tryToParseLambda();
   bool tryToParseLambdaIntroducer();
   void tryToParseJSFunction();
   void addUnwrappedLine();
   bool eof() const;
   void nextToken();
+  const FormatToken *getPreviousToken();
   void readToken();
   void flushComments(bool NewlineBeforeNext);
   void pushToken(FormatToken *Tok);
-  void calculateBraceTypes();
+  void calculateBraceTypes(bool ExpectClassBody = false);
 
   // Marks a conditional compilation edge (for example, an '#if', '#ifdef',
   // '#else' or merge conflict marker). If 'Unreachable' is true, assumes
@@ -155,10 +158,6 @@ private:
   // We store for each line whether it must be a declaration depending on
   // whether we are in a compound statement or not.
   std::vector<bool> DeclarationScopeStack;
-
-  // Will be true if we encounter an error that leads to possibily incorrect
-  // indentation levels.
-  bool StructuralError;
 
   const FormatStyle &Style;
   const AdditionalKeywords &Keywords;

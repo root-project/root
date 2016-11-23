@@ -193,7 +193,7 @@ namespace Math {
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/SineIntegral.html">
   Mathworld</A>. The implementation used is that of
-  <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c336/top.html">
+  <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c336/top.html">
   CERNLIB</A>,
   based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326.
 
@@ -209,7 +209,7 @@ namespace Math {
 
   /**
 
-  Calculates the real part of the cosine integral \Re(Ci).
+  Calculates the real part of the cosine integral Re(Ci).
 
   For x<0, the imaginary part is \pi i and has to be added by the user,
   for x>0 the imaginary part of Ci(x) is 0.
@@ -219,7 +219,7 @@ namespace Math {
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/CosineIntegral.html">
   Mathworld</A>. The implementation used is that of
-  <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c336/top.html">
+  <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c336/top.html">
   CERNLIB</A>,
   based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326.
 

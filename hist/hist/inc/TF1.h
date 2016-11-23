@@ -151,6 +151,14 @@ class TF1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
    template<class Func>
    friend struct ROOT::Internal::TF1Builder;
 
+public:
+   // Add to list behavior
+   enum class EAddToList {
+      kDefault,
+      kAdd,
+      kNo
+   };
+
 protected:
    Double_t    fXmin;        //Lower bounds for the range
    Double_t    fXmax;        //Upper bounds for the range
@@ -180,14 +188,14 @@ protected:
    TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
    TF1Parameters *fParams;   //Pointer to Function parameters object (exusts only for not-formula functions)
 
-   static Bool_t fgAbsValue;  //use absolute value of function when computing integral
+   static std::atomic<Bool_t> fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
-   static Bool_t fgAddToGlobList; //True if we want to register the function in the global list
+   static std::atomic<Bool_t> fgAddToGlobList; //True if we want to register the function in the global list
    static TF1   *fgCurrent;   //pointer to current function being processed
 
 
    //void CreateFromFunctor(const char *name, Int_t npar, Int_t ndim = 1);
-   void DoInitialize();
+   void DoInitialize(EAddToList addToGlobList);
 
    void IntegrateForNormalization();
 
@@ -200,21 +208,19 @@ protected:
    };
 
 public:
-    // TF1 status bits
-    enum {
-       kNotDraw     = BIT(9)  // don't draw the function when in a TH1
-    };
+   // TF1 status bits
+   enum {
+      kNotDraw     = BIT(9)  // don't draw the function when in a TH1
+   };
 
    TF1();
-   TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax = 1);
-   TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1);
-#ifndef __CINT__
-   TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0, Int_t ndim = 1);
-   TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0,Int_t ndim = 1);
-#endif
+   TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax = 1, EAddToList addToGlobList = EAddToList::kDefault);
+   TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
+   TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
+   TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0,Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
 
    // Constructors using functors (compiled mode only)
-   TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0,Int_t ndim = 1);
+   TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0,Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
 
    // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
    // and returning a double.
@@ -225,11 +231,11 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1 );
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault );
    
    // backward compatible interface
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *   ) :
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *, EAddToList addToGlobList = EAddToList::kDefault ) :
       TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(1),
@@ -246,7 +252,7 @@ public:
       fFormula(0),
       fParams(new TF1Parameters(npar) )
    {
-      DoInitialize();
+      DoInitialize(addToGlobList);
    }
 
 
@@ -259,7 +265,7 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <class PtrObj, typename MemFn>
-   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1) :
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
       TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(ndim),
@@ -276,11 +282,11 @@ public:
       fFormula(0),
       fParams(new TF1Parameters(npar) )
    {
-      DoInitialize();
+      DoInitialize(addToGlobList);
    }
    // backward compatible interface
    template <class PtrObj, typename MemFn>
-   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,const char * , const char * ) :
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,const char * , const char *, EAddToList addToGlobList = EAddToList::kDefault) :
       TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(1),
@@ -297,7 +303,7 @@ public:
       fFormula(0),
       fParams(new TF1Parameters(npar) )
    {
-      DoInitialize();
+      DoInitialize(addToGlobList);
    }
 
    TF1(const TF1 &f1);
@@ -479,7 +485,7 @@ public:
 
 ///ctor implementation
 template <typename Func>
-TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim ) :
+TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim, EAddToList addToGlobList) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -497,7 +503,7 @@ TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_
    fParams(0)
 {
    ROOT::Internal::TF1Builder<Func>::Build(this,f); 
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 namespace ROOT {

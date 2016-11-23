@@ -72,6 +72,9 @@
 #include<TMVA/Results.h>
 #endif
 
+#ifndef ROOT_TFile
+#include<TFile.h>
+#endif
 
 class TGraph;
 class TTree;
@@ -79,6 +82,7 @@ class TDirectory;
 class TSpline;
 class TH1F;
 class TH1D;
+class TMultiGraph;
 
 namespace TMVA {
 
@@ -89,10 +93,34 @@ namespace TMVA {
    class MethodBoost;
    class DataSetInfo;
 
+   /** \class IPythonInteractive 
+This class is needed by JsMVA, and it's a helper class for tracking errors during the training in Jupyter notebook.   
+It’s only initialized in Jupyter notebook context. In initialization we specify some title, 
+and a TGraph will be created for every title. We can add new data points easily to all TGraphs. 
+These graphs are added to a TMultiGraph, and during an interactive training we get this TMultiGraph object and plot it with JsROOT.
+*/
+   class IPythonInteractive {
+   public:
+       IPythonInteractive();
+       ~IPythonInteractive();
+       void Init(std::vector<TString>& graphTitles);
+       void ClearGraphs();
+       void AddPoint(Double_t x, Double_t y1, Double_t y2);
+       void AddPoint(std::vector<Double_t>& dat);
+       inline TMultiGraph* Get() {return fMultiGraph;}
+       inline bool NotInitialized(){ return fNumGraphs==0;};
+   private:
+       TMultiGraph* fMultiGraph;
+       std::vector<TGraph*> fGraphs;
+       Int_t fNumGraphs;
+       Int_t fIndex;
+   };
+
    class MethodBase : virtual public IMethod, public Configurable {
 
       friend class Factory;
-
+      friend class RootFinder;
+      friend class MethodBoost;
    public:
 
       enum EWeightFileType { kROOT=0, kTEXT };
@@ -102,15 +130,13 @@ namespace TMVA {
                   Types::EMVA methodType,
                   const TString& methodTitle,
                   DataSetInfo& dsi,
-                  const TString& theOption = "",
-                  TDirectory* theBaseDir = 0 );
+                  const TString& theOption = "" );
 
       // constructor used for Testing + Application of the MVA, only (no training),
       // using given weight file
       MethodBase( Types::EMVA methodType,
                   DataSetInfo& dsi,
-                  const TString& weightFile,
-                  TDirectory* theBaseDir = 0 );
+                  const TString& weightFile );
 
       // default destructur
       virtual ~MethodBase();
@@ -318,7 +344,7 @@ namespace TMVA {
       // internal names and expressions of input variables
       const TString&   GetInputVar  ( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetInternalName(); }
       const TString&   GetInputLabel( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetLabel(); }
-      const TString&   GetInputTitle( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetTitle(); }
+      const char *     GetInputTitle( Int_t i ) const { return DataInfo().GetVariableInfo(i).GetTitle(); }
 
       // normalisation and limit accessors
       Double_t         GetMean( Int_t ivar ) const { return GetTransformationHandler().GetMean(ivar); }
@@ -337,10 +363,21 @@ namespace TMVA {
       // pointers to ROOT directories
       TDirectory*      BaseDir()       const;
       TDirectory*      MethodBaseDir() const;
+      TFile*           GetFile() const {return fFile;}
+      
       void             SetMethodDir ( TDirectory* methodDir ) { fBaseDir = fMethodBaseDir  = methodDir; }
       void             SetBaseDir( TDirectory* methodDir ){ fBaseDir = methodDir; }
       void             SetMethodBaseDir( TDirectory* methodDir ){ fMethodBaseDir = methodDir; }
-
+      void             SetFile(TFile* file){fFile=file;}
+      
+      //Silent file
+      void SetSilentFile(Bool_t status){fSilentFile=status;}
+      Bool_t IsSilentFile(){return fSilentFile;}
+      
+      //Model Persistence
+      void SetModelPersistence(Bool_t status){fModelPersistence=status;}//added support to create/remove dir here if exits or not
+      Bool_t IsModelPersistence(){return fModelPersistence;}
+      
       // the TMVA version can be obtained and checked using
       //    if (GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}
       // or
@@ -398,7 +435,44 @@ namespace TMVA {
       Bool_t                DoMulticlass() const { return fAnalysisType == Types::kMulticlass; }
 
       // setter method for suppressing writing to XML and writing of standalone classes
-      void                  DisableWriting(Bool_t setter){ fDisableWriting = setter; }
+      void                  DisableWriting(Bool_t setter){ fModelPersistence = setter?kFALSE:kTRUE; }//DEPRECATED
+
+    protected:
+      // helper variables for JsMVA
+      IPythonInteractive *fInteractive = nullptr;
+      bool fExitFromTraining = false;
+      UInt_t fIPyMaxIter = 0, fIPyCurrentIter = 0;
+
+    public:
+
+      // initializing IPythonInteractive class (for JsMVA only)
+      inline void InitIPythonInteractive(){
+        if (fInteractive) delete fInteractive;
+        fInteractive = new IPythonInteractive();
+      }
+
+      // get training errors (for JsMVA only)
+      inline TMultiGraph* GetInteractiveTrainingError(){return fInteractive->Get();}
+
+      // stop's the training process (for JsMVA only)
+      inline void ExitFromTraining(){
+        fExitFromTraining = true;
+      }
+
+      // check's if the training ended (for JsMVA only)
+      inline bool TrainingEnded(){
+        if (fExitFromTraining && fInteractive){
+          delete fInteractive;
+          fInteractive = nullptr;
+        }
+        return fExitFromTraining;
+      }
+
+      // get fIPyMaxIter
+      inline UInt_t GetMaxIter(){ return fIPyMaxIter; }
+
+      // get fIPyCurrentIter
+      inline UInt_t GetCurrentIter(){ return fIPyCurrentIter; }
 
    protected:
 
@@ -442,8 +516,8 @@ namespace TMVA {
       // header and auxiliary classes
       virtual void     MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const {}
 
-      // static pointer to this object - required for ROOT finder (to be solved differently)
-      static MethodBase* GetThisBase();
+      // static pointer to this object - required for ROOT finder (to be solved differently)(solved by Omar)
+      //static MethodBase* GetThisBase();
 
       // some basic statistical analysis
       void Statistics( Types::ETreeType treeType, const TString& theVarName,
@@ -482,9 +556,9 @@ namespace TMVA {
       void             CreateMVAPdfs();
 
       // for root finder
-      static Double_t  IGetEffForRoot( Double_t );  // interface
-      Double_t         GetEffForRoot ( Double_t );  // implementation
-
+      //virtual method to find ROOT 
+      virtual Double_t         GetValueForRoot ( Double_t );  // implementation
+      
       // used for file parsing
       Bool_t           GetLine( std::istream& fin, char * buf );
 
@@ -498,12 +572,6 @@ namespace TMVA {
 
       void             AddInfoItem( void* gi, const TString& name,
                                     const TString& value) const;
-
-      static void      CreateVariableTransforms(const TString& trafoDefinition,
-                                                TMVA::DataSetInfo& dataInfo,
-                                                TMVA::TransformationHandler& transformationHandler,
-                                                TMVA::MsgLogger& log );
-
 
       // ========== class members ==================================================
 
@@ -528,7 +596,6 @@ namespace TMVA {
       // MethodCuts redefines some of the evaluation variables and histograms -> must access private members
       friend class MethodCuts;
 
-      Bool_t           fDisableWriting;       //! set to true in order to suppress writing to XML
 
       // data sets
       DataSetInfo&     fDataSetInfo;         //! the data set information (sometimes needed)
@@ -546,12 +613,19 @@ namespace TMVA {
       UInt_t           fROOTTrainingVersion; // ROOT version used for training
       Bool_t           fConstructedFromWeightFile; // is it obtained from weight file?
 
-      // Directory structure: fMethodBaseDir/fBaseDir
+      // Directory structure: dataloader/fMethodBaseDir/fBaseDir
       // where the first directory name is defined by the method type
       // and the second is user supplied (the title given in Factory::BookMethod())
       TDirectory*      fBaseDir;             // base directory for the instance, needed to know where to jump back from localDir
       mutable TDirectory* fMethodBaseDir;    // base directory for the method
+      //this will be the next way to save results
+      TFile            *fFile;
 
+      //SilentFile
+      Bool_t fSilentFile;
+      //Model Persistence
+      Bool_t fModelPersistence;
+      
       TString          fParentDir;           // method parent name, like booster name
 
       TString          fFileDir;             // unix sub-directory for weight files (default: DataLoader's Name + "weights")
@@ -634,7 +708,7 @@ namespace TMVA {
 
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
-      static MethodBase*& GetThisBaseThreadLocal() {TTHREAD_TLS(MethodBase*) fgThisBase(nullptr); return fgThisBase; };
+//       static MethodBase*& GetThisBaseThreadLocal() {TTHREAD_TLS(MethodBase*) fgThisBase(nullptr); return fgThisBase; };
 
       // ===== depreciated options, kept for backward compatibility  =====
    private:

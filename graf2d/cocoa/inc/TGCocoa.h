@@ -13,21 +13,15 @@
 #ifndef ROOT_TGCocoa
 #define ROOT_TGCocoa
 
-#include <utility>
-#include <vector>
+#include "CocoaGuiTypes.h"
+#include "TVirtualX.h"
+#include "X11Atoms.h"
+
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
-
-#ifndef ROOT_CocoaGuiTypes
-#include "CocoaGuiTypes.h"
-#endif
-#ifndef ROOT_TVirtualX
-#include "TVirtualX.h"
-#endif
-#ifndef ROOT_X11Atoms
-#include "X11Atoms.h"
-#endif
+#include <utility>
+#include <vector>
 
 /// \defgroup cocoa Cocoa backend
 /// \brief Interface to MacOS native graphics system.
@@ -447,7 +441,7 @@ protected:
 
    Drawable_t fSelectedDrawable;
 
-   std::auto_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
+   std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
    Int_t fCocoaDraw;
 
    EDrawMode fDrawMode;

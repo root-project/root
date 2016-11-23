@@ -31,7 +31,9 @@ namespace PyROOT {
    public:
       PyObject* fCallable;
 
-      TPythonCallback( PyObject* callable ) {
+      TPythonCallback( PyObject* callable ):
+         fCallable(nullptr)
+      {
          if ( !PyCallable_Check( callable ) ) {
             PyErr_SetString(PyExc_TypeError, "parameter must be callable");
             return;

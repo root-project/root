@@ -13,6 +13,7 @@
 /// ~~~
 ///
 /// \macro_code
+///
 /// \author Rene Brun
 
 
@@ -63,7 +64,7 @@ void read() {
 }
 
 void pileup(Int_t nev=200) {
-  //make nev pilepup events, each build with LOOPMAX events selected
+  //make nev pileup events, each build with LOOPMAX events selected
   //randomly among the nentries
   TFile f("JetEvent.root");
   TTree *T = (TTree*)f.Get("T");

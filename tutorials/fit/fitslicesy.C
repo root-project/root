@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Illustrates how to use the TH1::FitSlicesY function
 /// It uses the TH2F histogram generated in macro hsimple.C
 /// It invokes FitSlicesY and draw the fitted "mean" and "sigma"
@@ -22,23 +23,23 @@ void fitslicesy() {
    gStyle->SetTitleH(0.1);
 
 // Connect the input file and get the 2-d histogram in memory
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("fitslicesy.C","../hsimple.C");
+   TString dir = gROOT->GetTutorialsDir();
+   dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
-   TFile *hsimple = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
-   if (!hsimple) return;
-   TH2F *hpxpy = (TH2F*)hsimple->Get("hpxpy");
+   TFile *hsimpleFile = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
+   if (!hsimpleFile) return;
+   TH2F *hpxpy = (TH2F*)hsimpleFile->Get("hpxpy");
 
 // Create a canvas and divide it
    TCanvas *c1 = new TCanvas("c1","c1",700,500);
    c1->SetFillColor(42);
    c1->Divide(2,1);
-   TPad *left = (TPad*)c1->cd(1);;
-   left->Divide(1,2);
+   TPad *leftPad = (TPad*)c1->cd(1);;
+   leftPad->Divide(1,2);
 
 // Draw 2-d original histogram
-   left->cd(1);
+   leftPad->cd(1);
    gPad->SetTopMargin(0.12);
    gPad->SetFillColor(33);
    hpxpy->Draw();
@@ -50,25 +51,25 @@ void fitslicesy() {
    hpxpy->FitSlicesY(0,7,32,20);
 
 // Show fitted "mean" for each slice
-   left->cd(2);
+   leftPad->cd(2);
    gPad->SetFillColor(33);
-   TH2F *hpxpy_0 = (TH2F*)hsimple->Get("hpxpy_0");
+   TH2F *hpxpy_0 = (TH2F*)hsimpleFile->Get("hpxpy_0");
    hpxpy_0->Draw();
-   TPad *right = (TPad*)c1->cd(2);
-   right->Divide(1,2);
-   right->cd(1);
+   TPad *rightPad = (TPad*)c1->cd(2);
+   rightPad->Divide(1,2);
+   rightPad->cd(1);
    gPad->SetTopMargin(0.12);
    gPad->SetLeftMargin(0.15);
    gPad->SetFillColor(33);
-   TH2F *hpxpy_1 = (TH2F*)hsimple->Get("hpxpy_1");
+   TH2F *hpxpy_1 = (TH2F*)hsimpleFile->Get("hpxpy_1");
    hpxpy_1->Draw();
 
 // Show fitted "sigma" for each slice
-   right->cd(2);
+   rightPad->cd(2);
    gPad->SetTopMargin(0.12);
    gPad->SetLeftMargin(0.15);
    gPad->SetFillColor(33);
-   TH2F *hpxpy_2 = (TH2F*)hsimple->Get("hpxpy_2");
+   TH2F *hpxpy_2 = (TH2F*)hsimpleFile->Get("hpxpy_2");
    hpxpy_2->SetMinimum(0.8);
    hpxpy_2->Draw();
 

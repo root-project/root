@@ -3050,6 +3050,8 @@ Int_t TProofServ::SetupCommon()
       new TProofLockPath(TString::Format("%s/%s%s",
                          gSystem->TempDirectory(), kPROOF_CacheLockFile,
                          TString(fCacheDir).ReplaceAll("/","%").Data()));
+   // Make also sure the cache path is in the macro path
+   TProof::AssertMacroPath(TString::Format("%s/.", fCacheDir.Data()));
 
    // Check and make sure "packages" directory exists
    TString packdir = gEnv->GetValue("ProofServ.PackageDir",
@@ -4675,7 +4677,7 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Remove aborted queries from the list
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
-      if (pqr) SafeDelete(pqr);
+      SafeDelete(pqr);
       if (fQMgr) fQMgr->RemoveQuery(pq);
    } else {
       // Keep in memory only light infor about a query
@@ -6007,8 +6009,7 @@ void TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
       m.Reset(kPROOF_MESSAGE);
       m << TString(msg) << lf;
       if (fSocket->Send(m) <= 0)
-         Warning("SendAsynMessage",
-                 "could not send message '%s'", (msg ? msg : "(null)"));
+         Warning("SendAsynMessage", "could not send message '%s'", msg);
    }
 
    return;
@@ -6525,7 +6526,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      deleteplayer = kFALSE;
                   }
 
-                  if (t) SafeDelete(t);
+                  SafeDelete(t);
 
                }
 

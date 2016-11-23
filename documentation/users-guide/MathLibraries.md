@@ -32,7 +32,7 @@ which are provided in the `ROOT::Math` namespace are:
 
 -   Generic function classes and interfaces
    for evaluating one-dimensional  (`ROOT::Math::IBaseFunctiononeDim`) and  multi-dimensional functions
-    (`ROOT::Math::IBaseFunctionMultiDim`) and parametric function interfaces for evaluating functions with parameters in one 
+    (`ROOT::Math::IBaseFunctionMultiDim`) and parametric function interfaces for evaluating functions with parameters in one
     (`ROOT::Math::IParametricFunctionOneDim`) or multi dimensions (`ROOT::Math::IParametricFunctionMultiDim`).
 	A set of user convenient wrapper classes, such as `ROOT::Math::Functor` is provided for wrapping user-classes in the needed interface,
 	required to use the algorithms of the `ROOT` Mathematical libraries.
@@ -45,7 +45,7 @@ which are provided in the `ROOT::Math` namespace are:
 	- multi-dimensional minimization (only the `ROOT::Math::Minimizer` interface)
 
 - Fitting classes: set of classes for fitting generic data sets. These classes are provided in the namespace `ROOT::Fit`.
-   They are describing separately in the Fitting chapter. 
+   They are describing separately in the Fitting chapter.
 
 The sets described above is independednt of ROOT libraries and can be built as a set of standalone classes.
 In addition `MathCore` provides the following classes (depending on ROOT *libCore* library):
@@ -57,12 +57,12 @@ In addition `MathCore` provides the following classes (depending on ROOT *libCor
 A detailed description for all `MathCore` classes is available in the Doxygen
 [online reference documentation](online reference documentation).
 
-## MathMore Library 
+## MathMore Library
 
 The `MathMore` library provides an advanced collection of functions and
 C++ classes for numerical computing. This is an extension of the
 functionality provided by the `MathCore` library.
-The `MathMore` library is implemented wrapping in C++ the GNU Scientific Library (GSL). 
+The `MathMore` library is implemented wrapping in C++ the GNU Scientific Library (GSL).
 The current set, provided in
 the `ROOT::Math` namespace
 include:
@@ -71,7 +71,7 @@ include:
 
 - Additional mathematical functions used in statistics such as probability density
 functions, cumulative distributions functions and their inverse which are not in `MathCore` but present in
-the `GSL` library. 
+the `GSL` library.
 
 - Numerical algorithms for one dimensional functions based on
 implementation of the GNU Scientific Library (GSL):
@@ -84,7 +84,7 @@ implementation of the GNU Scientific Library (GSL):
 -   Root finder implementing the  **`ROOT::Math::RootFinder`** interface, using different
     solver algorithms from GSL
 
--   one-dimensional Minimization implementing the interface**`ROOT::Math::IMinimizer1D`** 
+-   one-dimensional Minimization implementing the interface**`ROOT::Math::IMinimizer1D`**
 
 -   Interpolation via **`ROOT::Math::Interpolation`**. All the GSL
     interpolation types are supported
@@ -131,7 +131,7 @@ In the namespace, **`TMath`**, a collection of free functions is provided for th
 
 -   numerical constants (like `pi`, `e`, `h`, etc.);
 
--   trigonometric and elementary mathematical functions; 
+-   trigonometric and elementary mathematical functions;
 
 -   functions to work with arrays and collections (e.g. functions to find `min` and `max` of arrays);
 
@@ -144,7 +144,7 @@ In the namespace, **`TMath`**, a collection of free functions is provided for th
 -   statistical functions, like common probability and cumulative
 (quantile) distributions
 
--   geometrical functions. 
+-   geometrical functions.
 
 For more details, see the reference documentation of **`TMath`** at
 <http://root.cern.ch/root/htmldoc/TMath.html>.
@@ -180,7 +180,7 @@ Although there are some functions that are not in the standard C math library (l
  vector<double> v(10);
  std::generate(v.begin(), v.end(), rand);
 
- // Find the minumum value of the vector (iterator version)
+ // Find the minimum value of the vector (iterator version)
  vector<double>::iterator it;
  it = TMath::LocMin(v.begin(), v.end());
  std::cout << *it << std::endl;
@@ -189,8 +189,8 @@ Although there are some functions that are not in the standard C math library (l
  int i;
  i = TMath::LocMin(10, &v[0]);
  std::cout << v[i] << std::endl;
- ```
- 
+```
+
 Another example of these functions can be found in $ROOTSYS/tutorials/permute.C.
 
 ### Statistic Functions Operating on Arrays.
@@ -233,13 +233,13 @@ and a modern C++-like  interface that receives two iterators to it.
 
  // old-style
  mean = TMath::Mean(n, &v[0], &w[0]);
- ```
- 
+```
+
 ### Special and Statistical Functions.
 
 `TMath` also provides special functions like Bessel, Error functions, Gamma or similar plus statistical mathematical functions, including probability density functions, cumulative distribution and their inverse.
 
-The majority of the special functions and the statitical distributions are provided also as free functions in the `ROOT::Math` namespace.
+The majority of the special functions and the statistical distributions are provided also as free functions in the `ROOT::Math` namespace.
 See one of the next paragraph for the complete description of the functions provided in `ROOT::Math`.
 The user is encourage to use those versions of the algorithms rather than the ones in TMath.
 
@@ -254,7 +254,7 @@ Functions not present in `ROOT::Math` and provided only by `TMath` are:
    * Voigt function
    * LaplaceDist
    * Vavilov
-   
+
 The example tutorial `GammaFun.C` and `mathBeta.C` in `$ROOTSYS/tutorials` shows an example of use of the `ROOT::Math` special functions
 
 
@@ -306,14 +306,14 @@ For more information on the generator see the following article:
 ### TRandom2
 
 
-This generator is based on the maximally equidistributed combined
+This generator is based on the maximally equi-distributed combined
 Tausworthe generator by L'Ecuyer. It uses only 3 32-bits words for the
 state and it has a period of about 10^26^. It is fast and given its
 small states, it is recommended for applications, which require a very
 small random number size. For more information on the generator see the
 following article:
 
--   P. L'Ecuyer, "Maximally Equidistributed Combined Tausworthe
+-   P. L'Ecuyer, "Maximally Equi-distributed Combined Tausworthe
     Generators", Mathematics of Computation, 65, 213 (1996), 203-213.
 
 ### TRandom3
@@ -328,7 +328,7 @@ state of 624 words. For more information on the generator see the
 following article:
 
 -   M. M. Matsumoto and T. Nishimura, "Mersenne twister: A
-    623-dimensionally equidistributed uniform pseudorandom number
+    623-dimensionally equi-distributed uniform pseudorandom number
     generator", ACM Trans. on Modeling and Computer Simulations, 8, 1,
     (1998), 3-20.
 
@@ -841,12 +841,12 @@ The following picture illustrates the available statistical functions
 
 ![PDF, CDF and quantiles in the case of the normal distribution](pictures/03000128.png)
 
-## Numerical Algorithms 
+## Numerical Algorithms
 
 ROOT provides C++ classes implementing numerical algorithms to solve a wide set of problem, like:
 
 * Evaluation of function derivatives.
-* Evaluation of integrals. 
+* Evaluation of integrals.
 * Finding the roots of a function
 * Finding the minimum/maximum of a function
 
@@ -863,7 +863,7 @@ In order to use the classes presented in this chapter, the mathematical function
 
 ### One-dimensional Function Interfaces
 
-These interfaces are used for numerical algorithms operating only on  one-dimensional functions and cannot be applied to multi-dimensional functions.  
+These interfaces are used for numerical algorithms operating only on  one-dimensional functions and cannot be applied to multi-dimensional functions.
 For this case the users needs to  define a function object which evaluates in one dimension, and the object  will have to derivate from the following:
 
 * `ROOT::Math::IBaseFunctionOneDim`: This class is the most basic function. Provides a method to evaluate the function given a value (simple double) by implementing
@@ -874,14 +874,14 @@ Example on how to create a class that represents a mathematical function. The us
 
 ```{.cpp}
 #include "Math/IFunction.h"
- 
+
 class MyFunction: public ROOT::Math::IBaseFunctionOneDim
 {
    double DoEval(double x) const
    {
       return x*x;
    }
- 
+
    ROOT::Math::IBaseFunctionOneDim* Clone() const
    {
       return new MyFunction();
@@ -898,7 +898,7 @@ class MyFunction: public ROOT::Math::IBaseFunctionOneDim
 
 ```{.cpp}
 #include "Math/IFunction.h"
- 
+
 class MyGradientFunction: public ROOT::Math::IGradientFunctionOneDim
 {
 public:
@@ -906,18 +906,18 @@ public:
    {
       return sin(x);
    }
- 
+
    ROOT::Math::IBaseFunctionOneDim* Clone() const
    {
       return new MyGradientFunction();
    }
- 
+
    double DoDerivative(double x) const
    {
       return -cos(x);
    }
- 
-}; 
+
+};
 ```
 
 ### Multi-dimensional Function Interfaces
@@ -935,7 +935,7 @@ functions. For algorithms working on both one-dimensional and multi-dimensional 
 
 ```{.cpp}
 #include "Math/IFunction.h"
- 
+
 class MyFunction: public ROOT::Math::IBaseFunctionMultiDim
 {
 public:
@@ -943,18 +943,18 @@ public:
    {
       return x[0] + sin(x[1]);
    }
- 
+
    unsigned int NDim() const
    {
       return 2;
    }
- 
+
    ROOT::Math::IBaseFunctionMultiDim* Clone() const
    {
       return new MyFunction();
    }
- 
-}; 
+
+};
 ```
 
 * `ROOT::Math::IGradientFunctionMultiDim`: This interface offers the same functionality as the base function plus the calcualtion of the derivative.
@@ -965,7 +965,7 @@ Example of implementing a multi-dimensional gradient function
 
 ```{.cpp}
 #include "Math/IFunction.h"
- 
+
 class MyGradientFunction: public ROOT::Math::IGradientFunctionMultiDim
 {
 public:
@@ -973,17 +973,17 @@ public:
    {
       return x[0] + sin(x[1]);
    }
- 
+
    unsigned int NDim() const
    {
       return 2;
    }
- 
+
    ROOT::Math::IGradientFunctionMultiDim* Clone() const
    {
       return new MyGradientFunction();
    }
- 
+
    double DoDerivative(const double* x, unsigned int ipar) const
    {
       if ( ipar == 0 )
@@ -991,55 +991,55 @@ public:
       else
          return x[0] + x[1] * cos(x[1]);
    }
- 
+
 };
 ```
 
 ### Parametric Function Interfaces
 
 These interfaces, for evaluating multi-dimensional functions are used for fitting. These interfaces are defined in the header file
-`Math/IParamFunction.h`. 
+`Math/IParamFunction.h`.
 See also the documentation of the `ROOT::Fit` classes in the Fitting chaper for more information.
 
 * **`ROOT::Math::IParametricFunctionMultiDim`**: Describes a multi dimensional parametric function. Similarly to the one dimensional version, the user needs to provide the
 method `void SetParameters(double* p)` as well as the getter methods `const double * Parameters()` and `uint NPar()`.
-Example of creating a parametric function: 
+Example of creating a parametric function:
 
 ```{.cpp}
 #include "Math/IFunction.h"
 #include "Math/IParamFunction.h"
- 
+
 class MyParametricFunction: public ROOT::Math::IParametricFunctionMultiDim
 {
 private:
    const double* pars;
- 
+
 public:
    double DoEvalPar(const double* x, const double* p) const
    {
       return p[0] * x[0] + sin(x[1]) + p[1];
    }
- 
+
    unsigned int NDim() const
    {
       return 2;
    }
- 
+
    ROOT::Math::IParametricFunctionMultiDim* Clone() const
    {
       return new MyParametricFunction();
    }
- 
-   const double* Parameters() const 
+
+   const double* Parameters() const
    {
       return pars;
    }
- 
+
    void SetParameters(const double* p)
    {
       pars = p;
    }
- 
+
    unsigned int NPar() const
    {
       return 2;
@@ -1055,44 +1055,44 @@ parameters. Here is an example:
 ```{.cpp}
 #include "Math/IFunction.h"
 #include "Math/IParamFunction.h"
- 
-class MyParametricGradFunction: 
+
+class MyParametricGradFunction:
           public ROOT::Math::IParametricGradFunctionMultiDim
 {
 private:
    const double* pars;
- 
+
 public:
    double DoEvalPar(const double* x, const double* p) const
    {
       return p[0] * x[0] + sin(x[1]) + p[1];
    }
- 
+
    unsigned int NDim() const
    {
       return 2;
    }
- 
+
    ROOT::Math::IParametricGradFunctionMultiDim* Clone() const
    {
       return new MyParametricGradFunction();
    }
- 
-   const double* Parameters() const 
+
+   const double* Parameters() const
    {
       return pars;
    }
- 
+
    void SetParameters(const double* p)
    {
       pars = p;
    }
- 
+
    unsigned int NPar() const
    {
       return 2;
    }
- 
+
    double DoParameterDerivative(const double* x, const double* p,
                                 unsigned int ipar) const
    {
@@ -1116,7 +1116,7 @@ The following table indicates the wrapper for the most basic ones:
 
 
 
-| **Interface**|   **Function Wrapper**    | 
+| **Interface**|   **Function Wrapper**    |
 |------------------------------------------|------------------------|
 | `ROOT::Math::IBaseFunctionOneDim`              | `ROOT::Math::Functor1D` |
 | `ROOT::Math::IGradientFunctionOneDim`        | `ROOT::Math::GradFunctor1D` |
@@ -1138,39 +1138,39 @@ Example:
 
 ```{.cpp}
 #include "Math/Functor.h"
- 
-class MyFunction1D { 
-   
-public: 
- 
-   double operator()(double x) const { 
-      return x*x; 
-   } 
- 
+
+class MyFunction1D {
+
+public:
+
+   double operator()(double x) const {
+      return x*x;
+   }
+
    double Eval(double x) const { return x+x; }
 };
- 
-double freeFunction1D(double  x ) { 
-   return 2*x; 
+
+double freeFunction1D(double  x ) {
+   return 2*x;
 }
- 
+
 int main()
 {
    // wrapping a free function
-   ROOT::Math::Functor1D  f1(&freeFunction1D); 
- 
+   ROOT::Math::Functor1D  f1(&freeFunction1D);
+
    MyFunction1D myf1;
- 
+
    // wrapping a function object implementing operator()
-   ROOT::Math::Functor1D  f2(myf1); 
- 
-   // wrapping a class member function 
-   ROOT::Math::Functor1D f3(&myf1,&MyFunction1D::Eval); 
- 
+   ROOT::Math::Functor1D  f2(myf1);
+
+   // wrapping a class member function
+   ROOT::Math::Functor1D f3(&myf1,&MyFunction1D::Eval);
+
    cout << f1(2) << endl;
    cout << f2(2) << endl;
    cout << f3(2) << endl;
- 
+
    return 0;
 }
 ```
@@ -1196,42 +1196,42 @@ The function dimension is required when constructing the functor.
 Example of using `Functor`:
 ```{.cpp}
 #include "Math/Functor.h"
- 
-class MyFunction { 
- 
-public: 
-   double operator()(const double *x) const { 
-      return x[0]+x[1]; 
-   } 
- 
+
+class MyFunction {
+
+public:
+   double operator()(const double *x) const {
+      return x[0]+x[1];
+   }
+
    double Eval(const double * x) const { return x[0]+x[1]; }
 };
- 
-double freeFunction(const double * x ) 
-{ 
-   return x[0]+x[1]; 
+
+double freeFunction(const double * x )
+{
+   return x[0]+x[1];
 }
- 
+
 int main()
 {
    // test directly calling the function object
    MyFunction myf;
- 
+
    // test from a free function pointer
-   ROOT::Math::Functor f1(&freeFunction,2); 
- 
+   ROOT::Math::Functor f1(&freeFunction,2);
+
    // test from function object
-   ROOT::Math::Functor f2(myf,2); 
- 
-   // test from a member function 
-   ROOT::Math::Functor f3(&myf,&MyFunction::Eval,2); 
- 
+   ROOT::Math::Functor f2(myf,2);
+
+   // test from a member function
+   ROOT::Math::Functor f3(&myf,&MyFunction::Eval,2);
+
    double x[] = {1,2};
- 
+
    cout << f1(x) << endl;
    cout << f2(x) << endl;
    cout << f3(x) << endl;
- 
+
    return 0;
 }
 ```
@@ -1256,17 +1256,17 @@ Example:
 ```{.cpp}
 #include "TF1.h"
 #include "Math/WrappedTF1.h"
- 
+
 int main()
 {
- 
+
    TF1 f("Sin Function", "sin(x)+y",0,3);
- 
+
    ROOT::Math::WrappedTF1 wf1(f);
- 
+
    cout << f(1) << endl;
    cout << wf1(1) << endl;
- 
+
    return 0;
 }
 ```
@@ -1278,19 +1278,19 @@ Example:
 ```{.cpp}
 #include "TF1.h"
 #include "Math/WrappedMultiTF1.h"
- 
+
 int main()
 {
- 
+
    TF2 f("Sin Function", "sin(x) + y",0,3,0,2);
- 
+
    ROOT::Math::WrappedMultiTF1 wf1(f);
- 
+
    double x[] = {1,2};
- 
+
    cout << f(x) << endl;
    cout << wf1(x) << endl;
- 
+
    return 0;
 }
 ```
@@ -1305,13 +1305,13 @@ These interfaces define the integrator functionality with abstract methods to se
 These methods must be implemented in the concrete classes existing for the different integration algorithms.
 The user cannot create directly these virtual integrator interfaces. He needs to create the
 `ROOT::Math::IntegratorOneDim` class for integrating one-dimensional functions and `ROOT::Math::IntegratorMultiDim` for multi-dimensional functions.
-Through the ROOT Plug-In Manager,  the user can initialize `ROOT::Math::IntegratorOneDim` or  `ROOT::Math::IntegratorMultiDim` with 
+Through the ROOT Plug-In Manager,  the user can initialize `ROOT::Math::IntegratorOneDim` or  `ROOT::Math::IntegratorMultiDim` with
 any of the concrete integration classes without dealing with them directly.
 These two classes provide the same interface as in `VirtualIntegratorOneDim` and `VirtualIntegratorMultiDim`, but with the possibility to choose in the constructor,
-which method will be used to perform the integration. 
+which method will be used to perform the integration.
 
 The method to set the function to be integrated,  must be of the function interface type described before.
-`ROOT::Math::IBaseFunctionOneDimFunction` is used for `ROOT::Math::IBaseFunctionMultiDim` and 
+`ROOT::Math::IBaseFunctionOneDimFunction` is used for `ROOT::Math::IBaseFunctionMultiDim` and
 The only difference between the  `ROOT::Math::IntegratorOneDim`  and `ROOT::Math::IntegratorMultiDim` resides
 in the dimensionality of that function and some specific that will be seen afterwards for the one dimensional one.
 
@@ -1337,55 +1337,55 @@ such as relative and absolute tolerance, can be specified using the static metho
 #include "Math/Integrator.h"
 
 const double ERRORLIMIT = 1E-3;
- 
-double f(double x) { 
-   return x; 
-} 
- 
-double f2(const double * x) { 
-   return x[0] + x[1]; 
-} 
- 
- 
-int testIntegration1D() { 
- 
+
+double f(double x) {
+   return x;
+}
+
+double f2(const double * x) {
+   return x[0] + x[1];
+}
+
+
+int testIntegration1D() {
+
    const double RESULT = 0.5;
    int status = 0;
 
    // set default tolerances for all integrators
    ROOT::Math::IntegratorOneDimOptions::SetDefaultAbsTolerance(1.E-6);
    ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-6);
- 
+
    ROOT::Math::Functor1D wf(&f);
-   ROOT::Math::Integrator ig(ROOT::Math::IntegrationOneDim::kADAPTIVESINGULAR); 
+   ROOT::Math::Integrator ig(ROOT::Math::IntegrationOneDim::kADAPTIVESINGULAR);
    ig.SetFunction(wf);
    double val = ig.Integral(0,1);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
-   ROOT::Math::Integrator ig2(ROOT::Math::IntegrationOneDim::kNONADAPTIVE); 
+
+   ROOT::Math::Integrator ig2(ROOT::Math::IntegrationOneDim::kNONADAPTIVE);
    ig2.SetFunction(wf);
    val = ig2.Integral(0,1);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
-   ROOT::Math::Integrator ig3(wf, ROOT::Math::IntegrationOneDim::kADAPTIVE); 
+
+   ROOT::Math::Integrator ig3(wf, ROOT::Math::IntegrationOneDim::kADAPTIVE);
    val = ig3.Integral(0,1);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
-   ROOT::Math::Integrator ig4(ROOT::Math::IntegrationOneDim::kGAUSS); 
+
+   ROOT::Math::Integrator ig4(ROOT::Math::IntegrationOneDim::kGAUSS);
    ig4.SetFunction(wf);
    val = ig4.Integral(0,1);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
 
-   ROOT::Math::Integrator ig4(ROOT::Math::IntegrationOneDim::kLEGENDRE); 
+   ROOT::Math::Integrator ig4(ROOT::Math::IntegrationOneDim::kLEGENDRE);
    ig4.SetFunction(wf);
    val = ig4.Integral(0,1);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
+
    return status;
 }
 ```
@@ -1395,7 +1395,7 @@ int testIntegration1D() {
 Here we provide a brief description of the different integration algorithms, which are also
 implemented as separate classes. The algorithms can be instantiated using the following enumeration values:
 
-| **Enumeration name**|   **Integrator class**    | 
+| **Enumeration name**|   **Integrator class**    |
 |------------------------------------  |-------------------------------|
 | `ROOT::Math::IntegratorOneDim::kGAUSS`      | `ROOT::Math::GaussianIntegrator`     |
 | `ROOT::Math::IntegratorOneDim::kLEGENDRE`   | `ROOT::Math:::GausLegendreIntegrator` |
@@ -1407,26 +1407,26 @@ implemented as separate classes. The algorithms can be instantiated using the fo
 
 It uses the most basic Gaussian integration algorithm, it uses the 8-point and the 16-point Gaussian
 quadrature approximations. It is derived from the `DGAUSS` rountine of the *CERNLIB* by S. Kolbig.
-This class  
+This class
 Here is an example of using directly  the `GaussIntegrator` class
 
 ```{.cpp}
 #include "TF1.h"
 #include "Math/WrappedTF1.h"
 #include "Math/GaussIntegrator.h"
- 
+
 int main()
 {
    TF1 f("Sin Function", "sin(x)", 0, TMath::Pi());
    ROOT::Math::WrappedTF1 wf1(f);
- 
+
    ROOT::Math::GaussIntegrator ig;
- 
+
    ig.SetFunction(wf1, false);
    ig.SetRelTolerance(0.001);
- 
+
    cout << ig.Integral(0, TMath::PiOver2()) << endl;
- 
+
    return 0;
 }
 ```
@@ -1443,7 +1443,7 @@ The default type is adaptive integration with singularity applying a Gauss-Kronr
 This class implements the best algorithms for numerical integration for one dimensional functions. We encourage the use it as the main option, bearing in mind that it uses code from the
 GSL library, wich is provided in the *MathMore* library of ROOT.
 
-The interface to use is the same as above. We have now the possibility to specify a different integration algorithm in the constructor of the `ROOT::Math::GSLIntegrator` class. 
+The interface to use is the same as above. We have now the possibility to specify a different integration algorithm in the constructor of the `ROOT::Math::GSLIntegrator` class.
 ```{.cpp}
 ROOT::Math::GSLIntegrator ig(ROOT::Math::Integration::kADAPTIVE, ROOT::Math::Integration::kGAUSS51);   // create the adaptive integrator with the 51 point rule
 ig.SetRelTolerance(1.E-6);  // set relative tolerance
@@ -1472,14 +1472,14 @@ iteration the subinterval with the largest estimated error is bisected. It is po
 	 is passed, the 31 points rule is used as default.
 
 * 	 `ROOT::Math::Integration::kADAPTIVESINGULAR`: based on `gsl_integration_qags`. It is an integration type which can be used in the case of the presence of singularities.It uses the
-       Gauss-Kronrod 21-point integration rule. This is the default algorithm 
+       Gauss-Kronrod 21-point integration rule. This is the default algorithm
 
 Note that when using the common `ROOT::Math::IntegratorOneDIm` class the enumeration type defining the algorithm must be defined in the namespace `ROOT::Math::IntegrationOneDim` (to distinguish from
 the multi-dimensional case) and  the rule enumeration (or its corresponding integer) can be passed in the constructor of the `ROOT::Math::IntegratorOneDIm`.
 
-### Multi-dimensional Integration 
+### Multi-dimensional Integration
 
-The multi-dimensional integration algorithm should be applied to functions with dimension larger than one. 
+The multi-dimensional integration algorithm should be applied to functions with dimension larger than one.
 Adaptive multi-dimensional integration works for low function dimension, while MC integration can be applied to higher dimensions.
 
 #### Using `ROOT::Math::IntegratorMultiDim`
@@ -1492,43 +1492,43 @@ different instance of the class using some of the available algorithms in ROOT.
 #include "Math/IntegratorMultiDim.h"
 #include "Math/Functor.h"
 
-  
-double f2(const double * x) { 
-   return x[0] + x[1]; 
-} 
 
-int testIntegrationMultiDim() { 
- 
+double f2(const double * x) {
+   return x[0] + x[1];
+}
+
+int testIntegrationMultiDim() {
+
    const double RESULT = 1.0;
    const double ERRORLIMIT = 1E-3;
    int status = 0;
- 
+
    ROOT::Math::Functor wf(&f2,2);
    double a[2] = {0,0};
    double b[2] = {1,1};
- 
-   ROOT::Math::IntegratorMultiDim ig(ROOT::Math::IntegrationMultiDim::kADAPTIVE); 
+
+   ROOT::Math::IntegratorMultiDim ig(ROOT::Math::IntegrationMultiDim::kADAPTIVE);
    ig.SetFunction(wf);
    double val = ig.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
-   ROOT::Math::IntegratorMultiDim ig2(ROOT::Math::IntegrationMultiDim::kVEGAS); 
+
+   ROOT::Math::IntegratorMultiDim ig2(ROOT::Math::IntegrationMultiDim::kVEGAS);
    ig2.SetFunction(wf);
    val = ig2.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
-   ROOT::Math::IntegratorMultiDim ig3(wf,ROOT::Math::IntegrationMultiDim::kPLAIN); 
+
+   ROOT::Math::IntegratorMultiDim ig3(wf,ROOT::Math::IntegrationMultiDim::kPLAIN);
    val = ig3.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
-   ROOT::Math::IntegratorMultiDim ig4(wf,ROOT::Math::IntegrationMultiDim::kMISER); 
+
+   ROOT::Math::IntegratorMultiDim ig4(wf,ROOT::Math::IntegrationMultiDim::kMISER);
    val = ig4.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
    status += std::fabs(val-RESULT) > ERRORLIMIT;
- 
+
    return status;
 }
 ```
@@ -1537,7 +1537,7 @@ int testIntegrationMultiDim() {
 
 Here is the types, that can be specified as enumeration and the corresponding classes
 
-| **Enumeration name**|   **Integrator class**    | 
+| **Enumeration name**|   **Integrator class**    |
 |------------------------------------  |-------------------------------|
 | `ROOT::Math::IntegratorMultiDim::kADAPTIVE`      | `ROOT::Math::AdaptiveIntegratorMultiDim`     |
 | `ROOT::Math::IntegratorMultiDim::kVEGAS`   | `ROOT::Math:::GSLMCIntegrator` |
@@ -1557,14 +1557,14 @@ opt.Print();
            Workspace size :          100000
      (max) function calls :          100000
 ```
-Depending on the algorithm, some of the control parameters might have no effect. 
+Depending on the algorithm, some of the control parameters might have no effect.
 
 #### `ROOT::Math::AdaptiveIntegratorMultiDim`
 
 This class implements an adaptive quadrature integration method for multi dimensional functions. It is described in this paper
 *Genz, A.A. Malik, An adaptive algorithm for numerical integration over an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302*.
 It is part of the *MathCore* library.
-The user can control the relative and absolute tolerance and the maximum allowed number of function evaluation. 
+The user can control the relative and absolute tolerance and the maximum allowed number of function evaluation.
 
 
 #### `ROOT::Math::GSLMCIntegrator`
@@ -1581,7 +1581,7 @@ interface, can be defined using the `ROOT::Math::IntegratorMultiDimOptions`.
 
 There are in ROOT only two classes to perform numerical derivation. One of them is in the MathCore library while the other is in the MathMore wrapping an integration function from the GSL library.
 * RichardsonDerivator: Implements the Richardson method for numerical integration. It can calculate up to the third derivative of a function.
-* GSLDerivator of *MathMore* based on GSL. 
+* GSLDerivator of *MathMore* based on GSL.
 
 ## Numerical Minimization
 
@@ -1614,7 +1614,7 @@ Here is an example where we define the function to minimize as a *lambda* functi
 
 ```{.cpp}
   ROOT::Math::Functor1D func( [](double x){ return 1 + -4*x + 1*x*x; } );
- 
+
    ROOT::Math::BrentMinimizer1D bm;
    bm.SetFunction(func, -10,10);
    bm.Minimize(10,0,0);
@@ -1626,21 +1626,21 @@ In the `Minimize` call, the maximum number of function calls, the relative and a
 
 #### `ROOT::Math::GSLMInimizer1D`
 
-This class wraps two different methods from the GSL. 
+This class wraps two different methods from the GSL.
 The algorithms which can be choosen at construction time are *GOLDENSECTION*, which is the simplest method
 but the slowest and *BRENT* (the default one) which combines the golden section with a parabolic interpolation.
 The algorithm can be chosen as a different enumeration in the constructor:
 * `ROOT::Math::Minim1D::kBRENT` for the Brent algorithm (default)
-* `ROOT::Math::Minim1D::kGOLDENSECTION` for the golden section algorithm 
+* `ROOT::Math::Minim1D::kGOLDENSECTION` for the golden section algorithm
 
 ```{.cpp}
  // this makes class with the default Brent algorithm
  ROOT::Math::GSLMinimizer1D minBrent;
-  // this make the class with the Golden Section algorithm 
+  // this make the class with the Golden Section algorithm
    ROOT::Math::GSLMinimizer1D minGold(ROOT::Math::Minim1D::kGOLDENSECTION);
 ```
 
-The interface to set the function and to minimize is the same as in the case of the `BrentMinimizer1D`. 
+The interface to set the function and to minimize is the same as in the case of the `BrentMinimizer1D`.
 
 #### Using the TF1 class
 
@@ -1650,7 +1650,7 @@ The minmization is implemented in `TF1` using the BrentMInimizer1D and available
 * `TF1::GetMinimumX`/`TF1::GetMaximumX` to find the x value corresponding at the function minimum.
 
 The interval to search for the minimum (the default is the `TF1` range),  tolerance and maximum iterations can be provided as optional parameters of the
-`TF1::GetMinimum/Maximum` functions. 
+`TF1::GetMinimum/Maximum` functions.
 
 
 ### Multi-Dimensional Minimization
@@ -1659,7 +1659,7 @@ All the algorithms for multi-dimensional minimization are implementing the `ROOT
 interface and they can be used in the same way and one can switch between minimizer at run-time.
 The minimizer concrete class can be in different ROOT libraries and they can be instantiate using the ROOT
 plug-in manager.
-More information on multi-dimensional minimization is provided in the Fitting Histogram chapter. 
+More information on multi-dimensional minimization is provided in the Fitting Histogram chapter.
 
 ## ROOT Finder Algorithms
 

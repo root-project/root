@@ -522,36 +522,34 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c");
-      switch(fLineStyle) {
-      case 1:
-         break;
-      case 2:
-         PrintStr(",dashed");
-         break;
-      case 3:
-         PrintStr(",dotted");
-         break;
-      case 4:
-         PrintStr(",dash pattern=on 2.4pt off 3.2pt on 0.8pt off 3.2pt");
-         break;
-      case 5:
-         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt");
-         break;
-      case 6:
-         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt");
-         break;
-      case 7:
-         PrintStr(",dash pattern=on 4pt off 4pt");
-         break;
-      case 8:
-         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt");
-         break;
-      case 9:
-         PrintStr(",dash pattern=on 16pt off 4pt");
-         break;
-      case 10:
-         PrintStr(",dash pattern=on 16pt off 8pt on 0.8pt off 8pt");
-         break;
+      TString spec = gStyle->GetLineStyleString(fLineStyle);
+      TString tikzSpec;
+      TString stripped = TString{spec.Strip(TString::kBoth)};
+      if (stripped.Length()) {
+         tikzSpec.Append(",dash pattern=");
+         Ssiz_t i{0}, j{0};
+         bool on{true}, iterate{true};
+
+         while (iterate){
+            j = stripped.Index(" ", 1, i, TString::kExact);
+            if (j == kNPOS){
+               iterate = false;
+               j = stripped.Length();
+            }
+
+            if (on) {
+               tikzSpec.Append("on ");
+               on = false;
+            } else {
+               tikzSpec.Append("off ");
+               on = true;
+            }
+            int num = TString{stripped(i, j - i)}.Atoi();
+            float pt = 0.2*num;
+            tikzSpec.Append(TString::Format("%.2fpt ", pt));
+            i = j + 1;
+         }
+         PrintStr(tikzSpec.Data());
       }
       PrintStr(",line width=");
       WriteReal(0.3*fLineScale*fLineWidth, kFALSE);

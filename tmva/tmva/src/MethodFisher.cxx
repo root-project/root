@@ -104,23 +104,27 @@
 
 #include "TMVA/MethodFisher.h"
 
-#include <iomanip>
-#include <cassert>
-
-#include "TMath.h"
-#include "TMatrix.h"
-#include "Riostream.h"
-
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableTransformBase.h"
+
+#include "TMath.h"
+#include "TMatrix.h"
+#include "TList.h"
+#include "Riostream.h"
+
+#include <iomanip>
+#include <cassert>
 
 REGISTER_METHOD(Fisher)
 
@@ -132,9 +136,8 @@ ClassImp(TMVA::MethodFisher);
 TMVA::MethodFisher::MethodFisher( const TString& jobName,
                                   const TString& methodTitle,
                                   DataSetInfo& dsi,
-                                  const TString& theOption,
-                                  TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kFisher, methodTitle, dsi, theOption, theTargetDir ),
+                                  const TString& theOption ) :
+   MethodBase( jobName, Types::kFisher, methodTitle, dsi, theOption),
    fMeanMatx     ( 0 ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),
@@ -153,9 +156,8 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName,
 /// constructor from weight file
 
 TMVA::MethodFisher::MethodFisher( DataSetInfo& dsi,
-                                  const TString& theWeightFile,
-                                  TDirectory* theTargetDir ) :
-   MethodBase( Types::kFisher, dsi, theWeightFile, theTargetDir ),
+                                  const TString& theWeightFile) :
+   MethodBase( Types::kFisher, dsi, theWeightFile),
    fMeanMatx     ( 0 ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),
@@ -259,6 +261,8 @@ void TMVA::MethodFisher::Train( void )
 
    // nice output
    PrintCoefficients();
+
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -555,7 +559,7 @@ const TMVA::Ranking* TMVA::MethodFisher::CreateRanking()
 
 void TMVA::MethodFisher::PrintCoefficients( void ) 
 {
-   Log() << kINFO << "Results for Fisher coefficients:" << Endl;
+   Log() << kHEADER << "Results for Fisher coefficients:" << Endl;
 
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
       Log() << kINFO << "NOTE: The coefficients must be applied to TRANFORMED variables" << Endl;

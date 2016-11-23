@@ -57,6 +57,10 @@ N: Paul Balm
 E: p.balm@nikhef.nl
 D: implemented TDatabasePDG::ConvertGeant3ToPDG
 
+N: Benjamin Bannier
+E: bbannier@gmail.com
+D: implemented THnChain
+
 N: Daniel Barna
 E: daniel.barna@cern.ch
 D: CINT install target
@@ -247,6 +251,10 @@ N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
 
+N: Andrey Erokhin
+E: Andrey.Erokhin@cern.ch
+D: ROOT::TDirectory
+
 N: Giulio Eulisse
 E: Giulio.Eulisse@cern.ch
 D: class TQtLock
@@ -338,6 +346,10 @@ D: extension of g2root, author of stressgeom
 N: Mary-Louise Gill
 E: m.l.gill+cern@gmail.com
 D: editline terminal interface
+
+N: Luca Giommi
+E: luca.giommi2@studio.unibo.it
+D: rootdrawtree and TSimpleAnalysis
 
 N: Enrico Guiraud
 E: enrico.guiraud@gmail.com
@@ -779,6 +791,10 @@ N: Benjamin Ragan-Kelley
 E: benjaminrk@gmail.com
 D: cling / Jupyter integration
 
+N: Dan Riley
+E: Daniel.Riley@cornell.edu
+D: Reduce memory/cpu waster in LZMA usage
+
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch
 D: various contributions to GUI classes
@@ -955,3 +971,12 @@ D: COL2 drawing option
 N: Georg Troska
 E: georg.troska@tu-dortmund.de
 D: Enhancement of the CANDLE drawing option
+
+N: Paul Gessinger
+E: hello@paulgessinger.com
+D: TRatioPlot class
+
+N: Pau Miquel Mir
+E: paumm2006@yahoo.es
+D: Conversion of ROOT tutorials to Jupyter notebooks
+

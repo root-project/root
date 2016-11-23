@@ -106,9 +106,18 @@
 
 #include "TMVA/MethodLikelihood.h"
 
-#include <iomanip>
-#include <vector>
-#include <cstdlib>
+#include "TMVA/Configurable.h"
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 
 #include "TMatrixD.h"
 #include "TVector.h"
@@ -120,17 +129,9 @@
 #include "TClass.h"
 #include "Riostream.h"
 
-#include "TMVA/Configurable.h"
-#include "TMVA/ClassifierFactory.h"
-#include "TMVA/DataSet.h"
-#include "TMVA/DataSetInfo.h"
-#include "TMVA/MethodBase.h"
-#include "TMVA/MsgLogger.h"
-#include "TMVA/PDF.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Types.h"
-#include "TMVA/VariableInfo.h"
+#include <iomanip>
+#include <vector>
+#include <cstdlib>
 
 REGISTER_METHOD(Likelihood)
 
@@ -142,9 +143,8 @@ ClassImp(TMVA::MethodLikelihood)
    TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
                                              const TString& methodTitle,
                                              DataSetInfo& theData,
-                                             const TString& theOption,
-                                             TDirectory* theTargetDir ) :
-   TMVA::MethodBase( jobName, Types::kLikelihood, methodTitle, theData, theOption, theTargetDir ),
+                                             const TString& theOption ) :
+   TMVA::MethodBase( jobName, Types::kLikelihood, methodTitle, theData, theOption),
    fEpsilon       ( 1.e3 * DBL_MIN ),
    fTransformLikelihoodOutput( kFALSE ),
    fDropVariable  ( 0 ),
@@ -170,9 +170,8 @@ ClassImp(TMVA::MethodLikelihood)
 /// construct likelihood references from file
 
 TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
-                                          const TString& theWeightFile,
-                                          TDirectory* theTargetDir ) :
-   TMVA::MethodBase( Types::kLikelihood, theData, theWeightFile, theTargetDir ),
+                                          const TString& theWeightFile) :
+   TMVA::MethodBase( Types::kLikelihood, theData, theWeightFile),
    fEpsilon       ( 1.e3 * DBL_MIN ),
    fTransformLikelihoodOutput( kFALSE ),
    fDropVariable  ( 0 ),
@@ -376,22 +375,21 @@ void TMVA::MethodLikelihood::Train( void )
          xmax[ivar]=xmax[ivar]+1; // make sure that all entries are included in histogram
          Int_t ixmax = TMath::Nint( xmax[ivar] );
          Int_t nbins = ixmax - ixmin;
-
-         (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     nbins, ixmin, ixmax );
-         (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", nbins, ixmin, ixmax );
+         (*fHistSig)[ivar] = new TH1F(GetMethodName()+"_"+var + "_sig", var + " signal training",     nbins, ixmin, ixmax );
+         (*fHistBgd)[ivar] = new TH1F(GetMethodName()+"_"+var + "_bgd", var + " background training", nbins, ixmin, ixmax );
       } else {
 
          UInt_t minNEvt = TMath::Min(Data()->GetNEvtSigTrain(),Data()->GetNEvtBkgdTrain());
          Int_t nbinsS = (*fPDFSig)[ivar]->GetHistNBins( minNEvt );
          Int_t nbinsB = (*fPDFBgd)[ivar]->GetHistNBins( minNEvt );
 
-         (*fHistSig)[ivar] = new TH1F( Form("%s_sig",var.Data()),
-                                       Form("%s signal training",var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
-         (*fHistBgd)[ivar] = new TH1F( Form("%s_bgd",var.Data()),
-                                       Form("%s background training",var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
+         (*fHistSig)[ivar] = new TH1F( Form("%s_%s_%s_sig",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       Form("%s_%s_%s signal training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
+         (*fHistBgd)[ivar] = new TH1F( Form("%s_%s_%s_bgd",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       Form("%s_%s_%s background training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
       }
    }
-
+   
    // ----- fill the reference histograms
    Log() << kINFO << "Filling reference histograms" << Endl;
 
@@ -446,6 +444,7 @@ void TMVA::MethodLikelihood::Train( void )
       if ((*fPDFSig)[ivar]->GetSmoothedHist() != 0) (*fHistSig_smooth)[ivar] = (*fPDFSig)[ivar]->GetSmoothedHist();
       if ((*fPDFBgd)[ivar]->GetSmoothedHist() != 0) (*fHistBgd_smooth)[ivar] = (*fPDFBgd)[ivar]->GetSmoothedHist();
    }
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -677,7 +676,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
    void* descnode = gTools().GetChild(wghtnode);
    for (UInt_t ivar=0; ivar<nvars; ivar++){
       void* pdfnode = gTools().GetChild(descnode);
-      Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
+      Log() << kDEBUG << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
       (*fPDFSig)[ivar] = new PDF( GetInputVar( ivar ) + " PDF Sig" );
@@ -702,7 +701,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-      Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
+      Log() << kDEBUG << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
       (*fPDFSig)[ivar] = new PDF(GetInputVar( ivar ) + " PDF Sig" );

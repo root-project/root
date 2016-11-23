@@ -39,12 +39,10 @@ namespace TMVA {
       MethodC50(const TString &jobName,
                 const TString &methodTitle,
                 DataSetInfo &theData,
-                const TString &theOption = "",
-                TDirectory *theTargetDir = NULL);
+                const TString &theOption = "");
 
       MethodC50(DataSetInfo &dsi,
-                const TString &theWeightFile,
-                TDirectory *theTargetDir = NULL);
+                const TString &theWeightFile);
 
 
       ~MethodC50(void);

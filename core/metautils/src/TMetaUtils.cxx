@@ -43,6 +43,7 @@
 #include "clang/Lex/Preprocessor.h"
 
 #include "clang/Sema/Sema.h"
+#include "clang/Sema/SemaDiagnostic.h"
 
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
@@ -200,8 +201,7 @@ static const clang::FieldDecl *GetDataMemberFromAll(const clang::CXXRecordDecl &
 
 static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Specifier,
                                               clang::CXXBasePath &Path,
-                                              void *Name
-)
+                                              const char *Name)
 {
    clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
 
@@ -215,7 +215,7 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
       clang::NamedDecl* NonConstFD = const_cast<clang::FieldDecl*>(found);
       clang::NamedDecl** BaseSpecFirstHack
       = reinterpret_cast<clang::NamedDecl**>(NonConstFD);
-      Path.Decls = clang::DeclContextLookupResult(BaseSpecFirstHack, 1);
+      Path.Decls = clang::DeclContextLookupResult(llvm::ArrayRef<clang::NamedDecl*>(BaseSpecFirstHack, 1));
       return true;
    }
    //
@@ -244,9 +244,8 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(const clang::CXXRecor
 {
    clang::CXXBasePaths Paths;
    Paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&cl));
-   if (cl.lookupInBases(&CXXRecordDecl__FindOrdinaryMember,
-      (void*) const_cast<char*>(what),
-                        Paths) )
+   if (cl.lookupInBases([=](const clang::CXXBaseSpecifier *Specifier, clang::CXXBasePath &Path) {
+            return CXXRecordDecl__FindOrdinaryMember(Specifier, Path, what);}, Paths))
    {
       clang::CXXBasePaths::paths_iterator iter = Paths.begin();
       if (iter != Paths.end()) {
@@ -672,8 +671,6 @@ ROOT::TMetaUtils::TNormalizedCtxtImpl::TNormalizedCtxtImpl(const cling::LookupHe
 
 using TNCtxtFullQual = ROOT::TMetaUtils::TNormalizedCtxtImpl;
 TNCtxtFullQual::TemplPtrIntMap_t TNCtxtFullQual::fTemplatePtrArgsToKeepMap=TNCtxtFullQual::TemplPtrIntMap_t{};
-// Initialisation of the atomic flag used to build a lightweight spinlock
-// std::atomic_flag TNCtxtFullQual::fCanAccessNargsToKeep = ATOMIC_FLAG_INIT;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -737,7 +734,7 @@ bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, cla
    // Here we might not have an active transaction to handle
    // the caused instantiation decl.
    cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
-   return S.RequireCompleteType( Loc, Type , 0);
+   return S.RequireCompleteType(Loc, Type, clang::diag::err_incomplete_type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1914,7 +1911,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             methodTCP="Insert";
             break;
       }
-      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classname.c_str() << " >()));" << "\n";
+      // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs sincelast
+      // they imply copies and therefore do not compile.
+      auto classNameForIO = TClassEdit::GetNameForIO(classname);
+      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
 
       needCollectionProxy = true;
    }
@@ -2648,7 +2648,7 @@ clang::RecordDecl *ROOT::TMetaUtils::GetUnderlyingRecordDecl(clang::QualType typ
    const clang::Type *rawtype = ROOT::TMetaUtils::GetUnderlyingType(type);
 
    if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
-      // not an ojbect.
+      // not an object.
       return 0;
    }
    return rawtype->getAsCXXRecordDecl();
@@ -2680,7 +2680,9 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    }
 
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer",interp)) {
-      if (cl.RootFlag()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
+      // The !genreflex is there to prevent genreflex to select collections which are data members
+      // This is to maintain the behaviour of ROOT5 and ROOT6 up to 6.07 included.
+      if (cl.RootFlag() && !isGenreflex) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
          (*WriteStreamerFunc)(cl, interp, normCtxt, dictStream, isGenreflex || cl.RequestStreamerInfo());
       } else
@@ -2688,7 +2690,8 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    } else {
       ROOT::TMetaUtils::Info(0, "Class %s: Streamer() not declared\n", fullname.c_str());
 
-      if (cl.RequestStreamerInfo()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
+      // See comment above about the !isGenreflex
+      if (cl.RequestStreamerInfo() && !isGenreflex) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
    }
    ROOT::TMetaUtils::WriteAuxFunctions(dictStream, cl, decl, interp, ctorTypes, normCtxt);
 }
@@ -3197,7 +3200,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
                                 ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
-                                0/*SuggModule*/, false /*SkipCache*/,
+                                0/*RequestingModule*/, 0/*SuggestedModule*/,
+                                false /*SkipCache*/,
+                                false /*BuildSystemModule*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
@@ -3240,7 +3245,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                     true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                     0/*Searchpath*/, 0/*RelPath*/,
-                                    0/*SuggModule*/);
+                                    0/*RequestingModule*/, 0/*SuggestedModule*/);
    }
 
    if (!FELong) {
@@ -3265,7 +3270,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                0/*Searchpath*/,
-                               0/*RelPath*/, 0/*SuggModule*/) == FELong) {
+                               0/*RelPath*/,
+                               0/*RequestingModule*/, 0 /*SuggestedModule*/) == FELong) {
          return trailingPart;
       }
    }
@@ -3555,6 +3561,58 @@ static bool isTypeWithDefault(const clang::NamedDecl* nDecl)
 
 }
 
+static void KeepNParams(clang::QualType& normalizedType,
+                        const clang::QualType& vanillaType,
+                        const cling::Interpreter& interp,
+                        const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt);
+
+// Returns true if normTArg might have changed.
+static bool RecurseKeepNParams(clang::TemplateArgument &normTArg,
+                               const clang::TemplateArgument &tArg,
+                               const cling::Interpreter& interp,
+                               const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
+                               const clang::ASTContext& astCtxt)
+{
+   using namespace ROOT::TMetaUtils;
+   using namespace clang;
+
+   // Once we know there is no more default parameter, we can run through to the end
+   // and/or recurse in the template parameter packs.
+
+   // If this is a type,
+   // we need first of all to recurse: this argument may need to be manipulated
+   if (tArg.getKind() == clang::TemplateArgument::Type) {
+      QualType thisNormQualType = normTArg.getAsType();
+      QualType thisArgQualType = tArg.getAsType();
+      KeepNParams(thisNormQualType,
+                  thisArgQualType,
+                  interp,
+                  normCtxt);
+      normTArg = TemplateArgument(thisNormQualType);
+      return (thisNormQualType != thisArgQualType);
+   } else if (normTArg.getKind() == clang::TemplateArgument::Pack) {
+      assert( tArg.getKind() == clang::TemplateArgument::Pack );
+
+      SmallVector<TemplateArgument, 2> desArgs;
+      bool mightHaveChanged = true;
+      for (auto I = normTArg.pack_begin(), E = normTArg.pack_end(),
+           FI = tArg.pack_begin(), FE = tArg.pack_end();
+           I != E && FI != FE; ++I, ++FI)
+      {
+         TemplateArgument pack_arg(*I);
+         mightHaveChanged |= RecurseKeepNParams(pack_arg, *FI, interp, normCtxt, astCtxt);
+         desArgs.push_back(pack_arg);
+      }
+      if (mightHaveChanged) {
+         ASTContext &mutableCtx( const_cast<ASTContext&>(astCtxt) );
+         normTArg = TemplateArgument::CreatePackCopy(mutableCtx, desArgs);
+      }
+      return mightHaveChanged;
+   }
+   return false;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// This function allows to manipulate the number of arguments in the type
 /// of a template specialisation.
@@ -3629,7 +3687,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    }
 
    // The canonical decl does not necessarily have the template default arguments.
-   // Need to walk through the redecl chain to find it (we know tehre will be no
+   // Need to walk through the redecl chain to find it (we know there will be no
    // inconsistencies, at least)
    const clang::ClassTemplateDecl* ctdWithDefaultArgs = ctd;
    for (const RedeclarableTemplateDecl* rd: ctdWithDefaultArgs->redecls()) {
@@ -3672,21 +3730,22 @@ static void KeepNParams(clang::QualType& normalizedType,
    bool mightHaveChanged = false;
 
    // becomes true when a parameter has a value equal to its default
-   for (int index = 0; index != nArgs; ++index) {
-      const NamedDecl* tParPtr = tPars.getParam(index);
-      if (!tParPtr) Error("KeepNParams",
-                          "The parameter number %s is null.\n",
-                          index);
+   for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
+      const NamedDecl* tParPtr = tPars.getParam(formal);
+      if (!tParPtr) {
+         Error("KeepNParams", "The parameter number %s is null.\n", formal);
+         continue;
+      }
 
-      const TemplateArgument& tArg = tArgs.get(index);
       // Stop if the normalized TemplateSpecializationType has less arguments than
       // the one index is pointing at.
       // We piggy back on the AddDefaultParameters routine basically.
-      if (index == nNormArgs) break;
+      if (formal == nNormArgs || inst == nNormArgs) break;
 
-      TemplateArgument NormTArg(normalizedTst->getArgs()[index]);
+      const TemplateArgument& tArg = tArgs.get(formal);
+      TemplateArgument normTArg(normalizedTst->getArgs()[inst]);
 
-      bool shouldKeepArg = nArgsToKeep < 0 || index < nArgsToKeep;
+      bool shouldKeepArg = nArgsToKeep < 0 || inst < nArgsToKeep;
       if (isStdDropDefault) shouldKeepArg = false;
 
       // Nothing to do here: either this parameter has no default, or we have to keep it.
@@ -3695,20 +3754,22 @@ static void KeepNParams(clang::QualType& normalizedType,
       // they are non default. This makes this feature UNUSABLE for cases like std::vector,
       // where 2 different entities would have the same name if an allocator different from
       // the default one is by chance used.
-      if (!isTypeWithDefault(tParPtr) || shouldKeepArg){
-         // If this is a type,
-         // we need first of all to recurse: this argument may need to be manipulated
-         if (tArg.getKind() == clang::TemplateArgument::Type){
-            QualType thisNormQualType = NormTArg.getAsType();
-            QualType thisArgQualType = tArg.getAsType();
-            KeepNParams(thisNormQualType,
-                        thisArgQualType,
-                        interp,
-                        normCtxt);
-            mightHaveChanged |= (thisNormQualType != thisArgQualType);
-            NormTArg = TemplateArgument(thisNormQualType);
+      if (!isTypeWithDefault(tParPtr) || shouldKeepArg) {
+         if ( tParPtr->isTemplateParameterPack() ) {
+            // This is the last template parameter in the template declaration
+            // but it is signaling that there can be an arbitrary number of arguments
+            // in the template instance.  So to avoid inadvertenly dropping those
+            // arguments we just process all remaining argument and exit the main loop.
+            for( ; inst != nNormArgs; ++inst) {
+               normTArg = normalizedTst->getArgs()[inst];
+               mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
+               argsToKeep.push_back(normTArg);
+            }
+            // Done.
+            break;
          }
-         argsToKeep.push_back(NormTArg);
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
+         argsToKeep.push_back(normTArg);
          continue;
       } else {
          if (!isStdDropDefault) {
@@ -3731,7 +3792,8 @@ static void KeepNParams(clang::QualType& normalizedType,
          equal = areEqualValues(tArg, *tParPtr);
       }
       if (!equal) {
-         argsToKeep.push_back(NormTArg);
+         mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
+         argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
       }
@@ -3847,6 +3909,64 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string,clang::QualType>
+ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
+                                   const cling::Interpreter &interpreter,
+                                   const TNormalizedCtxt &normCtxt,
+                                   TClassEdit::EModType mode)
+{
+   std::string thisTypeName;
+   GetNormalizedName(thisTypeName, thisType, interpreter, normCtxt );
+   bool hasChanged;
+   auto thisTypeNameForIO = TClassEdit::GetNameForIO(thisTypeName, mode, &hasChanged);
+   if (!hasChanged) return std::make_pair(thisTypeName,thisType);
+
+   if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+        "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
+   }
+
+   auto& lookupHelper = interpreter.getLookupHelper();
+
+   const clang::Type* typePtrForIO;
+   lookupHelper.findScope(thisTypeNameForIO,
+                          cling::LookupHelper::DiagSetting::NoDiagnostics,
+                          &typePtrForIO);
+
+   // This should never happen
+   if (!typePtrForIO) {
+      ROOT::TMetaUtils::Fatal("ROOT::TMetaUtils::GetTypeForIO",
+                              "Type not found: %s.",thisTypeNameForIO.c_str());
+   }
+
+   clang::QualType typeForIO(typePtrForIO,0);
+
+   // Check if this is a class. Indeed it could well be a POD
+   if (!typeForIO->isRecordType()) {
+      return std::make_pair(thisTypeNameForIO,typeForIO);
+   }
+
+   auto thisDeclForIO = typeForIO->getAsCXXRecordDecl();
+   if (!thisDeclForIO) {
+      ROOT::TMetaUtils::Error("ROOT::TMetaUtils::GetTypeForIO",
+       "The type for IO corresponding to %s is %s and it could not be found in the AST as class.\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
+      return std::make_pair(thisTypeName,thisType);
+   }
+
+   return std::make_pair(thisTypeNameForIO,typeForIO);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+clang::QualType ROOT::TMetaUtils::GetTypeForIO(const clang::QualType& thisType,
+                                               const cling::Interpreter &interpreter,
+                                               const TNormalizedCtxt &normCtxt,
+                                               TClassEdit::EModType mode)
+{
+   return GetNameTypeForIO(thisType, interpreter, normCtxt, mode).second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
 {
@@ -3919,7 +4039,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
                                  llvm::ArrayRef<std::pair<const clang::FileEntry *,
                                     const clang::DirectoryEntry *>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0/*SuggModule*/, false /*SkipCache*/,
+                                 0 /*RequestingModule*/, 0 /*SuggestedModule*/,
+                                 false /*SkipCache*/, false /*BuildSystemModule*/,
                                  false /*OpenFile*/, true /*CacheFailures*/);
       if (!hdrFileEntry) {
          std::cerr << "TMetaUtils::declareModuleMap: "
@@ -4869,7 +4990,7 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   interp.forwardDeclare(theTransaction, sema, llvmOstr, true, nullptr, ignoreFiles);
+   interp.forwardDeclare(theTransaction, sema.getPreprocessor(), sema.getASTContext(), llvmOstr, true, nullptr, ignoreFiles);
    llvmOstr.flush();
    return newFwdDecl;
 }

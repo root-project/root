@@ -33,13 +33,16 @@ public:
   void ReaderInitialized(ASTReader *Reader) override;
   void IdentifierRead(serialization::IdentID ID,
                       IdentifierInfo *II) override;
+  void MacroRead(serialization::MacroID ID, MacroInfo *MI) override;
   void TypeRead(serialization::TypeIdx Idx, QualType T) override;
   void DeclRead(serialization::DeclID ID, const Decl *D) override;
   void SelectorRead(serialization::SelectorID iD, Selector Sel) override;
   void MacroDefinitionRead(serialization::PreprocessedEntityID,
-                           MacroDefinition *MD) override;
+                           MacroDefinitionRecord *MD) override;
+  void ModuleRead(serialization::SubmoduleID ID, Module *Mod) override;
+
 private:
-  std::vector<ASTDeserializationListener*> Listeners;
+  std::vector<ASTDeserializationListener *> Listeners;
 };
 
 MultiplexASTDeserializationListener::MultiplexASTDeserializationListener(
@@ -57,6 +60,12 @@ void MultiplexASTDeserializationListener::IdentifierRead(
     serialization::IdentID ID, IdentifierInfo *II) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->IdentifierRead(ID, II);
+}
+
+void MultiplexASTDeserializationListener::MacroRead(
+    serialization::MacroID ID, MacroInfo *MI) {
+  for (auto &Listener : Listeners)
+    Listener->MacroRead(ID, MI);
 }
 
 void MultiplexASTDeserializationListener::TypeRead(
@@ -78,9 +87,15 @@ void MultiplexASTDeserializationListener::SelectorRead(
 }
 
 void MultiplexASTDeserializationListener::MacroDefinitionRead(
-    serialization::PreprocessedEntityID ID, MacroDefinition *MD) {
+    serialization::PreprocessedEntityID ID, MacroDefinitionRecord *MD) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->MacroDefinitionRead(ID, MD);
+}
+
+void MultiplexASTDeserializationListener::ModuleRead(
+    serialization::SubmoduleID ID, Module *Mod) {
+  for (auto &Listener : Listeners)
+    Listener->ModuleRead(ID, Mod);
 }
 
 // This ASTMutationListener forwards its notifications to a set of
@@ -98,16 +113,23 @@ public:
                                const VarTemplateSpecializationDecl *D) override;
   void AddedCXXTemplateSpecialization(const FunctionTemplateDecl *TD,
                                       const FunctionDecl *D) override;
+  void ResolvedExceptionSpec(const FunctionDecl *FD) override;
   void DeducedReturnType(const FunctionDecl *FD, QualType ReturnType) override;
+  void ResolvedOperatorDelete(const CXXDestructorDecl *DD,
+                              const FunctionDecl *Delete) override;
   void CompletedImplicitDefinition(const FunctionDecl *D) override;
   void StaticDataMemberInstantiated(const VarDecl *D) override;
+  void DefaultArgumentInstantiated(const ParmVarDecl *D) override;
   void AddedObjCCategoryToInterface(const ObjCCategoryDecl *CatD,
                                     const ObjCInterfaceDecl *IFD) override;
-  void AddedObjCPropertyInClassExtension(const ObjCPropertyDecl *Prop,
-                                    const ObjCPropertyDecl *OrigProp,
-                                    const ObjCCategoryDecl *ClassExt) override;
+  void FunctionDefinitionInstantiated(const FunctionDecl *D) override;
   void DeclarationMarkedUsed(const Decl *D) override;
   void DeclarationMarkedOpenMPThreadPrivate(const Decl *D) override;
+  void DeclarationMarkedOpenMPDeclareTarget(const Decl *D,
+                                            const Attr *Attr) override;
+  void RedefinedHiddenDefinition(const NamedDecl *D, Module *M) override;
+  void AddedAttributeToRecord(const Attr *Attr, 
+                              const RecordDecl *Record) override;
 
 private:
   std::vector<ASTMutationListener*> Listeners;
@@ -149,10 +171,20 @@ void MultiplexASTMutationListener::AddedCXXTemplateSpecialization(
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->AddedCXXTemplateSpecialization(TD, D);
 }
+void MultiplexASTMutationListener::ResolvedExceptionSpec(
+    const FunctionDecl *FD) {
+  for (auto &Listener : Listeners)
+    Listener->ResolvedExceptionSpec(FD);
+}
 void MultiplexASTMutationListener::DeducedReturnType(const FunctionDecl *FD,
                                                      QualType ReturnType) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->DeducedReturnType(FD, ReturnType);
+}
+void MultiplexASTMutationListener::ResolvedOperatorDelete(
+    const CXXDestructorDecl *DD, const FunctionDecl *Delete) {
+  for (auto *L : Listeners)
+    L->ResolvedOperatorDelete(DD, Delete);
 }
 void MultiplexASTMutationListener::CompletedImplicitDefinition(
                                                         const FunctionDecl *D) {
@@ -164,18 +196,21 @@ void MultiplexASTMutationListener::StaticDataMemberInstantiated(
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->StaticDataMemberInstantiated(D);
 }
+void MultiplexASTMutationListener::DefaultArgumentInstantiated(
+                                                         const ParmVarDecl *D) {
+  for (size_t i = 0, e = Listeners.size(); i != e; ++i)
+    Listeners[i]->DefaultArgumentInstantiated(D);
+}
 void MultiplexASTMutationListener::AddedObjCCategoryToInterface(
                                                  const ObjCCategoryDecl *CatD,
                                                  const ObjCInterfaceDecl *IFD) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->AddedObjCCategoryToInterface(CatD, IFD);
 }
-void MultiplexASTMutationListener::AddedObjCPropertyInClassExtension(
-                                             const ObjCPropertyDecl *Prop,
-                                             const ObjCPropertyDecl *OrigProp,
-                                             const ObjCCategoryDecl *ClassExt) {
-  for (size_t i = 0, e = Listeners.size(); i != e; ++i)
-    Listeners[i]->AddedObjCPropertyInClassExtension(Prop, OrigProp, ClassExt);
+void MultiplexASTMutationListener::FunctionDefinitionInstantiated(
+    const FunctionDecl *D) {
+  for (auto &Listener : Listeners)
+    Listener->FunctionDefinitionInstantiated(D);
 }
 void MultiplexASTMutationListener::DeclarationMarkedUsed(const Decl *D) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
@@ -185,6 +220,23 @@ void MultiplexASTMutationListener::DeclarationMarkedOpenMPThreadPrivate(
     const Decl *D) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->DeclarationMarkedOpenMPThreadPrivate(D);
+}
+void MultiplexASTMutationListener::DeclarationMarkedOpenMPDeclareTarget(
+    const Decl *D, const Attr *Attr) {
+  for (auto *L : Listeners)
+    L->DeclarationMarkedOpenMPDeclareTarget(D, Attr);
+}
+void MultiplexASTMutationListener::RedefinedHiddenDefinition(const NamedDecl *D,
+                                                             Module *M) {
+  for (auto *L : Listeners)
+    L->RedefinedHiddenDefinition(D, M);
+}
+  
+void MultiplexASTMutationListener::AddedAttributeToRecord(
+                                                    const Attr *Attr, 
+                                                    const RecordDecl *Record) {
+  for (auto *L : Listeners)
+    L->AddedAttributeToRecord(Attr, Record);
 }
 
 }  // end namespace clang
@@ -227,9 +279,9 @@ bool MultiplexConsumer::HandleTopLevelDecl(DeclGroupRef D) {
   return Continue;
 }
 
-void MultiplexConsumer::HandleInlineMethodDefinition(CXXMethodDecl *D) {
+void MultiplexConsumer::HandleInlineFunctionDefinition(FunctionDecl *D) {
   for (auto &Consumer : Consumers)
-    Consumer->HandleInlineMethodDefinition(D);
+    Consumer->HandleInlineFunctionDefinition(D);
 }
 
 void MultiplexConsumer::HandleCXXStaticMemberVarInstantiation(VarDecl *VD) {
@@ -272,24 +324,14 @@ void MultiplexConsumer::HandleImplicitImportDecl(ImportDecl *D) {
     Consumer->HandleImplicitImportDecl(D);
 }
 
-void MultiplexConsumer::HandleLinkerOptionPragma(llvm::StringRef Opts) {
-  for (auto &Consumer : Consumers)
-    Consumer->HandleLinkerOptionPragma(Opts);
-}
-
-void MultiplexConsumer::HandleDetectMismatch(llvm::StringRef Name, llvm::StringRef Value) {
-  for (auto &Consumer : Consumers)
-    Consumer->HandleDetectMismatch(Name, Value);
-}
-
-void MultiplexConsumer::HandleDependentLibrary(llvm::StringRef Lib) {
-  for (auto &Consumer : Consumers)
-    Consumer->HandleDependentLibrary(Lib);
-}
-
 void MultiplexConsumer::CompleteTentativeDefinition(VarDecl *D) {
   for (auto &Consumer : Consumers)
     Consumer->CompleteTentativeDefinition(D);
+}
+
+void MultiplexConsumer::AssignInheritanceModel(CXXRecordDecl *RD) {
+  for (auto &Consumer : Consumers)
+    Consumer->AssignInheritanceModel(RD);
 }
 
 void MultiplexConsumer::HandleVTable(CXXRecordDecl *RD) {
@@ -308,6 +350,13 @@ ASTDeserializationListener *MultiplexConsumer::GetASTDeserializationListener() {
 void MultiplexConsumer::PrintStats() {
   for (auto &Consumer : Consumers)
     Consumer->PrintStats();
+}
+
+bool MultiplexConsumer::shouldSkipFunctionBody(Decl *D) {
+  bool Skip = true;
+  for (auto &Consumer : Consumers)
+    Skip = Skip && Consumer->shouldSkipFunctionBody(D);
+  return Skip;
 }
 
 void MultiplexConsumer::InitializeSema(Sema &S) {

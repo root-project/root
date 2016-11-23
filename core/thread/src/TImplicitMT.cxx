@@ -21,6 +21,7 @@
 #include "TError.h"
 #include "TThread.h"
 
+#include <atomic>
 #include "tbb/task_scheduler_init.h"
 
 
@@ -30,15 +31,27 @@ static tbb::task_scheduler_init &GetScheduler()
    return scheduler;
 }
 
-static bool &GetIMTFlag()
+static bool &GetImplicitMTFlag()
 {
    static bool enabled = false;
    return enabled;
 }
 
+static std::atomic_int &GetParBranchProcessingCount()
+{
+   static std::atomic_int count(0);
+   return count;
+}
+
+static std::atomic_int &GetParTreeProcessingCount()
+{
+   static std::atomic_int count(0);
+   return count;
+}
+
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
-   if (!GetIMTFlag()) {
+   if (!GetImplicitMTFlag()) {
       if (!GetScheduler().is_active()) {
          TThread::Initialize();
 
@@ -47,7 +60,7 @@ extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 
          GetScheduler().initialize(numthreads);
       }
-      GetIMTFlag() = true;
+      GetImplicitMTFlag() = true;
    }
    else {
       ::Warning("ROOT_TImplicitMT_EnableImplicitMT", "Implicit multi-threading is already enabled");
@@ -56,8 +69,8 @@ extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 
 extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 {
-   if (GetIMTFlag()) {
-      GetIMTFlag() = false;
+   if (GetImplicitMTFlag()) {
+      GetImplicitMTFlag() = false;
    }
    else {
       ::Warning("ROOT_TImplicitMT_DisableImplicitMT", "Implicit multi-threading is already disabled");
@@ -66,6 +79,35 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 
 extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 {
-   return GetIMTFlag();
+   return GetImplicitMTFlag();
 };
 
+extern "C" void ROOT_TImplicitMT_EnableParBranchProcessing()
+{
+   ++GetParBranchProcessingCount();
+};
+
+extern "C" void ROOT_TImplicitMT_DisableParBranchProcessing()
+{
+   --GetParBranchProcessingCount();
+};
+
+extern "C" bool ROOT_TImplicitMT_IsParBranchProcessingEnabled()
+{
+   return GetParBranchProcessingCount() > 0;
+};
+
+extern "C" void ROOT_TImplicitMT_EnableParTreeProcessing()
+{
+   ++GetParTreeProcessingCount();
+};
+
+extern "C" void ROOT_TImplicitMT_DisableParTreeProcessing()
+{
+   --GetParTreeProcessingCount();
+};
+
+extern "C" bool ROOT_TImplicitMT_IsParTreeProcessingEnabled()
+{
+   return GetParTreeProcessingCount() > 0;
+};

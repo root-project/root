@@ -40,7 +40,7 @@ mpfe.calculate() ;           // Start calculation of slow-func in remote process
 Double_t val = mpfe.getVal() // Wait for remote calculation to finish and retrieve value
 ~~~
 
-For general multiprocessing in ROOT, please refer to the TProcPool class.
+For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 
 **/
 

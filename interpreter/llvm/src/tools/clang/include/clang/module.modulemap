@@ -12,6 +12,7 @@ module Clang_AST {
   umbrella "AST"
 
   textual header "AST/BuiltinTypes.def"
+  textual header "AST/OperationKinds.def"
   textual header "AST/TypeLocNodes.def"
   textual header "AST/TypeNodes.def"
 
@@ -25,21 +26,23 @@ module Clang_Basic {
   umbrella "Basic"
 
   textual header "Basic/BuiltinsAArch64.def"
-  textual header "Basic/BuiltinsARM64.def"
+  textual header "Basic/BuiltinsAMDGPU.def"
   textual header "Basic/BuiltinsARM.def"
   textual header "Basic/Builtins.def"
   textual header "Basic/BuiltinsHexagon.def"
+  textual header "Basic/BuiltinsLe64.def"
   textual header "Basic/BuiltinsMips.def"
   textual header "Basic/BuiltinsNEON.def"
   textual header "Basic/BuiltinsNVPTX.def"
   textual header "Basic/BuiltinsPPC.def"
-  textual header "Basic/BuiltinsR600.def"
+  textual header "Basic/BuiltinsSystemZ.def"
+  textual header "Basic/BuiltinsWebAssembly.def"
   textual header "Basic/BuiltinsX86.def"
   textual header "Basic/BuiltinsXCore.def"
-  textual header "Basic/BuiltinsLe64.def"
   textual header "Basic/DiagnosticOptions.def"
   textual header "Basic/LangOptions.def"
   textual header "Basic/OpenCLExtensions.def"
+  textual header "Basic/OpenCLImageTypes.def"
   textual header "Basic/OpenMPKinds.def"
   textual header "Basic/OperatorKinds.def"
   textual header "Basic/Sanitizers.def"
@@ -89,6 +92,9 @@ module Clang_Frontend {
   textual header "Frontend/LangStandards.def"
 
   module * { export * }
+
+  // FIXME: This violates layers.
+  exclude header "Frontend/PCHContainerOperations.h"
 }
 
 module Clang_FrontendTool { requires cplusplus umbrella "FrontendTool" module * { export * } }
@@ -99,13 +105,35 @@ module Clang_Rewrite { requires cplusplus umbrella "Rewrite" module * { export *
 module Clang_Sema { requires cplusplus umbrella "Sema" module * { export * } }
 module Clang_Serialization { requires cplusplus umbrella "Serialization" module * { export * } }
 
-module Clang_StaticAnalyzer {
+module Clang_StaticAnalyzer_Core {
   requires cplusplus
-  umbrella "StaticAnalyzer"
+  umbrella "StaticAnalyzer/Core"
 
   textual header "StaticAnalyzer/Core/Analyses.def"
+  textual header "StaticAnalyzer/Core/PathSensitive/SVals.def"
+  textual header "StaticAnalyzer/Core/PathSensitive/Symbols.def"
+  textual header "StaticAnalyzer/Core/PathSensitive/Regions.def"
 
   module * { export * }
 }
 
-module Clang_Tooling { requires cplusplus umbrella "Tooling" module * { export * } }
+module Clang_StaticAnalyzer_Checkers {
+  requires cplusplus
+  umbrella "StaticAnalyzer/Checkers"
+  module * { export * }
+}
+
+module Clang_StaticAnalyzer_Frontend {
+  requires cplusplus
+  umbrella "StaticAnalyzer/Frontend"
+  module * { export * }
+}
+
+module Clang_Tooling {
+  requires cplusplus umbrella "Tooling" module * { export * }
+  // FIXME: Exclude this header to avoid pulling all of the AST matchers
+  // library into clang-format. Due to inline key functions in the headers,
+  // importing the AST matchers library gives a link dependency on the AST
+  // matchers (and thus the AST), which clang-format should not have.
+  exclude header "Tooling/RefactoringCallbacks.h"
+}

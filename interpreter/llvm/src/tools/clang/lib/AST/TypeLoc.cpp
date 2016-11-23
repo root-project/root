@@ -19,6 +19,8 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace clang;
 
+static const unsigned TypeLocMaxDataAlign = llvm::alignOf<void *>();
+
 //===----------------------------------------------------------------------===//
 // TypeLoc Implementation
 //===----------------------------------------------------------------------===//
@@ -78,11 +80,11 @@ unsigned TypeLoc::getFullDataSizeForType(QualType Ty) {
   while (!TyLoc.isNull()) {
     unsigned Align = getLocalAlignmentForType(TyLoc.getType());
     MaxAlign = std::max(Align, MaxAlign);
-    Total = llvm::RoundUpToAlignment(Total, Align);
+    Total = llvm::alignTo(Total, Align);
     Total += TypeSizer().Visit(TyLoc);
     TyLoc = TyLoc.getNextTypeLoc();
   }
-  Total = llvm::RoundUpToAlignment(Total, MaxAlign);
+  Total = llvm::alignTo(Total, MaxAlign);
   return Total;
 }
 
@@ -125,6 +127,46 @@ void TypeLoc::initializeImpl(ASTContext &Context, TypeLoc TL,
   }
 }
 
+namespace {
+  class TypeLocCopier : public TypeLocVisitor<TypeLocCopier> {
+    TypeLoc Source;
+  public:
+    TypeLocCopier(TypeLoc source) : Source(source) { }
+
+#define ABSTRACT_TYPELOC(CLASS, PARENT)
+#define TYPELOC(CLASS, PARENT)                          \
+    void Visit##CLASS##TypeLoc(CLASS##TypeLoc dest) {   \
+      dest.copyLocal(Source.castAs<CLASS##TypeLoc>());  \
+    }
+#include "clang/AST/TypeLocNodes.def"
+  };
+}
+
+
+void TypeLoc::copy(TypeLoc other) {
+  assert(getFullDataSize() == other.getFullDataSize());
+
+  // If both data pointers are aligned to the maximum alignment, we
+  // can memcpy because getFullDataSize() accurately reflects the
+  // layout of the data.
+  if (reinterpret_cast<uintptr_t>(Data) ==
+          llvm::alignTo(reinterpret_cast<uintptr_t>(Data),
+                        TypeLocMaxDataAlign) &&
+      reinterpret_cast<uintptr_t>(other.Data) ==
+          llvm::alignTo(reinterpret_cast<uintptr_t>(other.Data),
+                        TypeLocMaxDataAlign)) {
+    memcpy(Data, other.Data, getFullDataSize());
+    return;
+  }
+
+  // Copy each of the pieces.
+  TypeLoc TL(getType(), Data);
+  do {
+    TypeLocCopier(other).Visit(TL);
+    other = other.getNextTypeLoc();
+  } while ((TL = TL.getNextTypeLoc()));
+}
+
 SourceLocation TypeLoc::getBeginLoc() const {
   TypeLoc Cur = *this;
   TypeLoc LeftMost = Cur;
@@ -150,7 +192,7 @@ SourceLocation TypeLoc::getBeginLoc() const {
       Cur = Cur.getNextTypeLoc();
       continue;
     default:
-      if (!Cur.getLocalSourceRange().getBegin().isInvalid())
+      if (Cur.getLocalSourceRange().getBegin().isValid())
         LeftMost = Cur;
       Cur = Cur.getNextTypeLoc();
       if (Cur.isNull())
@@ -278,6 +320,7 @@ TypeSpecifierType BuiltinTypeLoc::getWrittenTypeSpec() const {
   case BuiltinType::Float:
   case BuiltinType::Double:
   case BuiltinType::LongDouble:
+  case BuiltinType::Float128:
     llvm_unreachable("Builtin type needs extra local data!");
     // Fall through, if the impossible happens.
       
@@ -291,15 +334,17 @@ TypeSpecifierType BuiltinTypeLoc::getWrittenTypeSpec() const {
   case BuiltinType::ObjCId:
   case BuiltinType::ObjCClass:
   case BuiltinType::ObjCSel:
-  case BuiltinType::OCLImage1d:
-  case BuiltinType::OCLImage1dArray:
-  case BuiltinType::OCLImage1dBuffer:
-  case BuiltinType::OCLImage2d:
-  case BuiltinType::OCLImage2dArray:
-  case BuiltinType::OCLImage3d:
+#define IMAGE_TYPE(ImgType, Id, SingletonId, Access, Suffix) \
+  case BuiltinType::Id:
+#include "clang/Basic/OpenCLImageTypes.def"
   case BuiltinType::OCLSampler:
   case BuiltinType::OCLEvent:
+  case BuiltinType::OCLClkEvent:
+  case BuiltinType::OCLQueue:
+  case BuiltinType::OCLNDRange:
+  case BuiltinType::OCLReserveID:
   case BuiltinType::BuiltinFn:
+  case BuiltinType::OMPArraySection:
     return TST_unspecified;
   }
 
@@ -310,6 +355,54 @@ TypeLoc TypeLoc::IgnoreParensImpl(TypeLoc TL) {
   while (ParenTypeLoc PTL = TL.getAs<ParenTypeLoc>())
     TL = PTL.getInnerLoc();
   return TL;
+}
+
+SourceLocation TypeLoc::findNullabilityLoc() const {
+  if (auto attributedLoc = getAs<AttributedTypeLoc>()) {
+    if (attributedLoc.getAttrKind() == AttributedType::attr_nullable ||
+        attributedLoc.getAttrKind() == AttributedType::attr_nonnull ||
+        attributedLoc.getAttrKind() == AttributedType::attr_null_unspecified)
+      return attributedLoc.getAttrNameLoc();
+  }
+
+  return SourceLocation();
+}
+
+TypeLoc TypeLoc::findExplicitQualifierLoc() const {
+  // Qualified types.
+  if (auto qual = getAs<QualifiedTypeLoc>())
+    return qual;
+
+  TypeLoc loc = IgnoreParens();
+
+  // Attributed types.
+  if (auto attr = loc.getAs<AttributedTypeLoc>()) {
+    if (attr.isQualifier()) return attr;
+    return attr.getModifiedLoc().findExplicitQualifierLoc();
+  }
+
+  // C11 _Atomic types.
+  if (auto atomic = loc.getAs<AtomicTypeLoc>()) {
+    return atomic;
+  }
+
+  return TypeLoc();
+}
+
+void ObjCObjectTypeLoc::initializeLocal(ASTContext &Context, 
+                                        SourceLocation Loc) {
+  setHasBaseTypeAsWritten(true);
+  setTypeArgsLAngleLoc(Loc);
+  setTypeArgsRAngleLoc(Loc);
+  for (unsigned i = 0, e = getNumTypeArgs(); i != e; ++i) {
+    setTypeArgTInfo(i, 
+                   Context.getTrivialTypeSourceInfo(
+                     getTypePtr()->getTypeArgsAsWritten()[i], Loc));
+  }
+  setProtocolLAngleLoc(Loc);
+  setProtocolRAngleLoc(Loc);
+  for (unsigned i = 0, e = getNumProtocols(); i != e; ++i)
+    setProtocolLoc(i, Loc);
 }
 
 void TypeOfTypeLoc::initializeLocal(ASTContext &Context,

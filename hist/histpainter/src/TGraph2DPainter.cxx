@@ -157,7 +157,7 @@ TGraph2DPainter::~TGraph2DPainter()
 
 void TGraph2DPainter::FindTriangles()
 {
-   if (fDelaunay) { 
+   if (fDelaunay) {
       fDelaunay->FindAllTriangles();
       fNdt    = fDelaunay->GetNdt();
       fXN     = fDelaunay->GetXN();
@@ -239,7 +239,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
    // making the contour.
 
    // old implementation
-   if (fDelaunay) { 
+   if (fDelaunay) {
       for(it=0; it<fNdt; it++) {
          t[0] = fPTried[it];
          t[1] = fNTried[it];
@@ -250,7 +250,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          x0   = fX[p0]; x2 = fX[p0];
          y0   = fY[p0]; y2 = fY[p0];
          z0   = fZ[p0]; z2 = fZ[p0];
-         
+
          // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
          // After this z0 < z1 < z2
          i0=0, i1=0, i2=0;
@@ -698,7 +698,7 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    Int_t i, fillColor, ncolors, theColor0, theColor2;
 
    Int_t p[3];
-   if (fDelaunay) { 
+   if (fDelaunay) {
       p[0]=t[0]-1;
       p[1]=t[1]-1;
       p[2]=t[2]-1;
@@ -917,13 +917,18 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    Double_t *zm = new Double_t[fNpoints];
    Double_t hzmin = gCurrentHist->GetMinimum();
    Double_t hzmax = gCurrentHist->GetMaximum();
+
+   Double_t Xeps = (fXmax-fXmin)*0.0001;
+   Double_t Yeps = (fYmax-fYmin)*0.0001;
+   Double_t Zeps = (hzmax-hzmin)*0.0001;
+
    Int_t    npd = 0;
    for (it=0; it<fNpoints; it++) {
       xm[it] = 0;
       ym[it] = 0;
-      if(fX[it] < fXmin || fX[it] > fXmax) continue;
-      if(fY[it] < fYmin || fY[it] > fYmax) continue;
-      if(fZ[it] < hzmin || fZ[it] > hzmax) continue;
+      if(fXmin - fX[it] > Xeps || fX[it] - fXmax > Xeps) continue;
+      if(fYmin - fY[it] > Yeps || fY[it] - fYmax > Yeps) continue;
+      if(hzmin - fZ[it] > Zeps || fZ[it] - hzmax > Zeps) continue;
       temp1[0] = fX[it];
       temp1[1] = fY[it];
       temp1[2] = fZ[it];
@@ -1038,7 +1043,7 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
 {
    if (fDelaunay)
       PaintTriangles_old(option);
-   else if (fDelaunay2D) 
+   else if (fDelaunay2D)
       PaintTriangles_new(option);
 }
 

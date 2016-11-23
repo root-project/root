@@ -38,67 +38,35 @@ static MachineModuleInfoMachO &getMachOMMI(AsmPrinter &AP) {
 static MCSymbol *GetSymbolFromOperand(const MachineOperand &MO, AsmPrinter &AP){
   const TargetMachine &TM = AP.TM;
   Mangler *Mang = AP.Mang;
-  const DataLayout *DL = TM.getDataLayout();
+  const DataLayout &DL = AP.getDataLayout();
   MCContext &Ctx = AP.OutContext;
-  bool isDarwin = Triple(TM.getTargetTriple()).isOSDarwin();
 
   SmallString<128> Name;
   StringRef Suffix;
-  if (MO.getTargetFlags() == PPCII::MO_PLT_OR_STUB) {
-    if (isDarwin)
-      Suffix = "$stub";
-  } else if (MO.getTargetFlags() & PPCII::MO_NLP_FLAG)
+  if (MO.getTargetFlags() & PPCII::MO_NLP_FLAG)
     Suffix = "$non_lazy_ptr";
 
   if (!Suffix.empty())
-    Name += DL->getPrivateGlobalPrefix();
-
-  unsigned PrefixLen = Name.size();
+    Name += DL.getPrivateGlobalPrefix();
 
   if (!MO.isGlobal()) {
     assert(MO.isSymbol() && "Isn't a symbol reference");
-    Mang->getNameWithPrefix(Name, MO.getSymbolName());
+    Mangler::getNameWithPrefix(Name, MO.getSymbolName(), DL);
   } else {
     const GlobalValue *GV = MO.getGlobal();
     TM.getNameWithPrefix(Name, GV, *Mang);
   }
 
-  unsigned OrigLen = Name.size() - PrefixLen;
-
   Name += Suffix;
-  MCSymbol *Sym = Ctx.GetOrCreateSymbol(Name.str());
-  StringRef OrigName = StringRef(Name).substr(PrefixLen, OrigLen);
-
-  // If the target flags on the operand changes the name of the symbol, do that
-  // before we return the symbol.
-  if (MO.getTargetFlags() == PPCII::MO_PLT_OR_STUB && isDarwin) {
-    MachineModuleInfoImpl::StubValueTy &StubSym =
-      getMachOMMI(AP).getFnStubEntry(Sym);
-    if (StubSym.getPointer())
-      return Sym;
-    
-    if (MO.isGlobal()) {
-      StubSym =
-      MachineModuleInfoImpl::
-      StubValueTy(AP.getSymbol(MO.getGlobal()),
-                  !MO.getGlobal()->hasInternalLinkage());
-    } else {
-      StubSym =
-      MachineModuleInfoImpl::
-      StubValueTy(Ctx.GetOrCreateSymbol(OrigName), false);
-    }
-    return Sym;
-  }
+  MCSymbol *Sym = Ctx.getOrCreateSymbol(Name);
 
   // If the symbol reference is actually to a non_lazy_ptr, not to the symbol,
   // then add the suffix.
   if (MO.getTargetFlags() & PPCII::MO_NLP_FLAG) {
     MachineModuleInfoMachO &MachO = getMachOMMI(AP);
-    
-    MachineModuleInfoImpl::StubValueTy &StubSym =
-      (MO.getTargetFlags() & PPCII::MO_NLP_HIDDEN_FLAG) ? 
-         MachO.getHiddenGVStubEntry(Sym) : MachO.getGVStubEntry(Sym);
-    
+
+    MachineModuleInfoImpl::StubValueTy &StubSym = MachO.getGVStubEntry(Sym);
+
     if (!StubSym.getPointer()) {
       assert(MO.isGlobal() && "Extern symbol not handled yet");
       StubSym = MachineModuleInfoImpl::
@@ -137,43 +105,37 @@ static MCOperand GetSymbolRef(const MachineOperand &MO, const MCSymbol *Symbol,
     case PPCII::MO_TLS:
       RefKind = MCSymbolRefExpr::VK_PPC_TLS;
       break;
-    case PPCII::MO_TLSGD:
-      RefKind = MCSymbolRefExpr::VK_PPC_TLSGD;
-      break;
-    case PPCII::MO_TLSLD:
-      RefKind = MCSymbolRefExpr::VK_PPC_TLSLD;
-      break;
   }
 
-  if (MO.getTargetFlags() == PPCII::MO_PLT_OR_STUB && !isDarwin)
+  if (MO.getTargetFlags() == PPCII::MO_PLT)
     RefKind = MCSymbolRefExpr::VK_PLT;
 
-  const MCExpr *Expr = MCSymbolRefExpr::Create(Symbol, RefKind, Ctx);
+  const MCExpr *Expr = MCSymbolRefExpr::create(Symbol, RefKind, Ctx);
 
   if (!MO.isJTI() && MO.getOffset())
-    Expr = MCBinaryExpr::CreateAdd(Expr,
-                                   MCConstantExpr::Create(MO.getOffset(), Ctx),
+    Expr = MCBinaryExpr::createAdd(Expr,
+                                   MCConstantExpr::create(MO.getOffset(), Ctx),
                                    Ctx);
 
   // Subtract off the PIC base if required.
   if (MO.getTargetFlags() & PPCII::MO_PIC_FLAG) {
     const MachineFunction *MF = MO.getParent()->getParent()->getParent();
     
-    const MCExpr *PB = MCSymbolRefExpr::Create(MF->getPICBaseSymbol(), Ctx);
-    Expr = MCBinaryExpr::CreateSub(Expr, PB, Ctx);
+    const MCExpr *PB = MCSymbolRefExpr::create(MF->getPICBaseSymbol(), Ctx);
+    Expr = MCBinaryExpr::createSub(Expr, PB, Ctx);
   }
 
   // Add ha16() / lo16() markers if required.
   switch (access) {
     case PPCII::MO_LO:
-      Expr = PPCMCExpr::CreateLo(Expr, isDarwin, Ctx);
+      Expr = PPCMCExpr::createLo(Expr, isDarwin, Ctx);
       break;
     case PPCII::MO_HA:
-      Expr = PPCMCExpr::CreateHa(Expr, isDarwin, Ctx);
+      Expr = PPCMCExpr::createHa(Expr, isDarwin, Ctx);
       break;
   }
 
-  return MCOperand::CreateExpr(Expr);
+  return MCOperand::createExpr(Expr);
 }
 
 void llvm::LowerPPCMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
@@ -190,13 +152,16 @@ void llvm::LowerPPCMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
       llvm_unreachable("unknown operand type");
     case MachineOperand::MO_Register:
       assert(!MO.getSubReg() && "Subregs should be eliminated!");
-      MCOp = MCOperand::CreateReg(MO.getReg());
+      assert(MO.getReg() > PPC::NoRegister &&
+             MO.getReg() < PPC::NUM_TARGET_REGS &&
+             "Invalid register for this target!");
+      MCOp = MCOperand::createReg(MO.getReg());
       break;
     case MachineOperand::MO_Immediate:
-      MCOp = MCOperand::CreateImm(MO.getImm());
+      MCOp = MCOperand::createImm(MO.getImm());
       break;
     case MachineOperand::MO_MachineBasicBlock:
-      MCOp = MCOperand::CreateExpr(MCSymbolRefExpr::Create(
+      MCOp = MCOperand::createExpr(MCSymbolRefExpr::create(
                                       MO.getMBB()->getSymbol(), AP.OutContext));
       break;
     case MachineOperand::MO_GlobalAddress:

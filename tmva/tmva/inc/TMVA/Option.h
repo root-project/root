@@ -94,6 +94,9 @@ namespace TMVA {
    protected:
 
       static MsgLogger& Log();
+   protected:
+       
+       ClassDef(OptionBase,1);
    };
       
    // ---------------------------------------------------------------------------

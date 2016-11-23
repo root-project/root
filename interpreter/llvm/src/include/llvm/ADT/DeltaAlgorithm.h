@@ -68,7 +68,7 @@ private:
   /// \return - True on success.
   bool Search(const changeset_ty &Changes, const changesetlist_ty &Sets,
               changeset_ty &Res);
-              
+
 protected:
   /// UpdatedSearchState - Callback used when the search state changes.
   virtual void UpdatedSearchState(const changeset_ty &Changes,
@@ -76,6 +76,8 @@ protected:
 
   /// ExecuteOneTest - Execute a single test predicate on the change set \p S.
   virtual bool ExecuteOneTest(const changeset_ty &S) = 0;
+
+  DeltaAlgorithm& operator=(const DeltaAlgorithm&) = default;
 
 public:
   virtual ~DeltaAlgorithm();

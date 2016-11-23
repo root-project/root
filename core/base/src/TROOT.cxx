@@ -373,7 +373,7 @@ namespace Internal {
 
    static Func_t GetSymInLibThread(const char *funcname)
    {
-      const static bool loadSuccess = 0 <= gSystem->Load("libThread");
+      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libThread");
       if (loadSuccess) {
          if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
             return sym;
@@ -382,6 +382,103 @@ namespace Internal {
          }
       }
       return nullptr;
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
+   /// Globally enables the parallel branch processing, which is a case of
+   /// implicit multi-threading (IMT) in ROOT, activating the required locks.
+   /// This IMT use case, implemented in TTree::GetEntry, spawns a task for
+   /// each branch of the tree. Therefore, a task takes care of the reading,
+   /// decompression and deserialisation of a given branch.
+   void EnableParBranchProcessing()
+   {
+#ifdef R__USE_IMT
+      if (!IsImplicitMTEnabled())
+         EnableImplicitMT();
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParBranchProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("EnableParBranchProcessing", "Cannot enable parallel branch processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
+   /// Globally disables the IMT use case of parallel branch processing,
+   /// deactivating the corresponding locks.
+   void DisableParBranchProcessing()
+   {
+#ifdef R__USE_IMT
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParBranchProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("DisableParBranchProcessing", "Cannot disable parallel branch processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
+   /// Returns true if parallel branch processing is enabled.
+   Bool_t IsParBranchProcessingEnabled()
+   {
+#ifdef R__USE_IMT
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Globally enables the parallel tree processing, which is a case of
+   /// implicit multi-threading in ROOT, activating the required locks.
+   /// This IMT use case, implemented in TTreeProcessor::Process, receives a user
+   /// function and applies it to subranges of the tree, which correspond to its
+   /// clusters. Hence, for every cluster, a task is spawned to potentially
+   /// process it in parallel with the other clusters.
+   void EnableParTreeProcessing()
+   {
+#ifdef R__USE_IMT
+      if (!IsImplicitMTEnabled())
+         EnableImplicitMT();
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParTreeProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("EnableParTreeProcessing", "Cannot enable parallel tree processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
+   /// Globally disables the IMT use case of parallel branch processing,
+   /// deactivating the corresponding locks.
+   void DisableParTreeProcessing()
+   {
+#ifdef R__USE_IMT
+      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParTreeProcessing");
+      if (sym)
+         sym();
+#else
+      ::Warning("DisableParTreeProcessing", "Cannot disable parallel tree processing, please build ROOT with -Dimt=ON");
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns true if parallel tree processing is enabled.
+   Bool_t IsParTreeProcessingEnabled()
+   {
+#ifdef R__USE_IMT
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
+      if (sym)
+         return sym();
+      else
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
    }
 
 } // end of Internal sub namespace
@@ -421,6 +518,7 @@ namespace Internal {
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
+      EnableThreadSafety();
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);

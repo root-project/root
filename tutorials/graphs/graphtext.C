@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook
 /// Draw a graph with text attached to each point.
 /// The text is drawn in a TExec function attached to the TGraph,
 /// therefore if the text is

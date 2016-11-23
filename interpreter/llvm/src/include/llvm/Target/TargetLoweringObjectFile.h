@@ -29,22 +29,28 @@ namespace llvm {
   class MCSymbol;
   class MCSymbolRefExpr;
   class MCStreamer;
+  class MCValue;
   class ConstantExpr;
   class GlobalValue;
   class TargetMachine;
 
 class TargetLoweringObjectFile : public MCObjectFileInfo {
   MCContext *Ctx;
-  const DataLayout *DL;
 
   TargetLoweringObjectFile(
-    const TargetLoweringObjectFile&) LLVM_DELETED_FUNCTION;
-  void operator=(const TargetLoweringObjectFile&) LLVM_DELETED_FUNCTION;
+    const TargetLoweringObjectFile&) = delete;
+  void operator=(const TargetLoweringObjectFile&) = delete;
+
+protected:
+  bool SupportIndirectSymViaGOTPCRel;
+  bool SupportGOTPCRelWithOffset;
 
 public:
   MCContext &getContext() const { return *Ctx; }
 
-  TargetLoweringObjectFile() : MCObjectFileInfo(), Ctx(nullptr), DL(nullptr) {}
+  TargetLoweringObjectFile()
+      : MCObjectFileInfo(), Ctx(nullptr), SupportIndirectSymViaGOTPCRel(false),
+        SupportGOTPCRelWithOffset(true) {}
 
   virtual ~TargetLoweringObjectFile();
 
@@ -53,15 +59,8 @@ public:
   /// implementations a chance to set up their default sections.
   virtual void Initialize(MCContext &ctx, const TargetMachine &TM);
 
-  virtual void emitPersonalityValue(MCStreamer &Streamer,
-                                    const TargetMachine &TM,
+  virtual void emitPersonalityValue(MCStreamer &Streamer, const DataLayout &TM,
                                     const MCSymbol *Sym) const;
-
-  /// Extract the dependent library name from a linker option string. Returns
-  /// StringRef() if the option does not specify a library.
-  virtual StringRef getDepLibFromLinkerOpt(StringRef LinkerOption) const {
-    return StringRef();
-  }
 
   /// Emit the module flags that the platform cares about.
   virtual void emitModuleFlags(MCStreamer &Streamer,
@@ -70,8 +69,10 @@ public:
 
   /// Given a constant with the SectionKind, return a section that it should be
   /// placed in.
-  virtual const MCSection *getSectionForConstant(SectionKind Kind,
-                                                 const Constant *C) const;
+  virtual MCSection *getSectionForConstant(const DataLayout &DL,
+                                           SectionKind Kind,
+                                           const Constant *C,
+                                           unsigned &Align) const;
 
   /// Classify the specified global variable into a set of target independent
   /// categories embodied in SectionKind.
@@ -81,23 +82,31 @@ public:
   /// This method computes the appropriate section to emit the specified global
   /// variable or function definition. This should not be passed external (or
   /// available externally) globals.
-  const MCSection *SectionForGlobal(const GlobalValue *GV,
-                                    SectionKind Kind, Mangler &Mang,
-                                    const TargetMachine &TM) const;
+  MCSection *SectionForGlobal(const GlobalValue *GV, SectionKind Kind,
+                              Mangler &Mang, const TargetMachine &TM) const;
 
   /// This method computes the appropriate section to emit the specified global
   /// variable or function definition. This should not be passed external (or
   /// available externally) globals.
-  const MCSection *SectionForGlobal(const GlobalValue *GV,
-                                    Mangler &Mang,
-                                    const TargetMachine &TM) const {
+  MCSection *SectionForGlobal(const GlobalValue *GV, Mangler &Mang,
+                              const TargetMachine &TM) const {
     return SectionForGlobal(GV, getKindForGlobal(GV, TM), Mang, TM);
   }
+
+  virtual void getNameWithPrefix(SmallVectorImpl<char> &OutName,
+                                 const GlobalValue *GV, Mangler &Mang,
+                                 const TargetMachine &TM) const;
+
+  virtual MCSection *getSectionForJumpTable(const Function &F, Mangler &Mang,
+                                            const TargetMachine &TM) const;
+
+  virtual bool shouldPutJumpTableInFunctionSection(bool UsesLabelDifference,
+                                                   const Function &F) const;
 
   /// Targets should implement this method to assign a section to globals with
   /// an explicit section specfied. The implementation of this method can
   /// assume that GV->hasSection() is true.
-  virtual const MCSection *
+  virtual MCSection *
   getExplicitSectionGlobal(const GlobalValue *GV, SectionKind Kind,
                            Mangler &Mang, const TargetMachine &TM) const = 0;
 
@@ -131,13 +140,13 @@ public:
   getTTypeReference(const MCSymbolRefExpr *Sym, unsigned Encoding,
                     MCStreamer &Streamer) const;
 
-  virtual const MCSection *getStaticCtorSection(unsigned Priority,
-                                                const MCSymbol *KeySym) const {
+  virtual MCSection *getStaticCtorSection(unsigned Priority,
+                                          const MCSymbol *KeySym) const {
     return StaticCtorSection;
   }
 
-  virtual const MCSection *getStaticDtorSection(unsigned Priority,
-                                                const MCSymbol *KeySym) const {
+  virtual MCSection *getStaticDtorSection(unsigned Priority,
+                                          const MCSymbol *KeySym) const {
     return StaticDtorSection;
   }
 
@@ -146,15 +155,39 @@ public:
   virtual const MCExpr *getDebugThreadLocalSymbol(const MCSymbol *Sym) const;
 
   virtual const MCExpr *
-  getExecutableRelativeSymbol(const ConstantExpr *CE, Mangler &Mang,
-                              const TargetMachine &TM) const {
+  lowerRelativeReference(const GlobalValue *LHS, const GlobalValue *RHS,
+                         Mangler &Mang, const TargetMachine &TM) const {
     return nullptr;
   }
 
+  /// \brief Target supports replacing a data "PC"-relative access to a symbol
+  /// through another symbol, by accessing the later via a GOT entry instead?
+  bool supportIndirectSymViaGOTPCRel() const {
+    return SupportIndirectSymViaGOTPCRel;
+  }
+
+  /// \brief Target GOT "PC"-relative relocation supports encoding an additional
+  /// binary expression with an offset?
+  bool supportGOTPCRelWithOffset() const {
+    return SupportGOTPCRelWithOffset;
+  }
+
+  /// \brief Get the target specific PC relative GOT entry relocation
+  virtual const MCExpr *getIndirectSymViaGOTPCRel(const MCSymbol *Sym,
+                                                  const MCValue &MV,
+                                                  int64_t Offset,
+                                                  MachineModuleInfo *MMI,
+                                                  MCStreamer &Streamer) const {
+    return nullptr;
+  }
+
+  virtual void emitLinkerFlagsForGlobal(raw_ostream &OS, const GlobalValue *GV,
+                                        const Mangler &Mang) const {}
+
 protected:
-  virtual const MCSection *
-  SelectSectionForGlobal(const GlobalValue *GV, SectionKind Kind,
-                         Mangler &Mang, const TargetMachine &TM) const = 0;
+  virtual MCSection *SelectSectionForGlobal(const GlobalValue *GV,
+                                            SectionKind Kind, Mangler &Mang,
+                                            const TargetMachine &TM) const = 0;
 };
 
 } // end namespace llvm

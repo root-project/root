@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -js
 /// Example of generating quasi-random numbers
 ///
 /// \macro_image

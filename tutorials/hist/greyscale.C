@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Create grey scale of `200 x 200` boxes.
 ///
 /// \macro_image
@@ -7,6 +8,7 @@
 ///
 /// \author Olivier Couet
 
+void greyscale()
 {
    TCanvas *c = new TCanvas("grey", "Grey Scale", 500, 500);
    c->SetBorderMode(0);

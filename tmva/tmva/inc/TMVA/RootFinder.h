@@ -45,12 +45,13 @@
 namespace TMVA {
 
    class MsgLogger;
-
+   class MethodBase;
+   
    class RootFinder : public TObject {
 
    public:
 
-      RootFinder( Double_t (*rootVal)( Double_t ),
+      RootFinder( MethodBase *method,
                   Double_t rootMin, Double_t rootMax,
                   Int_t    maxIterations = 100, 
                   Double_t absTolerance  = 0.0 );
@@ -66,8 +67,8 @@ namespace TMVA {
       Int_t    fMaxIter;  // maximum number of iterations
       Double_t fAbsTol;   // absolute tolerance deviation
 
-      // function pointer
-      Double_t (*fGetRootVal)( Double_t );
+      // Methods pointer
+      MethodBase *fMethod;
 
       mutable MsgLogger* fLogger;   //! message logger
       MsgLogger& Log() const { return *fLogger; }                       

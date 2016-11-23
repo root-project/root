@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
-include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # Explicit to avoid circular dependencies mathcore <--> hist :-(
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # auto_ptr...
 
 set(MATHCORE_HEADERS TRandom.h
   TRandom1.h TRandom2.h TRandom3.h TKDTree.h TKDTreeBinning.h TStatistic.h
@@ -15,14 +15,17 @@ set(MATHCORE_HEADERS TRandom.h
   Math/BrentMethods.h Math/BrentMinimizer1D.h Math/BrentRootFinder.h Math/DistSampler.h
   Math/DistSamplerOptions.h Math/GoFTest.h Math/SpecFuncMathCore.h Math/DistFuncMathCore.h
   Math/ChebyshevPol.h Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h Math/Delaunay2D.h
-  Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdRandomEngines.h
-  Math/MersenneTwisterEngine.h Math/MixMaxEngine.h 
+  Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdEngine.h
+  Math/MersenneTwisterEngine.h Math/MixMaxEngine.h   TRandomGen.h Math/LCGEngine.h
 )
 
 ROOT_GENERATE_DICTIONARY(G__MathCore   TComplex.h TMath.h ${MATHCORE_HEADERS} Fit/*.h MODULE MathCore LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-add_definitions(-DUSE_ROOT_ERROR )
+add_definitions(-DUSE_ROOT_ERROR)
 ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler false positive warning
+ROOT_ADD_C_FLAG(_flags -Wno-maybe-uninitialized)  # Avoid what it seems a compiler false positive warning
+ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)
+
 set_source_files_properties(src/triangle.c COMPILE_FLAGS "${_flags}")
 
 ROOT_LINKER_LIBRARY(MathCore *.cxx *.c G__MathCore.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)

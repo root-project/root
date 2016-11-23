@@ -64,8 +64,8 @@ done
 
 # Add ad hoc headers which are not in dictionaries and are not stl
 # Can not be put in a dictionary until they properly handle ROOT/*
-echo '#include "ROOT/TSeq.h"' >> $allheaders
-echo '#include "ROOT/StringConv.h"' >> $allheaders
+echo '#include "ROOT/TSeq.hxx"' >> $allheaders
+echo '#include "ROOT/StringConv.hxx"' >> $allheaders
 
 if [ "x$1" = "x--" ]; then
     shift
@@ -75,6 +75,8 @@ while ! [ "x$1" = "x" ]; do
     case $1 in
         -Wno*) echo "$1" >> $cppflags.tmp ;;
         -W*) ;;
+        -x*) ;;
+        -ax*) ;;
         *) echo "$1" >> $cppflags.tmp ;;
     esac
     shift
@@ -85,7 +87,7 @@ for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx
     dirname=`echo $dirname | sed -e 's,/src$,,' -e 's,^[.]/,,' ` # to get foo/
 
     case $dirname in
-        graf2d/qt | math/fftw | math/foam | math/fumili | math/mlp | math/quadp | math/splot | math/unuran | math/vc | math/vdt | tmva/rmva ) continue;;
+        graf2d/qt | math/fftw | math/foam | math/fumili | math/mlp | math/quadp | math/splot | math/unuran | math/vdt | tmva/rmva ) continue;;
 
         interpreter/* | core/* | io/io | net/net | math/* | hist/* | tree/* | graf2d/* | graf3d/ftgl | graf3d/g3d | graf3d/gl | gui/gui | gui/fitpanel | rootx | bindings/pyroot | roofit/* | tmva/* | main) ;;
 

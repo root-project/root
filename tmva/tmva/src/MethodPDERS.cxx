@@ -70,27 +70,27 @@
 
 #include "TMVA/MethodPDERS.h"
 
-#include <assert.h>
-#include <algorithm>
-
-#include "TBuffer.h"
-#include "TFile.h"
-#include "TObjString.h"
-#include "TMath.h"
-
 #include "TMVA/BinaryTree.h"
 #include "TMVA/BinarySearchTree.h"
+#include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Event.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/RootFinder.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/Types.h"
 
-//FIXME: Is that really needed?
-#define TMVA_MethodPDERS__countByHand__Debug__
-#undef  TMVA_MethodPDERS__countByHand__Debug__
+#include "ThreadLocalStorage.h"
+#include "TBuffer.h"
+#include "TFile.h"
+#include "TObjString.h"
+#include "TMath.h"
+
+#include <assert.h>
+#include <algorithm>
 
 namespace TMVA {
    const Bool_t MethodPDERS_UseFindRoot = kFALSE;
@@ -107,9 +107,8 @@ ClassImp(TMVA::MethodPDERS)
    TMVA::MethodPDERS::MethodPDERS( const TString& jobName,
                                    const TString& methodTitle,
                                    DataSetInfo& theData,
-                                   const TString& theOption,
-                                   TDirectory* theTargetDir ) :
-   MethodBase( jobName, Types::kPDERS, methodTitle, theData, theOption, theTargetDir ),
+                                   const TString& theOption) :
+   MethodBase( jobName, Types::kPDERS, methodTitle, theData, theOption),
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
@@ -138,9 +137,8 @@ ClassImp(TMVA::MethodPDERS)
 /// construct MethodPDERS through from file
 
 TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
-                                const TString& theWeightFile,
-                                TDirectory* theTargetDir ) :
-   MethodBase( Types::kPDERS, theData, theWeightFile, theTargetDir ),
+                                const TString& theWeightFile) :
+   MethodBase( Types::kPDERS, theData, theWeightFile),
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
@@ -362,6 +360,7 @@ void TMVA::MethodPDERS::Train( void )
    SetVolumeElement();
 
    fInitializedVolumeEle = kTRUE;
+   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -611,7 +610,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          fHelpVolume = volume;
 
          UpdateThis(); // necessary update of static pointer
-         RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 200, 10 );
+         RootFinder rootFinder( this, 0.01, 50, 200, 10 );
          Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
          volume->ScaleInterval( scale );

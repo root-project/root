@@ -85,6 +85,27 @@ namespace {
    };
    const size_t ROOTTabCompletion::fgLineBufSize = 16*1024;
 
+   class TClingTabCompletion: public TabCompletion {
+   public:
+      TClingTabCompletion() {}
+      virtual ~TClingTabCompletion() {}
+
+      TClingTabCompletion(const TClingTabCompletion&) = delete;
+      TClingTabCompletion& operator=(const TClingTabCompletion&) = delete;
+
+      // Returns false on error
+      bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
+                    EditorRange& r /*out*/,
+                    std::vector<std::string>& completions /*out*/) {
+         gInterpreter->CodeComplete(line.GetText(), cursor, completions);
+         // FIXME: handle single completion by completing "line"
+         // FIXME: adjust r's update range, for now:
+         // redraw whole line, incl prompt
+         r.fEdit.Extend(Range::AllWithPrompt());
+         r.fDisplay.Extend(Range::AllWithPrompt());
+         return true;
+      }
+   };
 
    // Helper to define the lifetime of the TextInput singleton.
    class TextInputHolder {

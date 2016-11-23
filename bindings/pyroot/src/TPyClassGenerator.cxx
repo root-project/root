@@ -38,6 +38,8 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    if ( ! load || ! name )
       return 0;
 
+   PyROOT::PyGILRAII thePyGILRAII;
+   
 // first, check whether the name is of a module
    PyObject* modules = PySys_GetObject( const_cast<char*>("modules") );
    PyObject* pyname = PyROOT_PyUnicode_FromString( name );

@@ -42,6 +42,8 @@
 #include <assert.h>
 #include <cstdlib>
 
+#include "TString.h"
+
 #include "TMVA/BinarySearchTreeNode.h"
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"

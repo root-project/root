@@ -390,6 +390,8 @@ void TMVA::SVWorkingSet::Train(UInt_t nMaxIter)
    std::vector<TMVA::SVEvent*>::iterator idIter;
 
    while ((numChanged > 0) || (examineAll > 0)) {
+     if (fIPyCurrentIter) *fIPyCurrentIter = numit;
+     if (fExitFromTraining && *fExitFromTraining) break;
       numChanged = 0;
       if (examineAll) {
          for (idIter = fInputData->begin(); idIter!=fInputData->end(); idIter++){

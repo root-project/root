@@ -51,7 +51,7 @@ namespace Math {
    and \f[\psi(s) = s \ln \kappa + (s+\beta^2 \kappa)
                \cdot \left ( \int \limits_{0}^{1}
                \frac{1 - e^{\frac{-st}{\kappa}}}{t} \, dt- \gamma \right )
-               - \kappa \, e^{\frac{-s}{\kappa}}\f$.
+               - \kappa \, e^{\frac{-s}{\kappa}}\f].
    \f$ \gamma = 0.5772156649\dots\f$ is Euler's constant.
 
    The parameters are:

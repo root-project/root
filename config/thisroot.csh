@@ -111,6 +111,14 @@ if ($?old_rootsys) then
                                  -e "s;${old_rootsys}:;;g"   \
                                  -e "s;${old_rootsys};;g"`
    endif
+   if ($?JUPYTER_PATH) then
+      setenv JUPYTER_PATH `echo $JUPYTER_PATH | \
+                             sed -e "s;:$old_rootsys/etc/notebook:;:;g" \
+                                 -e "s;:$old_rootsys/etc/notebook;;g"   \
+                                 -e "s;$old_rootsys/etc/notebook:;;g"   \
+                                 -e "s;$old_rootsys/etc/notebook;;g"`
+   endif
+
 endif
 
 
@@ -167,6 +175,12 @@ if ($?CMAKE_PREFIX_PATH) then
    setenv CMAKE_PREFIX_PATH ${ROOTSYS}:$CMAKE_PREFIX_PATH
 else
    setenv CMAKE_PREFIX_PATH ${ROOTSYS}
+endif
+
+if ($?JUPYTER_PATH) then
+   setenv JUPYTER_PATH ${ROOTSYS}/etc/notebook:$JUPYTER_PATH
+else
+   setenv JUPYTER_PATH ${ROOTSYS}/etc/notebook
 endif
 
 endif # if ("$thisroot" != "")

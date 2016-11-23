@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \notebook -nodraw
 /// This macro can be used to get aggregate information on the size
 /// take on disk or in memory by the various branches in a TTree.
 ///
@@ -34,8 +34,10 @@
 ///   Its sub-branch "fTriggerBits" takes 1699 bytes on disk
 ///   Its sub-branch "fIsValid" takes 366 bytes on disk
 /// ~~~
+///
 /// \macro_code
-/// \author xxx
+///
+/// \author
 
 #include "TTree.h"
 #include "TBranch.h"
@@ -46,6 +48,9 @@
 
 Long64_t GetTotalSize(TBranch * b, bool ondisk, bool inclusive);
 Long64_t GetBasketSize(TBranch * b, bool ondisk, bool inclusive);
+
+void printSizes() {
+}
 
 Long64_t GetBasketSize(TObjArray * branches, bool ondisk, bool inclusive) {
    Long64_t result = 0;
@@ -166,4 +171,3 @@ void printTreeSummary(TTree *t)
    }
 }
 
-void printSizes() {}

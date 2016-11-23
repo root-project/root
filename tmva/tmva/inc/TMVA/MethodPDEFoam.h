@@ -106,12 +106,10 @@ namespace TMVA {
       MethodPDEFoam( const TString& jobName,
                      const TString& methodTitle,
                      DataSetInfo& dsi,
-                     const TString& theOption = "PDEFoam",
-                     TDirectory* theTargetDir = 0 );
+                     const TString& theOption = "PDEFoam");
 
       MethodPDEFoam( DataSetInfo& dsi,
-                     const TString& theWeightFile,
-                     TDirectory* theTargetDir = NULL );
+                     const TString& theWeightFile);
 
       virtual ~MethodPDEFoam( void );
 

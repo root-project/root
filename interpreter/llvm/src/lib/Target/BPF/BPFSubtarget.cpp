@@ -25,7 +25,7 @@ using namespace llvm;
 
 void BPFSubtarget::anchor() {}
 
-BPFSubtarget::BPFSubtarget(const std::string &TT, const std::string &CPU,
+BPFSubtarget::BPFSubtarget(const Triple &TT, const std::string &CPU,
                            const std::string &FS, const TargetMachine &TM)
     : BPFGenSubtargetInfo(TT, CPU, FS), InstrInfo(), FrameLowering(*this),
-      TLInfo(TM), TSInfo(TM.getDataLayout()) {}
+      TLInfo(TM, *this) {}

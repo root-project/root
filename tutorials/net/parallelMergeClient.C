@@ -1,3 +1,21 @@
+/// \file
+/// \ingroup tutorial_net
+/// Client program which creates and fills 2 histograms and a TTree.
+/// Every 1000000 fills the histograms and TTree is send to the server which displays the histogram.
+///
+/// To run this demo do the following:
+///   - Open at least 2 windows
+///   - Start ROOT in the first windows
+///   - Execute in the first window: .x fastMergeServer.C
+///   - Execute in the other windows: root.exe -b -l -q .x treeClient.C
+///     (You can put it in the background if wanted).
+/// If you want to run the hserv.C on a different host, just change
+/// "localhost" in the TSocket ctor below to the desired hostname.
+///
+/// \macro_code
+///
+/// \authors Fons Rademakers, Philippe Canal
+
 #include "TMessage.h"
 #include "TBenchmark.h"
 #include "TSocket.h"
@@ -9,20 +27,6 @@
 
 void parallelMergeClient()
 {
-   // Client program which creates and fills 2 histograms and a TTree.
-   // Every 1000000 fills the histograms and TTree is send to the server which displays the histogram.
-   //
-   // To run this demo do the following:
-   //   - Open at least 2 windows
-   //   - Start ROOT in the first windows
-   //   - Execute in the first window: .x fastMergeServer.C
-   //   - Execute in the other windows: root.exe -b -l -q .x treeClient.C
-   //     (You can put it in the background if wanted).
-   // If you want to run the hserv.C on a different host, just change
-   // "localhost" in the TSocket ctor below to the desired hostname.
-   //
-   //Author: Fons Rademakers, Philippe Canal
-
    gBenchmark->Start("treeClient");
 
    TParallelMergingFile *file = (TParallelMergingFile*)TFile::Open("mergedClient.root?pmerge=localhost:1095","RECREATE");
@@ -35,7 +39,7 @@ void parallelMergeClient()
    if (idx%2 == 0) {
       // Create the histogram
       hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
-      hpx->SetFillColor(48);  // set nice fillcolor
+      hpx->SetFillColor(48);  // set nice fill-color
    } else {
       hpx = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    }

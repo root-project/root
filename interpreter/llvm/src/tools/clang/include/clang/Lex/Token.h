@@ -14,12 +14,10 @@
 #ifndef LLVM_CLANG_LEX_TOKEN_H
 #define LLVM_CLANG_LEX_TOKEN_H
 
-#include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
-#include "clang/Basic/TemplateKinds.h"
 #include "clang/Basic/TokenKinds.h"
 #include "llvm/ADT/StringRef.h"
-#include <cstdlib>
+#include <cassert>
 
 namespace clang {
 
@@ -35,8 +33,8 @@ class IdentifierInfo;
 /// can be represented by a single typename annotation token that carries
 /// information about the SourceRange of the tokens and the type object.
 class Token {
-  /// The location of the token.
-  SourceLocation Loc;
+  /// The location of the token. This is actually a SourceLocation.
+  unsigned Loc;
 
   // Conceptually these next two fields could be in a union.  However, this
   // causes gcc 4.2 to pessimize LexTokenInternal, a very performance critical
@@ -69,8 +67,8 @@ class Token {
 
   /// Flags - Bits we track about this token, members of the TokenFlags enum.
   unsigned short Flags;
-public:
 
+public:
   // Various flags set per token:
   enum TokenFlags {
     StartOfLine   = 0x01,  // At start of line or only after whitespace
@@ -85,6 +83,7 @@ public:
     IgnoredComma = 0x80,   // This comma is not a macro argument separator (MS).
     StringifiedInMacro = 0x100, // This string or character literal is formed by
                                 // macro stringizing or charizing operator.
+    CommaAfterElided = 0x200, // The comma following this token was elided (MS).
   };
 
   tok::TokenKind getKind() const { return Kind; }
@@ -94,6 +93,13 @@ public:
   /// "if (Tok.is(tok::l_brace)) {...}".
   bool is(tok::TokenKind K) const { return Kind == K; }
   bool isNot(tok::TokenKind K) const { return Kind != K; }
+  bool isOneOf(tok::TokenKind K1, tok::TokenKind K2) const {
+    return is(K1) || is(K2);
+  }
+  template <typename... Ts>
+  bool isOneOf(tok::TokenKind K1, tok::TokenKind K2, Ts... Ks) const {
+    return is(K1) || isOneOf(K2, Ks...);
+  }
 
   /// \brief Return true if this is a raw identifier (when lexing
   /// in raw mode) or a non-keyword identifier (when lexing in non-raw mode).
@@ -114,13 +120,15 @@ public:
 
   /// \brief Return a source location identifier for the specified
   /// offset in the current file.
-  SourceLocation getLocation() const { return Loc; }
+  SourceLocation getLocation() const {
+    return SourceLocation::getFromRawEncoding(Loc);
+  }
   unsigned getLength() const {
     assert(!isAnnotation() && "Annotation tokens have no length field");
     return UintData;
   }
 
-  void setLocation(SourceLocation L) { Loc = L; }
+  void setLocation(SourceLocation L) { Loc = L.getRawEncoding(); }
   void setLength(unsigned Len) {
     assert(!isAnnotation() && "Annotation tokens have no length field");
     UintData = Len;
@@ -128,7 +136,7 @@ public:
 
   SourceLocation getAnnotationEndLoc() const {
     assert(isAnnotation() && "Used AnnotEndLocID on non-annotation token");
-    return SourceLocation::getFromRawEncoding(UintData);
+    return SourceLocation::getFromRawEncoding(UintData ? UintData : Loc);
   }
   void setAnnotationEndLoc(SourceLocation L) {
     assert(isAnnotation() && "Used AnnotEndLocID on non-annotation token");
@@ -137,6 +145,11 @@ public:
 
   SourceLocation getLastLoc() const {
     return isAnnotation() ? getAnnotationEndLoc() : getLocation();
+  }
+
+  SourceLocation getEndLoc() const {
+    return isAnnotation() ? getAnnotationEndLoc()
+                          : getLocation().getLocWithOffset(getLength());
   }
 
   /// \brief SourceRange of the group of tokens that this annotation token
@@ -157,7 +170,7 @@ public:
     Flags = 0;
     PtrData = nullptr;
     UintData = 0;
-    Loc = SourceLocation();
+    Loc = SourceLocation().getRawEncoding();
   }
 
   IdentifierInfo *getIdentifierInfo() const {
@@ -221,6 +234,11 @@ public:
     Flags |= Flag;
   }
 
+  /// \brief Get the specified flag.
+  bool getFlag(TokenFlags Flag) const {
+    return (Flags & Flag) != 0;
+  }
+
   /// \brief Unset the specified flag.
   void clearFlag(TokenFlags Flag) {
     Flags &= ~Flag;
@@ -244,17 +262,15 @@ public:
 
   /// isAtStartOfLine - Return true if this token is at the start of a line.
   ///
-  bool isAtStartOfLine() const { return (Flags & StartOfLine) ? true : false; }
+  bool isAtStartOfLine() const { return getFlag(StartOfLine); }
 
   /// \brief Return true if this token has whitespace before it.
   ///
-  bool hasLeadingSpace() const { return (Flags & LeadingSpace) ? true : false; }
+  bool hasLeadingSpace() const { return getFlag(LeadingSpace); }
 
   /// \brief Return true if this identifier token should never
   /// be expanded in the future, due to C99 6.10.3.4p2.
-  bool isExpandDisabled() const {
-    return (Flags & DisableExpand) ? true : false;
-  }
+  bool isExpandDisabled() const { return getFlag(DisableExpand); }
 
   /// \brief Return true if we have an ObjC keyword identifier.
   bool isObjCAtKeyword(tok::ObjCKeywordKind objcKey) const;
@@ -263,26 +279,25 @@ public:
   tok::ObjCKeywordKind getObjCKeywordID() const;
 
   /// \brief Return true if this token has trigraphs or escaped newlines in it.
-  bool needsCleaning() const { return (Flags & NeedsCleaning) ? true : false; }
+  bool needsCleaning() const { return getFlag(NeedsCleaning); }
 
   /// \brief Return true if this token has an empty macro before it.
   ///
-  bool hasLeadingEmptyMacro() const {
-    return (Flags & LeadingEmptyMacro) ? true : false;
-  }
+  bool hasLeadingEmptyMacro() const { return getFlag(LeadingEmptyMacro); }
 
   /// \brief Return true if this token is a string or character literal which
   /// has a ud-suffix.
-  bool hasUDSuffix() const { return (Flags & HasUDSuffix) ? true : false; }
+  bool hasUDSuffix() const { return getFlag(HasUDSuffix); }
 
   /// Returns true if this token contains a universal character name.
-  bool hasUCN() const { return (Flags & HasUCN) ? true : false; }
+  bool hasUCN() const { return getFlag(HasUCN); }
 
   /// Returns true if this token is formed by macro by stringizing or charizing
   /// operator.
-  bool stringifiedInMacro() const {
-    return (Flags & StringifiedInMacro) ? true : false;
-  }
+  bool stringifiedInMacro() const { return getFlag(StringifiedInMacro); }
+
+  /// Returns true if the comma after this token was elided.
+  bool commaAfterElided() const { return getFlag(CommaAfterElided); }
 };
 
 /// \brief Information about the conditional stack (\#if directives)
@@ -304,11 +319,11 @@ struct PPConditionalInfo {
   bool FoundElse;
 };
 
-}  // end namespace clang
+} // end namespace clang
 
 namespace llvm {
   template <>
   struct isPodLike<clang::Token> { static const bool value = true; };
-}  // end namespace llvm
+} // end namespace llvm
 
-#endif
+#endif // LLVM_CLANG_LEX_TOKEN_H

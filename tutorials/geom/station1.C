@@ -2,10 +2,8 @@
 /// \ingroup tutorial_geom
 /// Drawing a space station, using ROOT geometry class.
 ///
-/// Name: station1.C
-/// Author: Chang Yeol Lee, Dept. of Physics, Univ. of Seoul
 /// Reviewed by Sunman Kim (sunman98@hanmail.net)
-// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
+/// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
 ///
 /// How to run: `.x station1.C` in ROOT terminal, then use OpenGL
 ///
@@ -14,7 +12,7 @@
 ///
 /// \macro_code
 ///
-/// \author Chang Yeol Lee
+/// \author Chang Yeol Lee, Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"
 

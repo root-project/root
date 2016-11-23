@@ -188,6 +188,23 @@ bool EHStreamer::callToNoUnwindFunction(const MachineInstr *MI) {
   return MarkedNoUnwind;
 }
 
+void EHStreamer::computePadMap(
+    const SmallVectorImpl<const LandingPadInfo *> &LandingPads,
+    RangeMapType &PadMap) {
+  // Invokes and nounwind calls have entries in PadMap (due to being bracketed
+  // by try-range labels when lowered).  Ordinary calls do not, so appropriate
+  // try-ranges for them need be deduced so we can put them in the LSDA.
+  for (unsigned i = 0, N = LandingPads.size(); i != N; ++i) {
+    const LandingPadInfo *LandingPad = LandingPads[i];
+    for (unsigned j = 0, E = LandingPad->BeginLabels.size(); j != E; ++j) {
+      MCSymbol *BeginLabel = LandingPad->BeginLabels[j];
+      assert(!PadMap.count(BeginLabel) && "Duplicate landing pad labels!");
+      PadRange P = { i, j };
+      PadMap[BeginLabel] = P;
+    }
+  }
+}
+
 /// Compute the call-site table.  The entry for an invoke has a try-range
 /// containing the call, a non-zero landing pad, and an appropriate action.  The
 /// entry for an ordinary call has a try-range containing the call and zero for
@@ -198,19 +215,8 @@ void EHStreamer::
 computeCallSiteTable(SmallVectorImpl<CallSiteEntry> &CallSites,
                      const SmallVectorImpl<const LandingPadInfo *> &LandingPads,
                      const SmallVectorImpl<unsigned> &FirstActions) {
-  // Invokes and nounwind calls have entries in PadMap (due to being bracketed
-  // by try-range labels when lowered).  Ordinary calls do not, so appropriate
-  // try-ranges for them need be deduced so we can put them in the LSDA.
   RangeMapType PadMap;
-  for (unsigned i = 0, N = LandingPads.size(); i != N; ++i) {
-    const LandingPadInfo *LandingPad = LandingPads[i];
-    for (unsigned j = 0, E = LandingPad->BeginLabels.size(); j != E; ++j) {
-      MCSymbol *BeginLabel = LandingPad->BeginLabels[j];
-      assert(!PadMap.count(BeginLabel) && "Duplicate landing pad labels!");
-      PadRange P = { i, j };
-      PadMap[BeginLabel] = P;
-    }
-  }
+  computePadMap(LandingPads, PadMap);
 
   // The end label of the previous invoke or nounwind try-range.
   MCSymbol *LastLabel = nullptr;
@@ -303,7 +309,7 @@ computeCallSiteTable(SmallVectorImpl<CallSiteEntry> &CallSites,
   // If some instruction between the previous try-range and the end of the
   // function may throw, create a call-site entry with no landing pad for the
   // region following the try-range.
-  if (SawPotentiallyThrowing && !IsSJLJ) {
+  if (SawPotentiallyThrowing && !IsSJLJ && LastLabel != nullptr) {
     CallSiteEntry Site = { LastLabel, nullptr, nullptr, 0 };
     CallSites.push_back(Site);
   }
@@ -382,7 +388,7 @@ void EHStreamer::emitExceptionTable() {
   }
 
   // Type infos.
-  const MCSection *LSDASection = Asm->getObjFileLowering().getLSDASection();
+  MCSection *LSDASection = Asm->getObjFileLowering().getLSDASection();
   unsigned TTypeEncoding;
   unsigned TypeFormatSize;
 
@@ -428,20 +434,15 @@ void EHStreamer::emitExceptionTable() {
   // Sometimes we want not to emit the data into separate section (e.g. ARM
   // EHABI). In this case LSDASection will be NULL.
   if (LSDASection)
-    Asm->OutStreamer.SwitchSection(LSDASection);
+    Asm->OutStreamer->SwitchSection(LSDASection);
   Asm->EmitAlignment(2);
 
   // Emit the LSDA.
   MCSymbol *GCCETSym =
-    Asm->OutContext.GetOrCreateSymbol(Twine("GCC_except_table")+
+    Asm->OutContext.getOrCreateSymbol(Twine("GCC_except_table")+
                                       Twine(Asm->getFunctionNumber()));
-  Asm->OutStreamer.EmitLabel(GCCETSym);
-  Asm->OutStreamer.EmitLabel(Asm->GetTempSymbol("exception",
-                                                Asm->getFunctionNumber()));
-
-  if (IsSJLJ)
-    Asm->OutStreamer.EmitLabel(Asm->GetTempSymbol("_LSDA_",
-                                                  Asm->getFunctionNumber()));
+  Asm->OutStreamer->EmitLabel(GCCETSym);
+  Asm->OutStreamer->EmitLabel(Asm->getCurExceptionSym());
 
   // Emit the LSDA header.
   Asm->EmitEncodingByte(dwarf::DW_EH_PE_omit, "@LPStart");
@@ -485,7 +486,7 @@ void EHStreamer::emitExceptionTable() {
     SizeAlign = 0;
   }
 
-  bool VerboseAsm = Asm->OutStreamer.isVerboseAsm();
+  bool VerboseAsm = Asm->OutStreamer->isVerboseAsm();
 
   // SjLj Exception handling
   if (IsSJLJ) {
@@ -503,8 +504,8 @@ void EHStreamer::emitExceptionTable() {
       // Offset of the landing pad, counted in 16-byte bundles relative to the
       // @LPStart address.
       if (VerboseAsm) {
-        Asm->OutStreamer.AddComment(">> Call Site " + Twine(idx) + " <<");
-        Asm->OutStreamer.AddComment("  On exception at call site "+Twine(idx));
+        Asm->OutStreamer->AddComment(">> Call Site " + Twine(idx) + " <<");
+        Asm->OutStreamer->AddComment("  On exception at call site "+Twine(idx));
       }
       Asm->EmitULEB128(idx);
 
@@ -513,10 +514,10 @@ void EHStreamer::emitExceptionTable() {
       // the action table), and 0 indicates that there are no actions.
       if (VerboseAsm) {
         if (S.Action == 0)
-          Asm->OutStreamer.AddComment("  Action: cleanup");
+          Asm->OutStreamer->AddComment("  Action: cleanup");
         else
-          Asm->OutStreamer.AddComment("  Action: " +
-                                      Twine((S.Action - 1) / 2 + 1));
+          Asm->OutStreamer->AddComment("  Action: " +
+                                       Twine((S.Action - 1) / 2 + 1));
       }
       Asm->EmitULEB128(S.Action);
     }
@@ -552,39 +553,37 @@ void EHStreamer::emitExceptionTable() {
          I = CallSites.begin(), E = CallSites.end(); I != E; ++I) {
       const CallSiteEntry &S = *I;
 
-      MCSymbol *EHFuncBeginSym =
-        Asm->GetTempSymbol("eh_func_begin", Asm->getFunctionNumber());
+      MCSymbol *EHFuncBeginSym = Asm->getFunctionBegin();
 
       MCSymbol *BeginLabel = S.BeginLabel;
       if (!BeginLabel)
         BeginLabel = EHFuncBeginSym;
       MCSymbol *EndLabel = S.EndLabel;
       if (!EndLabel)
-        EndLabel = Asm->GetTempSymbol("eh_func_end", Asm->getFunctionNumber());
-
+        EndLabel = Asm->getFunctionEnd();
 
       // Offset of the call site relative to the previous call site, counted in
       // number of 16-byte bundles. The first call site is counted relative to
       // the start of the procedure fragment.
       if (VerboseAsm)
-        Asm->OutStreamer.AddComment(">> Call Site " + Twine(++Entry) + " <<");
+        Asm->OutStreamer->AddComment(">> Call Site " + Twine(++Entry) + " <<");
       Asm->EmitLabelDifference(BeginLabel, EHFuncBeginSym, 4);
       if (VerboseAsm)
-        Asm->OutStreamer.AddComment(Twine("  Call between ") +
-                                    BeginLabel->getName() + " and " +
-                                    EndLabel->getName());
+        Asm->OutStreamer->AddComment(Twine("  Call between ") +
+                                     BeginLabel->getName() + " and " +
+                                     EndLabel->getName());
       Asm->EmitLabelDifference(EndLabel, BeginLabel, 4);
 
       // Offset of the landing pad, counted in 16-byte bundles relative to the
       // @LPStart address.
       if (!S.LPad) {
         if (VerboseAsm)
-          Asm->OutStreamer.AddComment("    has no landing pad");
-        Asm->OutStreamer.EmitIntValue(0, 4/*size*/);
+          Asm->OutStreamer->AddComment("    has no landing pad");
+        Asm->OutStreamer->EmitIntValue(0, 4/*size*/);
       } else {
         if (VerboseAsm)
-          Asm->OutStreamer.AddComment(Twine("    jumps to ") +
-                                      S.LPad->LandingPadLabel->getName());
+          Asm->OutStreamer->AddComment(Twine("    jumps to ") +
+                                       S.LPad->LandingPadLabel->getName());
         Asm->EmitLabelDifference(S.LPad->LandingPadLabel, EHFuncBeginSym, 4);
       }
 
@@ -593,10 +592,10 @@ void EHStreamer::emitExceptionTable() {
       // the action table), and 0 indicates that there are no actions.
       if (VerboseAsm) {
         if (S.Action == 0)
-          Asm->OutStreamer.AddComment("  On action: cleanup");
+          Asm->OutStreamer->AddComment("  On action: cleanup");
         else
-          Asm->OutStreamer.AddComment("  On action: " +
-                                      Twine((S.Action - 1) / 2 + 1));
+          Asm->OutStreamer->AddComment("  On action: " +
+                                       Twine((S.Action - 1) / 2 + 1));
       }
       Asm->EmitULEB128(S.Action);
     }
@@ -610,7 +609,7 @@ void EHStreamer::emitExceptionTable() {
 
     if (VerboseAsm) {
       // Emit comments that decode the action table.
-      Asm->OutStreamer.AddComment(">> Action Record " + Twine(++Entry) + " <<");
+      Asm->OutStreamer->AddComment(">> Action Record " + Twine(++Entry) + " <<");
     }
 
     // Type Filter
@@ -619,13 +618,13 @@ void EHStreamer::emitExceptionTable() {
     //   type of the catch clauses or the types in the exception specification.
     if (VerboseAsm) {
       if (Action.ValueForTypeID > 0)
-        Asm->OutStreamer.AddComment("  Catch TypeInfo " +
-                                    Twine(Action.ValueForTypeID));
+        Asm->OutStreamer->AddComment("  Catch TypeInfo " +
+                                     Twine(Action.ValueForTypeID));
       else if (Action.ValueForTypeID < 0)
-        Asm->OutStreamer.AddComment("  Filter TypeInfo " +
-                                    Twine(Action.ValueForTypeID));
+        Asm->OutStreamer->AddComment("  Filter TypeInfo " +
+                                     Twine(Action.ValueForTypeID));
       else
-        Asm->OutStreamer.AddComment("  Cleanup");
+        Asm->OutStreamer->AddComment("  Cleanup");
     }
     Asm->EmitSLEB128(Action.ValueForTypeID);
 
@@ -635,10 +634,10 @@ void EHStreamer::emitExceptionTable() {
     //   or 0 if there is no next action record.
     if (VerboseAsm) {
       if (Action.NextAction == 0) {
-        Asm->OutStreamer.AddComment("  No further actions");
+        Asm->OutStreamer->AddComment("  No further actions");
       } else {
         unsigned NextAction = Entry + (Action.NextAction + 1) / 2;
-        Asm->OutStreamer.AddComment("  Continue to action "+Twine(NextAction));
+        Asm->OutStreamer->AddComment("  Continue to action "+Twine(NextAction));
       }
     }
     Asm->EmitSLEB128(Action.NextAction);
@@ -653,28 +652,27 @@ void EHStreamer::emitTypeInfos(unsigned TTypeEncoding) {
   const std::vector<const GlobalValue *> &TypeInfos = MMI->getTypeInfos();
   const std::vector<unsigned> &FilterIds = MMI->getFilterIds();
 
-  bool VerboseAsm = Asm->OutStreamer.isVerboseAsm();
+  bool VerboseAsm = Asm->OutStreamer->isVerboseAsm();
 
   int Entry = 0;
   // Emit the Catch TypeInfos.
   if (VerboseAsm && !TypeInfos.empty()) {
-    Asm->OutStreamer.AddComment(">> Catch TypeInfos <<");
-    Asm->OutStreamer.AddBlankLine();
+    Asm->OutStreamer->AddComment(">> Catch TypeInfos <<");
+    Asm->OutStreamer->AddBlankLine();
     Entry = TypeInfos.size();
   }
 
-  for (std::vector<const GlobalValue *>::const_reverse_iterator
-         I = TypeInfos.rbegin(), E = TypeInfos.rend(); I != E; ++I) {
-    const GlobalValue *GV = *I;
+  for (const GlobalValue *GV : make_range(TypeInfos.rbegin(),
+                                          TypeInfos.rend())) {
     if (VerboseAsm)
-      Asm->OutStreamer.AddComment("TypeInfo " + Twine(Entry--));
+      Asm->OutStreamer->AddComment("TypeInfo " + Twine(Entry--));
     Asm->EmitTTypeReference(GV, TTypeEncoding);
   }
 
   // Emit the Exception Specifications.
   if (VerboseAsm && !FilterIds.empty()) {
-    Asm->OutStreamer.AddComment(">> Filter TypeInfos <<");
-    Asm->OutStreamer.AddBlankLine();
+    Asm->OutStreamer->AddComment(">> Filter TypeInfos <<");
+    Asm->OutStreamer->AddBlankLine();
     Entry = 0;
   }
   for (std::vector<unsigned>::const_iterator
@@ -683,25 +681,9 @@ void EHStreamer::emitTypeInfos(unsigned TTypeEncoding) {
     if (VerboseAsm) {
       --Entry;
       if (isFilterEHSelector(TypeID))
-        Asm->OutStreamer.AddComment("FilterInfo " + Twine(Entry));
+        Asm->OutStreamer->AddComment("FilterInfo " + Twine(Entry));
     }
 
     Asm->EmitULEB128(TypeID);
   }
-}
-
-/// Emit all exception information that should come after the content.
-void EHStreamer::endModule() {
-  llvm_unreachable("Should be implemented");
-}
-
-/// Gather pre-function exception information. Assumes it's being emitted
-/// immediately after the function entry point.
-void EHStreamer::beginFunction(const MachineFunction *MF) {
-  llvm_unreachable("Should be implemented");
-}
-
-/// Gather and emit post-function exception information.
-void EHStreamer::endFunction(const MachineFunction *) {
-  llvm_unreachable("Should be implemented");
 }

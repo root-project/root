@@ -81,7 +81,7 @@ public:
     ///   matcher if an error occurred. In that case, \c Error will contain a
     ///   description of the error.
     virtual VariantMatcher actOnMatcherExpression(MatcherCtor Ctor,
-                                                  const SourceRange &NameRange,
+                                                  SourceRange NameRange,
                                                   StringRef BindID,
                                                   ArrayRef<ParserValue> Args,
                                                   Diagnostics *Error) = 0;
@@ -123,13 +123,13 @@ public:
   ///   tokens.
   class RegistrySema : public Parser::Sema {
    public:
-    virtual ~RegistrySema();
+     ~RegistrySema() override;
 
     llvm::Optional<MatcherCtor>
     lookupMatcherCtor(StringRef MatcherName) override;
 
     VariantMatcher actOnMatcherExpression(MatcherCtor Ctor,
-                                          const SourceRange &NameRange,
+                                          SourceRange NameRange,
                                           StringRef BindID,
                                           ArrayRef<ParserValue> Args,
                                           Diagnostics *Error) override;

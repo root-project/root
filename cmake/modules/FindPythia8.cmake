@@ -8,7 +8,13 @@
 # PYTHIA8_FOUND         if false, you cannot build anything that requires Pythia8
 # PYTHIA8_VERSION       version of Pythia8 if found
 
-set(_pythia8dirs ${PYTHIA8_DIR} $ENV{PYTHIA8_DIR} /usr /opt/pythia8)
+set(_pythia8dirs
+    ${PYTHIA8}
+    $ENV{PYTHIA8}
+    ${PYTHIA8_DIR}
+    $ENV{PYTHIA8_DIR}
+    /usr
+    /opt/pythia8)
 
 find_path(PYTHIA8_INCLUDE_DIR
           NAMES Pythia8/Pythia.h

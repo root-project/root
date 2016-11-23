@@ -81,7 +81,7 @@ namespace Math {
    B. Schorr, Programs for the Landau and the Vavilov distributions and the corresponding random numbers,
    <A HREF="http://dx.doi.org/10.1016/0010-4655(74)90091-5">Computer Phys. Comm. 7 (1974) 215-224</A>,
    which has been implemented in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g116/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g116/top.html">
    CERNLIB (G116)</A>.
 
    The class stores coefficients needed to calculate \f$p(\lambda; \kappa, \beta^2)\f$
@@ -96,7 +96,7 @@ namespace Math {
 
    Two parameters which are fixed in the CERNLIB implementation may be set by the user:
    - epsilonPM corresponds to \f$\epsilon^+ = \epsilon^-\f$ in Eqs. (2.1) and (2.2) of Schorr's paper.
-   epsilonPM gives an estimate on the integral of the cummulative distribution function
+   epsilonPM gives an estimate on the integral of the cumulative distribution function
    outside the range \f$\lambda_{min} \le \lambda \le \lambda_{max}\f$
    where the approximation is valid.
    Thus, it determines the support of the approximation used here (called $T_0 - T_1$ in the paper).
@@ -109,7 +109,7 @@ namespace Math {
 
    For the quantile calculation, the algorithm given by Schorr is not used,
    because it turns out to be very slow and still inaccurate.
-   Instead, an initial estimate is calculated based on a precalculated table,
+   Instead, an initial estimate is calculated based on a pre-calculated table,
    which is subsequently improved by Newton iterations.
 
    While the CERNLIB implementation calculates at most 156 terms in the series expansion
@@ -138,7 +138,7 @@ public:
 
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
-       @param epsilonPM: \f$\epsilon^+ = \epsilon^-\f$ in Eqs. (2.1) and (2.2) of Schorr's paper; gives an estimate on the integral of the cummulative distribution function
+       @param epsilonPM: \f$\epsilon^+ = \epsilon^-\f$ in Eqs. (2.1) and (2.2) of Schorr's paper; gives an estimate on the integral of the cumulative distribution function
               outside the range \f$\lambda_{min} \le \lambda \le \lambda_{max}\f$
               where the approximation is valid.
        @param epsilon: \f$\epsilon\f$ in Eq. (4.10) of Schorr's paper; determines the accuracy of the series expansion.
@@ -172,14 +172,14 @@ public:
    double Pdf (double x, double kappa, double beta2);
 
    /**
-       Evaluate the Vavilov cummulative probability density function
+       Evaluate the Vavilov cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
    */
    double Cdf (double x) const;
 
    /**
-       Evaluate the Vavilov cummulative probability density function,
+       Evaluate the Vavilov cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param x The Landau parameter \f$x = \lambda_L\f$
@@ -189,14 +189,14 @@ public:
    double Cdf (double x, double kappa, double beta2);
 
    /**
-       Evaluate the Vavilov complementary cummulative probability density function
+       Evaluate the Vavilov complementary cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
    */
    double Cdf_c (double x) const;
 
    /**
-       Evaluate the Vavilov complementary cummulative probability density function,
+       Evaluate the Vavilov complementary cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param x The Landau parameter \f$x = \lambda_L\f$
@@ -206,14 +206,14 @@ public:
    double Cdf_c (double x, double kappa, double beta2);
 
    /**
-       Evaluate the inverse of the Vavilov cummulative probability density function
+       Evaluate the inverse of the Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
    double Quantile (double z) const;
 
    /**
-       Evaluate the inverse of the Vavilov cummulative probability density function,
+       Evaluate the inverse of the Vavilov cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
@@ -223,14 +223,14 @@ public:
    double Quantile (double z, double kappa, double beta2);
 
    /**
-       Evaluate the inverse of the complementary Vavilov cummulative probability density function
+       Evaluate the inverse of the complementary Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
    double Quantile_c (double z) const;
 
    /**
-       Evaluate the inverse of the complementary Vavilov cummulative probability density function,
+       Evaluate the inverse of the complementary Vavilov cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
@@ -253,7 +253,7 @@ public:
 
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
-       @param epsilonPM \f$\epsilon^+ = \epsilon^-\f$ in Eqs. (2.1) and (2.2) of Schorr's paper; gives an estimate on the integral of the cummulative distribution function
+       @param epsilonPM \f$\epsilon^+ = \epsilon^-\f$ in Eqs. (2.1) and (2.2) of Schorr's paper; gives an estimate on the integral of the cumulative distribution function
               outside the range \f$\lambda_{min} \le \lambda \le \lambda_{max}\f$
               where the approximation is valid.
        @param epsilon \f$\epsilon\f$ in Eq. (4.10) of Schorr's paper; determines the accuracy of the series expansion.
@@ -365,7 +365,7 @@ private:
 double vavilov_accurate_pdf (double x, double kappa, double beta2);
 
    /**
-       The Vavilov cummulative probability density function
+       The Vavilov cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
@@ -376,7 +376,7 @@ double vavilov_accurate_pdf (double x, double kappa, double beta2);
 double vavilov_accurate_cdf (double x, double kappa, double beta2);
 
    /**
-       The Vavilov complementary cummulative probability density function
+       The Vavilov complementary cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
@@ -387,7 +387,7 @@ double vavilov_accurate_cdf (double x, double kappa, double beta2);
 double vavilov_accurate_cdf_c (double x, double kappa, double beta2);
 
    /**
-       The inverse of the Vavilov cummulative probability density function
+       The inverse of the Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
@@ -398,7 +398,7 @@ double vavilov_accurate_cdf_c (double x, double kappa, double beta2);
 double vavilov_accurate_quantile (double z, double kappa, double beta2);
 
    /**
-       The inverse of the complementary Vavilov cummulative probability density function
+       The inverse of the complementary Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$

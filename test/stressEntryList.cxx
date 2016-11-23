@@ -602,6 +602,8 @@ void CleanUp(Int_t nfiles)
 
 Int_t stressEntryList(Int_t nentries, Int_t nfiles)
 {
+   // Make sure files are not existing already.
+   CleanUp(nfiles);
 
    MakeTrees(nentries, nfiles);
    printf("**********************************************************************\n");

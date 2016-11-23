@@ -17,35 +17,37 @@
  *                                                                                *
  **********************************************************************************/
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <iomanip>
-#include <fstream>
+#include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
+#include "TMVA/MethodPyGTB.h"
 
-#include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
-#include "TMath.h"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include "TMVA/Configurable.h"
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/Config.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/Event.h"
+#include "TMVA/IMethod.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Results.h"
+#include "TMVA/ResultsClassification.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/Timer.h"
+#include "TMVA/VariableTransformBase.h"
+
 #include "Riostream.h"
+#include "TMath.h"
 #include "TMatrix.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 
-#include "TMVA/VariableTransformBase.h"
-#include "TMVA/MethodPyGTB.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Types.h"
-#include "TMVA/Config.h"
-#include "TMVA/PDF.h"
-#include "TMVA/ClassifierFactory.h"
-
-#include "TMVA/Results.h"
-#include "TMVA/ResultsClassification.h"
-#include "TMVA/Timer.h"
-
-
-
+#include <iomanip>
+#include <fstream>
 
 using namespace TMVA;
 
@@ -57,9 +59,8 @@ ClassImp(MethodPyGTB)
 MethodPyGTB::MethodPyGTB(const TString &jobName,
                          const TString &methodTitle,
                          DataSetInfo &dsi,
-                         const TString &theOption,
-                         TDirectory *theTargetDir) :
-   PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption, theTargetDir),
+                         const TString &theOption) :
+   PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption),
    loss("deviance"),
    learning_rate(0.1),
    n_estimators(100),
@@ -78,8 +79,8 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
 }
 
 //_______________________________________________________________________
-MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile, TDirectory *theTargetDir)
-   : PyMethodBase(Types::kPyGTB, theData, theWeightFile, theTargetDir),
+MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile)
+   : PyMethodBase(Types::kPyGTB, theData, theWeightFile),
      loss("deviance"),
      learning_rate(0.1),
      n_estimators(100),
@@ -392,13 +393,14 @@ void MethodPyGTB::Train()
 //     std::cout<<std::endl;
    //     pValue =PyObject_CallObject(fClassifier, PyUnicode_FromString("classes_"));
    //     PyObject_Print(pValue, stdout, 0);
-
-   TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-   Log() << Endl;
-
-  Serialize(path,fClassifier);
+   if (IsModelPersistence())
+   {
+        TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
+        Log() << Endl;
+        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+        Log() << Endl;
+        Serialize(path,fClassifier);
+   }
 }
 
 //_______________________________________________________________________
@@ -415,7 +417,7 @@ Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (!fClassifier) ReadModelFromFile();
+   if (IsModelPersistence()) ReadModelFromFile();
 
    Double_t mvaValue;
    const TMVA::Event *e = Data()->GetEvent();

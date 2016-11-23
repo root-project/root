@@ -37,24 +37,10 @@
 //
 //_______________________________________________________________________
 
-#include <vector>
-#include <cstdlib>
-#include <stdexcept>
-#if __cplusplus > 199711L
-#include <atomic>
-#endif
-
-#include "TString.h"
-#include "TTree.h"
-#include "TDirectory.h"
-#include "Riostream.h"
-#include "TRandom3.h"
-#include "TH2F.h"
-#include "TH1.h"
-#include "TMath.h"
-
-#include "TMVA/DataSetInfo.h"
 #include "TMVA/MethodBase.h"
+
+#include "TMVA/Configurable.h"
+#include "TMVA/DataSetInfo.h"
 #include "TMVA/MethodANNBase.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/TNeuron.h"
@@ -66,6 +52,24 @@
 #include "TMVA/TNeuronInputChooser.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Version.h"
+
+#include "TString.h"
+#include "TTree.h"
+#include "TDirectory.h"
+#include "Riostream.h"
+#include "TRandom3.h"
+#include "TH2F.h"
+#include "TH1.h"
+#include "TMath.h"
+#include "TMatrixT.h"
+
+#include <vector>
+#include <cstdlib>
+#include <stdexcept>
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
+
 
 using std::vector;
 
@@ -81,9 +85,8 @@ TMVA::MethodANNBase::MethodANNBase( const TString& jobName,
                                     Types::EMVA methodType,
                                     const TString& methodTitle,
                                     DataSetInfo& theData,
-                                    const TString& theOption,
-                                    TDirectory* theTargetDir )
-: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir )
+                                    const TString& theOption )
+: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption)
    , fEstimator(kMSE)
    , fUseRegulator(kFALSE)
    , fRandomSeed(0)
@@ -98,9 +101,8 @@ TMVA::MethodANNBase::MethodANNBase( const TString& jobName,
 
 TMVA::MethodANNBase::MethodANNBase( Types::EMVA methodType,
                                     DataSetInfo& theData,
-                                    const TString& theWeightFile,
-                                    TDirectory* theTargetDir )
-   : TMVA::MethodBase( methodType, theData, theWeightFile, theTargetDir )
+                                    const TString& theWeightFile)
+   : TMVA::MethodBase( methodType, theData, theWeightFile)
    , fEstimator(kMSE)
    , fUseRegulator(kFALSE)
    , fRandomSeed(0)
@@ -294,8 +296,9 @@ void TMVA::MethodANNBase::BuildNetwork( std::vector<Int_t>* layout, std::vector<
    else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
    else Log()<<kWARNING<<"fEstimator="<<fEstimator<<"\tfEstimatorS="<<fEstimatorS<<Endl;
    if (fEstimator!=kMSE && fEstimator!=kCE) Log()<<kWARNING<<"Estimator type unspecified \t"<<Endl; //zjh
+   
 
-   Log() << kINFO << "Building Network" << Endl;
+   Log() << kHEADER << "Building Network. " << Endl;
 
    DeleteNetwork();
    InitANNBase();
@@ -441,7 +444,7 @@ void TMVA::MethodANNBase::AddPreLinks(TNeuron* neuron, TObjArray* prevLayer)
 
 void TMVA::MethodANNBase::InitWeights()
 {
-   PrintMessage("Initializing weights");
+  PrintMessage("Initializing weights");
    
    // init synapse weights
    Int_t numSynapses = fSynapses->GetEntriesFast();

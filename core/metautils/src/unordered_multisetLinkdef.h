@@ -1,8 +1,5 @@
 #include <unordered_set>
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass unordered_multiset<int>;
 #pragma create TClass unordered_multiset<long>;

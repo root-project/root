@@ -39,6 +39,7 @@
 #include "TMVA/Types.h"
 
 #include "ThreadLocalStorage.h"
+#include "TObject.h"
 
 static const Int_t fgUNINITIALIZED = -1;
 

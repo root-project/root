@@ -51,7 +51,9 @@ ClassImp(TGraphPainter);
    - [TGraphErrors](#GP03a)
    - [TGraphAsymmErrors](#GP03b)
    - [TGraphBentErrors](#GP03c)
-- [TGraphPolar options](#GP034)
+- [TGraphPolar options](#GP04)
+- [Colors automatically picked in palette](#GP05)
+
 
 ### <a name="GP00"></a> Introduction
 
@@ -91,6 +93,7 @@ Graphs can be drawn with the following options:
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
 | "A"      | Axis are drawn around the graph |
+| "I"      | Combine with option 'A' it draws invisible axis |
 | "L"      | A simple polyline is drawn |
 | "F"      | A fill area is drawn ('CF' draw a smoothed fill area) |
 | "C"      | A smooth Curve is drawn |
@@ -100,6 +103,9 @@ Graphs can be drawn with the following options:
 | "1"      | When a graph is drawn as a bar chart, this option makes the bars start from the bottom of the pad. By default they start at 0. |
 | "X+"     | The X-axis is drawn on the top side of the plot. |
 | "Y+"     | The Y-axis is drawn on the right side of the plot. |
+| "PFC"    | Palette Fill Color: graph's fill color is taken in the current palette. |
+| "PLC"    | Palette Line Color: graph's line color is taken in the current palette. |
+| "PMC"    | Palette Marker Color: graph's marker color is taken in the current palette. |
 
 
 Drawing options can be combined. In the following example the graph
@@ -427,6 +433,27 @@ Begin_Macro(source)
 }
 End_Macro
 
+### <a name="GP05"></a> Colors automatically picked in palette
+
+\since **ROOT version 6.09/01**
+
+When several graphs are painted in the same canvas or when a multi-graph is drawn,
+it might be useful to have an easy and automatic way to choose
+their color. The simplest way is to pick colors in the current active color
+palette. Palette coloring for histogram is activated thanks to the options `PFC`
+(Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
+When one of these options is given to `TGraph::Draw` the graph get its color
+from the current color palette defined by `gStyle->SetPalette(…)`. The color
+is determined according to the number of objects having palette coloring in
+the current pad.
+
+Begin_Macro(source)
+../../../tutorials/graphs/graphpalettecolor.C
+End_Macro
+
+Begin_Macro(source)
+../../../tutorials/graphs/multigraphpalettecolor.C
+End_Macro
  */
 
 
@@ -884,22 +911,35 @@ char *TGraphPainter::GetObjectInfoHelper(TGraph * /*theGraph*/, Int_t /*px*/, In
 void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 {
 
+   char chopt[80];
+   strlcpy(chopt,option,80);
+
    if (theGraph) {
+      char *l1 = strstr(chopt,"pfc"); // Automatic Fill Color
+      char *l2 = strstr(chopt,"plc"); // Automatic Line Color
+      char *l3 = strstr(chopt,"pmc"); // Automatic Marker Color
+      if (l1 || l2 || l3) {
+         Int_t i = gPad->NextPaletteColor();
+         if (l1) {strncpy(l1,"   ",3); theGraph->SetFillColor(i);}
+         if (l2) {strncpy(l2,"   ",3); theGraph->SetLineColor(i);}
+         if (l3) {strncpy(l3,"   ",3); theGraph->SetMarkerColor(i);}
+      }
+
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
       if (theGraph->InheritsFrom(TGraphBentErrors::Class())) {
-         PaintGraphBentErrors(theGraph,option);
+         PaintGraphBentErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphQQ::Class())) {
-         PaintGraphQQ(theGraph,option);
+         PaintGraphQQ(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphAsymmErrors::Class())) {
-         PaintGraphAsymmErrors(theGraph,option);
+         PaintGraphAsymmErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphErrors::Class())) {
          if (theGraph->InheritsFrom(TGraphPolar::Class())) {
-            PaintGraphPolar(theGraph,option);
+            PaintGraphPolar(theGraph,chopt);
          } else {
-            PaintGraphErrors(theGraph,option);
+            PaintGraphErrors(theGraph,chopt);
          }
       } else {
-         PaintGraphSimple(theGraph,option);
+         PaintGraphSimple(theGraph,chopt);
       }
    }
 }
@@ -914,9 +954,9 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    if (theGraph->InheritsFrom("TGraphPolar"))
       gPad->PushSelectableObject(theGraph);
 
-   Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
-   Int_t optionBar  , optionR    , optionOne  , optionE;
-   Int_t optionFill , optionZ    , optionCurveFill;
+   Int_t optionLine , optionAxis , optionCurve    , optionStar , optionMark;
+   Int_t optionBar  , optionR    , optionOne      , optionE;
+   Int_t optionFill , optionZ    , optionCurveFill, optionIAxis;
    Int_t i, npt, nloop;
    Int_t drawtype=0;
    Double_t xlow, xhigh, ylow, yhigh;
@@ -934,15 +974,16 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    opt.ToUpper();
    opt.ReplaceAll("SAME","");
 
-   if (opt.Contains("L")) optionLine = 1;  else optionLine = 0;
-   if (opt.Contains("A")) optionAxis = 1;  else optionAxis = 0;
-   if (opt.Contains("C")) optionCurve= 1;  else optionCurve= 0;
-   if (opt.Contains("*")) optionStar = 1;  else optionStar = 0;
-   if (opt.Contains("P")) optionMark = 1;  else optionMark = 0;
-   if (opt.Contains("B")) optionBar  = 1;  else optionBar  = 0;
-   if (opt.Contains("R")) optionR    = 1;  else optionR    = 0;
-   if (opt.Contains("1")) optionOne  = 1;  else optionOne  = 0;
-   if (opt.Contains("F")) optionFill = 1;  else optionFill = 0;
+   if (opt.Contains("L")) optionLine  = 1;  else optionLine  = 0;
+   if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
+   if (opt.Contains("C")) optionCurve = 1;  else optionCurve = 0;
+   if (opt.Contains("*")) optionStar  = 1;  else optionStar  = 0;
+   if (opt.Contains("P")) optionMark  = 1;  else optionMark  = 0;
+   if (opt.Contains("B")) optionBar   = 1;  else optionBar   = 0;
+   if (opt.Contains("R")) optionR     = 1;  else optionR     = 0;
+   if (opt.Contains("1")) optionOne   = 1;  else optionOne   = 0;
+   if (opt.Contains("F")) optionFill  = 1;  else optionFill  = 0;
+   if (opt.Contains("I")) optionIAxis = 1;  else optionIAxis = 0;
    if (opt.Contains("2") || opt.Contains("3") ||
       opt.Contains("4") || opt.Contains("5")) optionE = 1;  else optionE = 0;
    optionZ    = 0;
@@ -1019,6 +1060,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       char chopth[8] = " ";
       if (strstr(chopt,"x+")) strncat(chopth, "x+",2);
       if (strstr(chopt,"y+")) strncat(chopth, "y+",2);
+      if (optionIAxis) strncat(chopth, "A",1);
       if (!theGraph->GetHistogram()) {
          // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.
@@ -1309,11 +1351,11 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 ///
 /// | Option | Description                                                     |
 /// |--------|-----------------------------------------------------------------|
-/// |"R"     | Graph is drawn horizontaly, parallel to X axis. (default is vertically, parallel to Y axis).If option R is selected the user must give 2 values for Y (y[0]=YMIN and y[1]=YMAX) or N values for X, one for each channel. Otherwise the user must give, N values for Y, one for each channel or 2 values for X (x[0]=XMIN and x[1]=XMAX) |
-/// |"L"     | A simple polyline beetwen every points is drawn.|
+/// |"R"     | Graph is drawn horizontally, parallel to X axis. (default is vertically, parallel to Y axis).If option R is selected the user must give 2 values for Y (y[0]=YMIN and y[1]=YMAX) or N values for X, one for each channel. Otherwise the user must give, N values for Y, one for each channel or 2 values for X (x[0]=XMIN and x[1]=XMAX) |
+/// |"L"     | A simple polyline between every points is drawn.|
 /// |"H"     | An Histogram with equidistant bins is drawn as a polyline.|
 /// |"F"     | An histogram with equidistant bins is drawn as a fill area. Contour is not drawn unless chopt='H' is also selected..|
-/// |"N"     | Non equidistant bins (default is equidistant). If N is the number of channels array X and Y must be dimensionned as follow: If option R is not selected (default) then the user must give (N+1) values for X (limits of channels) or N values for Y, one for each channel. Otherwise the user must give (N+1) values for Y (limits of channels). or N values for X, one for each channel |
+/// |"N"     | Non equidistant bins (default is equidistant). If N is the number of channels array X and Y must be dimensioned as follow: If option R is not selected (default) then the user must give (N+1) values for X (limits of channels) or N values for Y, one for each channel. Otherwise the user must give (N+1) values for Y (limits of channels). or N values for X, one for each channel |
 /// |"F1"    | Idem as 'F' except that fill area base line is the minimum of the pad instead of Y=0.|
 /// |"F2"    | Draw a Fill area polyline connecting the center of bins|
 /// |"C"     | A smooth Curve is drawn.|
@@ -1528,7 +1570,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
                //make sure that the fill area does not overwrite the frame
-               //take into account the frame linewidth
+               //take into account the frame line width
                if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
                if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
@@ -1610,7 +1652,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
                //make sure that the fill area does not overwrite the frame
-               //take into account the frame linewidth
+               //take into account the frame line width
                if (gxwork[0] < vxmin) {gxwork[0] = vxmin; gxwork[1    ] = vxmin;}
                if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
@@ -2833,7 +2875,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       rwrmax += 0.1*dr;
       rwrmin -= 0.1*dr;
 
-      // Assume equaly spaced points for full 2*Pi.
+      // Assume equally spaced points for full 2*Pi.
       rwtmax += dt/theNpoints;
    } else {
       rwrmin = thePolargram->GetRMin();
@@ -3507,7 +3549,7 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
       return;
    }
 
-   //  Decode the type of curve (drawtype).
+   //  Decode the type of curve (draw type).
 
    loptx = kFALSE;
    jtype  = (drawtype%1000)-10;

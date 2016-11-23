@@ -66,9 +66,8 @@ class WalkAST : public StmtVisitor<WalkAST> {
     // The type must be an array/pointer type.
 
     // This could be a null constant, which is allowed.
-    if (E->isNullPointerConstant(ASTC, Expr::NPC_ValueDependentIsNull))
-      return true;
-    return false;
+    return static_cast<bool>(
+        E->isNullPointerConstant(ASTC, Expr::NPC_ValueDependentIsNull));
   }
 
 public:
@@ -153,9 +152,9 @@ void WalkAST::VisitCallExpr(CallExpr *CE) {
 }
 
 void WalkAST::VisitChildren(Stmt *S) {
-  for (Stmt::child_iterator I = S->child_begin(), E = S->child_end(); I!=E; ++I)
-    if (Stmt *child = *I)
-      Visit(child);
+  for (Stmt *Child : S->children())
+    if (Child)
+      Visit(Child);
 }
 
 namespace {

@@ -36,8 +36,7 @@ protected:
   explicit ARMBaseInstrInfo(const ARMSubtarget &STI);
 
   void expandLoadStackGuardBase(MachineBasicBlock::iterator MI,
-                                unsigned LoadImmOpc, unsigned LoadOpc,
-                                Reloc::Model RM) const;
+                                unsigned LoadImmOpc, unsigned LoadOpc) const;
 
   /// Build the equivalent inputs of a REG_SEQUENCE for the given \p MI
   /// and \p DefIdx.
@@ -86,6 +85,17 @@ protected:
                             RegSubRegPair &BaseReg,
                             RegSubRegPairAndIdx &InsertedReg) const override;
 
+  /// Commutes the operands in the given instruction.
+  /// The commutable operands are specified by their indices OpIdx1 and OpIdx2.
+  ///
+  /// Do not call this method for a non-commutable instruction or for
+  /// non-commutable pair of operand indices OpIdx1 and OpIdx2.
+  /// Even though the instruction is commutable, the method may still
+  /// fail to commute the operands, null pointer is returned in such cases.
+  MachineInstr *commuteInstructionImpl(MachineInstr &MI, bool NewMI,
+                                       unsigned OpIdx1,
+                                       unsigned OpIdx2) const override;
+
 public:
   // Return whether the target has an explicit NOP encoding.
   bool hasNOP() const;
@@ -95,7 +105,7 @@ public:
   virtual unsigned getUnindexedOpcode(unsigned Opc) const =0;
 
   MachineInstr *convertToThreeAddress(MachineFunction::iterator &MFI,
-                                      MachineBasicBlock::iterator &MBBI,
+                                      MachineInstr &MI,
                                       LiveVariables *LV) const override;
 
   virtual const ARMBaseRegisterInfo &getRegisterInfo() const = 0;
@@ -116,44 +126,43 @@ public:
                      bool AllowModify = false) const override;
   unsigned RemoveBranch(MachineBasicBlock &MBB) const override;
   unsigned InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
-                        MachineBasicBlock *FBB,
-                        const SmallVectorImpl<MachineOperand> &Cond,
-                        DebugLoc DL) const override;
+                        MachineBasicBlock *FBB, ArrayRef<MachineOperand> Cond,
+                        const DebugLoc &DL) const override;
 
   bool
   ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const override;
 
   // Predication support.
-  bool isPredicated(const MachineInstr *MI) const override;
+  bool isPredicated(const MachineInstr &MI) const override;
 
-  ARMCC::CondCodes getPredicate(const MachineInstr *MI) const {
-    int PIdx = MI->findFirstPredOperandIdx();
-    return PIdx != -1 ? (ARMCC::CondCodes)MI->getOperand(PIdx).getImm()
+  ARMCC::CondCodes getPredicate(const MachineInstr &MI) const {
+    int PIdx = MI.findFirstPredOperandIdx();
+    return PIdx != -1 ? (ARMCC::CondCodes)MI.getOperand(PIdx).getImm()
                       : ARMCC::AL;
   }
 
-  bool PredicateInstruction(MachineInstr *MI,
-                    const SmallVectorImpl<MachineOperand> &Pred) const override;
+  bool PredicateInstruction(MachineInstr &MI,
+                            ArrayRef<MachineOperand> Pred) const override;
 
-  bool SubsumesPredicate(const SmallVectorImpl<MachineOperand> &Pred1,
-                   const SmallVectorImpl<MachineOperand> &Pred2) const override;
+  bool SubsumesPredicate(ArrayRef<MachineOperand> Pred1,
+                         ArrayRef<MachineOperand> Pred2) const override;
 
-  bool DefinesPredicate(MachineInstr *MI,
+  bool DefinesPredicate(MachineInstr &MI,
                         std::vector<MachineOperand> &Pred) const override;
 
-  bool isPredicable(MachineInstr *MI) const override;
+  bool isPredicable(MachineInstr &MI) const override;
 
   /// GetInstSize - Returns the size of the specified MachineInstr.
   ///
-  virtual unsigned GetInstSizeInBytes(const MachineInstr* MI) const;
+  virtual unsigned GetInstSizeInBytes(const MachineInstr &MI) const;
 
-  unsigned isLoadFromStackSlot(const MachineInstr *MI,
+  unsigned isLoadFromStackSlot(const MachineInstr &MI,
                                int &FrameIndex) const override;
-  unsigned isStoreToStackSlot(const MachineInstr *MI,
+  unsigned isStoreToStackSlot(const MachineInstr &MI,
                               int &FrameIndex) const override;
-  unsigned isLoadFromStackSlotPostFE(const MachineInstr *MI,
+  unsigned isLoadFromStackSlotPostFE(const MachineInstr &MI,
                                      int &FrameIndex) const override;
-  unsigned isStoreToStackSlotPostFE(const MachineInstr *MI,
+  unsigned isStoreToStackSlotPostFE(const MachineInstr &MI,
                                     int &FrameIndex) const override;
 
   void copyToCPSR(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
@@ -164,7 +173,7 @@ public:
                     const ARMSubtarget &Subtarget) const;
 
   void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
-                   DebugLoc DL, unsigned DestReg, unsigned SrcReg,
+                   const DebugLoc &DL, unsigned DestReg, unsigned SrcReg,
                    bool KillSrc) const override;
 
   void storeRegToStackSlot(MachineBasicBlock &MBB,
@@ -179,24 +188,21 @@ public:
                             const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
 
-  bool expandPostRAPseudo(MachineBasicBlock::iterator MI) const override;
+  bool expandPostRAPseudo(MachineInstr &MI) const override;
 
   void reMaterialize(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
                      unsigned DestReg, unsigned SubIdx,
-                     const MachineInstr *Orig,
+                     const MachineInstr &Orig,
                      const TargetRegisterInfo &TRI) const override;
 
-  MachineInstr *duplicate(MachineInstr *Orig,
+  MachineInstr *duplicate(MachineInstr &Orig,
                           MachineFunction &MF) const override;
-
-  MachineInstr *commuteInstruction(MachineInstr*,
-                                   bool=false) const override;
 
   const MachineInstrBuilder &AddDReg(MachineInstrBuilder &MIB, unsigned Reg,
                                      unsigned SubIdx, unsigned State,
                                      const TargetRegisterInfo *TRI) const;
 
-  bool produceSameValue(const MachineInstr *MI0, const MachineInstr *MI1,
+  bool produceSameValue(const MachineInstr &MI0, const MachineInstr &MI1,
                         const MachineRegisterInfo *MRI) const override;
 
   /// areLoadsFromSameBasePtr - This is used by the pre-regalloc scheduler to
@@ -219,21 +225,21 @@ public:
                                int64_t Offset1, int64_t Offset2,
                                unsigned NumLoads) const override;
 
-  bool isSchedulingBoundary(const MachineInstr *MI,
+  bool isSchedulingBoundary(const MachineInstr &MI,
                             const MachineBasicBlock *MBB,
                             const MachineFunction &MF) const override;
 
   bool isProfitableToIfCvt(MachineBasicBlock &MBB,
                            unsigned NumCycles, unsigned ExtraPredCycles,
-                           const BranchProbability &Probability) const override;
+                           BranchProbability Probability) const override;
 
   bool isProfitableToIfCvt(MachineBasicBlock &TMBB, unsigned NumT,
                            unsigned ExtraT, MachineBasicBlock &FMBB,
                            unsigned NumF, unsigned ExtraF,
-                           const BranchProbability &Probability) const override;
+                           BranchProbability Probability) const override;
 
   bool isProfitableToDupForIfCvt(MachineBasicBlock &MBB, unsigned NumCycles,
-                          const BranchProbability &Probability) const override {
+                                 BranchProbability Probability) const override {
     return NumCycles == 1;
   }
 
@@ -244,7 +250,7 @@ public:
   /// in SrcReg and SrcReg2 if having two register operands, and the value it
   /// compares against in CmpValue. Return true if the comparison instruction
   /// can be analyzed.
-  bool analyzeCompare(const MachineInstr *MI, unsigned &SrcReg,
+  bool analyzeCompare(const MachineInstr &MI, unsigned &SrcReg,
                       unsigned &SrcReg2, int &CmpMask,
                       int &CmpValue) const override;
 
@@ -252,30 +258,29 @@ public:
   /// that we can remove a "comparison with zero"; Remove a redundant CMP
   /// instruction if the flags can be updated in the same way by an earlier
   /// instruction such as SUB.
-  bool optimizeCompareInstr(MachineInstr *CmpInstr, unsigned SrcReg,
+  bool optimizeCompareInstr(MachineInstr &CmpInstr, unsigned SrcReg,
                             unsigned SrcReg2, int CmpMask, int CmpValue,
                             const MachineRegisterInfo *MRI) const override;
 
-  bool analyzeSelect(const MachineInstr *MI,
-                     SmallVectorImpl<MachineOperand> &Cond,
-                     unsigned &TrueOp, unsigned &FalseOp,
-                     bool &Optimizable) const override;
+  bool analyzeSelect(const MachineInstr &MI,
+                     SmallVectorImpl<MachineOperand> &Cond, unsigned &TrueOp,
+                     unsigned &FalseOp, bool &Optimizable) const override;
 
-  MachineInstr *optimizeSelect(MachineInstr *MI,
+  MachineInstr *optimizeSelect(MachineInstr &MI,
                                SmallPtrSetImpl<MachineInstr *> &SeenMIs,
                                bool) const override;
 
   /// FoldImmediate - 'Reg' is known to be defined by a move immediate
   /// instruction, try to fold the immediate into the use instruction.
-  bool FoldImmediate(MachineInstr *UseMI, MachineInstr *DefMI,
-                     unsigned Reg, MachineRegisterInfo *MRI) const override;
+  bool FoldImmediate(MachineInstr &UseMI, MachineInstr &DefMI, unsigned Reg,
+                     MachineRegisterInfo *MRI) const override;
 
   unsigned getNumMicroOps(const InstrItineraryData *ItinData,
-                          const MachineInstr *MI) const override;
+                          const MachineInstr &MI) const override;
 
   int getOperandLatency(const InstrItineraryData *ItinData,
-                        const MachineInstr *DefMI, unsigned DefIdx,
-                        const MachineInstr *UseMI,
+                        const MachineInstr &DefMI, unsigned DefIdx,
+                        const MachineInstr &UseMI,
                         unsigned UseIdx) const override;
   int getOperandLatency(const InstrItineraryData *ItinData,
                         SDNode *DefNode, unsigned DefIdx,
@@ -283,19 +288,20 @@ public:
 
   /// VFP/NEON execution domains.
   std::pair<uint16_t, uint16_t>
-  getExecutionDomain(const MachineInstr *MI) const override;
-  void setExecutionDomain(MachineInstr *MI, unsigned Domain) const override;
+  getExecutionDomain(const MachineInstr &MI) const override;
+  void setExecutionDomain(MachineInstr &MI, unsigned Domain) const override;
 
-  unsigned getPartialRegUpdateClearance(const MachineInstr*, unsigned,
-                                      const TargetRegisterInfo*) const override;
-  void breakPartialRegDependency(MachineBasicBlock::iterator, unsigned,
+  unsigned
+  getPartialRegUpdateClearance(const MachineInstr &, unsigned,
+                               const TargetRegisterInfo *) const override;
+  void breakPartialRegDependency(MachineInstr &, unsigned,
                                  const TargetRegisterInfo *TRI) const override;
 
   /// Get the number of addresses by LDM or VLDM or zero for unknown.
-  unsigned getNumLDMAddresses(const MachineInstr *MI) const;
+  unsigned getNumLDMAddresses(const MachineInstr &MI) const;
 
 private:
-  unsigned getInstBundleLength(const MachineInstr *MI) const;
+  unsigned getInstBundleLength(const MachineInstr &MI) const;
 
   int getVLDMDefCycle(const InstrItineraryData *ItinData,
                       const MCInstrDesc &DefMCID,
@@ -319,30 +325,38 @@ private:
                         const MCInstrDesc &UseMCID,
                         unsigned UseIdx, unsigned UseAlign) const;
 
-  unsigned getPredicationCost(const MachineInstr *MI) const override;
+  int getOperandLatencyImpl(const InstrItineraryData *ItinData,
+                            const MachineInstr &DefMI, unsigned DefIdx,
+                            const MCInstrDesc &DefMCID, unsigned DefAdj,
+                            const MachineOperand &DefMO, unsigned Reg,
+                            const MachineInstr &UseMI, unsigned UseIdx,
+                            const MCInstrDesc &UseMCID, unsigned UseAdj) const;
+
+  unsigned getPredicationCost(const MachineInstr &MI) const override;
 
   unsigned getInstrLatency(const InstrItineraryData *ItinData,
-                           const MachineInstr *MI,
+                           const MachineInstr &MI,
                            unsigned *PredCost = nullptr) const override;
 
   int getInstrLatency(const InstrItineraryData *ItinData,
                       SDNode *Node) const override;
 
-  bool hasHighOperandLatency(const InstrItineraryData *ItinData,
+  bool hasHighOperandLatency(const TargetSchedModel &SchedModel,
                              const MachineRegisterInfo *MRI,
-                             const MachineInstr *DefMI, unsigned DefIdx,
-                             const MachineInstr *UseMI,
+                             const MachineInstr &DefMI, unsigned DefIdx,
+                             const MachineInstr &UseMI,
                              unsigned UseIdx) const override;
-  bool hasLowDefLatency(const InstrItineraryData *ItinData,
-                        const MachineInstr *DefMI,
+  bool hasLowDefLatency(const TargetSchedModel &SchedModel,
+                        const MachineInstr &DefMI,
                         unsigned DefIdx) const override;
 
   /// verifyInstruction - Perform target specific instruction verification.
-  bool verifyInstruction(const MachineInstr *MI,
+  bool verifyInstruction(const MachineInstr &MI,
                          StringRef &ErrInfo) const override;
 
-  virtual void expandLoadStackGuard(MachineBasicBlock::iterator MI,
-                                    Reloc::Model RM) const = 0;
+  virtual void expandLoadStackGuard(MachineBasicBlock::iterator MI) const = 0;
+
+  void expandMEMCPY(MachineBasicBlock::iterator) const;
 
 private:
   /// Modeling special VFP / NEON fp MLA / MLS hazards.
@@ -437,9 +451,9 @@ static inline bool isPushOpcode(int Opc) {
 /// getInstrPredicate - If instruction is predicated, returns its predicate
 /// condition, otherwise returns AL. It also returns the condition code
 /// register by reference.
-ARMCC::CondCodes getInstrPredicate(const MachineInstr *MI, unsigned &PredReg);
+ARMCC::CondCodes getInstrPredicate(const MachineInstr &MI, unsigned &PredReg);
 
-int getMatchingCondBranchOpcode(int Opc);
+unsigned getMatchingCondBranchOpcode(unsigned Opc);
 
 /// Determine if MI can be folded into an ARM MOVCC instruction, and return the
 /// opcode of the SSA instruction representing the conditional MI.
@@ -456,21 +470,24 @@ unsigned convertAddSubFlagsOpcode(unsigned OldOpc);
 /// instructions to materializea destreg = basereg + immediate in ARM / Thumb2
 /// code.
 void emitARMRegPlusImmediate(MachineBasicBlock &MBB,
-                             MachineBasicBlock::iterator &MBBI, DebugLoc dl,
-                             unsigned DestReg, unsigned BaseReg, int NumBytes,
+                             MachineBasicBlock::iterator &MBBI,
+                             const DebugLoc &dl, unsigned DestReg,
+                             unsigned BaseReg, int NumBytes,
                              ARMCC::CondCodes Pred, unsigned PredReg,
                              const ARMBaseInstrInfo &TII, unsigned MIFlags = 0);
 
 void emitT2RegPlusImmediate(MachineBasicBlock &MBB,
-                            MachineBasicBlock::iterator &MBBI, DebugLoc dl,
-                            unsigned DestReg, unsigned BaseReg, int NumBytes,
+                            MachineBasicBlock::iterator &MBBI,
+                            const DebugLoc &dl, unsigned DestReg,
+                            unsigned BaseReg, int NumBytes,
                             ARMCC::CondCodes Pred, unsigned PredReg,
                             const ARMBaseInstrInfo &TII, unsigned MIFlags = 0);
 void emitThumbRegPlusImmediate(MachineBasicBlock &MBB,
-                               MachineBasicBlock::iterator &MBBI, DebugLoc dl,
-                               unsigned DestReg, unsigned BaseReg,
-                               int NumBytes, const TargetInstrInfo &TII,
-                               const ARMBaseRegisterInfo& MRI,
+                               MachineBasicBlock::iterator &MBBI,
+                               const DebugLoc &dl, unsigned DestReg,
+                               unsigned BaseReg, int NumBytes,
+                               const TargetInstrInfo &TII,
+                               const ARMBaseRegisterInfo &MRI,
                                unsigned MIFlags = 0);
 
 /// Tries to add registers to the reglist of a given base-updating

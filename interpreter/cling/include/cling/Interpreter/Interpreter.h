@@ -32,7 +32,6 @@ namespace llvm {
 namespace clang {
   class ASTContext;
   class ASTDeserializationListener;
-  class CodeGenerator;
   class CompilerInstance;
   class Decl;
   class DeclContext;
@@ -40,6 +39,7 @@ namespace clang {
   class GlobalDecl;
   class NamedDecl;
   class Parser;
+  class Preprocessor;
   class QualType;
   class RecordDecl;
   class Sema;
@@ -96,7 +96,6 @@ namespace cling {
     public:
       StateDebuggerRAII(const Interpreter* i);
       ~StateDebuggerRAII();
-      void pop() const;
     };
 
     ///\brief Describes the return result of the different routines that do the
@@ -158,7 +157,7 @@ namespace cling {
 
     ///\brief Counter used when we need unique names.
     ///
-    unsigned long long m_UniqueCounter;
+    mutable unsigned long long m_UniqueCounter;
 
     ///\brief Flag toggling the Debug printing on or off.
     ///
@@ -214,32 +213,41 @@ namespace cling {
     ///       initialized to point to the return value's location if the
     ///       expression result is an aggregate.
     ///\param [out] T - The cling::Transaction of the compiled input.
+    ///\param [in] wrapPoint - Where in input to begin the wrapper
     ///
     ///\returns Whether the operation was fully successful.
     ///
     CompilationResult EvaluateInternal(const std::string& input,
                                        CompilationOptions CO,
                                        Value* V = 0,
-                                       Transaction** T = 0);
+                                       Transaction** T = 0,
+                                       size_t wrapPoint = 0);
 
-    ///\brief Decides whether the input line should be wrapped into a function
-    /// declaration that can later be executed.
+    ///\brief Worker function to code complete after all the mechanism
+    /// has been set up.
     ///
-    ///\param[in] input - The input being scanned.
+    ///\param [in] input - The input being completed.
+    ///\param [in] offset - The offset for the completion point.
     ///
-    ///\returns true if the input should be wrapped into a function declaration.
+    ///\returns Whether the operation was fully successful.
     ///
-    bool ShouldWrapInput(const std::string& input);
+    CompilationResult CodeCompleteInternal(const std::string& input,
+                                           unsigned offset);
 
     ///\brief Wraps a given input.
     ///
     /// The interpreter must be able to run statements on the fly, which is not
     /// C++ standard-compliant operation. In order to do that we must wrap the
     /// input into a artificial function, containing the statements and run it.
-    ///\param [out] input - The input to wrap.
-    ///\param [out] fname - The wrapper function's name.
+    ///\param [in] Input - The input to wrap.
+    ///\param [out] Buffer - string to store input if wrapped (can be Input).
+    ///\param [in/out] WrapPoint - The position in Input to add the wrapper.
+    /// On exit WrapPoint is updated to the position of Input in Buffer.
     ///
-    void WrapInput(std::string& input, std::string& fname);
+    ///\returns A reference to Buffer when wrapped, otherwise a ref to Input
+    ///
+    const std::string& WrapInput(const std::string& Input, std::string& Buffer,
+                                 size_t& WrapPoint) const;
 
     ///\brief Runs given wrapper function.
     ///
@@ -266,10 +274,6 @@ namespace cling {
                                                 llvm::StringRef code,
                                                 bool withAccessControl);
 
-    ///\brief Set up include paths for runtime headers.
-    ///
-    void AddRuntimeIncludePaths(const char* argv0);
-
     ///\brief Include C++ runtime headers and definitions.
     ///
     void IncludeCXXRuntime();
@@ -278,12 +282,12 @@ namespace cling {
     ///
     void IncludeCRuntime();
 
-    ///\brier The target constructor to be called from both the
-    /// delegating constructors.
+    ///\brief The target constructor to be called from both the delegating
+    /// constructors. parentInterp might be nullptr.
     ///
     Interpreter(int argc, const char* const *argv,
-                const char* llvmdir /*= 0*/, bool noRuntime,
-                bool isChildInterp);
+                const char* llvmdir, bool noRuntime,
+                const Interpreter* parentInterp);
 
   public:
     ///\brief Constructor for Interpreter.
@@ -295,7 +299,7 @@ namespace cling {
     ///
     Interpreter(int argc, const char* const *argv, const char* llvmdir = 0,
                 bool noRuntime = false) :
-      Interpreter(argc, argv, llvmdir, noRuntime, false) { }
+      Interpreter(argc, argv, llvmdir, noRuntime, nullptr) { }
 
     ///\brief Constructor for child Interpreter.
     ///\param[in] parentInterpreter - the  parent interpreter of this interpreter
@@ -304,7 +308,7 @@ namespace cling {
     ///\param[in] llvmdir - ???
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
-    Interpreter(Interpreter &parentInterpreter,int argc, const char* const *argv,
+    Interpreter(const Interpreter &parentInterpreter,int argc, const char* const *argv,
                 const char* llvmdir = 0, bool noRuntime = true);
 
     virtual ~Interpreter();
@@ -357,7 +361,7 @@ namespace cling {
     /// next time the compiler looks for that name it will find it directly
     /// there.
     ///
-    llvm::StringRef createUniqueWrapper();
+    llvm::StringRef createUniqueWrapper() const;
 
     ///\brief Checks whether the name was generated by Interpreter's unique
     /// wrapper name generator.
@@ -368,9 +372,18 @@ namespace cling {
     ///
     bool isUniqueWrapper(llvm::StringRef name);
 
-    ///\brief Adds an include path (-I).
+    ///\brief Adds multiple include paths separated by a delimter.
     ///
-    void AddIncludePath(llvm::StringRef incpath);
+    ///\param[in] PathsStr - Path(s)
+    ///\param[in] Delim - Delimiter to separate paths or NULL if a single path
+    ///
+    void AddIncludePaths(llvm::StringRef PathsStr, const char* Delim = ":");
+
+    ///\brief Adds a single include path (-I).
+    ///
+    void AddIncludePath(llvm::StringRef PathsStr) {
+      return AddIncludePaths(PathsStr, nullptr);
+    }
 
     ///\brief Prints the current include paths that are used.
     ///
@@ -383,12 +396,15 @@ namespace cling {
     ///       a new include path region (e.g. "-cxx-isystem"). Also, flags
     ///       defining header search behavior will be included in incpaths, e.g.
     ///       "-nostdinc".
+    ///
     void GetIncludePaths(llvm::SmallVectorImpl<std::string>& incpaths,
                          bool withSystem, bool withFlags);
 
     ///\brief Prints the current include paths that are used.
     ///
-    void DumpIncludePath();
+    ///\param[in] S - stream to dump to or nullptr for default (llvm::outs)
+    ///
+    void DumpIncludePath(llvm::raw_ostream* S = nullptr);
 
     ///\brief Store the interpreter state in files
     /// Store the AST, the included files and the lookup tables
@@ -467,6 +483,20 @@ namespace cling {
     ///\returns Whether the operation was fully successful.
     ///
     CompilationResult parseForModule(const std::string& input);
+
+    ///\brief Code completes user input.
+    ///
+    /// The interface circumvents the most of the extra work necessary to
+    /// code complete code.
+    ///
+    /// @param[in] line - The input containing the string to be completed.
+    /// @param[in] cursor - The offset for the completion point.
+    /// @param[out] completions - The results for teh completion
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult codeComplete(const std::string& line, size_t& cursor,
+                                   std::vector<std::string>& completions) const;
 
     ///\brief Compiles input line, which doesn't contain statements.
     ///
@@ -552,12 +582,23 @@ namespace cling {
                                bool allowSharedLib = true,
                                Transaction** T = 0);
 
+    ///\brief Unloads (forgets) a transaction from AST and JITed symbols.
+    ///
+    /// If one of the declarations caused error in clang it is rolled back from
+    /// the AST. This is essential feature for the error recovery subsystem.
+    /// This is also a key entry point for the code unloading.
+    ///
+    ///\param[in] T - the transaction to unload.
+    ///
+    void unload(Transaction& T);
+
     ///\brief Unloads (forgets) given number of transactions.
     ///
     ///\param[in] numberOfTransactions - how many transactions to revert
     ///                                  starting from the last.
     ///
     void unload(unsigned numberOfTransactions);
+
     void runAndRemoveStaticDestructors();
     void runAndRemoveStaticDestructors(unsigned numberOfTransactions);
 
@@ -576,8 +617,8 @@ namespace cling {
     //FIXME: This must be in InterpreterCallbacks.
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
 
-    //FIXME: Terrible hack to let the IncrementalParser run static inits on
-    // transaction completed.
+    //FIXME: Lets the IncrementalParser run static inits on transaction
+    // completed. Find a better way.
     ExecutionResult executeTransaction(Transaction& T);
 
     ///\brief Evaluates given expression within given declaration context.
@@ -660,7 +701,8 @@ namespace cling {
     void GenerateAutoloadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
                                 bool enableMacros = false, bool enableLogs = true);
 
-    void forwardDeclare(Transaction& T, clang::Sema& S,
+    void forwardDeclare(Transaction& T, clang::Preprocessor& P,
+                        clang::ASTContext& Ctx,
                         llvm::raw_ostream& out,
                         bool enableMacros = false,
                         llvm::raw_ostream* logs = 0,

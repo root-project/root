@@ -8,7 +8,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/DebugInfo/DWARF/DWARFDebugLoc.h"
-#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Dwarf.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/raw_ostream.h"
@@ -67,8 +66,7 @@ void DWARFDebugLoc::parse(DataExtractor data, unsigned AddressSize) {
       // A single location description describing the location of the object...
       StringRef str = data.getData().substr(Offset, Bytes);
       Offset += Bytes;
-      E.Loc.reserve(str.size());
-      std::copy(str.begin(), str.end(), std::back_inserter(E.Loc));
+      E.Loc.append(str.begin(), str.end());
       Loc.Entries.push_back(std::move(E));
     }
   }

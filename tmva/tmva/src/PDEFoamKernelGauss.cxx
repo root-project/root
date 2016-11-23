@@ -37,6 +37,7 @@
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/PDEFoam.h"
+#include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/Types.h"
 
 #ifndef ROOT_TMath

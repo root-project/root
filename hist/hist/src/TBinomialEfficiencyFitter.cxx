@@ -9,11 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
 /** \class TBinomialEfficiencyFitter
     \ingroup Hist
     \brief Binomial fitter for the division of two histograms.
- 
+
 Use when you need to calculate a selection's efficiency from two histograms,
 one containing all entries, and one containing the subset of these entries
 that pass the selection, and when you have a parametrization available for
@@ -45,7 +44,7 @@ efficiency is provided, this construction in general yields less biased results
 A generic use of this method is given below (note that the method works for 2D
 and 3D histograms as well):
 
-~~~~~~~~~~~~~~~{.cpp}
+~~~ {.cpp}
     {
         TH1* denominator;              // denominator histogram
         TH1* numerator;                // corresponding numerator histogram
@@ -66,12 +65,12 @@ and 3D histograms as well):
           eff->Draw("same");
         }
     }
-~~~~~~~~~~~~~~~
+~~~
 
 Note that this method cannot be expected to yield reliable results when using
 weighted histograms (because the likelihood computation will be incorrect).
 
-*///////////////////////////////////////////////////////////////////////////////////
+*/
 
 #include "TBinomialEfficiencyFitter.h"
 

@@ -15,6 +15,8 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSectionELF.h"
+#include "llvm/MC/MCValue.h"
+#include "llvm/Support/COFF.h"
 #include "llvm/Support/Dwarf.h"
 #include "llvm/Target/TargetLowering.h"
 
@@ -31,9 +33,9 @@ const MCExpr *X86_64MachoTargetObjectFile::getTTypeGlobalReference(
   if ((Encoding & DW_EH_PE_indirect) && (Encoding & DW_EH_PE_pcrel)) {
     const MCSymbol *Sym = TM.getSymbol(GV, Mang);
     const MCExpr *Res =
-      MCSymbolRefExpr::Create(Sym, MCSymbolRefExpr::VK_GOTPCREL, getContext());
-    const MCExpr *Four = MCConstantExpr::Create(4, getContext());
-    return MCBinaryExpr::CreateAdd(Res, Four, getContext());
+      MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_GOTPCREL, getContext());
+    const MCExpr *Four = MCConstantExpr::create(4, getContext());
+    return MCBinaryExpr::createAdd(Res, Four, getContext());
   }
 
   return TargetLoweringObjectFileMachO::getTTypeGlobalReference(
@@ -46,67 +48,55 @@ MCSymbol *X86_64MachoTargetObjectFile::getCFIPersonalitySymbol(
   return TM.getSymbol(GV, Mang);
 }
 
+const MCExpr *X86_64MachoTargetObjectFile::getIndirectSymViaGOTPCRel(
+    const MCSymbol *Sym, const MCValue &MV, int64_t Offset,
+    MachineModuleInfo *MMI, MCStreamer &Streamer) const {
+  // On Darwin/X86-64, we need to use foo@GOTPCREL+4 to access the got entry
+  // from a data section. In case there's an additional offset, then use
+  // foo@GOTPCREL+4+<offset>.
+  unsigned FinalOff = Offset+MV.getConstant()+4;
+  const MCExpr *Res =
+    MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_GOTPCREL, getContext());
+  const MCExpr *Off = MCConstantExpr::create(FinalOff, getContext());
+  return MCBinaryExpr::createAdd(Res, Off, getContext());
+}
+
+const MCExpr *X86ELFTargetObjectFile::getDebugThreadLocalSymbol(
+    const MCSymbol *Sym) const {
+  return MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_DTPOFF, getContext());
+}
+
 void
-X86LinuxTargetObjectFile::Initialize(MCContext &Ctx, const TargetMachine &TM) {
+X86LinuxNaClTargetObjectFile::Initialize(MCContext &Ctx,
+                                         const TargetMachine &TM) {
   TargetLoweringObjectFileELF::Initialize(Ctx, TM);
   InitializeELF(TM.Options.UseInitArray);
 }
 
-const MCExpr *
-X86LinuxTargetObjectFile::getDebugThreadLocalSymbol(
-    const MCSymbol *Sym) const {
-  return MCSymbolRefExpr::Create(Sym, MCSymbolRefExpr::VK_DTPOFF, getContext());
-}
-
-const MCExpr *X86WindowsTargetObjectFile::getExecutableRelativeSymbol(
-    const ConstantExpr *CE, Mangler &Mang, const TargetMachine &TM) const {
-  // We are looking for the difference of two symbols, need a subtraction
-  // operation.
-  const SubOperator *Sub = dyn_cast<SubOperator>(CE);
-  if (!Sub)
-    return nullptr;
-
-  // Symbols must first be numbers before we can subtract them, we need to see a
-  // ptrtoint on both subtraction operands.
-  const PtrToIntOperator *SubLHS =
-      dyn_cast<PtrToIntOperator>(Sub->getOperand(0));
-  const PtrToIntOperator *SubRHS =
-      dyn_cast<PtrToIntOperator>(Sub->getOperand(1));
-  if (!SubLHS || !SubRHS)
-    return nullptr;
-
+const MCExpr *X86WindowsTargetObjectFile::lowerRelativeReference(
+    const GlobalValue *LHS, const GlobalValue *RHS, Mangler &Mang,
+    const TargetMachine &TM) const {
   // Our symbols should exist in address space zero, cowardly no-op if
   // otherwise.
-  if (SubLHS->getPointerAddressSpace() != 0 ||
-      SubRHS->getPointerAddressSpace() != 0)
+  if (LHS->getType()->getPointerAddressSpace() != 0 ||
+      RHS->getType()->getPointerAddressSpace() != 0)
     return nullptr;
 
-  // Both ptrtoint instructions must wrap global variables:
+  // Both ptrtoint instructions must wrap global objects:
   // - Only global variables are eligible for image relative relocations.
-  // - The subtrahend refers to the special symbol __ImageBase, a global.
-  const GlobalVariable *GVLHS =
-      dyn_cast<GlobalVariable>(SubLHS->getPointerOperand());
-  const GlobalVariable *GVRHS =
-      dyn_cast<GlobalVariable>(SubRHS->getPointerOperand());
-  if (!GVLHS || !GVRHS)
-    return nullptr;
-
+  // - The subtrahend refers to the special symbol __ImageBase, a GlobalVariable.
   // We expect __ImageBase to be a global variable without a section, externally
   // defined.
   //
   // It should look something like this: @__ImageBase = external constant i8
-  if (GVRHS->isThreadLocal() || GVRHS->getName() != "__ImageBase" ||
-      !GVRHS->hasExternalLinkage() || GVRHS->hasInitializer() ||
-      GVRHS->hasSection())
+  if (!isa<GlobalObject>(LHS) || !isa<GlobalVariable>(RHS) ||
+      LHS->isThreadLocal() || RHS->isThreadLocal() ||
+      RHS->getName() != "__ImageBase" || !RHS->hasExternalLinkage() ||
+      cast<GlobalVariable>(RHS)->hasInitializer() || RHS->hasSection())
     return nullptr;
 
-  // An image-relative, thread-local, symbol makes no sense.
-  if (GVLHS->isThreadLocal())
-    return nullptr;
-
-  return MCSymbolRefExpr::Create(TM.getSymbol(GVLHS, Mang),
-                                 MCSymbolRefExpr::VK_COFF_IMGREL32,
-                                 getContext());
+  return MCSymbolRefExpr::create(
+      TM.getSymbol(LHS, Mang), MCSymbolRefExpr::VK_COFF_IMGREL32, getContext());
 }
 
 static std::string APIntToHexString(const APInt &AI) {
@@ -119,53 +109,62 @@ static std::string APIntToHexString(const APInt &AI) {
   return HexString;
 }
 
-
 static std::string scalarConstantToHexString(const Constant *C) {
   Type *Ty = C->getType();
-  APInt AI;
   if (isa<UndefValue>(C)) {
-    AI = APInt(Ty->getPrimitiveSizeInBits(), /*val=*/0);
-  } else if (Ty->isFloatTy() || Ty->isDoubleTy()) {
-    const auto *CFP = cast<ConstantFP>(C);
-    AI = CFP->getValueAPF().bitcastToAPInt();
-  } else if (Ty->isIntegerTy()) {
-    const auto *CI = cast<ConstantInt>(C);
-    AI = CI->getValue();
+    return APIntToHexString(APInt::getNullValue(Ty->getPrimitiveSizeInBits()));
+  } else if (const auto *CFP = dyn_cast<ConstantFP>(C)) {
+    return APIntToHexString(CFP->getValueAPF().bitcastToAPInt());
+  } else if (const auto *CI = dyn_cast<ConstantInt>(C)) {
+    return APIntToHexString(CI->getValue());
   } else {
-    llvm_unreachable("unexpected constant pool element type!");
+    unsigned NumElements;
+    if (isa<VectorType>(Ty))
+      NumElements = Ty->getVectorNumElements();
+    else
+      NumElements = Ty->getArrayNumElements();
+    std::string HexString;
+    for (int I = NumElements - 1, E = -1; I != E; --I)
+      HexString += scalarConstantToHexString(C->getAggregateElement(I));
+    return HexString;
   }
-  return APIntToHexString(AI);
 }
 
-const MCSection *
-X86WindowsTargetObjectFile::getSectionForConstant(SectionKind Kind,
-                                                  const Constant *C) const {
-  if (Kind.isReadOnly()) {
-    if (C) {
-      Type *Ty = C->getType();
-      SmallString<32> COMDATSymName;
-      if (Ty->isFloatTy() || Ty->isDoubleTy()) {
-        COMDATSymName = "__real@";
-        COMDATSymName += scalarConstantToHexString(C);
-      } else if (const auto *VTy = dyn_cast<VectorType>(Ty)) {
-        uint64_t NumBits = VTy->getBitWidth();
-        if (NumBits == 128 || NumBits == 256) {
-          COMDATSymName = NumBits == 128 ? "__xmm@" : "__ymm@";
-          for (int I = VTy->getNumElements() - 1, E = -1; I != E; --I)
-            COMDATSymName +=
-                scalarConstantToHexString(C->getAggregateElement(I));
-        }
+MCSection *X86WindowsTargetObjectFile::getSectionForConstant(
+    const DataLayout &DL, SectionKind Kind, const Constant *C,
+    unsigned &Align) const {
+  if (Kind.isMergeableConst() && C) {
+    const unsigned Characteristics = COFF::IMAGE_SCN_CNT_INITIALIZED_DATA |
+                                     COFF::IMAGE_SCN_MEM_READ |
+                                     COFF::IMAGE_SCN_LNK_COMDAT;
+    std::string COMDATSymName;
+    if (Kind.isMergeableConst4()) {
+      if (Align <= 4) {
+        COMDATSymName = "__real@" + scalarConstantToHexString(C);
+        Align = 4;
       }
-      if (!COMDATSymName.empty()) {
-        unsigned Characteristics = COFF::IMAGE_SCN_CNT_INITIALIZED_DATA |
-                                   COFF::IMAGE_SCN_MEM_READ |
-                                   COFF::IMAGE_SCN_LNK_COMDAT;
-        return getContext().getCOFFSection(".rdata", Characteristics, Kind,
-                                           COMDATSymName,
-                                           COFF::IMAGE_COMDAT_SELECT_ANY);
+    } else if (Kind.isMergeableConst8()) {
+      if (Align <= 8) {
+        COMDATSymName = "__real@" + scalarConstantToHexString(C);
+        Align = 8;
+      }
+    } else if (Kind.isMergeableConst16()) {
+      if (Align <= 16) {
+        COMDATSymName = "__xmm@" + scalarConstantToHexString(C);
+        Align = 16;
+      }
+    } else if (Kind.isMergeableConst32()) {
+      if (Align <= 32) {
+        COMDATSymName = "__ymm@" + scalarConstantToHexString(C);
+        Align = 32;
       }
     }
+
+    if (!COMDATSymName.empty())
+      return getContext().getCOFFSection(".rdata", Characteristics, Kind,
+                                         COMDATSymName,
+                                         COFF::IMAGE_COMDAT_SELECT_ANY);
   }
 
-  return TargetLoweringObjectFile::getSectionForConstant(Kind, C);
+  return TargetLoweringObjectFile::getSectionForConstant(DL, Kind, C, Align);
 }

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 ///  Fitting multiple functions to different ranges of a 1-D histogram
 ///      Example showing how to fit in a sub-range of an histogram
 ///  An histogram is created and filled with the bin contents and errors

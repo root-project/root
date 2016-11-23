@@ -25,8 +25,10 @@
 #include <cmath>
 #include "Math/BrentRootFinder.h"
 #include "Math/WrappedFunction.h"
+#include "Math/Functor.h"
 
 #include "TCanvas.h"
+#include "TFile.h"
 #include "RooStats/SamplingDistPlot.h"
 
 #include <algorithm>
@@ -539,33 +541,16 @@ int HypoTestInverterResult::FindIndex(double xvalue) const
   return -1;
 }
 
-
-struct InterpolatedGraph { 
-   InterpolatedGraph( const TGraph & g, double target, const char * interpOpt) : 
-      fGraph(g), fTarget(target), fInterpOpt(interpOpt) {}
-
-   // return interpolated value for x - target
-   double operator() (double x) const { 
-      return fGraph.Eval(x, (TSpline*) 0, fInterpOpt) - fTarget;
-   }
-   const TGraph & fGraph;
-   double fTarget;
-   TString fInterpOpt;
-}; 
-
 double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool lowSearch, double &axmin, double &axmax) const  {
    // return the X value of the given graph for the target value y0
    // the graph is evaluated using linear interpolation by default. 
    // if option = "S" a TSpline3 is used 
 
-
-
-   TString opt = "";
-   if (fInterpolOption == kSpline)  opt = "S";
-
-   InterpolatedGraph f(graph,y0,opt);
-   ROOT::Math::BrentRootFinder brf;
-   ROOT::Math::WrappedFunction<InterpolatedGraph> wf(f);
+//#define DO_DEBUG
+#ifdef DO_DEBUG
+   std::cout << "using graph for search " << lowSearch << " min " << axmin << " max " << axmax << std::endl;
+#endif
+   
 
    // find reasanable xmin and xmax if not given
    const double * y = graph.GetY(); 
@@ -583,56 +568,46 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
        varmax = var->getMax();
    }
 
-   double xmin = axmin; 
+   double xmin = axmin;
    double xmax = axmax;
-   // case no range is given check if need to extrapolate to lower/upper values 
-   if (axmin >= axmax ) { 
+
+   // case no range is given check if need to extrapolate to lower/upper values
+   if (axmin >= axmax ) {
+
+#ifdef DO_DEBUG
+      std::cout << "No rage given - check if extrapolation is needed " << std::endl;
+#endif
+
       xmin = graph.GetX()[0];
       xmax = graph.GetX()[n-1];
 
+      double yfirst = graph.GetY()[0];
+      double ylast = graph.GetY()[n-1];
+
       // case we have lower/upper limits
 
-      // find ymin and ymax  and corresponding values 
-      double ymin = TMath::MinElement(n,y);
+      // find ymin and ymax  and corresponding values
+      //double ymin = TMath::MinElement(n,y);
       double ymax = TMath::MaxElement(n,y);
-      // do lower extrapolation 
-      if ( (ymax < y0 && !lowSearch) || ( ymin > y0 && lowSearch) ) { 
+      // do lower extrapolation
+
+      if ( (ymax < y0 && !lowSearch) || ( yfirst > y0 && lowSearch) ) {
          xmin = varmin;
       }
-      // do upper extrapolation  
-      if ( (ymax < y0 && lowSearch) || ( ymin > y0 && !lowSearch) ) { 
+      // do upper extrapolation
+      if ( (ymax < y0 && lowSearch) || ( ylast > y0 && !lowSearch) ) {
          xmax = varmax;
       }
    }
-   else { 
 
-#ifdef ISREALLYNEEDED //??
-      // in case of range given, check if all points are above or below the confidence level line
-      bool isCross = false;
-      bool first = true; 
-      double prod = 1;
-      for (int i = 0; i< n; ++i) { 
-         double xp, yp;
-         graph.GetPoint(i,xp,yp);
-         if (xp >= xmin && xp <= xmax) { 
-            prod *= TMath::Sign(1., (yp - y0) );
-            if (prod < 0 && !first) { 
-               isCross = true; 
-               break;
-            }
-            first = false;
-         }
-      }
-      if (!isCross) { 
-         return (lowSearch) ? varmin : varmax;
-      }
-#endif
-   }
+   auto func = [&](double x) {
+      return (fInterpolOption == kSpline) ? graph.Eval(x, nullptr, "S") - y0 : graph.Eval(x) - y0;
+   };   
+   ROOT::Math::Functor1D f1d(func);
    
-
-
-   brf.SetFunction(wf,xmin,xmax);
-   brf.SetNpx(20);
+   ROOT::Math::BrentRootFinder brf;
+   brf.SetFunction(f1d,xmin,xmax);
+   brf.SetNpx(TMath::Max(graph.GetN()*2,100) );
    bool ret = brf.Solve(100, 1.E-16, 1.E-6);
    if (!ret) { 
       ooccoutE(this,Eval) << "HypoTestInverterResult - interpolation failed - return inf" << std::endl;
@@ -640,11 +615,24 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    }
    double limit =  brf.Root();
 
-//#define DO_DEBUG
+   // auto grfunc = [&](double * x, double *) {
+   //    return (fInterpolOption == kSpline) ? graph.Eval(*x, nullptr, "S") - y0 : graph.Eval(*x) - y0;
+   // };
+   // TF1 tgrfunc("tgrfunc",grfunc,xmin,xmax,0);
+   // double limit = tgrfunc.GetX(0,xmin,xmax);
+
 #ifdef DO_DEBUG
    if (lowSearch) std::cout << "lower limit search : ";
    else std::cout << "Upper limit search :  ";
-   std::cout << "do interpolation between " << xmin << "  and " << xmax << " limit is " << limit << std::endl;
+   std::cout << "interpolation done between " << xmin << "  and " << xmax
+             << "\n Found limit using RootFinder is " << limit << std::endl;
+
+   TString fname = "graph_upper.root";
+   if (lowSearch) fname = "graph_lower.root";
+   auto file = TFile::Open(fname,"RECREATE");
+   graph.Write("graph");
+   file->Close();
+   
 #endif
 
    // look in case if a new interseption exists
@@ -676,10 +664,6 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
    // interpolate to find a limit value
    // Use a linear or a spline interpolation depending on the interpolation option
 
-   ooccoutD(this,Eval) << "HypoTestInverterResult - " 
-                       << "Interpolate the upper limit between the 2 results closest to the target confidence level" 
-                       << std::endl;
-
    // variable minimum and maximum
    double varmin = - TMath::Infinity();
    double varmax = TMath::Infinity();
@@ -709,7 +693,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       graph.SetPoint(i, GetXValue(index[i]), GetYValue(index[i] ) );
 
 
-   //std::cout << " search for " << lowSearch << std::endl;
+   //std::cout << " search for " << lowSearch << " xmin = " << xmin << " xmax  " << xmax << std::endl;
    
 
    // search first for min/max in the given range
@@ -722,20 +706,21 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       int iymax = itrmax - graph.GetY(); 
       double xwithymax = graph.GetX()[iymax];
 
-      //std::cout << " max of y " << iymax << "  " << xwithymax << "  " << ymax << " target is " << target << std::endl;
-
+#ifdef DO_DEBUG
+      std::cout << " max of y " << iymax << "  " << xwithymax << "  " << ymax << " target is " << target << std::endl;
+#endif
       // look if maximum is above/belove target
       if (ymax > target) {
          if (lowSearch)  {
             if ( iymax > 0) { 
-                  // low search (minimmum is first point or minimum range)
+                  // low search (minimum is first point or minimum range)
                xmin = ( graph.GetY()[0] <= target ) ? graph.GetX()[0] : varmin;  
                xmax = xwithymax;
                } 
             else { 
                // no room for lower limit
-               fLowerLimit = varmin; 
-               lowSearch = false; // search now for upper limits
+               fLowerLimit = varmin;
+               return fLowerLimit;
             }
          }
          if (!lowSearch ) {
@@ -746,11 +731,9 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
             }
             else { 
                // no room for upper limit
-               fUpperLimit = varmax; 
-               lowSearch = true; // search now for lower limits
-               xmin = varmin; 
-               xmax = xwithymax;
-               }
+               fUpperLimit = varmax;
+               return fUpperLimit; 
+            }
          }
       }
       else { 
@@ -795,37 +778,50 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
    std::cout << "finding " << lowSearch << " limit betweem " << xmin << "  " << xmax << endl;
 #endif
 
+   // compute noe the limit using the TGraph interpolations routine
    double limit =  GetGraphX(graph, target, lowSearch, xmin, xmax);
-   if (lowSearch) fLowerLimit = limit; 
+   if (lowSearch) fLowerLimit = limit;
    else fUpperLimit = limit;
-   CalculateEstimatedError( target, lowSearch, xmin, xmax);
+   // estimate the error
+   double error = CalculateEstimatedError( target, lowSearch, xmin, xmax);
+
+   TString limitType = (lowSearch) ? "lower" : "upper";
+   ooccoutD(this,Eval) << "HypoTestInverterResult::FindInterpolateLimit "
+      << "the computed " << limitType << " limit is " << limit << " +/- " << error << std::endl;
 
 #ifdef DO_DEBUG
-   std::cout << "limit is " << limit << std::endl;
+   std::cout << "Found limit is " << limit << " +/- " << error << astd::endl;
 #endif
 
-   if (lowSearch && !TMath::IsNaN(fUpperLimit)) return fLowerLimit;
-   if (!lowSearch && !TMath::IsNaN(fLowerLimit)) return fUpperLimit;
 
-   // now perform the opposite search on the complement interval
-   if (lowSearch) { 
-      xmin = xmax;
-      xmax = varmax;         
-   } else { 
-      xmax = xmin;         
-      xmin = varmin;
-   }
-   double limit2 =  GetGraphX(graph, target, !lowSearch, xmin, xmax);
-   if (!lowSearch) fLowerLimit = limit2; 
-   else fUpperLimit = limit2;
+   if (lowSearch) return fLowerLimit;
+   return fUpperLimit;
 
-   CalculateEstimatedError( target, !lowSearch, xmin, xmax);
 
-#ifdef DO_DEBUG
-   std::cout << "other limit is " << limit2 << std::endl;
-#endif
- 
-   return (lowSearch) ? fLowerLimit : fUpperLimit;
+//    if (lowSearch && !TMath::IsNaN(fUpperLimit)) return fLowerLimit;
+//    if (!lowSearch && !TMath::IsNaN(fLowerLimit)) return fUpperLimit;
+//    // is this needed ?
+//    // we call again the funciton for the upper limits
+
+//    // now perform the opposite search on the complement interval
+//    if (lowSearch) {
+//       xmin = xmax;
+//       xmax = varmax;
+//    } else {
+//       xmax = xmin;
+//       xmin = varmin;
+//    }
+//    double limit2 =  GetGraphX(graph, target, !lowSearch, xmin, xmax);
+//    if (!lowSearch) fLowerLimit = limit2;
+//    else fUpperLimit = limit2;
+
+//    CalculateEstimatedError( target, !lowSearch, xmin, xmax);
+
+// #ifdef DO_DEBUG
+//    std::cout << "other limit is " << limit2 << std::endl;
+// #endif
+
+//    return (lowSearch) ? fLowerLimit : fUpperLimit;
 
 }
 

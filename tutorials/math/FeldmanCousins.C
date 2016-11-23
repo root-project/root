@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
+/// \notebook -nodraw
 /// Example macro of using the TFeldmanCousins class in root.
 ///
 /// get a FeldmanCousins calculation object with the default limits

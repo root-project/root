@@ -27,24 +27,34 @@ using namespace llvm;
 #define DEBUG_TYPE "block-freq"
 
 #ifndef NDEBUG
-enum GVDAGType {
-  GVDT_None,
-  GVDT_Fraction,
-  GVDT_Integer
-};
+static cl::opt<GVDAGType> ViewBlockFreqPropagationDAG(
+    "view-block-freq-propagation-dags", cl::Hidden,
+    cl::desc("Pop up a window to show a dag displaying how block "
+             "frequencies propagation through the CFG."),
+    cl::values(clEnumValN(GVDT_None, "none", "do not display graphs."),
+               clEnumValN(GVDT_Fraction, "fraction",
+                          "display a graph using the "
+                          "fractional block frequency representation."),
+               clEnumValN(GVDT_Integer, "integer",
+                          "display a graph using the raw "
+                          "integer fractional block frequency representation."),
+               clEnumValN(GVDT_Count, "count", "display a graph using the real "
+                                               "profile count if available."),
+               clEnumValEnd));
 
-static cl::opt<GVDAGType>
-ViewBlockFreqPropagationDAG("view-block-freq-propagation-dags", cl::Hidden,
-          cl::desc("Pop up a window to show a dag displaying how block "
-                   "frequencies propagation through the CFG."),
-          cl::values(
-            clEnumValN(GVDT_None, "none",
-                       "do not display graphs."),
-            clEnumValN(GVDT_Fraction, "fraction", "display a graph using the "
-                       "fractional block frequency representation."),
-            clEnumValN(GVDT_Integer, "integer", "display a graph using the raw "
-                       "integer fractional block frequency representation."),
-            clEnumValEnd));
+cl::opt<std::string>
+    ViewBlockFreqFuncName("view-bfi-func-name", cl::Hidden,
+                          cl::desc("The option to specify "
+                                   "the name of the function "
+                                   "whose CFG will be displayed."));
+
+cl::opt<unsigned>
+    ViewHotFreqPercent("view-hot-freq-percent", cl::init(10), cl::Hidden,
+                       cl::desc("An integer in percent used to specify "
+                                "the hot blocks/edges to be displayed "
+                                "in red: a block or edge whose frequency "
+                                "is no less than the max frequency of the "
+                                "function multiplied by this percent."));
 
 namespace llvm {
 
@@ -55,7 +65,7 @@ struct GraphTraits<BlockFrequencyInfo *> {
   typedef Function::const_iterator nodes_iterator;
 
   static inline const NodeType *getEntryNode(const BlockFrequencyInfo *G) {
-    return G->getFunction()->begin();
+    return &G->getFunction()->front();
   }
   static ChildIteratorType child_begin(const NodeType *N) {
     return succ_begin(N);
@@ -71,83 +81,84 @@ struct GraphTraits<BlockFrequencyInfo *> {
   }
 };
 
-template<>
-struct DOTGraphTraits<BlockFrequencyInfo*> : public DefaultDOTGraphTraits {
-  explicit DOTGraphTraits(bool isSimple=false) :
-    DefaultDOTGraphTraits(isSimple) {}
+typedef BFIDOTGraphTraitsBase<BlockFrequencyInfo, BranchProbabilityInfo>
+    BFIDOTGTraitsBase;
 
-  static std::string getGraphName(const BlockFrequencyInfo *G) {
-    return G->getFunction()->getName();
-  }
+template <>
+struct DOTGraphTraits<BlockFrequencyInfo *> : public BFIDOTGTraitsBase {
+  explicit DOTGraphTraits(bool isSimple = false)
+      : BFIDOTGTraitsBase(isSimple) {}
 
   std::string getNodeLabel(const BasicBlock *Node,
                            const BlockFrequencyInfo *Graph) {
-    std::string Result;
-    raw_string_ostream OS(Result);
 
-    OS << Node->getName().str() << ":";
-    switch (ViewBlockFreqPropagationDAG) {
-    case GVDT_Fraction:
-      Graph->printBlockFreq(OS, Node);
-      break;
-    case GVDT_Integer:
-      OS << Graph->getBlockFreq(Node).getFrequency();
-      break;
-    case GVDT_None:
-      llvm_unreachable("If we are not supposed to render a graph we should "
-                       "never reach this point.");
-    }
+    return BFIDOTGTraitsBase::getNodeLabel(Node, Graph,
+                                           ViewBlockFreqPropagationDAG);
+  }
 
-    return Result;
+  std::string getNodeAttributes(const BasicBlock *Node,
+                                const BlockFrequencyInfo *Graph) {
+    return BFIDOTGTraitsBase::getNodeAttributes(Node, Graph,
+                                                ViewHotFreqPercent);
+  }
+
+  std::string getEdgeAttributes(const BasicBlock *Node, EdgeIter EI,
+                                const BlockFrequencyInfo *BFI) {
+    return BFIDOTGTraitsBase::getEdgeAttributes(Node, EI, BFI, BFI->getBPI(),
+                                                ViewHotFreqPercent);
   }
 };
 
 } // end namespace llvm
 #endif
 
-INITIALIZE_PASS_BEGIN(BlockFrequencyInfo, "block-freq",
-                      "Block Frequency Analysis", true, true)
-INITIALIZE_PASS_DEPENDENCY(BranchProbabilityInfo)
-INITIALIZE_PASS_DEPENDENCY(LoopInfoWrapperPass)
-INITIALIZE_PASS_END(BlockFrequencyInfo, "block-freq",
-                    "Block Frequency Analysis", true, true)
+BlockFrequencyInfo::BlockFrequencyInfo() {}
 
-char BlockFrequencyInfo::ID = 0;
-
-
-BlockFrequencyInfo::BlockFrequencyInfo() : FunctionPass(ID) {
-  initializeBlockFrequencyInfoPass(*PassRegistry::getPassRegistry());
+BlockFrequencyInfo::BlockFrequencyInfo(const Function &F,
+                                       const BranchProbabilityInfo &BPI,
+                                       const LoopInfo &LI) {
+  calculate(F, BPI, LI);
 }
 
-BlockFrequencyInfo::~BlockFrequencyInfo() {}
+BlockFrequencyInfo::BlockFrequencyInfo(BlockFrequencyInfo &&Arg)
+    : BFI(std::move(Arg.BFI)) {}
 
-void BlockFrequencyInfo::getAnalysisUsage(AnalysisUsage &AU) const {
-  AU.addRequired<BranchProbabilityInfo>();
-  AU.addRequired<LoopInfoWrapperPass>();
-  AU.setPreservesAll();
+BlockFrequencyInfo &BlockFrequencyInfo::operator=(BlockFrequencyInfo &&RHS) {
+  releaseMemory();
+  BFI = std::move(RHS.BFI);
+  return *this;
 }
 
-bool BlockFrequencyInfo::runOnFunction(Function &F) {
-  BranchProbabilityInfo &BPI = getAnalysis<BranchProbabilityInfo>();
-  LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+void BlockFrequencyInfo::calculate(const Function &F,
+                                   const BranchProbabilityInfo &BPI,
+                                   const LoopInfo &LI) {
   if (!BFI)
     BFI.reset(new ImplType);
-  BFI->doFunction(&F, &BPI, &LI);
+  BFI->calculate(F, BPI, LI);
 #ifndef NDEBUG
-  if (ViewBlockFreqPropagationDAG != GVDT_None)
+  if (ViewBlockFreqPropagationDAG != GVDT_None &&
+      (ViewBlockFreqFuncName.empty() ||
+       F.getName().equals(ViewBlockFreqFuncName))) {
     view();
+  }
 #endif
-  return false;
-}
-
-void BlockFrequencyInfo::releaseMemory() { BFI.reset(); }
-
-void BlockFrequencyInfo::print(raw_ostream &O, const Module *) const {
-  if (BFI) BFI->print(O);
 }
 
 BlockFrequency BlockFrequencyInfo::getBlockFreq(const BasicBlock *BB) const {
   return BFI ? BFI->getBlockFreq(BB) : 0;
+}
+
+Optional<uint64_t>
+BlockFrequencyInfo::getBlockProfileCount(const BasicBlock *BB) const {
+  if (!BFI)
+    return None;
+
+  return BFI->getBlockProfileCount(*getFunction(), BB);
+}
+
+void BlockFrequencyInfo::setBlockFreq(const BasicBlock *BB, uint64_t Freq) {
+  assert(BFI && "Expected analysis to be available");
+  BFI->setBlockFreq(BB, Freq);
 }
 
 /// Pop up a ghostview window with the current block frequency propagation
@@ -166,6 +177,10 @@ const Function *BlockFrequencyInfo::getFunction() const {
   return BFI ? BFI->getFunction() : nullptr;
 }
 
+const BranchProbabilityInfo *BlockFrequencyInfo::getBPI() const {
+  return BFI ? &BFI->getBPI() : nullptr;
+}
+
 raw_ostream &BlockFrequencyInfo::
 printBlockFreq(raw_ostream &OS, const BlockFrequency Freq) const {
   return BFI ? BFI->printBlockFreq(OS, Freq) : OS;
@@ -179,4 +194,68 @@ BlockFrequencyInfo::printBlockFreq(raw_ostream &OS,
 
 uint64_t BlockFrequencyInfo::getEntryFreq() const {
   return BFI ? BFI->getEntryFreq() : 0;
+}
+
+void BlockFrequencyInfo::releaseMemory() { BFI.reset(); }
+
+void BlockFrequencyInfo::print(raw_ostream &OS) const {
+  if (BFI)
+    BFI->print(OS);
+}
+
+
+INITIALIZE_PASS_BEGIN(BlockFrequencyInfoWrapperPass, "block-freq",
+                      "Block Frequency Analysis", true, true)
+INITIALIZE_PASS_DEPENDENCY(BranchProbabilityInfoWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(LoopInfoWrapperPass)
+INITIALIZE_PASS_END(BlockFrequencyInfoWrapperPass, "block-freq",
+                    "Block Frequency Analysis", true, true)
+
+char BlockFrequencyInfoWrapperPass::ID = 0;
+
+
+BlockFrequencyInfoWrapperPass::BlockFrequencyInfoWrapperPass()
+    : FunctionPass(ID) {
+  initializeBlockFrequencyInfoWrapperPassPass(*PassRegistry::getPassRegistry());
+}
+
+BlockFrequencyInfoWrapperPass::~BlockFrequencyInfoWrapperPass() {}
+
+void BlockFrequencyInfoWrapperPass::print(raw_ostream &OS,
+                                          const Module *) const {
+  BFI.print(OS);
+}
+
+void BlockFrequencyInfoWrapperPass::getAnalysisUsage(AnalysisUsage &AU) const {
+  AU.addRequired<BranchProbabilityInfoWrapperPass>();
+  AU.addRequired<LoopInfoWrapperPass>();
+  AU.setPreservesAll();
+}
+
+void BlockFrequencyInfoWrapperPass::releaseMemory() { BFI.releaseMemory(); }
+
+bool BlockFrequencyInfoWrapperPass::runOnFunction(Function &F) {
+  BranchProbabilityInfo &BPI =
+      getAnalysis<BranchProbabilityInfoWrapperPass>().getBPI();
+  LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+  BFI.calculate(F, BPI, LI);
+  return false;
+}
+
+char BlockFrequencyAnalysis::PassID;
+BlockFrequencyInfo BlockFrequencyAnalysis::run(Function &F,
+                                               AnalysisManager<Function> &AM) {
+  BlockFrequencyInfo BFI;
+  BFI.calculate(F, AM.getResult<BranchProbabilityAnalysis>(F),
+                AM.getResult<LoopAnalysis>(F));
+  return BFI;
+}
+
+PreservedAnalyses
+BlockFrequencyPrinterPass::run(Function &F, AnalysisManager<Function> &AM) {
+  OS << "Printing analysis results of BFI for function "
+     << "'" << F.getName() << "':"
+     << "\n";
+  AM.getResult<BlockFrequencyAnalysis>(F).print(OS);
+  return PreservedAnalyses::all();
 }

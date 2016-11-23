@@ -134,7 +134,7 @@ def test_equal():
 
 def test_type_spelling():
     """Ensure Type.spelling works."""
-    tu = get_tu('int c[5]; int i[]; int x; int v[x];')
+    tu = get_tu('int c[5]; void f(int i[]); int x; int v[x];')
     c = get_cursor(tu, 'c')
     i = get_cursor(tu, 'i')
     x = get_cursor(tu, 'x')
@@ -253,7 +253,7 @@ void bar(int a, int b);
 
 def test_element_type():
     """Ensure Type.element_type works."""
-    tu = get_tu('int c[5]; int i[]; int x; int v[x];')
+    tu = get_tu('int c[5]; void f(int i[]); int x; int v[x];')
     c = get_cursor(tu, 'c')
     i = get_cursor(tu, 'i')
     v = get_cursor(tu, 'v')
@@ -363,6 +363,7 @@ def test_offset():
     """Ensure Cursor.get_record_field_offset works in anonymous records"""
     source="""
 struct Test {
+  struct {int a;} typeanon;
   struct {
     int bariton;
     union {
@@ -371,15 +372,23 @@ struct Test {
   };
   int bar;
 };"""
-    tries=[(['-target','i386-linux-gnu'],(4,16,0,32,64)),
-           (['-target','nvptx64-unknown-unknown'],(8,24,0,32,64)),
-           (['-target','i386-pc-win32'],(8,16,0,32,64)),
-           (['-target','msp430-none-none'],(2,14,0,32,64))]
+    tries=[(['-target','i386-linux-gnu'],(4,16,0,32,64,96)),
+           (['-target','nvptx64-unknown-unknown'],(8,24,0,32,64,96)),
+           (['-target','i386-pc-win32'],(8,16,0,32,64,96)),
+           (['-target','msp430-none-none'],(2,14,0,32,64,96))]
     for flags, values in tries:
-        align,total,bariton,foo,bar = values
+        align,total,f1,bariton,foo,bar = values
         tu = get_tu(source)
         teststruct = get_cursor(tu, 'Test')
-        fields = list(teststruct.get_children())
+        children = list(teststruct.get_children())
+        fields = list(teststruct.type.get_fields())
+        assert children[0].kind == CursorKind.STRUCT_DECL
+        assert children[0].spelling != "typeanon"
+        assert children[1].spelling == "typeanon"
+        assert fields[0].kind == CursorKind.FIELD_DECL
+        assert fields[1].kind == CursorKind.FIELD_DECL
+        assert fields[1].is_anonymous()
+        assert teststruct.type.get_offset("typeanon") == f1
         assert teststruct.type.get_offset("bariton") == bariton
         assert teststruct.type.get_offset("foo") == foo
         assert teststruct.type.get_offset("bar") == bar

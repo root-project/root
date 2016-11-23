@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -js
 ## A Simple histogram drawing example
 ##
 ## \macro_image

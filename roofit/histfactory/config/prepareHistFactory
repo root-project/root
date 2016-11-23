@@ -2,22 +2,15 @@
 
 # HistFactory workplace setup script
 
-if [ -z $ROOTSYS ]
-then
-  echo "ROOTSYS is not set. try to use root-config" 
-  ROOTPREFDIR=`root-config --prefix`
-  ROOTETCDIR=`root-config --etcdir`
-  echo "Using etcdir "$ROOTETCDIR
-  ROOTTUTDIR=$ROOTPREFDIR/tutorials
-  if test -e $ROOTTUTDIR; then
-      echo "Using tutorials dir" $ROOTTUTDIR 
-  else     
-      ROOTTUTDIR=${ROOTPREFDIR}/share/doc/root/tutorials
-      echo "Using tutorials dir" $ROOTTUTDIR 
-  fi
-else
-  ROOTETCDIR=$ROOTSYS/etc
-  ROOTTUTDIR=$ROOTSYS/tutorials
+ROOTPREFDIR=`root-config --prefix`
+ROOTETCDIR=`root-config --etcdir`
+echo "Using etcdir "$ROOTETCDIR
+ROOTTUTDIR=$ROOTPREFDIR/tutorials
+if test -e $ROOTTUTDIR; then
+    echo "Using tutorials dir" $ROOTTUTDIR 
+else     
+    ROOTTUTDIR=${ROOTPREFDIR}/share/doc/root/tutorials
+    echo "Using tutorials dir" $ROOTTUTDIR 
 fi
 
 if [ $# -eq 1 ]

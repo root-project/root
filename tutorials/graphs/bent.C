@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_graphs
+/// \notebook -js
 /// Bent error bars
 ///
 /// \macro_image
@@ -7,7 +8,8 @@
 ///
 /// \author Olivier Couet
 
-void bent() {
+void bent() 
+{
    const Int_t n = 10;
    Double_t x[n]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
    Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};

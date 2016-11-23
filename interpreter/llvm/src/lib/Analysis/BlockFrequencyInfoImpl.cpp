@@ -13,6 +13,7 @@
 
 #include "llvm/Analysis/BlockFrequencyInfoImpl.h"
 #include "llvm/ADT/SCCIterator.h"
+#include "llvm/IR/Function.h"
 #include "llvm/Support/raw_ostream.h"
 #include <numeric>
 
@@ -27,7 +28,7 @@ ScaledNumber<uint64_t> BlockMass::toScaled() const {
   return ScaledNumber<uint64_t>(getMass() + 1, -64);
 }
 
-void BlockMass::dump() const { print(dbgs()); }
+LLVM_DUMP_METHOD void BlockMass::dump() const { print(dbgs()); }
 
 static char getHexDigit(int N) {
   assert(N < 16);
@@ -35,6 +36,7 @@ static char getHexDigit(int N) {
     return '0' + N;
   return 'a' + N - 10;
 }
+
 raw_ostream &BlockMass::print(raw_ostream &OS) const {
   for (int Digits = 0; Digits < 16; ++Digits)
     OS << getHexDigit(Mass >> (60 - Digits * 4) & 0xf);
@@ -78,7 +80,7 @@ struct DitheringDistributer {
   BlockMass takeMass(uint32_t Weight);
 };
 
-} // end namespace
+} // end anonymous namespace
 
 DitheringDistributer::DitheringDistributer(Distribution &Dist,
                                            const BlockMass &Mass) {
@@ -130,6 +132,7 @@ static void combineWeight(Weight &W, const Weight &OtherW) {
   else
     W.Amount += OtherW.Amount;
 }
+
 static void combineWeightsBySorting(WeightList &Weights) {
   // Sort so edges to the same node are adjacent.
   std::sort(Weights.begin(), Weights.end(),
@@ -149,8 +152,8 @@ static void combineWeightsBySorting(WeightList &Weights) {
 
   // Erase extra entries.
   Weights.erase(O, Weights.end());
-  return;
 }
+
 static void combineWeightsByHashing(WeightList &Weights) {
   // Collect weights into a DenseMap.
   typedef DenseMap<BlockNode::IndexType, Weight> HashTable;
@@ -168,6 +171,7 @@ static void combineWeightsByHashing(WeightList &Weights) {
   for (const auto &I : Combined)
     Weights.push_back(I.second);
 }
+
 static void combineWeights(WeightList &Weights) {
   // Use a hash table for many successors to keep this linear.
   if (Weights.size() > 128) {
@@ -177,6 +181,7 @@ static void combineWeights(WeightList &Weights) {
 
   combineWeightsBySorting(Weights);
 }
+
 static uint64_t shiftRightAndRound(uint64_t N, int Shift) {
   assert(Shift >= 0);
   assert(Shift < 64);
@@ -184,6 +189,7 @@ static uint64_t shiftRightAndRound(uint64_t N, int Shift) {
     return N;
   return (N >> Shift) + (UINT64_C(1) & N >> (Shift - 1));
 }
+
 void Distribution::normalize() {
   // Early exit for termination nodes.
   if (Weights.empty())
@@ -286,7 +292,7 @@ bool BlockFrequencyInfoImplBase::addToDist(Distribution &Dist,
 
   if (isLoopHeader(Resolved)) {
     DEBUG(debugSuccessor("backedge"));
-    Dist.addBackedge(OuterLoop->getHeader(), Weight);
+    Dist.addBackedge(Resolved, Weight);
     return true;
   }
 
@@ -331,32 +337,38 @@ bool BlockFrequencyInfoImplBase::addLoopSuccessorsToDist(
   return true;
 }
 
-/// \brief Get the maximum allowed loop scale.
-///
-/// Gives the maximum number of estimated iterations allowed for a loop.  Very
-/// large numbers cause problems downstream (even within 64-bits).
-static Scaled64 getMaxLoopScale() { return Scaled64(1, 12); }
-
 /// \brief Compute the loop scale for a loop.
 void BlockFrequencyInfoImplBase::computeLoopScale(LoopData &Loop) {
   // Compute loop scale.
   DEBUG(dbgs() << "compute-loop-scale: " << getLoopName(Loop) << "\n");
 
+  // Infinite loops need special handling. If we give the back edge an infinite
+  // mass, they may saturate all the other scales in the function down to 1,
+  // making all the other region temperatures look exactly the same. Choose an
+  // arbitrary scale to avoid these issues.
+  //
+  // FIXME: An alternate way would be to select a symbolic scale which is later
+  // replaced to be the maximum of all computed scales plus 1. This would
+  // appropriately describe the loop as having a large scale, without skewing
+  // the final frequency computation.
+  const Scaled64 InfiniteLoopScale(1, 12);
+
   // LoopScale == 1 / ExitMass
   // ExitMass == HeadMass - BackedgeMass
-  BlockMass ExitMass = BlockMass::getFull() - Loop.BackedgeMass;
+  BlockMass TotalBackedgeMass;
+  for (auto &Mass : Loop.BackedgeMass)
+    TotalBackedgeMass += Mass;
+  BlockMass ExitMass = BlockMass::getFull() - TotalBackedgeMass;
 
-  // Block scale stores the inverse of the scale.
-  Loop.Scale = ExitMass.toScaled().inverse();
+  // Block scale stores the inverse of the scale. If this is an infinite loop,
+  // its exit mass will be zero. In this case, use an arbitrary scale for the
+  // loop scale.
+  Loop.Scale =
+      ExitMass.isEmpty() ? InfiniteLoopScale : ExitMass.toScaled().inverse();
 
   DEBUG(dbgs() << " - exit-mass = " << ExitMass << " (" << BlockMass::getFull()
-               << " - " << Loop.BackedgeMass << ")\n"
+               << " - " << TotalBackedgeMass << ")\n"
                << " - scale = " << Loop.Scale << "\n");
-
-  if (Loop.Scale > getMaxLoopScale()) {
-    Loop.Scale = getMaxLoopScale();
-    DEBUG(dbgs() << " - reduced-to-max-scale: " << getMaxLoopScale() << "\n");
-  }
 }
 
 /// \brief Package up a loop.
@@ -372,6 +384,19 @@ void BlockFrequencyInfoImplBase::packageLoop(LoopData &Loop) {
   Loop.IsPackaged = true;
 }
 
+#ifndef NDEBUG
+static void debugAssign(const BlockFrequencyInfoImplBase &BFI,
+                        const DitheringDistributer &D, const BlockNode &T,
+                        const BlockMass &M, const char *Desc) {
+  dbgs() << "  => assign " << M << " (" << D.RemMass << ")";
+  if (Desc)
+    dbgs() << " [" << Desc << "]";
+  if (T.isValid())
+    dbgs() << " to " << BFI.getBlockName(T);
+  dbgs() << "\n";
+}
+#endif
+
 void BlockFrequencyInfoImplBase::distributeMass(const BlockNode &Source,
                                                 LoopData *OuterLoop,
                                                 Distribution &Dist) {
@@ -381,25 +406,12 @@ void BlockFrequencyInfoImplBase::distributeMass(const BlockNode &Source,
   // Distribute mass to successors as laid out in Dist.
   DitheringDistributer D(Dist, Mass);
 
-#ifndef NDEBUG
-  auto debugAssign = [&](const BlockNode &T, const BlockMass &M,
-                         const char *Desc) {
-    dbgs() << "  => assign " << M << " (" << D.RemMass << ")";
-    if (Desc)
-      dbgs() << " [" << Desc << "]";
-    if (T.isValid())
-      dbgs() << " to " << getBlockName(T);
-    dbgs() << "\n";
-  };
-  (void)debugAssign;
-#endif
-
   for (const Weight &W : Dist.Weights) {
     // Check for a local edge (non-backedge and non-exit).
     BlockMass Taken = D.takeMass(W.Amount);
     if (W.Type == Weight::Local) {
       Working[W.TargetNode.Index].getMass() += Taken;
-      DEBUG(debugAssign(W.TargetNode, Taken, nullptr));
+      DEBUG(debugAssign(*this, D, W.TargetNode, Taken, nullptr));
       continue;
     }
 
@@ -408,15 +420,15 @@ void BlockFrequencyInfoImplBase::distributeMass(const BlockNode &Source,
 
     // Check for a backedge.
     if (W.Type == Weight::Backedge) {
-      OuterLoop->BackedgeMass += Taken;
-      DEBUG(debugAssign(BlockNode(), Taken, "back"));
+      OuterLoop->BackedgeMass[OuterLoop->getHeaderIndex(W.TargetNode)] += Taken;
+      DEBUG(debugAssign(*this, D, W.TargetNode, Taken, "back"));
       continue;
     }
 
     // This must be an exit.
     assert(W.Type == Weight::Exit);
     OuterLoop->Exits.push_back(std::make_pair(W.TargetNode, Taken));
-    DEBUG(debugAssign(W.TargetNode, Taken, "exit"));
+    DEBUG(debugAssign(*this, D, W.TargetNode, Taken, "exit"));
   }
 }
 
@@ -424,15 +436,24 @@ static void convertFloatingToInteger(BlockFrequencyInfoImplBase &BFI,
                                      const Scaled64 &Min, const Scaled64 &Max) {
   // Scale the Factor to a size that creates integers.  Ideally, integers would
   // be scaled so that Max == UINT64_MAX so that they can be best
-  // differentiated.  However, the register allocator currently deals poorly
-  // with large numbers.  Instead, push Min up a little from 1 to give some
-  // room to differentiate small, unequal numbers.
-  //
-  // TODO: fix issues downstream so that ScalingFactor can be
-  // Scaled64(1,64)/Max.
-  Scaled64 ScalingFactor = Min.inverse();
-  if ((Max / Min).lg() < 60)
+  // differentiated.  However, in the presence of large frequency values, small
+  // frequencies are scaled down to 1, making it impossible to differentiate
+  // small, unequal numbers. When the spread between Min and Max frequencies
+  // fits well within MaxBits, we make the scale be at least 8.
+  const unsigned MaxBits = 64;
+  const unsigned SpreadBits = (Max / Min).lg();
+  Scaled64 ScalingFactor;
+  if (SpreadBits <= MaxBits - 3) {
+    // If the values are small enough, make the scaling factor at least 8 to
+    // allow distinguishing small values.
+    ScalingFactor = Min.inverse();
     ScalingFactor <<= 3;
+  } else {
+    // If the values need more than MaxBits to be represented, saturate small
+    // frequency values down to 1 by using a scaling factor that benefits large
+    // frequency values.
+    ScalingFactor = Scaled64(1, MaxBits) / Max;
+  }
 
   // Translate the floats to integers.
   DEBUG(dbgs() << "float-to-int: min = " << Min << ", max = " << Max
@@ -508,6 +529,22 @@ BlockFrequencyInfoImplBase::getBlockFreq(const BlockNode &Node) const {
     return 0;
   return Freqs[Node.Index].Integer;
 }
+
+Optional<uint64_t>
+BlockFrequencyInfoImplBase::getBlockProfileCount(const Function &F,
+                                                 const BlockNode &Node) const {
+  auto EntryCount = F.getEntryCount();
+  if (!EntryCount)
+    return None;
+  // Use 128 bit APInt to do the arithmetic to avoid overflow.
+  APInt BlockCount(128, EntryCount.getValue());
+  APInt BlockFreq(128, getBlockFreq(Node).getFrequency());
+  APInt EntryFreq(128, getEntryFreq());
+  BlockCount *= BlockFreq;
+  BlockCount = BlockCount.udiv(EntryFreq);
+  return BlockCount.getLimitedValue();
+}
+
 Scaled64
 BlockFrequencyInfoImplBase::getFloatingBlockFreq(const BlockNode &Node) const {
   if (!Node.isValid())
@@ -515,10 +552,18 @@ BlockFrequencyInfoImplBase::getFloatingBlockFreq(const BlockNode &Node) const {
   return Freqs[Node.Index].Scaled;
 }
 
+void BlockFrequencyInfoImplBase::setBlockFreq(const BlockNode &Node,
+                                              uint64_t Freq) {
+  assert(Node.isValid() && "Expected valid node");
+  assert(Node.Index < Freqs.size() && "Expected legal index");
+  Freqs[Node.Index].Integer = Freq;
+}
+
 std::string
 BlockFrequencyInfoImplBase::getBlockName(const BlockNode &Node) const {
   return std::string();
 }
+
 std::string
 BlockFrequencyInfoImplBase::getLoopName(const LoopData &Loop) const {
   return getBlockName(Loop.getHeader()) + (Loop.isIrreducible() ? "**" : "*");
@@ -546,6 +591,7 @@ void IrreducibleGraph::addNodesInLoop(const BFIBase::LoopData &OuterLoop) {
     addNode(N);
   indexNodes();
 }
+
 void IrreducibleGraph::addNodesInFunction() {
   Start = 0;
   for (uint32_t Index = 0; Index < BFI.Working.size(); ++Index)
@@ -553,10 +599,12 @@ void IrreducibleGraph::addNodesInFunction() {
       addNode(Index);
   indexNodes();
 }
+
 void IrreducibleGraph::indexNodes() {
   for (auto &I : Nodes)
     Lookup[I.Node.Index] = &I;
 }
+
 void IrreducibleGraph::addEdge(IrrNode &Irr, const BlockNode &Succ,
                                const BFIBase::LoopData *OuterLoop) {
   if (OuterLoop && OuterLoop->isHeader(Succ))
@@ -583,7 +631,7 @@ template <> struct GraphTraits<IrreducibleGraph> {
   static ChildIteratorType child_begin(NodeType *N) { return N->succ_begin(); }
   static ChildIteratorType child_end(NodeType *N) { return N->succ_end(); }
 };
-}
+} // end namespace llvm
 
 /// \brief Find extra irreducible headers.
 ///
@@ -701,10 +749,47 @@ BlockFrequencyInfoImplBase::analyzeIrreducible(
 void
 BlockFrequencyInfoImplBase::updateLoopWithIrreducible(LoopData &OuterLoop) {
   OuterLoop.Exits.clear();
-  OuterLoop.BackedgeMass = BlockMass::getEmpty();
+  for (auto &Mass : OuterLoop.BackedgeMass)
+    Mass = BlockMass::getEmpty();
   auto O = OuterLoop.Nodes.begin() + 1;
   for (auto I = O, E = OuterLoop.Nodes.end(); I != E; ++I)
     if (!Working[I->Index].isPackaged())
       *O++ = *I;
   OuterLoop.Nodes.erase(O, OuterLoop.Nodes.end());
+}
+
+void BlockFrequencyInfoImplBase::adjustLoopHeaderMass(LoopData &Loop) {
+  assert(Loop.isIrreducible() && "this only makes sense on irreducible loops");
+
+  // Since the loop has more than one header block, the mass flowing back into
+  // each header will be different. Adjust the mass in each header loop to
+  // reflect the masses flowing through back edges.
+  //
+  // To do this, we distribute the initial mass using the backedge masses
+  // as weights for the distribution.
+  BlockMass LoopMass = BlockMass::getFull();
+  Distribution Dist;
+
+  DEBUG(dbgs() << "adjust-loop-header-mass:\n");
+  for (uint32_t H = 0; H < Loop.NumHeaders; ++H) {
+    auto &HeaderNode = Loop.Nodes[H];
+    auto &BackedgeMass = Loop.BackedgeMass[Loop.getHeaderIndex(HeaderNode)];
+    DEBUG(dbgs() << " - Add back edge mass for node "
+                 << getBlockName(HeaderNode) << ": " << BackedgeMass << "\n");
+    if (BackedgeMass.getMass() > 0)
+      Dist.addLocal(HeaderNode, BackedgeMass.getMass());
+    else
+      DEBUG(dbgs() << "   Nothing added. Back edge mass is zero\n");
+  }
+
+  DitheringDistributer D(Dist, LoopMass);
+
+  DEBUG(dbgs() << " Distribute loop mass " << LoopMass
+               << " to headers using above weights\n");
+  for (const Weight &W : Dist.Weights) {
+    BlockMass Taken = D.takeMass(W.Amount);
+    assert(W.Type == Weight::Local && "all weights should be local");
+    Working[W.TargetNode.Index].getMass() = Taken;
+    DEBUG(debugAssign(*this, D, W.TargetNode, Taken, nullptr));
+  }
 }

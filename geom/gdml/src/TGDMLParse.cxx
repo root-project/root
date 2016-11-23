@@ -423,7 +423,7 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    // name = TString::Format("%s_%s", name.Data(), fCurrentFile);
    //}
 
-   fformvec.push_back(new TFormula(name, value));
+   fconsts[name.Data()] = Value(value);
 
    return node;
 }
@@ -521,9 +521,65 @@ Double_t TGDMLParse::GetScaleVal(const char* sunit)
 
 Double_t TGDMLParse::Value(const char* svalue) const
 {
-   static TString s;
-   s = svalue;
-   return s.Atof();
+   char* end;
+   double val = strtod(svalue, &end);
+
+   // Succesfully parsed all the characters up to the ending NULL, so svalue
+   // was a simple number.
+   if(*end == 0) return val;
+
+   // Otherwise we'll use TFormula to evaluate the string, having first found
+   // all the GDML variable names in it and marked them with [] so that
+   // TFormula will recognize them as parameters.
+
+   std::string expanded;
+   expanded.reserve(strlen(svalue)*2);
+
+   // Be careful about locale so we always mean the same thing by
+   // "alphanumeric"
+   const std::locale& loc = std::locale::classic(); // "C" locale
+
+   // Walk through the string inserting '[' and ']' where necessary
+   const char* p = svalue;
+   while(*p){
+     // Find a site for a '['. Just before the first alphabetic character
+     for(; *p != 0; ++p){
+       if(std::isalpha(*p, loc) || *p == '_'){
+	 expanded += '[';
+	 break;
+       }
+       expanded += *p;
+     }
+     // If we reached the end of the string while looking for the start of a
+     // token then we're done
+     if(*p == 0) break;
+
+     // Now look for the position of the following ']'. Straight before the
+     // first non-alphanumeric character
+     for(; *p != 0; ++p){
+       if(!isalnum(*p, loc) && *p != '_'){
+	 expanded += ']';
+	 break;
+       }
+       expanded += *p;
+     }
+     // If we reached the end of the string while looking for a position for a
+     // ']' then it goes here
+     if(*p == 0) expanded += ']';
+   } // end loop over svalue
+
+   TFormula f("TFormula", expanded.c_str());
+
+   // Tell the TFormula about every parameter we know about
+   for(auto it: fconsts) f.SetParameter(it.first.c_str(), it.second);
+
+   val = f.Eval(0);
+
+   if(std::isnan(val) || std::isinf(val)){
+     Fatal("Value", "Got bad value %lf from string '%s'", val, svalue);
+   }
+
+   return val;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

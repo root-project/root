@@ -12,7 +12,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TDrawable.h"
+#include "ROOT/TDrawable.hxx"
 
 // pin vtable
 ROOT::Experimental::Internal::TDrawable::~TDrawable() { }

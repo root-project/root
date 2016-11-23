@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_pyroot
+## \notebook -js
 ##  This program creates :
 ##    - a one dimensional histogram
 ##    - a two dimensional histogram
@@ -51,12 +52,12 @@ rannor, rndm = gRandom.Rannor, gRandom.Rndm
 # For speed, bind and cache the Fill member functions,
 histos = [ 'hpx', 'hpxpy', 'hprof', 'ntuple' ]
 for name in histos:
-   exec '%sFill = %s.Fill' % (name,name)
+   exec('%sFill = %s.Fill' % (name,name))
 
 # Fill histograms randomly.
 px, py = Double(), Double()
 kUPDATE = 1000
-for i in xrange( 25000 ):
+for i in range( 25000 ):
  # Generate random values.
    rannor( px, py )
    pz = px*px + py*py
@@ -81,7 +82,7 @@ for i in xrange( 25000 ):
 
 # Destroy member functions cache.
 for name in histos:
-   exec 'del %sFill' % name
+   exec('del %sFill' % name)
 del histos
 
 gBenchmark.Show( 'hsimple' )

@@ -47,6 +47,7 @@
 #include "TMVA/Types.h"
 
 #include "Rtypes.h"
+#include "TString.h"
 
 ClassImp(TMVA::FitterBase)
 

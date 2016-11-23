@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook
 /// This example illustrates how to make a Tree from variables or arrays
 /// in a C struct. **Use of C structs is strongly discouraged and one should
 /// use classes instead**. However support for C structs is important for

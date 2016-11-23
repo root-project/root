@@ -68,7 +68,7 @@ TVirtualGeoConverter *TVirtualGeoConverter::Instance(TGeoManager *geom)
          fgGeoConverter = (TVirtualGeoConverter*)h->ExecPlugin(1,mgr);
       }
    }
-   fgGeoConverter->SetGeometry(mgr);
+   if (fgGeoConverter) fgGeoConverter->SetGeometry(mgr);
    return fgGeoConverter;
 }
 

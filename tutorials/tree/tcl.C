@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
+/// \notebook
 /// How to write a TClonesArray to a TTree
 ///
 /// The following tests can be run

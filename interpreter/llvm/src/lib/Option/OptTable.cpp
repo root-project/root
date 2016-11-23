@@ -84,15 +84,9 @@ static inline bool operator<(const OptTable::Info &I, const char *Name) {
 
 OptSpecifier::OptSpecifier(const Option *Opt) : ID(Opt->getID()) {}
 
-OptTable::OptTable(const Info *_OptionInfos, unsigned _NumOptionInfos,
-                   bool _IgnoreCase)
-  : OptionInfos(_OptionInfos),
-    NumOptionInfos(_NumOptionInfos),
-    IgnoreCase(_IgnoreCase),
-    TheInputOptionID(0),
-    TheUnknownOptionID(0),
-    FirstSearchableIndex(0)
-{
+OptTable::OptTable(ArrayRef<Info> OptionInfos, bool IgnoreCase)
+    : OptionInfos(OptionInfos), IgnoreCase(IgnoreCase), TheInputOptionID(0),
+      TheUnknownOptionID(0), FirstSearchableIndex(0) {
   // Explicitly zero initialize the error to work around a bug in array
   // value-initialization on MinGW with gcc 4.3.5.
 
@@ -203,8 +197,8 @@ Arg *OptTable::ParseOneArg(const ArgList &Args, unsigned &Index,
   if (isInput(PrefixesUnion, Str))
     return new Arg(getOption(TheInputOptionID), Str, Index++, Str);
 
-  const Info *Start = OptionInfos + FirstSearchableIndex;
-  const Info *End = OptionInfos + getNumOptions();
+  const Info *Start = OptionInfos.begin() + FirstSearchableIndex;
+  const Info *End = OptionInfos.end();
   StringRef Name = StringRef(Str).ltrim(PrefixChars);
 
   // Search for the first next option which could be a prefix.
@@ -251,33 +245,32 @@ Arg *OptTable::ParseOneArg(const ArgList &Args, unsigned &Index,
   return new Arg(getOption(TheUnknownOptionID), Str, Index++, Str);
 }
 
-InputArgList *OptTable::ParseArgs(const char *const *ArgBegin,
-                                  const char *const *ArgEnd,
-                                  unsigned &MissingArgIndex,
-                                  unsigned &MissingArgCount,
-                                  unsigned FlagsToInclude,
-                                  unsigned FlagsToExclude) const {
-  InputArgList *Args = new InputArgList(ArgBegin, ArgEnd);
+InputArgList OptTable::ParseArgs(ArrayRef<const char *> ArgArr,
+                                 unsigned &MissingArgIndex,
+                                 unsigned &MissingArgCount,
+                                 unsigned FlagsToInclude,
+                                 unsigned FlagsToExclude) const {
+  InputArgList Args(ArgArr.begin(), ArgArr.end());
 
   // FIXME: Handle '@' args (or at least error on them).
 
   MissingArgIndex = MissingArgCount = 0;
-  unsigned Index = 0, End = ArgEnd - ArgBegin;
+  unsigned Index = 0, End = ArgArr.size();
   while (Index < End) {
     // Ingore nullptrs, they are response file's EOL markers
-    if (Args->getArgString(Index) == nullptr) {
+    if (Args.getArgString(Index) == nullptr) {
       ++Index;
       continue;
     }
     // Ignore empty arguments (other things may still take them as arguments).
-    StringRef Str = Args->getArgString(Index);
+    StringRef Str = Args.getArgString(Index);
     if (Str == "") {
       ++Index;
       continue;
     }
 
     unsigned Prev = Index;
-    Arg *A = ParseOneArg(*Args, Index, FlagsToInclude, FlagsToExclude);
+    Arg *A = ParseOneArg(Args, Index, FlagsToInclude, FlagsToExclude);
     assert(Index > Prev && "Parser failed to consume argument.");
 
     // Check for missing argument error.
@@ -289,7 +282,7 @@ InputArgList *OptTable::ParseArgs(const char *const *ArgBegin,
       break;
     }
 
-    Args->append(A);
+    Args.append(A);
   }
 
   return Args;
@@ -322,7 +315,7 @@ static std::string getOptionHelpName(const OptTable &Opts, OptSpecifier Id) {
     break;
 
   case Option::SeparateClass: case Option::JoinedOrSeparateClass:
-  case Option::RemainingArgsClass:
+  case Option::RemainingArgsClass: case Option::RemainingArgsJoinedClass:
     Name += ' ';
     // FALLTHROUGH
   case Option::JoinedClass: case Option::CommaJoinedClass:

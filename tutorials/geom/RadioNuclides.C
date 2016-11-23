@@ -9,7 +9,7 @@
 ///
 /// The radionuclides table is loaded on demand by any call:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    TGeoElementRN *TGeoElementTable::GetElementRN(Int_t atomic_number,
 ///                                                  Int_t atomic_charge,
 ///                                                  Int_t isomeric_number)
@@ -20,14 +20,14 @@
 /// To create a radioactive material based on a radionuclide, one should use the
 /// constructor:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    TGeoMaterial(const char *name, TGeoElement *elem, Double_t density)
 /// ~~~
 ///
 /// To create a radioactive mixture, one can use radionuclides as well as stable
 /// elements:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    TGeoMixture(const char *name, Int_t nelements, Double_t density);
 ///    TGeoMixture::AddElement(TGeoElement *elem, Double_t weight_fraction);
 /// ~~~
@@ -35,7 +35,7 @@
 /// Once defined, one can retrieve the time evolution for the radioactive
 /// materials/mixtures by using one of the 2 methods:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    void TGeoMaterial::FillMaterialEvolution(TObjArray *population,
 ///                                             Double_t   precision=0.001)
 /// ~~~
@@ -47,7 +47,7 @@
 /// The POPULATION list may contain stable elements as well as radionuclides,
 /// depending on the initial elements. To test if an element is a radionuclide:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    Bool_t TGeoElement::IsRadioNuclide() const
 /// ~~~
 ///
@@ -56,7 +56,7 @@
 /// top radionuclide in the decay chain. These objects (Bateman solutions) can be
 /// retrieved and drawn:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    TGeoBatemanSol *TGeoElementRN::Ratio();
 ///    void TGeoBatemanSol::Draw();
 /// ~~~
@@ -64,7 +64,7 @@
 /// Another method allows to create the evolution of a given radioactive
 /// material/mixture at a given moment in time:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 ///    TGeoMaterial::DecayMaterial(Double_t time, Double_t precision=0.001)
 /// ~~~
 ///

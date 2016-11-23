@@ -156,6 +156,8 @@ protected:
 
    TGStatusBar         *fStatusBar;        // statusbar widget
 
+   Bool_t               fChangedParams;    // flag to indicate if the parameters have been set in the ParameterDialog GUI
+
    static TFitEditor *fgFitDialog;         // singleton fit panel
 
 protected:

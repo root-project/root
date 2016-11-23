@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_fit
+/// \notebook -js
 /// Example of fitting with a linear function, using TLinearFitter
 /// This example is for a TGraphErrors, but it can also be used
 /// when fitting a histogram, a TGraph2D or a TMultiGraph
@@ -28,7 +29,6 @@ void fitLinear()
    Double_t *e = new Double_t[n];
    TCanvas *myc = new TCanvas("myc",
       "Fitting 3 TGraphErrors with linear functions");
-   myc->SetFillColor(42);
    myc->SetGrid();
 
    //Generate points along a 3rd degree polynomial:
@@ -80,8 +80,6 @@ void fitLinear()
    leg->AddEntry(gre2, "sin(x) + sin(2*x)", "p");
    leg->AddEntry(gre4, "-2 + exp(-x)", "p");
    leg->Draw();
-   leg->SetFillColor(42);
-
 
 }
 

@@ -44,6 +44,8 @@
 #include "TMVA/Types.h"
 
 #include "TH1D.h"
+#include "ThreadLocalStorage.h"
+#include "TObjArray.h"
 
 static const Int_t UNINITIALIZED = -1;
 

@@ -51,9 +51,9 @@
 
 //#include <iostream>
 
-Bool_t TF1::fgAbsValue    = kFALSE;
+std::atomic<Bool_t> TF1::fgAbsValue(kFALSE);
 Bool_t TF1::fgRejectPoint = kFALSE;
-Bool_t TF1::fgAddToGlobList = kTRUE;
+std::atomic<Bool_t> TF1::fgAddToGlobList(kTRUE);
 static Double_t gErrorTF1 = 0;
 
 ClassImp(TF1)
@@ -141,22 +141,22 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TF1
-    \ingroup Hist 
+    \ingroup Hist
     \brief 1-Dim function class
 
 
 ## TF1: 1-Dim function class
 
-A TF1 object is a 1-Dim function defined between a lower and upper limit.   
-The function may be a simple function based on a TFormula expression or a precompiled user function.   
-The function may have associated parameters.   
+A TF1 object is a 1-Dim function defined between a lower and upper limit.
+The function may be a simple function based on a TFormula expression or a precompiled user function.
+The function may have associated parameters.
 TF1 graphics function is via the TH1 and TGraph drawing functions.
 
 The following types of functions can be created:
 
 1.  [Expression using variable x and no parameters]([#F1)
 2.  [Expression using variable x with parameters](#F2)
-3.  [Lambda Expression with variable x and parameters](#F3)  
+3.  [Lambda Expression with variable x and parameters](#F3)
 4.  [A general C function with parameters](#F4)
 5.  [A general C++ function object (functor) with parameters](#F5)
 6.  [A member function with parameters of a general C++ class](#F6)
@@ -168,28 +168,28 @@ The following types of functions can be created:
 #### Case 1: inline expression using standard C++ functions/operators
 
 Begin_Macro(source)
-{ 
-TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10); 
-fa1->Draw(); 
-} 
+{
+   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+   fa1->Draw();
+}
 End_Macro
 
 #### Case 2: inline expression using a ROOT function (e.g. from TMath) without parameters
 
 
-Begin_Macro(source) 
+Begin_Macro(source)
 {
-  TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10); 
-  fa2->Draw(); 
-} 
+   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
+   fa2->Draw();
+}
 End_Macro
 
 #### Case 3: inline expression using a user defined CLING function by name
 
 ~~~~{.cpp}
-Double_t myFunc(x) { return x+sin(x); } 
+Double_t myFunc(double x) { return x+sin(x); }
 ....
-TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5); 
+TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
 fa3->Draw();
 ~~~~
 
@@ -197,11 +197,11 @@ fa3->Draw();
 
 #### Case 1: inline expression using standard C++ functions/operators
 
-* Example a: 
+* Example a:
 
 
 ~~~~{.cpp}
-TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3); 
+TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
 ~~~~
 
 This creates a function of variable x with 2 parameters. The parameters must be initialized via:
@@ -237,26 +237,29 @@ Parameters may be given a name:
 
 
 
-Begin_Macro(source) 
-{ 
+Begin_Macro
+{
     TCanvas *c = new TCanvas("c","c",0,0,500,300);
-    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10); 
-    fb2->SetParameters(0.2,1.3); fb2->Draw(); 
-    return c; 
-} 
+    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
+    fb2->SetParameters(0.2,1.3); fb2->Draw();
+    return c;
+}
 End_Macro
 
-###<a name="F3"></a> 3 - A lambda expression with variables and parameters **(NEW)**
+###<a name="F3"></a> 3 - A lambda expression with variables and parameters
 
-TF1 now supports using lambda expressions in the formula. This allows, by using a full C++ syntax the full power of lambda 
-functions and still mantain the capability of storing the function in a file which cannot be done with 
-funciton pointer or lambda written not as expression, but as code (see items belows). 
+\since **6.00/00:**
+TF1 supports using lambda expressions in the formula. This allows, by using a full C++ syntax the full power of lambda
+functions and still maintain the capability of storing the function in a file which cannot be done with
+function pointer or lambda written not as expression, but as code (see items below).
 
-Example on how using lambda to define a sum of two functions. Note that is necessary to provide the number of parameters
+Example on how using lambda to define a sum of two functions.
+Note that is necessary to provide the number of parameters
+
 ~~~~{.cpp}
 TF1 f1("f1","sin(x)",0,10);
 TF1 f2("f2","cos(x)",0,10);
-TF1 fsum("f1","[&](double *x, double *p){ return p[0]*f1(x) + p[1]*f2(x); }",0,10,2); 
+TF1 fsum("f1","[&](double *x, double *p){ return p[0]*f1(x) + p[1]*f2(x); }",0,10,2);
 ~~~~
 
 ###<a name="F4"></a> 4 - A general C function with parameters
@@ -347,12 +350,13 @@ class  MyFunctionObject {
 
 #### Using a lambda function as a general C++ functor object
 
-From C++11 we can use both std::function or even better lambda functions to create the TF1. As above the lambda must have the right signature but can capture whatever we want. For example we can make
-a TF1 from the TGraph::Eval function as shown below where we use a sfunction parameter the graph normalization.  
+From C++11 we can use both std::function or even better lambda functions to create the TF1.
+As above the lambda must have the right signature but can capture whatever we want. For example we can make
+a TF1 from the TGraph::Eval function as shown below where we use as function parameter the graph normalization.
 
 ~~~~{.cpp}
-TGraph * g = new TGraph(npointx, xvec, yvec); 
-TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);   
+TGraph * g = new TGraph(npointx, xvec, yvec);
+TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);
 ~~~~
 
 
@@ -379,7 +383,7 @@ class  MyFunction {
 }
 ~~~~
 
-See also the tutorial __math/exampleFunctor.C__ for a running example. 
+See also the tutorial __math/exampleFunctor.C__ for a running example.
 */
 ////////////////////////////////////////////////////////////////////////////
 
@@ -417,7 +421,7 @@ TF1::TF1():
 /// the formula string is "fffffff" and "xxxx" and "yyyy" are the
 /// titles for the X and Y axis respectively.
 
-TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
+TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList) :
    TNamed(name,formula), TAttLine(), TAttFill(), TAttMarker(),
    fNpx(100), fType(0),
    fNpfits(0), fNDF(0), fChisquare(0),
@@ -447,23 +451,24 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
       MakeZombie();
    }
 
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// F1 constructor using name of an interpreted function.
 ///
 ///  Creates a function of type C between xmin and xmax.
-///  name is the name of an interpreted CINT cunction.
+///  name is the name of an interpreted C++ function.
 ///  The function is defined with npar parameters
 ///  fcn must be a function of type:
+///
 ///     Double_t fcn(Double_t *x, Double_t *params)
 ///
-///  This constructor is called for functions of type C by CINT.
+///  This constructor is called for functions of type C by the C++ interpreter.
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) :
+TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim, EAddToList addToGlobList) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -495,7 +500,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) 
       return;
    }
 
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 
@@ -512,7 +517,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) 
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim) :
+TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -530,7 +535,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fParams(new TF1Parameters(npar) )
 
 {
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,7 +551,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim) :
+TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -563,7 +568,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    fFormula(0),
    fParams(new TF1Parameters(npar) )
 {
-   DoInitialize();
+   DoInitialize(addToGlobList);
 }
 
 
@@ -578,7 +583,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim ) :
+TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList ) :
    TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
@@ -596,20 +601,22 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fParams(new TF1Parameters(npar) )
 
 {
-    DoInitialize();
+    DoInitialize(addToGlobList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Common initialization of the TF1. Add to the global list and
 /// set the default style
 
-void TF1::DoInitialize() {
+void TF1::DoInitialize(EAddToList addToGlobalList) {
 
    fMinimum = -1111;
    fMaximum = -1111;
-   
+
    // add to global list of functions if default adding is on OR if bit is set
-   if (fgAddToGlobList  && gROOT) {
+   bool doAdd = ((addToGlobalList == EAddToList::kDefault && fgAddToGlobList)
+                 || addToGlobalList == EAddToList::kAdd);
+   if (doAdd && gROOT) {
       SetBit(kNotGlobal,kFALSE);
       R__LOCKGUARD2(gROOTMutex);
       // Store formula in linked list of formula in ROOT
@@ -619,7 +626,7 @@ void TF1::DoInitialize() {
    }
    else
       SetBit(kNotGlobal,kTRUE);
-   
+
    if (gStyle) {
       SetLineColor(gStyle->GetFuncColor());
       SetLineWidth(gStyle->GetFuncWidth());
@@ -632,16 +639,15 @@ void TF1::DoInitialize() {
 /// Static method to add/avoid to add automatically functions to the global list  (gROOT->GetListOfFunctions() )
 /// After having called this static method, all the functions created afterwards will follow the
 /// desired behaviour.
-/// By defult the functions are added automatically
-/// It returns the previous status (true if the functions are added automatically) 
+///
+/// By default the functions are added automatically
+/// It returns the previous status (true if the functions are added automatically)
 
 Bool_t TF1::DefaultAddToGlobalList(Bool_t on)
 {
-   R__LOCKGUARD2(gROOTMutex);
-   bool previous = fgAddToGlobList;
-   fgAddToGlobList = on;
-   return previous; 
+   return fgAddToGlobList.exchange(on);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Add to global list of functions (gROOT->GetListOfFunctions() )
 /// return previous status (true if the function was already in the list false if not)
@@ -847,7 +853,7 @@ void TF1::Copy(TObject &obj) const
 /// central difference formulas
 /// interpolation error is decreased by making the step size h smaller.
 ///
-/// Author: Anna Kreshuk
+/// \author Anna Kreshuk
 
 Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 {
@@ -913,7 +919,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 /// central difference formulas
 /// interpolation error is decreased by making the step size h smaller.
 ///
-/// Author: Anna Kreshuk
+/// \author Anna Kreshuk
 
 Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 {
@@ -972,14 +978,14 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 /// Getting the error via TF1::DerivativeError:
 ///   (total error = roundoff error + interpolation error)
 /// the estimate of the roundoff error is taken as follows:
-///Begin_Latex
-///    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
-///End_Latex
+/// \f[
+///    err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
+/// \f]
 /// where k is the double precision, ai are coefficients used in
 /// central difference formulas
 /// interpolation error is decreased by making the step size h smaller.
 ///
-/// Author: Anna Kreshuk
+/// \author Anna Kreshuk
 
 Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
 {
@@ -1201,15 +1207,15 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 /// If argument params is omitted or equal 0, the internal values
 /// of parameters (array fParams) will be used instead.
 /// For a 1-D function only x[0] must be given.
-/// In case of a multi-dimemsional function, the arrays x must be
+/// In case of a multi-dimensional function, the arrays x must be
 /// filled with the corresponding number of dimensions.
 ///
 /// WARNING. In case of an interpreted function (fType=2), it is the
-/// user's responsability to initialize the parameters via InitArgs
+/// user's responsibility to initialize the parameters via InitArgs
 /// before calling this function.
 /// InitArgs should be called at least once to specify the addresses
 /// of the arguments x and params.
-/// InitArgs should be called everytime these addresses change.
+/// InitArgs should be called every time these addresses change.
 
 Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 {
@@ -1220,7 +1226,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       assert(fFormula);
       if (fNormalized && fNormIntegral != 0)
          return fFormula->EvalPar(x,params)/fNormIntegral;
-      else 
+      else
          return fFormula->EvalPar(x,params);
    }
    Double_t result = 0;
@@ -1231,10 +1237,10 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
          else        result = fFunctor((Double_t*)x,(Double_t*)fParams->GetParameters());
 
       }else          result = GetSave(x);
-      
+
       if (fNormalized && fNormIntegral!=0)
          result = result/fNormIntegral;
-        
+
       return result;
    }
    if (fType == 2) {
@@ -1292,7 +1298,7 @@ TF1 *TF1::GetCurrent()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer to the histogram used to vusualize the function
+/// Return a pointer to the histogram used to visualise the function
 
 TH1 *TF1::GetHistogram() const
 {
@@ -1503,7 +1509,7 @@ Double_t TF1::GetMinMaxNDim(Double_t * x , bool findmax, Double_t epsilon, Int_t
    if (min->X() ) std::copy (min->X(), min->X()+ndim, x);
    double fmin = min->MinValue();
    delete min;
-   // need to revert sign in case looging for maximum
+   // need to revert sign in case looking for maximum
    return (findmax) ? -fmin : fmin;
 
 }
@@ -1672,7 +1678,6 @@ Double_t TF1::GetProb() const
 /// \f[
 ///        F(x_{\frac{1}{2}}) = \prod(x < x_{\frac{1}{2}}) = \frac{1}{2}
 /// \f]
-/// code from Eddy Offermann, Renaissance
 ///
 /// \param[in] this TF1 function
 /// \param[in] nprobSum maximum size of array q and size of array probSum
@@ -1688,6 +1693,9 @@ Double_t TF1::GetProb() const
 ///      f1->GetQuantiles(nprob,gr->GetX());
 ///      f2->GetQuantiles(nprob,gr->GetY());
 ///      gr->Draw("alp");
+///
+/// \author Eddy Offermann
+
 
 Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 {
@@ -2044,7 +2052,7 @@ Double_t TF1::GetSave(const Double_t *xx)
    Double_t x    = Double_t(xx[0]);
    Double_t y,dx,xmin,xmax,xlow,xup,ylow,yup;
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
-      //if parent is a histogram the function had been savedat the center of the bins
+      //if parent is a histogram the function had been saved at the center of the bins
       //we make a linear interpolation between the saved values
       xmin = fSave[fNsave-3];
       xmax = fSave[fNsave-2];
@@ -2201,7 +2209,7 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 /// default value of eps = 0.01
 /// Method is the same as in Derivative() function
 ///
-/// If a paramter is fixed, the gradient on this parameter = 0
+/// If a parameter is fixed, the gradient on this parameter = 0
 
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
@@ -2271,9 +2279,9 @@ Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
          Info("computing analytical integral for function %s with number %d",GetName(), GetNumber() );
       }
       result = AnalyticalIntegral(this, a, b);
-      // if it is a formula that havent been implmented in analytical integral a NaN is return
+      // if it is a formula that havent been implemented in analytical integral a NaN is return
       if (!TMath::IsNaN(result)) return result;
-      if (gDebug) 
+      if (gDebug)
          Warning("analytical integral not available for %s - with number %d  compute numerical integral",GetName(),GetNumber());
    }
    return IntegralOneDim(a,b, epsrel, epsrel, error);
@@ -2283,7 +2291,7 @@ Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
 /// Return Integral of function between a and b using the given parameter values and
 /// relative and absolute tolerance.
 ///
-/// The defult integrator defined in ROOT::Math::IntegratorOneDimOptions::DefaultIntegrator() is used
+/// The default integrator defined in ROOT::Math::IntegratorOneDimOptions::DefaultIntegrator() is used
 /// If ROOT contains the MathMore library the default integrator is set to be
 /// the adaptive ROOT::Math::GSLIntegrator (based on QUADPACK) or otherwise the
 /// ROOT::Math::GaussIntegrator is used
@@ -2312,7 +2320,7 @@ Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
 ///   TF1::CalcGaussLegendreSamplingPoints and TF1::IntegralFast.
 ///   See an example with the following script:
 ///
-/// ~~~~~~~~~~{.cpp}
+/// ~~~ {.cpp}
 ///   void gint() {
 ///      TF1 *g = new TF1("g","gaus",-5,5);
 ///      g->SetParameters(1,0,1);
@@ -2339,23 +2347,25 @@ Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
 ///      delete [] x;
 ///      delete [] w;
 ///   }
+/// ~~~
 ///
 ///   This example produces the following results:
 ///
+/// ~~~ {.cpp}
 ///      g->Integral(0,5)               = 1.25331
 ///      g->Integral(0,1000)            = 1.25319
 ///      g->IntegralFast(n,x,w,0,5)     = 1.25331
 ///      g->IntegralFast(n,x,w,0,1000)  = 1.25331
 ///      g->IntegralFast(n,x,w,0,10000) = 1.25331
 ///      g->IntegralFast(n,x,w,0,100000)= 1.253
-/// ~~~~~~~~~~
+/// ~~~
 
 Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t epsabs, Double_t & error)
 {
    //Double_t *parameters = GetParameters();
    TF1_EvalWrapper wf1( this, 0, fgAbsValue );
    Double_t result = 0;
-   Int_t status = 0; 
+   Int_t status = 0;
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
@@ -2386,9 +2396,13 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    if (status != 0) {
       std::string igName = ROOT::Math::IntegratorOneDim::GetName(ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType());
       Warning("IntegralOneDim","Error found in integrating function %s in [%f,%f] using %s. Result = %f +/- %f  - status = %d",GetName(),a,b,igName.c_str(),result,error,status);
-      std::cout << "Function Parameters = { ";
-      for (int ipar = 0; ipar < GetNpar(); ++ipar) std::cout << GetParName(ipar) << "=" << GetParameter(ipar) << " ";
-      std::cout << "}\n";
+      TString msg("\t\tFunction Parameters = {");
+      for (int ipar = 0; ipar < GetNpar(); ++ipar) {
+         msg += TString::Format(" %s =  %f ",GetParName(ipar), GetParameter(ipar));
+         if (ipar < GetNpar()-1) msg += TString(",");
+         else msg += TString("}");
+      }
+      Info("IntegralOneDim","%s",msg.Data());
    }
    return result;
 }
@@ -2414,7 +2428,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return Error on Integral of a parameteric function between a and b
+/// Return Error on Integral of a parametric function between a and b
 /// due to the parameter uncertainties.
 /// A pointer to a vector of parameter values and to the elements of the covariance matrix (covmat)
 /// can be optionally passed.  By default (i.e. when a zero pointer is passed) the current stored
@@ -2451,7 +2465,7 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, con
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return Error on Integral of a parameteric function with dimension larger tan one
+/// Return Error on Integral of a parametric function with dimension larger tan one
 /// between a[] and b[]  due to the parameters uncertainties.
 /// For a TF1 with dimension larger than 1 (for example a TF2 or TF3)
 /// TF1::IntegralMultiple is used for the integral calculation
@@ -2516,9 +2530,9 @@ Double_t TF1::IntegralFast(Int_t num, Double_t * /* x */, Double_t * /* w */, Do
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  See more general prototype below.
-///  This interface kept for back compatibility
-/// It is reccomended to use the other interface where one can specify also epsabs and the maximum number of
+/// See more general prototype below.
+/// This interface kept for back compatibility
+/// It is recommended to use the other interface where one can specify also epsabs and the maximum number of
 /// points
 
 Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsrel, Double_t &relerr)
@@ -2537,8 +2551,6 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 /// This function computes, to an attempted specified accuracy, the value of
 /// the integral
 ///
-/// Input parameters:
-///
 /// \param[in] n   Number of dimensions [2,15]
 /// \param[in] a,b One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
 ///   contain the lower and upper limits of integration, respectively.
@@ -2548,7 +2560,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 /// \param[in] epsrel Specified relative accuracy.
 /// \param[in] epsabs Specified absolute accuracy.
 ///   The integration algorithm will attempt to reach either the relative or the absolute accuracy.
-///   In case the maximum funcion called is reached the algorithm will stop earlier without having reached
+///   In case the maximum function called is reached the algorithm will stop earlier without having reached
 ///   the desired accuracy
 ///
 /// \param[out] relerr Contains, on exit, an estimation of the relative accuracy of the result.
@@ -2565,7 +2577,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 ///
 /// Method:
 ///
-/// The defult method used is the Genz-Mallik adaptive multidimensional algorithm
+/// The default method used is the Genz-Mallik adaptive multidimensional algorithm
 /// using the class ROOT::Math::AdaptiveIntegratorMultiDim (see the reference documentation of the class)
 ///
 /// Other methods can be used by setting ROOT::Math::IntegratorMultiDimOptions::SetDefaultIntegrator()
@@ -3062,7 +3074,7 @@ void TF1::SetFitResult(const ROOT::Fit::FitResult & result, const Int_t* indpar 
 {
    Int_t npar = GetNpar();
    if (result.IsEmpty()) {
-      Warning("SetFitResult","Empty Fit result - nathing is set in TF1");
+      Warning("SetFitResult","Empty Fit result - nothing is set in TF1");
       return;
    }
    if (indpar == 0 && npar != (int) result.NPar() ) {
@@ -3265,7 +3277,7 @@ void TF1::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
-      // process new version with new TFormula class whuich is contained in TF1
+      // process new version with new TFormula class which is contained in TF1
       //printf("reading TF1....- version  %d..\n",v);
 
       if (v > 7) {
@@ -3302,7 +3314,7 @@ void TF1::Streamer(TBuffer &b)
             // case of a function pointers
             fParams = new TF1Parameters(fNpar);
             fName = fold.GetName();
-            fTitle = fold.GetTitle(); 
+            fTitle = fold.GetTitle();
          }
          // need to set parameter values
          SetParameters(fold.GetParameters() );
@@ -3342,7 +3354,7 @@ void TF1::Streamer(TBuffer &b)
    // Writing
    else {
       Int_t saved = 0;
-      // save not-formula functions as aray of points
+      // save not-formula functions as array of points
       if (fType > 0 && fSave.empty()) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 
       b.WriteClassBuffer(TF1::Class(),this);
@@ -3373,9 +3385,9 @@ void TF1::Update()
        fNormIntegral = Integral(fXmin,fXmax, ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance());
        fNormalized = true;
    }
-   else 
+   else
       fNormIntegral = 0;
-   
+
    // std::vector<double>x(fNdim);
    // if ((fType == 1) && !fFunctor.Empty())  fFunctor(x.data(), (Double_t*)fParams);
 }
@@ -3440,7 +3452,8 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
 /// (i.e the n-th moment around the mean value)
 ///
 /// See TF1::Integral() for parameter definitions
-///   Author: Gene Van Buren <gene@bnl.gov>
+///
+/// \author Gene Van Buren <gene@bnl.gov>
 
 Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
@@ -3519,7 +3532,7 @@ TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
 /** \f[
           W(x)=1  -1<x<1 \\
           (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
-    \f] 
+    \f]
 **/
 /// num is the number of sampling points (>0)
 /// x and w are arrays of size num

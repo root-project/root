@@ -1,8 +1,5 @@
 #include <complex>
 #include "root_std_complex.h"
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma extra_include "root_std_complex.h";
 

@@ -1,14 +1,15 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Display the various 2-d drawing options
 ///
 /// \macro_code
 ///
 /// \author Rene Brun
 
+void draw2dopt()
 {
    gStyle->SetOptStat(0);
-   gStyle->SetPalette(1);
    gStyle->SetCanvasColor(33);
    gStyle->SetFrameFillColor(18);
    TF2 *f2 = new TF2("f2","xygaus + xygaus(5) + xylandau(10)",-4,4,-4,4);

@@ -1,12 +1,10 @@
+// For backward compatibility only
 #ifdef __CINT__
 #include <multiset>
 #else
 #include <set>
 #endif
 #include <string>
-#ifndef __hpux
-using namespace std;
-#endif
 
 #pragma create TClass multiset<int>;
 #pragma create TClass multiset<long>;

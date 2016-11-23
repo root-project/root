@@ -34,35 +34,31 @@ double kPi    = 3.14159265358979323846;
 double kEulerGamma = 0.577215664901532860606512090082402431042;
 
 
-/* Begin_Html
-<center><h2>KelvinFunctions</h2></center>
-
-<p>
+/** \class KelvinFunctions
 This class calculates the Kelvin functions Ber(x), Bei(x), Ker(x),
 Kei(x), and their first derivatives.
-</p>
-
-End_Html */
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Begin_Latex
-/// Ber(x) = Ber_{0}(x) = Re#left[J_{0}#left(x e^{3#pii/4}#right)#right]
-/// End_Latex
-/// where x is real, and Begin_Latex J_{0}(z) End_Latex is the zeroth-order Bessel
+/// \f[
+/// Ber(x) = Ber_{0}(x) = Re\left[J_{0}\left(x e^{3\pi i/4}\right)\right]
+/// \f]
+/// where x is real, and \f$J_{0}(z)\f$ is the zeroth-order Bessel
 /// function of the first kind.
 ///
 /// If x < fgMin (=20), Ber(x) is computed according to its polynomial
 /// approximation
-/// Begin_Latex
-/// Ber(x) = 1 + #sum_{n #geq 1}#frac{(-1)^{n}(x/2)^{4n}}{[(2n)!]^{2}}
-/// End_Latex
+/// \f[
+/// Ber(x) = 1 + \sum_{n \geq 1}\frac{(-1)^{n}(x/2)^{4n}}{[(2n)!]^{2}}
+/// \f]
 /// For x > fgMin, Ber(x) is computed according to its asymptotic
 /// expansion:
-/// Begin_Latex
-/// Ber(x) = #frac{e^{x/#sqrt{2}}}{#sqrt{2#pix}} [F1(x) cos#alpha + G1(x) sin#alpha] - #frac{1}{#pi}Kei(x)
-/// End_Latex
-/// where Begin_Latex #alpha = #frac{x}{#sqrt{2}} - #frac{#pi}{8} End_Latex.
-/// See also F1(x) and G1(x).
+/// \f[
+/// Ber(x) = \frac{e^{x/\sqrt{2}}}{\sqrt{2\pi x}} [F1(x) cos\alpha + G1(x) sin\alpha] - \frac{1}{\pi}Kei(x)
+/// \f]
+/// where \f$\alpha = \frac{x}{\sqrt{2}} - \frac{\pi}{8}\f$.
+///
+/// See also F1() and G1().
 ///
 /// Begin_Macro
 /// {
@@ -102,24 +98,25 @@ double KelvinFunctions::Ber(double x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Begin_Latex
-/// Bei(x) = Bei_{0}(x) = Im#left[J_{0}#left(x e^{3#pii/4}#right)#right]
-/// End_Latex
-/// where x is real, and Begin_Latex J_{0}(z) End_Latex is the zeroth-order Bessel
+/// \f[
+/// Bei(x) = Bei_{0}(x) = Im\left[J_{0}\left(x e^{3\pi i/4}\right)\right]
+/// \f]
+/// where x is real, and \f$J_{0}(z)\f$ is the zeroth-order Bessel
 /// function of the first kind.
 ///
 /// If x < fgMin (=20), Bei(x) is computed according to its polynomial
 /// approximation
-/// Begin_Latex
-/// Bei(x) = #sum_{n #geq 0}#frac{(-1)^{n}(x/2)^{4n+2}}{[(2n+1)!]^{2}}
-/// End_Latex
+/// \f[
+/// Bei(x) = \sum_{n \geq 0}\frac{(-1)^{n}(x/2)^{4n+2}}{[(2n+1)!]^{2}}
+/// \f]
 /// For x > fgMin, Bei(x) is computed according to its asymptotic
 /// expansion:
-/// Begin_Latex
-/// Bei(x) = #frac{e^{x/#sqrt{2}}}{#sqrt{2#pix}} [F1(x) sin#alpha + G1(x) cos#alpha] - #frac{1}{#pi}Ker(x)
-/// End_Latex
-/// where Begin_Latex #alpha = #frac{x}{#sqrt{2}} - #frac{#pi}{8} End_Latex
-/// See also F1(x) and G1(x).
+/// \f[
+/// Bei(x) = \frac{e^{x/\sqrt{2}}}{\sqrt{2\pi x}} [F1(x) sin\alpha + G1(x) cos\alpha] - \frac{1}{\pi}Ker(x)
+/// \f]
+/// where \f$\alpha = \frac{x}{\sqrt{2}} - \frac{\pi}{8}\f$.
+///
+/// See also F1() and G1().
 ///
 /// Begin_Macro
 /// {
@@ -161,29 +158,30 @@ double KelvinFunctions::Bei(double x)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Begin_Latex
-/// Ker(x) = Ker_{0}(x) = Re#left[K_{0}#left(x e^{3#pii/4}#right)#right]
-/// End_Latex
-/// where x is real, and Begin_Latex K_{0}(z) End_Latex is the zeroth-order modified
+/// \f[
+/// Ker(x) = Ker_{0}(x) = Re\left[K_{0}\left(x e^{3\pi i/4}\right)\right]
+/// \f]
+/// where x is real, and \f$K_{0}(z)\f$ is the zeroth-order modified
 /// Bessel function of the second kind.
 ///
 /// If x < fgMin (=20), Ker(x) is computed according to its polynomial
 /// approximation
-/// Begin_Latex
-/// Ker(x) = -#left(ln #frac{|x|}{2} + #gamma#right) Ber(x) + #left(#frac{#pi}{4} - #delta#right) Bei(x) + #sum_{n #geq 0} #frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} #left(#frac{x}{2}#right)^{4n}
-/// End_Latex
-/// where Begin_Latex #gamma = 0.577215664... End_Latex is the Euler-Mascheroni constant,
-/// Begin_Latex #delta = #pi End_Latex for x < 0 and is otherwise zero, and
-/// Begin_Latex
-/// H_{n} = #sum_{k = 1}^{n} #frac{1}{k}
-/// End_Latex
+/// \f[
+/// Ker(x) = -\left(ln \frac{|x|}{2} + \gamma\right) Ber(x) + \left(\frac{\pi}{4} - \delta\right) Bei(x) + \sum_{n \geq 0} \frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} \left(\frac{x}{2}\right)^{4n}
+/// \f]
+/// where \f$\gamma = 0.577215664...\f$ is the Euler-Mascheroni constant,
+/// \f$\delta = \pi\f$ for x < 0 and is otherwise zero, and
+/// \f[
+/// H_{n} = \sum_{k = 1}^{n} \frac{1}{k}
+/// \f]
 /// For x > fgMin, Ker(x) is computed according to its asymptotic
 /// expansion:
-/// Begin_Latex
-/// Ker(x) = #sqrt{#frac{#pi}{2x}} e^{-x/#sqrt{2}} [F2(x) cos#beta + G2(x) sin#beta]
-/// End_Latex
-/// where Begin_Latex #beta = #frac{x}{#sqrt{2}} + #frac{#pi}{8} End_Latex
-/// See also F2(x) and G2(x).
+/// \f[
+/// Ker(x) = \sqrt{\frac{\pi}{2x}} e^{-x/\sqrt{2}} [F2(x) cos\beta + G2(x) sin\beta]
+/// \f]
+/// where \f$\beta = \frac{x}{\sqrt{2}} + \frac{\pi}{8}\f$.
+///
+/// See also F2() and G2().
 ///
 /// Begin_Macro
 /// {
@@ -227,29 +225,30 @@ double KelvinFunctions::Ker(double x)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Begin_Latex
-/// Kei(x) = Kei_{0}(x) = Im#left[K_{0}#left(x e^{3#pii/4}#right)#right]
-/// End_Latex
-/// where x is real, and Begin_Latex K_{0}(z) End_Latex is the zeroth-order modified
+/// \f[
+/// Kei(x) = Kei_{0}(x) = Im\left[K_{0}\left(x e^{3\pi i/4}\right)\right]
+/// \f]
+/// where x is real, and \f$K_{0}(z)\f$ is the zeroth-order modified
 /// Bessel function of the second kind.
 ///
 /// If x < fgMin (=20), Kei(x) is computed according to its polynomial
 /// approximation
-/// Begin_Latex
-/// Kei(x) = -#left(ln #frac{x}{2} + #gamma#right) Bei(x) - #left(#frac{#pi}{4} - #delta#right) Ber(x) + #sum_{n #geq 0} #frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} #left(#frac{x}{2}#right)^{4n+2}
-/// End_Latex
-/// where Begin_Latex #gamma = 0.577215664... End_Latex is the Euler-Mascheroni constant,
-/// Begin_Latex #delta = #pi End_Latex for x < 0 and is otherwise zero, and
-/// Begin_Latex
-/// H_{n} = #sum_{k = 1}^{n} #frac{1}{k}
-/// End_Latex
+/// \f[
+/// Kei(x) = -\left(ln \frac{x}{2} + \gamma\right) Bei(x) - \left(\frac{\pi}{4} - \delta\right) Ber(x) + \sum_{n \geq 0} \frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} \left(\frac{x}{2}\right)^{4n+2}
+/// \f]
+/// where \f$\gamma = 0.577215664...\f$ is the Euler-Mascheroni constant,
+/// \f$\delta = \pi\f$ for x < 0 and is otherwise zero, and
+/// \f[
+/// H_{n} = \sum_{k = 1}^{n} \frac{1}{k}
+/// \f]
 /// For x > fgMin, Kei(x) is computed according to its asymptotic
 /// expansion:
-/// Begin_Latex
-/// Kei(x) = - #sqrt{#frac{#pi}{2x}} e^{-x/#sqrt{2}} [F2(x) sin#beta + G2(x) cos#beta]
-/// End_Latex
-/// where Begin_Latex #beta = #frac{x}{#sqrt{2}} + #frac{#pi}{8} End_Latex
-/// See also F2(x) and G2(x).
+/// \f[
+/// Kei(x) = - \sqrt{\frac{\pi}{2x}} e^{-x/\sqrt{2}} [F2(x) sin\beta + G2(x) cos\beta]
+/// \f]
+/// where \f$\beta = \frac{x}{\sqrt{2}} + \frac{\pi}{8}\f$.
+///
+/// See also F2() and G2().
 ///
 /// Begin_Macro
 /// {
@@ -298,10 +297,10 @@ double KelvinFunctions::Kei(double x)
 /// If x < fgMin (=20), DBer(x) is computed according to the derivative of
 /// the polynomial approximation of Ber(x). Otherwise it is computed
 /// according to its asymptotic expansion
-/// Begin_Latex
-/// #frac{d}{dx} Ber(x) = M cos#left(#theta - #frac{#pi}{4}#right)
-/// End_Latex
-/// See also M(x) and Theta(x).
+/// \f[
+/// \frac{d}{dx} Ber(x) = M cos\left(\theta - \frac{\pi}{4}\right)
+/// \f]
+/// See also M() and Theta().
 ///
 /// Begin_Macro
 /// {
@@ -343,10 +342,10 @@ double KelvinFunctions::DBer(double x)
 /// If x < fgMin (=20), DBei(x) is computed according to the derivative of
 /// the polynomial approximation of Bei(x). Otherwise it is computed
 /// according to its asymptotic expansion
-/// Begin_Latex
-/// #frac{d}{dx} Bei(x) = M sin#left(#theta - #frac{#pi}{4}#right)
-/// End_Latex
-/// See also M(x) and Theta(x).
+/// \f[
+/// \frac{d}{dx} Bei(x) = M sin\left(\theta - \frac{\pi}{4}\right)
+/// \f]
+/// See also M() and Theta().
 ///
 /// Begin_Macro
 /// {
@@ -388,10 +387,10 @@ double KelvinFunctions::DBei(double x)
 /// If x < fgMin (=20), DKer(x) is computed according to the derivative of
 /// the polynomial approximation of Ker(x). Otherwise it is computed
 /// according to its asymptotic expansion
-/// Begin_Latex
-/// #frac{d}{dx} Ker(x) = N cos#left(#phi - #frac{#pi}{4}#right)
-/// End_Latex
-/// See also N(x) and Phi(x).
+/// \f[
+/// \frac{d}{dx} Ker(x) = N cos\left(\phi - \frac{\pi}{4}\right)
+/// \f]
+/// See also N() and Phi().
 ///
 /// Begin_Macro
 /// {
@@ -436,10 +435,10 @@ double KelvinFunctions::DKer(double x)
 /// If x < fgMin (=20), DKei(x) is computed according to the derivative of
 /// the polynomial approximation of Kei(x). Otherwise it is computed
 /// according to its asymptotic expansion
-/// Begin_Latex
-/// #frac{d}{dx} Kei(x) = N sin#left(#phi - #frac{#pi}{4}#right)
-/// End_Latex
-/// See also N(x) and Phi(x).
+/// \f[
+/// \frac{d}{dx} Kei(x) = N sin\left(\phi - \frac{\pi}{4}\right)
+/// \f]
+/// See also N() and Phi().
 ///
 /// Begin_Macro
 /// {
@@ -481,9 +480,9 @@ double KelvinFunctions::DKei(double x)
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the calculations of the Kelvin
 /// functions Bei(x) and Ber(x) (and their derivatives). F1(x) is given by
-/// Begin_Latex
-/// F1(x) = 1 + #sum_{n #geq 1} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos#left(#frac{n#pi}{4}#right)
-/// End_Latex
+/// \f[
+/// F1(x) = 1 + \sum_{n \geq 1} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos\left(\frac{n\pi}{4}\right)
+/// \f]
 
 double KelvinFunctions::F1(double x)
 {
@@ -510,9 +509,9 @@ double KelvinFunctions::F1(double x)
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the calculations of the Kelvin
 /// functions Kei(x) and Ker(x) (and their derivatives). F2(x) is given by
-/// Begin_Latex
-/// F2(x) = 1 + #sum_{n #geq 1} (-1)^{n} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos#left(#frac{n#pi}{4}#right)
-/// End_Latex
+/// \f[
+/// F2(x) = 1 + \sum_{n \geq 1} (-1)^{n} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos\left(\frac{n\pi}{4}\right)
+/// \f]
 
 double KelvinFunctions::F2(double x)
 {
@@ -541,9 +540,9 @@ double KelvinFunctions::F2(double x)
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the calculations of the Kelvin
 /// functions Bei(x) and Ber(x) (and their derivatives). G1(x) is given by
-/// Begin_Latex
-/// G1(x) = #sum_{n #geq 1} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin#left(#frac{n#pi}{4}#right)
-/// End_Latex
+/// \f[
+/// G1(x) = \sum_{n \geq 1} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin\left(\frac{n\pi}{4}\right)
+/// \f]
 
 double KelvinFunctions::G1(double x)
 {
@@ -568,9 +567,9 @@ double KelvinFunctions::G1(double x)
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the calculations of the Kelvin
 /// functions Kei(x) and Ker(x) (and their derivatives). G2(x) is given by
-/// Begin_Latex
-/// G2(x) = #sum_{n #geq 1} (-1)^{n} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin#left(#frac{n#pi}{4}#right)
-/// End_Latex
+/// \f[
+/// G2(x) = \sum_{n \geq 1} (-1)^{n} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin\left(\frac{n\pi}{4}\right)
+/// \f]
 
 double KelvinFunctions::G2(double x)
 {
@@ -597,9 +596,9 @@ double KelvinFunctions::G2(double x)
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the asymptotic expansions of DBer(x) and
 /// DBei(x). M(x) is given by
-/// Begin_Latex
-/// M(x) = #frac{e^{x/#sqrt{2}}}{#sqrt{2#pix}}#left(1 + #frac{1}{8#sqrt{2} x} + #frac{1}{256 x^{2}} - #frac{399}{6144#sqrt{2} x^{3}} + O#left(#frac{1}{x^{4}}#right)#right)
-/// End_Latex
+/// \f[
+/// M(x) = \frac{e^{x/\sqrt{2}}}{\sqrt{2\pi x}}\left(1 + \frac{1}{8\sqrt{2} x} + \frac{1}{256 x^{2}} - \frac{399}{6144\sqrt{2} x^{3}} + O\left(\frac{1}{x^{4}}\right)\right)
+/// \f]
 
 double KelvinFunctions::M(double x)
 {
@@ -612,10 +611,10 @@ double KelvinFunctions::M(double x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the asymptotic expansions of DBer(x) and
-/// DBei(x). Begin_Latex #theta(x) #End_Latex is given by
-/// Begin_Latex
-/// #theta(x) = #frac{x}{#sqrt{2}} - #frac{#pi}{8} - #frac{1}{8#sqrt{2} x} - #frac{1}{16 x^{2}} - #frac{25}{384#sqrt{2} x^{3}} + O#left(#frac{1}{x^{5}}#right)
-/// End_Latex
+/// DBei(x). \f$\theta(x)\f$ is given by
+/// \f[
+/// \theta(x) = \frac{x}{\sqrt{2}} - \frac{\pi}{8} - \frac{1}{8\sqrt{2} x} - \frac{1}{16 x^{2}} - \frac{25}{384\sqrt{2} x^{3}} + O\left(\frac{1}{x^{5}}\right)
+/// \f]
 
 double KelvinFunctions::Theta(double x)
 {
@@ -628,10 +627,10 @@ double KelvinFunctions::Theta(double x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the asymptotic expansions of DKer(x) and
-/// DKei(x). (x) is given by
-/// Begin_Latex
-/// N(x) = #sqrt{#frac{#pi}{2x}} e^{-x/#sqrt{2}} #left(1 - #frac{1}{8#sqrt{2} x} + #frac{1}{256 x^{2}} + #frac{399}{6144#sqrt{2} x^{3}} + O#left(#frac{1}{x^{4}}#right)#right)
-/// End_Latex
+/// DKei(x). N(x) is given by
+/// \f[
+/// N(x) = \sqrt{\frac{\pi}{2x}} e^{-x/\sqrt{2}} \left(1 - \frac{1}{8\sqrt{2} x} + \frac{1}{256 x^{2}} + \frac{399}{6144\sqrt{2} x^{3}} + O\left(\frac{1}{x^{4}}\right)\right)
+/// \f]
 
 double KelvinFunctions::N(double x)
 {
@@ -644,10 +643,10 @@ double KelvinFunctions::N(double x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function appearing in the asymptotic expansions of DKer(x) and
-/// DKei(x). Begin_Latex #phi(x) #End_Latex is given by
-/// Begin_Latex
-/// #phi(x) = - #frac{x}{#sqrt{2}} - #frac{#pi}{8} + #frac{1}{8#sqrt{2} x} - #frac{1}{16 x^{2}} + #frac{25}{384#sqrt{2} x^{3}} + O#left(#frac{1}{x^{5}}#right)
-/// End_Latex
+/// DKei(x). \f$\phi(x)\f$ is given by
+/// \f[
+/// \phi(x) = - \frac{x}{\sqrt{2}} - \frac{\pi}{8} + \frac{1}{8\sqrt{2} x} - \frac{1}{16 x^{2}} + \frac{25}{384\sqrt{2} x^{3}} + O\left(\frac{1}{x^{5}}\right)
+/// \f]
 
 double KelvinFunctions::Phi(double x)
 {

@@ -7,6 +7,7 @@
 /// \macro_code
 ///
 /// \author Danilo Piparo
+/// \date January 2016
 
 // Total amount of numbers
 const UInt_t nNumbers = 20000000U;
@@ -31,7 +32,7 @@ Int_t mtbb001_fillHistos()
    };
 
    // Create the pool of threads
-   ThreadPool pool(nThreads);
+   ROOT::TThreadExecutor pool(nThreads);
 
    // Fill the pool with work
    pool.Map(workItem, ROOT::TSeqI(nThreads));

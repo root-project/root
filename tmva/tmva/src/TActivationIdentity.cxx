@@ -24,6 +24,7 @@
 #include "TMVA/TActivationIdentity.h"
 
 #include "Rtypes.h"
+#include "TString.h"
 
 #include <iostream>
 

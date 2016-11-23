@@ -1,6 +1,7 @@
 ## \file
 ## \ingroup tutorial_pyroot
 ## Tornado example.
+## \notebook
 ##
 ## \macro_image
 ## \macro_code
@@ -33,7 +34,7 @@ for j in range( d, numberOfCircles * d, d ):
    pm3d = TPolyMarker3D( numberOfPoints )
 
  # set points
-   for i in xrange( 1, numberOfPoints ) :
+   for i in range( 1, numberOfPoints ) :
       csin = sin( 2*pi / numberOfPoints * i ) + 1
       ccos = cos( 2*pi / numberOfPoints  * i ) + 1
       esin = sin( 2*pi / (numberOfCircles*d) * j ) + 1

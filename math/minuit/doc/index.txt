@@ -5,7 +5,7 @@ BEGIN_HTML
 <li>The main TMinuit class is documented in class TMinuit.</li>
 <li><a href="ftp://root.cern.ch/root/doc/5FittingHistograms.pdf">The Chapter about Fitting Histogram in the Users Guide
     </a></li>
-<li><a href="http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/minmain.html">The MINUIT documentation in CERNLIB
+<li><a href="https://cern-tex.web.cern.ch/cern-tex/minuit/minmain.html">The MINUIT documentation in CERNLIB
     </a></li>
 <li><a href="http://root.cern.ch/drupal/content/howtos#fit">How to Fit Histograms
       </A></li>

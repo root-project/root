@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_image
+/// \notebook
 /// Display image in canvas and pad.
 ///
 /// \macro_image
@@ -21,9 +22,9 @@ void img2pad()
    c->SetFixedAspectRatio();
 
    TCanvas *c1 = new TCanvas("roses", "roses", 800, 800);
-   img->Draw("T100,100,yellow");
-   //img->Draw("T100,100,#556655");
-   //img->Draw("T100,100");
+   img->Draw("T100,100,#ffff00");
+   /*img->Draw("T100,100,#556655");*/
+   /*img->Draw("T100,100");*/
 
    TImage *i1 = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
    i1->SetConstRatio(kFALSE);

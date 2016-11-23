@@ -15,7 +15,7 @@
 #include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 
-/** \class
+/** \class TGLVoxelPainter
 \ingroup opengl
 Paint TH3 histograms as "voxels" - colored boxes, transparent if transfer function was specified.
 */

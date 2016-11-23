@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_roostats
+/// \notebook
 /// Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
 ///
 /// This macro will perform a scan of the p-values for computing the interval or limit
 ///
 /// Usage:
 ///
-/// ~~~ {.cpp}
+/// ~~~{.cpp}
 /// root>.L StandardHypoTestInvDemo.C
 /// root> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, use CLS,
 ///                                number of points, xmin, xmax, number of toys, use number counting)
@@ -66,13 +67,13 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-// structure defining the options 
-struct HypoTestInvOptions { 
+// structure defining the options
+struct HypoTestInvOptions {
 
 bool plotHypoTestResult = true;          // plot test statistic result at each point
 bool writeResult = true;                 // write HypoTestInverterResult in a file
 TString resultFileName;                  // file with results (by default is built automatically using the workspace input file name)
-bool optimize = true;                    // optmize evaluation of test statistic
+bool optimize = true;                    // optimize evaluation of test statistic
 bool useVectorStore = true;              // convert data to use new roofit data store
 bool generateBinned = false;             // generate binned data sets
 bool noSystematics = false;              // force all systematics to be off (i.e. set all nuisance parameters as constat
@@ -109,7 +110,7 @@ bool useNLLOffset = false;               // use NLL offset when fitting (this in
 };
 
 
-HypoTestInvOptions optHTInv;  
+HypoTestInvOptions optHTInv;
 
 // internal class to run the inverter and more
 
@@ -319,13 +320,13 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
   useNumberCounting:  set to true when using number counting events
 
-  nuisPriorName:   name of prior for the nnuisance. This is often expressed as constraint term in the global model
+  nuisPriorName:   name of prior for the nuisance. This is often expressed as constraint term in the global model
   It is needed only when using the HybridCalculator (type=1)
   If not given by default the prior pdf from ModelConfig is used.
 
-  extra options are available as global paramwters of the macro. They major ones are:
+  extra options are available as global parameters of the macro. They major ones are:
 
-  plotHypoTestResult   plot result of tests at each point (TS distributions) (defauly is true)
+  plotHypoTestResult   plot result of tests at each point (TS distributions) (default is true)
   useProof             use Proof   (default is true)
   writeResult          write result of scan (default is true)
   rebuild              rebuild scan for expected limits (require extra toys) (default is false)
@@ -564,7 +565,7 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
          pl->Draw();
       }
    }
-   gPad = c1; 
+   gPad = c1;
 
 }
 
@@ -671,7 +672,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    }
 
    // check model  has global observables when there are nuisance pdf
-   // for the hybrid case the globobs are not needed
+   // for the hybrid case the globals are not needed
    if (type != 1 ) {
       bool hasNuisParam = (sbModel->GetNuisanceParameters() && sbModel->GetNuisanceParameters()->getSize() > 0);
       bool hasGlobalObs = (sbModel->GetGlobalObservables() && sbModel->GetGlobalObservables()->getSize() > 0);
@@ -858,7 +859,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       toymcs->SetUseMultiGen(mOptimize);
 
       if (mGenerateBinned &&  sbModel->GetObservables()->getSize() > 2) {
-         Warning("StandardHypoTestInvDemo","generate binned is activated but the number of ovservable is %d. Too much memory could be needed for allocating all the bins",sbModel->GetObservables()->getSize() );
+         Warning("StandardHypoTestInvDemo","generate binned is activated but the number of observable is %d. Too much memory could be needed for allocating all the bins",sbModel->GetObservables()->getSize() );
       }
 
       // set the random seed if needed
@@ -905,7 +906,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
                Info("StandardHypoTestInvDemo","No nuisance pdf given - try to use %s that is defined as a prior pdf in the B model",nuisPdf->GetName());
             }
             else {
-               Error("StandardHypoTestInvDemo","Cannnot run Hybrid calculator because no prior on the nuisance parameter is specified or can be derived");
+               Error("StandardHypoTestInvDemo","Cannot run Hybrid calculator because no prior on the nuisance parameter is specified or can be derived");
                return 0;
             }
          }
