@@ -13,7 +13,7 @@
 #include <utility>
 #include <cstdlib>
 #include <iostream>
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 #ifndef R__TSCHEMATYPE_H
 #include "TSchemaType.h"
