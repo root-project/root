@@ -1,111 +1,95 @@
-// Author: Stefan Schmitt
-// DESY, 23/01/09
-
-//  Version 17.1, bug fix with background uncertainty
-//
-//  History:
-//    Version 17.0, possibility to specify an error matrix with SetInput
-//    Version 16.1, parallel to changes in TUnfold
-//    Version 16.0, parallel to changes in TUnfold
-//    Version 15, fix bugs with uncorr. uncertainties, add backgnd subtraction
-//    Version 14, remove some print-out, do not add unused sys.errors
-//    Version 13, support for systematic errors
+// @(#)root/unfold:$Id$
+// Author: Stefan Schmitt DESY, 23/01/09
 
 /** \class TUnfoldSys
-    \ingroup Hist
-  TUnfold is used to decompose a measurement y into several sources x
-  given the measurement uncertainties and a matrix of migrations A
+\ingroup Unfold
+An algorithm to unfold distributions from detector to truth level,
+with background subtraction and propagation of systematic uncertainties
 
-  TUnfoldSys adds error propagation of systematic errors to TUnfold
-  Also, background sources (with errors) can be subtracted.
+TUnfoldSys is used to decompose a measurement y into several sources x,
+given the measurement uncertainties, background b and a matrix of migrations A.
+The method can be applied to a large number of problems,
+where the measured distribution y is a linear superposition
+of several Monte Carlo shapes. Beyond such a simple template fit,
+TUnfoldSys has an adjustable regularisation term and also supports an
+optional constraint on the total number of events.
+Background sources can be specified, with a normalisation constant and
+normalisation uncertainty. In addition, variants of the response
+matrix may be specified, these are taken to determine systematic
+uncertainties.
 
-  **For most applications, it is better to use TUnfoldDensity
-  instead of using TUnfoldSys or TUnfold**
+<b>For most applications, it is better to use the derived class
+TUnfoldDensity instead of TUnfoldSys. TUnfoldDensity adds
+features to TUnfoldSys, related to possible complex multidimensional
+arrangements of bins. For innocent
+users, the most notable improvement of TUnfoldDensity over TUnfoldSys are
+the getter functions. For TUnfoldSys, histograms have to be booked by the
+user and the getter functions fill the histogram bins. TUnfoldDensity
+simply returns a new, already filled histogram.</b>
 
-  If you use this software, please consider the following citation
-       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
+If you use this software, please consider the following citation
 
-  More documentation and updates are available on
-      http://www.desy.de/~sschmitt
+<b>S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]</b>
 
-  The following sources of systematic error are considered in TUnfoldSys
+Detailed documentation and updates are available on
+http://www.desy.de/~sschmitt
 
-  (a) uncorrelated errors on the input matrix histA, taken as the
-      errors provided with the histogram.
-      These are typically statistical errors from finite Monte Carlo samples
+Brief recipy to use TUnfoldSys:
 
-  (b) correlated shifts of the input matrix histA. These shifts are taken
-      as one-sigma effects when switchig on a given error soure.
-      several such error sources may be defined
+  - a matrix (truth,reconstructed) is given as a two-dimensional histogram
+    as argument to the constructor of TUnfold
+  - a vector of measurements is given as one-dimensional histogram using
+    the SetInput() method
+  - repeated calls to SubtractBackground() to specify background sources
+  - repeated calls to AddSysError() to specify systematic uncertainties
+  - The unfolding is performed
+    - either once with a fixed parameter tau, method DoUnfold(tau)
+    - or multiple times in a scan to determine the best chouce of tau,
+      method ScanLCurve()
+  - Unfolding results are retrieved using various GetXXX() methods
 
-  (c) a systematic error on the regularisation parameter tau
 
-  (d) uncorrelated errors on background sources, taken as the errors
-      provided with the background histograms
+Description of (systematic) uncertainties available in
+TUnfoldSys. There are covariance matrix contributions and there are
+systematic shifts. Systematic shifts correspond to the variation of a
+(buicance) parameter, for example a background normalisation or a
+one-sigma variation of a correlated systematic error.
 
-  (e) scale errors on background sources
+|                         | Set by                 | Access covariance matrix        | Access vector of shifts      | Description |
+|-------------------------|------------------------|---------------------------------|------------------------------|-------------|
+| (a)                     | TUnfoldSys constructor | GetEmatrixSysUncorr()           | n.a.                         | uncorrelated errors on the input matrix histA, taken as the errors provided with the histogram. These are typically statistical errors from finite Monte Carlo samples. |
+| (b)                     | AddSysError()          | GetEmatrixSysSource()           | GetDeltaSysSource()          | correlated shifts of the input matrix histA. These shifts are taken as one-sigma effects when switchig on a given error soure. Several such error sources may be defined |
+| (c)                     | SetTauError()          | GetEmatrixSysTau()              | GetDeltaSysTau()             | A systematic error on the regularisation parameter tau |
+| (d)                     | SubtractBackground()   | GetEmatrixSysBackgroundUncorr() | n.a.                         | uncorrelated errors on background sources, originating from the errors provided with the background histograms |
+| (e)                     | SubtractBackground()   | GetEmatrixSysBackgroundScale()  | GetDeltaSysBackgroundScale() | scale errors on background sources |
+| (i)                     | SetInput()             | GetEmatrixInput()               | n.a.                         | statistical uncertainty of the input (the measurement) |
+| (i)+(d)+(e)             | see above              | GetEmatrix()                    | n.a.                         | Partial sun of uncertainties: all sources which are propagated to the covariance before unfolding |
+| (i)+(a)+(b)+(c)+(d)+(e) | see above              | GetEmatrixTotal()               | n.a.                         | All known error sources summed up |
 
- In addition there is the (statistical) uncertainty of the input vector (i)
 
- Source (a) is providede with the original histogram histA
-     TUnfoldSys(histA,...)
+Note:  (a), (b), (c) are propagated to the result AFTER unfolding,
+whereas the background errors (d) and (e) are added to the data errors
+BEFORE unfolding. For this reason the errors of type (d) and (e) are
+INCLUDED in the standard error matrix and other methods provided by
+the base class TUnfold, whereas errors of type (a), (b), (c) are NOT
+INCLUDED in the methods provided by the base class TUnfold.
 
- Sources (b) are added by calls to
-     AddSysError()
 
- The systematic uncertainty on tau (c) is set by
-     SetTauError()
+--------------------------------------------------------------------------------
+<b>Version 17.6, with updated doxygen comments</b>
 
- Backgound sources causing errors of type (d) and (e) are added by
-     SubtractBackground()
-
- NOTE:
-    Systematic errors (a), (b), (c) are propagated to the result
-       AFTER unfolding
-
-    Background errors (d) and (e) are added to the data errors
-       BEFORE unfolding
-
- For this reason:
-  errors of type (d) and (e) are INCLUDED in the standard error matrix
-  and other methods provided by the base class TUnfold:
-      GetOutput()
-      GetEmatrix()
-      ...
-  whereas errors of type (a), (b), (c) are NOT INCLUDED in the methods
-  provided by the base class TUnfold.
-
-  ## Accessing error matrices:
-  The error sources (b),(c) and (e) propagate to shifts of the result.
-  These shifts may be accessed as histograms using the methods
-     GetDeltaSysSource()            corresponds to (b)
-     GetDeltaSysTau()               corresponds to (c)
-     GetDeltaSysBackgroundScale()   corresponds to (e)
-  The error sources (a) and (d) originate from many uncorrelated errors,
-  which in general are NOT uncorrelated on the result vector.
-  Thus, there is no corresponding shift of the output vector, only error
-  matrices are available
-
-  Method to get error matrix   |     corresponds to error sources
-  -----------------------------|---------------------------------
-   GetEmatrixSysUncorr()           |  (a)
-   GetEmatrixSysSource()           |  (b)
-   GetEmatrixSysTau()              |  (c)
-   GetEmatrixSysBackgroundUncorr() |  (d)
-   GetEmatrixSysBackgroundScale()  |  (e)
-   GetEmatrixInput()               |  (i)
-   GetEmatrix()                    |  (i)+(d)+(e)
-   GetEmatrixTotal()               |  (i)+(a)+(b)+(c)+(d)+(e)
-
-  Error matrices can be added to existing histograms.
-  This is useful to retreive the sum of several error matrices.
-  If the last argument of the GetEmatrixXXX() methods is set to kFALSE,
-  the histogram is not cleared, but the error matrix is simply added to the
-  existing histogram
-*/
-
-/*
-  This file is part of TUnfold.
+#### History:
+  - Version 17.5, in parallel to changes in TUnfold
+  - Version 17.4, in parallel to changes in TUnfoldBinning
+  - Version 17.3, in parallel to changes in TUnfoldBinning
+  - Version 17.2, add methods to find back systematic and background sources
+  - Version 17.1, bug fix with background uncertainty
+  - Version 17.0, possibility to specify an error matrix with SetInput
+  - Version 16.1, parallel to changes in TUnfold
+  - Version 16.0, parallel to changes in TUnfold
+  - Version 15, fix bugs with uncorr. uncertainties, add backgnd subtraction
+  - Version 14, remove some print-out, do not add unused sys.errors
+  - Version 13, support for systematic errors  This file is part of TUnfold.
 
   TUnfold is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -125,6 +109,7 @@
 #include <TMap.h>
 #include <TMath.h>
 #include <TObjString.h>
+#include <TSortedList.h>
 #include <RVersion.h>
 #include <cmath>
 
@@ -132,29 +117,57 @@
 
 ClassImp(TUnfoldSys)
 
+TUnfoldSys::~TUnfoldSys(void)
+{
+   // delete all data members
+   DeleteMatrix(&fDAinRelSq);
+   DeleteMatrix(&fDAinColRelSq);
+   delete fBgrIn;
+   delete fBgrErrUncorrInSq;
+   delete fBgrErrScaleIn;
+   delete fSysIn;
+   ClearResults();
+   delete fDeltaCorrX;
+   delete fDeltaCorrAx;
+   DeleteMatrix(&fYData);
+   DeleteMatrix(&fVyyData);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Only for use by root streamer or derived classes.
+
 TUnfoldSys::TUnfoldSys(void)
 {
    // set all pointers to zero
    InitTUnfoldSys();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set up response matrix A, uncorrelated uncertainties of A and
+/// regularisation scheme.
+///
+/// \param[in] hist_A matrix that describes the migrations
+/// \param[in] histmap mapping of the histogram axes to the unfolding output
+/// \param[in] regmode (default=kRegModeSize) global regularisation mode
+/// \param[in] constraint (default=kEConstraintArea) type of constraint
+///
+/// For further details, consult the constructir of the class TUnfold.
+/// The uncertainties of hist_A are taken to be uncorrelated and aper
+/// propagated to the unfolding result, method GetEmatrixSysUncorr().
+
 TUnfoldSys::TUnfoldSys
 (const TH2 *hist_A, EHistMap histmap, ERegMode regmode,EConstraint constraint)
    : TUnfold(hist_A,histmap,regmode,constraint)
 {
-   // arguments:
-   //    hist_A:  matrix that describes the migrations
-   //    histmap: mapping of the histogram axes to the unfolding output
-   //    regmode: global regularisation mode
    // data members initialized to something different from zero:
    //    fDA2, fDAcol
 
-   // initialize TUnfold
+   // initialize TUnfoldSys
    InitTUnfoldSys();
 
-   // svae underflow and overflow bins
+   // save underflow and overflow bins
    fAoutside = new TMatrixD(GetNx(),2);
-   // save the romalized errors on hist_A
+   // save the normalized errors on hist_A
    // to the matrices fDAinRelSq and fDAinColRelSq
    fDAinColRelSq = new TMatrixD(GetNx(),1);
 
@@ -213,21 +226,36 @@ TUnfoldSys::TUnfoldSys
    delete[] dataDAinRelSq;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Specify a correlated systematic uncertainty.
+///
+/// \param[in] sysError alternative matrix or matrix of absolute/relative shifts
+/// \param[in] name identifier of the error source
+/// \param[in] histmap mapping of the histogram axes
+/// \param[in] mode format of the error source
+///
+/// <b>sysError</b> corresponds to a one-sigma variation. If
+/// may be given in various forms, specified by <b>mode</b>
+///
+///   - <b>mode=kSysErrModeMatrix</b> the histogram <b>sysError</b>
+///     corresponds to an alternative response matrix.
+///   - <b>mode=kSysErrModeShift</b> the content of the histogram <b>sysError</b> are the absolute shifts of the response matrix
+///   - <b>mode=kSysErrModeRelative</b> the content of the histogram <b>sysError</b>
+///      specifies the relative uncertainties
+///
+/// Internally, all three cases are transformed to the case <b>mode=kSysErrModeMatrix</b>.
+
 void TUnfoldSys::AddSysError
 (const TH2 *sysError,const char *name,EHistMap histmap,ESysErrMode mode)
 {
-   // add a correlated error source
-   //    sysError: alternative matrix or matrix of absolute/relative shifts
-   //    name: name of the error source
-   //    histmap: mapping of the histogram axes to the unfolding output
-   //    mode: format of the error source
 
    if(fSysIn->FindObject(name)) {
       Error("AddSysError","Source %s given twice, ignoring 2nd call.\n",name);
    } else {
       // a copy of fA is made. It can be accessed inside the loop
       // without having to take care that the sparse structure of *fA
-      // may be accidentally destroyed by asking for an element which is zero.
+      // otherwise, *fA may be accidentally destroyed by asking
+      // for an element which is zero.
       TMatrixD aCopy(*fA);
 
       Int_t nmax= GetNx()*GetNy();
@@ -297,9 +325,14 @@ void TUnfoldSys::AddSysError
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Perform background subtraction.
+///
+/// This prepares the data members for the base class TUnfold, such
+/// that the background is properly taken into account.
+
 void TUnfoldSys::DoBackgroundSubtraction(void)
 {
-   // performs background subtraction
    // fY = fYData - fBgrIn
    // fVyy = fVyyData + fBgrErrUncorr^2 + fBgrErrCorr * fBgrErrCorr#
    // fVyyinv = fVyy^(-1)
@@ -407,24 +440,32 @@ void TUnfoldSys::DoBackgroundSubtraction(void)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Define the input data for subsequent calls to DoUnfold(Double_t).
+///
+///  input:   input distribution with errors
+///  - scaleBias:  scale factor applied to the bias
+///  - oneOverZeroError: for bins with zero error, this number defines 1/error.
+///
+/// Return value: number of bins with bad error
+///                 +10000*number of unconstrained output bins
+///
+///         Note: return values>=10000 are fatal errors,
+///               for the given input, the unfolding can not be done!
+///
+/// Calls the SetInput method of the base class, then renames the input
+/// vectors fY and fVyy, then performs the background subtraction
+///
+/// Data members modified:
+///   fYData,fY,fVyyData,fVyy,fVyyinvData,fVyyinv
+///
+/// and those modified by TUnfold::SetInput()
+/// and those modified by DoBackgroundSubtraction()
+
 Int_t TUnfoldSys::SetInput(const TH1 *hist_y,Double_t scaleBias,
                               Double_t oneOverZeroError,const TH2 *hist_vyy,
                               const TH2 *hist_vyy_inv)
 {
-   // Define the input data for subsequent calls to DoUnfold(Double_t)
-   //  input:   input distribution with errors
-   //  scaleBias:  scale factor applied to the bias
-   //  oneOverZeroError: for bins with zero error, this number defines 1/error.
-   // Return value: number of bins with bad error
-   //                 +10000*number of unconstrained output bins
-   //         Note: return values>=10000 are fatal errors,
-   //               for the given input, the unfolding can not be done!
-   // Calls the SetInput method of the base class, then renames the input
-   // vectors fY and fVyy, then performs the background subtraction
-   // Data members modified:
-   //   fYData,fY,fVyyData,fVyy,fVyyinvData,fVyyinv
-   // and those modified by TUnfold::SetInput()
-   // and those modified by DoBackgroundSubtraction()
 
    Int_t r=TUnfold::SetInput(hist_y,scaleBias,oneOverZeroError,hist_vyy,
                              hist_vyy_inv);
@@ -437,18 +478,31 @@ Int_t TUnfoldSys::SetInput(const TH1 *hist_y,Double_t scaleBias,
    return r;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Specify a source of background.
+///
+/// \param[in] bgr background distribution with uncorrelated errors
+/// \param[in] name identifier for this background source
+/// \param[in] scale normalisation factor applied to the background
+/// \param[in] scaleError normalisation uncertainty
+///
+/// The contribution <b>scale</b>*<b>bgr</b> is subtracted from the
+/// measurement prior to unfolding. The following contributions are
+/// added to the input covarianc ematrix
+///
+///   - using the uncorrelated histogram errors <b>dbgr</b>, the contribution
+/// (<b>scale</b>*<b>dbgr<sub>i</sub></b>)<sup>2</sup> is added to the
+/// diagonals of the covariance
+///   - using the histogram contents, the background normalisation uncertainty contribution
+/// <b>dscale</b>*<b>bgr<sub>i</sub></b> <b>dscale</b>*<b>bgr<sub>j</sub></b>
+/// is added to the covariance matrix
+///
+/// Data members modified:
+///   fBgrIn,fBgrErrUncorrInSq,fBgrErrScaleIn and those modified by DoBackgroundSubtraction()
+
 void TUnfoldSys::SubtractBackground
 (const TH1 *bgr,const char *name,Double_t scale,Double_t scale_error)
 {
-   // Store background source
-   //   bgr:    background distribution with uncorrelated errors
-   //   name:   name of this background source
-   //   scale:  scale factor applied to the background
-   //   scaleError: error on scale factor (correlated error)
-   //
-   // Data members modified:
-   //   fBgrIn,fBgrErrUncorrInSq,fBgrErrScaleIn
-   // and those modified by DoBackgroundSubtraction()
 
    // save background source
    if(fBgrIn->FindObject(name)) {
@@ -475,6 +529,23 @@ void TUnfoldSys::SubtractBackground
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get background into a histogram.
+///
+/// \param[inout] bgrHist target histogram, content and errors will be altered
+/// \param[in] bgrSource (default=0) name of backgrond source or zero
+/// to add all sources of background
+/// \param[in] binMap (default=0) remap histogram bins
+/// \param[in] includeError (default=3) include uncorrelated(1),
+/// correlated (2) or both (3) sources of uncertainty in the
+/// histogram errors
+/// \param[in] clearHist (default=true) reset histogram before adding
+/// up the specified background sources
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+/// The flag <b>clearHist</b> may be used to add background from
+/// several sources in successive calls to GetBackground().
 
 void TUnfoldSys::GetBackground
 (TH1 *bgrHist,const char *bgrSource,const Int_t *binMap,
@@ -548,10 +619,11 @@ void TUnfoldSys::GetBackground
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize pointers and TMaps.
+
 void TUnfoldSys::InitTUnfoldSys(void)
 {
-   // initialize pointers and TMaps
-
    // input
    fDAinRelSq = 0;
    fDAinColRelSq = 0;
@@ -589,25 +661,11 @@ void TUnfoldSys::InitTUnfoldSys(void)
    fVyyData=0;
 }
 
-TUnfoldSys::~TUnfoldSys(void)
-{
-   // delete all data members
-   DeleteMatrix(&fDAinRelSq);
-   DeleteMatrix(&fDAinColRelSq);
-   delete fBgrIn;
-   delete fBgrErrUncorrInSq;
-   delete fBgrErrScaleIn;
-   delete fSysIn;
-   ClearResults();
-   delete fDeltaCorrX;
-   delete fDeltaCorrAx;
-   DeleteMatrix(&fYData);
-   DeleteMatrix(&fVyyData);
-}
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all data members which depend on the unfolding results.
 
 void TUnfoldSys::ClearResults(void)
 {
-   // clear all data members which depend on the unfolding results
    TUnfold::ClearResults();
    DeleteMatrix(&fEmatUncorrX);
    DeleteMatrix(&fEmatUncorrAx);
@@ -616,11 +674,14 @@ void TUnfoldSys::ClearResults(void)
    DeleteMatrix(&fDeltaSysTau);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix calculations required to propagate systematic errors.
+///
+/// data members modified:
+///    fEmatUncorrX, fEmatUncorrAx, fDeltaCorrX, fDeltaCorrAx
+
 void TUnfoldSys::PrepareSysError(void)
 {
-   // calculations required for syst.error
-   // data members modified
-   //    fEmatUncorrX, fEmatUncorrAx, fDeltaCorrX, fDeltaCorrAx
    if(!fEmatUncorrX) {
       fEmatUncorrX=PrepareUncorrEmat(GetDXDAM(0),GetDXDAM(1));
    }
@@ -700,117 +761,145 @@ void TUnfoldSys::PrepareSysError(void)
    DeleteMatrix(&AM1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Covariance contribution from uncorrelated uncertainties of the
+/// response matrix.
+///
+/// \param[inout] ematrix covariance matrix histogram
+/// \param[in] binMap mapping of histogram bins
+/// \param[in] clearEmat if true, ematrix is cleared prior to adding
+/// this covariance matrix contribution
+///
+/// This method propagates the uncertainties of the response matrix
+/// histogram, specified with the constructor, to the unfolding
+/// result. It is assumed that the entries of that histogram are
+/// bin-to-bin uncorrelated. In many cases this corresponds to the
+/// "Monte Carlo statistical uncertainties".
+///
+/// The array <b>binMap</b> is explained with the method GetOutput().
+/// The flag <b>clearEmat</b> may be used to add covariance matrices from
+/// several uncertainty sources.
+///
+/// data members modified:
+///   fVYAx, fESparse, fEAtV, fErrorAStat
+
 void TUnfoldSys::GetEmatrixSysUncorr
 (TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
 {
-   // get output error contribution from statistical fluctuations in A
-   //   ematrix: output error matrix histogram
-   //   binMap: see method GetEmatrix()
-   //   clearEmat: set kTRUE to clear the histogram prior to adding the errors
-   // data members modified:
-   //   fVYAx, fESparse, fEAtV, fErrorAStat
    PrepareSysError();
    ErrorMatrixToHist(ematrix,fEmatUncorrX,binMap,clearEmat);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Propagate uncorrelated systematic errors to a covariance matrix.
+///
+/// \param[in] m_0 coefficients for error propagation
+/// \param[in] m_1 coefficients for error propagation
+///
+/// Returns the covariance matrix, propagates uncorrelated systematic errors to
+/// a covariance matrix. m_0,m_1 are the coefficients (matrices) for propagating
+/// the errors.
+///
+/// The error matrix is calculated by standard error propagation, where the
+/// derivative of the result vector X wrt the matrix A is given by:
+///
+///  \f[ \frac{dX_k}{dA_{ij}}  =  M0_{kj} Z0_i  - M1_{ki} Z1_j \f]
+///
+/// where:
+//
+///   the matrices M0 and M1 are arguments to this function
+///   the vectors Z0, Z1 : GetDXDAZ()
+///
+/// The matrix A is calculated from a matrix B as
+///
+///    \f[ A_{ij} = \frac{B_{ij}}{\sum_k B_{kj}} \f]
+///
+/// where k runs over additional indices of B, not present in A.
+/// (underflow and overflow bins, used for efficiency corrections)
+///
+/// define:   \f$ Norm_j = \sum_k B_{kj} \f$   (data member fSumOverY)
+///
+/// the derivative of A wrt this input matrix B is given by:
+///
+///   \f[ \frac{dA_{ij}}{dB_{kj}} = (\delta_{ik} - A_{ij} ) \frac{1}{Norm_j} \f]
+///
+/// The covariance matrix Vxx is:
+///
+///   \f[ Vxx_{mn}  = \sum_{ijlk} \big[   (\frac{dX_m}{dA_{ij}}) (\frac{dA_{ij}}{dB_{}kj}) DB_{kj} (\frac{dX_n}{dA_{lj}}) (\frac{dA_{lj}}{dB_{kj}}) \big] \f]
+///
+/// where \f$ DB_{kj} \f$ is the error on \f$ B_{kj} \f$ squared.
+///
+/// Simplify the sum over k:
+///
+///   \f[   \sum_k \big[ (\frac{dA_{ij}}{dB_{kj}}) DB_{kj} (\frac{dA_{lj}}{dB_{kj}}) \big]
+///      =  \sum_k \big[ (\delta_{ik} - A_{ij} ) \frac{1}{Norm_j} DB_{kj} (\delta_{lk} - A_{lj} ) \frac{1}{Norm_j} \big]
+///      =  \sum_k \big[ (\delta_{ik} \delta_{lk} - \delta_{ik} A_{lj} - \delta_{lk} A_{ij} + A_{ij} A_{lj} ) \frac{DB_{kj}}{Norm_j^2} \big] \f]
+///
+/// introduce normalized errors:  \f$ Rsq_{kj} = \frac{DB_{kj}}{Norm_j^2} \f$
+///
+/// after summing over k:
+///   \f[ \delta_{ik} \delta_{lk} Rsq_{kj}  \to    \delta_{il} Rsq_{ij}            \f]
+///   \f[ \delta_{ik} A_{lj} Rsq_{kj}       \to    A_{lj} Rsq_{ij}                 \f]
+///   \f[ \delta_{lk} A_{ij} Rsq_{kj}       \to    A_{ij} Rsq_{lj}                 \f]
+///   \f[ A_{ij} A_{lj} Rsq_{kj}            \to    A_{ij} A_{lj} \sum_k(Rsq_{kj})  \f]
+///
+/// introduce sum of normalized errors squared:   \f$ SRsq_j = \sum_k(Rsq_{kj}) \f$
+///
+/// Note: \f$ Rsq_{ij} \f$ is stored as `fDAinRelSq` (excludes extra indices of B)
+/// and \f$ SRsq_j \f$ is stored as  `fDAinColRelSq`  (sum includes all indices of B)
+///
+///   \f[ Vxx_{nm} = \sum_{ijl} \big[ (\frac{dX_m}{dA_{ij}}) (\frac{dX_n}{dA_{lj}})
+///     (\delta_{il} Rsq_{ij} - A_{lj} Rsq_{ij} - A_{ij} Rsq_{lj} + A_{ij} A_{lj} SRsq_j) \big] \f]
+///
+///   \f[ Vxx_nm = \sum_j \big[ F_{mj} F_{nj} SRsq_j \big]
+///              - \sum_j \big[ G_{mj} F_{nj} \big]
+///              - \sum_j \big[ F_{mj} G_{nj} \big]
+///              + \sum_{ij} \big[  (\frac{dX_m}{dA_{ij}}) (\frac{dX_n}{dA_{lj}}) Rsq_{ij} \big] \f]
+///
+/// where:
+///
+///   \f[ F_{mj} = \sum_i \big[ (\frac{dX_m}{dA_{ij}}) * A_{ij} \big]   \f]
+///   \f[ G_{mj} = \sum_i \big[ (\frac{dX_m}{dA_{ij}}) Rsq_{ij} \big]   \f]
+///
+/// In order to avoid explicitly calculating the 3-dimensional tensor
+/// \f$(\frac{dX_m}{dA_{ij}}) \f$ the sums are evaluated further, using:
+///
+///   \f[ \frac{dX_k}{dA_{ij}}  =  M0_{kj} Z0_i  - M1_{ki} Z1_j  \f]
+///   \f[ F_{mj} = M0_{mj} * (A\# Z0)_j - (M1 A)_{mj} Z1_j       \f]
+///   \f[ G_{mj} = M0_{mj} * (Rsq\# Z0)_j - (M1 Rsq)_{mj} Z1_j   \f]
+///
+/// and
+///
+///   \f[ \sum_{ij} \big[ (\frac{dX_m}{dA_{ij}}) (\frac{dX_n}{dA_{ij}}) Rsq_{ij} \big] =
+///          \sum_j \big[ M0_{mj} M0_nj \big[ \sum_i (Z0_i)^2 Rsq_{ij} \big] \big]
+///        + \sum_i \big[ M1_{mi} M1_{ni} \big[ \sum_j (Z1_j)^2 Rsq_{ij} \big] \big]
+///        - \sum_i \big[ M1_{mi} H_{ni} + M1_{ni} H_{mi} \big] \f]
+///
+/// where:
+///
+///   \f[ H_{mi} = Z0_i \sum_j \big[ M0_{mj} Z1_j Rsq_{ij} \big] \f]
+///
+/// collect all contributions:
+///
+///   \f[ Vxx_nm = r0 -r1 -r2 +r3 +r4 -r5 -r6 \f]
+///   \f[     r0 = \sum_j \big[ F_{mj} F_nj * SRsq_j \big] \f]
+///   \f[     r1 = \sum_j \big[ G_{mj} F_nj \big] \f]
+///   \f[     r2 = \sum_j \big[ F_{mj} G_nj \big] \f]
+///   \f[     r3 = \sum_j \big[ M0_{mj} M0_nj \big[ \sum_i (Z0_i)^2 Rsq_{ij} \big] \big] \f]
+///   \f[     r4 = \sum_i \big[ M1_{mi} M1_{ni} \big[ \sum_j (Z1_j)^2 Rsq_{ij} \big] \big] \f]
+///   \f[     r5 = \sum_i \big[ M1_{mi} H_{ni} \big] \f]
+///   \f[     r6 = \sum_i \big[ M1_{ni} H_{mi} \big] \f]
+
 TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
 (const TMatrixDSparse *m_0,const TMatrixDSparse *m_1)
 {
-   // propagate uncorrelated systematic errors to a covariance matrix
-   //   m0,m1 : coefficients (matrices) for propagating the errors
-   //
-   // the error matrix is calculated by standard error propagation, where the
-   // derivative of the result vector X wrt the matrix A is given by
-   //
-   //  dX_k / dA_ij  =  M0_kj * Z0_i  - M1_ki * Z1_j
-   //
-   // where:
-   //   the matrices M0 and M1 are arguments to this function
-   //   the vectors Z0, Z1 : GetDXDAZ()
-   //
-   // The matrix A is calculated from a matrix B as
-   //
-   //    A_ij = B_ij / sum_k B_kj
-   //
-   // where k runs over additional indices of B, not present in A.
-   // (underflow and overflow bins, used for efficiency corrections)
-   //
-   // define:   Norm_j = sum_k B_kj   (data member fSumOverY)
-   //
-   // the derivative of A wrt this input matrix B is given by:
-   //
-   //   dA_ij / dB_kj = (  delta_ik - A_ij ) * 1/Norm_j
-   //
-   // The covariance matrix Vxx is:
-   //
-   //   Vxx_mn  = sum_ijlk [   (dX_m / dA_ij) * (dA_ij / dB_kj) * DB_kj
-   //                        * (dX_n / dA_lj) * (dA_lj / dB_kj)  ]
-   //
-   // where DB_kj is the error on B_kj squared
-   // Simplify the sum over k:
-   //
-   //   sum_k [ (dA_ij / dB_kj) * DB_kj * (dA_lj / dB_kj) ]
-   //      =  sum_k [  ( delta_ik - A_ij ) * 1/Norm_j * DB_kj *
-   //                * ( delta_lk - A_lj ) * 1/Norm_j ]
-   //      =  sum_k [ ( delta_ik*delta_lk - delta_ik*A_lj - delta_lk*A_ij
-   //                  + A_ij * A_lj ) * DB_kj / Norm_j^2 ]
-   //
-   // introduce normalized errors:  Rsq_kj = DB_kj / Norm_j^2
-   // after summing over k:
-   //   delta_ik*delta_lk*Rsq_kj  ->    delta_il*Rsq_ij
-   //   delta_ik*A_lj*Rsq_kj      ->    A_lj*Rsq_ij
-   //   delta_lk*A_ij*Rsq_kj      ->    A_ij*Rsq_lj
-   //   A_ij*A_lj*Rsq_kj          ->    A_ij*A_lj*sum_k(Rsq_kj)
-   //
-   // introduce sum of normalized errors squared:   SRsq_j = sum_k(Rsq_kj)
-   //
-   // Note: Rsq_ij is stored as  fDAinRelSq     (excludes extra indices of B)
-   //   and SRsq_j is stored as  fDAinColRelSq  (sum includes all indices of B)
-   //
-   //  Vxx_nm = sum_ijl [ (dX_m / dA_ij) * (dX_n / dA_lj)
-   //     (delta_il*Rsq_ij - A_lj*Rsq_ij - A_ij*Rsq_lj + A_ij*A_lj *SRsq_j) ]
-   //
-   //  Vxx_nm =    sum_j [ F_mj * F_nj * SRsq_j
-   //            - sum_j [ G_mj * F_nj ]
-   //            - sum_j [ F_mj * G_nj ]
-   //            + sum_ij [  (dX_m / dA_ij) * (dX_n / dA_lj) * Rsq_ij ]
-   //
-   // where:
-   //    F_mj = sum_i [ (dX_m / dA_ij) * A_ij ]
-   //    G_mj = sum_i [ (dX_m / dA_ij) * Rsq_ij ]
-   //
-   // In order to avoid explicitly calculating the 3-dimensional tensor
-   // (dX_m/dA_ij) the sums are evaluated further, using
-   //    dX_k / dA_ij  =  M0_kj * Z0_i  - M1_ki * Z1_j
-   //
-   //   F_mj = M0_mj * (A# Z0)_j - (M1 A)_mj Z1_j
-   //   G_mj = M0_mj * (Rsq# Z0)_j - (M1 Rsq)_mj Z1_j
-   //
-   // and
-   //
-   //   sum_ij [ (dX_m/dA_ij) * (dX_n/dA_ij) * Rsq_ij ] =
-   //      sum_j [ M0_mj * M0_nj *  [ sum_i (Z0_i)^2 * Rsq_ij ] ]
-   //    + sum_i [ M1_mi * M1_ni *  [ sum_j (Z1_j)^2 * Rsq_ij ] ]
-   //    - sum_i [ M1_mi * H_ni + M1_ni * H_mi]
-   // where:
-   //   H_mi = Z0_i * sum_j [ M0_mj * Z1_j * Rsq_ij ]
-   //
-   // collect all contributions:
-   //   Vxx_nm = r0 -r1 -r2 +r3 +r4 -r5 -r6
-   //      r0 = sum_j [ F_mj * F_nj * SRsq_j ]
-   //      r1 = sum_j [ G_mj * F_nj ]
-   //      r2 = sum_j [ F_mj * G_nj ]
-   //      r3 = sum_j [ M0_mj * M0_nj *  [ sum_i (Z0_i)^2 * Rsq_ij ] ]
-   //      r4 = sum_i [ M1_mi * M1_ni *  [ sum_j (Z1_j)^2 * Rsq_ij ] ]
-   //      r5 = sum_i [ M1_mi * H_ni ]
-   //      r6 = sum_i [ M1_ni * H_mi ]
 
    //======================================================
    // calculate contributions containing matrices F and G
    // r0,r1,r2
    TMatrixDSparse *r=0;
    if(fDAinColRelSq && fDAinRelSq) {
-      // calculate matrices (M1*A)_mj * Z1_j  and  (M1*Rsq)_mj * Z1_j
+      // calculate matrices (M1*A)_{mj} * Z1_j  and  (M1*Rsq)_{mj} * Z1_j
       TMatrixDSparse *M1A_Z1=MultiplyMSparseMSparse(m_1,fA);
       ScaleColumnsByVector(M1A_Z1,GetDXDAZ(1));
       TMatrixDSparse *M1Rsq_Z1=MultiplyMSparseMSparse(m_1,fDAinRelSq);
@@ -820,12 +909,12 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
       TMatrixDSparse *RsqZ0=
          MultiplyMSparseTranspMSparse(fDAinRelSq,GetDXDAZ(0));
       //calculate matrix F
-      //   F_mj = M0_mj * (A# Z0)_j - (M1 A)_mj Z1_j
+      //   F_{mj} = M0_{mj} * (A# Z0)_j - (M1 A)_{mj} Z1_j
       TMatrixDSparse *F=new TMatrixDSparse(*m_0);
       ScaleColumnsByVector(F,AtZ0);
       AddMSparse(F,-1.0,M1A_Z1);
       //calculate matrix G
-      //   G_mj = M0_mj * (Rsq# Z0)_j - (M1 Rsq)_mj Z1_j
+      //   G_{mj} = M0_{mj} * (Rsq# Z0)_j - (M1 Rsq)_{mj} Z1_j
       TMatrixDSparse *G=new TMatrixDSparse(*m_0);
       ScaleColumnsByVector(G,RsqZ0);
       AddMSparse(G,-1.0,M1Rsq_Z1);
@@ -833,11 +922,11 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
       DeleteMatrix(&M1Rsq_Z1);
       DeleteMatrix(&AtZ0);
       DeleteMatrix(&RsqZ0);
-      //      r0 = sum_j [ F_mj * F_nj * SRsq_j ]
+      //      r0 = \sum_j [ F_{mj} * F_nj * SRsq_j ]
       r=MultiplyMSparseMSparseTranspVector(F,F,fDAinColRelSq);
-      //      r1 = sum_j [ G_mj * F_nj ]
+      //      r1 = \sum_j [ G_{mj} * F_nj ]
       TMatrixDSparse *r1=MultiplyMSparseMSparseTranspVector(F,G,0);
-      //      r2 = sum_j [ F_mj * G_nj ]
+      //      r2 = \sum_j [ F_{mj} * G_nj ]
       TMatrixDSparse *r2=MultiplyMSparseMSparseTranspVector(G,F,0);
       // r = r0-r1-r2
       AddMSparse(r,-1.0,r1);
@@ -849,7 +938,7 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
    }
    //======================================================
    // calculate contribution
-   //   sum_ij [ (dX_m/dA_ij) * (dX_n/dA_ij) * Rsq_ij ]
+   //   \sum_{ij} [ (dX_m/dA_{ij}) * (dX_n/dA_{ij}) * Rsq_{ij} ]
    //  (r3,r4,r5,r6)
    if(fDAinRelSq) {
       // (Z0_i)^2
@@ -859,9 +948,9 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
       for(int index=0;index<Z0sq_rows[Z0sq.GetNrows()];index++) {
          Z0sq_data[index] *= Z0sq_data[index];
       }
-      // Z0sqRsq =  sum_i (Z_i)^2 * Rsq_ij
+      // Z0sqRsq =  \sum_i (Z_i)^2 * Rsq_{ij}
       TMatrixDSparse *Z0sqRsq=MultiplyMSparseTranspMSparse(fDAinRelSq,&Z0sq);
-      //      r3 = sum_j [ M0_mj * M0_nj *  [ sum_i (Z0_i)^2 * Rsq_ij ] ]
+      //      r3 = \sum_j [ M0_{mj} * M0_nj *  [ \sum_i (Z0_i)^2 * Rsq_{ij} ] ]
       TMatrixDSparse *r3=MultiplyMSparseMSparseTranspVector(m_0,m_0,Z0sqRsq);
       DeleteMatrix(&Z0sqRsq);
 
@@ -872,23 +961,23 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
       for(int index=0;index<Z1sq_rows[Z1sq.GetNrows()];index++) {
          Z1sq_data[index] *= Z1sq_data[index];
       }
-      // Z1sqRsq = sum_j (Z1_j)^2 * Rsq_ij ]
+      // Z1sqRsq = \sum_j (Z1_j)^2 * Rsq_{ij} ]
       TMatrixDSparse *Z1sqRsq=MultiplyMSparseMSparse(fDAinRelSq,&Z1sq);
-      //      r4 = sum_i [ M1_mi * M1_ni *  [ sum_j (Z1_j)^2 * Rsq_ij ] ]
+      //      r4 = \sum_i [ M1_{mi} * M1_{ni} *  [ \sum_j (Z1_j)^2 * Rsq_{ij} ] ]
       TMatrixDSparse *r4=MultiplyMSparseMSparseTranspVector(m_1,m_1,Z1sqRsq);
       DeleteMatrix(&Z1sqRsq);
 
-      // sum_j [ M0_mj * Z1_j * Rsq_ij ]
+      // \sum_j [ M0_{mj} * Z1_j * Rsq_{ij} ]
       TMatrixDSparse *H=MultiplyMSparseMSparseTranspVector
          (m_0,fDAinRelSq,GetDXDAZ(1));
-      // H_mi = Z0_i * sum_j [ M0_mj * Z1_j * Rsq_ij ]
+      // H_{mi} = Z0_i * \sum_j [ M0_{mj} * Z1_j * Rsq_{ij} ]
       ScaleColumnsByVector(H,GetDXDAZ(0));
-      //      r5 = sum_i [ M1_mi * H_ni ]
+      //      r5 = \sum_i [ M1_{mi} * H_{ni} ]
       TMatrixDSparse *r5=MultiplyMSparseMSparseTranspVector(m_1,H,0);
-      //      r6 = sum_i [ H_mi * M1_ni ]
+      //      r6 = \sum_i [ H_{mi} * M1_{ni} ]
       TMatrixDSparse *r6=MultiplyMSparseMSparseTranspVector(H,m_1,0);
       DeleteMatrix(&H);
-      // r =  r0 -r1 -r2 +r3 +r4 +r5 +r6
+      // r =  r0 -r1 -r2 +r3 +r4 -r5 -r6
       if(r) {
          AddMSparse(r,1.0,r3);
          DeleteMatrix(&r3);
@@ -906,6 +995,13 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
    return r;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Propagate correlated systematic shift to an output vector.
+///
+/// \param[in] m1 coefficients
+/// \param[in] m2 coeffiicients
+/// \param[in] dsys matrix of correlated shifts from this source
+
 TMatrixDSparse *TUnfoldSys::PrepareCorrEmat
 (const TMatrixDSparse *m1,const TMatrixDSparse *m2,const TMatrixDSparse *dsys)
 {
@@ -916,8 +1012,8 @@ TMatrixDSparse *TUnfoldSys::PrepareCorrEmat
    // delta_m =
    //   sum{i,j}   {
    //      ((*m1)(m,j) * (*fVYAx)(i) - (*m2)(m,i) * (*fX)(j))*dsys(i,j) }
-   //   =    sum_j (*m1)(m,j)  sum_i dsys(i,j) * (*fVYAx)(i)
-   //     -  sum_i (*m2)(m,i)  sum_j dsys(i,j) * (*fX)(j)
+   //   =    \sum_j (*m1)(m,j)  \sum_i dsys(i,j) * (*fVYAx)(i)
+   //     -  \sum_i (*m2)(m,i)  \sum_j dsys(i,j) * (*fX)(j)
 
    TMatrixDSparse *dsysT_VYAx = MultiplyMSparseTranspMSparse(dsys,GetDXDAZ(0));
    TMatrixDSparse *delta =  MultiplyMSparseMSparse(m1,dsysT_VYAx);
@@ -930,6 +1026,13 @@ TMatrixDSparse *TUnfoldSys::PrepareCorrEmat
    return delta;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Specify an uncertainty on tau.
+///
+/// \param[in] delta_tau new uncertainty on tau
+///
+/// The default is to have no uncertyainty on tau.
+
 void TUnfoldSys::SetTauError(Double_t delta_tau)
 {
    // set uncertainty on tau
@@ -937,13 +1040,23 @@ void TUnfoldSys::SetTauError(Double_t delta_tau)
    DeleteMatrix(&fDeltaSysTau);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Correlated one-sigma shifts correspinding to a given systematic uncertainty.
+///
+/// \param[out] hist_delta histogram to store shifts
+/// \param[in] name  identifier of the background source
+/// \param[in] binMap (default=0) remapping of histogram bins
+///
+/// returns true if the error source was found.
+///
+/// This method returns the shifts of the unfolding result induced by
+/// varying the identified systematic source by one sigma.
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+
 Bool_t TUnfoldSys::GetDeltaSysSource(TH1 *hist_delta,const char *name,
                                    const Int_t *binMap)
 {
-   // calculate systematic shift from a given source
-   //    ematrix: output
-   //    source: name of the error source
-   //    binMap: see method GetEmatrix()
    PrepareSysError();
    const TPair *named_emat=(const TPair *)fDeltaCorrX->FindObject(name);
    const TMatrixDSparse *delta=0;
@@ -954,14 +1067,23 @@ Bool_t TUnfoldSys::GetDeltaSysSource(TH1 *hist_delta,const char *name,
    return delta !=0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Correlated one-sigma shifts from background normalisation uncertainty.
+///
+/// \param[out] hist_delta histogram to store shifts
+/// \param[in] source  identifier of the background source
+/// \param[in] binMap (default=0) remapping of histogram bins
+///
+/// returns true if the background source was found.
+///
+/// This method returns the shifts of the unfolding result induced by
+/// varying the normalisation of the identified background by one sigma.
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+
 Bool_t TUnfoldSys::GetDeltaSysBackgroundScale
 (TH1 *hist_delta,const char *source,const Int_t *binMap)
 {
-   // get correlated shift induced by a background source
-   //   delta: output shift vector histogram
-   //   source: name of background source
-   //   binMap: see method GetEmatrix()
-   //   see PrepareSysError()
    PrepareSysError();
    const TPair *named_err=(const TPair *)fBgrErrScaleIn->FindObject(source);
    TMatrixDSparse *dx=0;
@@ -977,6 +1099,20 @@ Bool_t TUnfoldSys::GetDeltaSysBackgroundScale
    return kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Correlated one-sigma shifts from shifting tau.
+///
+/// \param[out] hist_delta histogram to store shifts
+/// \param[in] source  identifier of the background source
+/// \param[in] binMap (default=0) remapping of histogram bins
+///
+/// returns true if the background source was found.
+///
+/// This method returns the shifts of the unfolding result induced by
+/// varying the normalisation of the identified background by one sigma.
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+
 Bool_t TUnfoldSys::GetDeltaSysTau(TH1 *hist_delta,const Int_t *binMap)
 {
    // calculate systematic shift from tau variation
@@ -987,14 +1123,26 @@ Bool_t TUnfoldSys::GetDeltaSysTau(TH1 *hist_delta,const Int_t *binMap)
    return fDeltaSysTau !=0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Covariance contribution from a systematic variation of the
+/// response matrix.
+///
+/// \param[inout] ematrix covariance matrix histogram
+/// \param[in] name identifier of the systematic variation
+/// \param[in] binMap (default=0) remapping of histogram bins
+/// \param[in] clearEmat (default=true) if true, clear the histogram
+/// prior to adding the covariance matrix contribution
+///
+/// Returns the covariance matrix contribution from shifting the given
+/// uncertainty source within one sigma
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+/// The flag <b>clearEmat</b> may be used to add covariance matrices from
+/// several uncertainty sources.
+
 void TUnfoldSys::GetEmatrixSysSource
 (TH2 *ematrix,const char *name,const Int_t *binMap,Bool_t clearEmat)
 {
-   // calculate systematic shift from a given source
-   //    ematrix: output
-   //    source: name of the error source
-   //    binMap: see method GetEmatrix()
-   //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
    PrepareSysError();
    const TPair *named_emat=(const TPair *)fDeltaCorrX->FindObject(name);
    TMatrixDSparse *emat=0;
@@ -1006,14 +1154,26 @@ void TUnfoldSys::GetEmatrixSysSource
    DeleteMatrix(&emat);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Covariance contribution from background normalisation uncertainty.
+///
+/// \param[inout] ematrix output histogram
+/// \param[in] source identifier of the background source
+/// \param[in] binMap (default=0) remapping of histogram bins
+/// \param[in] clearEmat (default=true) if true, clear the histogram
+/// prior to adding the covariance matrix contribution
+///
+/// this method returns the uncertainties on the unfolding result
+/// arising from the background source <b>source</b> and its normalisation
+/// uncertainty. See method SubtractBackground() how to set the normalisation uncertainty
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+/// The flag <b>clearEmat</b> may be used to add covariance matrices from
+/// several uncertainty sources.
+
 void TUnfoldSys::GetEmatrixSysBackgroundScale
 (TH2 *ematrix,const char *name,const Int_t *binMap,Bool_t clearEmat)
 {
-   // calculate systematic shift from a given background scale error
-   //    ematrix: output
-   //    source: name of the error source
-   //    binMap: see method GetEmatrix()
-   //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
    PrepareSysError();
    const TPair *named_err=(const TPair *)fBgrErrScaleIn->FindObject(name);
    TMatrixDSparse *emat=0;
@@ -1027,13 +1187,30 @@ void TUnfoldSys::GetEmatrixSysBackgroundScale
    DeleteMatrix(&emat);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Covariance matrix contribution from error on regularisation
+/// parameter.
+///
+/// \param[inout] ematrix output histogram
+/// \param[in] binMap (default=0) remapping of histogram bins
+/// \param[in] clearEmat (default=true) if true, clear the histogram
+///
+/// this method returns the covariance contributions to the unfolding result
+/// from the assigned uncertainty on the parameter tau, see method
+/// SetTauError().
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+/// The flag <b>clearEmat</b> may be used to add covariance matrices from
+/// several uncertainty sources.
+///
+/// Calculate error matrix from error in regularisation parameter
+///  - ematrix: output
+///  - binMap: see method GetEmatrix()
+///  - clearEmat: set kTRUE to clear the histogram prior to adding the errors
+
 void TUnfoldSys::GetEmatrixSysTau
 (TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
 {
-   // calculate error matrix from error in regularisation parameter
-   //    ematrix: output
-   //    binMap: see method GetEmatrix()
-   //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
    PrepareSysError();
    TMatrixDSparse *emat=0;
    if(fDeltaSysTau) {
@@ -1043,25 +1220,46 @@ void TUnfoldSys::GetEmatrixSysTau
    DeleteMatrix(&emat);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Covariance matrix contribution from input measurement uncertainties.
+///
+/// \param[inout] ematrix output histogram
+/// \param[in] binMap (default=0) remapping of histogram bins
+/// \param[in] clearEmat (default=true) if true, clear the histogram
+///
+/// this method returns the covariance contributions to the unfolding result
+/// from the uncertainties or covariance of the input
+/// data. In many cases, these are the "statistical uncertainties".
+///
+/// The array <b>binMap</b> is explained with the method GetOutput().
+/// The flag <b>clearEmat</b> may be used to add covariance matrices from
+/// several uncertainty sources.
+
 void TUnfoldSys::GetEmatrixInput
 (TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
 {
-   // calculate error matrix from error in input vector alone
-   //    ematrix: output
-   //    binMap: see method GetEmatrix()
-   //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
    GetEmatrixFromVyy(fVyyData,ematrix,binMap,clearEmat);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Covariance contribution from background uncorrelated  uncertainty.
+///
+/// \param[in] ematrix output histogram
+/// \param[in] source identifier of the background source
+/// \param[in] binMap (default=0) remapping of histogram bins
+/// \param[in] clearEmat (default=true) if true, clear the histogram
+///
+/// this method returns the covariance contributions to the unfolding result
+/// arising from the background source <b>source</b> and the uncorrelated
+/// (background histogram uncertainties). Also see method SubtractBackground()
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+/// The flag <b>clearEmat</b> may be used to add covariance matrices from
+/// several uncertainty sources.
 
 void TUnfoldSys::GetEmatrixSysBackgroundUncorr
 (TH2 *ematrix,const char *source,const Int_t *binMap,Bool_t clearEmat)
 {
-   // calculate error matrix contribution originating from uncorrelated errors
-   // of one background source
-   //    ematrix: output
-   //    source: name of the error source
-   //    binMap: see method GetEmatrix()
-   //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
    const TPair *named_err=(const TPair *)fBgrErrUncorrInSq->FindObject(source);
    TMatrixDSparse *emat=0;
    if(named_err) {
@@ -1072,14 +1270,24 @@ void TUnfoldSys::GetEmatrixSysBackgroundUncorr
    DeleteMatrix(&emat);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Propagate an error matrix on the input vector to the unfolding result.
+///
+/// \param[in] vyy input error matrix
+/// \param[inout] ematrix histogram to be updated
+/// \param[in] binMap  mapping of histogram bins
+/// \param[in] clearEmat if set, clear histogram before adding this
+/// covariance contribution
+///
+/// propagate error matrix vyy to the result
+///  - vyy: error matrix on input data fY
+///  - ematrix: output
+///  - binMap: see method GetEmatrix()
+///  - clearEmat: set kTRUE to clear the histogram prior to adding the errors
+
 void TUnfoldSys::GetEmatrixFromVyy
 (const TMatrixDSparse *vyy,TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
 {
-   // propagate error matrix vyy to the result
-   //    vyy: error matrix on input data fY
-   //    ematrix: output
-   //    binMap: see method GetEmatrix()
-   //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
    PrepareSysError();
    TMatrixDSparse *em=0;
    if(vyy) {
@@ -1091,11 +1299,20 @@ void TUnfoldSys::GetEmatrixFromVyy
    DeleteMatrix(&em);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get total error matrix, summing up all contributions.
+///
+/// \param[out] ematrix histogram which will be filled
+/// \param[in] binMap (default=0) remapping of histogram bins
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+///
+/// get total error including statistical error
+///  - ematrix: output
+///  - binMap: see method GetEmatrix()
+
 void TUnfoldSys::GetEmatrixTotal(TH2 *ematrix,const Int_t *binMap)
 {
-   // get total error including statistical error
-   //    ematrix: output
-   //    binMap: see method GetEmatrix()
    GetEmatrix(ematrix,binMap);  // (stat)+(d)+(e)
    GetEmatrixSysUncorr(ematrix,binMap,kFALSE); // (a)
    TMapIter sysErrPtr(fDeltaCorrX);
@@ -1109,6 +1326,9 @@ void TUnfoldSys::GetEmatrixTotal(TH2 *ematrix,const Int_t *binMap)
    GetEmatrixSysTau(ematrix,binMap,kFALSE); // (c)
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Determine total error matrix on the vector Ax.
+
 TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixYY(void)
 {
    PrepareSysError();
@@ -1117,7 +1337,9 @@ TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixYY(void)
    TMatrixDSparse *emat_sum=new TMatrixDSparse(*fVyy);
 
    // uncorrelated systematic error
-   AddMSparse(emat_sum,1.0,fEmatUncorrAx);
+   if(fEmatUncorrAx) {
+      AddMSparse(emat_sum,1.0,fEmatUncorrAx);
+   }
    TMapIter sysErrPtr(fDeltaCorrAx);
    const TObject *key;
 
@@ -1147,6 +1369,9 @@ TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixYY(void)
    return emat_sum;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Determine total error matrix on the vector x.
+
 TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixXX(void)
 {
    PrepareSysError();
@@ -1155,7 +1380,9 @@ TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixXX(void)
    TMatrixDSparse *emat_sum=new TMatrixDSparse(*GetVxx());
 
    // uncorrelated systematic error
-   AddMSparse(emat_sum,1.0,fEmatUncorrX);
+   if(fEmatUncorrX) {
+      AddMSparse(emat_sum,1.0,fEmatUncorrX);
+   }
    TMapIter sysErrPtr(fDeltaCorrX);
    const TObject *key;
 
@@ -1184,9 +1411,11 @@ TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixXX(void)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate total chi**2 including all systematic errors.
+
 Double_t TUnfoldSys::GetChi2Sys(void)
 {
-   // calculate total chi**2 including systematic errors
 
    TMatrixDSparse *emat_sum=GetSummedErrorMatrixYY();
 
@@ -1208,14 +1437,28 @@ Double_t TUnfoldSys::GetChi2Sys(void)
    return r;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get global correlatiocn coefficients, summing up all contributions.
+///
+/// \param[out] rhoi histogram which will be filled
+/// \param[in] binMap (default=0) remapping of histogram bins
+/// \param[out] invEmat (default=0) inverse of error matrix
+///
+/// return the global correlation coefficients, including all error
+/// sources. If <b>invEmat</b> is nonzero, the inverse of the error
+/// matrix is returned in that histogram
+///
+/// the array <b>binMap</b> is explained with the method GetOutput().
+///
+/// get global correlation coefficients including systematic,statistical,background,tau errors
+///  - rhoi: output histogram
+///  - binMap: for each global bin, indicate in which histogram bin
+///            to store its content
+///  - invEmat: output histogram for inverse of error matrix
+///              (pointer may zero if inverse is not requested)
+
 void TUnfoldSys::GetRhoItotal(TH1 *rhoi,const Int_t *binMap,TH2 *invEmat)
 {
-   // get global correlation coefficients including systematic,statistical,background,tau errors
-   //    rhoi: output histogram
-   //    binMap: for each global bin, indicate in which histogram bin
-   //            to store its content
-   //    invEmat: output histogram for inverse of error matrix
-   //              (pointer may zero if inverse is not requested)
    ClearHistogram(rhoi,-1.);
    TMatrixDSparse *emat_sum=GetSummedErrorMatrixXX();
    GetRhoIFromMatrix(rhoi,emat_sum,binMap,invEmat);
@@ -1223,13 +1466,22 @@ void TUnfoldSys::GetRhoItotal(TH1 *rhoi,const Int_t *binMap,TH2 *invEmat)
    DeleteMatrix(&emat_sum);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Scale columns of a matrix by the corresponding rows of a vector.
+///
+/// \param[inout] m matrix
+/// \param[in] v vector
+///
+/// the entries m<sub>ij</sub> are multiplied by v<sub>j</sub>.
+///
+/// scale columns of m by the corresponding rows of v
+/// input:
+///  - m:  pointer to sparse matrix of dimension NxM
+///  - v:  pointer to matrix of dimension Mx1
+
 void TUnfoldSys::ScaleColumnsByVector
 (TMatrixDSparse *m,const TMatrixTBase<Double_t> *v) const
 {
-   // scale columns of m by the corresponding rows of v
-   // input:
-   //   m:  pointer to sparse matrix of dimension NxM
-   //   v:  pointer to matrix of dimension Mx1
    if((m->GetNcols() != v->GetNrows())||(v->GetNcols()!=1)) {
       Fatal("ScaleColumnsByVector error",
             "matrix cols/vector rows %d!=%d OR vector cols %d !=1\n",
@@ -1255,19 +1507,34 @@ void TUnfoldSys::ScaleColumnsByVector
       }
    } else {
       for(Int_t i=0;i<m->GetNrows();i++) {
-         for(Int_t index=rows_m[i];index<rows_m[i+1];index++) {
-            data_m[index] *= (*v)(cols_m[index],0);
+         for(Int_t index_m=rows_m[i];index_m<rows_m[i+1];index_m++) {
+            Int_t j=cols_m[index_m];
+            data_m[index_m] *= (*v)(j,0);
          }
       }
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Map delta to hist_delta, possibly summing up bins.
+///
+/// \param[out] hist_delta result histogram
+/// \param[in] delta vector to be mapped to the histogram
+/// \param[in] binMap  mapping of histogram bins
+///
+/// groups of bins of <b>delta</b> are mapped to bins of
+/// <b>hist_delta</b>. The histogram contents are set to the sum over
+/// the group of bins. The histogram errors are reset to zero.
+///
+/// The array <b>binMap</b> is explained with the method GetOutput()
+///
+/// sum over bins of *delta, as defined in binMap,fXToHist
+///  - hist_delta: histogram to return summed vector
+///  - delta: vector to sum and remap
+
 void TUnfoldSys::VectorMapToHist
 (TH1 *hist_delta,const TMatrixDSparse *delta,const Int_t *binMap)
 {
-   // sum over bins of *delta, as defined in binMap,fXToHist
-   //   hist_delta: histogram to return summed vector
-   //   delta: vector to sum and remap
    Int_t nbin=hist_delta->GetNbinsX();
    Double_t *c=new Double_t[nbin+2];
    for(Int_t i=0;i<nbin+2;i++) {
@@ -1293,4 +1560,34 @@ void TUnfoldSys::VectorMapToHist
       hist_delta->SetBinError(i,0.0);
    }
    delete[] c;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get a new list of all systematic uuncertainty sources.
+///
+/// The user is responsible for deleting the list
+/// get list of names of systematic sources
+
+TSortedList *TUnfoldSys::GetSysSources(void) const {
+   TSortedList *r=new TSortedList();
+   TMapIter i(fSysIn);
+   for(const TObject *key=i.Next();key;key=i.Next()) {
+      r->Add(((TObjString *)key)->Clone());
+   }
+   return r;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get a new list of all background sources.
+///
+/// The user is responsible for deleting the list
+/// get list of name of background sources
+
+TSortedList *TUnfoldSys::GetBgrSources(void) const {
+   TSortedList *r=new TSortedList();
+   TMapIter i(fBgrIn);
+   for(const TObject *key=i.Next();key;key=i.Next()) {
+      r->Add(((TObjString *)key)->Clone());
+   }
+   return r;
 }

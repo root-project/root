@@ -1,10 +1,14 @@
 // Author: Stefan Schmitt
 // DESY, 11/08/11
 
-//  Version 17.1, add scan type RhoSquare
+//  Version 17.5, bug fix in TUnfold also corrects GetEmatrixSysUncorr()
 //
 //  History:
-//     Version 17.0, support for density regularisation and complex binning schemes
+//    Version 17.4, in parallel to changes in TUnfoldBinning
+//    Version 17.3, in parallel to changes in TUnfoldBinning
+//    Version 17.2, in parallel to changes in TUnfoldBinning
+//    Version 17.1, add scan type RhoSquare
+//    Version 17.0, support for density regularisation and complex binning schemes
 
 #ifndef ROOT_TUnfoldDensity
 #define ROOT_TUnfoldDensity
@@ -43,24 +47,32 @@
 
 class TUnfoldDensity : public TUnfoldSys {
  protected:
-   const TUnfoldBinning * fConstOutputBins; // binning scheme for the output
-   const TUnfoldBinning * fConstInputBins; // binning scheme for the input
-   TUnfoldBinning *fOwnedOutputBins; // output binning scheme if owner
-   TUnfoldBinning *fOwnedInputBins; // input binning scheme if owner
-   TUnfoldBinning *fRegularisationConditions; // binning scheme for the regularisation conditions
+   /// binning scheme for the output (truth level)
+   const TUnfoldBinning * fConstOutputBins;
+   /// binning scheme for the input (detector level)
+   const TUnfoldBinning * fConstInputBins;
+   /// pointer to output binning scheme if owned by this class
+   TUnfoldBinning *fOwnedOutputBins;
+   /// pointer to input binning scheme if owned by this class
+   TUnfoldBinning *fOwnedInputBins;
+   /// binning scheme for the regularisation conditions
+   TUnfoldBinning *fRegularisationConditions;
 
  public:
+   /// choice of regularisation scale factors to cinstruct the matrix L
    enum EDensityMode {
-     kDensityModeeNone=0,
-     kDensityModeBinWidth=1,
-     kDensityModeUser=2,
-     kDensityModeBinWidthAndUser=3
+      /// no scale factors, matrix L is similar to unity matrix
+      kDensityModeNone=0,
+      /// scale factors from multidimensional bin width
+      kDensityModeBinWidth=1,
+      /// scale factors from user function in TUnfoldBinning
+      kDensityModeUser=2,
+      /// scale factors from multidimensional bin width and  user function
+      kDensityModeBinWidthAndUser=3
    };
  protected:
 
    virtual TString GetOutputBinName(Int_t iBinX) const; // name a bin
-
-   TUnfoldDensity(void); // constructor for derived classes, do nothing
 
    Double_t GetDensityFactor(EDensityMode densityMode,Int_t iBin) const; // density correction factor for this bin
    void RegularizeDistributionRecursive
@@ -72,29 +84,37 @@ class TUnfoldDensity : public TUnfoldSys {
       EDensityMode densityMode,const char *axisSteering); // regularize the distribution of one binning node
 
  public:
+   TUnfoldDensity(void); // constructor for derived classes, do nothing
+
    TUnfoldDensity(const TH2 *hist_A, EHistMap histmap,
-                  ERegMode regmode = kRegModeCurvature,
-                  EConstraint constraint=kEConstraintArea,
-                  EDensityMode densityMode=kDensityModeBinWidthAndUser,
-                  const TUnfoldBinning *outputBins=0,
-                  const TUnfoldBinning *inputBins=0,
-                  const char *regularisationDistribution=0,
-                  const char *regularisationAxisSteering="*[UOB]"); // constructor for using the histogram classes. Default regularisation is on the curvature of the bin-width normalized density, excluding underflow and overflow bins
+		     ERegMode regmode = kRegModeCurvature,
+		     EConstraint constraint=kEConstraintArea,
+		     EDensityMode densityMode=kDensityModeBinWidthAndUser,
+		     const TUnfoldBinning *outputBins=0,
+		     const TUnfoldBinning *inputBins=0,
+		     const char *regularisationDistribution=0,
+		     const char *regularisationAxisSteering="*[UOB]"); // constructor for using the histogram classes. Default regularisation is on the curvature of the bin-width normalized density, excluding underflow and overflow bins
 
    virtual ~ TUnfoldDensity(void); // delete data members
 
    void RegularizeDistribution(ERegMode regmode,EDensityMode densityMode,
-                               const char *distribution,
-                               const char *axisSteering); // regularize distribution(s) of the output binning scheme
+			       const char *distribution,
+			       const char *axisSteering); // regularize distribution(s) of the output binning scheme
 
-
-   enum EScanTauMode { // scan mode of correlation scan
-      kEScanTauRhoAvg =0, // average global correlation coefficient (from TUnfold::GetRhoI())
-      kEScanTauRhoMax =1, // maximum global correlation coefficient (from TUnfold::GetRhoI())
-      kEScanTauRhoAvgSys =2, // average global correlation coefficient (from TUnfoldSys::GetRhoItotal())
-      kEScanTauRhoMaxSys =3,  // maximum global correlation coefficient (from TUnfoldSys::GetRhoItotal())
-      kEScanTauRhoSquareAvg =4, // average global correlation coefficient squared (from TUnfold::GetRhoI())
-      kEScanTauRhoSquareAvgSys =5 // average global correlation coefficient squared (from TUnfoldSys::GetRhoItotal())
+   /// scan mode for correlation scan
+   enum EScanTauMode {
+      /// average global correlation coefficient (from TUnfold::GetRhoI())
+      kEScanTauRhoAvg =0,
+      /// maximum global correlation coefficient (from TUnfold::GetRhoI())
+      kEScanTauRhoMax =1,
+       /// average global correlation coefficient (from TUnfoldSys::GetRhoItotal())
+      kEScanTauRhoAvgSys =2,
+      /// maximum global correlation coefficient (from TUnfoldSys::GetRhoItotal())
+      kEScanTauRhoMaxSys =3,
+      /// average global correlation coefficient squared (from TUnfold::GetRhoI())
+      kEScanTauRhoSquareAvg =4,
+      /// average global correlation coefficient squared (from TUnfoldSys::GetRhoItotal())
+      kEScanTauRhoSquareAvgSys =5
    };
 
    virtual Int_t ScanTau(Int_t nPoint,Double_t tauMin,Double_t tauMax,
@@ -104,10 +124,10 @@ class TUnfoldDensity : public TUnfoldSys {
 
    TH1 *GetOutput(const char *histogramName,
                   const char *histogramTitle=0,const char *distributionName=0,
-                  const char *projectionMode=0,Bool_t useAxisBinning=kTRUE) const;  // get unfolding result
+		  const char *projectionMode=0,Bool_t useAxisBinning=kTRUE) const;  // get unfolding result
    TH1 *GetBias(const char *histogramName,
                 const char *histogramTitle=0,const char *distributionName=0,
-                const char *projectionMode=0,Bool_t useAxisBinning=kTRUE) const;      // get bias
+		const char *projectionMode=0,Bool_t useAxisBinning=kTRUE) const;      // get bias
    TH1 *GetFoldedOutput(const char *histogramName,
                         const char *histogramTitle=0,
                         const char *distributionName=0,
@@ -116,8 +136,7 @@ class TUnfoldDensity : public TUnfoldSys {
    TH1 *GetBackground(const char *histogramName,const char *bgrSource=0,
                       const char *histogramTitle=0,
                       const char *distributionName=0,
-                      const char *projectionMode=0,Bool_t useAxisBinning=kTRUE,Int_t includeError=3,
-                      Bool_t clearHist=kTRUE) const; // get background source
+                      const char *projectionMode=0,Bool_t useAxisBinning=kTRUE,Int_t includeError=3) const; // get background source
    TH1 *GetInput(const char *histogramName,const char *histogramTitle=0,
                  const char *distributionName=0,
                  const char *projectionMode=0,Bool_t useAxisBinning=kTRUE) const;     // get unfolding input
@@ -125,57 +144,58 @@ class TUnfoldDensity : public TUnfoldSys {
                           const char *histogramName,
                           const char *histogramTitle=0,
                           const char *distributionName=0,
-                          const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get systematic shifts from one systematic source
+			  const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get systematic shifts from one systematic source
    TH1 *GetDeltaSysBackgroundScale(const char *bgrSource,
                                    const char *histogramName,
                                    const char *histogramTitle=0,
                                    const char *distributionName=0,
-                                   const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get correlated uncertainty induced by the scale uncertainty of a background source
+				   const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get correlated uncertainty induced by the scale uncertainty of a background source
    TH1 *GetDeltaSysTau(const char *histogramName,
                        const char *histogramTitle=0,
                        const char *distributionName=0,
-                       const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get correlated uncertainty from varying tau
+		       const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get correlated uncertainty from varying tau
    TH2 *GetEmatrixSysUncorr(const char *histogramName,
-                            const char *histogramTitle=0,
-                            const char *distributionName=0,
-                            const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get error matrix contribution from uncorrelated errors on the matrix A
+			    const char *histogramTitle=0,
+			    const char *distributionName=0,
+			    const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get error matrix contribution from uncorrelated errors on the matrix A
    TH2 *GetEmatrixSysBackgroundUncorr(const char *bgrSource,
-                                      const char *histogramName,
-                                      const char *histogramTitle=0,
-                                      const char *distributionName=0,
-                                      const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get error matrix from uncorrelated error of one background source
+				      const char *histogramName,
+				      const char *histogramTitle=0,
+				      const char *distributionName=0,
+				      const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get error matrix from uncorrelated error of one background source
    TH2 *GetEmatrixInput(const char *histogramName,
                         const char *histogramTitle=0,
-                        const char *distributionName=0,
-                        const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get error contribution from input vector
+			const char *distributionName=0,
+			const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get error contribution from input vector
    TH2 *GetEmatrixTotal(const char *histogramName,
-                        const char *histogramTitle=0,
-                        const char *distributionName=0,
-                        const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get total error including systematic,statistical,background,tau errors
+			const char *histogramTitle=0,
+			const char *distributionName=0,
+			const char *projectionMode=0,Bool_t useAxisBinning=kTRUE); // get total error including systematic,statistical,background,tau errors
    TH1 *GetRhoIstatbgr(const char *histogramName,const char *histogramTitle=0,
                      const char *distributionName=0,
-                       const char *projectionMode=0,Bool_t useAxisBinning=kTRUE,
+		     const char *projectionMode=0,Bool_t useAxisBinning=kTRUE,
                      TH2 **ematInv=0);      // get global correlation coefficients, stat+bgr errors only (from TUnfold)
    TH1 *GetRhoItotal(const char *histogramName,const char *histogramTitle=0,
                      const char *distributionName=0,
-                     const char *projectionMode=0,Bool_t useAxisBinning=kTRUE,
+		     const char *projectionMode=0,Bool_t useAxisBinning=kTRUE,
                      TH2 **ematInv=0);      // get global correlation coefficients, including systematic errors (from TUnfoldSys)
    TH2 *GetRhoIJtotal(const char *histogramName,
-                      const char *histogramTitle=0,
-                      const char *distributionName=0,
-                      const char *projectionMode=0,Bool_t useAxisBinning=kTRUE);     // get correlation coefficients
+		      const char *histogramTitle=0,
+		      const char *distributionName=0,
+		      const char *projectionMode=0,Bool_t useAxisBinning=kTRUE);     // get correlation coefficients
    TH2 *GetL(const char *histogramName,
              const char *histogramTitle=0,
              Bool_t useAxisBinning=kTRUE); // get regularisation matrix
-   TH1 *GetLxMinusBias(const char *histogramName,const char *histogramTitle=0); // get vector L(x-bias) of regularisation conditions
+   TH1 *GetLxMinusBias(const char *histogramName,const char *histogramTitle=0); // get vector L(x-bias) of regularisation conditions 
 
    TH2 *GetProbabilityMatrix(const char *histogramName,
-                             const char *histogramTitle=0,Bool_t useAxisBinning=kTRUE) const; // get matrix of probabilities
+                           const char *histogramTitle=0,Bool_t useAxisBinning=kTRUE) const; // get matrix of probabilities
 
    const TUnfoldBinning *GetInputBinning(const char *distributionName=0) const; // find binning scheme for input bins
    const TUnfoldBinning *GetOutputBinning(const char *distributionName=0) const; // find binning scheme for output bins
-TUnfoldBinning *GetLBinning(void) const { return fRegularisationConditions; } // binning scheme for regularisation conditions (matrix L)
-   ClassDef(TUnfoldDensity, TUnfold_CLASS_VERSION) //Unfolding with densisty regularisation
+   /// return binning scheme for regularisation conditions (matrix L)
+TUnfoldBinning *GetLBinning(void) const { return fRegularisationConditions; }
+   ClassDef(TUnfoldDensity, TUnfold_CLASS_VERSION) //Unfolding with density regularisation
 };
 
 #endif
