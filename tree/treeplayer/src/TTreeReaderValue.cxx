@@ -45,7 +45,6 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
    fDict(dict),
    fProxy(NULL),
    fLeaf(NULL),
-   fLastTreeNumber(-1),
    fSetupStatus(kSetupNotSetup),
    fReadStatus(kReadNothingYet)
 {
@@ -62,7 +61,6 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(const TTreeReaderValu
    fDict(rhs.fDict),
    fProxy(rhs.fProxy),
    fLeaf(rhs.fLeaf),
-   fLastTreeNumber(rhs.fLastTreeNumber),
    fSetupStatus(rhs.fSetupStatus),
    fReadStatus(rhs.fReadStatus),
    fStaticClassOffsets(rhs.fStaticClassOffsets)
@@ -87,7 +85,6 @@ ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs)
       fDict = rhs.fDict;
       fProxy = rhs.fProxy;
       fLeaf = rhs.fLeaf;
-      fLastTreeNumber = rhs.fLastTreeNumber;
       fSetupStatus = rhs.fSetupStatus;
       fReadStatus = rhs.fReadStatus;
       fStaticClassOffsets = rhs.fStaticClassOffsets;
@@ -139,44 +136,24 @@ std::string ROOT::Internal::TTreeReaderValueBase::GetElementTypeName(const std::
    return ret;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// If we are reading a leaf, return the corresponding TLeaf.
+/// The TTreeReader has switched to a new TTree. Update the leaf.
 
-TLeaf* ROOT::Internal::TTreeReaderValueBase::GetLeaf() {
-   if (fLeafName.Length() > 0){
+void ROOT::Internal::TTreeReaderValueBase::NotifyNewTree(TTree* newTree) {
+   if (fLeafName.Length() == 0)
+      return;
 
-      Int_t newTreeNumber = fTreeReader->GetTree()->GetTreeNumber();
+   TBranch *myBranch = newTree->GetBranch(fBranchName);
 
-      if (newTreeNumber != fLastTreeNumber){
-         fLastTreeNumber = newTreeNumber;
-
-         TTree *myTree = fTreeReader->GetTree();
-
-         if (!myTree) {
-            fReadStatus = kReadError;
-            Error("TTreeReaderValueBase::GetLeaf()", "Unable to get the tree from the TTreeReader");
-            return 0;
-         }
-
-         TBranch *myBranch = myTree->GetBranch(fBranchName);
-
-         if (!myBranch) {
-            fReadStatus = kReadError;
-            Error("TTreeReaderValueBase::GetLeaf()", "Unable to get the branch from the tree");
-            return 0;
-         }
-
-         fLeaf = myBranch->GetLeaf(fLeafName);
-         if (!fLeaf) {
-            Error("TTreeReaderValueBase::GetLeaf()", "Failed to get the leaf from the branch");
-         }
-      }
-      return fLeaf;
+   if (!myBranch) {
+      fReadStatus = kReadError;
+      Error("TTreeReaderValueBase::GetLeaf()", "Unable to get the branch from the tree");
+      return;
    }
-   else {
-      Error("TTreeReaderValueBase::GetLeaf()", "We are not reading a leaf");
-      return 0;
+
+   fLeaf = myBranch->GetLeaf(fLeafName);
+   if (!fLeaf) {
+      Error("TTreeReaderValueBase::GetLeaf()", "Failed to get the leaf from the branch");
    }
 }
 

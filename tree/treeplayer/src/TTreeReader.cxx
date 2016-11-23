@@ -352,8 +352,14 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    }
 
    if (fDirector->GetTree() != fTree->GetTree()
-       || fMostRecentTreeNumber != fTree->GetTreeNumber())
+       || fMostRecentTreeNumber != fTree->GetTreeNumber()) {
       fDirector->SetTree(fTree->GetTree());
+      if (fProxiesSet) {
+         for (auto value: fValues) {
+            value->NotifyNewTree(fTree->GetTree());
+         }
+      }
+   }
 
    fMostRecentTreeNumber = fTree->GetTreeNumber();
 
