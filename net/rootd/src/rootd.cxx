@@ -312,6 +312,7 @@ extern "C" {
 }
 #endif
 
+#include "NetErrors.h"
 #include "rootdp.h"
 
 // Debug flag

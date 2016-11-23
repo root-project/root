@@ -19,13 +19,9 @@
 //        The intention is to seraparte them into a few .cpp files instead,
 //        so that users needing one form need not incorporate code for them all.
 
-#include <cmath>
-#include <limits>
-
+#include "Math/GenVector/3DConversions.h"
 
 #include "Math/Math.h"
-
-#include "Math/GenVector/3DConversions.h"
 
 #include "Math/GenVector/Rotation3D.h"
 #include "Math/GenVector/AxisAngle.h"
@@ -36,6 +32,8 @@
 #include "Math/GenVector/RotationY.h"
 #include "Math/GenVector/RotationZ.h"
 
+#include <cmath>
+#include <limits>
 
 namespace ROOT {
 namespace Math {
