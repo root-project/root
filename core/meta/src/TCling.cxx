@@ -1495,7 +1495,8 @@ void TCling::RegisterModule(const char* modulename,
                             const char* fwdDeclsCode,
                             void (*triggerFunc)(),
                             const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                            const char** classesHeaders)
+                            const char** classesHeaders,
+                            Bool_t lateRegistration /*=false*/)
 {
    // rootcling also uses TCling for generating the dictionary ROOT files.
    static const bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
@@ -1560,36 +1561,42 @@ void TCling::RegisterModule(const char* modulename,
    TString code = gNonInterpreterClassDef;
    code += payloadCode;
 
-   // We need to open the dictionary shared library, to resolve symbols
-   // requested by the JIT from it: as the library is currently being dlopen'ed,
-   // its symbols are not yet reachable from the process.
-   // Recursive dlopen seems to work just fine.
-   const char* dyLibName = FindLibraryName(triggerFunc);
-   if (dyLibName) {
-      // We were able to determine the library name.
-      void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
-      if (!dyLibHandle) {
+   const char* dyLibName = nullptr;
+   // If this call happens after dlopen has finished (i.e. late registration)
+   // there is no need to dlopen the library recursively. See ROOT-8437 where
+   // the dyLibName would correspond to the binary.
+   if (!lateRegistration) {
+      // We need to open the dictionary shared library, to resolve symbols
+      // requested by the JIT from it: as the library is currently being dlopen'ed,
+      // its symbols are not yet reachable from the process.
+      // Recursive dlopen seems to work just fine.
+      dyLibName = FindLibraryName(triggerFunc);
+      if (dyLibName) {
+         // We were able to determine the library name.
+         void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
+         if (!dyLibHandle) {
 #ifdef R__WIN32
-         char dyLibError[1000];
-         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
-                       sizeof(dyLibError), NULL);
-         {
+            char dyLibError[1000];
+            FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
+                          sizeof(dyLibError), NULL);
 #else
-         const char* dyLibError = dlerror();
-         if (dyLibError) {
+            const char* dyLibError = dlerror();
+            if (dyLibError)
 #endif
-            if (gDebug > 0) {
-               ::Info("TCling::RegisterModule",
-                      "Cannot open shared library %s for dictionary %s:\n  %s",
-                      dyLibName, modulename, dyLibError);
+            {
+               if (gDebug > 0) {
+                  ::Info("TCling::RegisterModule",
+                         "Cannot open shared library %s for dictionary %s:\n  %s",
+                         dyLibName, modulename, dyLibError);
+               }
             }
-         }
-         dyLibName = 0;
-      } else {
-         fRegisterModuleDyLibs.push_back(dyLibHandle);
-      }
-   }
+            dyLibName = 0;
+         } else {
+            fRegisterModuleDyLibs.push_back(dyLibHandle);
+         } // if (!dyLibHandle) .. else
+      } // if (dyLibName)
+   } // if (!lateRegistration)
 
    if (hasHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified

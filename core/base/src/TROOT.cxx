@@ -1936,7 +1936,8 @@ void TROOT::InitInterpreter()
                                    li->fFwdDeclCode,
                                    li->fTriggerFunc,
                                    li->fFwdNargsToKeepColl,
-                                   li->fClassesHeaders);
+                                   li->fClassesHeaders,
+                                   kTRUE /*lateRegistration*/);
    }
    GetModuleHeaderInfoBuffer().clear();
 
