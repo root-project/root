@@ -38,6 +38,3 @@ ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa ${CRYPTLI
 if(builtin_openssl)
   ROOT_ADD_BUILTIN_DEPENDENCIES(SrvAuth OPENSSL)
 endif()
-
-
-ROOT_INSTALL_HEADERS()
