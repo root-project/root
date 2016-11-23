@@ -156,7 +156,8 @@ public:
                                    const char* /*fwdDeclsCode*/,
                                    void (* /*triggerFunc*/)(),
                                    const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
-                                   const char** classesHeaders) = 0;
+                                   const char** classesHeaders,
+                                   Bool_t lateRegistration = false) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;

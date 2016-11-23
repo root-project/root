@@ -209,7 +209,8 @@ public: // Public Interface
                           const char* fwdDeclsCode,
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                          const char** classesHeaders);
+                          const char** classesHeaders,
+                          Bool_t lateRegistration = false);
    void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 
