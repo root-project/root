@@ -148,7 +148,7 @@ TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
 
    // try big file
    idcur = (TFree*)lfree->Last();
-   Long64_t last = idcur->fLast+1000000000;
+   Long64_t last = idcur->fLast+1000000000LL;
    idcur->SetLast(last);
    return idcur;
 }
