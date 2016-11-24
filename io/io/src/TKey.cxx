@@ -483,6 +483,9 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
    if (fSeekKey >= f->GetEND()) {
       f->SetEND(fSeekKey+nsize);
       bestfree->SetFirst(fSeekKey+nsize);
+      if (f->GetEND() > bestfree->GetLast()) {
+         bestfree->SetLast(bestfree->GetLast() + 1000000000);
+      }
       fLeft   = -1;
       if (!fBuffer) fBuffer = new char[nsize];
    } else {
