@@ -131,21 +131,21 @@ The following interfaces have been removed, after deprecation in v6.08.
 - Added the CMake exported ROOT libraries into the ROOT:: namespace. In this way, projects based on CMake using ROOT can avoid
   conflicts in library target names. As an example, this is the way to build a project consisting of one library and one 
   executable using ROOT.
+  ```
+  find_package(ROOT REQUIRED)
+  include(${ROOT_USE_FILE})
 
-```
-find_package(ROOT REQUIRED)
-include(${ROOT_USE_FILE})
+  include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
+  add_definitions(${ROOT_CXX_FLAGS})
 
-include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
-add_definitions(${ROOT_CXX_FLAGS})
+  ROOT_GENERATE_DICTIONARY(G__Event Event.h LINKDEF EventLinkDef.h)
 
-ROOT_GENERATE_DICTIONARY(G__Event Event.h LINKDEF EventLinkDef.h)
+  add_library(Event SHARED Event.cxx G__Event.cxx)
+  target_link_libraries(Event ROOT::Hist ROOT::Tree)
 
-add_library(Event SHARED Event.cxx G__Event.cxx)
-target_link_libraries(Event ROOT::Hist ROOT::Tree)
-
-add_executable(Main MainEvent.cxx)
-target_link_libraries(Main Event)
-```
+  add_executable(Main MainEvent.cxx)
+  target_link_libraries(Main Event)
+  ```
+- Added option `builtin_all` to enable all the built in options. 
 
 
