@@ -72,3 +72,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(IOO): CXXFLAGS += -I$(ROOT_SRCDIR)/core/clib/res
