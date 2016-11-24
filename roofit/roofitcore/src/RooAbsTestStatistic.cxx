@@ -297,7 +297,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     std::cout << "evaluate mpmaster collect timing: " << timing_ns / 1e9  << "s" << std::endl;
 
     outfile << "{\"evaluate_mpmaster_collect_timing_ns\": \"" << timing_ns
-            << "\", \"pid:\": \"" << getpid()
+            << "\", \"pid\": \"" << getpid()
             << "\"}," << std::endl;
 
     outfile.close();
