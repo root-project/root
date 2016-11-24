@@ -2906,17 +2906,20 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    // Draw the error bars.
    // Y errors are lines, but X errors are pieces of circles.
    if (opt.Contains("E")) {
+      Double_t c=1;
+      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
+      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
       if (theEY) {
          for (i=0; i<theNpoints; i++) {
             Double_t eymin, eymax, exmin,exmax;
             exmin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
             eymin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Sin(c*(theX[i]-rwtmin)/thetaNDC);
             exmax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
             eymax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Sin(c*(theX[i]-rwtmin)/thetaNDC);
             theGraphPolar->TAttLine::Modify();
             if (exmin != exmax || eymin != eymax) gPad->PaintLine(exmin,eymin,exmax,eymax);
          }
@@ -2940,10 +2943,9 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       Double_t xt   = 0;
       Double_t yt   = 0 ;
       Int_t j       = -1;
+      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
+      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
       for (i=0; i<theNpoints; i++) {
-         if (thePolargram->IsRadian()) {c=1;}
-         if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
-         if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
          xts  = xt;
          yts  = yt;
          xt   = (theY[i]-rwrmin)/radiusNDC*TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);

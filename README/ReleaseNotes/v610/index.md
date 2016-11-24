@@ -85,6 +85,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   the current pad.
 - The line width and line style can be change on 2d histograms painted with
   option `ARR`.
+- When the angle of a TGraphPolar was not in radian, the error bars were misplaced.
+  The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8476).
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
