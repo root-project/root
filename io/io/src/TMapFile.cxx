@@ -96,6 +96,8 @@ robust Streamer mechanism I opted for 3).
 #include "TClass.h"
 #include "TBufferFile.h"
 #include "TVirtualMutex.h"
+#include "mmprivate.h"
+
 #include <cmath>
 
 #if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
@@ -1088,6 +1090,15 @@ Int_t TMapFile::GetBestBuffer()
    return (Int_t)(mean + std::sqrt(rms2));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current location in the memory region for this malloc heap which
+/// represents the end of memory in use. Returns 0 if map file was closed.
+
+void *TMapFile::GetBreakval() const
+{
+   if (!fMmallocDesc) return 0;
+   return (void *)((struct mdesc *)fMmallocDesc)->breakval;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a memory mapped file.
@@ -1183,3 +1194,22 @@ void TMapFile::operator delete(void *ptr)
 
    TObject::operator delete(ptr);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+TMapFile *TMapFile::WhichMapFile(void *addr)
+{
+   if (!gROOT || !gROOT->GetListOfMappedFiles()) return 0;
+
+   TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
+   while (lnk) {
+      TMapFile *mf = (TMapFile*)lnk->GetObject();
+      if (!mf) return 0;
+      if ((ULong_t)addr >= mf->fBaseAddr + mf->fOffset &&
+          (ULong_t)addr <  (ULong_t)mf->GetBreakval() + mf->fOffset)
+         return mf;
+      lnk = lnk->Prev();
+   }
+   return 0;
+}
+
