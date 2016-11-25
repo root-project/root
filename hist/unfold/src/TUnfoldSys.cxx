@@ -1001,20 +1001,19 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
 /// \param[in] m1 coefficients
 /// \param[in] m2 coeffiicients
 /// \param[in] dsys matrix of correlated shifts from this source
+/// propagate correlated systematic shift to output vector
+///   m1,m2 : coefficients for propagating the errors
+///   dsys : matrix of correlated shifts from this source
+///
+/// \f[ \delta_m =
+///   \sum{i,j}   {
+///      ((*m1)(m,j) * (*fVYAx)(i) - (*m2)(m,i) * (*fX)(j))*dsys(i,j) }
+///   =    \sum_j (*m1)(m,j)  \sum_i dsys(i,j) * (*fVYAx)(i)
+///     -  \sum_i (*m2)(m,i)  \sum_j dsys(i,j) * (*fX)(j) \f]
 
 TMatrixDSparse *TUnfoldSys::PrepareCorrEmat
 (const TMatrixDSparse *m1,const TMatrixDSparse *m2,const TMatrixDSparse *dsys)
 {
-   // propagate correlated systematic shift to output vector
-   //   m1,m2 : coefficients for propagating the errors
-   //   dsys : matrix of correlated shifts from this source
-
-   // delta_m =
-   //   sum{i,j}   {
-   //      ((*m1)(m,j) * (*fVYAx)(i) - (*m2)(m,i) * (*fX)(j))*dsys(i,j) }
-   //   =    \sum_j (*m1)(m,j)  \sum_i dsys(i,j) * (*fVYAx)(i)
-   //     -  \sum_i (*m2)(m,i)  \sum_j dsys(i,j) * (*fX)(j)
-
    TMatrixDSparse *dsysT_VYAx = MultiplyMSparseTranspMSparse(dsys,GetDXDAZ(0));
    TMatrixDSparse *delta =  MultiplyMSparseMSparse(m1,dsysT_VYAx);
    DeleteMatrix(&dsysT_VYAx);
@@ -1035,7 +1034,6 @@ TMatrixDSparse *TUnfoldSys::PrepareCorrEmat
 
 void TUnfoldSys::SetTauError(Double_t delta_tau)
 {
-   // set uncertainty on tau
    fDtau=delta_tau;
    DeleteMatrix(&fDeltaSysTau);
 }
@@ -1112,12 +1110,13 @@ Bool_t TUnfoldSys::GetDeltaSysBackgroundScale
 /// varying the normalisation of the identified background by one sigma.
 ///
 /// the array <b>binMap</b> is explained with the method GetOutput().
+///
+/// calculate systematic shift from tau variation
+///  - ematrix: output
+///  - binMap: see method GetEmatrix()
 
 Bool_t TUnfoldSys::GetDeltaSysTau(TH1 *hist_delta,const Int_t *binMap)
 {
-   // calculate systematic shift from tau variation
-   //    ematrix: output
-   //    binMap: see method GetEmatrix()
    PrepareSysError();
    VectorMapToHist(hist_delta,fDeltaSysTau,binMap);
    return fDeltaSysTau !=0;
