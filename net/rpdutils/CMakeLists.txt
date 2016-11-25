@@ -6,7 +6,9 @@
 ROOT_GLOB_SOURCES(rpdutilsrcs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 list(REMOVE_ITEM rpdutilsrcs src/rpdpriv.cxx src/rpdconn.cxx)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/res
+  ${CMAKE_CURRENT_SOURCE_DIR}/../auth/res)
 
 if(globus)
   add_definitions(-DR__GLBS)

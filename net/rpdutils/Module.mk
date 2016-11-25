@@ -111,7 +111,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(RPDALLO):  CXXFLAGS += -I$(RPDUTILDIRR)
+$(RPDALLO):  CXXFLAGS += -I$(RPDUTILDIRR) -I$(AUTHDIRR)
 $(RPDUTILO): CXXFLAGS += $(AUTHFLAGS)
 ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(RPDUTILDIRS)/rpdutils.o): CXXFLAGS += -Wno-deprecated-declarations
