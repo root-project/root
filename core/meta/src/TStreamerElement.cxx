@@ -46,8 +46,6 @@ static TString &IncludeNameBuffer() {
    return includeName;
 }
 
-extern void *gMmallocDesc;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper function to initialize the 'index/counter' value of
 /// the Pointer streamerElements.  If directive is a StreamerInfo and it correspond to the

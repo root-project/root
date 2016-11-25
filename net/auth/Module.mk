@@ -160,3 +160,4 @@ $(AFSAUTHO):    CXXFLAGS += $(AFSINCDIR) $(AFSEXTRACFLAGS)
 ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(AUTHDIRS)/TAuthenticate.o): CXXFLAGS += -Wno-deprecated-declarations
 endif
+$(DAEMONUTILSO): CXXFLAGS += -I$(ROOT_SRCDIR)/net/rpdutils/res

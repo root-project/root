@@ -11,6 +11,7 @@ MODDIRI      := $(MODDIR)/inc
 CLIBDIR      := $(MODDIR)
 CLIBDIRS     := $(CLIBDIR)/src
 CLIBDIRI     := $(CLIBDIR)/inc
+CLIBDIRR     := $(CLIBDIR)/res
 
 ##### libClib (part of libCore) #####
 CLIBL        := $(MODDIRI)/LinkDef.h
@@ -51,3 +52,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(CLIBO): CXXFLAGS += -I$(CLIBDIRR)
+$(CLIBO): CFLAGS += -I$(CLIBDIRR)

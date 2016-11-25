@@ -56,8 +56,6 @@ XPDINCEXTRA  += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA  := $(XROOTDDIRL)/libXrdClient.lib
 
 # used in the main Makefile
-PROOFDEXEH   := $(MODDIRI)/proofdp.h
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
 ALLLIBS      += $(XPDLIB)
 
 # include all dependency files
@@ -92,7 +90,6 @@ $(XPCONNO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
 else
 
 ##### proofd #####
-PROOFDEXEH   := $(MODDIRI)/proofdp.h
 PROOFDEXES   := $(MODDIRS)/proofd.cxx
 PROOFDEXEO   := $(call stripsrc,$(PROOFDEXES:.cxx=.o))
 PROOFDDEP    := $(PROOFDEXEO:.o=.d)
@@ -205,7 +202,6 @@ endif
 endif
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
 ALLEXECS     += $(PROOFDEXE)
 ifeq ($(HASXRD),yes)
 ALLLIBS      += $(XPDLIB)
@@ -259,10 +255,10 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
+$(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
 
 $(XPDO): $(XROOTDMAKE) $(XRDHDRS)
-$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
+$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS) $(BONJOURCPPFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
 
 ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.

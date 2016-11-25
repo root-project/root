@@ -5,6 +5,7 @@
 
 include_directories(${XROOTD_INCLUDE_DIRS})
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../rpdutils/res)
 add_definitions(${XROOTD_CFLAGS})
 #
 # This should not be needed any longer after fix 039136791216af4620b9041e89d60c3ac0bab2f7
