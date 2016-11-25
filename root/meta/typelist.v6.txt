@@ -640,7 +640,6 @@ Marker_t
 Mask_t
 mbstate_t
 MemberStreamerFunc_t
-mmalloc_info
 mode_t
 multimap<TObject*,TF1*>::allocator_type
 multimap<TObject*,TF1*>::const_iterator
