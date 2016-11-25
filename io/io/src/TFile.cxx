@@ -3614,8 +3614,13 @@ void TFile::WriteStreamerInfo()
    if (!fWritable) return;
    if (!fClassIndex) return;
    if (fIsPcmFile) return; // No schema evolution for ROOT PCM files.
-   //no need to update the index if no new classes added to the file
-   if (fClassIndex->fArray[0] == 0) return;
+   if (fClassIndex->fArray[0] == 0
+       && fSeekInfo != 0) {
+      // No need to update the index if no new classes added to the file
+      // but write once an empty StreamerInfo list to mark that there is no need
+      // for StreamerInfos in this file.
+      return;
+   }
    if (gDebug > 0) Info("WriteStreamerInfo", "called for file %s",GetName());
 
    SafeDelete(fInfoCache);
