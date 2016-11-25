@@ -155,6 +155,4 @@ public:
    TMapRec      *GetNext(Long_t offset = 0) const { return (TMapRec *)((Long_t) fNext + offset); }
 };
 
-R__EXTERN void *gMmallocDesc;  //is initialized in TClass.cxx
-
 #endif
