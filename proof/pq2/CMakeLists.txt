@@ -5,5 +5,3 @@
 
 ROOT_EXECUTABLE(pq2 *.cxx LIBRARIES Core Proof Hist Matrix Tree
   RIO Net Thread MathCore)
-
-ROOT_INSTALL_HEADERS()
