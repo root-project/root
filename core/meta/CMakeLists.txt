@@ -12,7 +12,7 @@ ROOT_OBJECT_LIBRARY(Meta ${sources})
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling*.cxx)
 add_definitions(${CLING_CXXFLAGS})
-include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/io/io/inc)
+include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/core/metautils/res ${CMAKE_SOURCE_DIR}/io/io/inc)
 if(MSVC)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
 else()
