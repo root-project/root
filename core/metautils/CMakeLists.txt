@@ -16,6 +16,7 @@ ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMetaUtils.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/libcpp_string_view.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/RWrap_libcpp_string_view.h)
+list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ClingRAII.h)
 
 set(MetaUtils_dict_headers ${headers} PARENT_SCOPE)
 
