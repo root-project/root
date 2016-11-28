@@ -11,13 +11,15 @@
 #ifndef ROOSTATS_AsymptoticCalculator
 #define ROOSTATS_AsymptoticCalculator
 
-
-
 #ifndef ROOSTATS_HypoTestCalculatorGeneric
 #include "RooStats/HypoTestCalculatorGeneric.h"
 #endif
+#include "RooArgSet.h"
+#include "Rtypes.h"
 
-class RooArgSet;
+class RooArgList;
+class RooCategory;
+class RooRealVar;
 class RooPoisson;
 class RooProdPdf;
 

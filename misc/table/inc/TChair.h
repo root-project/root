@@ -22,6 +22,8 @@
 
 #include "TTable.h"
 
+#include "TCut.h"
+
 class TChair : public TDataSet {
 
 protected:
