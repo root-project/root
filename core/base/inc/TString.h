@@ -38,7 +38,7 @@
 
 #include <stdarg.h>
 #include <string>
-#include <RStringView.h>
+#include "RStringView.h"
 
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }
