@@ -23,6 +23,16 @@
 #endif
 #if !defined(__MMPRIVATE_H) && !defined(__CINT__)
 #include "mmprivate.h"
+// Undef a few common words, see ROOT-8475
+#undef PTR
+#undef PARAMS
+#undef HEAP
+#undef BLOCK
+#undef BLOCKSIZE
+#undef BLOCKIFY
+#undef ADDRESS
+#undef ADDR2UINT
+#undef RESIDUAL
 #endif
 
 
