@@ -2431,7 +2431,7 @@ void TFile::WriteFree()
          // TKey, so we had one less TFree to store than we planned.
          memset(buffer,0,nbytes-actualBytes);
       } else {
-         Error("WriteFree","The free block list TKey wrote more data than expected (%d vs %ld). Most likely there has been an out-of-bound write.",nbytes,actualBytes);
+         Error("WriteFree","The free block list TKey wrote more data than expected (%d vs %ld). Most likely there has been an out-of-bound write.",nbytes,(long int)actualBytes);
       }
    }
    fNbytesFree = key->GetNbytes();
