@@ -523,3 +523,5 @@ Changes will be part of the future 6.08/02
 
 - ROOT is now built with `-fvisibility-inlines-hidden` with GCC-compatible
   compilers. Code linking against ROOT should probably use the same flag.
+- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+
