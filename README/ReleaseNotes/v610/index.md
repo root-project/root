@@ -87,6 +87,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   option `ARR`.
 - When the angle of a TGraphPolar was not in radian, the error bars were misplaced.
   The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8476).
+- In `TASimage::DrawLineInternal` the case of a line with 0 pixel along X and 0
+  pixel along Y was not treated properly. An horizontal line was drawn instead.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
@@ -98,7 +100,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 
 ## I/O Libraries
-
+- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
 
 ## Database Libraries
 
@@ -129,7 +131,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## Build, Configuration and Testing Infrastructure
 - Added the CMake exported ROOT libraries into the ROOT:: namespace. In this way, projects based on CMake using ROOT can avoid
-  conflicts in library target names. As an example, this is the way to build a project consisting of one library and one 
+  conflicts in library target names. As an example, this is the way to build a project consisting of one library and one
   executable using ROOT.
   ```
   find_package(ROOT REQUIRED)
@@ -146,6 +148,6 @@ The following interfaces have been removed, after deprecation in v6.08.
   add_executable(Main MainEvent.cxx)
   target_link_libraries(Main Event)
   ```
-- Added option `builtin_all` to enable all the built in options. 
+- Added option `builtin_all` to enable all the built in options.
 
 
