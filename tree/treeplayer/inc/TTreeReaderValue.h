@@ -84,12 +84,12 @@ namespace Internal {
 
       const char* GetBranchName() const { return fBranchName; }
 
+      virtual ~TTreeReaderValueBase();
+
    protected:
       TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
       TTreeReaderValueBase(const TTreeReaderValueBase&);
       TTreeReaderValueBase& operator=(const TTreeReaderValueBase&);
-
-      virtual ~TTreeReaderValueBase();
 
       void RegisterWithTreeReader();
       void NotifyNewTree(TTree* newTree);
