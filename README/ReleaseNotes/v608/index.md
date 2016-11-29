@@ -507,6 +507,13 @@ For more details, like the complete change log, the documentation, and very deta
   packages at locations other than native MacOS installations. Needed when wanting to ignore packages from Fink, Brew or Ports.
 - Added new 'cuda' option to enable looking for CUDA in the system.
 
+## HEAD of the v6-08-00-patches branch
+
+Changes will be part of the future 6.08/02
+
+## Bugs fixed in this release
+
+* [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
 
 ## HEAD of the v6-08-00-patches branch
 
