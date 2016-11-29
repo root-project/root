@@ -116,7 +116,8 @@ void testUnfold7b()
   // read binning schemes in XML format
 
   TDOMParser parser;
-  Int_t error=parser.ParseFile("testUnfold7binning.xml");
+  TString dir = gSystem->DirName(__FILE__);
+  Int_t error=parser.ParseFile(dir+"/testUnfold7binning.xml");
   if(error) {
      cout<<"error="<<error<<" from TDOMParser\n";
      cout<<"==============================================================\n";
