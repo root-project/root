@@ -1,0 +1,3 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/withoutDictionaries/execVectorDMWriteWithoutDictionary.C...
+Error in <TStreamerInfo::Build>: The class "ECont" is compiled and for its data member "elems" we do not have a dictionary for the collection "vector<Elem>". Because of this, we will not be able to read or write this data member.

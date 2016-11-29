@@ -1,3 +1,12 @@
+# ROOT-8478
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(VectorDMWriteWithoutDictionary
+                                    VectorDMWriteWithoutDictionary.h
+                                    SELECTION VectorDMWriteWithoutDictionary_selection.xml)
+
+ROOTTEST_ADD_TEST(VectorDMWriteWithoutDictionary
+                  OUTREF execVectorDMWriteWithoutDictionary.ref
+                  MACRO execVectorDMWriteWithoutDictionary.C)
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(IOWithoutDictionaries
                                     IOWithoutDictionaries.h
                                     SELECTION IOWithoutDictionaries_selection.xml)
