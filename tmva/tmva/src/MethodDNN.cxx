@@ -539,23 +539,28 @@ void TMVA::MethodDNN::Train()
    const std::vector<TMVA::Event*>& eventCollectionTraining = GetEventCollection (Types::kTraining);
    const std::vector<TMVA::Event*>& eventCollectionTesting  = GetEventCollection (Types::kTesting);
 
+   Int_t  nEvents  = GetNEvents();
+   UInt_t nClasses = DataInfo().GetNClasses();
+   UInt_t nTgts = DataInfo().GetNTargets();
+   
    for (auto &event : eventCollectionTraining) {
       const std::vector<Float_t>& values = event->GetValues();
-      if (fAnalysisType == Types::kClassification) {
+      if (fAnalysisType == Types::kClassification && nClasses == 2) { // two class classification
          double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
          trainPattern.push_back(Pattern (values.begin(),
                                          values.end(),
                                          outputValue,
                                          event->GetWeight()));
          trainPattern.back().addInput(1.0);
-      } else if (fAnalysisType == Types::kMulticlass) {
-         std::vector<Float_t> oneHot(DataInfo().GetNClasses(), 0.0);
-         oneHot[event->GetClass()] = 1.0;
+      } else if (DoMulticlass ()) {
+         UInt_t cls = event->GetClass();
+         std::vector<Float_t> oneHot(nClasses, 0.1);
+         oneHot[cls] = 0.9;
          trainPattern.push_back(Pattern (values.begin(), values.end(),
                                         oneHot.cbegin(), oneHot.cend(),
                                         event->GetWeight()));
-         trainPattern.back().addInput(1.0);
-      } else {
+         trainPattern.back().addInput(1.0); // bias node
+      } else if (DoRegression ()) { //                           regression 
          const std::vector<Float_t>& targets = event->GetTargets ();
          trainPattern.push_back(Pattern(values.begin(),
                                         values.end(),
@@ -568,21 +573,22 @@ void TMVA::MethodDNN::Train()
 
    for (auto &event : eventCollectionTesting) {
       const std::vector<Float_t>& values = event->GetValues();
-      if (fAnalysisType == Types::kClassification) {
+      if (DoClassification ()) {
          double outputValue = event->GetClass () == 0 ? 0.9 : 0.1;
          testPattern.push_back(Pattern (values.begin(),
                                          values.end(),
                                          outputValue,
                                          event->GetWeight()));
          testPattern.back().addInput(1.0);
-      } else if (fAnalysisType == Types::kMulticlass) {
-         std::vector<Float_t> oneHot(DataInfo().GetNClasses(), 0.0);
-         oneHot[event->GetClass()] = 1.0;
+      } else if (DoMulticlass ()) {
+         UInt_t cls = event->GetClass();
+         std::vector<Float_t> oneHot(nClasses, 0.1);
+         oneHot[cls] = 0.9;
          testPattern.push_back(Pattern (values.begin(), values.end(),
                                         oneHot.cbegin(), oneHot.cend(),
                                         event->GetWeight()));
-         testPattern.back().addInput(1.0);
-      } else {
+         testPattern.back().addInput(1.0); // bias node
+      } else if (DoRegression ()) {
          const std::vector<Float_t>& targets = event->GetTargets ();
          testPattern.push_back(Pattern(values.begin(),
                                         values.end(),
@@ -1129,21 +1135,42 @@ const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
    Matrix_t X(1, nVariables);
+<<<<<<< HEAD
    Matrix_t YHat(1, DataInfo().GetNClasses());
    if (fMulticlassReturnVal == NULL) {
       fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
    }
 
+=======
+   Matrix_t YHat(1, 1);
+
+   UInt_t nClasses = DataInfo().GetNClasses();
+   
+>>>>>>> 1200ae623678755f5e5344724021539ad411c7f2
    const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
    for (size_t i = 0; i < nVariables; i++) {
       X(0,i) = inputValues[i];
    }
 
    fNet.Prediction(YHat, X, fOutputFunction);
+<<<<<<< HEAD
    for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
       (*fMulticlassReturnVal)[i] = YHat(0, i);
    }
    return *fMulticlassReturnVal;
+=======
+ 
+   if (fRegressionReturnVal == NULL) {
+       fRegressionReturnVal = new std::vector<Float_t>();
+   }
+   else
+       fRegressionReturnVal->clear();
+   
+   for (size_t i = 0; i < nClasses; i++)
+       fRegressionReturnVal->push_back (YHat(0, i));
+
+   return *fRegressionReturnVal;
+>>>>>>> 1200ae623678755f5e5344724021539ad411c7f2
 }
 
 //______________________________________________________________________________

@@ -433,45 +433,32 @@ int TMVAClassification( TString myMethodList = "" )
    // Multi-architecture DNN implementation.
    if (Use["DNN"])
    {
-      // General layout.
-      TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
+    /*
+       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
+       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+    */
+       TString layoutString ("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
 
-      // Training strategies.
-      TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
-                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                        "WeightDecay=1e-4,Regularization=L2,"
-                        "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
-      TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
-                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                        "WeightDecay=1e-4,Regularization=L2,"
-                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-      TString training2("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
-                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                        "WeightDecay=1e-4,Regularization=L2,"
-                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-      TString trainingStrategyString ("TrainingStrategy=");
-      trainingStrategyString += training0 + "|" + training1 + "|" + training2;
+       TString training0 ("LearningRate=1e-1,Momentum=0.0,Repetitions=1,ConvergenceSteps=30,BatchSize=50,TestRepetitions=15,WeightDecay=0.001,Regularization=NONE,DropConfig=0.0+0.5+0.5+0.5,DropRepetitions=1,Multithreading=True");
+       TString training1 ("LearningRate=1e-2,Momentum=0.5,Repetitions=1,ConvergenceSteps=30,BatchSize=50,TestRepetitions=7,WeightDecay=0.001,Regularization=L2,Multithreading=True,DropConfig=0.0+0.1+0.1+0.1,DropRepetitions=1");
+       TString training2 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=30,BatchSize=60,TestRepetitions=7,WeightDecay=0.0001,Regularization=L2,Multithreading=True");
+       TString training3 ("LearningRate=1e-3,Momentum=0.1,Repetitions=1,ConvergenceSteps=20,BatchSize=70,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE,Multithreading=True");
 
-      // General Options.
-      TString dnnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
-                          "WeightInitialization=XAVIERUNIFORM");
-      dnnOptions.Append (":"); dnnOptions.Append (layoutString);
-      dnnOptions.Append (":"); dnnOptions.Append (trainingStrategyString);
+       TString trainingStrategyString ("TrainingStrategy=");
+       trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
 
-      // Standard implementation, no dependencies.
-      TString stdOptions = dnnOptions + ":Architecture=STANDARD";
-      factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", stdOptions);
 
-      // Cuda implementation.
-      if (Use["DNN_GPU"]) {
-         TString gpuOptions = dnnOptions + ":Architecture=GPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN GPU", gpuOptions);
-      }
-      // Multi-core CPU implementation.
-      if (Use["DNN_CPU"]) {
-         TString cpuOptions = dnnOptions + ":Architecture=CPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN CPU", cpuOptions);
-      }
+       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CROSSENTROPY");
+       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
+       // TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
+       nnOptions.Append (":"); nnOptions.Append (layoutString);
+       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
+
+       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions ); // NN
    }
 
    // CF(Clermont-Ferrand)ANN
