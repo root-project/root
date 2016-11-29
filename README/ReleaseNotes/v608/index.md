@@ -511,17 +511,11 @@ For more details, like the complete change log, the documentation, and very deta
 
 Changes will be part of the future 6.08/02
 
-## Bugs fixed in this release
-
-* [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
-
-## HEAD of the v6-08-00-patches branch
-
-Changes will be part of the future 6.08/02
-
-## Build System
+### Build System
 
 - ROOT is now built with `-fvisibility-inlines-hidden` with GCC-compatible
   compilers. Code linking against ROOT should probably use the same flag.
-- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
 
+### Bugs fixed in this release
+
+- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
