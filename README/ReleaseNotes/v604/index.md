@@ -1101,3 +1101,8 @@ Published on 2016-06-22.
 ## HEAD of the v6-04-00-patches branch
 
 Changes will be part of the future 6.04/20
+
+### Bugs and issues fixed
+* [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+
+
