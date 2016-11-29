@@ -519,3 +519,5 @@ Changes will be part of the future 6.08/02
 ### Bugs fixed in this release
 
 - [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+- [[https://sft.its.cern.ch/jira/browse/ROOT-8466](https://sft.its.cern.ch/jira/browse/ROOT-8466)] - Proof-lite does not copy dict.pcm file
+
