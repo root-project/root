@@ -3946,6 +3946,8 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    dx = TMath::Abs(Int_t(x2) - Int_t(x1));
    dy = TMath::Abs(Int_t(y2) - Int_t(y1));
 
+   if (!dx && !dy) return; // invisible line
+
    if (!dx) {
       DrawVLine(x1, y2 > y1 ? y1 : y2,
                     y2 > y1 ? y2 : y1, color, thick);
