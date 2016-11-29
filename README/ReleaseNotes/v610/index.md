@@ -100,7 +100,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 
 ## I/O Libraries
-
+- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
 
 ## Database Libraries
 
