@@ -508,3 +508,11 @@ For more details, like the complete change log, the documentation, and very deta
 - Added new 'cuda' option to enable looking for CUDA in the system.
 
 
+## HEAD of the v6-08-00-patches branch
+
+Changes will be part of the future 6.08/02
+
+## Build System
+
+- ROOT is now built with `-fvisibility-inlines-hidden` with GCC-compatible
+  compilers. Code linking against ROOT should probably use the same flag.
