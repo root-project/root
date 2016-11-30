@@ -16,5 +16,8 @@
 <class name="Template<float>"/>
 <class name="Template<std::vector<double> >"/>
 <class name="Template<std::vector<float> >"/>
-<class pattern="vector<*" />
+
+<class name="vector<Double32_t>" />
+<class name="vector<Template<Double32_t> >" />
+<class name="vector<Template<float> >" />
 </lcgdict>

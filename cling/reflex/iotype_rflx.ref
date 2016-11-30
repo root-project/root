@@ -49,12 +49,6 @@ dm: ok.
 
 data member 'f', type 'float'
 
-data member 'vTd' 
-cl: ok.
-dm: ok.
-
-data member 'vTd', type 'vector<Template<double> >'
-
 data member 'vTd32' 
 cl: ok.
 dm: ok.
@@ -96,12 +90,6 @@ cl: ok.
 dm: ok.
 
 data member 'Tvf', type 'Template<vector<float> >'
-
-data member 'Td' 
-cl: ok.
-dm: ok.
-
-data member 'Td', type 'Template<double>'
 
 data member 'Td32' 
 cl: ok.

@@ -29,7 +29,7 @@ private:
    Float_t f;
 
 protected:
-   std::vector<Template<Double_t> > vTd;
+//    std::vector<Template<Double_t> > vTd;
    std::vector<Template<Double32_t> > vTd32;
    std::vector<Template<Double_t> > vTdd32;
    std::vector<Template<float> > vTf;
@@ -40,7 +40,7 @@ protected:
    Template<std::vector<Float_t> > Tvf;
 
 public:
-   Template<double> Td;
+//    Template<double> Td;
    Template<Double32_t> Td32;
    Template<double> Tdd32;
    Template<Float_t> Tf;
@@ -103,7 +103,7 @@ inline void CIoType::Set(double x) {
    SetT(dd32, v = x);
    SetT(f, v = x);
 
-   SetT(vTd, v = x);
+//    SetT(vTd, v = x);
    SetT(vTd32, v = x);
    SetT(vTdd32, v = x);
    SetT(vTf, v = x);
@@ -113,7 +113,7 @@ inline void CIoType::Set(double x) {
    SetT(Tvdd32, v = x);
    SetT(Tvf, v = x);
 
-   SetT(Td, v = x);
+//    SetT(Td, v = x);
    SetT(Td32, v = x);
    SetT(Tdd32, v = x);
    SetT(Tf, v = x);
