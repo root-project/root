@@ -419,9 +419,9 @@ void TMVA::MethodDNN::ProcessOptions()
    fLayout = TMVA::MethodDNN::ParseLayoutString (fLayoutString);
    size_t inputSize = GetNVariables ();
    size_t outputSize = 1;
-   if (GetNTargets() != 0) {
+   if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
       outputSize = GetNTargets();
-   } else if (DataInfo().GetNClasses() > 2) {
+   } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
       outputSize = DataInfo().GetNClasses();
    }
 
