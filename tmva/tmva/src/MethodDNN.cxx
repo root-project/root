@@ -141,6 +141,7 @@ void TMVA::MethodDNN::DeclareOptions()
                     " or cross entropy (binary classifcation).");
    AddPreDefVal(TString("CROSSENTROPY"));
    AddPreDefVal(TString("SUMOFSQUARES"));
+   AddPreDefVal(TString("MUTUALEXCLUSIVE"));
 
    DeclareOptionRef(fWeightInitializationString="XAVIER",
                     "WeightInitialization",
