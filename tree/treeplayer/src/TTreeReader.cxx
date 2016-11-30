@@ -419,7 +419,7 @@ Bool_t TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* re
 {
    if (fProxiesSet) {
       Error("RegisterValueReader",
-            "Error registering reader for %s: TTreeReaderValue/Array objects must be created before the call to Next() / SetEntry() / SetLocalEntry(), or after TTreeReader::Reset()!",
+            "Error registering reader for %s: TTreeReaderValue/Array objects must be created before the call to Next() / SetEntry() / SetLocalEntry(), or after TTreeReader::Restart()!",
             reader->GetBranchName());
       return false;
    }
