@@ -89,6 +89,9 @@ The following interfaces have been removed, after deprecation in v6.08.
   The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8476).
 - In `TASimage::DrawLineInternal` the case of a line with 0 pixel along X and 0
   pixel along Y was not treated properly. An horizontal line was drawn instead.
+- In `TGraphPainter::PaintGrapHist`: Decouple the `P` option (histogram drawn with
+  a simple polymarker) from the `L`(Histogram drawn as a simple polyline). This
+  improved (in some cases some extra markers were drawn) and simplify. the code.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
