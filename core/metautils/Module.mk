@@ -16,7 +16,8 @@ METAUTILSDIRI  := $(METAUTILSDIR)/inc
 METAUTILSH     := $(filter-out $(MODDIRI)/TMetaUtils.%,\
   $(filter-out $(MODDIRI)/libcpp_string_view.h,\
   $(filter-out $(MODDIRI)/RWrap_libcpp_string_view.h,\
-  $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)))))
+  $(filter-out $(MODDIRI)/ClingRAII.h,\
+  $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))))))
 METAUTILSS     := $(filter-out $(MODDIRS)/TMetaUtils.%,\
   $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 
