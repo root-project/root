@@ -62,8 +62,6 @@ public:
    Pointers(Pointers*) { cout << "Called Pointers::Pointers(Pointers*)\n"; }
 };
 
-#include "Rtypeinfo.h"
-
 class WithTemplate {
 public:
    WithTemplate() { cout << "Called WithTemplate::WithTemplate()\n"; }

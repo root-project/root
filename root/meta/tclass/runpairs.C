@@ -8,7 +8,7 @@
 
 #endif
 
-#include <Rtypeinfo.h>
+#include <typeinfo>
 #include "Riostream.h"
 #include "TVirtualCollectionProxy.h"
 #include "TEmulatedCollectionProxy.h"
