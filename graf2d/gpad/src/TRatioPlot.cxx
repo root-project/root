@@ -163,10 +163,6 @@ TRatioPlot::~TRatioPlot()
 
    gROOT->GetListOfCleanups()->Remove(this);
 
-   if (fUpperPad != 0) delete fUpperPad;
-   if (fLowerPad != 0) delete fLowerPad;
-   if (fTopPad != 0) delete fTopPad;
-
    if (fRatioGraph != 0) delete fRatioGraph;
    if (fConfidenceInterval1 != 0) delete fConfidenceInterval1;
    if (fConfidenceInterval2 != 0) delete fConfidenceInterval2;
