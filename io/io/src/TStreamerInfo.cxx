@@ -2954,6 +2954,14 @@ void TStreamerInfo::ComputeSize()
    if (fNVirtualInfoLoc > 0 && (fVirtualInfoLoc[0]+sizeof(TStreamerInfo*)) >= (ULong_t)fSize) {
       fSize = fVirtualInfoLoc[0] + sizeof(TStreamerInfo*);
    }
+
+   // On some platform and in some case of layout non-basic data types needs
+   // to be aligned.  So let's be on the safe side and align on the size of
+   // the pointers.  (Question: is that the right thing on x32 ABI ?)
+   constexpr size_t kSizeOfPtr = sizeof(void*);
+   if ((fSize % kSizeOfPtr) != 0) {
+      fSize = fSize - (fSize % kSizeOfPtr) + kSizeOfPtr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
