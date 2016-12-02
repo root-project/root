@@ -501,26 +501,25 @@ void TStreamerInfo::Build()
             TVirtualCollectionProxy *proxy = TClass::GetClass(dmType /* the underlying type */)->GetCollectionProxy();
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
             else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dmFull, dmIsPtr);
-// Disable feature: see ROOT-8478
-//             if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
-            auto printErrorMsg = [&](const char* category)
-               {
-                  Error("Build","The class \"%s\" is %s and for its data member \"%s\" we do not have a dictionary for the collection \"%s\". Because of this, we will not be able to read or write this data member.",GetName(), category, dmName, dmType);
-               };
-            if (fClass->IsLoaded()) {
-               if (!element->GetClassPointer()->IsLoaded()) {
-                  printErrorMsg("compiled");
-                  delete element;
-                  continue;
-               }
-            } else if (fClass->GetState() == TClass::kInterpreted) {
-               if (element->GetClassPointer()->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) {
-                  printErrorMsg("interpreted");
-                  delete element;
-                  continue;
+            if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
+               auto printErrorMsg = [&](const char* category)
+                  {
+                     Error("Build","The class \"%s\" is %s and for its data member \"%s\" we do not have a dictionary for the collection \"%s\". Because of this, we will not be able to read or write this data member.",GetName(), category, dmName, dmType);
+                  };
+               if (fClass->IsLoaded()) {
+                  if (!element->GetClassPointer()->IsLoaded()) {
+                     printErrorMsg("compiled");
+                     delete element;
+                     continue;
+                  }
+               } else if (fClass->GetState() == TClass::kInterpreted) {
+                  if (element->GetClassPointer()->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) {
+                     printErrorMsg("interpreted");
+                     delete element;
+                     continue;
+                  }
                }
             }
-//             } // End of check if collection is different from std::vector
          } else {
             TClass* clm = TClass::GetClass(dmType);
             if (!clm) {
