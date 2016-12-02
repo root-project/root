@@ -1644,7 +1644,7 @@ void TStreamerInfo::BuildOld()
    Int_t offset = 0;
    TMemberStreamer* streamer = 0;
 
-   Int_t sp = sizeof(void*);
+   constexpr size_t kSizeOfPtr = sizeof(void*);
 
    int nBaze = 0;
 
@@ -2317,8 +2317,8 @@ void TStreamerInfo::BuildOld()
             asize = element->GetSize();
          }
          // align the non-basic data types (required on alpha and IRIX!!)
-         if ((offset % sp) != 0) {
-            offset = offset - (offset % sp) + sp;
+         if ((offset % kSizeOfPtr) != 0) {
+            offset = offset - (offset % kSizeOfPtr) + kSizeOfPtr;
          }
          element->SetOffset(offset);
          offset += asize;
