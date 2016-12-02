@@ -1908,8 +1908,8 @@ void TStreamerInfo::BuildOld()
             offset += asize;
             element->Init(this);
             continue;
-         }
-      }
+         } // if element is of type TStreamerBase or not.
+      } // if (element->IsBase())
 
       // If we get here, this means that we looked at all the base classes.
       if (shouldHaveInfoLoc && fNVirtualInfoLoc==0) {
@@ -1980,7 +1980,7 @@ void TStreamerInfo::BuildOld()
                element->SetSize(dsize*narr);
             }
          }
-      }
+      } // Class corresponding to StreamerInfo is emulated or not.
 
       // Now let's deal with Schema evolution
       Int_t newType = -1;
