@@ -23,7 +23,6 @@
 
 #include <math.h>
 #include "Rtypes.h"
-#include "Riosfwd.h"
 #include <complex>
 
 // This is a bare-bones complex class adapted from the CINT complex.h header,

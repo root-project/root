@@ -23,9 +23,6 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 #ifndef __CINT__
 #include <string.h>
 #endif

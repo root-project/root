@@ -18,9 +18,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 #ifndef ROOT_TMath
 #include "TMath.h"
 #endif

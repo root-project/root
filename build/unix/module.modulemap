@@ -36,7 +36,6 @@ module ROOT_Core_Config_C {
  header "TMetaUtils.h"
  header "TSchemaType.h"
  header "DllImport.h" // Should merge in RConfig.h.
- header "Rtypeinfo.h" // Old and useless, should delete.
  header "TGenericClassInfo.h"
  header "TSchemaHelper.h"
  header "ESTLType.h"
@@ -44,7 +43,6 @@ module ROOT_Core_Config_C {
  header "Varargs.h" // Old should revisit, either drop or delete.
  header "RootMetaSelection.h"
  header "TString.h"
- header "Riosfwd.h"
  header "snprintf.h" // #included by Rtypes, could go away?
  header "strlcpy.h" // #included by Rtypes, could go away?
 

@@ -32,9 +32,6 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
 
 class TClass;
 class TEnumConstant;

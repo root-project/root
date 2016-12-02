@@ -11,9 +11,6 @@
 #ifndef ROOT_TMathText
 #define ROOT_TMathText
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 #ifndef ROOT_TText
 #include "TText.h"
 #endif

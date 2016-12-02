@@ -413,9 +413,9 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   set(excluded_headers "RConversionRuleParser.h TSchemaRuleProcessor.h 
                         RConfig.h RVersion.h RtypesImp.h
 			Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h
-			TSchemaType.h DllImport.h Rtypeinfo.h TGenericClassInfo.h
+			TSchemaType.h DllImport.h TGenericClassInfo.h
 			TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
-			RootMetaSelection.h TString.h Riosfwd.h TMathBase.h
+			RootMetaSelection.h TString.h TMathBase.h
 			RWrap_libcpp_string_view.h TAtomicCountGcc.h
 			TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h

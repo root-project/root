@@ -12,10 +12,6 @@
 #ifndef ROOT_TGeoNode
 #define ROOT_TGeoNode
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-
 #ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
 #endif
