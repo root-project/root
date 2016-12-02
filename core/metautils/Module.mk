@@ -26,6 +26,7 @@ METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
 METAUTILSTH     += $(MODDIRI)/root_std_complex.h
 METAUTILSTH     += $(MODDIRI)/libcpp_string_view.h
 METAUTILSTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
+METAUTILSTH     += $(MODDIRI)/ClingRAII.h
 
 METAUTILSSLLVM := $(MODDIRS)/BaseSelectionRule.cxx \
                   $(MODDIRS)/ClassSelectionRule.cxx \
