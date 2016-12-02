@@ -511,10 +511,23 @@ For more details, like the complete change log, the documentation, and very deta
 
 Changes will be part of the future 6.08/02
 
-### Build System
+### Interpreter
 
-- ROOT is now built with `-fvisibility-inlines-hidden` with GCC-compatible
-  compilers. Code linking against ROOT should probably use the same flag.
+- Improve unloading by removing traces of the default template argument in all the decl in the decl chains 
+and updating the DeclContext used for lookup to point to the definition.
+- Upgrade the code handling the meta-data of autoloading based of filenames to be more accurate and handle more cases.
+For example add support for the case where a class has its header file known to rootcling indirectly but the user is
+including it directly.
+- Fix autoloading when it is enduces by an expression containing both the auto keyword and a template function for
+which the parameter's definition needs to be autoloaded.
+
+### I/O
+
+- Properly handle I/O of pointer to std::string. 
+- Add support for direct input to TMemFile larger than 2Gb.
+- Store an empty StreamerInfo if the file has no data or data that does not need a StreamerInfo.
+- Fixed the I/O of std::vector<T> where T is a class *and* no dictionary was generated for std::vector<T> *and* sizeof(T)%sizeof(T*) is not zero. 
+
 
 ### Bugs fixed in this release
 
