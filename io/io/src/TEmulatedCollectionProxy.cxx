@@ -177,9 +177,8 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                }
                if ( 0 == fValDiff )  {
                   fValDiff  = fVal->fSize;
-                  if (fVal->fCase != G__BIT_ISFUNDAMENTAL) {
-                     fValDiff += (slong - fValDiff%slong)%slong;
-                  }
+                  // No need to align, the size even for a class should already
+                  // be correctly padded for use in a vector.
                }
                break;
          }
