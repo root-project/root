@@ -21,7 +21,7 @@ TEST(DrawTest, TwoD) {
    canv.Draw(h);
    // No THist copt c'tor:
    //canv.Draw(TH2F(xaxis, yaxis));
-   canv.Draw(std::move(std::make_unique<TH2C>(xaxis, yaxis)));
+   canv.Draw(std::make_unique<TH2C>(xaxis, yaxis));
    EXPECT_EQ(canv.GetPrimitives().size(), 2u);
 }
 
