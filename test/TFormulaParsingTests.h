@@ -6,12 +6,29 @@
 #include "TMath.h"
 #include "Math/ChebyshevPol.h"
 
+#include <stdio.h>
 // test of tformula neeeded to be run
 
 class TFormulaParsingTests {
 
 bool verbose;
 std::vector<int> failedTests;
+
+// We need a softer way to reason about equality in 32 bits
+// Being this a quick test, doing the check at runtime is really no problem.
+bool fpEqual(double x, double y, double epsilon = 0.)
+{
+   bool isEqual;
+   if (epsilon == 0.)
+      isEqual = (x == y);
+   else
+      isEqual = TMath::AreEqualAbs(x, y, epsilon);
+   if (!isEqual) {
+      // std::hexfloat not there for older gcc versions
+      printf("\nThe numbers differ: %A and %A\n", x, y);
+   }
+   return isEqual;
+}
 
 public:
 
@@ -100,7 +117,7 @@ bool test7() {
    TF1 * f1 = new TF1("f1","1++x");
    if (f1->GetNpar() != 2) return false;
    f1->SetParameters(2,3);
-   if (f1->Eval(3) != 11) return  false;
+   if (f1->Eval(3) != 11) return false;
 
    if (verbose) printf("Test7: test linear part1 of function\n");
    TFormula * lin1 = (TFormula*) f1->GetLinearPart(1);
@@ -110,7 +127,7 @@ bool test7() {
    if (verbose) printf("Test7: test copying linear function\n");
 
    TF1 * f2 = new TF1(*f1);
-   if (f2->Eval(3) != 11) return  false;
+   if (f2->Eval(3) != 11) return false;
 
    if (verbose) printf("Test7: test linear part1 of copied function\n");
    if (!f2->IsLinear()) return false;
@@ -123,7 +140,7 @@ bool test7() {
    if (verbose) printf("Test7: test cloning linear function\n");
 
    TF1 * f3 = (TF1*) f2->Clone("f3");
-   if (f3->Eval(3) != 11) return  false;
+   if (f3->Eval(3) != 11) return false;
 
    if (verbose) printf("Test7: test deleting the copied function\n");
    delete f2;
@@ -206,7 +223,7 @@ bool test10() {
    // test the operator "? : "
    bool ok = true;
    TFormula * f = 0;
-   f  = new TFormula("f","(x<0)?-x:x");
+   f = new TFormula("f","(x<0)?-x:x");
    ok &= (f->Eval(-2) == 2);
    ok &= (f->Eval(2) == 2);
 
@@ -283,9 +300,9 @@ bool test17() {
    TF1 * f0 = new TF1("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]); },0,10,2);
    f0->SetParameters(2,3);
    bool ok = true;
-   ok &= (f1->Eval(1.5) == f0->Eval(1.5));
+   ok &= fpEqual(f1->Eval(1.5), f0->Eval(1.5));
    double xx[1] = {2.5};
-   ok &= (f1->EvalPar(xx) == f0->Eval(2.5));
+   ok &= fpEqual(f1->EvalPar(xx), f0->Eval(2.5));
    return ok;
 }
 
@@ -296,10 +313,10 @@ bool test18() {
    TF2 * f0 = new TF2("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]); },0,10,0,10,2);
    f0->SetParameters(2,3);
    bool ok = true;
-   ok &= (f1->Eval(1.5,2.5) == f0->Eval(1.5,2.5));
+   ok &= fpEqual(f1->Eval(1.5,2.5), f0->Eval(1.5,2.5));
    double par[2] = {3,4};
    double xx[2] = {0.8,1.6};
-   ok &= TMath::AreEqualAbs(f1->EvalPar(xx,par), f0->EvalPar(xx,par), 2e-16);
+   ok &= fpEqual(f1->EvalPar(xx,par), f0->EvalPar(xx,par), 2e-16);
    return ok;
 }
 
@@ -310,10 +327,10 @@ bool test19() {
    TF3 * f0 = new TF3("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]*x[2]); },0,10,0,10,0,10,2);
    f0->SetParameters(2,3);
    bool ok = true;
-   ok &= (f1->Eval(1.5,2.5,3.5) == f0->Eval(1.5,2.5,3.5));
+   ok &= fpEqual(f1->Eval(1.5,2.5,3.5), f0->Eval(1.5,2.5,3.5));
    double par[2] = {3,4};
    double xx[3] = {0.8,1.6,2.2};
-   ok &= TMath::AreEqualAbs(f1->EvalPar(xx,par), f0->EvalPar(xx,par), 2e-16);
+   ok &= fpEqual(f1->EvalPar(xx,par), f0->EvalPar(xx,par), 2e-16);
    return ok;
 }
 
@@ -328,7 +345,7 @@ bool test20() {
       -10,10,-10,10,16);
    double xx[2]={1,2};
    //printf(" difference = %f, value %f \n", f2.Eval(1,2) - f0.EvalPar(xx,params), f2.Eval(1,2));
-   return (f2.Eval(1,2) == f0.EvalPar(xx,params));
+   return fpEqual(f2.Eval(1,2), f0.EvalPar(xx,params));
 }
 
 bool test21() {
@@ -337,7 +354,7 @@ bool test21() {
    f.SetParameters(1,2,3,1,0,1);
    TF1 f0("f0",[](double *x, double *p){ return p[0]+x[0]*p[1]+x[0]*x[0]*p[2]+p[3]*TMath::Gaus(x[0],p[4],p[5]); },0,1,6);
    f0.SetParameters(f.GetParameters());
-   return (f.Eval(2) == f0.Eval(2));
+   return fpEqual(f.Eval(2), f0.Eval(2));
 }
 
 bool test22() {
@@ -356,12 +373,12 @@ bool test23() {
    TF1 f0("f0",[](double *x, double *p){ return p[0]+p[1]*TMath::Gaus(x[0],p[2],p[3]); },-3,3,4);
    f2.SetParameters(10,1,0,1);
    f0.SetParameters(f2.GetParameters());
-   ok &= TMath::AreEqualAbs(f2.Eval(1), f0.Eval(1), 7e-16);
+   ok &= fpEqual(f2.Eval(1), f0.Eval(1), 7e-16);
 
    TF1 f3("f3","f1+[0]");
    // param order should be the same
    f3.SetParameters(f2.GetParameters());
-   ok &= TMath::AreEqualAbs(f3.Eval(1), f0.Eval(1), 7e-16);
+   ok &= fpEqual(f3.Eval(1), f0.Eval(1), 7e-16);
    return ok;
 }
 
@@ -397,7 +414,7 @@ bool test25() {
    double x = 2;
    double y =(x<190)?(-18.7813+(((2.49368+(10.3321/(std::pow(x,0.881126))))*exp(-((std::pow(x,-1.66603))/0.074916)))-(-17.5757*exp(-((std::pow(x,-1464.26))/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))));
    // this fails on 32 bits - put a tolerance
-   ret = TMath::AreEqualAbs(t1.Eval(2), y, 1.E-8);
+   ret = fpEqual(t1.Eval(2), y, 1.E-8);
    if (!ret) std::cout << "Error in test25 - t1 != y " << t1.Eval(2.) << "  " << y << std::endl;
    ok &= ret;
 
@@ -457,18 +474,18 @@ bool test27() {
    TF1 f1("f1","x+sq(x+2)+sq(x+[0])");
    TF1 f2("f2","x+(x+2)^2+(x+[0])^2");
    f1.SetParameter(0,3); f2.SetParameter(0,3);
-   ok &= (f1.Eval(2) == f2.Eval(2));
-   ok &= (f1.Eval(-4) == f2.Eval(-4));
+   ok &= fpEqual(f1.Eval(2), f2.Eval(2));
+   ok &= fpEqual(f1.Eval(-4), f2.Eval(-4));
    // test nested expressions and conflict with sqrt
    TF1 f3("f3","sqrt(1.+sq(x))");
-   ok &= (f3.Eval(2) == sqrt(5));
+   ok &= fpEqual(f3.Eval(2), sqrt(5));
    TF1 f4("f4","sq(1.+std::sqrt(x))");
-   ok &= (f4.Eval(2) == TMath::Sq(1.+sqrt(2)));
+   ok &= fpEqual(f4.Eval(2), TMath::Sq(1.+sqrt(2)));
    TF1 f5("f5","sqrt(((TMath::Sign(1,[0])*sq([0]/x))+(sq([1])*(x^([3]-1))))+sq([2]))");
    auto func = [](double *x, double *p){ return TMath::Sqrt(((TMath::Sign(1,p[0])*TMath::Sq(p[0]/x[0]))+(TMath::Sq(p[1])*(TMath::Power(x[0],(p[3]-1)))))+TMath::Sq(p[2])); };
    TF1 f6("f6",func,-10,10,4);
    f5.SetParameters(-1,2,3,4); f6.SetParameters(f5.GetParameters());
-   ok &= TMath::AreEqualAbs(f5.Eval(2), f6.Eval(2), 4.e-16);
+   ok &= fpEqual(f5.Eval(2), f6.Eval(2), 4.e-16);
    return ok;
 }
 
@@ -479,7 +496,7 @@ bool test28() {
    fsin.SetParNames("sin");
    fsin.SetParameter(0, 2.1);
 
-   TF1  fcos("fcos", "[0]*cos(x)", 0., 10.);
+   TF1 fcos("fcos", "[0]*cos(x)", 0., 10.);
    fcos.SetParNames("cos");
    fcos.SetParameter(0, 1.1);
 
@@ -488,7 +505,7 @@ bool test28() {
    // keep same order in evaluation
    TF1 f0("f0",[](double *x, double *p){ return p[1]*sin(x[0]) + p[0]*cos(x[0]);},0.,10.,2);
    f0.SetParameters(1.1,2.1);
-   ok &= TMath::AreEqualAbs(fsincos.Eval(2), f0.Eval(2), 3e-16);
+   ok &= fpEqual(fsincos.Eval(2), f0.Eval(2), 3e-16);
    return ok;
 }
 
@@ -554,17 +571,17 @@ bool test33() {
    f1.SetParameters(1,0,1,1,2,0.);
    TF2 f2("f2","xygaus",-10,10,-10,10);
    f2.SetParameters(1,0,1,1,2);
-   ok &= TMath::AreEqualAbs(f1.Eval(0), f2.Eval(0)/(f2.Integral(-10,10,-20,20)), 1.E-4);
+   ok &= fpEqual(f1.Eval(0), f2.Eval(0)/(f2.Integral(-10,10,-20,20)), 1.E-4);
    if (!ok) std::cout << "Error in test33 - " << f1.Eval(0) << "  " << f2.Eval(0)/f2.Integral(-10,10,-10,10) << std::endl;
    return ok;
 }
 
 bool test34() {
    // test for bug 8105
-   bool ok  = true;
+   bool ok = true;
    TF1 f1("f1","(1.- gaus)*[3]",-10,10);
    f1.SetParameters(1,0,1,3);
-   ok &= TMath::AreEqualAbs(f1.Eval(1), (1.- TMath::Gaus(1,0,1))*3., 1.E-10);
+   ok &= fpEqual(f1.Eval(1), (1.- TMath::Gaus(1,0,1))*3., 1.E-10);
    return ok;
 }
 
@@ -598,12 +615,12 @@ bool test36() {
    TF2 f1("f1","xygaus(0) + gaus(5)");
    f1.SetParameters(1,0,1,1,2,2,-1,1);
    auto g1 = [](double x, double y){ return TMath::Gaus(x,0,1)*TMath::Gaus(y,1,2)+2.*TMath::Gaus(x,-1,1); };
-   ok &= TMath::AreEqualAbs(f1.Eval(1,1), g1(1,1), 1.E-10);
+   ok &= fpEqual(f1.Eval(1,1), g1(1,1), 1.E-10);
 
    TF2 f2("f2","xygaus(0) + gaus[y](5)");
    f2.SetParameters(1,0,1,1,2,2,-1,1);
    auto g2 = [](double x, double y){ return TMath::Gaus(x,0,1)*TMath::Gaus(y,1,2)+2.*TMath::Gaus(y,-1,1); };
-   ok &= TMath::AreEqualAbs(f2.Eval(1,1), g2(1,1), 1.E-10);
+   ok &= fpEqual(f2.Eval(1,1), g2(1,1), 1.E-10);
 
    return ok;
 }
