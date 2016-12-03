@@ -27,7 +27,6 @@ TGOSXGLManager::TGOSXGLManager()
    assert(gGLManager == 0 && "TGOSXGLManager, gGLManager is initialized");
    gGLManager = this;
 
-   //TODO: do we really need this?
    if (gROOT && gROOT->GetListOfSpecials())
       gROOT->GetListOfSpecials()->Add(this);
 }
@@ -38,7 +37,6 @@ TGOSXGLManager::~TGOSXGLManager()
 {
    //Destructor.
 
-   //TODO: do we really need this and does ROOT ever deletes 'this'?
    if (gROOT && gROOT->GetListOfSpecials())
       gROOT->GetListOfSpecials()->Remove(this);
 }
@@ -50,9 +48,6 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
    typedef std::pair<UInt_t, Int_t> component_type;
 
    std::vector<component_type> format;//Where is the hummer when you need one??? (I mean C++11 initializers '{xxx}').
-
-   //TODO: this values actually are quite random, as it was in TX11GLManager/TGWin32GLManager,
-   //find something better!
 
    format.push_back(component_type(Rgl::kDoubleBuffer, 1));//1 means nothing, kDoubleBuffer is enough :)
    format.push_back(component_type(Rgl::kStencil, 8));

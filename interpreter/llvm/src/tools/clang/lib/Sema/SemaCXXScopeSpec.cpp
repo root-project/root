@@ -111,6 +111,10 @@ DeclContext *Sema::computeDeclContext(const CXXScopeSpec &SS,
           // into that class template definition.
           QualType Injected
             = ClassTemplate->getInjectedClassNameSpecialization();
+
+          // Injected might not be canonical
+          Injected = Injected.getCanonicalType();
+
           if (Context.hasSameType(Injected, ContextType))
             return ClassTemplate->getTemplatedDecl();
 
@@ -207,7 +211,7 @@ CXXRecordDecl *Sema::getCurrentInstantiationOf(NestedNameSpecifier *NNS) {
 /// a class template specialization that is not a complete type, we
 /// will attempt to instantiate that class template.
 bool Sema::RequireCompleteDeclContext(CXXScopeSpec &SS,
-                                      DeclContext *DC) {
+                                      DeclContext *&DC) {
   assert(DC && "given null context");
 
   TagDecl *tag = dyn_cast<TagDecl>(DC);
@@ -231,6 +235,12 @@ bool Sema::RequireCompleteDeclContext(CXXScopeSpec &SS,
   // The type must be complete.
   if (RequireCompleteType(loc, type, diag::err_incomplete_nested_name_spec,
                           SS.getRange())) {
+    // The actual information about the decl may have been loaded via an
+    // external source that created a new AST node/decl for the definition
+    // rather than reusing the one we had (DC) like the ASTReader does.
+    // To avoid the caller to continue using the still incomplete decl, let's
+    // set it to the definition.
+    DC = tag->getDefinition();
     SS.SetInvalid(SS.getRange());
     return true;
   }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE TUnfoldBinning SYSTEM "tunfoldbinning.dtd">
+<TUnfoldBinning>
+<BinningNode name="binning" firstbin="1" factor="1">
+ <BinningNode name="branch1" firstbin="1" factor="1">
+  <Axis name="x" lowEdge="0">
+   <Bin repeat="4" width="1" center="0.5" />
+   <Axis name="y" lowEdge="0">
+    <Bin repeat="3" width="1" center="0.5" />
+   </Axis>
+  </Axis>
+ </BinningNode>
+ <BinningNode name="branch2" firstbin="13" factor="1">
+  <Axis name="x" lowEdge="0">
+   <Bin repeat="3" width="1" center="0.5" />
+   <Axis name="y" lowEdge="0">
+    <Bin repeat="2" width="1" center="0.5" />
+   </Axis>
+  </Axis>
+ </BinningNode>
+ <BinningNode name="branch3" firstbin="19" factor="1">
+  <Axis name="x" lowEdge="0">
+   <Bin repeat="2" width="1" center="0.5" />
+  </Axis>
+ </BinningNode>
+</BinningNode>
+</TUnfoldBinning>

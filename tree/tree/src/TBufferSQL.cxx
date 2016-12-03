@@ -311,7 +311,7 @@ void TBufferSQL::WriteTString(const TString   &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read a std::string
 
-void TBufferSQL::ReadStdString(std::string &s)
+void TBufferSQL::ReadStdString(std::string *s)
 {
    TBufferFile::ReadStdString(s);
 }
@@ -319,10 +319,27 @@ void TBufferSQL::ReadStdString(std::string &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a std::string
 
-void TBufferSQL::WriteStdString(const std::string &s)
+void TBufferSQL::WriteStdString(const std::string *s)
 {
    TBufferFile::WriteStdString(s);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a char* string
+
+void TBufferSQL::ReadCharStar(char* &s)
+{
+   TBufferFile::ReadCharStar(s);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write a char* string
+
+void TBufferSQL::WriteCharStar(char *s)
+{
+   TBufferFile::WriteCharStar(s);
+}
+
 
 // Method to send to database.
 

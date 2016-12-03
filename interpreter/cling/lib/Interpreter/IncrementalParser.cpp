@@ -133,12 +133,8 @@ namespace cling {
   IncrementalParser::Initialize(llvm::SmallVectorImpl<ParseResultTransaction>&
                                 result, bool isChildInterpreter) {
     m_TransactionPool.reset(new TransactionPool);
-    if (hasCodeGenerator()) {
+    if (hasCodeGenerator())
       getCodeGenerator()->Initialize(getCI()->getASTContext());
-      m_BackendPasses.reset(new BackendPasses(getCI()->getCodeGenOpts(),
-                                              getCI()->getTargetOpts(),
-                                              getCI()->getLangOpts()));
-    }
 
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
@@ -176,6 +172,11 @@ namespace cling {
     ExternalASTSource *External = TheSema->getASTContext().getExternalSource();
     if (External)
       External->StartTranslationUnit(m_Consumer);
+
+    Parser::DeclGroupPtrTy ADecl;
+    // Start parsing the "main file" to warm up lexing (enter caching lex mode
+    // for ParseInternal()'s call EnterSourceFile() to make sense.
+    while (!m_Parser->ParseTopLevelDecl(ADecl)) {}
 
     // If I belong to the parent Interpreter, only then do
     // the #include <new>
@@ -396,7 +397,6 @@ namespace cling {
       Transaction* prevConsumerT = m_Consumer->getTransaction();
       m_Consumer->setTransaction(T);
       codeGenTransaction(T);
-      transformTransactionIR(T);
       T->setState(Transaction::kCommitted);
       if (!T->getParent()) {
         if (m_Interpreter->executeTransaction(*T)
@@ -415,31 +415,6 @@ namespace cling {
     if (InterpreterCallbacks* callbacks = m_Interpreter->getCallbacks())
       callbacks->TransactionCommitted(*T);
 
-  }
-
-  void IncrementalParser::markWholeTransactionAsUsed(Transaction* T) const {
-    ASTContext& C = m_CI->getASTContext();
-    for (Transaction::const_iterator I = T->decls_begin(), E = T->decls_end();
-         I != E; ++I) {
-      // Copy DCI; it might get relocated below.
-      Transaction::DelayCallInfo DCI = *I;
-      // FIXME: implement for multiple decls in a DGR.
-      assert(DCI.m_DGR.isSingleDecl());
-      Decl* D = DCI.m_DGR.getSingleDecl();
-      if (!D->hasAttr<clang::UsedAttr>())
-        D->addAttr(::new (D->getASTContext())
-                   clang::UsedAttr(D->getSourceRange(), D->getASTContext(),
-                                   0/*AttributeSpellingListIndex*/));
-    }
-    for (Transaction::iterator I = T->deserialized_decls_begin(),
-           E = T->deserialized_decls_end(); I != E; ++I) {
-      // FIXME: implement for multiple decls in a DGR.
-      assert(I->m_DGR.isSingleDecl());
-      Decl* D = I->m_DGR.getSingleDecl();
-      if (!D->hasAttr<clang::UsedAttr>())
-        D->addAttr(::new (C) clang::UsedAttr(D->getSourceRange(), C,
-                                   0/*AttributeSpellingListIndex*/));
-    }
   }
 
   void IncrementalParser::emitTransaction(Transaction* T) {
@@ -512,16 +487,6 @@ namespace cling {
                                       *m_Interpreter->getLLVMContext(),
                                       getCI()->getCodeGenOpts());
     }
-  }
-
-  bool IncrementalParser::transformTransactionIR(Transaction* T) {
-    // Transform IR
-    bool success = true;
-    //if (!success)
-    //  m_Interpreter->unload(*T);
-    if (m_BackendPasses && T->getModule())
-      m_BackendPasses->runOnModule(*T->getModule());
-    return success;
   }
 
   void IncrementalParser::deregisterTransaction(Transaction& T) {

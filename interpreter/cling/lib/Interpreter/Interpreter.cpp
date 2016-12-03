@@ -128,7 +128,7 @@ namespace cling {
       // The ClangInternalState destructor can provoke deserialization,
       // we need a transaction.
       PushTransactionRAII pushedT(m_Interpreter);
-      m_State->compare("aName");
+      m_State->compare("aName", m_Interpreter->m_Opts.Verbose());
       m_State.reset();
     }
   }
@@ -174,8 +174,7 @@ namespace cling {
                                                      /*isTemp*/true), this));
 
     if (!isInSyntaxOnlyMode())
-      m_Executor.reset(new IncrementalExecutor(SemaRef.Diags,
-                                               getCI()->getCodeGenOpts()));
+      m_Executor.reset(new IncrementalExecutor(SemaRef.Diags, *getCI()));
 
     // Tell the diagnostic client that we are entering file parsing mode.
     DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
@@ -365,7 +364,7 @@ namespace cling {
 
     // This may induce deserialization
     PushTransactionRAII RAII(this);
-    m_StoredStates[foundAtPos]->compare(name);
+    m_StoredStates[foundAtPos]->compare(name, m_Opts.Verbose());
   }
 
   void Interpreter::printIncludedFiles(llvm::raw_ostream& Out) const {
@@ -637,7 +636,6 @@ namespace cling {
     assert(!isInSyntaxOnlyMode() && "No CodeGenerator?");
     m_IncrParser->emitTransaction(T);
     m_IncrParser->addTransaction(T);
-    m_IncrParser->markWholeTransactionAsUsed(T);
     T->setState(Transaction::kCollecting);
     auto PRT = m_IncrParser->endTransaction(T);
     m_IncrParser->commitTransaction(PRT);
@@ -1269,11 +1267,13 @@ namespace cling {
     llvm::raw_fd_ostream log((outFile + ".skipped").str().c_str(),
                              EC, llvm::sys::fs::OpenFlags::F_None);
     log << "Generated for :" << inFile << "\n";
-    forwardDeclare(*T, fwdGen.getCI()->getSema(), out, enableMacros,
+    forwardDeclare(*T, fwdGenPP, fwdGen.getCI()->getSema().getASTContext(),
+                   out, enableMacros,
                    &log);
   }
 
-  void Interpreter::forwardDeclare(Transaction& T, Sema& S,
+  void Interpreter::forwardDeclare(Transaction& T, Preprocessor& P,
+                                   clang::ASTContext& Ctx,
                                    llvm::raw_ostream& out,
                                    bool enableMacros /*=false*/,
                                    llvm::raw_ostream* logs /*=0*/,
@@ -1282,7 +1282,7 @@ namespace cling {
     if (!logs)
       logs = &null;
 
-    ForwardDeclPrinter visitor(out, *logs, S, T, 0, false, ignoreFiles);
+    ForwardDeclPrinter visitor(out, *logs, P, Ctx, T, 0, false, ignoreFiles);
     visitor.printStats();
 
     // Avoid assertion in the ~IncrementalParser.

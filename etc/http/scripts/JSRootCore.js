@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.6.0 22/08/2016";
+   JSROOT.version = "4.7.1 1/11/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -102,7 +102,7 @@
    JSROOT.id_counter = 0;
 
    JSROOT.touches = false;
-   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari:false, isChrome:false, isIE:false };
+   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari:false, isChrome:false, isIE:false, isWin:false };
 
    if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
       var scripts = document.getElementsByTagName('script');
@@ -129,6 +129,7 @@
       JSROOT.browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
       JSROOT.browser.isChrome = !!window.chrome && !JSROOT.browser.isOpera;
       JSROOT.browser.isIE = false || !!document.documentMode;
+      JSROOT.browser.isWin = navigator.platform.indexOf('Win') >= 0;
    }
 
    JSROOT.browser.isWebKit = JSROOT.browser.isChrome || JSROOT.browser.isSafari;
@@ -581,10 +582,10 @@
 
             if ((kind=="bin") && ('Uint8Array' in window) && ('byteLength' in xhr.response)) {
                // if string representation in requested - provide it
-               var filecontent = "";
-               var u8Arr = new Uint8Array(xhr.response, 0, xhr.response.byteLength);
+
+               var filecontent = "", u8Arr = new Uint8Array(xhr.response);
                for (var i = 0; i < u8Arr.length; ++i)
-                  filecontent = filecontent + String.fromCharCode(u8Arr[i]);
+                  filecontent += String.fromCharCode(u8Arr[i]);
                delete u8Arr;
 
                return callback(filecontent);
@@ -1114,6 +1115,12 @@
             JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fGraphs: JSROOT.Create("TList"),
                                  fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
             break;
+         case 'TPolyLine':
+            JSROOT.Create("TObject", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttFill", obj);
+            JSROOT.extend(obj, { fLastPoint: -1, fN: 0, fOption: "", fX: null, fY: null });
+            break;
          case 'TGaxis':
             JSROOT.Create("TLine", obj);
             JSROOT.Create("TAttText", obj);
@@ -1189,20 +1196,18 @@
    JSROOT.CreateTAxis = function() { return JSROOT.Create("TAxis"); }
 
    JSROOT.CreateTH1 = function(nbinsx) {
-
       var histo = JSROOT.extend(JSROOT.Create("TH1I"),
                    { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (nbinsx!==undefined) {
          histo.fNcells = nbinsx+2;
          for (var i=0;i<histo.fNcells;++i) histo.fArray.push(0);
-         JSROOT.extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
+         JSROOT.extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
       }
       return histo;
    }
 
    JSROOT.CreateTH2 = function(nbinsx, nbinsy) {
-
       var histo = JSROOT.extend(JSROOT.Create("TH2I"),
                     { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
@@ -1213,6 +1218,23 @@
          JSROOT.extend(histo.fYaxis, { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
       }
       return histo;
+   }
+
+
+   JSROOT.CreateTPolyLine = function(npoints, use_int32) {
+      var poly = JSROOT.Create("TPolyLine");
+      if (npoints) {
+         poly.fN = npoints;
+         if (use_int32) {
+            poly.fX = new Int32Array(npoints);
+            poly.fY = new Int32Array(npoints);
+         } else {
+            poly.fX = new Float32Array(npoints);
+            poly.fY = new Float32Array(npoints);
+         }
+      }
+
+      return poly;
    }
 
    JSROOT.CreateTGraph = function(npoints, xpts, ypts) {
@@ -1281,7 +1303,7 @@
 
       if ((typename === "TPaveText") || (typename === "TPaveStats")) {
          m.AddText = function(txt) {
-            this.fLines.Add({ fTitle: txt, fTextColor: 1 });
+            this.fLines.Add({ _typename: 'TText', fTitle: txt, fTextColor: 1 });
          }
          m.Clear = function() {
             this.fLines.Clear();
@@ -1351,10 +1373,9 @@
       if ((typename.indexOf("TGraph") == 0) || (typename == "TCutG")) {
          // check if point inside figure specified by the TGrpah
          m.IsInside = function(xp,yp) {
-            var j = this.fNpoints - 1, x = this.fX, y = this.fY;
-            var oddNodes = false;
+            var i, j = this.fNpoints - 1, x = this.fX, y = this.fY, oddNodes = false;
 
-            for (var i=0; i<this.fNpoints; ++i) {
+            for (i=0; i<this.fNpoints; ++i) {
                if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
                   if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
                      oddNodes = !oddNodes;
@@ -1393,6 +1414,13 @@
       if (typename.indexOf("TH1") == 0) {
          m.getBin = function(x) { return x; }
          m.getBinContent = function(bin) { return this.fArray[bin]; }
+         m.Fill = function(x, weight) {
+            var axis = this.fXaxis,
+                bin = 1 + Math.round((x - axis.fXmin) / (axis.fXmax - axis.fXmin) * axis.fNbins);
+            if (bin < 0) bin = 0; else
+            if (bin > axis.fNbins + 1) bin = axis.fNbins + 1;
+            this.fArray[bin] += ((weight===undefined) ? 1 : weight);
+         }
       }
 
       if (typename.indexOf("TH2") == 0) {

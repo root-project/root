@@ -119,14 +119,14 @@ using namespace std;
 
 TVirtualMutex* gInterpreterMutex = 0;
 
-void *gMmallocDesc = 0; //is used and set in TMapFile
 namespace {
    class TMmallocDescTemp {
    private:
       void *fSave;
    public:
-      TMmallocDescTemp(void *value = 0) : fSave(gMmallocDesc) { gMmallocDesc = value; }
-      ~TMmallocDescTemp() { gMmallocDesc = fSave; }
+      TMmallocDescTemp(void *value = 0) :
+         fSave(ROOT::Internal::gMmallocDesc) { ROOT::Internal::gMmallocDesc = value; }
+      ~TMmallocDescTemp() { ROOT::Internal::gMmallocDesc = fSave; }
    };
 }
 
@@ -1730,6 +1730,8 @@ Int_t TClass::ReadRules()
    if (f != 0) {
       res = ReadRulesContent(f);
       fclose(f);
+   } else {
+      ::Error("TClass::ReadRules()", "Cannot find rules file %s", sname.Data());
    }
    return res;
 }

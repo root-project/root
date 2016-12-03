@@ -296,12 +296,16 @@ namespace RooStats {
       /// to N dimensions
       virtual void SetIntervalType(enum IntervalType intervalType)
       { fIntervalType = intervalType; }
+      virtual void SetShortestInterval() { SetIntervalType(kShortest); }
 
       /// Return the type of this interval
       virtual enum IntervalType GetIntervalType() { return fIntervalType; }
 
       /// set the left-side tail fraction for a tail-fraction interval
-      virtual void SetLeftSideTailFraction(Double_t a) { fLeftSideTF = a; }
+      virtual void SetLeftSideTailFraction(Double_t a) {
+         fIntervalType = kTailFraction;
+         fLeftSideTF = a;
+      }
 
       /// kbelasco: The inner-workings of the class really should not be exposed
       /// like this in a comment, but it seems to be the only way to give

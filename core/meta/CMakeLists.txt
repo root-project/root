@@ -12,21 +12,17 @@ ROOT_OBJECT_LIBRARY(Meta ${sources})
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling*.cxx)
 add_definitions(${CLING_CXXFLAGS})
-include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/io/io/inc)
+include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/core/metautils/res ${CMAKE_SOURCE_DIR}/io/io/inc)
 if(MSVC)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
 else()
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-   # This to avoid warning coming from  message coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
-   # in clang + llvm version r227800.
-   set(CLANG_ADDITIONAL_FLAGS "-Wno-conditional-uninitialized")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_ADDITIONAL_FLAGS}")
-endif()
-
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS  -Wno-shadow)
+# This to avoid warning coming from  message coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
+# in clang + llvm version r227800.
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-conditional-uninitialized)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-shadow)
 
 ROOT_OBJECT_LIBRARY(MetaLLVM ${sources})
 add_dependencies(MetaLLVM CLING)

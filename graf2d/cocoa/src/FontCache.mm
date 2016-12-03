@@ -224,7 +224,7 @@ void CreateXLFDString(const X11::XLFDName &xlfd, std::string &xlfdString)
     } else
         xlfdString += "-*";
 
-    xlfdString += "-*-*-*-*-*-*-*-";//TODO: something more reasonable?
+    xlfdString += "-*-*-*-*-*-*-*-";
 }
 
 }

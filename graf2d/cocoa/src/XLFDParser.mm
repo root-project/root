@@ -26,7 +26,6 @@
 // ROOT's GUI for some time, I noticed that ROOT can use font name like
 // *, "fixed", "-*-" or something like this. In this case I have to set
 // some "default" or "wildcard" names.
-// TODO: what does X11 epxected to do, if XLFD name is bad?
 //
 
 namespace ROOT {

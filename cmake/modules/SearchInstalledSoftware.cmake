@@ -201,7 +201,7 @@ if(builtin_lzma)
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else()
-    if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
       set(LZMA_CFLAGS "-Wno-format-nonliteral")
       set(LZMA_LDFLAGS "-Qunused-arguments")
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1056,7 +1056,7 @@ if(davix OR builtin_davix)
     if(NOT davix)
       set(davix ON CACHE BOOL "" FORCE)
     endif()
-    set(DAVIX_VERSION 0.6.3)
+    set(DAVIX_VERSION 0.6.4)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
     string(REPLACE "-W " "" __cxxflags "${__cxxflags}")
@@ -1069,8 +1069,7 @@ if(davix OR builtin_davix)
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
-      # Patch need. see https://github.com/cern-it-sdc-id/davix/issues/6
-      # PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch 
+      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -1260,11 +1259,45 @@ if(vc OR builtin_vc)
   endif()
 endif()
 
+#---Check for Vdt--------------------------------------------------------------------
+if(vdt OR builtin_vdt)
+  if(NOT builtin_vdt)
+    message(STATUS "Looking for VDT")
+    find_package(Vdt)
+    if(NOT VDT_FOUND)
+      if(fail-on-missing)
+        message(FATAL_ERROR "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
+      else()
+        message(STATUS "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
+        message(STATUS "               Alternatively, you can also enable the option 'builtin_vdt' to build the VDT libraries internally")
+        message(STATUS "               For the time being switching OFF 'vdt' option")
+        set(vdt OFF CACHE BOOL "" FORCE)
+      endif()
+    endif()
+  endif()
+  if(builtin_vdt)
+    set(vdt_version 0.3.9)
+    ExternalProject_Add(
+      VDT
+      URL ${repository_tarfiles}/vdt-${vdt_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    )
+    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
+    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX} 
+            DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
+    set(vdt ON CACHE BOOL "" FORCE)
+  endif()
+endif()
 
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva AND cuda)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
-  find_package(CUDA QUIET)
+  find_package(CUDA 7.5)
   if(NOT CUDA_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")

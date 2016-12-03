@@ -76,7 +76,7 @@ private:
 
     // perfStats
     Double_t eventStart();
-    void eventStop(Double_t t, Long64_t len);
+    void eventStop(Double_t t, Long64_t len, bool read = true);
 
 public:
     ///

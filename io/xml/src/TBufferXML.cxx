@@ -2724,7 +2724,7 @@ void TBufferXML::ReadTString(TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads a std::string
 
-void TBufferXML::ReadStdString(std::string &s)
+void TBufferXML::ReadStdString(std::string *s)
 {
    if (GetIOVersion()<3) {
       TBufferFile::ReadStdString(s);
@@ -2732,8 +2732,16 @@ void TBufferXML::ReadStdString(std::string &s)
       BeforeIOoperation();
       const char* buf;
       if ((buf = XmlReadValue(xmlio::String)))
-         s = buf;
+         if (s) *s = buf;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a char* string
+
+void TBufferXML::ReadCharStar(char* &s)
+{
+   TBufferFile::ReadCharStar(s);
 }
 
 
@@ -2873,15 +2881,25 @@ void TBufferXML::WriteTString(const TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes a TString
 
-void TBufferXML::WriteStdString(const std::string &s)
+void TBufferXML::WriteStdString(const std::string *s)
 {
    if (GetIOVersion()<3) {
       TBufferFile::WriteStdString(s);
    } else {
       BeforeIOoperation();
-      XmlWriteValue(s.c_str(), xmlio::String);
+      if (s) XmlWriteValue(s->c_str(), xmlio::String);
+      else XmlWriteValue("", xmlio::String);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write a char* string
+
+void TBufferXML::WriteCharStar(char *s)
+{
+   TBufferFile::WriteCharStar(s);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts Char_t to string and add xml node to buffer

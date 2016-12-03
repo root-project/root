@@ -45,10 +45,10 @@ Bool_t TH1Merger::operator() () {
       Bool_t ret =  BufferMerge();
       // if ret is true the merge is completed and we can exit 
       if (ret) return kTRUE; 
-      // in the otehr case then we merge using FindBin
+      // in the other cases then we merge using FindBin
       return DifferentAxesMerge(); 
    }
-   Error("TH1Merger","Unknown type");
+   Error("TH1Merger","Unknown type of Merge for histogram %s",fH0->GetName());
    return kFALSE;
 }
 
@@ -156,9 +156,9 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
                // and one common bin edge
                if (!TH1::RecomputeAxisLimits(fNewXAxis, *(h->GetXaxis()))) {
                   Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                        "first: (%d, %f, %f), second: (%d, %f, %f)",
-                        fNewXAxis.GetNbins(), fNewXAxis.GetXmin(), fNewXAxis.GetXmax(),
-                        h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
+                        "first: %s (%d, %f, %f), second: %s (%d, %f, %f)", fH0->GetName(),
+                        fNewXAxis.GetNbins(), fNewXAxis.GetXmin(), fNewXAxis.GetXmax(), 
+                        h->GetName(),h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                         h->GetXaxis()->GetXmax());
                   return kNotCompatible;
                }
@@ -171,9 +171,9 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
              // and one common bin edge
              if (!TH1::RecomputeAxisLimits(fNewYAxis, *(h->GetYaxis()))) {
                Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     "first: %s (%d, %f, %f), second: %s (%d, %f, %f)", fH0->GetName(),
                      fNewYAxis.GetNbins(), fNewYAxis.GetXmin(), fNewYAxis.GetXmax(),
-                     h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
+                     h->GetName(), h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
                      h->GetYaxis()->GetXmax());
                return kNotCompatible;
              }
@@ -182,9 +182,9 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
              sameLimitsZ = kFALSE;
              if (!TH1::RecomputeAxisLimits(fNewZAxis, *(h->GetZaxis()))) {
                Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     "first: %s (%d, %f, %f), second: %s (%d, %f, %f)", fH0->GetName(),
                      fNewZAxis.GetNbins(), fNewZAxis.GetXmin(), fNewZAxis.GetXmax(),
-                     h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
+                     h->GetName(),h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
                      h->GetZaxis()->GetXmax());
                return kNotCompatible;
              }
@@ -493,26 +493,40 @@ Bool_t TH1Merger::DifferentAxesMerge() {
          if (fH0->fSumw2.fN) e1sq= hist->GetBinErrorSqUnchecked(ibin);
 
          // if bin is empty we can skip it
-         if (cu == 0 && e1sq == 0) continue; 
-
-         if (hist->IsBinUnderflow(ibin) || hist->IsBinOverflow(ibin) ) { 
-            Error("TH1Merger::DifferentAxesMerge", "Cannot merge histograms - the histograms have"
-                  " different limits and underflows/overflows are present."
-                  " The initial histogram is now broken!");
-            return kFALSE;
-         }
+         if (cu == 0 && e1sq == 0) continue;
 
          Int_t binx,biny,binz;
          hist->GetBinXYZ(ibin, binx, biny, binz);
-         
 
+         // case of underflow/overflows in the histogram being merged
+         if (binx <= 0 || binx >= hist->GetNbinsX() + 1) {
+            if (fH0->fXaxis.CanExtend() || ( hist->fXaxis.GetBinCenter(binx) > fH0->fXaxis.GetXmin() && hist->fXaxis.GetBinCenter(binx) < fH0->fXaxis.GetXmax()) ) {
+               Error("TH1Merger::DifferentAxesMerge", "Cannot merge histograms - the histograms %s can extend the X axis or have"
+                     " different limits and underflows/overflows are present in the histogram %s.",fH0->GetName(),hist->GetName());
+                  return kFALSE;
+            }
+         }
+         if (biny <= 0 || biny >= hist->GetNbinsY() + 1) {
+            if (fH0->fYaxis.CanExtend() || ( hist->fYaxis.GetBinCenter(biny) > fH0->fYaxis.GetXmin() && hist->fYaxis.GetBinCenter(biny) < fH0->fYaxis.GetXmax()) ) {
+               Error("TH1Merger::DifferentAxesMerge", "Cannot merge histograms - the histograms %s can extend the Y axis or have"
+                     " different limits and underflows/overflows are present in the histogram %s.",fH0->GetName(),hist->GetName());
+                  return kFALSE;
+            }
+         }
+         if (binz <= 0 || binz >= hist->GetNbinsZ() + 1) {
+            if (fH0->fZaxis.CanExtend() || ( hist->fZaxis.GetBinCenter(binz) > fH0->fZaxis.GetXmin() && hist->fXaxis.GetBinCenter(binz) < fH0->fZaxis.GetXmax()) ) {
+               Error("TH1Merger::DifferentAxesMerge", "Cannot merge histograms - the histograms %s can extend the Z axis or have"
+                     " different limits and underflows/overflows are present in the histogram %s.",fH0->GetName(),hist->GetName());
+                  return kFALSE;
+            }
+         }
 
          Int_t ix = 0;
          Int_t iy = 0;
          Int_t iz = 0;
 
          // we can extend eventually the axis if histogram is capable of doing it
-         // by using FindBIn
+         // by using FindBin
           ix = fH0->fXaxis.FindBin(hist->GetXaxis()->GetBinCenter(binx));
           if (fH0->fDimension > 1)
              iy = fH0->fYaxis.FindBin(hist->GetYaxis()->GetBinCenter(biny));

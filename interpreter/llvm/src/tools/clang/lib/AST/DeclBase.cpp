@@ -1259,9 +1259,7 @@ void DeclContext::removeDecl(Decl *D) {
       StoredDeclsMap *Map = DC->getPrimaryContext()->LookupPtr;
       if (Map) {
         StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
-#ifndef NDEBUG
-        assert(Pos != Map->end() && "no lookup entry for decl");
-#endif
+        assert((DC->hasExternalVisibleStorage() || Pos != Map->end()) && "no lookup entry for decl");
         if (Pos != Map->end()) {
         StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector();
         if ((Vec && std::find(Vec->begin(), Vec->end(), ND) != Vec->end())

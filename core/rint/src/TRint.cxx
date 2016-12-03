@@ -37,6 +37,7 @@
 #include "TInterpreter.h"
 #include "TObjArray.h"
 #include "TObjString.h"
+#include "TStorage.h" // ROOT::Internal::gMmallocDesc
 #include "TTabCom.h"
 #include "TError.h"
 #include <stdlib.h>
@@ -47,8 +48,6 @@
 #ifdef R__UNIX
 #include <signal.h>
 #endif
-
-R__EXTERN void *gMmallocDesc; //is used and set in TMapFile and TClass
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +95,7 @@ Bool_t TInterruptHandler::Notify()
    }
 
    // make sure we use the sbrk heap (in case of mapped files)
-   gMmallocDesc = 0;
+   ROOT::Internal::gMmallocDesc = 0;
 
    if (TROOT::Initialized() && gROOT->IsLineProcessing()) {
       Break("TInterruptHandler::Notify", "keyboard interrupt");

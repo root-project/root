@@ -20,12 +20,6 @@ set(LIBS
   clingUtils
 )
 
-find_library(DL_LIBRARY_PATH dl)
-if (DL_LIBRARY_PATH)
-  list(APPEND LIBS dl)
-endif()
-
-
 set( LLVM_LINK_COMPONENTS
   analysis
   core
@@ -38,8 +32,10 @@ set( LLVM_LINK_COMPONENTS
   option
   orcjit
   runtimedyld
+  scalaropts
   support
   target
+  transformutils
 )
 
 add_cling_library(clingInterpreter OBJECT
@@ -95,7 +91,6 @@ endif()
 # cl : Command line warning D9025: overriding '/EHc' with '/EHc-'
 # so let's change the target compiler flags instead:
 if(MSVC)
-  add_definitions(-UUNICODE -U_UNICODE)
   get_target_property(CI_COMPILE_FLAGS clingInterpreter COMPILE_FLAGS)
   if(${CI_COMPILE_FLAGS})
     string(REPLACE "/EHs-c-" "" CI_COMPILE_FLAGS ${CI_COMPILE_FLAGS})
@@ -201,7 +196,9 @@ if (UNIX)
       # binary. Eg. /usr/local/gcc -> /usr/bin/ccache. Resolving the realpath
       # we will get to the ccache and not the intended compiler binary. This
       # could be fixed if we run 'gcc -###' which will give us the correct info.
-      get_filename_component(_path ${CMAKE_CXX_COMPILER} REALPATH)
+      get_filename_component(_realpath ${CMAKE_CXX_COMPILER} REALPATH)
+      get_filename_component(_name ${_realpath} NAME)
+      get_filename_component(_path ${_realpath} PATH)
     endif()
 
     # Test if path compiler is on PATH.

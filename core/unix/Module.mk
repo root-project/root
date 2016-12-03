@@ -44,3 +44,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(UNIXDEP)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+$(UNIXO): CXXFLAGS += -I$(ROOT_SRCDIR)/core/clib/res

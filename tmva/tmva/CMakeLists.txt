@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-#---The following is needed because client codes of TMVA (in ROOT itself) assumes to find header files under /TVMA
+#---The following is needed because client codes of TMVA (in ROOT itself) assumes to find header files under /TMVA
 #execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMVA)
 
 if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
@@ -45,6 +45,7 @@ foreach(hs headers1 headers2 headers3 headers4 headers5)
   endforeach()
 endforeach()
 
+#---Assign source files to the implementations -----------------
 SET(DNN_FILES      src/DNN/Architectures/Reference.cxx)
 SET(DNN_CUDA_FILES src/DNN/Architectures/Cuda.cu
                    src/DNN/Architectures/Cuda/CudaBuffers.cxx
@@ -55,10 +56,10 @@ SET(DNN_CPU_FILES  src/DNN/Architectures/Cpu.cxx
 
 #---Handle CUDA dependent code. -----------------
 if(CUDA_FOUND)
-  CUDA_INCLUDE_DIRECTORIES(${ROOT_INCLUDE_DIRS})
   CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
   set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+  add_dependencies(dnn_cuda move_headers)
 else()
   set(DNN_CUDA_LIBRARIES)
 endif()

@@ -375,7 +375,7 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       }
       if (fillsi == -3) {
          SetColor(5);
-         if (fAlpha == 1) PrintFast(17," q 0.002 w [] 0 d");
+         if (fAlpha == 1) PrintFast(15," q 0.4 w [] 0 d");
          WriteReal(ix1);
          WriteReal(iy1);
          WriteReal(ix2 - ix1);
@@ -386,7 +386,7 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
    if (fillis == 1) {
       SetColor(fFillColor);
-      if (fAlpha == 1) PrintFast(17," q 0.002 w [] 0 d");
+      if (fAlpha == 1) PrintFast(15," q 0.4 w [] 0 d");
       WriteReal(ix1);
       WriteReal(iy1);
       WriteReal(ix2 - ix1);

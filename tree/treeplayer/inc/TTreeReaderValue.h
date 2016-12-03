@@ -44,27 +44,26 @@ namespace Internal {
 
    class TTreeReaderValueBase {
    public:
-      TTreeReaderValueBase(const TTreeReaderValueBase&) = delete;
 
       // Status flags, 0 is good
       enum ESetupStatus {
-         kSetupNotSetup = -7,
-         kSetupTreeDestructed = -8,
+         kSetupNotSetup = -7, /// No initialization has happened yet.
+         kSetupTreeDestructed = -8, /// The TTreeReader has been destructed / not set.
          kSetupMakeClassModeMismatch = -7, // readers disagree on whether TTree::SetMakeBranch() should be on
-         kSetupMissingCounterBranch = -6,
-         kSetupMissingBranch = -5,
-         kSetupInternalError = -4,
-         kSetupMissingCompiledCollectionProxy = -3,
-         kSetupMismatch = -2,
-         kSetupClassMismatch = -1,
-         kSetupMatch = 0,
-         kSetupMatchBranch = 0,
-         kSetupMatchConversion,
-         kSetupMatchConversionCollection,
-         kSetupMakeClass,
-         kSetupVoidPtr,
-         kSetupNoCheck,
-         kSetupMatchLeaf
+         kSetupMissingCounterBranch = -6, /// The array cannot find its counter branch: Array[CounterBranch]
+         kSetupMissingBranch = -5, /// The specified branch cannot be found.
+         kSetupInternalError = -4, /// Some other error - hopefully the error message helps.
+         kSetupMissingDictionary = -3, /// To read this branch, we need a dictionary.
+         kSetupMismatch = -2, /// Mismatch of branch type and reader template type.
+         kSetupNotACollection = -1, /// The branch class type is not a collection.
+         kSetupMatch = 0, /// This branch has been set up, branch data type and reader template type match, reading should succeed.
+         kSetupMatchBranch = 0, /// This branch has been set up, branch data type and reader template type match, reading should succeed.
+         //kSetupMatchConversion = 1, /// This branch has been set up, the branch data type can be converted to the reader template type, reading should succeed.
+         //kSetupMatchConversionCollection = 2, /// This branch has been set up, the data type of the branch's collection elements can be converted to the reader template type, reading should succeed.
+         //kSetupMakeClass = 3, /// This branch has been set up, enabling MakeClass mode for it, reading should succeed.
+         // kSetupVoidPtr = 4,
+         kSetupNoCheck = 5,
+         kSetupMatchLeaf = 6 /// This branch (or TLeaf, really) has been set up, reading should succeed.
       };
       enum EReadStatus {
          kReadSuccess = 0, // data read okay
@@ -78,16 +77,22 @@ namespace Internal {
       ESetupStatus GetSetupStatus() const { return fSetupStatus; }
       virtual EReadStatus GetReadStatus() const { return fReadStatus; }
 
-      TLeaf* GetLeaf();
+      /// If we are reading a leaf, return the corresponding TLeaf.
+      TLeaf* GetLeaf() { return fLeaf; }
 
       void* GetAddress();
 
       const char* GetBranchName() const { return fBranchName; }
 
+      virtual ~TTreeReaderValueBase();
+
    protected:
       TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
+      TTreeReaderValueBase(const TTreeReaderValueBase&);
+      TTreeReaderValueBase& operator=(const TTreeReaderValueBase&);
 
-      virtual ~TTreeReaderValueBase();
+      void RegisterWithTreeReader();
+      void NotifyNewTree(TTree* newTree);
 
       virtual void CreateProxy();
       const char* GetBranchDataType(TBranch* branch,
@@ -97,7 +102,10 @@ namespace Internal {
 
       Detail::TBranchProxy* GetProxy() const { return fProxy; }
 
-      void MarkTreeReaderUnavailable() { fTreeReader = 0; }
+      void MarkTreeReaderUnavailable() { fTreeReader = 0; fSetupStatus = kSetupTreeDestructed; }
+
+      /// Stringify the template argument.
+      static std::string GetElementTypeName(const std::type_info& ti);
 
       TString      fBranchName; // name of the branch to read data from.
       TString      fLeafName;
@@ -105,7 +113,6 @@ namespace Internal {
       TDictionary* fDict; // type that the branch should contain
       Detail::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
       TLeaf*       fLeaf;
-      Long64_t     fTreeLastOffset;
       ESetupStatus fSetupStatus; // setup status of this data access
       EReadStatus  fReadStatus; // read status of this data access
       std::vector<Long64_t> fStaticClassOffsets;
@@ -141,9 +148,11 @@ public:
 
 protected:
    // FIXME: use IsA() instead once we have ClassDefTInline
-#define R__TTreeReaderValue_TypeString(T) #T
-   virtual const char* GetDerivedTypeName() const { return R__TTreeReaderValue_TypeString(T); }
-#undef R__TTreeReaderValue_TypeString
+   /// Get the template argument as a string.
+   virtual const char* GetDerivedTypeName() const {
+      static const std::string sElementTypeName = GetElementTypeName(typeid(T));
+      return sElementTypeName.data();
+   }
 
    // FIXME: re-introduce once we have ClassDefTInline!
    //ClassDefT(TTreeReaderValue, 0);//Accessor to data via TTreeReader

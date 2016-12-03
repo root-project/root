@@ -49,6 +49,7 @@
 #include "TDataType.h"
 #include "TRealData.h"
 #include "TDataMember.h"
+#include "TMap.h"
 #include "TExMap.h"
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
@@ -78,6 +79,155 @@ ClassImp(TBufferJSON)
 const char *TBufferJSON::fgFloatFmt = "%e";
 const char *TBufferJSON::fgDoubleFmt = "%.14e";
 
+// TArrayIndexProducer is used to correctly create
+// JSON array separators for multi-dimensional JSON arrays
+// It fully reproduces array dimensions as in original ROOT classes
+// Contrary to binary I/O, which always writes flat arrays
+
+class TArrayIndexProducer {
+   protected:
+
+      Int_t fTotalLen;
+      Int_t fCnt;
+      const char* fSepar;
+      TArrayI fIndicies;
+      TArrayI fMaxIndex;
+      TString fRes;
+
+   public:
+      TArrayIndexProducer(TStreamerElement* elem, Int_t arraylen, const char* separ) :
+         fTotalLen(0),
+         fCnt(-1),
+         fSepar(separ),
+         fIndicies(),
+         fMaxIndex(),
+         fRes()
+      {
+         Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
+
+         if (usearrayindx && (arraylen > 0)) {
+            if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
+                (elem->GetType() == TStreamerInfo::kStreamLoop)) usearrayindx = kFALSE;
+            else
+               if (arraylen != elem->GetArrayLength()) {
+                  printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
+               }
+         }
+
+         if (usearrayindx) {
+            fTotalLen = elem->GetArrayLength();
+            fMaxIndex.Set(elem->GetArrayDim());
+            for(int dim=0;dim<elem->GetArrayDim();dim++)
+               fMaxIndex[dim] = elem->GetMaxIndex(dim);
+         } else
+         if (arraylen > 1) {
+            fTotalLen = arraylen;
+            fMaxIndex.Set(1);
+            fMaxIndex[0] = arraylen;
+         }
+
+         if (fMaxIndex.GetSize() > 0) {
+            fIndicies.Set(fMaxIndex.GetSize());
+            fIndicies.Reset(0);
+         }
+      }
+
+      TArrayIndexProducer(TDataMember* member, Int_t extradim, const char* separ) :
+         fTotalLen(0),
+         fCnt(-1),
+         fSepar(separ),
+         fIndicies(),
+         fMaxIndex(),
+         fRes()
+      {
+         Int_t ndim = member->GetArrayDim();
+         if (extradim > 0) ndim++;
+
+         if (ndim > 0) {
+            fIndicies.Set(ndim);
+            fIndicies.Reset(0);
+            fMaxIndex.Set(ndim);
+            fTotalLen = 1;
+            for (int dim=0;dim<member->GetArrayDim();dim++) {
+               fMaxIndex[dim] = member->GetMaxIndex(dim);
+               fTotalLen *= member->GetMaxIndex(dim);
+            }
+
+            if (extradim > 0) {
+               fMaxIndex[ndim-1] = extradim;
+               fTotalLen *= extradim;
+            }
+         }
+      }
+
+      Int_t ReduceDimension()
+      {
+         // reduce one dimension of the array
+         // return size of reduced dimension
+         if (fMaxIndex.GetSize() == 0) return 0;
+         Int_t ndim = fMaxIndex.GetSize()-1;
+         Int_t len = fMaxIndex[ndim];
+         fMaxIndex.Set(ndim);
+         fIndicies.Set(ndim);
+         fTotalLen = fTotalLen/len;
+         return len;
+      }
+
+
+      Bool_t IsArray() const
+      {
+         return (fTotalLen>1);
+      }
+
+      Bool_t IsDone() const
+      {
+         // return true when iteration over all arrays indexes are done
+         return !IsArray() || (fCnt >= fTotalLen);
+      }
+
+      const char* GetBegin()
+      {
+         ++fCnt;
+         // return starting separator
+         fRes.Clear();
+         for (Int_t n=0;n<fIndicies.GetSize();++n) fRes.Append("[");
+         return fRes.Data();
+      }
+
+      const char* GetEnd()
+      {
+         // return ending separator
+         fRes.Clear();
+         for (Int_t n=0;n<fIndicies.GetSize();++n) fRes.Append("]");
+         return fRes.Data();
+      }
+
+      const char* NextSeparator()
+      {
+         // return intermediate or last separator
+
+         if (++fCnt >= fTotalLen) return GetEnd();
+
+         Int_t cnt = fIndicies.GetSize() - 1;
+         fIndicies[cnt]++;
+
+         fRes.Clear();
+
+         while ((cnt >= 0) && (cnt < fIndicies.GetSize()))  {
+            if (fIndicies[cnt] >= fMaxIndex[cnt]) {
+               fRes.Append("]");
+               fIndicies[cnt--] = 0;
+               if (cnt >= 0) fIndicies[cnt]++;
+               continue;
+            }
+            fRes.Append(fIndicies[cnt] == 0 ? "[" : fSepar);
+            cnt++;
+         }
+         return fRes.Data();
+      }
+
+};
+
 
 // TJSONStackObj is used to keep stack of object hierarchy,
 // stored in TBuffer. For instance, data for parent class(es)
@@ -95,6 +245,7 @@ public:
    Bool_t            fAccObjects;     //! if true, accumulate whole objects in values
    TObjArray         fValues;         //! raw values
    Int_t             fLevel;          //! indent level
+   TArrayIndexProducer *fIndx;        //! producer of ndim indexes
 
    TJSONStackObj() :
       TObject(),
@@ -107,7 +258,8 @@ public:
       fIsObjStarted(kFALSE),
       fAccObjects(kFALSE),
       fValues(),
-      fLevel(0)
+      fLevel(0),
+      fIndx(0)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -115,6 +267,7 @@ public:
    virtual ~TJSONStackObj()
    {
       if (fIsElemOwner) delete fElem;
+      if (fIndx) delete fIndx;
    }
 
    Bool_t IsStreamerInfo() const
@@ -230,8 +383,14 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl,
 {
    if ((member_name!=0) && (obj!=0)) {
       TRealData *rdata = cl->GetRealData(member_name);
-      if (rdata==0) return TString();
-      TDataMember *member = rdata->GetDataMember();
+      TDataMember *member = rdata ? rdata->GetDataMember() : 0;
+      if (member==0) {
+         TIter iter(cl->GetListOfRealData());
+         while ((rdata = dynamic_cast<TRealData*>(iter())) != 0) {
+            member = rdata->GetDataMember();
+            if (member && strcmp(member->GetName(), member_name)==0) break;
+         }
+      }
       if (member==0) return TString();
 
       Int_t arraylen = -1;
@@ -276,7 +435,7 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member,
    TClass *mcl = member->IsBasic() ? 0 : gROOT->GetClass(member->GetTypeName());
 
    if ((mcl != 0) && (mcl != TString::Class()) && !stlstring && !isstl &&
-         (mcl->GetBaseClassOffset(TArray::Class()) != 0))
+         (mcl->GetBaseClassOffset(TArray::Class()) != 0) && (arraylen<=0) && (member->GetArrayDim()==0))
       return TBufferJSON::ConvertToJSON(ptr, mcl, compact);
 
    TBufferJSON buf;
@@ -340,252 +499,109 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
       Info("JsonWriteMember", "Write member %s type %s ndim %d",
            member->GetName(), member->GetTrueTypeName(), member->GetArrayDim());
 
+   Int_t tid = member->GetDataType() ? member->GetDataType()->GetType() : kNoType_t;
+   if (strcmp(member->GetTrueTypeName(),"const char*")==0) tid = kCharStar; else
+   if (!member->IsBasic() || (tid == kOther_t) || (tid == kVoid_t)) tid = kNoType_t;
+
+   if (ptr==0) return (tid == kCharStar) ? "\"\"" : "null";
+
    PushStack(0);
    fValue.Clear();
 
-   if (member->IsBasic()) {
+   if (tid != kNoType_t) {
 
-      Int_t tid = member->GetDataType() ? member->GetDataType()->GetType() : kNoType_t;
+      TArrayIndexProducer indx(member, arraylen, fArraySepar.Data());
 
-      if (ptr == 0) {
-         fValue = "null";
-      } else if ((member->GetArrayDim() == 0) && (arraylen<0)) {
+      Int_t shift = 1;
+
+      if (indx.IsArray() && (tid==kChar_t))
+         shift = indx.ReduceDimension();
+
+      char* ppp = (char*) ptr;
+
+      if (indx.IsArray()) fOutBuffer.Append(indx.GetBegin());
+
+      do {
+         fValue.Clear();
+
          switch (tid) {
             case kChar_t:
-               JsonWriteBasic(*((Char_t *)ptr));
+               if (shift>1)
+                  JsonWriteConstChar((Char_t *)ppp, shift);
+               else
+                  JsonWriteBasic(*((Char_t *)ppp));
                break;
             case kShort_t:
-               JsonWriteBasic(*((Short_t *)ptr));
+               JsonWriteBasic(*((Short_t *)ppp));
                break;
             case kInt_t:
-               JsonWriteBasic(*((Int_t *)ptr));
+               JsonWriteBasic(*((Int_t *)ppp));
                break;
             case kLong_t:
-               JsonWriteBasic(*((Long_t *)ptr));
+               JsonWriteBasic(*((Long_t *)ppp));
                break;
             case kFloat_t:
-               JsonWriteBasic(*((Float_t *)ptr));
+               JsonWriteBasic(*((Float_t *)ppp));
                break;
             case kCounter:
-               JsonWriteBasic(*((Int_t *)ptr));
+               JsonWriteBasic(*((Int_t *)ppp));
                break;
             case kCharStar:
-               WriteCharP((Char_t *)ptr);
+               JsonWriteConstChar((Char_t *)ppp);
                break;
             case kDouble_t:
-               JsonWriteBasic(*((Double_t *)ptr));
+               JsonWriteBasic(*((Double_t *)ppp));
                break;
             case kDouble32_t:
-               JsonWriteBasic(*((Double_t *)ptr));
+               JsonWriteBasic(*((Double_t *)ppp));
                break;
             case kchar:
-               JsonWriteBasic(*((char *)ptr));
+               JsonWriteBasic(*((char *)ppp));
                break;
             case kUChar_t:
-               JsonWriteBasic(*((UChar_t *)ptr));
+               JsonWriteBasic(*((UChar_t *)ppp));
                break;
             case kUShort_t:
-               JsonWriteBasic(*((UShort_t *)ptr));
+               JsonWriteBasic(*((UShort_t *)ppp));
                break;
             case kUInt_t:
-               JsonWriteBasic(*((UInt_t *)ptr));
+               JsonWriteBasic(*((UInt_t *)ppp));
                break;
             case kULong_t:
-               JsonWriteBasic(*((ULong_t *)ptr));
+               JsonWriteBasic(*((ULong_t *)ppp));
                break;
             case kBits:
-               JsonWriteBasic(*((UInt_t *)ptr));
+               JsonWriteBasic(*((UInt_t *)ppp));
                break;
             case kLong64_t:
-               JsonWriteBasic(*((Long64_t *)ptr));
+               JsonWriteBasic(*((Long64_t *)ppp));
                break;
             case kULong64_t:
-               JsonWriteBasic(*((ULong64_t *)ptr));
+               JsonWriteBasic(*((ULong64_t *)ppp));
                break;
             case kBool_t:
-               JsonWriteBasic(*((Bool_t *)ptr));
+               JsonWriteBasic(*((Bool_t *)ppp));
                break;
             case kFloat16_t:
-               JsonWriteBasic(*((Float_t *)ptr));
+               JsonWriteBasic(*((Float_t *)ppp));
                break;
             case kOther_t:
-            case kNoType_t:
             case kVoid_t:
                break;
          }
-      } else if ((member->GetArrayDim() == 1) || (arraylen>=0)) {
-         Int_t n = (arraylen>=0) ? arraylen : member->GetMaxIndex(0);
-         switch (tid) {
-            case kChar_t:
-               WriteFastArray((Char_t *)ptr, n);
-               break;
-            case kShort_t:
-               WriteFastArray((Short_t *)ptr, n);
-               break;
-            case kInt_t:
-               WriteFastArray((Int_t *)ptr, n);
-               break;
-            case kLong_t:
-               WriteFastArray((Long_t *)ptr, n);
-               break;
-            case kFloat_t:
-               WriteFastArray((Float_t *)ptr, n);
-               break;
-            case kCounter:
-               WriteFastArray((Int_t *)ptr, n);
-               break;
-            case kCharStar:
-               WriteFastArray((Char_t *)ptr, n);
-               break;
-            case kDouble_t:
-               WriteFastArray((Double_t *)ptr, n);
-               break;
-            case kDouble32_t:
-               WriteFastArray((Double_t *)ptr, n);
-               break;
-            case kchar:
-               WriteFastArray((char *)ptr, n);
-               break;
-            case kUChar_t:
-               WriteFastArray((UChar_t *)ptr, n);
-               break;
-            case kUShort_t:
-               WriteFastArray((UShort_t *)ptr, n);
-               break;
-            case kUInt_t:
-               WriteFastArray((UInt_t *)ptr, n);
-               break;
-            case kULong_t:
-               WriteFastArray((ULong_t *)ptr, n);
-               break;
-            case kBits:
-               WriteFastArray((UInt_t *)ptr, n);
-               break;
-            case kLong64_t:
-               WriteFastArray((Long64_t *)ptr, n);
-               break;
-            case kULong64_t:
-               WriteFastArray((ULong64_t *)ptr, n);
-               break;
-            case kBool_t:
-               WriteFastArray((Bool_t *)ptr, n);
-               break;
-            case kFloat16_t:
-               WriteFastArray((Float_t *)ptr, n);
-               break;
-            case kOther_t:
-            case kNoType_t:
-            case kVoid_t:
-               break;
-         }
-      } else {
-         // here generic code to write n-dimensional array
 
-         TArrayI indexes(member->GetArrayDim() - 1);
-         indexes.Reset(0);
+         fOutBuffer.Append(fValue);
+         if (indx.IsArray()) fOutBuffer.Append(indx.NextSeparator());
 
-         Int_t cnt = 0;
-         while (cnt >= 0) {
-            if (indexes[cnt] >= member->GetMaxIndex(cnt)) {
-               fOutBuffer.Append(" ]");
-               indexes[cnt--] = 0;
-               if (cnt >= 0) indexes[cnt]++;
-               continue;
-            }
+         ppp += shift*member->GetUnitSize();
 
-            if (indexes[cnt] > 0)
-               fOutBuffer.Append(fArraySepar);
-            else
-               fOutBuffer.Append("[ ");
+      } while (!indx.IsDone());
 
-            if (++cnt == indexes.GetSize()) {
-               Int_t shift = 0;
-               for (Int_t k = 0; k < indexes.GetSize(); k++) {
-                  shift = shift * member->GetMaxIndex(k) + indexes[k];
-               }
+      fValue = fOutBuffer;
 
-               Int_t len = member->GetMaxIndex(indexes.GetSize());
-               shift *= len;
-
-               fValue.Clear();
-
-               switch (tid) {
-                  case kChar_t:
-                     WriteFastArray((Char_t *)ptr + shift, len);
-                     break;
-                  case kShort_t:
-                     WriteFastArray((Short_t *)ptr + shift, len);
-                     break;
-                  case kInt_t:
-                     WriteFastArray((Int_t *)ptr + shift, len);
-                     break;
-                  case kLong_t:
-                     WriteFastArray((Long_t *)ptr + shift, len);
-                     break;
-                  case kFloat_t:
-                     WriteFastArray((Float_t *)ptr + shift, len);
-                     break;
-                  case kCounter:
-                     WriteFastArray((Int_t *)ptr + shift, len);
-                     break;
-                  case kCharStar:
-                     WriteFastArray((Char_t *)ptr + shift, len);
-                     break;
-                  case kDouble_t:
-                     WriteFastArray((Double_t *)ptr + shift, len);
-                     break;
-                  case kDouble32_t:
-                     WriteFastArray((Double_t *)ptr + shift, len);
-                     break;
-                  case kchar:
-                     WriteFastArray((char *)ptr + shift, len);
-                     break;
-                  case kUChar_t:
-                     WriteFastArray((UChar_t *)ptr + shift, len);
-                     break;
-                  case kUShort_t:
-                     WriteFastArray((UShort_t *)ptr + shift, len);
-                     break;
-                  case kUInt_t:
-                     WriteFastArray((UInt_t *)ptr + shift, len);
-                     break;
-                  case kULong_t:
-                     WriteFastArray((ULong_t *)ptr + shift, len);
-                     break;
-                  case kBits:
-                     WriteFastArray((UInt_t *)ptr + shift, len);
-                     break;
-                  case kLong64_t:
-                     WriteFastArray((Long64_t *)ptr + shift, len);
-                     break;
-                  case kULong64_t:
-                     WriteFastArray((ULong64_t *)ptr + shift, len);
-                     break;
-                  case kBool_t:
-                     WriteFastArray((Bool_t *)ptr + shift, len);
-                     break;
-                  case kFloat16_t:
-                     WriteFastArray((Float_t *)ptr + shift, len);
-                     break;
-                  case kOther_t:
-                  case kNoType_t:
-                  case kVoid_t:
-                     fValue = "null";
-                     break;
-               }
-
-               fOutBuffer.Append(fValue);
-               indexes[--cnt]++;
-            }
-         }
-
-         fValue = fOutBuffer;
-      }
    } else if (memberClass == TString::Class()) {
       TString *str = (TString *) ptr;
-      fValue.Append("\"");
-      if (str != 0) fValue.Append(*str);
-      fValue.Append("\"");
+      JsonWriteConstChar(str ? str->Data() : 0);
    } else if ((member->IsSTLContainer() == ROOT::kSTLvector) ||
               (member->IsSTLContainer() == ROOT::kSTLlist) ||
               (member->IsSTLContainer() == ROOT::kSTLforwardlist)) {
@@ -616,7 +632,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
    if (fValue.Length()) return fValue;
 
-   if ((memberClass == 0) || (member->GetArrayDim() > 0)) return "\"not supported\"";
+   if ((memberClass == 0) || (member->GetArrayDim() > 0) || (arraylen > 0)) return "<not supported>";
 
    return TBufferJSON::ConvertToJSON(ptr, memberClass);
 }
@@ -730,6 +746,9 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
          case TClassEdit::kList   :
             elem_name = "fList";
             break;
+         case TClassEdit::kForwardlist :
+            elem_name = "fForwardlist";
+            break;
          case TClassEdit::kDeque  :
             elem_name = "fDeque";
             break;
@@ -744,6 +763,18 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
             break;
          case TClassEdit::kMultiSet :
             elem_name = "fMultiSet";
+            break;
+         case TClassEdit::kUnorderedSet :
+            elem_name = "fUnorderedSet";
+            break;
+         case TClassEdit::kUnorderedMultiSet :
+            elem_name = "fUnorderedMultiSet";
+            break;
+         case TClassEdit::kUnorderedMap :
+            elem_name = "fUnorderedMap";
+            break;
+         case TClassEdit::kUnorderedMultiMap :
+            elem_name = "fUnorderedMultiMap";
             break;
          case TClassEdit::kBitSet :
             elem_name = "fBitSet";
@@ -925,7 +956,8 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          Int_t size = TString(stack->fValues.At(0)->GetName()).Atoi();
 
          if ((size * 2 == stack->fValues.GetLast()) &&
-               ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap))) {
+               ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+                (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
             // special handling for std::map. Create entries like { 'first' : key, 'second' : value }
             for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
                fValue.Append(separ);
@@ -1012,42 +1044,57 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
    AppendOutput("\",", "\"arr\"");
    AppendOutput(fSemicolon.Data());
 
-   // collection treated as JS Array and its reference kept in the objects map
-   AppendOutput("[");   // fJsonrCnt++; // account array of objects
+   // collection treated as JS Array
+   AppendOutput("[");
 
    bool islist = col->InheritsFrom(TList::Class());
+   TMap* map = 0;
+   if (col->InheritsFrom(TMap::Class())) map = dynamic_cast<TMap*> (col);
+
    TString sopt;
-   sopt.Capacity(500);
-   sopt = "[";
+   if (islist) { sopt.Capacity(500); sopt = "["; }
 
    TIter iter(col);
    TObject *obj;
    Bool_t first = kTRUE;
    while ((obj = iter()) != 0) {
-      if (!first) {
-         AppendOutput(fArraySepar.Data());
-         sopt.Append(fArraySepar.Data());
+      if (!first) AppendOutput(fArraySepar.Data());
+
+      if (map) {
+         fJsonrCnt++; // account map pair as JSON object
+         AppendOutput("{", "\"_typename\"");
+         AppendOutput(fSemicolon.Data());
+         AppendOutput("\"TPair\"");
+         AppendOutput(fArraySepar.Data(), "\"first\"");
+         AppendOutput(fSemicolon.Data());
       }
+
+      WriteObjectAny(obj, TObject::Class());
+
+      if (map) {
+         AppendOutput(fArraySepar.Data(), "\"second\"");
+         AppendOutput(fSemicolon.Data());
+         WriteObjectAny(map->GetValue(obj), TObject::Class());
+         AppendOutput("", "}");
+      }
+
       if (islist) {
+         if (!first) sopt.Append(fArraySepar.Data());
          sopt.Append("\"");
          sopt.Append(iter.GetOption());
          sopt.Append("\"");
       }
 
-      WriteObjectAny(obj, TObject::Class());
-
       first = kFALSE;
    }
-
-   sopt.Append("]");
 
    AppendOutput("]");
 
    if (islist) {
+      sopt.Append("]");
       AppendOutput(",", "\"opt\"");
       AppendOutput(fSemicolon.Data());
       AppendOutput(sopt.Data());
-      /* fJsonrCnt++; */ // account array of options
    }
    fValue.Clear();
 }
@@ -1218,6 +1265,12 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
    stack->fIsElemOwner = (number < 0);
 
    JsonStartElement(elem, base_class);
+
+   if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) &&
+       (elem->GetArrayDim() > 0)) {
+          stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
+          AppendOutput(stack->fIndx->GetBegin());
+       }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1897,9 +1950,9 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
 // macro also treat situation, when instead of one single array chain
 // of several elements should be produced
 #define TBufferJSON_ReadFastArray(vname)                 \
-   {                                                        \
-      if (n <= 0) return;                                   \
-      if (!vname) return;                                   \
+   {                                                     \
+      if (n <= 0) return;                                \
+      if (!vname) return;                                \
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2230,7 +2283,7 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
 // write array without size attribute
 // macro also treat situation, when instead of one single array
 // chain of several elements should be produced
-#define TBufferJSON_WriteFastArray(vname)                                    \
+#define TBufferJSON_WriteFastArray(vname,method)                             \
    {                                                                         \
       TJSONPushValue();                                                      \
       if (n <= 0) { /*fJsonrCnt++;*/ fValue.Append("[]"); return; }          \
@@ -2250,7 +2303,7 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
                JsonWriteBasic(vname[index]);                                 \
                index++;                                                      \
             } else {                                                         \
-               TJSONWriteArrayContent((vname+index), elem->GetArrayLength());\
+               method((vname+index), elem->GetArrayLength());                \
                index+=elem->GetArrayLength();                                \
             }                                                                \
             PerformPostProcessing(Stack(0), elem);                           \
@@ -2259,7 +2312,7 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
          if ((elem!=0) && (elem->GetArrayDim()>1) && (elem->GetArrayLength()==n)) { \
             TArrayI indexes(elem->GetArrayDim() - 1);                           \
             indexes.Reset(0);                                                   \
-            Int_t cnt = 0;                                                      \
+            Int_t cnt = 0, shift = 0, len = elem->GetMaxIndex(indexes.GetSize()); \
             while (cnt >= 0) {                                                  \
                if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {                    \
                   fValue.Append("]");                                           \
@@ -2269,17 +2322,13 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
                }                                                                \
                fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());     \
                if (++cnt == indexes.GetSize()) {                                \
-                  Int_t shift = 0;                                              \
-                  for (Int_t k = 0; k < indexes.GetSize(); k++)                 \
-                     shift = shift * elem->GetMaxIndex(k) + indexes[k];         \
-                  Int_t len = elem->GetMaxIndex(indexes.GetSize());             \
-                  shift *= len;                                                 \
-                  TJSONWriteArrayContent((vname+shift), len);                   \
+                  method((vname+shift), len);                                   \
                   indexes[--cnt]++;                                             \
+                  shift+=len;                                                   \
                }                                                                \
             }                                                                   \
          } else {                                                               \
-            TJSONWriteArrayContent(vname, n);                                   \
+            method(vname, n);                                                   \
          }                                                                      \
    }
 
@@ -2288,26 +2337,15 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
 
 void TBufferJSON::WriteFastArray(const Bool_t *b, Int_t n)
 {
-   TBufferJSON_WriteFastArray(b);
+   TBufferJSON_WriteFastArray(b,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Char_t to buffer
-/// If array does not include any special characters,
-/// it will be reproduced as CharStar node with string as attribute
 
 void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
 {
-   Bool_t asarray = fExpectedChain;
-   if (Stack(0)->fElem != 0)
-      if (Stack(0)->fElem->GetType() == TStreamerInfo::kOffsetP + TStreamerInfo::kChar) asarray = kTRUE;
-
-   if (asarray) {
-      TBufferJSON_WriteFastArray(c);
-   } else {
-      TJSONPushValue();
-      JsonWriteConstChar(c, n);
-   }
+   TBufferJSON_WriteFastArray(c,JsonWriteConstChar);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2315,7 +2353,7 @@ void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
 
 void TBufferJSON::WriteFastArrayString(const Char_t *c, Int_t n)
 {
-   WriteFastArray(c, n);
+   TBufferJSON_WriteFastArray(c,JsonWriteConstChar);
 }
 
 
@@ -2324,7 +2362,7 @@ void TBufferJSON::WriteFastArrayString(const Char_t *c, Int_t n)
 
 void TBufferJSON::WriteFastArray(const UChar_t *c, Int_t n)
 {
-   TBufferJSON_WriteFastArray(c);
+   TBufferJSON_WriteFastArray(c,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2332,7 +2370,7 @@ void TBufferJSON::WriteFastArray(const UChar_t *c, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Short_t *h, Int_t n)
 {
-   TBufferJSON_WriteFastArray(h);
+   TBufferJSON_WriteFastArray(h,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2340,7 +2378,7 @@ void TBufferJSON::WriteFastArray(const Short_t *h, Int_t n)
 
 void TBufferJSON::WriteFastArray(const UShort_t *h, Int_t n)
 {
-   TBufferJSON_WriteFastArray(h);
+   TBufferJSON_WriteFastArray(h,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2348,7 +2386,7 @@ void TBufferJSON::WriteFastArray(const UShort_t *h, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Int_t *i, Int_t n)
 {
-   TBufferJSON_WriteFastArray(i);
+   TBufferJSON_WriteFastArray(i,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2356,7 +2394,7 @@ void TBufferJSON::WriteFastArray(const Int_t *i, Int_t n)
 
 void TBufferJSON::WriteFastArray(const UInt_t *i, Int_t n)
 {
-   TBufferJSON_WriteFastArray(i);
+   TBufferJSON_WriteFastArray(i,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2364,7 +2402,7 @@ void TBufferJSON::WriteFastArray(const UInt_t *i, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Long_t *l, Int_t n)
 {
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2372,7 +2410,7 @@ void TBufferJSON::WriteFastArray(const Long_t *l, Int_t n)
 
 void TBufferJSON::WriteFastArray(const ULong_t *l, Int_t n)
 {
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2380,7 +2418,7 @@ void TBufferJSON::WriteFastArray(const ULong_t *l, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Long64_t *l, Int_t n)
 {
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2388,7 +2426,7 @@ void TBufferJSON::WriteFastArray(const Long64_t *l, Int_t n)
 
 void TBufferJSON::WriteFastArray(const ULong64_t *l, Int_t n)
 {
-   TBufferJSON_WriteFastArray(l);
+   TBufferJSON_WriteFastArray(l,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2396,7 +2434,7 @@ void TBufferJSON::WriteFastArray(const ULong64_t *l, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Float_t *f, Int_t n)
 {
-   TBufferJSON_WriteFastArray(f);
+   TBufferJSON_WriteFastArray(f,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2404,7 +2442,7 @@ void TBufferJSON::WriteFastArray(const Float_t *f, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Double_t *d, Int_t n)
 {
-   TBufferJSON_WriteFastArray(d);
+   TBufferJSON_WriteFastArray(d,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2413,7 +2451,7 @@ void TBufferJSON::WriteFastArray(const Double_t *d, Int_t n)
 void TBufferJSON::WriteFastArrayFloat16(const Float_t *f, Int_t n,
                                         TStreamerElement * /*ele*/)
 {
-   TBufferJSON_WriteFastArray(f);
+   TBufferJSON_WriteFastArray(f,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2422,7 +2460,7 @@ void TBufferJSON::WriteFastArrayFloat16(const Float_t *f, Int_t n,
 void TBufferJSON::WriteFastArrayDouble32(const Double_t *d, Int_t n,
       TStreamerElement * /*ele*/)
 {
-   TBufferJSON_WriteFastArray(d);
+   TBufferJSON_WriteFastArray(d,TJSONWriteArrayContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2445,22 +2483,30 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    if (!n) n = 1;
    int size = cl->Size();
 
-   if (n > 1) {
+   TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
+
+   if (indexes.IsArray()) {
       JsonDisablePostprocessing();
-      AppendOutput("[");
-      /* fJsonrCnt++; */ // count array, but do not add to references
+      AppendOutput(indexes.GetBegin());
    }
 
    for (Int_t j = 0; j < n; j++, obj += size) {
-      if (j > 0) AppendOutput(fArraySepar.Data());
+
+      if (j>0) AppendOutput(indexes.NextSeparator());
 
       JsonWriteObject(obj, cl, kFALSE);
+
+      if (indexes.IsArray() && (fValue.Length() > 0)) {
+         AppendOutput(fValue.Data());
+         fValue.Clear();
+      }
    }
 
-   if (n > 1) {
-      AppendOutput("]");
-   }
+   if (indexes.IsArray())
+      AppendOutput(indexes.GetEnd());
 
+   if (Stack(0)->fIndx)
+      AppendOutput(Stack(0)->fIndx->NextSeparator());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2479,36 +2525,40 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
       return 0;
    }
 
+   if (n<=0) return 0;
+
    Int_t res = 0;
 
-   if (n > 1) {
+   TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
+
+   if (indexes.IsArray()) {
       JsonDisablePostprocessing();
-      AppendOutput("[");
-      /* fJsonrCnt++; */ // count array, but do not add to references
+      AppendOutput(indexes.GetBegin());
    }
 
-   if (!isPreAlloc) {
+   for (Int_t j = 0; j < n; j++) {
 
-      for (Int_t j = 0; j < n; j++) {
-         if (j > 0) AppendOutput(fArraySepar.Data());
+      if (j>0) AppendOutput(indexes.NextSeparator());
+
+      if (!isPreAlloc) {
          res |= WriteObjectAny(start[j], cl);
-      }
-
-   } else {
-      //case //-> in comment
-
-      for (Int_t j = 0; j < n; j++) {
-         if (j > 0) AppendOutput(fArraySepar.Data());
-
+      } else {
          if (!start[j]) start[j] = ((TClass *)cl)->New();
          // ((TClass*)cl)->Streamer(start[j],*this);
          JsonWriteObject(start[j], cl, kFALSE);
       }
+
+      if (indexes.IsArray() && (fValue.Length() > 0)) {
+         AppendOutput(fValue.Data());
+         fValue.Clear();
+      }
    }
 
-   if (n > 1) {
-      AppendOutput("]");
-   }
+   if (indexes.IsArray())
+      AppendOutput(indexes.GetEnd());
+
+   if (Stack(0)->fIndx)
+      AppendOutput(Stack(0)->fIndx->NextSeparator());
 
    return res;
 }
@@ -2658,7 +2708,14 @@ void TBufferJSON::ReadTString(TString & /*s*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads a std::string
 
-void TBufferJSON::ReadStdString(std::string &/*s*/)
+void TBufferJSON::ReadStdString(std::string */*s*/)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reads a char* string
+
+void TBufferJSON::ReadCharStar(char* &/*s*/)
 {
 }
 
@@ -2815,11 +2872,23 @@ void TBufferJSON::WriteTString(const TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes a std::string
 
-void TBufferJSON::WriteStdString(const std::string &s)
+void TBufferJSON::WriteStdString(const std::string *s)
 {
    TJSONPushValue();
 
-   JsonWriteConstChar(s.c_str(), s.length());
+   if (s) JsonWriteConstChar(s->c_str(), s->length());
+   else JsonWriteConstChar("",0);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Writes a char*
+
+void TBufferJSON::WriteCharStar(char *s)
+{
+   TJSONPushValue();
+
+   JsonWriteConstChar(s);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3045,13 +3114,19 @@ void TBufferJSON::JsonWriteBasic(ULong64_t value)
 
 void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
 {
-   fValue.Append("\"");
+   if (value==0) {
 
-   if (value!=0) {
+      fValue.Append("\"\"");
+
+   } else {
+
+      fValue.Append("\"");
+
       if (len<0) len = strlen(value);
 
       for (Int_t n=0;n<len;n++) {
          char c = value[n];
+         if (c==0) break;
          switch(c) {
             case '\n':
                fValue.Append("\\n");
@@ -3084,9 +3159,9 @@ void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
                   fValue.Append(TString::Format("\\u%04x", (unsigned) c));
          }
       }
-   }
 
-   fValue.Append("\"");
+      fValue.Append("\"");
+   }
 }
 
 

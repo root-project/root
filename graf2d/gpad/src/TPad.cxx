@@ -133,7 +133,6 @@ TPad::TPad()
    fPrimitives = 0;
    fExecs      = 0;
    fCanvas     = 0;
-   fMother     = 0;
    fPadPaint   = 0;
    fPixmapID   = -1;
    fGLDevice   = -1;
@@ -178,6 +177,9 @@ TPad::TPad()
 
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
+
+   fNumPaletteColor = 0;
+   fNextPaletteColor = 0;
 
    fLogx  = 0;
    fLogy  = 0;
@@ -271,6 +273,9 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
 
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
+
+   fNumPaletteColor = 0;
+   fNextPaletteColor = 0;
 
    fViewer3D = 0;
 
@@ -581,6 +586,7 @@ void TPad::Clear(Option_t *option)
 
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
+   fNumPaletteColor = 0;
    ResetBit(TGraph::kClipFrame);
 }
 
@@ -2883,6 +2889,36 @@ void TPad::ls(Option_t *option) const
    if (!fPrimitives) return;
    fPrimitives->ls(option);
    TROOT::DecreaseDirLevel();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment (i==1) or set (i>1) the number of autocolor in the pad.
+
+Int_t TPad::IncrementPaletteColor(Int_t i, TString opt)
+{
+   if (opt.Index("pfc")>=0 || opt.Index("plc")>=0 || opt.Index("pmc")>=0) {
+       if (i==1) fNumPaletteColor++;
+       else      fNumPaletteColor = i;
+       return fNumPaletteColor;
+   } else {
+      return 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the next autocolor in the pad.
+
+Int_t TPad::NextPaletteColor()
+{
+   Int_t i = 0;
+   Int_t ncolors = gStyle->GetNumberOfColors();
+   if (fNumPaletteColor>1) {
+      i = fNextPaletteColor*(ncolors/(fNumPaletteColor-1));
+      if (i>=ncolors) i = ncolors-1;
+   }
+   fNextPaletteColor++;
+   if (fNextPaletteColor > fNumPaletteColor-1) fNextPaletteColor = 0;
+   return gStyle->GetColorPalette(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

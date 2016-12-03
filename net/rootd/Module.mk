@@ -53,4 +53,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(ROOTDO):  CXXFLAGS += $(AUTHFLAGS)
+$(ROOTDO):  CXXFLAGS += $(AUTHFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res

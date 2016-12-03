@@ -177,8 +177,8 @@ TAttFill::TAttFill()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// AttFill normal constructor.
-/// color Fill Color
-/// style Fill Style
+///   - color Fill Color
+///   - style Fill Style
 
 TAttFill::TAttFill(Color_t color, Style_t style)
 {

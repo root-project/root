@@ -1247,6 +1247,18 @@
    fun:_XSend
    fun:XQueryExtension
 }
+{
+   ROOT:X11 - XftFontOpenXlfd
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:*/libfontconfig.*
+   obj:*/libfontconfig.*
+   fun:FcFontRenderPrepare
+   fun:FcFontMatch
+   fun:XftFontMatch
+   fun:XftFontOpenXlfd
+}
 
 ####### System
 

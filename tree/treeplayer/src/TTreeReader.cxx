@@ -199,6 +199,7 @@ TTreeReader::TTreeReader(TTree* tree):
    fTree(tree),
    fDirectory(0),
    fEntryStatus(kEntryNotLoaded),
+   fMostRecentTreeNumber(-1),
    fDirector(0),
    fLastEntry(-1),
    fProxiesSet(kFALSE)
@@ -219,6 +220,7 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
    fTree(0),
    fDirectory(dir),
    fEntryStatus(kEntryNotLoaded),
+   fMostRecentTreeNumber(-1),
    fDirector(0),
    fLastEntry(-1),
    fProxiesSet(kFALSE)
@@ -249,7 +251,12 @@ void TTreeReader::Initialize()
    if (!fTree) {
       MakeZombie();
       fEntryStatus = kEntryNoTree;
+      fMostRecentTreeNumber = -1;
    } else {
+      ResetBit(kZombie);
+      if (fTree->InheritsFrom(TChain::Class())) {
+         SetBit(kBitIsChain);
+      }
       fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
    }
 }
@@ -273,12 +280,21 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the index of the current entry being read
+/// Restart a Next() loop from the first entry.
+
+void TTreeReader::Restart() {
+   fDirector->SetTree(nullptr);
+   fDirector->SetReadEntry(-1);
+   fProxiesSet = false; // we might get more value readers, meaning new proxies.
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the index of the current entry being read
 
 Long64_t TTreeReader::GetCurrentEntry() const {
-   if (!fDirector) return 0;
+   if (!fDirector) return -1;
    Long64_t currentTreeEntry = fDirector->GetReadEntry();
-   if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
+   if (TestBit(kBitIsChain) && currentTreeEntry >= 0) {
       return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
    }
    return currentTreeEntry;
@@ -292,28 +308,62 @@ Long64_t TTreeReader::GetCurrentEntry() const {
 
 TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
-   if (!fTree) {
+   if (!fTree || !fDirector) {
       fEntryStatus = kEntryNoTree;
       return fEntryStatus;
    }
 
-   TTree* prevTree = fDirector->GetTree();
+   if (fProxiesSet && fDirector && fDirector->GetReadEntry() == -1
+       && fMostRecentTreeNumber != -1) {
+      // Passed the end of the chain, Restart() was not called:
+      // don't try to load entries anymore. Can happen in these cases:
+      // while (tr.Next()) {something()};
+      // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
+      fEntryStatus = kEntryNotFound;
+      return fEntryStatus;
+   }
 
-   Int_t treeNumInChainBeforeLoad = fTree->GetTreeNumber();
+   Int_t treeNumberBeforeLoadTree = fTree->GetTreeNumber();
 
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
    Long64_t loadResult = treeToCallLoadOn->LoadTree(entry);
 
    if (loadResult == -2) {
+      fDirector->SetTree(nullptr);
       fEntryStatus = kEntryNotFound;
       return fEntryStatus;
    }
 
-   if (treeNumInChainBeforeLoad != fTree->GetTreeNumber()) {
-      fDirector->SetTree(fTree->GetTree());
+   if (fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
+      // This can happen if someone switched trees behind us.
+      // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
+      // This means that "local" should be set!
+
+      if (fTree->GetTreeNumber() != treeNumberBeforeLoadTree) {
+         // we have switched trees again, which means that "local" was not set!
+         // There are two entities switching trees which is bad.
+         R__ASSERT(!local && "Logic error - !local but tree number changed?");
+         Warning("SetEntryBase()",
+                 "The current tree in the TChain %s has changed (e.g. by TTree::Process) "
+                 "even though TTreeReader::SetEntry() was called, which switched the tree "
+                 "again. Did you mean to call TTreeReader::SetLocalEntry()?",
+                 fTree->GetName());
+      }
    }
 
-   if (!prevTree || fDirector->GetReadEntry() == -1 || !fProxiesSet) {
+   if (fDirector->GetTree() != fTree->GetTree()
+       || fMostRecentTreeNumber != fTree->GetTreeNumber()) {
+      fDirector->SetTree(fTree->GetTree());
+      if (fProxiesSet) {
+         for (auto value: fValues) {
+            value->NotifyNewTree(fTree->GetTree());
+         }
+      }
+   }
+
+   fMostRecentTreeNumber = fTree->GetTreeNumber();
+
+   if (!fProxiesSet) {
       // Tell readers we now have a tree
       for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
               i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
@@ -327,6 +377,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       // If at least one proxy was there and no error occurred, we assume the proxies to be set.
       fProxiesSet = !fValues.empty();
    }
+
    if (fLastEntry >= 0 && entry >= fLastEntry) {
       fEntryStatus = kEntryLast;
       return fEntryStatus;
@@ -356,15 +407,24 @@ void TTreeReader::SetTree(TTree* tree)
    else {
       fDirector->SetTree(fTree);
       fDirector->SetReadEntry(-1);
+      // Distinguish from end-of-chain case:
+      fMostRecentTreeNumber = -1;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a value reader for this tree.
 
-void TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
+Bool_t TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
 {
+   if (fProxiesSet) {
+      Error("RegisterValueReader",
+            "Error registering reader for %s: TTreeReaderValue/Array objects must be created before the call to Next() / SetEntry() / SetLocalEntry(), or after TTreeReader::Restart()!",
+            reader->GetBranchName());
+      return false;
+   }
    fValues.push_back(reader);
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

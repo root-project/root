@@ -1,8 +1,11 @@
-Add_Subdirectory(hist)             # special CMakeLists.txt
-Add_Subdirectory(histpainter)      # special CMakeLists.txt
-Add_Subdirectory(spectrum)
-Add_Subdirectory(spectrumpainter)  # special CMakeLists.txt
-If(CMAKE_Fortran_COMPILER)
-  Add_Subdirectory(hbook)
-EndIf(CMAKE_Fortran_COMPILER)
+add_subdirectory(hist)             # special CMakeLists.txt
+add_subdirectory(histpainter)      # special CMakeLists.txt
+add_subdirectory(spectrum)
+add_subdirectory(spectrumpainter)  # special CMakeLists.txt
+if(xml)
+  add_subdirectory(unfold)
+endif()
+if(CMAKE_Fortran_COMPILER)
+  add_subdirectory(hbook)
+endif()
 

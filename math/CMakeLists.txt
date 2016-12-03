@@ -26,10 +26,6 @@ if(fftw3)
   add_subdirectory(fftw)
 endif()
 
-if(vdt)
-  add_subdirectory(vdt)
-endif()
-
 if(r)
   add_subdirectory(rtools)
 endif()

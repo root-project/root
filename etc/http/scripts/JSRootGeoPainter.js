@@ -37,13 +37,15 @@
    // ======= Geometry painter================================================
 
 
-   JSROOT.TGeoPainter = function( obj ) {
+   JSROOT.TGeoPainter = function( obj, is_manager ) {
       if (obj && (obj._typename.indexOf('TGeoVolume') === 0))
-         obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, _geoh: obj._geoh };
+         obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, _geoh: obj._geoh, _proxy: true };
 
       JSROOT.TObjectPainter.call(this, obj);
 
       this.no_default_title = true; // do not set title to main DIV
+
+      this.is_geo_manager = is_manager; // only in manager name of top volume used in the item name
 
       this.Cleanup(true);
    }
@@ -58,6 +60,7 @@
          title: 'Save as PNG',
          icon: JSROOT.ToolbarIcons.camera,
          click: function() {
+            painter.Render3D(0);
             var dataUrl = painter._renderer.domElement.toDataURL("image/png");
             dataUrl.replace("image/png", "image/octet-stream");
             var link = document.createElement('a');
@@ -107,39 +110,37 @@
 
 
    JSROOT.TGeoPainter.prototype.ModifyVisisbility = function(name, sign) {
-      var node = this.GetObject();
-
-      var kind = JSROOT.GEO.NodeKind(node);
-      var prop = JSROOT.GEO.getNodeProperties(kind, node);
+      if (JSROOT.GEO.NodeKind(this.GetObject()) !== 0) return;
 
       if (name == "")
-         return JSROOT.GEO.SetBit(prop.volume, JSROOT.GEO.BITS.kVisThis, (sign === "+"));
+         return JSROOT.GEO.SetBit(this.GetObject().fVolume, JSROOT.GEO.BITS.kVisThis, (sign === "+"));
 
-      var regexp;
+      var regexp, exact = false;
 
-      if (name.indexOf("*") < 0)
-         regexp = new RegExp(name);
-      else
+      //arg.node.fVolume
+      if (name.indexOf("*") < 0) {
+         regexp = new RegExp("^"+name+"$");
+         exact = true;
+      } else {
          regexp = new RegExp("^" + name.split("*").join(".*") + "$");
+         exact = false;
+      }
 
-      if (prop.chlds!==null)
-         for (var n=0;n<prop.chlds.length;++n) {
-            var chld = JSROOT.GEO.getNodeProperties(kind, prop.chlds[n]);
-
-            if (regexp.test(chld.name) && chld.volume) {
-               JSROOT.GEO.SetBit(chld.volume, JSROOT.GEO.BITS.kVisThis, (sign === "+"));
-               JSROOT.GEO.SetBit(chld.volume, JSROOT.GEO.BITS.kVisDaughters, (sign === "+"));
-            }
-         }
+      this.FindNodeWithVolume(regexp, function(arg) {
+         JSROOT.GEO.InvisibleAll.call(arg.node.fVolume, (sign !== "+"));
+         return exact ? arg : null; // continue search if not exact expression provided
+      });
    }
 
    JSROOT.TGeoPainter.prototype.decodeOptions = function(opt) {
       var res = { _grid: false, _bound: false, _debug: false,
                   _full: false, _axis:false, _count:false, wireframe: false,
-                   scale: new THREE.Vector3(1,1,1), more:1,
+                   scale: new THREE.Vector3(1,1,1),
+                   more: 1, maxlimit: 100000, maxnodeslimit: 3000,
                    use_worker: false, update_browser: true, show_controls: false,
                    highlight: false, select_in_view: false,
-                   clipx: false, clipy: false, clipz: false };
+                   clipx: false, clipy: false, clipz: false, ssao: false,
+                   script_name: "", transparancy: 1, autoRotate: false };
 
       var _opt = JSROOT.GetUrlOption('_grid');
       if (_opt !== null && _opt == "true") res._grid = true;
@@ -147,6 +148,15 @@
       if (_opt !== null && _opt == "true") { res._debug = true; res._grid = true; }
       if (_opt !== null && _opt == "bound") { res._debug = true; res._grid = true; res._bound = true; }
       if (_opt !== null && _opt == "full") { res._debug = true; res._grid = true; res._full = true; res._bound = true; }
+
+      var macro = opt.indexOf("macro:");
+      if (macro>=0) {
+         var separ = opt.indexOf(";", macro+6);
+         if (separ<0) separ = opt.length;
+         res.script_name = opt.substr(macro+6,separ-macro-6);
+         opt = opt.substr(0, macro) + opt.substr(separ+1);
+         console.log('script', res.script_name, 'rest', opt);
+      }
 
       while (true) {
          var pp = opt.indexOf("+"), pm = opt.indexOf("-");
@@ -167,9 +177,21 @@
       opt = opt.toLowerCase();
 
       function check(name) {
-         if (opt.indexOf(name) < 0) return false;
-         opt = opt.replace(name," ");
+         var indx = opt.indexOf(name);
+         if (indx<0) return false;
+         opt = opt.substr(0, indx) + opt.substr(indx+name.length);
          return true;
+      }
+
+      function checkval(name, dflt) {
+         var indx = opt.indexOf(name);
+         if (indx<0) return dflt;
+         opt = opt.substr(0, indx) + opt.substr(indx+name.length);
+         var indx2 = indx;
+         while ((indx2<opt.length) && (opt.charAt(indx2).match(/[0-9]/))) indx2++;
+         if (indx2>indx) dflt = parseInt(opt.substr(indx, indx2-indx));
+         opt = opt.substr(0,indx) + opt.substr(indx2);
+         return dflt;
       }
 
       if (check("more3")) res.more = 3;
@@ -186,17 +208,23 @@
       if (check("clipz")) res.clipz = true;
       if (check("clip")) res.clipx = res.clipy = res.clipz = true;
 
+      if (check("dflt_colors")) this.SetRootDefaultColors();
+      if (check("ssao")) res.ssao = true;
+
       if (check("noworker")) res.use_worker = -1;
       if (check("worker")) res.use_worker = 1;
 
       if (check("highlight")) res.highlight = true;
 
       if (check("wire")) res.wireframe = true;
+      if (check("rotate")) res.autoRotate = true;
 
       if (check("invy")) res.scale.y = -1;
       if (check("invz")) res.scale.z = -1;
 
       if (check("count")) res._count = true;
+
+      res.transparancy = checkval('transp', 100)/100;
 
       if (check("axis") || check("a")) { res._axis = true; res._yup = false; }
 
@@ -212,12 +240,9 @@
    }
 
    JSROOT.TGeoPainter.prototype.ActiavteInBrowser = function(names, force) {
-      if (this.GetItemName() === null) return;
+      // if (this.GetItemName() === null) return;
 
       if (typeof names == 'string') names = [ names ];
-      if (this.GetItemName().length > 0)
-         for (var n=0;n<names.length;++n)
-            names[n] = this.GetItemName() + ((names[n].length > 0) ? ('/' + names[n]) : "");
 
       if (JSROOT.hpainter) {
          // show browser if it not visible
@@ -313,8 +338,8 @@
          this.focusCamera();
          this.Render3D();
       });
-      menu.addchk(this._controls.autoRotate, "Autorotate", function() {
-         this._controls.autoRotate = !this._controls.autoRotate;
+      menu.addchk(this.options.autoRotate, "Autorotate", function() {
+         this.options.autoRotate = !this.options.autoRotate;
          this.autorotate(2.5);
       });
       menu.addchk(this.options.select_in_view, "Select in view", function() {
@@ -323,11 +348,25 @@
       });
    }
 
+   JSROOT.TGeoPainter.prototype.changeGlobalTransparancy = function(value, skip_render) {
+      this._toplevel.traverse( function (node) {
+         if (node instanceof THREE.Mesh) {
+            if (node.material.alwaysTransparent !== undefined) {
+               if (!node.material.alwaysTransparent) {
+                  node.material.transparent = value !== 1.0;
+               }
+               node.material.opacity = Math.min(value * value, node.material.inherentOpacity);
+            }
+
+         }
+      });
+      if (!skip_render) this.Render3D(0);
+   }
+
    JSROOT.TGeoPainter.prototype.showControlOptions = function(on) {
 
       if (this._datgui) {
          if (on) return;
-
          this._datgui.destroy();
          delete this._datgui;
          return;
@@ -417,20 +456,8 @@
          }
       });
 
-      appearance.add(this, 'globalTransparency', 0.0, 1.0).listen().onChange( function (value) {
-            painter._toplevel.traverse( function (node) {
-               if (node instanceof THREE.Mesh) {
-                  if (node.material.alwaysTransparent !== undefined) {
-                     if (!node.material.alwaysTransparent) {
-                        node.material.transparent = value !== 1.0;
-                     }
-                     node.material.opacity = Math.min(value * value, node.material.inherentOpacity);
-                  }
-
-               }
-            });
-            painter.Render3D(0);
-         });
+      appearance.add(this.options, 'transparancy', 0.0, 1.0)
+                     .listen().onChange(this.changeGlobalTransparancy.bind(this));
 
       appearance.add(this.options, 'wireframe').name('Wireframe').onChange( function (value) {
          painter.changeWireFrame(painter._scene, painter.options.wireframe);
@@ -481,25 +508,58 @@
       JSROOT.Painter.createMenu(function(menu) {
          menu.painter = painter; // set as this in callbacks
 
-         if (!intersects || (intersects.length==0)) {
+         var numitems = 0, numnodes = 0, cnt = 0;
+         if (intersects)
+            for (var n=0;n<intersects.length;++n) {
+               if (intersects[n].object.stack) numnodes++;
+               if (intersects[n].object.geo_name) numitems++;
+            }
+
+         if (numnodes + numitems === 0) {
             painter.FillContextMenu(menu);
          } else {
-            var many = (intersects.length > 1);
+            var many = (numnodes + numitems) > 1;
 
-            if (many) menu.add("header: Nodes");
+            if (many) menu.add("header:" + ((numitems > 0) ? "Items" : "Nodes"));
 
             for (var n=0;n<intersects.length;++n) {
-               var obj = intersects[n].object;
-               var name = painter._clones.ResolveStack(obj.stack).name;
+               var obj = intersects[n].object,
+                   name, itemname, hdr;
 
-               var hdr = "header";
-               if (name.indexOf("Nodes/") === 0) hdr = name.substr(6); else
-               if (name.length > 0) hdr = name; else
-               if (painter.GetItemName()) hdr = painter.GetItemName();
+               if (obj.geo_name) {
+                  itemname = obj.geo_name;
+                  name = itemname.substr(itemname.lastIndexOf("/")+1);
+                  if (!name) name = itemname;
+                  hdr = name;
+               } else
+               if (obj.stack) {
+                  name = painter._clones.ResolveStack(obj.stack).name;
+                  itemname = painter.GetStackFullName(obj.stack);
+                  hdr = painter.GetItemName();
+                  if (name.indexOf("Nodes/") === 0) hdr = name.substr(6); else
+                  if (name.length > 0) hdr = name; else
+                  if (!hdr) hdr = "header";
 
-               menu.add((many ? "sub:" : "header:") + hdr, name, function(arg) { this.ActiavteInBrowser([arg], true); });
+               } else
+                  continue;
 
-               menu.add("Browse", name, function(arg) { this.ActiavteInBrowser([arg], true); });
+
+               menu.add((many ? "sub:" : "header:") + hdr, itemname, function(arg) { this.ActiavteInBrowser([arg], true); });
+
+               menu.add("Browse", itemname, function(arg) { this.ActiavteInBrowser([arg], true); });
+
+               if (obj.geo_name) {
+                  menu.add("Hide", n, function(indx) {
+                     var mesh = intersects[indx].object;
+                     mesh.visible = false; // just disable mesh
+                     if (mesh.geo_object) mesh.geo_object._hidden_via_menu = true; // and hide object for further redraw
+                     painter.Render3D();
+                  });
+
+                  if (many) menu.add("endsub:");
+
+                  continue;
+               }
 
                var wireframe = painter.accessObjectWireFrame(obj);
 
@@ -510,7 +570,7 @@
                      this.Render3D();
                   });
 
-               if (n>0)
+               if (++cnt>1)
                   menu.add("Manifest", n, function(indx) {
 
                      if (this._last_manifest)
@@ -541,9 +601,13 @@
                menu.add("Hide", n, function(indx) {
                   var resolve = painter._clones.ResolveStack(intersects[indx].object.stack);
 
-                  if (resolve.obj && resolve.obj.fVolume) {
+                  if (resolve.obj && (resolve.node.kind === 0) && resolve.obj.fVolume) {
                      JSROOT.GEO.SetBit(resolve.obj.fVolume, JSROOT.GEO.BITS.kVisThis, false);
                      JSROOT.GEO.updateBrowserIcons(resolve.obj.fVolume, JSROOT.hpainter);
+                  } else
+                  if (resolve.obj && (resolve.node.kind === 1)) {
+                     resolve.obj.fRnrSelf = false;
+                     JSROOT.GEO.updateBrowserIcons(resolve.obj, JSROOT.hpainter);
                   }
                   // intersects[arg].object.visible = false;
                   // this.Render3D();
@@ -561,12 +625,14 @@
    JSROOT.TGeoPainter.prototype.FilterIntersects = function(intersects) {
 
       // remove all elements without stack - indicator that this is geometry object
-      for (var n=intersects.length-1; n>=0;--n) {
+      for (var n=intersects.length-1; n>=0; --n) {
 
-         var unique = intersects[n].object.stack !== undefined;
+         var obj = intersects[n].object;
+
+         var unique = (obj.stack !== undefined) || (obj.geo_name !== undefined);
 
          for (var k=0;(k<n) && unique;++k)
-            if (intersects[k].object === intersects[n].object) unique = false;
+            if (intersects[k].object === obj) unique = false;
 
          if (!unique) intersects.splice(n,1);
       }
@@ -614,11 +680,17 @@
          this.startDrawGeometry();
    }
 
+   JSROOT.TGeoPainter.prototype.GetStackFullName = function(stack) {
+      var mainitemname = this.GetItemName();
+      if (!stack || !this._clones) return mainitemname;
+      var sub = this._clones.ResolveStack(stack).name;
+      if (mainitemname) sub = mainitemname + (sub ? ("/" + sub) : "");
+      return sub;
+   }
+
    JSROOT.TGeoPainter.prototype.addOrbitControls = function() {
 
       if (this._controls) return;
-
-      this.select_main().property('flex_block_drag', true);
 
       var painter = this;
 
@@ -634,16 +706,26 @@
 
             if (painter._selected.mesh !== null) {
                painter._selected.mesh.material.color = painter._selected.originalColor;
+               if (painter._selected.mesh.hightlightLineWidth)
+                  painter._selected.mesh.material.linewidth = painter._selected.mesh.hightlightLineWidth/3;
+               if (painter._selected.mesh.highlightMarkerSize)
+                  painter._selected.mesh.material.size = painter._selected.mesh.highlightMarkerSize/3;
             }
 
             if (intersects.length > 0) {
                painter._selected.mesh = intersects[0].object;
                painter._selected.originalColor = painter._selected.mesh.material.color;
                painter._selected.mesh.material.color = new THREE.Color( 0xffaa33 );
+               if (painter._selected.mesh.hightlightLineWidth)
+                  painter._selected.mesh.material.linewidth = painter._selected.mesh.hightlightLineWidth;
+               if (painter._selected.mesh.highlightMarkerSize)
+                  painter._selected.mesh.material.size = painter._selected.mesh.highlightMarkerSize;
                painter.Render3D(0);
 
                if (intersects[0].object.stack)
-                  tooltip = painter._clones.ResolveStack(intersects[0].object.stack).name;
+                  tooltip = painter.GetStackFullName(intersects[0].object.stack);
+               else if (intersects[0].object.geo_name)
+                  tooltip = intersects[0].object.geo_name;
             }
          }
 
@@ -661,10 +743,11 @@
             } else {
                for (var n=0;n<intersects.length;++n) {
                   var obj = intersects[n].object;
-                  if (obj.stack)
-                  names.push(painter._clones.ResolveStack(obj.stack).name);
+                  if (obj.geo_name) names.push(obj.geo_name); else
+                  if (obj.stack) names.push(painter.GetStackFullName(obj.stack));
                }
             }
+
             painter.ActiavteInBrowser(names);
          }
 
@@ -840,7 +923,11 @@
          }
 
          this._current_face_limit = this.options.maxlimit;
-         if (matrix) this._current_face_limit*=1.25;
+         this._current_nodes_limit = this.options.maxnodeslimit;
+         if (matrix) {
+            this._current_face_limit*=1.25;
+            this._current_nodes_limit*=1.25;
+         }
 
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
@@ -852,7 +939,7 @@
 
          if (!need_worker || !this._worker_ready) {
             //var tm1 = new Date().getTime();
-            var res = this._clones.CollectVisibles(this._current_face_limit, frustum);
+            var res = this._clones.CollectVisibles(this._current_face_limit, frustum, this._current_nodes_limit);
             this._new_draw_nodes = res.lst;
             this._draw_all_nodes = res.complete;
             //var tm2 = new Date().getTime();
@@ -863,6 +950,7 @@
 
          var job = {
                collect: this._current_face_limit,   // indicator for the command
+               collect_nodes: this._current_nodes_limit,
                visible: this._clones.GetVisibleFlags(),
                matrix: matrix ? matrix.elements : null
          };
@@ -1157,8 +1245,6 @@
 
       // Default Settings
 
-      this.globalTransparency = 1.0;
-
       this._defaultAdvanced = { aoClamp: 0.70,
                                 lumInfluence: 0.4,
                               //  shininess: 100,
@@ -1169,7 +1255,7 @@
       // Smooth Lighting Shader (Screen Space Ambient Occulsion)
       // http://threejs.org/examples/webgl_postprocessing_ssao.html
 
-      this._enableSSAO = false;
+      this._enableSSAO = this.options.ssao;
 
       if (webgl) {
          var renderPass = new THREE.RenderPass( this._scene, this._camera );
@@ -1274,7 +1360,12 @@
 
    JSROOT.TGeoPainter.prototype.adjustCameraPosition = function(first_time) {
 
+      var extras = this.getExtrasContainer('get');
+      if (extras) this._toplevel.remove(extras);
+
       var box = new THREE.Box3().setFromObject(this._toplevel);
+
+      if (extras) this._toplevel.add(extras);
 
       var sizex = box.max.x - box.min.x,
           sizey = box.max.y - box.min.y,
@@ -1328,19 +1419,13 @@
 
    JSROOT.TGeoPainter.prototype.focusOnItem = function(itemname) {
 
-      if (!itemname || (itemname.indexOf('Nodes/')!==0) || !this._clones) return;
+      if (!itemname || !this._clones) return;
 
-      var stack = this._clones.FindStackByName(itemname.substr(6));
+      var stack = this._clones.FindStackByName(itemname);
 
       if (!stack) return;
 
       var info = this._clones.ResolveStack(stack, true);
-
-      //console.log( info );
-
-      //console.log('transfrom matrix', info.matrix.elements);
-
-      //console.log('shape dimensions', info.node.fDX, info.node.fDY, info.node.fDZ);
 
       this.focusCamera( info, false );
    }
@@ -1389,7 +1474,7 @@
       var posIncrement = position.sub(this._camera.position).divideScalar(frames);
       // Amount to change "lookAt" so it will end pointed at target
       var targetIncrement = target.sub(oldTarget).divideScalar(frames);
-      console.log( targetIncrement );
+      // console.log( targetIncrement );
 
       // Automatic Clipping
 
@@ -1413,7 +1498,6 @@
 
       var painter = this;
       this._animating = true;
-      this._controls.autoRotate = false;
 
       // Interpolate //
 
@@ -1448,16 +1532,19 @@
 
    JSROOT.TGeoPainter.prototype.autorotate = function(speed) {
 
-      var rotSpeed = speed === undefined ? 2.0 : speed;
-      var painter = this;
-      var last = new Date();
+      var rotSpeed = (speed === undefined) ? 2.0 : speed,
+          painter = this, last = new Date();
+
       function animate() {
          var current = new Date();
 
-         if ( painter._controls.autoRotate ) requestAnimationFrame( animate );
+         if ( painter.options.autoRotate ) requestAnimationFrame( animate );
 
-         painter._controls.autoRotateSpeed = rotSpeed * ( current.getTime() - last.getTime() ) / 16.6666;
-         painter._controls.update();
+         if (painter._controls) {
+            painter._controls.autoRotate = painter.options.autoRotate;
+            painter._controls.autoRotateSpeed = rotSpeed * ( current.getTime() - last.getTime() ) / 16.6666;
+            painter._controls.update();
+         }
          last = new Date();
          painter.Render3D(0);
       }
@@ -1533,21 +1620,411 @@
    }
 
 
-   JSROOT.TGeoPainter.prototype.DrawGeometry = function(opt) {
-      if (typeof opt !== 'string') opt = "";
+   JSROOT.TGeoPainter.prototype.PerformDrop = function(obj, itemname, hitem) {
 
-      var size = this.size_for_3d();
+      if (this.drawExtras(obj, itemname, true)) {
+         if (hitem) hitem._painter = this; // set for the browser item back pointer
+         this.Render3D(100);
+      }
 
-      this._webgl = JSROOT.Painter.TestWebGL();
+      return null;
+   }
 
-      this.options = this.decodeOptions(opt);
+   JSROOT.TGeoPainter.prototype.addExtra = function(obj, itemname) {
 
-      if (!('_yup' in this.options))
-         this.options._yup = this.svg_canvas().empty();
+      // register extra objects like tracks or hits
+      // Check if object already exists to prevent duplication
 
+      if (this._extraObjects === undefined)
+         this._extraObjects = JSROOT.Create("TList");
+
+      if (this._extraObjects.arr.indexOf(obj)>=0) return false;
+
+      this._extraObjects.Add(obj, itemname);
+
+      delete obj._hidden_via_menu; // remove previous hidden property
+
+      return true;
+   }
+
+   JSROOT.TGeoPainter.prototype.ExtraObjectVisible = function(itemname, toggle) {
+      if (!this._extraObjects) return;
+
+      var indx = this._extraObjects.opt.indexOf(itemname);
+
+      if (indx < 0) return;
+
+      var obj = this._extraObjects.arr[indx];
+
+      var res = obj._hidden_via_menu ? false : true;
+
+      if (toggle) {
+         obj._hidden_via_menu = res; res = !res;
+
+         var mesh = null;
+         // either found painted object or just draw once again
+         this._toplevel.traverse(function(node) { if (node.geo_object === obj) mesh = node; });
+
+         if (mesh) mesh.visible = res; else
+         if (res) this.drawExtras(obj);
+
+         if (mesh || res) this.Render3D();
+      }
+
+      return res;
+   }
+
+
+   JSROOT.TGeoPainter.prototype.drawExtras = function(obj, itemname, add_objects) {
+      if (!obj || obj._typename===undefined) return false;
+
+      // if object was hidden via menu, do not redraw it with next draw call
+      if (!add_objects && obj._hidden_via_menu) return false;
+
+      var isany = false;
+
+      if (obj._typename === "TList") {
+         if (!obj.arr) return false;
+         for (var n=0;n<obj.arr.length;++n) {
+            var sobj = obj.arr[n];
+            var sname = itemname === undefined ? obj.opt[n] : (itemname + "/" + sobj.fName);
+            if (this.drawExtras(sobj, sname, add_objects)) isany = true;
+         }
+      } else
+      if (obj._typename === 'TEveTrack') {
+         if (add_objects && !this.addExtra(obj, itemname)) return false;
+         isany = this.drawTrack(obj, itemname);
+      } else
+      if (obj._typename === 'TEvePointSet') {
+         if (add_objects && !this.addExtra(obj, itemname)) return false;
+         isany = this.drawHit(obj, itemname);
+      }
+
+      return isany;
+   }
+
+   JSROOT.TGeoPainter.prototype.getExtrasContainer = function(action) {
+      if (!this._toplevel) return null;
+
+      var extras = null;
+      for (var n=0;n<this._toplevel.children.length;++n) {
+         var chld = this._toplevel.children[n];
+         if (chld._extras) { extras = chld; break; }
+      }
+
+      if (action==="delete") {
+         if (extras) this._toplevel.remove(extras);
+         JSROOT.Painter.DisposeThreejsObject(extras);
+         return null;
+      }
+
+      if ((action!=="get") && !extras) {
+         extras = new THREE.Object3D();
+         extras._extras = true;
+         this._toplevel.add(extras);
+      }
+
+      return extras;
+   }
+
+
+   JSROOT.TGeoPainter.prototype.drawTrack = function(track, itemname) {
+      if (!track) return false;
+
+      var track_width = track.fLineWidth;
+
+      var track_color = JSROOT.Painter.root_colors[track.fLineColor];
+
+      if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
+
+      var buf = new Float32Array((track.fN-1)*6), pos = 0;
+
+      for (var k=0;k<track.fN-1;++k) {
+         buf[pos]   = track.fP[k*3];
+         buf[pos+1] = track.fP[k*3+1];
+         buf[pos+2] = track.fP[k*3+2];
+         buf[pos+3] = track.fP[k*3+3];
+         buf[pos+4] = track.fP[k*3+4];
+         buf[pos+5] = track.fP[k*3+5];
+         pos+=6;
+      }
+
+      var geom = new THREE.BufferGeometry();
+      geom.addAttribute( 'position', new THREE.BufferAttribute( buf, 3 ) );
+      var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
+      var line = new THREE.LineSegments(geom, lineMaterial);
+
+      line.geo_name = itemname;
+      line.geo_object = track;
+      if (!JSROOT.browser.isWin) line.hightlightLineWidth = track_width*3;
+
+      this.getExtrasContainer().add(line);
+
+      return true;
+   }
+
+   JSROOT.TGeoPainter.prototype.drawHit = function(hit, itemname) {
+      if (!hit) return false;
+
+      var hit_size = 25.0 * hit.fMarkerSize;
+      var hit_color = JSROOT.Painter.root_colors[hit.fMarkerColor];
+
+      var use_points = this._webgl,
+      size = hit.fN-1, step = 1, scale = hit_size*0.3,
+      indicies = JSROOT.Painter.Box_Indexes,
+      normals = JSROOT.Painter.Box_Normals,
+      vertices = JSROOT.Painter.Box_Vertices,
+      lll = 0, pos, norm;
+
+      if (use_points) {
+         pos = new Float32Array(size*3);
+         norm = null;
+      } else {
+         // TODO: provide support of POINTS directly in the CanvasRenderer
+
+         if (size > 1000) { step = Math.floor(size/500); if (step<2) step = 2; }
+
+         pos = new Float32Array(indicies.length*3*Math.floor(size/step));
+         norm = new Float32Array(indicies.length*3*Math.floor(size/step));
+      }
+
+      for (var i=0;i<size;i+=step) {
+
+         var x = hit.fP[i*3],
+         y = hit.fP[i*3+1],
+         z = hit.fP[i*3+2];
+
+         if (use_points) {
+            pos[lll]   = x;
+            pos[lll+1] = y;
+            pos[lll+2] = z;
+            lll+=3;
+            continue;
+         }
+
+         for (var k=0,nn=-3;k<indicies.length;++k) {
+            var vert = vertices[indicies[k]];
+            pos[lll]   = x + (vert.x-0.5)*scale;
+            pos[lll+1] = y + (vert.y-0.5)*scale;
+            pos[lll+2] = z + (vert.z-0.5)*scale;
+
+            if (k%6===0) nn+=3;
+            norm[lll] = normals[nn];
+            norm[lll+1] = normals[nn+1];
+            norm[lll+2] = normals[nn+2];
+
+            lll+=3;
+         }
+      }
+
+      var geom = new THREE.BufferGeometry(), mesh;
+      geom.addAttribute( 'position', new THREE.BufferAttribute( pos, 3 ) );
+      if (norm) geom.addAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
+
+      if (use_points) {
+         var material = new THREE.PointsMaterial( { size: hit_size, color: hit_color } );
+         mesh = new THREE.Points(geom, material);
+         mesh.highlightMarkerSize = hit_size*3;
+      } else {
+         // var material = new THREE.MeshPhongMaterial({ color : fcolor, specular : 0x4f4f4f});
+         var material = new THREE.MeshBasicMaterial( { color: hit_color, shading: THREE.SmoothShading  } );
+         mesh = new THREE.Mesh(geom, material);
+
+      }
+      mesh.geo_name = itemname;
+      mesh.geo_object = hit;
+
+      this.getExtrasContainer().add(mesh);
+
+      return true;
+   }
+
+   JSROOT.TGeoPainter.prototype.FindNodeWithVolume = function(name, action, prnt, itemname, volumes) {
+
+      var first_level = false, res = null;
+
+      if (!prnt) {
+         prnt = this.GetObject();
+         if (!prnt && (JSROOT.GEO.NodeKind(prnt)!==0)) return null;
+         itemname = this.is_geo_manager ? prnt.fName : "";
+         first_level = true;
+         volumes = [];
+      } else {
+         if (itemname.length>0) itemname += "/";
+         itemname += prnt.fName;
+      }
+
+      if (!prnt.fVolume || prnt.fVolume._searched) return null;
+
+      if (name.test(prnt.fVolume.fName)) {
+         res = action({ node: prnt, item: itemname });
+         if (res) return res;
+      }
+
+      prnt.fVolume._searched = true;
+      volumes.push(prnt.fVolume);
+
+      if (prnt.fVolume.fNodes)
+         for (var n=0;n<prnt.fVolume.fNodes.arr.length;++n) {
+            res = this.FindNodeWithVolume(name, action, prnt.fVolume.fNodes.arr[n], itemname, volumes);
+            if (res) break;
+         }
+
+      if (first_level)
+         for (var n=0, len=volumes.length; n<len; ++n)
+            delete volumes[n]._searched;
+
+      return res;
+   }
+
+   JSROOT.TGeoPainter.prototype.SetRootDefaultColors = function() {
+      // set default colors like TGeoManager::DefaultColors() does
+
+      var dflt = { kWhite:0,   kBlack:1,   kGray:920,
+                     kRed:632, kGreen:416, kBlue:600, kYellow:400, kMagenta:616, kCyan:432,
+                     kOrange:800, kSpring:820, kTeal:840, kAzure:860, kViolet:880, kPink:900 };
+
+      var nmax = 110, col = [];
+      for (var i=0;i<nmax;i++) col.push(dflt.kGray);
+
+      //here we should create a new TColor with the same rgb as in the default
+      //ROOT colors used below
+      col[ 3] = dflt.kYellow-10;
+      col[ 4] = col[ 5] = dflt.kGreen-10;
+      col[ 6] = col[ 7] = dflt.kBlue-7;
+      col[ 8] = col[ 9] = dflt.kMagenta-3;
+      col[10] = col[11] = dflt.kRed-10;
+      col[12] = dflt.kGray+1;
+      col[13] = dflt.kBlue-10;
+      col[14] = dflt.kOrange+7;
+      col[16] = dflt.kYellow+1;
+      col[20] = dflt.kYellow-10;
+      col[24] = col[25] = col[26] = dflt.kBlue-8;
+      col[29] = dflt.kOrange+9;
+      col[79] = dflt.kOrange-2;
+
+      var name = { test:function() { return true; }} // select all volumes
+
+      this.FindNodeWithVolume(name, function(arg) {
+         var vol = arg.node.fVolume;
+         var med = vol.fMedium;
+         if (!med) return null;
+         var mat = med.fMaterial;
+         var matZ = Math.round(mat.fZ);
+         vol.fLineColor = col[matZ];
+         if (mat.fDensity<0.1) mat.fFillStyle = 3000+60; // vol.SetTransparency(60)
+      });
+   }
+
+
+   JSROOT.TGeoPainter.prototype.checkScript = function(script_name, call_back) {
+
+      var painter = this, draw_obj = this.GetObject(), name_prefix = "";
+
+      if (this.is_geo_manager) name_prefix = draw_obj.fName;
+
+      if (!script_name || (script_name.length<3) || (JSROOT.GEO.NodeKind(draw_obj)!==0))
+         return JSROOT.CallBack(call_back, draw_obj, name_prefix);
+
+      var mgr = {
+            GetVolume: function (name) {
+               var regexp = new RegExp("^"+name+"$");
+               var currnode = painter.FindNodeWithVolume(regexp, function(arg) { return arg; } );
+
+               if (!currnode) console.log('Did not found '+name + ' volume');
+
+               // return proxy object with several methods, typically used in ROOT geom scripts
+               return {
+                   found: currnode,
+                   fVolume: currnode ? currnode.node.fVolume : null,
+                   InvisibleAll: function(flag) {
+                      JSROOT.GEO.InvisibleAll.call(this.fVolume, flag);
+                   },
+                   Draw: function() {
+                      if (!this.found || !this.fVolume) return;
+                      draw_obj = this.found.node;
+                      name_prefix = this.found.item;
+                      console.log('Select volume for drawing', this.fVolume.fName, name_prefix);
+                   },
+                   SetTransparency: function(lvl) {
+                     if (this.fVolume && this.fVolume.fMedium && this.fVolume.fMedium.fMaterial)
+                        this.fVolume.fMedium.fMaterial.fFillStyle = 3000+lvl;
+                   },
+                   SetLineColor: function(col) {
+                      if (this.fVolume) this.fVolume.fLineColor = col;
+                   }
+                };
+            },
+
+            DefaultColors: function() {
+               painter.SetRootDefaultColors();
+            },
+
+            SetMaxVisNodes: function(limit) {
+               console.log('Automatic visible depth for ' + limit + ' nodes');
+               if (limit>0) painter.options.maxnodeslimit = limit;
+            }
+          };
+
+      JSROOT.progress('Loading macro ' + script_name);
+
+      var xhr = JSROOT.NewHttpRequest(script_name, "text", function(res) {
+         if (!res || (res.length==0))
+            return JSROOT.CallBack(call_back, draw_obj, name_prefix);
+
+         var lines = res.split('\n');
+
+         ProcessNextLine(0);
+
+         function ProcessNextLine(indx) {
+
+            var first_tm = new Date().getTime();
+            while (indx < lines.length) {
+               var line = lines[indx++].trim();
+
+               if (line.indexOf('//')==0) continue;
+
+               if (line.indexOf('gGeoManager')<0) continue;
+               line = line.replace('->GetVolume','.GetVolume');
+               line = line.replace('->InvisibleAll','.InvisibleAll');
+               line = line.replace('->SetMaxVisNodes','.SetMaxVisNodes');
+               line = line.replace('->DefaultColors','.DefaultColors');
+               line = line.replace('->Draw','.Draw');
+               line = line.replace('->SetTransparency','.SetTransparency');
+               line = line.replace('->SetLineColor','.SetLineColor');
+               if (line.indexOf('->')>=0) continue;
+
+               // console.log(line);
+
+               try {
+                  var func = new Function('gGeoManager',line);
+                  func(mgr);
+               } catch(err) {
+                  console.error('Problem by processing ' + line);
+               }
+
+               var now = new Date().getTime();
+               if (now - first_tm > 300) {
+                  JSROOT.progress('exec ' + line);
+                  return setTimeout(ProcessNextLine.bind(this,indx),1);
+               }
+            }
+
+            JSROOT.CallBack(call_back, draw_obj, name_prefix);
+         }
+
+      });
+
+      xhr.send(null);
+   }
+
+   JSROOT.TGeoPainter.prototype.prepareObjectDraw = function(draw_obj, name_prefix) {
       var tm1 = new Date().getTime();
 
-      this._clones = new JSROOT.GEO.ClonedNodes(this.GetObject());
+      this._clones = new JSROOT.GEO.ClonedNodes(draw_obj);
+
+      this._clones.name_prefix = name_prefix;
+
       var uniquevis = this._clones.MarkVisisble(true);
       if (uniquevis <= 0)
          uniquevis = this._clones.MarkVisisble(false);
@@ -1569,13 +2046,34 @@
       // activate worker
       if (this.options.use_worker > 0) this.startWorker();
 
+      var size = this.size_for_3d();
+
       this.createScene(this._webgl, size.width, size.height, window.devicePixelRatio);
 
       this.add_3d_canvas(size, this._renderer.domElement);
 
+      this.set_as_main_painter();
+
+      // set DIVID when first child exists - we use it for painter
+
       this.CreateToolbar();
 
       this.startDrawGeometry(true);
+   }
+
+   JSROOT.TGeoPainter.prototype.DrawGeometry = function(opt, divid) {
+      if (typeof opt !== 'string') opt = "";
+
+      this._webgl = JSROOT.Painter.TestWebGL();
+
+      this.options = this.decodeOptions(opt);
+
+      if (!('_yup' in this.options))
+         this.options._yup = this.svg_canvas().empty();
+
+      // this.options.script_name = 'http://jsroot.gsi.de/files/geom/geomAlice.C'
+
+      this.checkScript(this.options.script_name, this.prepareObjectDraw.bind(this));
 
       return this;
    }
@@ -1710,7 +2208,7 @@
       };
 
       // send initialization message with clones
-      this._worker.postMessage( { init: true, tm0: new Date().getTime(), clones: this._clones.nodes, sortmap: this._clones.sortmap  } );
+      this._worker.postMessage( { init: true, browser: JSROOT.browser, tm0: new Date().getTime(), clones: this._clones.nodes, sortmap: this._clones.sortmap  } );
    }
 
    JSROOT.TGeoPainter.prototype.canSubmitToWorker = function(force) {
@@ -1808,7 +2306,11 @@
             this.enableZ = this.options.clipz;
             this.updateClipping(true); // only set clip panels, do not render
          }
+
       }
+
+      if (this.options.transparancy!==1)
+         this.changeGlobalTransparancy(this.options.transparancy, true);
 
       this.completeScene();
 
@@ -1818,6 +2320,10 @@
       }
 
       this._scene.overrideMaterial = null;
+
+      // if extra object where append, redraw them at the end
+      this.getExtrasContainer("delete"); // delete old container
+      this.drawExtras(this._extraObjects);
 
       this.Render3D(0, true);
 
@@ -1829,7 +2335,17 @@
 
       this.showControlOptions(this.options.show_controls);
 
-      if (call_ready) this.DrawingReady();
+      if (call_ready) {
+
+         // after first draw check if highlight can be enabled
+         if (this.options.highlight === false)
+            this.options.highlight = (this.first_render_tm < 1000);
+
+         // if rotation was enabled, do it
+         if (this.options.autoRotate) this.autorotate(2.5);
+
+         this.DrawingReady();
+      }
 
       if (this._draw_nodes_again)
          this.startDrawGeometry(); // relaunch drawing
@@ -1839,7 +2355,6 @@
 
       if (!first_time) {
          this.helpText();
-
 
          JSROOT.Painter.DisposeThreejsObject(this._scene);
 
@@ -1950,7 +2465,7 @@
       JSROOT.GEO.GradPerSegm = JSROOT.gStyle.GeoGradPerSegm;
       JSROOT.GEO.CompressComp = JSROOT.gStyle.GeoCompressComp;
 
-      var shape = null;
+      var shape = null, is_manager = false;
 
       if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
          shape = obj; obj = null;
@@ -1963,7 +2478,9 @@
       } else
       if (obj._typename === 'TGeoManager') {
          obj = obj.fMasterVolume;
+         JSROOT.GEO.SetBit(obj, JSROOT.GEO.BITS.kVisThis, false);
          shape = obj.fShape;
+         is_manager = true;
       } else
       if ('fVolume' in obj) {
          if (obj.fVolume) shape = obj.fVolume.fShape;
@@ -1981,9 +2498,9 @@
                    { fTrans: null, fShape: shape, fRGBA: [ 0, 1, 0, 1], fElements: null, fRnrSelf: true });
 
       if (obj) {
-         JSROOT.extend(this, new JSROOT.TGeoPainter(obj));
+         JSROOT.extend(this, new JSROOT.TGeoPainter(obj,is_manager));
          this.SetDivId(divid, 5);
-         return this.DrawGeometry(opt);
+         return this.DrawGeometry(opt, divid);
       }
 
       return this.DrawingReady();
@@ -2069,14 +2586,17 @@
       return vol;
    }
 
-   JSROOT.GEO.provideVisStyle = function(volume) {
-      var vis = !JSROOT.GEO.TestBit(volume, JSROOT.GEO.BITS.kVisNone) &&
-                JSROOT.GEO.TestBit(volume, JSROOT.GEO.BITS.kVisThis);
+   JSROOT.GEO.provideVisStyle = function(obj) {
+      if (obj._typename === 'TEveGeoShapeExtract')
+         return obj.fRnrSelf ? " geovis_this" : "";
 
-      var chld = JSROOT.GEO.TestBit(volume, JSROOT.GEO.BITS.kVisDaughters) ||
-                 JSROOT.GEO.TestBit(volume, JSROOT.GEO.BITS.kVisOneLevel);
+      var vis = !JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisNone) &&
+                JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisThis);
 
-      if (chld && (!volume.fNodes || (volume.fNodes.arr.length === 0))) chld = false;
+      var chld = JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisDaughters) ||
+                 JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisOneLevel);
+
+      if (chld && (!obj.fNodes || (obj.fNodes.arr.length === 0))) chld = false;
 
       if (vis && chld) return " geovis_all";
       if (vis) return " geovis_this";
@@ -2092,6 +2612,7 @@
       JSROOT.CallBack(callback, item, item._geoobj);
    }
 
+
    JSROOT.GEO.createItem = function(node, obj, name) {
       var sub = {
          _kind: "ROOT." + obj._typename,
@@ -2102,7 +2623,7 @@
          _get: JSROOT.GEO.getBrowserItem
       };
 
-      var volume, shape, subnodes;
+      var volume, shape, subnodes, iseve = false;
 
       if (obj._typename == "TGeoMaterial") sub._icon = "img_geomaterial"; else
       if (obj._typename == "TGeoMedium") sub._icon = "img_geomedium"; else
@@ -2116,6 +2637,7 @@
          volume = obj;
       } else
       if (obj._typename == "TEveGeoShapeExtract") {
+         iseve = true;
          shape = obj.fShape;
          subnodes = obj.fElements ? obj.fElements.arr : null;
       } else
@@ -2158,10 +2680,11 @@
 
          if (volume)
             sub._icon += JSROOT.GEO.provideVisStyle(volume);
+         else if (iseve)
+            sub._icon += JSROOT.GEO.provideVisStyle(obj);
 
          sub._menu = JSROOT.GEO.provideMenu;
          sub._icon_click  = JSROOT.GEO.browserIconClick;
-
       }
 
       if (!node._childs) node._childs = [];
@@ -2176,7 +2699,7 @@
 
       var item = {
           _name: name,
-          _kind: "Folder",
+          _kind: "ROOT.TList",
           _title: title,
           _more: true,
           _geoobj: lst,
@@ -2213,10 +2736,48 @@
 
    JSROOT.GEO.provideMenu = function(menu, item, hpainter) {
 
-      if (!item._volume || !item._geoobj) return false;
+      if (!item._geoobj) return false;
+
+      var obj = item._geoobj, vol = item._volume,
+          iseve = (obj._typename === 'TEveGeoShapeExtract');
+
+      if (!vol && !iseve) return false;
 
       menu.add("separator");
-      var vol = item._volume;
+
+      function ScanEveVisible(obj, arg, skip_this) {
+         if (!arg) arg = { visible: 0, hidden: 0 };
+
+         if (!skip_this) {
+            if (arg.assign!==undefined) obj.fRnrSelf = arg.assign; else
+            if (obj.fRnrSelf) arg.vis++; else arg.hidden++;
+         }
+
+         if (obj.fElements)
+            for (var n=0;n<obj.fElements.arr.length;++n)
+               ScanEveVisible(obj.fElements.arr[n], arg, false);
+
+         return arg;
+      }
+
+      function ToggleEveVisibility(arg) {
+         if (arg === 'self') {
+            obj.fRnrSelf = !obj.fRnrSelf;
+            item._icon = item._icon.split(" ")[0] + JSROOT.GEO.provideVisStyle(obj);
+            hpainter.UpdateTreeNode(item);
+         } else {
+            ScanEveVisible(obj, { assign: (arg === "true") }, true);
+            hpainter.ForEach(function(m) {
+               // update all child items
+               if (m._geoobj && m._icon) {
+                  m._icon = item._icon.split(" ")[0] + JSROOT.GEO.provideVisStyle(m._geoobj);
+                  hpainter.UpdateTreeNode(m);
+               }
+            }, item);
+         }
+
+         JSROOT.GEO.findItemWithPainter(item, 'testGeomChanges');
+      }
 
       function ToggleMenuBit(arg) {
          JSROOT.GEO.ToggleBit(vol, arg);
@@ -2233,27 +2794,36 @@
          JSROOT.GEO.findItemWithPainter(item, 'testGeomChanges');
       }
 
-
       if ((item._geoobj._typename.indexOf("TGeoNode")===0) && JSROOT.GEO.findItemWithPainter(item))
          menu.add("Focus", function() {
 
            var drawitem = JSROOT.GEO.findItemWithPainter(item);
-         //  console.log(drawitem);
+
            if (!drawitem) return;
 
            var fullname = hpainter.itemFullName(item, drawitem);
+
            if (drawitem._painter && typeof drawitem._painter.focusOnItem == 'function')
               drawitem._painter.focusOnItem(fullname);
          });
 
-      menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisNone), "Invisible",
-            JSROOT.GEO.BITS.kVisNone, ToggleMenuBit);
-      menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisThis), "Visible",
-            JSROOT.GEO.BITS.kVisThis, ToggleMenuBit);
-      menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisDaughters), "Daughters",
-            JSROOT.GEO.BITS.kVisDaughters, ToggleMenuBit);
-      menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisOneLevel), "1lvl daughters",
-            JSROOT.GEO.BITS.kVisOneLevel, ToggleMenuBit);
+      if (iseve) {
+         menu.addchk(obj.fRnrSelf, "Visible", "self", ToggleEveVisibility);
+         var res = ScanEveVisible(obj, undefined, true);
+
+         if (res.hidden + res.visible > 0)
+            menu.addchk((res.hidden==0), "Daughters", (res.hidden!=0) ? "true" : "false", ToggleEveVisibility);
+
+      } else {
+         menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisNone), "Invisible",
+               JSROOT.GEO.BITS.kVisNone, ToggleMenuBit);
+         menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisThis), "Visible",
+               JSROOT.GEO.BITS.kVisThis, ToggleMenuBit);
+         menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisDaughters), "Daughters",
+               JSROOT.GEO.BITS.kVisDaughters, ToggleMenuBit);
+         menu.addchk(JSROOT.GEO.TestBit(vol, JSROOT.GEO.BITS.kVisOneLevel), "1lvl daughters",
+               JSROOT.GEO.BITS.kVisOneLevel, ToggleMenuBit);
+      }
 
       return true;
    }
@@ -2270,30 +2840,48 @@
       return null;
    }
 
-   JSROOT.GEO.updateBrowserIcons = function(volume, hpainter) {
-      if (!volume || !hpainter) return;
+   JSROOT.GEO.updateBrowserIcons = function(obj, hpainter) {
+      if (!obj || !hpainter) return;
 
       hpainter.ForEach(function(m) {
          // update all items with that volume
-         if (volume === m._volume) {
-            m._icon = m._icon.split(" ")[0] + JSROOT.GEO.provideVisStyle(volume);
+         if ((obj === m._volume) || (obj === m._geoobj)) {
+            m._icon = m._icon.split(" ")[0] + JSROOT.GEO.provideVisStyle(obj);
             hpainter.UpdateTreeNode(m);
          }
       });
    }
 
    JSROOT.GEO.browserIconClick = function(hitem, hpainter) {
-      if (!hitem._volume) return false;
+      if (hitem._volume) {
+         if (hitem._more && hitem._volume.fNodes && (hitem._volume.fNodes.arr.length>0))
+            JSROOT.GEO.ToggleBit(hitem._volume, JSROOT.GEO.BITS.kVisDaughters);
+         else
+            JSROOT.GEO.ToggleBit(hitem._volume, JSROOT.GEO.BITS.kVisThis);
 
-      if (hitem._more && hitem._volume.fNodes && (hitem._volume.fNodes.arr.length>0))
-         JSROOT.GEO.ToggleBit(hitem._volume, JSROOT.GEO.BITS.kVisDaughters);
-      else
-         JSROOT.GEO.ToggleBit(hitem._volume, JSROOT.GEO.BITS.kVisThis);
+         JSROOT.GEO.updateBrowserIcons(hitem._volume, hpainter);
 
-      JSROOT.GEO.updateBrowserIcons(hitem._volume, hpainter);
+         JSROOT.GEO.findItemWithPainter(hitem, 'testGeomChanges');
+         return false; // no need to update icon - we did it ourself
+      }
 
-      JSROOT.GEO.findItemWithPainter(hitem, 'testGeomChanges');
-      return false; // no need to update icon - we did it ourself
+      if (hitem._geoobj && hitem._geoobj._typename == "TEveGeoShapeExtract") {
+         hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
+
+         JSROOT.GEO.updateBrowserIcons(hitem._geoobj, hpainter);
+         JSROOT.GEO.findItemWithPainter(hitem, 'testGeomChanges');
+         return false; // no need to update icon - we did it ourself
+      }
+
+
+      // first check that geo painter assigned with the item
+      var drawitem = JSROOT.GEO.findItemWithPainter(hitem);
+      if (!drawitem) return false;
+
+      var newstate = drawitem._painter.ExtraObjectVisible(hpainter.itemFullName(hitem), true);
+
+      // return true means browser should update icon for the item
+      return (newstate!==undefined) ? true : false;
    }
 
    JSROOT.GEO.getShapeIcon = function(shape) {
@@ -2323,6 +2911,19 @@
       return "img_geotube";
    }
 
+   JSROOT.GEO.getBrowserIcon = function(hitem, hpainter) {
+      var icon = "";
+      if (hitem._kind == 'ROOT.TEveTrack') icon = 'img_evetrack'; else
+      if (hitem._kind == 'ROOT.TEvePointSet') icon = 'img_evepoints';
+      if (icon.length>0) {
+         var drawitem = JSROOT.GEO.findItemWithPainter(hitem);
+         if (drawitem)
+            if (drawitem._painter.ExtraObjectVisible(hpainter.itemFullName(hitem)))
+               icon += " geovis_this";
+      }
+      return icon;
+   }
+
    JSROOT.GEO.expandObject = function(parent, obj) {
       if (!parent || !obj) return false;
 
@@ -2335,32 +2936,25 @@
 
       if (parent._childs) return true;
 
-      // if (!parent._childs) parent._childs = [];
+      if (ismanager) {
+         JSROOT.GEO.createList(parent, obj.fMaterials, "Materials", "list of materials");
+         JSROOT.GEO.createList(parent, obj.fMedia, "Media", "list of media");
+         JSROOT.GEO.createList(parent, obj.fTracks, "fTracks", "list of tracks");
+
+         JSROOT.GEO.SetBit(obj.fMasterVolume, JSROOT.GEO.BITS.kVisThis, false);
+         JSROOT.GEO.createItem(parent, obj.fMasterVolume);
+         return true;
+      }
+
       var volume, subnodes, shape;
 
       if (iseve) {
-         // volume = obj;
          subnodes = obj.fElements ? obj.fElements.arr : null;
          shape = obj.fShape;
       } else {
-         volume = ismanager ? obj.fMasterVolume : (isnode ? obj.fVolume : obj);
+         volume = (isnode ? obj.fVolume : obj);
          subnodes = volume && volume.fNodes ? volume.fNodes.arr : null;
          shape = volume ? volume.fShape : null;
-      }
-
-      if (ismanager || (!parent._geoobj && subnodes && subnodes.length && !iseve)) {
-         if (ismanager) {
-            JSROOT.GEO.createList(parent, obj.fMaterials, "Materials", "list of materials");
-            JSROOT.GEO.createList(parent, obj.fMedia, "Media", "list of media");
-            JSROOT.GEO.createList(parent, obj.fTracks, "Tracks", "list of tracks");
-         }
-
-         if (volume) {
-            JSROOT.GEO.createItem(parent, volume, "Volumes");
-            JSROOT.GEO.createList(parent, volume.fNodes, "Nodes", "Hierarchy of TGeoNodes");
-         }
-
-         return true;
       }
 
       if (!subnodes && shape && (shape._typename === "TGeoCompositeShape") && shape.fNode) {
@@ -2374,26 +2968,16 @@
 
       if (!subnodes) return false;
 
-      var map = [];
-
-      for (var i=0;i<subnodes.length;++i) {
-         if (isnode || iseve)
-            JSROOT.GEO.createItem(parent, subnodes[i]);
-         else
-         if (isvolume) {
-            var vol = subnodes[i].fVolume;
-            if (map.indexOf(vol) < 0) {
-               map.push(vol); // avoid duplication of similar volume
-               JSROOT.GEO.createItem(parent, vol);
-            }
-         }
-      }
+      for (var i=0;i<subnodes.length;++i)
+         JSROOT.GEO.createItem(parent, subnodes[i]);
 
       return true;
    }
 
    JSROOT.addDrawFunc({ name: "TGeoVolumeAssembly", icon: 'img_geoassembly', func: JSROOT.Painter.drawGeoObject, expand: JSROOT.GEO.expandObject, opt: ";more;all;count" });
    JSROOT.addDrawFunc({ name: "TAxis3D", func: JSROOT.Painter.drawAxis3D });
+   JSROOT.addDrawFunc({ name: "TEvePointSet", icon_get: JSROOT.GEO.getBrowserIcon, icon_click: JSROOT.GEO.browserIconClick });
+   JSROOT.addDrawFunc({ name: "TEveTrack", icon_get: JSROOT.GEO.getBrowserIcon, icon_click: JSROOT.GEO.browserIconClick });
 
    return JSROOT.Painter;
 

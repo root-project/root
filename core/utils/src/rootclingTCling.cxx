@@ -54,11 +54,11 @@ const char *TROOT__GetEtcDir()
 extern "C"
 cling::Interpreter *TCling__GetInterpreter()
 {
-   static bool sInitialized = false;
+   static bool isInitialized = false;
    gROOT; // trigger initialization
-   if (!sInitialized) {
+   if (!isInitialized) {
       gCling->SetClassAutoloading(false);
-      sInitialized = true;
+      isInitialized = true;
    }
    return ((TCling *)gCling)->GetInterpreter();
 }
@@ -139,9 +139,9 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
       std::vector<std::string> out;
       int i;
       TClassEdit::GetSplit(dmTypeName, out, i);
-      std::string_view deleterTypeName(out[2].c_str());
-      if (0 != deleterTypeName.find("default_delete<")) {
-         Error("CloseStreamerInfoROOTFile", "I/O is supported only for unique_ptrs with a default deleter. %s::%s  appears to have a custom one, %s.\n", normName, dm->GetName(), deleterTypeName);
+      // out[2] contains the deleter type.
+      if (0 != out[2].find("default_delete<")) {
+         Error("CloseStreamerInfoROOTFile", "I/O is supported only for unique_ptrs with a default deleter. %s::%s  appears to have a custom one, %s.\n", normName, dm->GetName(), out[2].c_str());
          return true;
       }
    }

@@ -20,6 +20,7 @@ list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/RWrap_libcpp_string_vie
 set(MetaUtils_dict_headers ${headers} PARENT_SCOPE)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
 add_definitions(${CLING_CXXFLAGS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS  -Wno-shadow)

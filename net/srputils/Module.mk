@@ -76,5 +76,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(SRPUTILSO): CXXFLAGS += $(SRPINCDIR:%=-I%)
+$(SRPUTILSO): CXXFLAGS += $(SRPINCDIR:%=-I%) -I$(ROOT_SRCDIR)/net/rpdutils/res
 $(RTCONFO): CFLAGS += $(SRPUTILINCDIR:%=-I%) $(SRPINCDIR:%=-I%)
