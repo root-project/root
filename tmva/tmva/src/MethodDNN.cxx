@@ -541,7 +541,7 @@ void TMVA::MethodDNN::Train()
        ExitFromTraining();
        return;
    } else if (fArchitectureString == "OpenCL") {
-      Log() << kFATAL << "OpenCL backend not yes supported." << Endl;
+      Log() << kFATAL << "OpenCL backend not yet supported." << Endl;
       return;
    } else if (fArchitectureString == "CPU") {
       TrainCpu();
@@ -993,7 +993,7 @@ void TMVA::MethodDNN::TrainCpu()
       std::chrono::time_point<std::chrono::system_clock> start, end;
       start = std::chrono::system_clock::now();
 
-      if (fInteractive) {
+      if (!fInteractive) {
          Log() << std::setw(10) << "Epoch" << " | "
                << std::setw(12) << "Train Err."
                << std::setw(12) << "Test  Err."
