@@ -767,21 +767,16 @@ void TCandle::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// The coordinates in the TParallelCoordVar-class are in Pad-Coordinates, so we need to convert them
 
-void TCandle::ConvertToPadCoords(Double_t minAxis, Double_t maxAxis, Double_t axisMinCoord, Double_t axisMaxCoord, Double_t fMinInit, Double_t fMaxInit)
+void TCandle::ConvertToPadCoords(Double_t minAxis, Double_t maxAxis, Double_t axisMinCoord, Double_t axisMaxCoord, Double_t , Double_t )
 {
    if (!fIsCalculated) Calculate();
-   Double_t a,b,maxinit,mininit;
+   Double_t a,b;
    if (fLogY) {
       a = TMath::Log10(minAxis);
       b = TMath::Log10(maxAxis/minAxis);
-      if(fMinInit > 0) mininit = TMath::Log10(fMinInit);
-      else             mininit = TMath::Log10(axisMinCoord);
-      maxinit = TMath::Log10(fMaxInit);
    } else {
       a = minAxis;
       b = maxAxis-minAxis;
-      mininit = fMinInit;
-      maxinit = fMaxInit;
    }
 
    fMean = axisMinCoord + ((fMean-a)/b)*(axisMaxCoord-axisMinCoord);
