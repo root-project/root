@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook
 /// Example showing how to combine the various candle plot options.
 ///
 /// \macro_image
