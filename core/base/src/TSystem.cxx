@@ -1138,14 +1138,15 @@ again:
       buff[0] = 0;
       strncat(buff, c+1, n);
       std::string hd = GetHomeDirectory(buff);
-      p = hd.c_str();
       e = c+1+n;
-      if (p) {                          // we have smth to copy
+      if (!hd.empty()) {                   // we have smth to copy
+         p = hd.c_str();
          strlcpy(x, p, kBufSize);
          x += strlen(p);
          c = e;
       } else {
-         ++ier;
+         x++[0] = c[0];
+         //++ier;
          ++c;
       }
    }

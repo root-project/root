@@ -1438,7 +1438,9 @@ const char *TUnixSystem::HomeDirectory(const char *userName)
 std::string TUnixSystem::GetHomeDirectory(const char *userName) const
 {
    char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
-   return std::string(UnixHomedirectory(userName, path, mydir));
+   auto res = UnixHomedirectory(userName, path, mydir);
+   if (res) return std::string(res);
+   else return std::string();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
