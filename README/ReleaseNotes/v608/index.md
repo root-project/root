@@ -507,9 +507,8 @@ For more details, like the complete change log, the documentation, and very deta
   packages at locations other than native MacOS installations. Needed when wanting to ignore packages from Fink, Brew or Ports.
 - Added new 'cuda' option to enable looking for CUDA in the system.
 
-## HEAD of the v6-08-00-patches branch
-
-Changes will be part of the future 6.08/02
+## Release 6.08/02
+Released on December 2, 2016
 
 ### Interpreter
 
@@ -531,6 +530,25 @@ which the parameter's definition needs to be autoloaded.
 
 ### Bugs fixed in this release
 
-- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
-- [[https://sft.its.cern.ch/jira/browse/ROOT-8466](https://sft.its.cern.ch/jira/browse/ROOT-8466)] - Proof-lite does not copy dict.pcm file
+*   [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+*   [[ROOT-8466](https://sft.its.cern.ch/jira/browse/ROOT-8466)] - Proof-lite does not copy dict.pcm file
+*   [[ROOT-5837](https://sft.its.cern.ch/jira/browse/ROOT-5837)] - ROOT ProcessLine doesnt print error after #include
+*   [[ROOT-8289](https://sft.its.cern.ch/jira/browse/ROOT-8289)] - valgrind issue in clang::ASTDeclReader::VisitFriendDecl()
+*   [[ROOT-8422](https://sft.its.cern.ch/jira/browse/ROOT-8422)] - segmentation fault when instantiating a templated class with "disabled" methods
+*   [[ROOT-8429](https://sft.its.cern.ch/jira/browse/ROOT-8429)] - Error during dictionary creation of PyMVA on SuSe 13.1 and OpenSuSE Leap 42.1
+*   [[ROOT-8432](https://sft.its.cern.ch/jira/browse/ROOT-8432)] - Autoparse error for outlined template functions
+*   [[ROOT-8433](https://sft.its.cern.ch/jira/browse/ROOT-8433)] - TBuffer::WriteStdString fails
+*   [[ROOT-8434](https://sft.its.cern.ch/jira/browse/ROOT-8434)] - compilation error on v6-08-00-patches
+*   [[ROOT-8437](https://sft.its.cern.ch/jira/browse/ROOT-8437)] - Warning and segfault when writing custom class into TTree (with dictionary)
+*   [[ROOT-8441](https://sft.its.cern.ch/jira/browse/ROOT-8441)] - template arguments deduction not working in Python
+*   [[ROOT-8443](https://sft.its.cern.ch/jira/browse/ROOT-8443)] - Major failure on linux interactive python with template instantiations
+*   [[ROOT-8445](https://sft.its.cern.ch/jira/browse/ROOT-8445)] - Failure on linux interactive C++ with auto
+*   [[ROOT-8456](https://sft.its.cern.ch/jira/browse/ROOT-8456)] - Issues with TTreeReader
+*   [[ROOT-8464](https://sft.its.cern.ch/jira/browse/ROOT-8464)] - CMake: spurious errors from IPython
+*   [[ROOT-8475](https://sft.its.cern.ch/jira/browse/ROOT-8475)] - PTR macro defined in mmalloc.h is not undefined
+*   [[ROOT-8483](https://sft.its.cern.ch/jira/browse/ROOT-8483)] - misleading error message from TTreeReaderValue
+
+## HEAD of the v6-08-00-patches branch
+
+Changes will be part of the future 6.08/04
 
