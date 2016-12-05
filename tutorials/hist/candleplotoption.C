@@ -10,7 +10,7 @@
 
 void candleplotoption()
 {
-   TCanvas *c1 = new TCanvas("c1","Candle Presets",1200,800);
+   TCanvas *c1 = new TCanvas("c1","Candle Presets",800,600);
    c1->Divide(3,2);
 
    TRandom *randnum = new TRandom();
@@ -31,7 +31,7 @@ void candleplotoption()
       myhist->SetTitle(str);
    }
 
-   TCanvas *c2 = new TCanvas("c2","Candle Individual",1200,800);
+   TCanvas *c2 = new TCanvas("c2","Candle Individual",800,600);
    c2->Divide(4,4);
    char myopt[16][8] = {"0","1","11","21","31","30","111","311","301","1111","2321","12111","112111","212111","312111"};
    for (int i = 0; i < 15; i++) {
