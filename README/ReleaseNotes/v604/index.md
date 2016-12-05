@@ -1102,7 +1102,10 @@ Published on 2016-06-22.
 
 Changes will be part of the future 6.04/20
 
+### I/O
+
+- Fixed the I/O of std::vector<T> where T is a class *and* no dictionary was generated for std::vector<T> *and* sizeof(T)%sizeof(T*) is not zero. [ROOT-8478]
+
 ### Bugs and issues fixed
-* [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
 
 
