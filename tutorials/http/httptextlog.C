@@ -184,8 +184,9 @@ void httptextlog()
          // make messages not very often
          if (loop % 1000 == 0) {
             loop = loop/1000;
+            int shift = loop % 40;
             // make a 'stairs' with spaces
-            log->AddMsg(TString::Format("%*s Message %d", loop % 40, "", loop));
+            log->AddMsg(TString::Format("%*s Message %ld", shift, "", loop));
          }
       }
    }
