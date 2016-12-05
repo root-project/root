@@ -39,11 +39,8 @@
    }
 
    guiLayout = function() {
-      var res = 'collapsible';
       var selects = document.getElementById("layout");
-      if (selects)
-         res = selects.options[selects.selectedIndex].text;
-      return res;
+      return selects ? selects.options[selects.selectedIndex].text : 'collapsible';
    }
 
    setGuiLayout = function(value) {
@@ -75,17 +72,19 @@
 
    BuildSimpleGUI = function() {
 
-      if (JSROOT.GetUrlOption("nobrowser")!=null)
-         return JSROOT.BuildNobrowserGUI();
-
-      var myDiv = $('#simpleGUI');
-      var online = false;
+      var myDiv = $('#simpleGUI'), online = false;
 
       if (myDiv.length==0) {
          myDiv = $('#onlineGUI');
          if (myDiv.length==0) return alert('no div for simple gui found');
          online = true;
       }
+
+      if (myDiv.attr("ignoreurl") === "true")
+         JSROOT.gStyle.IgnoreUrlOptions = true;
+
+      if ((JSROOT.GetUrlOption("nobrowser")!==null) || (myDiv.attr("nobrowser") && myDiv.attr("nobrowser")!=="false"))
+         return JSROOT.BuildNobrowserGUI();
 
       JSROOT.Painter.readStyleFromURL();
 
@@ -101,18 +100,16 @@
             + ' </select>';
       } else {
 
-         var files = myDiv.attr("files");
-         var path = JSROOT.GetUrlOption("path");
-         if (path==null) path = myDiv.attr("path");
-         if (path==null) path = "";
-
-         if (files==null) files = "../files/hsimple.root";
-         var arrFiles = files.split(';');
-
          guiCode += "<h1><font face='Verdana' size='4'>Read a ROOT file</font></h1>"
-            + "<p><font face='Verdana' size='1px'><a href='https://root.cern.ch/js/'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>";
+                  + "<p><font face='Verdana' size='1px'><a href='https://root.cern.ch/js/'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>";
 
-         if (JSROOT.GetUrlOption("noselect")==null) {
+         var noselect = JSROOT.GetUrlOption("noselect") || myDiv.attr("noselect");
+
+         if (!noselect) {
+            var files = myDiv.attr("files") || "../files/hsimple.root",
+                path = JSROOT.GetUrlOption("path") || myDiv.attr("path") || "",
+                arrFiles = files.split(';');
+
             guiCode += '<form name="ex">'
                +'<input type="text" name="state" value="" style="width:95%; margin-top:5px;" id="urlToLoad"/>'
                +'<select name="s" style="width:65%; margin-top:5px;" '
@@ -131,13 +128,20 @@
                +'  <option>simple</option><option>collapsible</option><option>flex</option><option>tabs</option><option>grid 1x2</option><option>grid 2x2</option><option>grid 1x3</option><option>grid 2x3</option><option>grid 3x3</option><option>grid 4x4</option>'
                +'</select><br/>'
                +'</form>';
+         } else
+         if (noselect === "file") {
+            guiCode += '<form name="ex">'
+                     + '<select style="padding:2px; margin-left:5px; margin-top:5px;" title="layout kind" id="layout">'
+                     + '  <option>simple</option><option>collapsible</option><option>flex</option><option>tabs</option><option>grid 1x2</option><option>grid 2x2</option><option>grid 1x3</option><option>grid 2x3</option><option>grid 3x3</option><option>grid 4x4</option>'
+                     + '</select><br/>'
+                     + '</form>';
          }
       }
 
       guiCode += '<div id="browser"></div>'
-         +'</div>'
-         +'<div id="separator-div" style="top:1px; bottom:1px"></div>'
-         +'<div id="right-div" class="column" style="top:1px; bottom:1px"></div>';
+               + '</div>'
+               + '<div id="separator-div" style="top:1px; bottom:1px"></div>'
+               + '<div id="right-div" class="column" style="top:1px; bottom:1px"></div>';
 
       var drawDivId = 'right-div';
 
@@ -154,9 +158,12 @@
 
       hpainter.SetDisplay(null, drawDivId);
 
+      hpainter._topname = JSROOT.GetUrlOption("topname") || myDiv.attr("topname");
+
       JSROOT.Painter.ConfigureVSeparator(hpainter);
 
       // JSROOT.Painter.ConfigureHSeparator(28, true);
+
 
       hpainter.StartGUI(h0, function() {
 
@@ -182,7 +189,7 @@
             hpainter.ForEachRootFile(function(item) { if (fname=="") fname = item._fullurl; });
             $("#urlToLoad").val(fname);
          }
-      });
+      }, d3.select('#simpleGUI'));
    }
 
    return JSROOT;

@@ -13,9 +13,12 @@
       if (typeof THREE == 'undefined')
          throw new Error('THREE is not defined', 'JSRootGeoBase.js');
 
-      factory(JSROOT);
+      if (typeof ThreeBSP == 'undefined')
+         throw new Error('ThreeBSP is not defined', 'JSRootGeoBase.js');
+
+      factory(JSROOT, THREE, ThreeBSP);
    }
-} (function( JSROOT ) {
+} (function( JSROOT, THREE, ThreeBSP ) {
    // === functions to create THREE.Geometry for TGeo shapes ========================
 
    /** @namespace JSROOT.GEO */
@@ -2677,10 +2680,10 @@
       geom2 = JSROOT.GEO.createGeometry(shape.fNode.fRight, faces_limit/2);
 
       if (geom1 instanceof THREE.Geometry) geom1.computeVertexNormals();
-      bsp1 = new ThreeBSP(geom1, matrix1, JSROOT.GEO.CompressComp ? 0 : undefined);
+      bsp1 = new ThreeBSP.Geometry(geom1, matrix1, JSROOT.GEO.CompressComp ? 0 : undefined);
 
       if (geom2 instanceof THREE.Geometry) geom2.computeVertexNormals();
-      bsp2 = new ThreeBSP(geom2, matrix2, bsp1.maxid);
+      bsp2 = new ThreeBSP.Geometry(geom2, matrix2, bsp1.maxid);
 
       // take over maxid from both geometries
       bsp1.maxid = bsp2.maxid;
@@ -2698,7 +2701,7 @@
                + ' left: ' + shape.fNode.fLeft._typename +  ' ' + JSROOT.GEO.numGeometryFaces(geom1) + ' faces'
                + ' right: ' + shape.fNode.fRight._typename + ' ' + JSROOT.GEO.numGeometryFaces(geom2) + ' faces'
                + '  use first');
-         bsp1 = new ThreeBSP(geom1, matrix1);
+         bsp1 = new ThreeBSP.Geometry(geom1, matrix1);
       }
 
       return return_bsp ? { polygons: bsp1.toPolygons() } : bsp1.toBufferGeometry();
@@ -2860,7 +2863,7 @@
    JSROOT.GEO.numGeometryFaces = function(geom) {
       if (!geom) return 0;
 
-      if (geom instanceof ThreeBSP)
+      if (geom instanceof ThreeBSP.Geometry)
          return geom.tree.numPolygons();
 
       if (geom.type == 'BufferGeometry') {
@@ -2878,7 +2881,7 @@
    JSROOT.GEO.numGeometryVertices = function(geom) {
       if (!geom) return 0;
 
-      if (geom instanceof ThreeBSP)
+      if (geom instanceof ThreeBSP.Geometry)
          return geom.tree.numPolygons() * 3;
 
       if (geom.type == 'BufferGeometry') {
@@ -2916,6 +2919,35 @@
          return obj.fShape;
       }
       return null;
+   }
+   
+   JSROOT.GEO.ClonedNodes.prototype.Cleanup = function(drawnodes, drawshapes) {
+      // function to cleanup as much as possible structures
+      // drawnodes and drawshapes are arrays created during building of geometry
+
+      if (drawnodes) {
+         for (var n=0;n<drawnodes.length;++n) {
+            delete drawnodes[n].stack;
+            drawnodes[n] = undefined;
+         }
+      }
+   
+      if (drawshapes) {
+         for (var n=0;n<drawshapes.length;++n) {
+            delete drawshapes[n].geom;
+            drawshapes[n] = undefined;
+         }
+      }
+      
+      if (this.nodes)
+         for (var n=0;n<this.nodes.length;++n)
+            delete this.nodes[n].chlds;
+      
+      delete this.nodes;
+      delete this.origin;
+      
+      delete this.sortmap;
+      
    }
 
    JSROOT.GEO.ClonedNodes.prototype.CreateClones = function(obj, sublevel, kind) {

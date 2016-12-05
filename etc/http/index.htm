@@ -21,13 +21,16 @@ This is JSROOT main page, which aims to display content of ROOT files.
 Several URL parameters could be specified when opening page:
    file      - name of the file(s), which will be automatically open with page loading
    json      - name of JSON file(s) with ROOT object, stored by TBufferJSON::ConvertToJSON method
-   item      - object name(s) in the file to display
-   opt       - draw option(s) for the item(s)
+   item      - object name in the file to display
+   items     - object names in the file to display
+   opt       - draw option for the item
+   opts      - draw options for the items
    layout    - can be 'simple', 'flex', 'collapsible', 'tabs' or gridNxM where N and M are integer values
    nobrowser - only file item(s) will be displayed, browser will be disabled
    load      - name of JavaScript(s), automatically loaded at the beginning
    mathjax   - use MathJax for Latex output (automatically loaded for TMathText objects)
    palette   - id of default color palette, 51..121 - new ROOT6 palette  (default 57)
+   style     - TStyle object itemname or JSON file name
 
 Example:
    https://root.cern.ch/js/latest/?file=../files/hsimple.root&layout=grid2x2&item=[hpx;1,hpxpy;1]&opts=[,colz]

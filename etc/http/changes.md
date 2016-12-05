@@ -1,5 +1,39 @@
 # JSROOT changelog
 
+
+## Changes in 4.8.0
+1. Many improvements in the I/O part 
+   - support most of STL containers
+   - support TMap and TClonesArray containers
+   - all kind of multidimensional arrays 
+   - correct tratement of foreign classes
+   - supports different versions of class in the same file
+   - support memebers like ClassName* fField; //[fCnt]
+   - support const char*
+   - support fixed-size array of TString, TObject and TNamed 
+2. Many new draw options for different classes are supported:
+    - TGraph  - 'z', 'x', '||', '[]', '>', '|>', '5', 'X+', 'Y+'
+    - TH1     - '*', 'L', 'LF2', 'B', 'B1', 'TEXT', 'E0', 'E3', 'E4', 'EX0', 'X+', 'Y+'
+    - TH2     - 'E', 'col1', 'box', 'box1', 'surf3', 'surf7', 'base0'
+    - TH2     - 'same' with 'box', 'col', 'cont', 'lego', 'surf'
+    - TH3     - 'scat', use by default
+    - TF1/TF2 - 'nosave' to ignore saved buffer
+    - TCanvas - logx/y/z, gridx/y, tickx/y 
+    - THStack - 'lego' and other 3D draw options
+3. Implement drawing of TProfile2D, TF2, TGraph2D, TGraph2DErrors and TMarker
+4. Fix - correctly place TGAxis relative to frame (when exists) 
+5. When superimpose items, one can specify individual options
+     ...&item=histo1+histo2&opt=hist+e1
+     ...&item=[histo1,histo2]&opt=[hist,e1]
+6. Support loading of TStyle object, providing in URL
+     ...&style=item_name  or ...&style=json_file_name 
+   All values are copied directly to JSROOT.gStyle object.  
+7. Add callback argument into JSROOT.draw() function. 
+   Function will be called after drawing of object is completed.
+   Painter for drawn object will be provided as first argument (or null in case of error). 
+8. Improve cleanup of JSROOT objects 
+
+
 ## Changes in 4.7.1
 1. Workaround for MathJax output - scaling not always works in Firefox
 2. Fix - bin scaling for box draw option for TH2 and TH3 histograms 
