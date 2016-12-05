@@ -25,8 +25,8 @@ GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
                 TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h TGButtonGroup.h \
                 TGNumberEntry.h TGTableLayout.h WidgetMessageTypes.h \
                 TGIdleHandler.h TGInputDialog.h TGPack.h
-GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
-                TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
+GUIH2        := TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
+                TGTab.h TGSlider.h TGListView.h TGMimeTypes.h \
                 TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h \
                 TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h \
                 TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h \
