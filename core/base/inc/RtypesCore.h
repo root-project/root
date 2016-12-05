@@ -24,6 +24,8 @@
 #include "RConfig.h"
 #endif
 
+#include <stddef.h>
+
 //---- Tag used by rootcling to determine constructor used for I/O.
 
 class TRootIOCtor;
