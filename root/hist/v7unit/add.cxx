@@ -4,11 +4,39 @@
 
 // Test "x + 0 = x"
 TEST(HistAddTest, AddEmptyHist) {
-  ROOT::Experimental::TH1F hTo({100,0.,1});
   ROOT::Experimental::TH1F hFrom({100,0.,1});
-  hTo.Fill({{0.1111}}, .42);
+  ROOT::Experimental::TH1F hTo({100,0.,1});
+  hFrom.Fill({{0.1111}}, .42);
   ROOT::Experimental::Add(hTo, hFrom);
   EXPECT_FLOAT_EQ(0.42, hTo.GetBinContent({{0.1111}}));
+}
+
+// Test "0 + x = x"
+TEST(HistAddTest, AddEmptySelf) {
+   ROOT::Experimental::TH1F hFrom({100,0.,1});
+   ROOT::Experimental::TH1F hTo({100,0.,1});
+   hTo.Fill({{0.1111}}, .42);
+   ROOT::Experimental::Add(hTo, hFrom);
+   EXPECT_FLOAT_EQ(0.42, hTo.GetBinContent({{0.1111}}));
+}
+
+// Test "x + x = 2*x"
+TEST(HistAddTest, AddSelfHist) {
+   ROOT::Experimental::TH1F hist({100,0.,1});
+   hist.Fill({{0.1111}}, .42);
+   ROOT::Experimental::Add(hist, hist);
+   EXPECT_FLOAT_EQ(0.84, hist.GetBinContent({{0.1111}}));
+}
+
+// Test "x + y" with less STAT
+TEST(HistAddTest, AddHist) {
+   ROOT::Experimental::TH1F hFrom({100,0.,1});
+   // Implicitly tests ROOT-8485.
+   ROOT::Experimental::THist<1, float> hTo({100,0.,1});
+   hFrom.Fill({{0.1111}}, .42);
+   hTo.Fill({{0.1111}}, .17);
+   ROOT::Experimental::Add(hTo, hFrom);
+   EXPECT_FLOAT_EQ(0.59, hTo.GetBinContent({{0.1111}}));
 }
 
 // Test addition of a hist range
