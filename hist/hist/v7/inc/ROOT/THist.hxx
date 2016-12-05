@@ -188,6 +188,15 @@ private:
   friend THist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
 };
 
+/// THist with no STAT parameter uses THistStatContent by default.
+template<int DIMENSIONS, class PRECISION>
+class THist<DIMENSIONS, PRECISION>:
+   public THist<DIMENSIONS, PRECISION, THistStatContent>
+{
+   using THist<DIMENSIONS, PRECISION, THistStatContent>::THist;
+};
+
+
 /// Swap two histograms.
 ///
 /// Very efficient; swaps the `fImpl` pointers.
