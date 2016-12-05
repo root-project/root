@@ -740,6 +740,8 @@ Released on September 1, 2016
 
 Changes will be part of the future 6.06/10
 
-## Bugs fixed in this release
+### I/O
 
-* [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+- Fixed the I/O of std::vector<T> where T is a class *and* no dictionary was generated for std::vector<T> *and* sizeof(T)%sizeof(T*) is not zero. [ROOT-8478]
+
+### Bugs fixed in this release
