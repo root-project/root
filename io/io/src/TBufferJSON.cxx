@@ -942,12 +942,21 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
          if ((size * 2 == stack->fValues.GetLast()) &&
                ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap))) {
-            // special handling for std::map. Create entries like { 'first' : key, 'second' : value }
+            // special handling for std::map. Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
+
+            TString pairtype = cl->GetName();
+            if (pairtype.Index("multimap<")==0) pairtype.Replace(0, 9, "pair<"); else
+            if (pairtype.Index("map<")==0) pairtype.Replace(0, 4, "pair<"); else pairtype = "TPair";
+            pairtype = TString("\"") + pairtype + TString("\"");
             for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
                fValue.Append(separ);
                separ = fArraySepar.Data();
-               fJsonrCnt++; // account each entry in map, can conflict with objects inside values
+               // fJsonrCnt++; // do not add entry in the map, can conflict with objects inside values
                fValue.Append("{");
+               fValue.Append("\"$pair\"");
+               fValue.Append(fSemicolon);
+               fValue.Append(pairtype.Data());
+               fValue.Append(fArraySepar);
                fValue.Append("\"first\"");
                fValue.Append(fSemicolon);
                fValue.Append(stack->fValues.At(k)->GetName());
@@ -1045,8 +1054,8 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
       if (!first) AppendOutput(fArraySepar.Data());
 
       if (map) {
-         fJsonrCnt++; // account map pair as JSON object
-         AppendOutput("{", "\"_typename\"");
+         // fJsonrCnt++; // do not account map pair as JSON object
+         AppendOutput("{", "\"$pair\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"TPair\"");
          AppendOutput(fArraySepar.Data(), "\"first\"");
