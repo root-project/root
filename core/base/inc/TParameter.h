@@ -71,7 +71,7 @@ public:
              : fName(name), fVal(val) { Reset(); SetBit(kIsConst);}
    TParameter(const char *name, const AParamType &val, char mergemode)
              : fName(name), fVal(val) { SetMergeMode(mergemode); SetBit(kIsConst);}
-   ~TParameter() { }
+   virtual ~TParameter() { }
 
    const char       *GetName() const { return fName; }
    const AParamType &GetVal() const { return fVal; }
