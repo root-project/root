@@ -105,9 +105,9 @@ namespace {
 
    class TCollectionLessSTLReader : public TVirtualCollectionReader {
    private:
-      TVirtualCollectionProxy *localCollection;
+      TVirtualCollectionProxy *fLocalCollection;
    public:
-      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy) {}
+      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : fLocalCollection(proxy) {}
 
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()) {
@@ -120,7 +120,7 @@ namespace {
             return 0;
          }
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
-         return localCollection;
+         return fLocalCollection;
       }
 
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
@@ -147,9 +147,9 @@ namespace {
    // SEE TTreeProxyGenerator.cxx:1319: '//We have a top level raw type'
    class TObjectArrayReader: public TVirtualCollectionReader {
    private:
-      Int_t basicTypeSize;
+      Int_t fBasicTypeSize;
    public:
-      TObjectArrayReader() : basicTypeSize(-1) { }
+      TObjectArrayReader() : fBasicTypeSize(-1) { }
       ~TObjectArrayReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()){
@@ -171,7 +171,7 @@ namespace {
          Int_t objectSize;
          void *array = (void*)proxy->GetStart();
 
-         if (basicTypeSize == -1){
+         if (fBasicTypeSize == -1){
             TClass *myClass = proxy->GetClass();
             if (!myClass){
                Error("TObjectArrayReader::At()", "Cannot get class info from branch proxy.");
@@ -180,13 +180,13 @@ namespace {
             objectSize = myClass->GetClassSize();
          }
          else {
-            objectSize = basicTypeSize;
+            objectSize = fBasicTypeSize;
          }
          return (void*)((Byte_t*)array + (objectSize * idx));
       }
 
       void SetBasicTypeSize(Int_t size){
-         basicTypeSize = size;
+         fBasicTypeSize = size;
       }
    };
 
@@ -223,12 +223,12 @@ namespace {
    // Reader interface for fixed size arrays
    class TArrayFixedSizeReader : public TObjectArrayReader {
    private:
-      Int_t size;
+      Int_t fSize;
 
    public:
-      TArrayFixedSizeReader(Int_t sizeArg) : size(sizeArg) {}
+      TArrayFixedSizeReader(Int_t sizeArg) : fSize(sizeArg) {}
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) { return size; }
+      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) { return fSize; }
    };
 
    class TBasicTypeArrayReader : public TVirtualCollectionReader {
@@ -260,55 +260,56 @@ namespace {
 
    class TBasicTypeClonesReader : public TClonesReader {
    private:
-      Int_t offset;
+      Int_t fOffset;
    public:
-      TBasicTypeClonesReader(Int_t offsetArg) : offset(offsetArg) {}
+      TBasicTypeClonesReader(Int_t offsetArg) : fOffset(offsetArg) {}
 
       virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx){
          TClonesArray *myClonesArray = GetCA(proxy);
          if (!myClonesArray) return 0;
-         return (Byte_t*)myClonesArray->At(idx) + offset;
+         return (Byte_t*)myClonesArray->At(idx) + fOffset;
       }
    };
 
    class TLeafReader : public TVirtualCollectionReader {
    private:
-      TTreeReaderValueBase *valueReader;
-      Int_t elementSize;
+      TTreeReaderValueBase *fValueReader;
+      Int_t fElementSize;
    public:
-      TLeafReader(TTreeReaderValueBase *valueReaderArg) : valueReader(valueReaderArg), elementSize(-1) {}
+      TLeafReader(TTreeReaderValueBase *valueReaderArg) : fValueReader(valueReaderArg), fElementSize(-1) {}
 
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){
-         TLeaf *myLeaf = valueReader->GetLeaf();
+         TLeaf *myLeaf = fValueReader->GetLeaf();
          return myLeaf ? myLeaf->GetLen() : 0; // Error will be printed by GetLeaf
       }
 
       virtual void* At(ROOT::Detail::TBranchProxy* /*proxy*/, size_t idx){
          ProxyRead();
-         void *address = valueReader->GetAddress();
-         if (elementSize == -1){
-            TLeaf *myLeaf = valueReader->GetLeaf();
+         void *address = fValueReader->GetAddress();
+         if (fElementSize == -1){
+            TLeaf *myLeaf = fValueReader->GetLeaf();
             if (!myLeaf) return 0; // Error will be printed by GetLeaf
-            elementSize = myLeaf->GetLenType();
+            fElementSize = myLeaf->GetLenType();
          }
-         return (Byte_t*)address + (elementSize * idx);
+         return (Byte_t*)address + (fElementSize * idx);
       }
 
    protected:
       void ProxyRead(){
-         valueReader->ProxyRead();
+         fValueReader->ProxyRead();
       }
    };
 
    class TLeafParameterSizeReader : public TLeafReader {
    private:
-      TTreeReaderValue<Int_t> sizeReader;
+      TTreeReaderValue<Int_t> fSizeReader;
    public:
-      TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName, TTreeReaderValueBase *valueReaderArg) : TLeafReader(valueReaderArg), sizeReader(*treeReader, leafName) {}
+      TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName, TTreeReaderValueBase *valueReaderArg) :
+         TLeafReader(valueReaderArg), fSizeReader(*treeReader, leafName) {}
 
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){
          ProxyRead();
-         return *sizeReader;
+         return *fSizeReader;
       }
    };
 }
