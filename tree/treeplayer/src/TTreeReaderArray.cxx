@@ -359,7 +359,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       fSetupStatus = kSetupMatch;
       fProxy = namedProxy->GetProxy();
       if (!fImpl){
-         Fatal("TTreeReaderArrayBase::CreateProxy()", "No fImpl set!");
+         Error("TTreeReaderArrayBase::CreateProxy()", "No fImpl set!");
          fSetupStatus = kSetupMissingDictionary;
       }
       return;
