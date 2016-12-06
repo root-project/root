@@ -20,7 +20,9 @@ TCanvas *c1;
 
 void rose_image()
 {
-   TImage *img = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
+   TString dir = TROOT::GetTutorialDir();
+
+   TImage *img = TImage::Open(dir + "/image/rose512.jpg");
 
    if (!img) {
       printf("Could not create an image... exit\n");
@@ -41,9 +43,9 @@ void rose_image()
 
    // draw text over image with foreground specified by pixmap
    img->DrawText(250, 350, "goodbye cruel world ...", 24, 0,
-                 ar, TImage::kPlain, "fore.xpm");
+                 ar, TImage::kPlain, dir + "/image/fore.xpm");
 
-   TImage *img2 = TImage::Open("mditestbg.xpm");
+   TImage *img2 = TImage::Open(dir + "/image/mditestbg.xpm");
 
    // tile image
    img2->Tile(img->GetWidth(), img->GetHeight());
