@@ -47,10 +47,10 @@ TCandle::TCandle()
    fWhiskerUp     = 0.;
    fWhiskerDown   = 0.;
    fNDatapoints   = 0;
-   fDismiss = 0;
+   fDismiss       = 0;
    fLogX          = 0;
    fLogY          = 0;
-   fNDrawPoints     = 0;
+   fNDrawPoints   = 0;
    fNHistoPoints  = 0;
 }
 
@@ -79,7 +79,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
-   fNDrawPoints     = 0;
+   fNDrawPoints   = 0;
    fNHistoPoints  = 0;
 
 }
@@ -109,7 +109,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
-   fNDrawPoints     = 0;
+   fNDrawPoints   = 0;
    fNHistoPoints  = 0;
 
 }
@@ -266,10 +266,10 @@ void TCandle::Calculate() {
    quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
    if (!fIsRaw && fProj) { //Need a calculation for a projected histo
       if (((IsOption(kHistoLeft)) || (IsOption(kHistoRight)) || (IsOption(kHistoViolin))) && fProj->GetNbinsX() > 500) {
-         //When using the histooption the number of bins of the projection is
-         //limited because of the arrayspace defined by kNMAXPOINTS.
-         //So the histo is rebinned, that it can be displayed at any time.
-         // Finer granularity is not usefull anyhow
+         // When using the histooption the number of bins of the projection is
+         // limited because of the array space defined by kNMAXPOINTS.
+         // So the histo is rebinned, that it can be displayed at any time.
+         // Finer granularity is not useful anyhow
          int divideBy = ((fProj->GetNbinsX() - 1)/((kNMAXPOINTS-10)/4))+1;
          fProj->RebinX(divideBy);
       }
@@ -348,7 +348,7 @@ void TCandle::Calculate() {
             // Either show them only outside the whiskers, or all of them
             if (fProj->GetBinContent(bin) > 0 && (fProj->GetBinCenter(bin) < fWhiskerDown || fProj->GetBinCenter(bin) > fWhiskerUp || (GetCandleOption(5) > 1)) ) {
                Double_t scaledBinContent = fProj->GetBinContent(bin)/myScale;
-               if (scaledBinContent >0 && scaledBinContent < 1) scaledBinContent = 1; //Outliers have a typical bincontent between 0 and 1, when scaling they would disappear
+               if (scaledBinContent >0 && scaledBinContent < 1) scaledBinContent = 1; //Outliers have a typical bin content between 0 and 1, when scaling they would disappear
                for (int j=0; j < (int)scaledBinContent; j++) {
                   if (fNDrawPoints > maxOutliers) break;
                   if (IsOption(kPointsAllScat)) { //Draw outliers and "all" values scattered
@@ -399,10 +399,10 @@ void TCandle::Calculate() {
             if (myData < fWhiskerDown || myData > fWhiskerUp || (GetCandleOption(5) > 1)) {
                if (IsOption(kPointsAllScat)) { //Draw outliers and "all" values scattered
                   fDrawPointsX[fNDrawPoints] = fPosCandleAxis - fCandleWidth/2. + fCandleWidth*random.Rndm();
-                  fDrawPointsY[fNDrawPoints] = myData + (random.Rndm() - 0.5)*maxScatter; //random +- 0.5 of candleheight
+                  fDrawPointsY[fNDrawPoints] = myData + (random.Rndm() - 0.5)*maxScatter; //random +- 0.5 of candle-height
                } else { //Draw them in the "candle line"
                   fDrawPointsX[fNDrawPoints] = fPosCandleAxis;
-                  fDrawPointsY[fNDrawPoints] = myData + (random.Rndm() - 0.5)*maxScatter; //random +- 0.5 of candleheight
+                  fDrawPointsY[fNDrawPoints] = myData + (random.Rndm() - 0.5)*maxScatter; //random +- 0.5 of candle-height
                }
                if (swapXY) {
                   //Swap X and Y
@@ -767,7 +767,7 @@ void TCandle::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// The coordinates in the TParallelCoordVar-class are in Pad-Coordinates, so we need to convert them
 
-void TCandle::ConvertToPadCoords(Double_t minAxis, Double_t maxAxis, Double_t axisMinCoord, Double_t axisMaxCoord, Double_t , Double_t )
+void TCandle::ConvertToPadCoords(Double_t minAxis, Double_t maxAxis, Double_t axisMinCoord, Double_t axisMaxCoord)
 {
    if (!fIsCalculated) Calculate();
    Double_t a,b;
@@ -779,13 +779,13 @@ void TCandle::ConvertToPadCoords(Double_t minAxis, Double_t maxAxis, Double_t ax
       b = maxAxis-minAxis;
    }
 
-   fMean = axisMinCoord + ((fMean-a)/b)*(axisMaxCoord-axisMinCoord);
-   fMedian = axisMinCoord + ((fMedian-a)/b)*(axisMaxCoord-axisMinCoord);
-   fMedianErr  = axisMinCoord + ((fMedianErr-a)/b)*(axisMaxCoord-axisMinCoord);
-   fBoxUp  = axisMinCoord + ((fBoxUp-a)/b)*(axisMaxCoord-axisMinCoord);
-   fBoxDown  = axisMinCoord + ((fBoxDown-a)/b)*(axisMaxCoord-axisMinCoord);
-   fWhiskerUp  = axisMinCoord + ((fWhiskerUp-a)/b)*(axisMaxCoord-axisMinCoord);
-   fWhiskerDown  = axisMinCoord + ((fWhiskerDown-a)/b)*(axisMaxCoord-axisMinCoord);
+   fMean        = axisMinCoord + ((fMean-a)/b)*(axisMaxCoord-axisMinCoord);
+   fMedian      = axisMinCoord + ((fMedian-a)/b)*(axisMaxCoord-axisMinCoord);
+   fMedianErr   = axisMinCoord + ((fMedianErr-a)/b)*(axisMaxCoord-axisMinCoord);
+   fBoxUp       = axisMinCoord + ((fBoxUp-a)/b)*(axisMaxCoord-axisMinCoord);
+   fBoxDown     = axisMinCoord + ((fBoxDown-a)/b)*(axisMaxCoord-axisMinCoord);
+   fWhiskerUp   = axisMinCoord + ((fWhiskerUp-a)/b)*(axisMaxCoord-axisMinCoord);
+   fWhiskerDown = axisMinCoord + ((fWhiskerDown-a)/b)*(axisMaxCoord-axisMinCoord);
 
    for (int i = 0; i < fNDrawPoints; i++) {
       fDrawPointsY[i] = axisMinCoord + ((fDrawPointsY[i]-a)/b)*(axisMaxCoord-axisMinCoord);

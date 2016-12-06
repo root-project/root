@@ -33,33 +33,25 @@ const Int_t kNMAXPOINTS = 2010;  // Max outliers per candle
 class TCandle : public TAttLine, public TAttFill, public TAttMarker {
 public:
    //Candle Option
-   enum CandleOption : long {
-      kNoOption = 0,
-      kBox = 1,
-      //---------------
-      kMedianLine = 10,
-      kMedianNotched = 20,
-      kMedianCircle = 30,
-      //---------------
-      kMeanLine = 100,
-      kMeanCircle = 300,
-      //---------------
-      kWhiskerAll = 1000,
-      kWhisker15 = 2000,
-      //---------------
-      kAnchor = 10000,
-      //---------------
-      kPointsOutliers = 100000,
-      kPointsAll = 200000,
-      kPointsAllScat = 300000,
-      //---------------
-      kHistoLeft = 1000000,
-      kHistoRight = 2000000,
-      kHistoViolin = 3000000,
-      //---------------
-      kHistoZeroIndicator = 10000000, 
-      //---------------
-      kHorizontal = 1000000000 // if this bit is not set it is vertical!
+   enum CandleOption {
+      kNoOption           = 0,
+      kBox                = 1,
+      kMedianLine         = 10,
+      kMedianNotched      = 20,
+      kMedianCircle       = 30,
+      kMeanLine           = 100,
+      kMeanCircle         = 300,
+      kWhiskerAll         = 1000,
+      kWhisker15          = 2000,
+      kAnchor             = 10000,
+      kPointsOutliers     = 100000,
+      kPointsAll          = 200000,
+      kPointsAllScat      = 300000,
+      kHistoLeft          = 1000000,
+      kHistoRight         = 2000000,
+      kHistoViolin        = 3000000,
+      kHistoZeroIndicator = 10000000,
+      kHorizontal         = 1000000000 // if this bit is not set it is vertical
    };
 
 protected:
@@ -82,11 +74,11 @@ protected:
 
    Double_t * fDatapoints;                ///< position of all Datapoints within this candle
    Long64_t fNDatapoints;                 ///< Number of Datapoints within this candle
-   
+
    Double_t fDrawPointsX[kNMAXPOINTS];    ///< x-coord for every outlier, ..
    Double_t fDrawPointsY[kNMAXPOINTS];    ///< y-coord for every outlier, ..
-   Long64_t fNDrawPoints;                 ///< max number of outliers or otherpoint to be shown
-   
+   Long64_t fNDrawPoints;                 ///< max number of outliers or other point to be shown
+
    Double_t fHistoPointsX[kNMAXPOINTS];   ///< x-coord for the polyline of the histo
    Double_t fHistoPointsY[kNMAXPOINTS];   ///< y-coord for the polyline of the histo
    int  fNHistoPoints;
@@ -94,7 +86,7 @@ protected:
    CandleOption fOption;                  ///< Setting the style of the candle
    int fLogX;                             ///< make the candle appear logx-like
    int fLogY;                             ///< make the candle appear logy-like
-   
+
    Double_t fAxisMin;                     ///< The Minimum which is visible by the axis (used by zero indicator)
    Double_t fAxisMax;                     ///< The Maximum which is visible by the axis (used by zero indicator)
 
@@ -129,7 +121,7 @@ public:
    void           SetHistogram(TH1D *proj) { fProj = proj; fIsCalculated = false;}
 
    virtual void   Paint(Option_t *option="");
-   void           ConvertToPadCoords(Double_t minAxis, Double_t maxAxis, Double_t axisMinCoord, Double_t axisMaxCoord, Double_t minInit, Double_t maxInit); 
+   void           ConvertToPadCoords(Double_t minAxis, Double_t maxAxis, Double_t axisMinCoord, Double_t axisMaxCoord);
 
    virtual void   SetMean(Double_t mean) { fMean = mean; }
    virtual void   SetMedian(Double_t median) { fMedian = median; }
