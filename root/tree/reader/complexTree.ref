@@ -596,19 +596,19 @@ vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
 vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
 Success!
 A0: readVectorStarBArray(): ---------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorFloatArray(): ---------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorFloat. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorFloat. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorBArray(): -------------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
 Failure
 A0: readBArray(): -------------------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
 Failure
 A0: readBStarArray(): ---------------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorBStarValue(): ---------------- 
 vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
@@ -623,7 +623,7 @@ vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
 vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
 Success!
 A0: readVectorBStarArray(): ---------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
 Failure
 A0: readBClonesArrayValue(): --------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -638,13 +638,13 @@ BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
 BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 A0: readBClonesArrayArray(): --------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorBDummyArray(): --------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
 Failure
 A0: readBClonesArrayDummyArray(): ---------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
 Failure
 A1: readNum(): ------------------------------ 
 Num: 14
@@ -2404,19 +2404,19 @@ vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
 vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
 Success!
 A0: readVectorStarBArray(): ---------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorFloatArray(): ---------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorFloat. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorFloat. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorBArray(): -------------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
 Failure
 A0: readBArray(): -------------------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
 Failure
 A0: readBStarArray(): ---------------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorBStarValue(): ---------------- 
 vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
@@ -2441,7 +2441,7 @@ vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
 vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 A0: readVectorBStarArray(): ---------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
 Failure
 A0: readBClonesArrayValue(): --------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -2466,13 +2466,13 @@ BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
 BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
 Success!
 A0: readBClonesArrayArray(): --------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
 Failure
 A0: readVectorBDummyArray(): --------------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
 Failure
 A0: readBClonesArrayDummyArray(): ---------- 
-Error in <TTreeReaderArrayBase::CreateProxy()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
 Failure
 A1: readNum(): ------------------------------ 
 Num: 14
