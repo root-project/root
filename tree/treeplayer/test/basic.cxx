@@ -9,27 +9,26 @@
 
 TTree* MakeTree() {
    double x[3]{};
-   unsigned int ny;
-   int* y = nullptr;
+   struct {
+      unsigned int ny;
+      int* y = nullptr;
+   } yData;
 
    TTree* tree = new TTree("T", "test tree");
-   tree->Branch("one", &x, "x/D[3]");
-   tree->Branch("two", &ny, "ny/i");
-   tree->Branch("three", &y, "y/I[ny]");
+   tree->Branch("one", &x, "x[3]/D");
+   tree->Branch("two", &yData, "ny/i:y[ny]/I");
 
    x[1] = 42.;
-   ny = 42;
-   y = new int[42]{};
-   y[0] = 17;
+   yData.ny = 42;
+   yData.y = new int[42]{};
+   yData.y[0] = 17;
    tree->Fill();
-   delete [] y;
 
    x[2] = 43.;
-   ny = 5;
-   y = new int[5]{};
-   y[4] = 7;
+   yData.ny = 5;
+   yData.y[4] = 7;
    tree->Fill();
-   delete [] y;
+   delete [] yData.y;
 
    tree->ResetBranchAddresses();
 
@@ -41,7 +40,7 @@ TEST(TTreeReaderBasic, Interfaces) {
 
    TTreeReader tr(tree);
    TTreeReaderArray<double> x(tr, "one.x");
-   TTreeReaderArray<int> y(tr, "three.y");
+   TTreeReaderArray<int> y(tr, "two.y");
    TTreeReaderValue<unsigned int> ny(tr, "two.ny");
 
    // Before reading data:
@@ -80,9 +79,9 @@ TEST(TTreeReaderBasic, Interfaces) {
    EXPECT_EQ(ROOT::Internal::TTreeReaderValueBase::kSetupMatch, ny.GetSetupStatus());
    EXPECT_EQ(ROOT::Internal::TTreeReaderValueBase::kReadSuccess, ny.ProxyRead());
 
-   //FAILS: EXPECT_EQ(3, x.GetSize());
-   //FAILS: EXPECT_EQ(5, y.GetSize());
-   //FAILS: EXPECT_DOUBLE_EQ(42., x[2]);
+   EXPECT_EQ(3, x.GetSize());
+   EXPECT_EQ(5, y.GetSize());
+   EXPECT_DOUBLE_EQ(43., x[2]);
    //FAILS: EXPECT_EQ(7, y[4]);
 
 
