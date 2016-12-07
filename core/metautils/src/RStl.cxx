@@ -22,8 +22,6 @@ using namespace TClassEdit;
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
 
-#include "Scanner.h"
-
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 
