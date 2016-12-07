@@ -6,6 +6,10 @@
 ROOT_GLOB_SOURCES(rpdutilsrcs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 list(REMOVE_ITEM rpdutilsrcs src/rpdpriv.cxx src/rpdconn.cxx)
 
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/res
+  ${CMAKE_CURRENT_SOURCE_DIR}/../auth/res)
+
 if(globus)
   add_definitions(-DR__GLBS)
   include_directories(${GLOBUS_INCLUDE_DIRS})
@@ -38,6 +42,3 @@ ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa ${CRYPTLI
 if(builtin_openssl)
   ROOT_ADD_BUILTIN_DEPENDENCIES(SrvAuth OPENSSL)
 endif()
-
-
-ROOT_INSTALL_HEADERS()

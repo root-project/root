@@ -11,6 +11,6 @@ endif()
 
 ROOT_GENERATE_DICTIONARY(G__${libname} *.h Math/*.h v5/*.h ${Hist_v7_dict_headers} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx ${root7src} G__${libname}.cxx DEPENDENCIES Matrix MathCore)
+ROOT_LINKER_LIBRARY(${libname} *.cxx ${root7src} G__${libname}.cxx DEPENDENCIES Matrix MathCore RIO)
 ROOT_INSTALL_HEADERS()
 

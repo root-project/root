@@ -35,7 +35,7 @@
 #include "TDatime.h"
 #endif
 #ifndef ROOT_rsafun
-#include "rsafun.h"
+//#include "rsafun.h"
 #endif
 #ifndef ROOT_AuthConst
 #include "AuthConst.h"
@@ -59,6 +59,10 @@ typedef Int_t (*SecureAuth_t)(TAuthenticate *auth, const char *user, const char 
                               const char *remote, TString &det, Int_t version);
 
 R__EXTERN TVirtualMutex *gAuthenticateMutex;
+
+struct R__rsa_KEY; // opaque replacement for rsa_KEY
+struct R__rsa_KEY_export; // opaque replacement for rsa_KEY_export
+struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
 
 class TAuthenticate : public TObject {
 
@@ -120,9 +124,9 @@ private:
    static TString         fgRootAuthrc;     // Path to last rootauthrc-like file read
    static Int_t           fgRSAKey;         // Default type of RSA key to be tried
    static Int_t           fgRSAInit;
-   static rsa_KEY         fgRSAPriKey;
-   static rsa_KEY         fgRSAPubKey;
-   static rsa_KEY_export  fgRSAPubExport[2];
+   static R__rsa_KEY         fgRSAPriKey;
+   static R__rsa_KEY         fgRSAPubKey;
+   static R__rsa_KEY_export* fgRSAPubExport; // array of size [2]
 #ifdef R__SSL
    static BF_KEY          fgBFKey;          // Blowfish symmetric key
 #endif
@@ -166,8 +170,8 @@ public:
    static void        AuthError(const char *where, Int_t error);
    static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
 
-   static Int_t       DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n,
-                                      rsa_NUMBER &d, char **rsassl = 0);
+   static Int_t       DecodeRSAPublic(const char *rsapubexport, R__rsa_NUMBER &n,
+                                      R__rsa_NUMBER &d, char **rsassl = 0);
 
    static TList      *GetAuthInfo();
    static const char *GetAuthMethod(Int_t idx);

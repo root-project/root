@@ -1289,7 +1289,7 @@ if(vdt OR builtin_vdt)
     install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX} 
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "" FORCE)
   endif()
 endif()

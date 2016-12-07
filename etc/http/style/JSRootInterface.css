@@ -3,10 +3,11 @@
 * { padding: 0; margin: 0; }
 * html, body { height: 100%; }
 
-body, textarea {
-   font-family: "lucida sans", verdana, arial, helvetica, sans-serif;
-   font-size: 80%;
+
+textarea {
+   font-family: verdana, arial, helvetica, sans-serif;
 }
+
 
 h1 { font-size: 20pt }
 h2 { font-size: 18pt; font-weight:bold; color: navy }
@@ -16,8 +17,6 @@ h5 { font-size: 10pt; font-weight:bold; color:#6495ED; margin-bottom:2px; }
 h6 { font-size: 10pt; font-weight:bold; color:navy }
 
 body { margin: 1px; }
-
-textarea { font-size: 100%;}
 
 p { margin-top: 5px; margin-bottom: 5px; }
 

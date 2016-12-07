@@ -152,7 +152,7 @@ protected:
    virtual Bool_t SyncPadMargins();
    void SetPadMargins();
    void CreateGridline();
-   void BuildLowerPlot();
+   Int_t BuildLowerPlot();
 
    void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
 

@@ -31,9 +31,11 @@
 #include "llvm/Support/FileSystem.h"
 
 #include "TMetaUtils.h"
+#include "ClingRAII.h"
 
 using namespace clang;
 using namespace cling;
+using namespace ROOT::Internal;
 
 class TObject;
 
@@ -315,23 +317,9 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
       ASTContext& C = SemaR.getASTContext();
-      Preprocessor &PP = SemaR.getPreprocessor();
       Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
-      Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-      Parser::ParserCurTokRestoreRAII savedCurToken(P);
-      Sema::DelayedInfoRAII semaInfoRAII(SemaR);
 
-      // After we have saved the token reset the current one to something which
-      // is safe (semi colon usually means empty decl)
-      Token& Tok = const_cast<Token&>(P.getCurToken());
-      Tok.setKind(tok::semi);
-
-      // We can't PushDeclContext, because we go up and the routine that pops
-      // the DeclContext assumes that we drill down always.
-      // We have to be on the global context. At that point we are in a
-      // wrapper function so the parent context must be the global.
-      Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
-                                             SemaR.TUScope);
+      ParsingStateRAII raii(P,SemaR);
 
       // Use the Normalized name for the autoload
       std::string Name;
@@ -386,22 +374,9 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
      }
      else {
         // Save state of the PP
-        ASTContext& C = SemaR.getASTContext();
-        Preprocessor &PP = SemaR.getPreprocessor();
         Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
-        Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-        Parser::ParserCurTokRestoreRAII savedCurToken(P);
-        // After we have saved the token reset the current one to something which
-        // is safe (semi colon usually means empty decl)
-        Token& Tok = const_cast<Token&>(P.getCurToken());
-        Tok.setKind(tok::semi);
 
-        // We can't PushDeclContext, because we go up and the routine that pops
-        // the DeclContext assumes that we drill down always.
-        // We have to be on the global context. At that point we are in a
-        // wrapper function so the parent context must be the global.
-        Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
-                                               SemaR.TUScope);
+        ParsingStateRAII raii(P,SemaR);
 
         // First see whether we have a fwd decl of this name.
         // We shall only do that if lookup makes sense for it (!FE).
@@ -422,8 +397,9 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
         }
 
         if (TCling__AutoParseCallback(Name.str().c_str())) {
-           pushedDCAndS.pop();
-           cleanupRAII.pop();
+           // Shouldn't we pop more?
+           raii.fPushedDCAndS.pop();
+           raii.fCleanupRAII.pop();
            lookupSuccess = FE || SemaR.LookupName(R, S);
         } else if (FE && TCling__GetClassSharedLibs(Name.str().c_str())) {
            // We are "autoparsing" a header, and the header was not parsed.

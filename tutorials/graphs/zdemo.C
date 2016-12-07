@@ -25,6 +25,10 @@
 #include "TGraph.h"
 #include "TFrame.h"
 
+#ifdef HZ
+#undef HZ
+#endif
+
 const Int_t NMAX = 20;
 Int_t NLOOP;
 Float_t Z[NMAX], HZ[NMAX], PT[NMAX], INVSIG[NMAX];

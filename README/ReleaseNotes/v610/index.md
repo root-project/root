@@ -42,6 +42,24 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## Histogram Libraries
 
+- New class `THnChain` was added to provide a `TChain`-like experience when
+  working with `THnBase`'ed histograms (currently `THn` and `THnSparse`) from
+  many files, see [here](https://sft.its.cern.ch/jira/browse/ROOT-4515). This
+  allows to e.g., interactively adjust axis parameters before performing
+  projections from high-dimensional histograms,
+
+  ```{.cpp}
+  // Create a chain of histograms called `h`.
+  THnChain chain("h");
+
+  // Add files containing histograms `h` to `chain`.
+  chain->AddFile("file1.root");
+
+  chain->GetXaxis(1)->SetRangeUser(0.1, 0.2);
+
+  TH1* projection = chain->Projection(0)
+  ```
+
 
 ## Math Libraries
 
@@ -83,6 +101,25 @@ The following interfaces have been removed, after deprecation in v6.08.
   from the current color palette defined by `gStyle->SetPalette(…)`. The color
   is determined according to the number of objects having palette coloring in
   the current pad.
+- The line width and line style can be change on 2d histograms painted with
+  option `ARR`.
+- When the angle of a TGraphPolar was not in radian, the error bars were misplaced.
+  The problem was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8476).
+- In `TASimage::DrawLineInternal` the case of a line with 0 pixel along X and 0
+  pixel along Y was not treated properly. An horizontal line was drawn instead.
+- In `TGraphPainter::PaintGrapHist`: Decouple the `P` option (histogram drawn with
+  a simple polymarker) from the `L`(Histogram drawn as a simple polyline). This
+  improved (in some cases some extra markers were drawn) and simplify. the code.
+- Candle plot improvements:
+   * Rearragement of TCandle-code - split into calculate and paint
+   * Implementation for a "raw-data candle" inside TCandle - to be used from TTreeViewer in the future
+   * Implementation of 1D histograms along each candle (left, right and violin) - to be used for violin-charts
+   * Implementation of a zero indicator line for TCandle - to be used for violin-charts
+   * Reimplementation if THistPainter draw option VIOLIN
+   * Implementations of presets and individual options for VIOLIN-charts
+   * Implementation of VIOLIN-charts in THStack - can be combined with CANDLE
+   * Update of the docs (THistPainter and THStack)
+   * New tutorials
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
@@ -94,7 +131,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 
 ## I/O Libraries
-
+- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
 
 ## Database Libraries
 
@@ -124,5 +161,24 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 
 ## Build, Configuration and Testing Infrastructure
+- Added the CMake exported ROOT libraries into the ROOT:: namespace. In this way, projects based on CMake using ROOT can avoid
+  conflicts in library target names. As an example, this is the way to build a project consisting of one library and one
+  executable using ROOT.
+  ```
+  find_package(ROOT REQUIRED)
+  include(${ROOT_USE_FILE})
+
+  include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
+  add_definitions(${ROOT_CXX_FLAGS})
+
+  ROOT_GENERATE_DICTIONARY(G__Event Event.h LINKDEF EventLinkDef.h)
+
+  add_library(Event SHARED Event.cxx G__Event.cxx)
+  target_link_libraries(Event ROOT::Hist ROOT::Tree)
+
+  add_executable(Main MainEvent.cxx)
+  target_link_libraries(Main Event)
+  ```
+- Added option `builtin_all` to enable all the built in options.
 
 

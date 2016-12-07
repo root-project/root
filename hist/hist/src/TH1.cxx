@@ -811,9 +811,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
             TF1::RejectPoint(kFALSE);
             bin = binx + ncellsx * (biny + ncellsy * binz);
             if (integral) {
-               xx[0] = fXaxis.GetBinLowEdge(binx);
-               cu  = c1*f1->EvalPar(xx);
-               cu += c1*f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx)) * fXaxis.GetBinWidth(binx);
+               cu = c1*f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx)) / fXaxis.GetBinWidth(binx);
             } else {
                cu  = c1*f1->EvalPar(xx);
             }
@@ -4738,40 +4736,62 @@ Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the bin is overflow.
 
-Bool_t TH1::IsBinOverflow(Int_t bin) const
+Bool_t TH1::IsBinOverflow(Int_t bin, Int_t iaxis) const
 {
    Int_t binx, biny, binz;
    GetBinXYZ(bin, binx, biny, binz);
 
-   if ( fDimension == 1 )
+   if (iaxis == 0) { 
+      if ( fDimension == 1 )
+         return binx >= GetNbinsX() + 1;
+      if ( fDimension == 2 )
+         return (binx >= GetNbinsX() + 1) ||
+            (biny >= GetNbinsY() + 1);
+      if ( fDimension == 3 )
+         return (binx >= GetNbinsX() + 1) ||
+            (biny >= GetNbinsY() + 1) ||
+            (binz >= GetNbinsZ() + 1);
+      return kFALSE;
+   }
+   if (iaxis == 1)
       return binx >= GetNbinsX() + 1;
-   else if ( fDimension == 2 )
-      return (binx >= GetNbinsX() + 1) ||
-             (biny >= GetNbinsY() + 1);
-   else if ( fDimension == 3 )
-      return (binx >= GetNbinsX() + 1) ||
-             (biny >= GetNbinsY() + 1) ||
-             (binz >= GetNbinsZ() + 1);
-   else
-      return 0;
+   if (iaxis == 2)
+      return biny >= GetNbinsY() + 1;
+   if (iaxis == 3)
+      return binz >= GetNbinsZ() + 1;
+   
+   Error("IsBinOverflow","Invalid axis value");
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the bin is underflow.
+/// If iaxis = 0  make OR with all axes otherwise check only for the given axis
 
-Bool_t TH1::IsBinUnderflow(Int_t bin) const
+Bool_t TH1::IsBinUnderflow(Int_t bin, Int_t iaxis) const
 {
    Int_t binx, biny, binz;
    GetBinXYZ(bin, binx, biny, binz);
 
-   if ( fDimension == 1 )
-      return (binx <= 0);
-   else if ( fDimension == 2 )
-      return (binx <= 0 || biny <= 0);
-   else if ( fDimension == 3 )
-      return (binx <= 0 || biny <= 0 || binz <= 0);
-   else
-      return 0;
+   if (iaxis == 0) { 
+      if ( fDimension == 1 )
+         return (binx <= 0);
+      else if ( fDimension == 2 )
+         return (binx <= 0 || biny <= 0);
+      else if ( fDimension == 3 )
+         return (binx <= 0 || biny <= 0 || binz <= 0);
+      else
+         return kFALSE;
+   }
+   if (iaxis == 1)
+       return (binx <= 0);
+   if (iaxis == 2)
+      return (biny <= 0);
+   if (iaxis == 3)
+      return (binz <= 0);
+   
+   Error("IsBinUnderflow","Invalid axis value");
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4877,12 +4897,14 @@ void TH1::LabelsInflate(Option_t *ax)
    Double_t oldEntries = fEntries;
    Int_t bin,ibin,binx,biny,binz;
    for (ibin =0; ibin < hold->fNcells; ibin++) {
-      // get the binx,y,z values . This will stay the same between new-old after the expanding
+      // get the binx,y,z values . The x-y-z (axis) bin values will stay the same between new-old after the expanding
       hold->GetBinXYZ(ibin,binx,biny,binz);
       bin = GetBin(binx,biny,binz);
 
       // underflow and overflow will be cleaned up because their meaning has been altered
-      if (hold->IsBinUnderflow(ibin) || hold->IsBinOverflow(ibin)) continue;
+      if (hold->IsBinUnderflow(ibin,iaxis) || hold->IsBinOverflow(ibin,iaxis)) {
+         continue;
+      }
       else {
          AddBinContent(bin, hold->RetrieveBinContent(ibin));
          if (errors) fSumw2.fArray[bin] += hold->fSumw2.fArray[ibin];
@@ -5830,31 +5852,48 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
    //set new axis limits
    axis->SetLimits(xmin,xmax);
 
-   Int_t  nbinsx = fXaxis.GetNbins();
-   Int_t  nbinsy = fYaxis.GetNbins();
-   Int_t  nbinsz = fZaxis.GetNbins();
-
+   
    //now loop on all bins and refill
-   Double_t bx,by,bz;
    Int_t errors = GetSumw2N();
-   Int_t ix,iy,iz,ibin,binx,biny,binz,bin;
+
    Reset("ICE"); //reset only Integral, contents and Errors
-   for (binz=1;binz<=nbinsz;binz++) {
-      bz  = hold->GetZaxis()->GetBinCenter(binz);
-      iz  = fZaxis.FindFixBin(bz);
-      for (biny=1;biny<=nbinsy;biny++) {
+
+   int iaxis = 0;
+   if (axis == &fXaxis) iaxis = 1;
+   if (axis == &fYaxis) iaxis = 2;
+   if (axis == &fZaxis) iaxis = 3;
+   bool firstw = kTRUE;
+   Int_t binx,biny, binz = 0;
+   Int_t ix = 0,iy = 0,iz = 0;
+   Double_t bx,by,bz;
+   Int_t ncells = hold->GetNcells();
+   for (Int_t bin = 0; bin < ncells; ++bin) {
+      hold->GetBinXYZ(bin,binx,biny,binz);
+      bx = hold->GetXaxis()->GetBinCenter(binx);
+      ix  = fXaxis.FindFixBin(bx);
+      if (fDimension > 1) {
          by  = hold->GetYaxis()->GetBinCenter(biny);
          iy  = fYaxis.FindFixBin(by);
-         for (binx=1;binx<=nbinsx;binx++) {
-            bx = hold->GetXaxis()->GetBinCenter(binx);
-            ix  = fXaxis.FindFixBin(bx);
-            bin = hold->GetBin(binx,biny,binz);
-            ibin= GetBin(ix,iy,iz);
-            AddBinContent(ibin, hold->RetrieveBinContent(bin));
-            if (errors) {
-               fSumw2.fArray[ibin] += hold->GetBinErrorSqUnchecked(bin);
-            }
+         if (fDimension > 2) {
+            bz  = hold->GetZaxis()->GetBinCenter(binz);
+            iz  = fZaxis.FindFixBin(bz);
          }
+      }
+      // exclude underflow/overflow
+      double content = hold->RetrieveBinContent(bin);
+      if (content == 0) continue;
+      if (IsBinUnderflow(bin,iaxis) || IsBinOverflow(bin,iaxis) ) {
+         if (firstw) {
+            Warning("ExtendAxis","Histogram %s has underflow or overflow in the axis that is extendable"
+                    " their content will be lost",GetName() );
+            firstw= kFALSE;
+         }
+         continue;
+      }
+      Int_t ibin= GetBin(ix,iy,iz);
+      AddBinContent(ibin, content);
+      if (errors) {
+         fSumw2.fArray[ibin] += hold->GetBinErrorSqUnchecked(bin);
       }
    }
    delete hold;

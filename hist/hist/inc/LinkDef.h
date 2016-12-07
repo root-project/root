@@ -117,6 +117,7 @@
 #pragma link C++ class TNDArrayRef<const UShort_t>+;
 */
 #pragma link C++ class THn+;
+#pragma link C++ class THnChain+;
 #pragma link C++ class THnT<Float_t>+;
 //#pragma link C++ class THnT<Float16_t>+;
 #pragma link C++ class THnT<Double_t>+;
@@ -159,10 +160,6 @@
 #pragma link C++ class TVirtualGraphPainter+;
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TBackCompFitter+;
-#pragma link C++ class TUnfold+;
-#pragma link C++ class TUnfoldSys+;
-#pragma link C++ class TUnfoldBinning+;
-#pragma link C++ class TUnfoldDensity+;
 #pragma link C++ class TSVDUnfold+;
 #pragma link C++ class TEfficiency+;
 #pragma link C++ class TKDE+;

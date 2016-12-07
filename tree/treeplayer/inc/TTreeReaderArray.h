@@ -46,6 +46,9 @@ namespace Internal {
    protected:
       void* UntypedAt(size_t idx) const { return fImpl->At(GetProxy(), idx); }
       virtual void CreateProxy();
+      bool GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
+                            TDictionary* &branchActualType);
+      void SetImpl(TBranch* branch, TLeaf* myLeaf);
       const char* GetBranchContentDataType(TBranch* branch,
                                            TString& contentTypeName,
                                            TDictionary* &dict);

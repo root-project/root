@@ -23,7 +23,7 @@ else # ifneq ($(HOST),)
 
 .SECONDARY: $(ROOTCLINGTMPS)
 
-CLINGMETAUTILSO    = $(METAUTILSTO) $(METAUTILSOLLVM)
+CLINGMETAUTILSO    = $(METAUTILSTO)
 ROOTCLINGEXEEXTRAO = $(COREO) $(COREDO) $(IOO) $(IODO) $(THREADO) $(THREADDO) $(METAOLLVM)
 # The dependency on $(CLINGLIB) was added to prevent $(CLINGLIB) and
 # $(ROOTCLINGEXE) from being linked in parallel.

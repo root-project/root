@@ -970,24 +970,26 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
       if (fCreateSelObj) SafeDelete(fSelector);
 
       // Get selector files from cache
+      TString ocwd = gSystem->WorkingDirectory();
       if (gProofServ) {
          gProofServ->GetCacheLock()->Lock();
-         TString ocwd = gSystem->WorkingDirectory();
          gSystem->ChangeDirectory(gProofServ->GetCacheDir());
+      }
 
-         fSelector = TSelector::GetSelector(selector_file);
+      fSelector = TSelector::GetSelector(selector_file);
 
+      if (gProofServ) {
          gSystem->ChangeDirectory(ocwd);
          gProofServ->GetCacheLock()->Unlock();
-
-         if (!fSelector) {
-            Error("AssertSelector", "cannot load: %s", selector_file );
-           return -1;
-         }
+      }
+ 
+      if (!fSelector) {
+         Error("AssertSelector", "cannot load: %s", selector_file );
+        return -1;
       }
 
       fCreateSelObj = kTRUE;
-      Info("AssertSelector", "Processing via filename");
+      Info("AssertSelector", "Processing via filename (%s)", selector_file);
    } else if (!fSelector) {
       Error("AssertSelector", "no TSelector object define : cannot continue!");
       return -1;

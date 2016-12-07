@@ -11,6 +11,7 @@ MODDIRI      := $(MODDIR)/inc
 AUTHDIR      := $(MODDIR)
 AUTHDIRS     := $(AUTHDIR)/src
 AUTHDIRI     := $(AUTHDIR)/inc
+AUTHDIRR     := $(AUTHDIR)/res
 
 ##### libRootAuth #####
 RAUTHL       := $(MODDIRI)/LinkDefRoot.h
@@ -155,8 +156,9 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS)
+$(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS) -I$(AUTHDIRR)
 $(AFSAUTHO):    CXXFLAGS += $(AFSINCDIR) $(AFSEXTRACFLAGS)
 ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(AUTHDIRS)/TAuthenticate.o): CXXFLAGS += -Wno-deprecated-declarations
 endif
+$(DAEMONUTILSO): CXXFLAGS += -I$(ROOT_SRCDIR)/net/rpdutils/res

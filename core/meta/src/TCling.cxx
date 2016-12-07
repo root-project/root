@@ -71,6 +71,7 @@ clang/LLVM technology.
 #include "ThreadLocalStorage.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "ClingRAII.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -1495,7 +1496,8 @@ void TCling::RegisterModule(const char* modulename,
                             const char* fwdDeclsCode,
                             void (*triggerFunc)(),
                             const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                            const char** classesHeaders)
+                            const char** classesHeaders,
+                            Bool_t lateRegistration /*=false*/)
 {
    // rootcling also uses TCling for generating the dictionary ROOT files.
    static const bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
@@ -1560,36 +1562,42 @@ void TCling::RegisterModule(const char* modulename,
    TString code = gNonInterpreterClassDef;
    code += payloadCode;
 
-   // We need to open the dictionary shared library, to resolve symbols
-   // requested by the JIT from it: as the library is currently being dlopen'ed,
-   // its symbols are not yet reachable from the process.
-   // Recursive dlopen seems to work just fine.
-   const char* dyLibName = FindLibraryName(triggerFunc);
-   if (dyLibName) {
-      // We were able to determine the library name.
-      void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
-      if (!dyLibHandle) {
+   const char* dyLibName = nullptr;
+   // If this call happens after dlopen has finished (i.e. late registration)
+   // there is no need to dlopen the library recursively. See ROOT-8437 where
+   // the dyLibName would correspond to the binary.
+   if (!lateRegistration) {
+      // We need to open the dictionary shared library, to resolve symbols
+      // requested by the JIT from it: as the library is currently being dlopen'ed,
+      // its symbols are not yet reachable from the process.
+      // Recursive dlopen seems to work just fine.
+      dyLibName = FindLibraryName(triggerFunc);
+      if (dyLibName) {
+         // We were able to determine the library name.
+         void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
+         if (!dyLibHandle) {
 #ifdef R__WIN32
-         char dyLibError[1000];
-         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
-                       sizeof(dyLibError), NULL);
-         {
+            char dyLibError[1000];
+            FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
+                          sizeof(dyLibError), NULL);
 #else
-         const char* dyLibError = dlerror();
-         if (dyLibError) {
+            const char* dyLibError = dlerror();
+            if (dyLibError)
 #endif
-            if (gDebug > 0) {
-               ::Info("TCling::RegisterModule",
-                      "Cannot open shared library %s for dictionary %s:\n  %s",
-                      dyLibName, modulename, dyLibError);
+            {
+               if (gDebug > 0) {
+                  ::Info("TCling::RegisterModule",
+                         "Cannot open shared library %s for dictionary %s:\n  %s",
+                         dyLibName, modulename, dyLibError);
+               }
             }
-         }
-         dyLibName = 0;
-      } else {
-         fRegisterModuleDyLibs.push_back(dyLibHandle);
-      }
-   }
+            dyLibName = 0;
+         } else {
+            fRegisterModuleDyLibs.push_back(dyLibHandle);
+         } // if (!dyLibHandle) .. else
+      } // if (dyLibName)
+   } // if (!lateRegistration)
 
    if (hasHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified
@@ -1936,17 +1944,17 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
    gROOT->SetLineIsProcessing();
 
-   struct InterpreterFlagsRAII_t {
+   struct InterpreterFlagsRAII {
       cling::Interpreter* fInterpreter;
       bool fWasDynamicLookupEnabled;
 
-      InterpreterFlagsRAII_t(cling::Interpreter* interp):
+      InterpreterFlagsRAII(cling::Interpreter* interp):
          fInterpreter(interp),
          fWasDynamicLookupEnabled(interp->isDynamicLookupEnabled())
       {
          fInterpreter->enableDynamicLookup(true);
       }
-      ~InterpreterFlagsRAII_t() {
+      ~InterpreterFlagsRAII() {
          fInterpreter->enableDynamicLookup(fWasDynamicLookupEnabled);
          gROOT->SetLineHasBeenProcessed();
       }
@@ -2688,29 +2696,29 @@ void TCling::UpdateListOfLoadedSharedLibraries()
    }
    fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
 #elif defined(R__LINUX)
-   struct PointerNo4_t {
+   struct PointerNo4 {
       void* fSkip[3];
       void* fPtr;
    };
-   struct LinkMap_t {
+   struct LinkMap {
       void* fAddr;
       const char* fName;
       void* fLd;
-      LinkMap_t* fNext;
-      LinkMap_t* fPrev;
+      LinkMap* fNext;
+      LinkMap* fPrev;
    };
    if (!fPrevLoadedDynLibInfo || fPrevLoadedDynLibInfo == (void*)(size_t)-1) {
-      PointerNo4_t* procLinkMap = (PointerNo4_t*)dlopen(0,  RTLD_LAZY | RTLD_GLOBAL);
+      PointerNo4* procLinkMap = (PointerNo4*)dlopen(0,  RTLD_LAZY | RTLD_GLOBAL);
       // 4th pointer of 4th pointer is the linkmap.
       // See http://syprog.blogspot.fr/2011/12/listing-loaded-shared-objects-in-linux.html
-      LinkMap_t* linkMap = (LinkMap_t*) ((PointerNo4_t*)procLinkMap->fPtr)->fPtr;
+      LinkMap* linkMap = (LinkMap*) ((PointerNo4*)procLinkMap->fPtr)->fPtr;
       RegisterLoadedSharedLibrary(linkMap->fName);
       fPrevLoadedDynLibInfo = linkMap;
       // reduce use count of link map structure:
       dlclose(procLinkMap);
    }
 
-   LinkMap_t* iDyLib = (LinkMap_t*)fPrevLoadedDynLibInfo;
+   LinkMap* iDyLib = (LinkMap*)fPrevLoadedDynLibInfo;
    while (iDyLib->fNext) {
       iDyLib = iDyLib->fNext;
       RegisterLoadedSharedLibrary(iDyLib->fName);
@@ -5293,49 +5301,6 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    return status;
 }
 
-namespace {
-////////////////////////////////////////////////////////////////////////////////
-/// RAII used to store Parser, Sema, Preprocessor state for recursive parsing.
-   struct ParsingStateRAII_t {
-      Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
-      Parser::ParserCurTokRestoreRAII fSavedCurToken;
-      cling::ParserStateRAII fParserRAII;
-
-      // We can't PushDeclContext, because we go up and the routine that pops
-      // the DeclContext assumes that we drill down always.
-      // We have to be on the global context. At that point we are in a
-      // wrapper function so the parent context must be the global.
-      Sema::ContextAndScopeRAII fPushedDCAndS;
-
-      struct SemaParsingInitForAutoVarsRAII_t {
-         using PIFAV_t = decltype(Sema::ParsingInitForAutoVars);
-         PIFAV_t& fSemaPIFAV;
-         PIFAV_t fSavedPIFAV;
-         SemaParsingInitForAutoVarsRAII_t(PIFAV_t& PIFAV): fSemaPIFAV(PIFAV) {
-            fSavedPIFAV.swap(PIFAV);
-         }
-         ~SemaParsingInitForAutoVarsRAII_t() {
-            fSavedPIFAV.swap(fSemaPIFAV);
-         }
-      };
-      SemaParsingInitForAutoVarsRAII_t fSemaParsingInitForAutoVarsRAII;
-
-      ParsingStateRAII_t(Parser& parser, Sema& sema):
-         fCleanupRAII(sema.getPreprocessor()),
-         fSavedCurToken(parser),
-         fParserRAII(parser, false /*skipToEOF*/),
-         fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
-                       sema.TUScope),
-         fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
-      {
-         // After we have saved the token reset the current one to something which
-         // is safe (semi colon usually means empty decl)
-         Token& Tok = const_cast<Token&>(parser.getCurToken());
-         Tok.setKind(tok::semi);
-      }
-   };
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse the payload or header.
 
@@ -5366,7 +5331,7 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
       // dictionary generation time. That won't be an issue with the PCMs.
 
       Sema &SemaR = interpreter->getSema();
-      ParsingStateRAII_t parsingStateRAII(interpreter->getParser(), SemaR);
+      ROOT::Internal::ParsingStateRAII parsingStateRAII(interpreter->getParser(), SemaR);
       clangDiagSuppr diagSuppr(SemaR.getDiagnostics());
 
       #if defined(R__MUST_REVISIT)
@@ -5541,7 +5506,7 @@ Int_t TCling::AutoParse(const char *cls)
    if (fClingCallbacks->IsAutoloadingEnabled()
          && !gClassTable->GetDictNorm(cls)) {
       // Need RAII against recursive (dictionary payload) parsing (ROOT-8445).
-      ParsingStateRAII_t parsingStateRAII(fInterpreter->getParser(),
+      ROOT::Internal::ParsingStateRAII parsingStateRAII(fInterpreter->getParser(),
          fInterpreter->getSema());
       AutoLoad(cls, true /*knowDictNotLoaded*/);
    }

@@ -31,12 +31,6 @@ size_t strlcat(char *dst, const char *src, size_t siz);
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* HAS_STRLCPY */
-
-#else
-
-size_t strlcpy(char *dst, const char *src, size_t siz);
-size_t strlcat(char *dst, const char *src, size_t siz);
 
 #endif /* ROOT_strlcpy */

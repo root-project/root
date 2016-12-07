@@ -129,3 +129,4 @@ ifneq ($(CXX:g++=),$(CXX))
 METADOCXXFLAGS := -Wno-shadow -Wno-unused-parameter
 endif
 $(COREDO): CXXFLAGS += -D__CLING__ -Ietc -Ietc/cling $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS))) $(METADOCXXFLAGS)
+$(METAOLLVM): CXXFLAGS += -I$(METAUTILSDIRR)

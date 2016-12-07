@@ -11,7 +11,7 @@
 void candleplot() {
 
    gStyle->SetTimeOffset(0);
-   TRandom *randnum = new TRandom();
+   TRandom *rand = new TRandom();
    TDatime *dateBegin = new TDatime(2010,1,1,0,0,0);
    TDatime *dateEnd = new TDatime(2011,1,1,0,0,0);
 
@@ -25,22 +25,25 @@ void candleplot() {
    float Rand;
    for (int i = dateBegin->Convert(); i < dateEnd->Convert(); i+=86400*30) {
       for (int j = 0; j < 1000; j++) {
-         Rand = randnum->Gaus(500+sin(i/10000000.)*100,50); h1->Fill(i,Rand);
-         Rand = randnum->Gaus(500+sin(i/11000000.)*100,70); h2->Fill(i,Rand);
+         Rand = rand->Gaus(500+sin(i/10000000.)*100,50); h1->Fill(i,Rand);
+         Rand = rand->Gaus(500+sin(i/11000000.)*100,70); h2->Fill(i,Rand);
       }
    }
 
    h1->SetBarWidth(0.4);
    h1->SetBarOffset(-0.25);
+   h1->SetFillColor(kYellow);
+   h1->SetFillStyle(1001);
 
    h2->SetBarWidth(0.4);
    h2->SetBarOffset(0.25);
    h2->SetLineColor(kRed);
+   h2->SetFillColor(kGreen);
 
    TCanvas *c1 = new TCanvas();
 
    h1->Draw("candle2");
    h2->Draw("candle3 same");
 
-   gPad->BuildLegend(0.6,0.7,0.7,0.8);
+   gPad->BuildLegend(0.78,0.695,0.980,0.935,"","f");
 }

@@ -28,10 +28,10 @@
 class TGraphAsymmErrors : public TGraph {
 
 protected:
-   Double_t    *fEXlow;        //[fNpoints] array of X low errors
-   Double_t    *fEXhigh;       //[fNpoints] array of X high errors
-   Double_t    *fEYlow;        //[fNpoints] array of Y low errors
-   Double_t    *fEYhigh;       //[fNpoints] array of Y high errors
+   Double_t    *fEXlow;        ///<[fNpoints] array of X low errors
+   Double_t    *fEXhigh;       ///<[fNpoints] array of X high errors
+   Double_t    *fEYlow;        ///<[fNpoints] array of Y low errors
+   Double_t    *fEYhigh;       ///<[fNpoints] array of Y high errors
 
    virtual void    SwapPoints(Int_t pos1, Int_t pos2);
 

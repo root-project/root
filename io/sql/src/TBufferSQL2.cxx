@@ -2252,6 +2252,23 @@ void TBufferSQL2::WriteStdString(const std::string *s)
    TBufferFile::WriteStdString(s);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Read a char* string
+
+void TBufferSQL2::ReadCharStar(char* &s)
+{
+   TBufferFile::ReadCharStar(s);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write a char* string
+
+void TBufferSQL2::WriteCharStar(char *s)
+{
+   TBufferFile::WriteCharStar(s);
+}
+
+
 // macro for right shift operator for basic types
 #define TBufferSQL2_operatorout(vname)          \
    {                                            \

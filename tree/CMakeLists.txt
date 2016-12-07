@@ -1,3 +1,3 @@
-Add_Subdirectory(tree)        # special CMakeLists.txt
-Add_Subdirectory(treeplayer)  # special CMakeLists.txt
-Add_Subdirectory(treeviewer)  # special CMakeLists.txt
+add_subdirectory(tree)        # special CMakeLists.txt
+add_subdirectory(treeplayer)  # special CMakeLists.txt
+add_subdirectory(treeviewer)  # special CMakeLists.txt

@@ -163,6 +163,7 @@ public:
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
    void SetLastEntry(Long64_t entry) { fLastEntry = entry; }
    EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
+   void Restart();
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
@@ -182,7 +183,7 @@ protected:
       return (ROOT::Internal::TNamedBranchProxy*) fProxies.FindObject(branchname); }
    TCollection* GetProxies() { return &fProxies; }
 
-   void RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
+   Bool_t RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);

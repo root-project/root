@@ -111,7 +111,7 @@ void TFree::FillBuffer(char *&buffer)
    Version_t version = TFree::Class_Version();
    if (fLast > TFile::kStartBigFile) version += 1000;
    tobuf(buffer, version);
-//printf("TFree::fillBuffer, fFirst=%lld, fLast=%lld, version=%d\n",fFirst,fLast,version);
+   // printf("TFree::fillBuffer, fFirst=%lld, fLast=%lld, version=%d\n",fFirst,fLast,version);
    if (version > 1000) {
       tobuf(buffer, fFirst);
       tobuf(buffer, fLast);
@@ -146,9 +146,9 @@ TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
    // return first segment >nbytes
    if (idcur1) return idcur1;
 
-   //try big file
+   // try big file
    idcur = (TFree*)lfree->Last();
-   Long64_t last = idcur->fLast+1000000000;
+   Long64_t last = idcur->fLast+1000000000LL;
    idcur->SetLast(last);
    return idcur;
 }
@@ -183,6 +183,7 @@ void TFree::ReadBuffer(char *&buffer)
 
 Int_t TFree::Sizeof() const
 {
+   // printf("TFree::Sizeof, fFirst=%lld, fLast=%lld, version=%d\n",fFirst,fLast, (fLast > TFile::kStartBigFile));
    if (fLast > TFile::kStartBigFile) return 18;
    else                              return 10;
 }

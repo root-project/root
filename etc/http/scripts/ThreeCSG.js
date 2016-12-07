@@ -1,14 +1,27 @@
+(function( factory ) {
+   if ( typeof define === "function" && define.amd ) {
+      // AMD. Register as an anonymous module.
+      define( [ 'threejs' ], factory );
+   } else {
 
-function ThreeBSPfactory() {
+      if (typeof THREE == 'undefined')
+         throw new Error('THREE is not defined', 'ThreeCSG.js');
 
-   var ThreeBSP,
-      EPSILON = 1e-5,
-      COPLANAR = 0,
-      FRONT = 1,
-      BACK = 2,
-      SPANNING = 3;
+      ThreeBSP = {};
 
-   ThreeBSP = function( geometry, transfer_matrix, nodeid ) {
+      factory(THREE, ThreeBSP );
+   }
+} (function( THREE, ThreeBSP ) {
+
+   var EPSILON = 1e-5,
+       COPLANAR = 0,
+       FRONT = 1,
+       BACK = 2,
+       SPANNING = 3;
+
+   if (!ThreeBSP) ThreeBSP = {};
+
+   ThreeBSP.Geometry = function( geometry, transfer_matrix, nodeid ) {
       // Convert THREE.Geometry to ThreeBSP
       var i, _length_i,
          face, vertex, /* faceVertexUvs, uvs, */
@@ -135,7 +148,7 @@ function ThreeBSPfactory() {
       if (nodeid!==undefined) this.maxid = this.tree.maxnodeid;
 
    };
-   ThreeBSP.prototype.subtract = function( other_tree ) {
+   ThreeBSP.Geometry.prototype.subtract = function( other_tree ) {
       var a = this.tree.clone(),
           b = other_tree.tree.clone();
 
@@ -147,11 +160,11 @@ function ThreeBSPfactory() {
       b.invert();
       a.build( b.allPolygons() );
       a.invert();
-      a = new ThreeBSP( a );
+      a = new ThreeBSP.Geometry( a );
       a.matrix = this.matrix;
       return a;
    };
-   ThreeBSP.prototype.union = function( other_tree ) {
+   ThreeBSP.Geometry.prototype.union = function( other_tree ) {
       var a = this.tree.clone(),
          b = other_tree.tree.clone();
 
@@ -161,11 +174,11 @@ function ThreeBSPfactory() {
       b.clipTo( a );
       b.invert();
       a.build( b.allPolygons() );
-      a = new ThreeBSP( a );
+      a = new ThreeBSP.Geometry( a );
       a.matrix = this.matrix;
       return a;
    };
-   ThreeBSP.prototype.intersect = function( other_tree ) {
+   ThreeBSP.Geometry.prototype.intersect = function( other_tree ) {
       var a = this.tree.clone(),
          b = other_tree.tree.clone();
 
@@ -176,12 +189,12 @@ function ThreeBSPfactory() {
       b.clipTo( a );
       a.build( b.allPolygons() );
       a.invert();
-      a = new ThreeBSP( a );
+      a = new ThreeBSP.Geometry( a );
       a.matrix = this.matrix;
       return a;
    };
 
-   ThreeBSP.prototype.tryToCompress = function(polygons) {
+   ThreeBSP.Geometry.prototype.tryToCompress = function(polygons) {
 
       if (this.maxid === undefined) return;
 
@@ -243,7 +256,7 @@ function ThreeBSPfactory() {
       }
    }
 
-   ThreeBSP.prototype.direct_subtract = function( other_tree ) {
+   ThreeBSP.Geometry.prototype.direct_subtract = function( other_tree ) {
       var a = this.tree,
           b = other_tree.tree;
       a.invert();
@@ -256,7 +269,8 @@ function ThreeBSPfactory() {
       a.invert();
       return this;
    };
-   ThreeBSP.prototype.direct_union = function( other_tree ) {
+
+   ThreeBSP.Geometry.prototype.direct_union = function( other_tree ) {
       var a = this.tree,
           b = other_tree.tree;
 
@@ -268,7 +282,8 @@ function ThreeBSPfactory() {
       a.build( b.collectPolygons([]) );
       return this;
    };
-   ThreeBSP.prototype.direct_intersect = function( other_tree ) {
+
+   ThreeBSP.Geometry.prototype.direct_intersect = function( other_tree ) {
       var a = this.tree,
           b = other_tree.tree;
 
@@ -281,7 +296,8 @@ function ThreeBSPfactory() {
       a.invert();
       return this;
    };
-   ThreeBSP.prototype.toGeometry = function() {
+
+   ThreeBSP.Geometry.prototype.toGeometry = function() {
       var i, j,
          matrix = this.matrix ? new THREE.Matrix4().getInverse( this.matrix ) : null,
          geometry = new THREE.Geometry(),
@@ -349,7 +365,7 @@ function ThreeBSPfactory() {
       return geometry;
    };
 
-   ThreeBSP.prototype.toPolygons = function() {
+   ThreeBSP.Geometry.prototype.toPolygons = function() {
       var polygons = this.tree.collectPolygons([]);
 
       this.tryToCompress(polygons);
@@ -362,7 +378,7 @@ function ThreeBSPfactory() {
       return polygons;
    }
 
-   ThreeBSP.prototype.toBufferGeometry = function() {
+   ThreeBSP.Geometry.prototype.toBufferGeometry = function() {
       var i, j,
          polygons = this.toPolygons(),
          polygon_count = polygons.length,
@@ -403,7 +419,8 @@ function ThreeBSPfactory() {
       // geometry.computeVertexNormals();
       return geometry;
    };
-   ThreeBSP.prototype.toMesh = function( material ) {
+
+   ThreeBSP.Geometry.prototype.toMesh = function( material ) {
       var geometry = this.toGeometry(),
          mesh = new THREE.Mesh( geometry, material );
 
@@ -414,7 +431,6 @@ function ThreeBSPfactory() {
 
       return mesh;
    };
-
 
    ThreeBSP.Polygon = function( vertices, normal, w ) {
       if ( !( vertices instanceof Array ) ) {
@@ -822,12 +838,7 @@ function ThreeBSPfactory() {
       if ( this.back ) this.back.clipTo( node );
    };
 
-
    return ThreeBSP;
-};
 
-if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
-   window.ThreeBSP = ThreeBSPfactory();
-} else {
-   ThreeBSP = ThreeBSPfactory();
-}
+}));
+

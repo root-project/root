@@ -136,7 +136,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
          // since under-neath is actually an array.
 
          // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
-         int slong = sizeof(void*);
+         auto alignedSize = [](size_t in) {
+            constexpr size_t kSizeOfPtr = sizeof(void*);
+            return in + (kSizeOfPtr - in%kSizeOfPtr)%kSizeOfPtr;
+         };
          switch ( fSTL_type )  {
             case ROOT::kSTLmap:
             case ROOT::kSTLmultimap:
@@ -156,14 +159,11 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
                   fProperties |= kNeedDelete;
                }
-               if ( 0 == fValDiff )  {
-                  fValDiff = fKey->fSize + fVal->fSize;
-                  fValDiff += (slong - fKey->fSize%slong)%slong;
-                  fValDiff += (slong - fValDiff%slong)%slong;
-               }
                if ( 0 == fValOffset )  {
-                  fValOffset  = fKey->fSize;
-                  fValOffset += (slong - fKey->fSize%slong)%slong;
+                  fValOffset = alignedSize(fKey->fSize);
+               }
+               if ( 0 == fValDiff )  {
+                  fValDiff = alignedSize(fValOffset + fVal->fSize);
                }
                break;
             case ROOT::kSTLbitset:
@@ -177,9 +177,8 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                }
                if ( 0 == fValDiff )  {
                   fValDiff  = fVal->fSize;
-                  if (fVal->fCase != kIsFundamental) {
-                     fValDiff += (slong - fValDiff%slong)%slong;
-                  }
+                  // No need to align, the size even for a class should already
+                  // be correctly padded for use in a vector.
                }
                break;
          }

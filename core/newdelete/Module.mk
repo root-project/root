@@ -49,3 +49,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(NEWDEP) $(NEWLIB)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+$(NEWO): CXXFLAGS += -I$(ROOT_SRCDIR)/core/clib/res

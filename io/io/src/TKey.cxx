@@ -431,7 +431,7 @@ void TKey::Browse(TBrowser *b)
 
    void* obj = fMotherDir->GetList()->FindObject(GetName());
    if (obj && objcl->IsTObject()) {
-      TObject *tobj = (TObject*)obj;
+      TObject *tobj = (TObject*) objcl->DynamicCast(TObject::Class(), obj);
       if (!tobj->IsFolder()) {
          if (tobj->InheritsFrom(TCollection::Class()))
             tobj->Delete();   // delete also collection elements
@@ -483,6 +483,9 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
    if (fSeekKey >= f->GetEND()) {
       f->SetEND(fSeekKey+nsize);
       bestfree->SetFirst(fSeekKey+nsize);
+      if (f->GetEND() > bestfree->GetLast()) {
+         bestfree->SetLast(bestfree->GetLast() + 1000000000);
+      }
       fLeft   = -1;
       if (!fBuffer) fBuffer = new char[nsize];
    } else {
@@ -656,7 +659,7 @@ Bool_t TKey::IsFolder() const
 
    TClass *classPtr = TClass::GetClass((const char *) fClassName);
    if (classPtr && classPtr->GetState() > TClass::kEmulated && classPtr->IsTObject()) {
-      TObject *obj = (TObject *) classPtr->New(TClass::kDummyNew);
+      TObject *obj = (TObject *) classPtr->DynamicCast(TObject::Class(), classPtr->New(TClass::kDummyNew));
       if (obj) {
          ret = obj->IsFolder();
          delete obj;
@@ -1098,12 +1101,12 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    }
 
    if (cl->IsTObject()) {
-      baseOffset = cl->GetBaseClassOffset(TObject::Class());
-      if (baseOffset==-1) {
+      auto tobjBaseOffset = cl->GetBaseClassOffset(TObject::Class());
+      if (tobjBaseOffset == -1) {
          Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",
                fClassName.Data());
       }
-      TObject *tobj = (TObject*)( ((char*)pobj) +baseOffset);
+      TObject *tobj = (TObject*)( ((char*)pobj) + tobjBaseOffset);
 
       // See similar adjustments in ReadObj
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();

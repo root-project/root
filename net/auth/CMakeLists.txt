@@ -20,6 +20,8 @@ if(MACOSX_SSK_DEPRECATED)
 endif()
 
 #---static library needed for rootd and proofd --------------------------------------------
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
+
 add_library(rsa STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rsaaux.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsalib.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsafun.cxx)

@@ -11999,6 +11999,15 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    TFileCollection *dataset = 0;
    TString lookupopt;
    TString dsname(dset->GetName());
+
+   // First extract the "entry list" part on the global name, if any
+   TString dsns(dsname), enlname;
+   Ssiz_t eli = dsns.Index("?enl=");
+   if (eli != kNPOS) {
+      enlname = dsns(eli + strlen("?enl="), dsns.Length());
+      dsns.Remove(eli, dsns.Length()-eli);
+   }
+
    // The dataset maybe in the form of a TFileCollection in the input list
    if (dsname.BeginsWith("TFileCollection:")) {
       // Isolate the real name
@@ -12012,7 +12021,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       // Remove from everywhere
       input->RecursiveRemove(dataset);
       // Add it to the local list
-      datasets->Add(new TPair(dataset, new TObjString("")));
+      datasets->Add(new TPair(dataset, new TObjString(enlname.Data())));
       // Make sure we lookup everything (unless the client or the administrator
       // required something else)
       if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
@@ -12030,24 +12039,16 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    // name, should be processed.
    if (!dataset) {
 
-      // First of all check if the full string (except the "entry list" part)
-      // is the name of a single existing dataset: if it is, don't break it
-      // into parts
-      TString dsns( dsname.Data() ), enl;
-      Ssiz_t eli = dsns.Index("?enl=");
       TFileCollection *fc = nullptr;
-      if (eli != kNPOS) {
-         enl = dsns(eli+5, dsns.Length());
-         dsns.Remove(eli, dsns.Length()-eli);
-      }
 
-      // Check if the entry list is valid. If it has spaces, commas, or pipes,
-      // it is not considered as valid and we revert to the "multiple datasets"
-      // case
-      Bool_t validEnl = ((enl.Index("|") == kNPOS) &&
-        (enl.Index(",") == kNPOS) && (enl.Index(" ") == kNPOS));
+      // Check if the entry list and dataset name are valid. If they have spaces,
+      // commas, or pipes, they are not considered as valid and we revert to the
+      // "multiple datasets" case
+      TRegexp rg("[, |]");
+      Bool_t validEnl = (enlname.Index(rg) == kNPOS) ? kTRUE : kFALSE;
+      Bool_t validSdsn = (dsns.Index(rg) == kNPOS) ? kTRUE : kFALSE;
 
-      if (validEnl && (( fc = mgr->GetDataSet(dsns) ))) {
+      if (validEnl && validSdsn && (( fc = mgr->GetDataSet(dsns) ))) {
 
          //
          // String corresponds to ONE dataset only
@@ -12061,10 +12062,9 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
          dsnparse = dsns;  // without entry list
 
          // Adds the entry list (or empty string if not specified)
-         datasets->Add( new TPair(dataset, new TObjString( enl.Data() )) );
+         datasets->Add( new TPair(dataset, new TObjString( enlname.Data() )) );
 
-      }
-      else {
+      } else {
 
          //
          // String does NOT correspond to one dataset: check if many datasets
@@ -12078,10 +12078,10 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
             TString dsn2;
             Int_t from2 = 0;
             while (dsn1.Tokenize(dsn2, from2, "|")) {
-               enl = "";
+               enlname = "";
                Int_t ienl = dsn2.Index("?enl=");
                if (ienl != kNPOS) {
-                  enl = dsn2(ienl + 5, dsn2.Length());
+                  enlname = dsn2(ienl + 5, dsn2.Length());
                   dsn2.Remove(ienl);
                }
                if ((fc = mgr->GetDataSet(dsn2.Data()))) {
@@ -12105,7 +12105,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
                if (dataset->GetList()->First())
                   ((TFileInfo *)(dataset->GetList()->First()))->SetTitle(dsn1.Data());
                // Add it to the local list
-               datasets->Add(new TPair(dataset, new TObjString(enl.Data())));
+               datasets->Add(new TPair(dataset, new TObjString(enlname.Data())));
             }
             // Reset the pointer
             dataset = 0;
