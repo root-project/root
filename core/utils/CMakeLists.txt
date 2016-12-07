@@ -3,6 +3,13 @@
 ############################################################################
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
+
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+list(REMOVE_ITEM sources
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootclingTCling.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/rlibmap.cxx)
+
 if(NOT MSVC)
   add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
 else()
@@ -13,14 +20,18 @@ if(CXX_HAS_fno_rtti)
   set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
 endif()
 
-ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
-                          src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
-                          ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+ROOT_OBJECT_LIBRARY(RootclingUtils
+  ${sources}
+  ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+  ${CMAKE_SOURCE_DIR}/core/metautils/src/RStl.cxx
+)
+
+ROOT_EXECUTABLE(rootcling src/rootcling.cxx src/rootclingTCling.cxx
                           $<TARGET_OBJECTS:BaseTROOT>
                           $<TARGET_OBJECTS:MetaLLVM>
                           $<TARGET_OBJECTS:Clib>
                           $<TARGET_OBJECTS:MetaUtils>
-                          $<TARGET_OBJECTS:MetaUtilsLLVM>
+                          $<TARGET_OBJECTS:RootclingUtils>
                           $<TARGET_OBJECTS:RIOObjs>
                           $<TARGET_OBJECTS:ThreadObjs>
                           $<TARGET_OBJECTS:Base>
@@ -78,12 +89,10 @@ else()
   endif()
 endif()
 
-ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
-                              src/TModuleGenerator.cxx src/rootcling_tmp.cxx
-                              ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+ROOT_EXECUTABLE(rootcling_tmp src/rootcling_tmp.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:MetaUtils>
-                              $<TARGET_OBJECTS:MetaUtilsLLVM>
+                              $<TARGET_OBJECTS:RootclingUtils>
                               LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
 set_target_properties(rootcling_tmp PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)

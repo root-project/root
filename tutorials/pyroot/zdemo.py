@@ -18,7 +18,6 @@
 
 import ROOT
 from array import array
-from math import *
 
 NMAX = 20
 Z      = array( 'f', [0.]*NMAX )
@@ -31,6 +30,7 @@ saves = {}
 
 #_______________________________________________________________________________
 def hz_calc( ENERG, DENS, TGRAD, PTMIN, PTMAX, DELP ):
+   from math import sin, cos, sqrt
    global NLOOP
    global Z, HZ, PT, INVSIG
 
@@ -104,9 +104,11 @@ def hz_calc( ENERG, DENS, TGRAD, PTMIN, PTMAX, DELP ):
 
 #_______________________________________________________________________________
 def zdemo():
+    from array import array
     global NLOOP
     global Z, HZ, PT, INVSIG
     global saves
+    global hz_calc
 
     # Create a new canvas.
     c1 = ROOT.TCanvas( 'zdemo', 'Monte Carlo Study of Z scaling', 10, 40, 800, 600 )

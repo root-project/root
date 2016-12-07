@@ -110,6 +110,16 @@ The following interfaces have been removed, after deprecation in v6.08.
 - In `TGraphPainter::PaintGrapHist`: Decouple the `P` option (histogram drawn with
   a simple polymarker) from the `L`(Histogram drawn as a simple polyline). This
   improved (in some cases some extra markers were drawn) and simplify. the code.
+- Candle plot improvements:
+   * Rearragement of TCandle-code - split into calculate and paint
+   * Implementation for a "raw-data candle" inside TCandle - to be used from TTreeViewer in the future
+   * Implementation of 1D histograms along each candle (left, right and violin) - to be used for violin-charts
+   * Implementation of a zero indicator line for TCandle - to be used for violin-charts
+   * Reimplementation if THistPainter draw option VIOLIN
+   * Implementations of presets and individual options for VIOLIN-charts
+   * Implementation of VIOLIN-charts in THStack - can be combined with CANDLE
+   * Update of the docs (THistPainter and THStack)
+   * New tutorials
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.

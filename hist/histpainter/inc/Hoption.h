@@ -49,8 +49,7 @@ typedef struct Hoption_t {
    int Text;        ///< "TEXT"   Draw 2D plot with the content of each cell.
    int Tri;         ///< "TRI"    Draw 2D plot with Delaunay triangles.
    int Pie;         ///< "PIE"    Draw 1D plot as a pie chart.
-   int Candle;      ///< "CANDLE" Draw a 2D histogram as candle/box plot.
-   int Violin;      ///< "VIOLIN" Draw a 2D histogram as violin plot.
+   long Candle;     ///< "CANDLE" Draw a 2D histogram as candle/box plot or violin plot (also with "VIOLIN").
    int System;      ///< type of coordinate system(1=car,2=pol,3=cyl,4=sph,5=psr)
    int Zscale;      ///< "Z"   to display the Z scale (color palette)
    int FrontBox;    ///<  = 0 to suppress the front box

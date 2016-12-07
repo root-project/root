@@ -51,23 +51,23 @@ class TGraph2D : public TNamed, public TAttLine, public TAttFill, public TAttMar
 
 protected:
 
-   Int_t       fNpoints;          // Number of points in the data set
-   Int_t       fNpx;              // Number of bins along X in fHistogram
-   Int_t       fNpy;              // Number of bins along Y in fHistogram
-   Int_t       fMaxIter;          // Maximum number of iterations to find Delaunay triangles
-   Int_t       fSize;             //!Real size of fX, fY and fZ
-   Double_t   *fX;                //[fNpoints]
-   Double_t   *fY;                //[fNpoints] Data set to be plotted
-   Double_t   *fZ;                //[fNpoints]
-   Double_t    fMinimum;          // Minimum value for plotting along z
-   Double_t    fMaximum;          // Maximum value for plotting along z
-   Double_t    fMargin;           // Extra space (in %) around interpolated area for fHistogram
-   Double_t    fZout;             // fHistogram bin height for points lying outside the interpolated area
-   TList      *fFunctions;        // Pointer to list of functions (fits and user)
-   TH2D       *fHistogram;        //!2D histogram of z values linearly interpolated on the triangles
-   TObject    *fDelaunay;         //! Pointer to Delaunay interpolator object
-   TDirectory *fDirectory;        //!Pointer to directory holding this 2D graph
-   TVirtualHistPainter *fPainter; //!Pointer to histogram painter
+   Int_t       fNpoints;          ///< Number of points in the data set
+   Int_t       fNpx;              ///< Number of bins along X in fHistogram
+   Int_t       fNpy;              ///< Number of bins along Y in fHistogram
+   Int_t       fMaxIter;          ///< Maximum number of iterations to find Delaunay triangles
+   Int_t       fSize;             ///<!Real size of fX, fY and fZ
+   Double_t   *fX;                ///<[fNpoints]
+   Double_t   *fY;                ///<[fNpoints] Data set to be plotted
+   Double_t   *fZ;                ///<[fNpoints]
+   Double_t    fMinimum;          ///< Minimum value for plotting along z
+   Double_t    fMaximum;          ///< Maximum value for plotting along z
+   Double_t    fMargin;           ///< Extra space (in %) around interpolated area for fHistogram
+   Double_t    fZout;             ///< fHistogram bin height for points lying outside the interpolated area
+   TList      *fFunctions;        ///< Pointer to list of functions (fits and user)
+   TH2D       *fHistogram;        ///<!2D histogram of z values linearly interpolated on the triangles
+   TObject    *fDelaunay;         ///<! Pointer to Delaunay interpolator object
+   TDirectory *fDirectory;        ///<!Pointer to directory holding this 2D graph
+   TVirtualHistPainter *fPainter; ///<!Pointer to histogram painter
 
    void     Build(Int_t n);
 

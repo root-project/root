@@ -28,8 +28,8 @@
 class TGraphErrors : public TGraph {
 
 protected:
-   Double_t    *fEX;        //[fNpoints] array of X errors
-   Double_t    *fEY;        //[fNpoints] array of Y errors
+   Double_t    *fEX;        ///<[fNpoints] array of X errors
+   Double_t    *fEY;        ///<[fNpoints] array of Y errors
 
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
 
