@@ -31,9 +31,9 @@ private:
 
 
 protected:
-   Double_t *fEX; //[fNpoints] array of X errors
-   Double_t *fEY; //[fNpoints] array of Y errors
-   Double_t *fEZ; //[fNpoints] array of Z errors
+   Double_t *fEX; ///<[fNpoints] array of X errors
+   Double_t *fEY; ///<[fNpoints] array of Y errors
+   Double_t *fEZ; ///<[fNpoints] array of Z errors
 
 public:
    TGraph2DErrors();
