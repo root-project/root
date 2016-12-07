@@ -18,22 +18,15 @@ METAUTILSH     := $(filter-out $(MODDIRI)/TMetaUtils.%,\
   $(filter-out $(MODDIRI)/libcpp_string_view.h,\
   $(filter-out $(MODDIRI)/RWrap_libcpp_string_view.h,\
   $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)))))
-METAUTILSS     := $(filter-out $(MODDIRS)/TMetaUtils.%,\
-  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
+METAUTILSS     := $(filter-out $(MODDIRS)/RStl.%,\
+  $(filter-out $(MODDIRS)/TMetaUtils.%,\
+  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))))
 
 METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
-METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
+METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx $(MODDIRS)/RStl.cxx
 METAUTILSTH     += $(MODDIRI)/root_std_complex.h
 METAUTILSTH     += $(MODDIRI)/libcpp_string_view.h
 METAUTILSTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
-
-METAUTILSSLLVM := $(MODDIRS)/BaseSelectionRule.cxx \
-                  $(MODDIRS)/ClassSelectionRule.cxx \
-                  $(MODDIRS)/VariableSelectionRule.cxx \
-                  $(MODDIRS)/RStl.cxx \
-                  $(MODDIRS)/Scanner.cxx \
-                  $(MODDIRS)/SelectionRules.cxx \
-                  $(MODDIRS)/XMLReader.cxx
 
 METAUTILSCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
@@ -41,13 +34,11 @@ METAUTILSCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
 
 METAUTILSO     := $(call stripsrc,$(METAUTILSS:.cxx=.o))
-METAUTILSOLLVM := $(call stripsrc,$(METAUTILSSLLVM:.cxx=.o))
-METAUTILSO     := $(filter-out $(METAUTILSOLLVM),$(METAUTILSO))
 METAUTILSTO    := $(call stripsrc,$(METAUTILSTS:.cxx=.o))
 
 METAUTILSL     := $(MODDIRI)/LinkDef.h
 
-METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d) $(METAUTILSOLLVM:.o=.d)
+METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAUTILSH) $(METAUTILSTH))
@@ -125,7 +116,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(METAUTILSOLLVM): CXXFLAGS += $(METAUTILSCXXFLAGS)
-$(METAUTILSOLLVM): $(LLVMDEP)
 $(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS) -I$(METAUTILSDIRR)
 $(METAUTILSTO): $(LLVMDEP)

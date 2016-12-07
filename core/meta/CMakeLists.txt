@@ -29,8 +29,8 @@ add_dependencies(MetaLLVM CLING)
 
 ROOT_LINKER_LIBRARY(Cling
                     ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+                    ${CMAKE_SOURCE_DIR}/core/metautils/src/RStl.cxx
                     $<TARGET_OBJECTS:MetaLLVM>
-                    $<TARGET_OBJECTS:MetaUtilsLLVM>
                     LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                     DEPENDENCIES Core RIO)
 
