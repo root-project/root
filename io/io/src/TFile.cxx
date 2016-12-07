@@ -1250,18 +1250,21 @@ const TList *TFile::GetStreamerInfoCache()
    return fInfoCache ?  fInfoCache : (fInfoCache=GetStreamerInfoList());
 }
 
-//______________________________________________________________________________
 TList *TFile::GetStreamerInfoList()
 {
    // Read the list of TStreamerInfo objects written to this file.
    // The function returns a TList. It is the user'responsability
    // to delete the list created by this function.
    //
+   // Note the list, in addition to TStreamerInfo object, contains sometimes
+   // a TList named 'listOfRules' and containing the schema evolution rules
+   // related to the file's content.
+   //
    // Using the list, one can access additional information,eg:
    //   TFile f("myfile.root");
    //   TList *list = f.GetStreamerInfoList();
-   //   TStreamerInfo *info = (TStreamerInfo*)list->FindObject("MyClass");
-   //   Int_t classversionid = info->GetClassVersion();
+   //   TStreamerInfo *info = dynamic_cast<TStreamerInfo*>(list->FindObject("MyClass"));
+   //   if (info)Int_t classversionid = info->GetClassVersion();
    //   delete list;
 
    TList *list = 0;
