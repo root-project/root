@@ -849,9 +849,17 @@ void TFormula::HandlePolN(TString &formula)
       Int_t tmp = 1;
       while(tmp <= degree)
       {
-         replacement.Append(TString::Format("+[%d]*%s^%d",param,variable.Data(),tmp));
+	if (tmp > 1) 
+	  replacement.Append(TString::Format("+[%d]*%s^%d",param,variable.Data(),tmp));
+	else 
+	  replacement.Append(TString::Format("+[%d]*%s",param,variable.Data()));
          param++;
          tmp++;
+      }
+      // add paranthesis before and after
+      if (degree > 0) {
+	replacement.Insert(0,'(');
+	replacement.Append(')');	
       }
       TString pattern;
       if(defaultCounter && !defaultDegree)
