@@ -412,14 +412,46 @@ void RooRealMPFE::calculate() const
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << endl ;
+    ofstream outfile("RRMPFE_init_timings.json", ios::app);
+    auto begin = std::chrono::high_resolution_clock::now();
+
     const_cast<RooRealMPFE*>(this)->initialize() ;
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    float timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+          (end-begin).count();
+    std::cout << "calculate initialize timing: " << timing_ns / 1e9  << "s" << std::endl;
+
+    outfile << "{\"calculate_init_timing_ns\": \"" << timing_ns
+            << "\", \"pid\": \"" << getpid()
+            << "\", \"tid\": \"" << pthread_self()
+            << "\"}," << std::endl;
+
+    outfile.close();
   }
 
   // Inline mode -- Calculate value now
   if (_state==Inline) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
+    ofstream outfile("RRMPFE_inline_timings.json", ios::app);
+    auto begin = std::chrono::high_resolution_clock::now();
+
     _value = _arg ;
     clearValueDirty() ;
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    float timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+          (end-begin).count();
+    std::cout << "calculate inline timing: " << timing_ns / 1e9  << "s" << std::endl;
+
+    outfile << "{\"calculate_inline_timing_ns\": \"" << timing_ns
+          << "\", \"pid\": \"" << getpid()
+          << "\", \"tid\": \"" << pthread_self()
+          << "\"}," << std::endl;
+
+    outfile.close();
   }
 
 #ifndef _WIN32

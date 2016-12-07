@@ -273,11 +273,12 @@ Double_t RooAbsTestStatistic::evaluate() const
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
-    
+    // EGP: open file before calculate, otherwise this will take time from in between calculate dispatch and
+    // waiting for calculation to finish in the getValV loop.
+    ofstream outfile("RATS_timings.json", ios::app);
+
     // Start calculations in parallel
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
-
-    ofstream outfile("RATS_timings.json", ios::app);
 
     Double_t sum(0), carry = 0.;
 
