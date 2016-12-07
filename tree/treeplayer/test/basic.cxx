@@ -79,8 +79,8 @@ TEST(TTreeReaderBasic, Interfaces) {
    EXPECT_EQ(ROOT::Internal::TTreeReaderValueBase::kSetupMatch, ny.GetSetupStatus());
    EXPECT_EQ(ROOT::Internal::TTreeReaderValueBase::kReadSuccess, ny.ProxyRead());
 
-   EXPECT_EQ(3, x.GetSize());
-   EXPECT_EQ(5, y.GetSize());
+   EXPECT_EQ(3u, x.GetSize());
+   EXPECT_EQ(5u, y.GetSize());
    EXPECT_DOUBLE_EQ(43., x[2]);
    //FAILS: EXPECT_EQ(7, y[4]);
 

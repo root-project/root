@@ -29,12 +29,12 @@ TEST(TTreeReaderArray, MultiReaders) {
 
    TR.SetEntry(1);
 
-   EXPECT_EQ(4, trDouble0.GetSize());
-   EXPECT_EQ(4, trDouble1.GetSize());
-   EXPECT_EQ(4, trDouble2.GetSize());
-   EXPECT_EQ(4, trDouble3.GetSize());
-   EXPECT_EQ(4, trDouble4.GetSize());
-   EXPECT_EQ(4, trDouble5.GetSize());
+   EXPECT_EQ(4u, trDouble0.GetSize());
+   EXPECT_EQ(4u, trDouble1.GetSize());
+   EXPECT_EQ(4u, trDouble2.GetSize());
+   EXPECT_EQ(4u, trDouble3.GetSize());
+   EXPECT_EQ(4u, trDouble4.GetSize());
+   EXPECT_EQ(4u, trDouble5.GetSize());
    for (int i = 0; i < 4; ++i) {
       EXPECT_DOUBLE_EQ(Double[i], trDouble0[i]);
       EXPECT_DOUBLE_EQ(Double[i], trDouble1[i]);
