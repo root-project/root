@@ -431,7 +431,7 @@ void TKey::Browse(TBrowser *b)
 
    void* obj = fMotherDir->GetList()->FindObject(GetName());
    if (obj && objcl->IsTObject()) {
-      TObject *tobj = (TObject*)obj;
+      TObject *tobj = (TObject*) objcl->DynamicCast(TObject::Class(), obj);
       if (!tobj->IsFolder()) {
          if (tobj->InheritsFrom(TCollection::Class()))
             tobj->Delete();   // delete also collection elements
@@ -659,7 +659,7 @@ Bool_t TKey::IsFolder() const
 
    TClass *classPtr = TClass::GetClass((const char *) fClassName);
    if (classPtr && classPtr->GetState() > TClass::kEmulated && classPtr->IsTObject()) {
-      TObject *obj = (TObject *) classPtr->New(TClass::kDummyNew);
+      TObject *obj = (TObject *) classPtr->DynamicCast(TObject::Class(), classPtr->New(TClass::kDummyNew));
       if (obj) {
          ret = obj->IsFolder();
          delete obj;
