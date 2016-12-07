@@ -811,9 +811,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
             TF1::RejectPoint(kFALSE);
             bin = binx + ncellsx * (biny + ncellsy * binz);
             if (integral) {
-               xx[0] = fXaxis.GetBinLowEdge(binx);
-               cu  = c1*f1->EvalPar(xx);
-               cu += c1*f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx)) * fXaxis.GetBinWidth(binx);
+               cu = c1*f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx)) / fXaxis.GetBinWidth(binx);
             } else {
                cu  = c1*f1->EvalPar(xx);
             }
