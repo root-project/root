@@ -276,6 +276,11 @@ Double_t RooAbsTestStatistic::evaluate() const
     // EGP: open file before calculate, otherwise this will take time from in between calculate dispatch and
     // waiting for calculation to finish in the getValV loop.
     ofstream outfile("RATS_timings.json", ios::app);
+    // EGP: also do other preparations
+    std::vector< std::chrono::time_point<std::chrono::system_clock> > begin_part;
+    std::vector< std::chrono::time_point<std::chrono::system_clock> > end_part;
+    begin_part.reserve(_nCPU);
+    end_part.reserve(_nCPU);
 
     // Start calculations in parallel
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
@@ -284,12 +289,14 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     auto begin = std::chrono::high_resolution_clock::now();
     for (Int_t i = 0; i < _nCPU; ++i) {
+      begin_part[i] = std::chrono::high_resolution_clock::now();
       Double_t y = _mpfeArray[i]->getValV();
       carry += _mpfeArray[i]->getCarry();
       y -= carry;
       const Double_t t = sum + y;
       carry = (t - sum) - y;
       sum = t;
+      end_part[i] = std::chrono::high_resolution_clock::now();
     }
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -297,8 +304,15 @@ Double_t RooAbsTestStatistic::evaluate() const
                       (end-begin).count();
     std::cout << "evaluate mpmaster collect timing: " << timing_ns / 1e9  << "s" << std::endl;
 
-    outfile << "{\"evaluate_mpmaster_collect_timing_ns\": \"" << timing_ns
-            << "\", \"pid\": \"" << getpid()
+    outfile << "{\"evaluate_mpmaster_collect_timing_ns\": \"" << timing_ns;
+
+    for (Int_t i = 0; i < _nCPU; ++i) {
+      timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+                  (end_part[i]-begin_part[i]).count();
+      outfile << "\", \"evaluate_mpmaster_collect_it" << i << "_timing_ns\": \"" << timing_ns;
+    }
+
+    outfile << "\", \"pid\": \"" << getpid()
             << "\"}," << std::endl;
 
     outfile.close();
