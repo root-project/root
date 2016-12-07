@@ -1093,12 +1093,12 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    }
 
    if (cl->InheritsFrom(TObject::Class())) {
-      baseOffset = cl->GetBaseClassOffset(TObject::Class());
-      if (baseOffset==-1) {
+      Long_t tobjBaseOffset = cl->GetBaseClassOffset(TObject::Class());
+      if (tobjBaseOffset == -1) {
          Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",
                fClassName.Data());
       }
-      TObject *tobj = (TObject*)( ((char*)pobj) +baseOffset);
+      TObject *tobj = (TObject*)( ((char*)pobj) + tobjBaseOffset);
 
       // See similar adjustments in ReadObj
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
