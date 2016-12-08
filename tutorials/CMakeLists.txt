@@ -140,8 +140,12 @@ set(gui_veto fit/fitpanel_playback.C
              tree/tvdemo.C
              eve/*.C)
 
-#---These do not need to run for TMVA
-set (tmva_veto tmva/createData.C)
+if (NOT ROOT_tmva_FOUND)
+  set(tmva_veto tmva/*.C)
+else
+  #---These do not need to run for TMVA
+  set(tmva_veto tmva/createData.C)
+endif()
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
