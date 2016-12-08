@@ -10,3 +10,4 @@ MyCla	::fgPrivateM
 TH1F *h = 0;
 h->GetXaxis()->SetTi		
 .q
+

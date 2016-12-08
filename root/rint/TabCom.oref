@@ -1,3 +1,16 @@
+TObj	
+TObject::k	
+gROOT->GetListOfT	
+TNamed tabComTestNamedObj("AName","ATitle");
+tabComTestNamedOb	.SetTitl		"OtherTitle")
+tabComTestNamedOb	.GetTitl	()
+#include "MyClass.h"
+MyCla	::fgM	
+MyCla	::fgPrivateM	
+TH1F *h = 0;
+h->GetXaxis()->SetTi		
+.q
+
 
 TObjArray
 TObjArrayIter
