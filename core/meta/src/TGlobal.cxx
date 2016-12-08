@@ -172,6 +172,11 @@ TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
 {
    // Used to storeTGlobalMappedFunctions from other libs, before gROOT was initialized
    static TList fEarlyRegisteredGlobals;
+   // For thread-safe setting of SetOwner(kTRUE).
+   static bool earlyRegisteredGlobalsSetOwner
+      = (fEarlyRegisteredGlobals.SetOwner(kTRUE), true);
+   (void) earlyRegisteredGlobalsSetOwner; // silence unused var
+
    return fEarlyRegisteredGlobals;
 }
 
