@@ -300,16 +300,16 @@ Double_t RooAbsTestStatistic::evaluate() const
     }
     auto end = std::chrono::high_resolution_clock::now();
 
-    float timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
-                      (end-begin).count();
-    std::cout << "evaluate mpmaster collect timing: " << timing_ns / 1e9  << "s" << std::endl;
+    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
+                      (end-begin).count() / 1.e9;
+    std::cout << "evaluate mpmaster collect timing (wallclock): " << timing_s << "s" << std::endl;
 
-    outfile << "{\"evaluate_mpmaster_collect_timing_ns\": \"" << timing_ns;
+    outfile << "{\"evaluate_mpmaster_collect_walltime_s\": \"" << timing_s;
 
     for (Int_t i = 0; i < _nCPU; ++i) {
-      timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
-                  (end_part[i]-begin_part[i]).count();
-      outfile << "\", \"evaluate_mpmaster_collect_it" << i << "_timing_ns\": \"" << timing_ns;
+      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
+                  (end_part[i]-begin_part[i]).count() / 1.e9;
+      outfile << "\", \"evaluate_mpmaster_collect_it" << i << "_timing_s\": \"" << timing_s;
     }
 
     outfile << "\", \"pid\": \"" << getpid()
