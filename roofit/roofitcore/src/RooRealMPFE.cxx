@@ -596,6 +596,9 @@ Double_t RooRealMPFE::evaluate() const
     return_value = _arg ;
   } else if (_state==Client) {
 #ifndef _WIN32
+    ofstream outfile("RRMPFE_eval_timings.json", ios::app);
+    auto begin = std::chrono::high_resolution_clock::now();
+
     bool needflush = false;
     int msg;
     Double_t value;
@@ -623,7 +626,11 @@ Double_t RooRealMPFE::evaluate() const
 
     Int_t numError;
 
+    auto before_retrieve = std::chrono::high_resolution_clock::now();
+
     *_pipe >> msg >> value >> _evalCarry >> numError;
+
+    auto after_retrieve = std::chrono::high_resolution_clock::now();
 
     if (msg!=ReturnValue) {
       cout << "RooRealMPFE::evaluate(" << GetName()
@@ -656,6 +663,33 @@ Double_t RooRealMPFE::evaluate() const
     // Mark end of calculation in progress
     _calcInProgress = kFALSE ;
     return_value = value ;
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    float timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+                       (end-begin).count();
+    std::cout << "evaluate MPFE client timing: " << timing_ns / 1e9  << "s" << std::endl;
+
+    outfile << "{\"evaluate_MPFE_client_timing_ns\": \"" << timing_ns;
+
+    timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+                (before_retrieve-begin).count();
+    std::cout << "evaluate MPFE client (before retrieve) timing: " << timing_ns / 1e9  << "s" << std::endl;
+
+    outfile << "\", \"evaluate_MPFE_client_before_retrieve_timing_ns\": \"" << timing_ns;
+
+    timing_ns = std::chrono::duration_cast<std::chrono::nanoseconds>
+                (after_retrieve-before_retrieve).count();
+    std::cout << "evaluate MPFE client (retrieve) timing: " << timing_ns / 1e9  << "s" << std::endl;
+
+    outfile << "\", \"evaluate_MPFE_client_retrieve_timing_ns\": \"" << timing_ns;
+
+    outfile << "\", \"pid\": \"" << getpid()
+            << "\", \"tid\": \"" << pthread_self()
+            << "\"}," << std::endl;
+
+    outfile.close();
+
 #endif // _WIN32
   }
 
