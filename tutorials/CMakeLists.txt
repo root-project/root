@@ -69,6 +69,10 @@ if(NOT ROOT_unuran_FOUND)
                    math/multidimSampling.C)
 endif()
 
+if(NOT ROOT_unfold_FOUND)
+  set(unfold_veto unfold/*.C)
+endif()
+
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  xml/*.C
                 histfactory/*.C)   # histfactory requires xml
@@ -141,7 +145,7 @@ set(gui_veto fit/fitpanel_playback.C
              eve/*.C)
 
 if (NOT ROOT_tmva_FOUND)
-  set(tmva_veto tmva/*.C)
+  set(tmva_veto tmva/*.C tmva/*.py tmva/keras/*.C tmva/keras/*.py)
 else()
   #---These do not need to run for TMVA
   set(tmva_veto tmva/createData.C)
@@ -185,6 +189,7 @@ set(all_veto hsimple.C
              ${xml_veto}
              ${fitsio_veto}
              ${tmva_veto}
+             ${unfold_veto}
              ${mathmore_veto}
              ${fftw3_veto}
              ${opengl_veto}
