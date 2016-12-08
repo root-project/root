@@ -35,7 +35,7 @@ G3DMAP       := $(G3DLIB:.$(SOEXT)=.rootmap)
 # used in the main Makefile
 G3DH1_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(G3DH1))
 G3DH2_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(G3DH2))
-ALLHDRS     += $(G3DH_REL1) $(G3DH_REL2)
+ALLHDRS     += $(G3DH1_REL) $(G3DH2_REL)
 ALLLIBS     += $(G3DLIB)
 ALLMAPS     += $(G3DMAP)
 ifeq ($(CXXMODULES),yes)
