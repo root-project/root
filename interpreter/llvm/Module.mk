@@ -175,7 +175,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		if [ $(GCCTOOLCHAIN) ]; then \
 			LLVM_CFLAGS="$(LLVM_CFLAGS) --gcc-toolchain=$(GCCTOOLCHAIN) "; \
 		fi; \
-		if [ $(CXXMODULES) ]; then \
+		if [ $(CXXMODULES) = "yes" ]; then \
 			LLVM_CXXMODULES=" -DLLVM_ENABLE_MODULES=ON "; \
 		fi; \
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
