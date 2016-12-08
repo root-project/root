@@ -80,6 +80,7 @@ public:
    // TGraph status bits
    enum {
       kClipFrame     = BIT(10),  ///< clip to the frame boundary
+      kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
       kNotEditable   = BIT(18),  ///< bit set if graph is non editable
       kIsSortedX     = BIT(19)   ///< graph is sorted in X points
    };

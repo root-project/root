@@ -61,6 +61,7 @@
 #include "TStreamerInfoActions.h"
 #include "RVersion.h"
 #include "Riostream.h"
+#include "RZip.h"
 #include "TClonesArray.h"
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
@@ -454,13 +455,69 @@ Int_t TBufferJSON::ExportToFile(const char* filename, const TObject *obj, const 
 {
    if (!obj || !filename || (*filename==0)) return 0;
 
-   Int_t compact = 0;
+   Int_t compact = strstr(filename,".json.gz") ? 3 : 0;
    if (option && (*option >= '0') && (*option <='3')) compact = TString(option,1).Atoi();
 
    TString json = TBufferJSON::ConvertToJSON(obj, compact);
 
-   std::ofstream ofs (filename);
-   ofs << json.Data();
+   std::ofstream ofs(filename);
+
+   if (strstr(filename,".json.gz")) {
+      const char *objbuf = json.Data();
+      Long_t objlen = json.Length();
+
+      unsigned long objcrc = R__crc32(0, NULL, 0);
+      objcrc = R__crc32(objcrc, (const unsigned char *) objbuf, objlen);
+
+      // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
+      Int_t buflen = 10 + objlen + 8;
+      if (buflen < 512) buflen = 512;
+
+      char *buffer = (char *) malloc(buflen);
+      if (buffer == 0) return 0; // failure
+
+      char *bufcur = buffer;
+
+      *bufcur++ = 0x1f;  // first byte of ZIP identifier
+      *bufcur++ = 0x8b;  // second byte of ZIP identifier
+      *bufcur++ = 0x08;  // compression method
+      *bufcur++ = 0x00;  // FLAG - empty, no any file names
+      *bufcur++ = 0;    // empty timestamp
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    // XFL (eXtra FLags)
+      *bufcur++ = 3;    // OS   3 means Unix
+      //strcpy(bufcur, "item.json");
+      //bufcur += strlen("item.json")+1;
+
+      char dummy[8];
+      memcpy(dummy, bufcur - 6, 6);
+
+      // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
+      unsigned long ziplen = R__memcompress(bufcur - 6, objlen + 6, (char *) objbuf, objlen);
+
+      memcpy(bufcur - 6, dummy, 6);
+
+      bufcur += (ziplen - 6); // jump over compressed data (6 byte is extra ROOT header)
+
+      *bufcur++ = objcrc & 0xff;    // CRC32
+      *bufcur++ = (objcrc >> 8) & 0xff;
+      *bufcur++ = (objcrc >> 16) & 0xff;
+      *bufcur++ = (objcrc >> 24) & 0xff;
+
+      *bufcur++ = objlen & 0xff;  // original data length
+      *bufcur++ = (objlen >> 8) & 0xff;  // original data length
+      *bufcur++ = (objlen >> 16) & 0xff;  // original data length
+      *bufcur++ = (objlen >> 24) & 0xff;  // original data length
+
+      ofs.write(buffer, bufcur - buffer);
+
+      free(buffer);
+   } else {
+      ofs << json.Data();
+   }
+
    ofs.close();
 
    return json.Length();
@@ -474,13 +531,69 @@ Int_t TBufferJSON::ExportToFile(const char* filename, const void *obj, const TCl
 {
    if (!obj || !cl || !filename || (*filename==0)) return 0;
 
-   Int_t compact = 0;
+   Int_t compact = strstr(filename,".json.gz") ? 3 : 0;
    if (option && (*option >= '0') && (*option <='3')) compact = TString(option,1).Atoi();
 
    TString json = TBufferJSON::ConvertToJSON(obj, cl, compact);
 
    std::ofstream ofs (filename);
-   ofs << json.Data();
+
+   if (strstr(filename,".json.gz")) {
+      const char *objbuf = json.Data();
+      Long_t objlen = json.Length();
+
+      unsigned long objcrc = R__crc32(0, NULL, 0);
+      objcrc = R__crc32(objcrc, (const unsigned char *) objbuf, objlen);
+
+      // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
+      Int_t buflen = 10 + objlen + 8;
+      if (buflen < 512) buflen = 512;
+
+      char *buffer = (char *) malloc(buflen);
+      if (buffer == 0) return 0; // failure
+
+      char *bufcur = buffer;
+
+      *bufcur++ = 0x1f;  // first byte of ZIP identifier
+      *bufcur++ = 0x8b;  // second byte of ZIP identifier
+      *bufcur++ = 0x08;  // compression method
+      *bufcur++ = 0x00;  // FLAG - empty, no any file names
+      *bufcur++ = 0;    // empty timestamp
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    // XFL (eXtra FLags)
+      *bufcur++ = 3;    // OS   3 means Unix
+      //strcpy(bufcur, "item.json");
+      //bufcur += strlen("item.json")+1;
+
+      char dummy[8];
+      memcpy(dummy, bufcur - 6, 6);
+
+      // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
+      unsigned long ziplen = R__memcompress(bufcur - 6, objlen + 6, (char *) objbuf, objlen);
+
+      memcpy(bufcur - 6, dummy, 6);
+
+      bufcur += (ziplen - 6); // jump over compressed data (6 byte is extra ROOT header)
+
+      *bufcur++ = objcrc & 0xff;    // CRC32
+      *bufcur++ = (objcrc >> 8) & 0xff;
+      *bufcur++ = (objcrc >> 16) & 0xff;
+      *bufcur++ = (objcrc >> 24) & 0xff;
+
+      *bufcur++ = objlen & 0xff;  // original data length
+      *bufcur++ = (objlen >> 8) & 0xff;  // original data length
+      *bufcur++ = (objlen >> 16) & 0xff;  // original data length
+      *bufcur++ = (objlen >> 24) & 0xff;  // original data length
+
+      ofs.write(buffer, bufcur - buffer);
+
+      free(buffer);
+   } else {
+      ofs << json.Data();
+   }
+
    ofs.close();
 
    return json.Length();
@@ -883,9 +996,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          std::map<const void *, unsigned>::const_iterator iter = fJsonrMap.find(obj);
          if (iter != fJsonrMap.end()) {
             // old-style refs, coded into string like "$ref12"
-            AppendOutput(Form("\"$ref:%u\"", iter->second));
-            // new-style refs, coded into extra object {"$ref":12}, auto-detected by JSROOT
-            //AppendOutput(Form("{\"$ref\":%u}", iter->second));
+            // AppendOutput(Form("\"$ref:%u\"", iter->second));
+            // new-style refs, coded into extra object {"$ref":12}, auto-detected by JSROOT 4.8 and higher
+            AppendOutput(Form("{\"$ref\":%u}", iter->second));
             goto post_process;
          }
          fJsonrMap[obj] = fJsonrCnt;
@@ -958,12 +1071,21 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          if ((size * 2 == stack->fValues.GetLast()) &&
                ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
                 (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
-            // special handling for std::map. Create entries like { 'first' : key, 'second' : value }
+            // special handling for std::map. Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
+
+            TString pairtype = cl->GetName();
+            if (pairtype.Index("multimap<")==0) pairtype.Replace(0, 9, "pair<"); else
+            if (pairtype.Index("map<")==0) pairtype.Replace(0, 4, "pair<"); else pairtype = "TPair";
+            pairtype = TString("\"") + pairtype + TString("\"");
             for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
                fValue.Append(separ);
                separ = fArraySepar.Data();
-               fJsonrCnt++; // account each entry in map, can conflict with objects inside values
+               // fJsonrCnt++; // do not add entry in the map, can conflict with objects inside values
                fValue.Append("{");
+               fValue.Append("\"$pair\"");
+               fValue.Append(fSemicolon);
+               fValue.Append(pairtype.Data());
+               fValue.Append(fArraySepar);
                fValue.Append("\"first\"");
                fValue.Append(fSemicolon);
                fValue.Append(stack->fValues.At(k)->GetName());
@@ -1061,8 +1183,8 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
       if (!first) AppendOutput(fArraySepar.Data());
 
       if (map) {
-         fJsonrCnt++; // account map pair as JSON object
-         AppendOutput("{", "\"_typename\"");
+         // fJsonrCnt++; // do not account map pair as JSON object
+         AppendOutput("{", "\"$pair\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"TPair\"");
          AppendOutput(fArraySepar.Data(), "\"first\"");
