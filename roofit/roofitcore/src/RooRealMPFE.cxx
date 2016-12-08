@@ -673,16 +673,16 @@ Double_t RooRealMPFE::evaluate() const
     std::clock_t c_end = std::clock();
     auto end = std::chrono::high_resolution_clock::now();
 
-    float c_timing_s = (c_end - c_begin) / CLOCKS_PER_SEC;
+    double c_timing_s = (c_end - c_begin) / static_cast<double>(CLOCKS_PER_SEC);
     double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
                       (end-begin).count() / 1.e9;
     std::cout << "evaluate MPFE client timing (wallclock): " << timing_s << "s" << std::endl;
     std::cout << "evaluate MPFE client timing (cpu time): " << c_timing_s << "s" << std::endl;
 
     outfile << "{\"evaluate_MPFE_client_walltime_s\": \"" << timing_s;
-    outfile << "{\"evaluate_MPFE_client_cputime_s\": \"" << c_timing_s;
+    outfile << "\", \"evaluate_MPFE_client_cputime_s\": \"" << c_timing_s;
 
-    c_timing_s = (c_before_retrieve - c_begin) / CLOCKS_PER_SEC;
+    c_timing_s = (c_before_retrieve - c_begin) / static_cast<double>(CLOCKS_PER_SEC);
     timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
                 (before_retrieve-begin).count() / 1.e9;
     std::cout << "evaluate MPFE client (before retrieve) timing (wallclock): " << timing_s  << "s" << std::endl;
@@ -691,7 +691,7 @@ Double_t RooRealMPFE::evaluate() const
     outfile << "\", \"evaluate_MPFE_client_before_retrieve_walltime_s\": \"" << timing_s;
     outfile << "\", \"evaluate_MPFE_client_before_retrieve_cputime_s\": \"" << c_timing_s;
 
-    c_timing_s = (c_after_retrieve - c_before_retrieve) / CLOCKS_PER_SEC;
+    c_timing_s = (c_after_retrieve - c_before_retrieve) / static_cast<double>(CLOCKS_PER_SEC);
     timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
                 (after_retrieve-before_retrieve).count() / 1.e9;
     std::cout << "evaluate MPFE client (retrieve) timing (wallclock): " << timing_s << "s" << std::endl;
