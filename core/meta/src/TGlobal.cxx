@@ -68,7 +68,7 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
 
 TGlobal::~TGlobal()
 {
-   gCling->DataMemberInfo_Delete(fInfo);
+   if (fInfo && gCling) gCling->DataMemberInfo_Delete(fInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
