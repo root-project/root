@@ -302,7 +302,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
                       (end-begin).count() / 1.e9;
-    std::cout << "evaluate mpmaster collect timing (wallclock): " << timing_s << "s" << std::endl;
+//    std::cout << "evaluate mpmaster collect timing (wallclock): " << timing_s << "s" << std::endl;
 
     outfile << "{\"evaluate_mpmaster_collect_walltime_s\": \"" << timing_s;
 
