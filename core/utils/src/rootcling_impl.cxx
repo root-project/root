@@ -1,22 +1,12 @@
 // Authors: Axel Naumann, Philippe Canal, Danilo Piparo
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-#ifdef _MSC_VER
-  #define R__DLLEXPORT __declspec(dllexport)
-#else
-  #define R__DLLEXPORT
-#endif
-
-extern "C" {
-   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
-}
 
 const char *shortHelp =
    "Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
@@ -173,6 +163,9 @@ const char *rootClingHelp =
    "   MyClass(TRootIOCtor*);                                                   \n"
    "   MyClass(); // Or a constructor with all its arguments defaulted.         \n";
 
+
+#include "rootcling_impl.h"
+
 #include "RConfigure.h"
 #include "RConfig.h"
 
@@ -182,20 +175,6 @@ const char *rootClingHelp =
 #include <vector>
 #include <algorithm>
 #include <stdio.h>
-
-#ifdef _WIN32
-#ifdef system
-#undef system
-#endif
-#include <windows.h>
-#include <Tlhelp32.h> // for MAX_MODULE_NAME32
-#include <process.h>
-#define PATH_MAX _MAX_PATH
-#ifdef interface
-// prevent error coming from clang/AST/Attrs.inc
-#undef interface
-#endif
-#endif
 
 #include <errno.h>
 #include <string>
@@ -242,10 +221,6 @@ const char *rootClingHelp =
 
 #include "OptionParser.h"
 
-#ifndef ROOT_STAGE1_BUILD
-#include "rootclingTCling.h"
-#endif
-
 #ifdef WIN32
 const std::string gLibraryExtension(".dll");
 #else
@@ -265,11 +240,9 @@ const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 #else
 #include <unistd.h>
 #endif
-#ifdef ROOT_STAGE1_BUILD
-const bool buildingROOT = true;
-#else
-bool buildingROOT = false;
-#endif
+
+bool gBuildingROOT = false;
+const ROOT::Internal::RootCling::DriverConfig* gDriverConfig = nullptr;
 
 #ifdef R__EXTERN_LLVMDIR
 # define R__LLVMDIR R__EXTERN_LLVMDIR
@@ -314,29 +287,30 @@ struct SetROOTSYS {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_STAGE1_BUILD
 void EmitStreamerInfo(const char *normName)
 {
-   AddStreamerInfoToROOTFile(normName);
+   if (gDriverConfig->fAddStreamerInfoToROOTFile)
+      gDriverConfig->fAddStreamerInfoToROOTFile(normName);
 }
 static void EmitTypedefs(const std::vector<clang::TypedefNameDecl *> &tdvec)
 {
+   if (!gDriverConfig->fAddTypedefToROOTFile)
+      return;
    for (const auto td : tdvec)
-      AddTypedefToROOTFile(td->getQualifiedNameAsString().c_str());
+      gDriverConfig->fAddTypedefToROOTFile(td->getQualifiedNameAsString().c_str());
 }
 static void EmitEnums(const std::vector<clang::EnumDecl *> &enumvec)
 {
+   if (!gDriverConfig->fAddEnumToROOTFile)
+      return;
    for (const auto en : enumvec) {
       // Enums within tag decls are processed as part of the tag.
       if (clang::isa<clang::TranslationUnitDecl>(en->getDeclContext())
             || clang::isa<clang::LinkageSpecDecl>(en->getDeclContext())
             || clang::isa<clang::NamespaceDecl>(en->getDeclContext()))
-         AddEnumToROOTFile(en->getQualifiedNameAsString().c_str());
+         gDriverConfig->fAddEnumToROOTFile(en->getQualifiedNameAsString().c_str());
    }
 }
-#else
-void EmitStreamerInfo(const char *) { }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -391,7 +365,7 @@ static std::string GetRelocatableHeaderName(const std::string &header, const std
       // different relative path to the header files.
       result.erase(0, lenCurrWorkDir);
    }
-   if (buildingROOT) {
+   if (gBuildingROOT) {
       // For ROOT, convert module directories like core/base/inc/ to include/
       int posInc = result.find("/inc/");
       if (posInc != -1) {
@@ -647,48 +621,11 @@ bool IsSelectionFile(const char *filename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the executable path name, used by SetRootSys().
-
-const char *GetExePath()
-{
-   static std::string exepath;
-   if (exepath == "") {
-#ifdef __APPLE__
-      exepath = _dyld_get_image_name(0);
-#endif
-#if defined(__linux) || defined(__linux__)
-      char linkname[PATH_MAX];  // /proc/<pid>/exe
-      char buf[PATH_MAX];     // exe path name
-      pid_t pid;
-
-      // get our pid and build the name of the link in /proc
-      pid = getpid();
-      snprintf(linkname, PATH_MAX, "/proc/%i/exe", pid);
-      int ret = readlink(linkname, buf, 1024);
-      if (ret > 0 && ret < 1024) {
-         buf[ret] = 0;
-         exepath = buf;
-      }
-#endif
-#ifdef _WIN32
-      char *buf = new char[MAX_MODULE_NAME32 + 1];
-      ::GetModuleFileName(NULL, buf, MAX_MODULE_NAME32 + 1);
-      char *p = buf;
-      while ((p = strchr(p, '\\')))
-         * (p++) = '/';
-      exepath = buf;
-      delete[] buf;
-#endif
-   }
-   return exepath.c_str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set the ROOTSYS env var based on the executable location.
 
 void SetRootSys()
 {
-   const char *exepath = GetExePath();
+   const char *exepath = gDriverConfig->fExePath.c_str();
    if (exepath && *exepath) {
 #if !defined(_WIN32)
       char *ep = new char[PATH_MAX];
@@ -2123,7 +2060,7 @@ bool Which(cling::Interpreter &interp, const char *fname, string &pname)
 
 const char *CopyArg(const char *original)
 {
-   if (!buildingROOT)
+   if (!gBuildingROOT)
       return original;
 
    if (IsSelectionFile(original))
@@ -2234,7 +2171,7 @@ int GenerateModule(TModuleGenerator &modGen,
 
       CI->getFrontendOpts().RelocatablePCH = true;
       std::string ISysRoot("/DUMMY_SYSROOT/include/");
-      if (buildingROOT)
+      if (gBuildingROOT)
          ISysRoot = (currentDirectory + "/").c_str();
 
       Writer.WriteAST(CI->getSema(), modGen.GetModuleFileName().c_str(),
@@ -2879,9 +2816,11 @@ int CheckClassesForInterpreterOnlyDicts(cling::Interpreter &interp,
 /// Make up for skipping RegisterModule, now that dictionary parsing
 /// is done and these headers cannot be selected anymore.
 
-#ifndef ROOT_STAGE1_BUILD
 int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootPCM=false)
 {
+   if (!gDriverConfig->fCloseStreamerInfoROOTFile)
+      return 0;
+
    interp.parseForModule("#include \"TStreamerInfo.h\"\n"
                            "#include \"TFile.h\"\n"
                            "#include \"TObjArray.h\"\n"
@@ -2900,12 +2839,12 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
                            "#include \"TArray.h\"\n"
                            "#include \"TRefArray.h\"\n"
                            "#include \"root_std_complex.h\"\n");
-   if (!CloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
+   if (!gDriverConfig->fCloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
       return 1;
    }
    return 0;
 }
-#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int GenerateFullDict(std::ostream &dictStream,
@@ -3026,14 +2965,14 @@ int GenerateFullDict(std::ostream &dictStream,
    // coverity[fun_call_w_exception] - that's just fine.
    ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
 
-#ifndef ROOT_STAGE1_BUILD
-   EmitTypedefs(scan.fSelectedTypedefs);
-   EmitEnums(scan.fSelectedEnums);
-   // Make up for skipping RegisterModule, now that dictionary parsing
-   // is done and these headers cannot be selected anymore.
-   int finRetCode = FinalizeStreamerInfoWriting(interp, writeEmptyRootPCM);
-   if (finRetCode != 0) return finRetCode;
-#endif
+   if (!gDriverConfig->fBuildingROOTStage1) {
+      EmitTypedefs(scan.fSelectedTypedefs);
+      EmitEnums(scan.fSelectedEnums);
+      // Make up for skipping RegisterModule, now that dictionary parsing
+      // is done and these headers cannot be selected anymore.
+      int finRetCode = FinalizeStreamerInfoWriting(interp, writeEmptyRootPCM);
+      if (finRetCode != 0) return finRetCode;
+   }
 
    return 0;
 }
@@ -3736,7 +3675,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int RootCling(int argc,
+int RootClingMain(int argc,
               char **argv,
               bool isDeep = false,
               bool isGenreflex = false)
@@ -3759,13 +3698,13 @@ int RootCling(int argc,
    GetCurrentDirectory(currentDirectory);
 
    ic = 1;
-#ifndef ROOT_STAGE1_BUILD
-   if (strcmp("-rootbuild", argv[ic]) == 0) {
-      // running rootcling for ROOT itself.
-      buildingROOT = true;
-      ic++;
+   if (!gDriverConfig->fBuildingROOTStage1) {
+      if (strcmp("-rootbuild", argv[ic]) == 0) {
+         // running rootcling for ROOT itself.
+         gBuildingROOT = true;
+         ic++;
+      }
    }
-#endif
    if (!strcmp(argv[ic], "-v")) {
       ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
@@ -3917,7 +3856,7 @@ int RootCling(int argc,
    }
 
 #if defined(ROOTINCDIR)
-   if (!buildingROOT)
+   if (!gBuildingROOT)
       SetRootSys();
 #endif
 
@@ -4076,7 +4015,7 @@ int RootCling(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(buildingROOT));
+   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(gBuildingROOT));
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -4100,7 +4039,7 @@ int RootCling(int argc,
    }
 
    // cling-only arguments
-   clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT));
+   clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(gBuildingROOT));
    // We do not want __ROOTCLING__ in the pch!
    if (!onepcm) {
       clingArgs.push_back("-D__ROOTCLING__");
@@ -4128,26 +4067,30 @@ int RootCling(int argc,
 #ifdef R__LLVMRESOURCEDIR
    resourceDir = "@R__LLVMRESOURCEDIR@";
 #else
-   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
+   resourceDir = TMetaUtils::GetLLVMResourceDir(gBuildingROOT);
 #endif
 
-#ifndef ROOT_STAGE1_BUILD
-   // Pass the interpreter arguments to TCling's interpreter:
-   clingArgsC.push_back("-resource-dir");
-   clingArgsC.push_back(resourceDir.c_str());
-   clingArgsC.push_back(0); // signal end of array
-   const char ** &extraArgs = *TROOT__GetExtraInterpreterArgs();
-   extraArgs = &clingArgsC[1]; // skip binary name
-   cling::Interpreter &interp = *TCling__GetInterpreter();
-   std::list<std::string> filesIncludedByLinkdef;
-   if (!isGenreflex && !onepcm) {
-      std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(&interp, filesIncludedByLinkdef));
-      interp.setCallbacks(std::move(callBacks));
+   std::unique_ptr<cling::Interpreter> owningInterpPtr;
+   cling::Interpreter* interpPtr = nullptr;
+
+   if (!gDriverConfig->fBuildingROOTStage1) {
+      // Pass the interpreter arguments to TCling's interpreter:
+      clingArgsC.push_back("-resource-dir");
+      clingArgsC.push_back(resourceDir.c_str());
+      clingArgsC.push_back(0); // signal end of array
+      const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
+      extraArgs = &clingArgsC[1]; // skip binary name
+      interpPtr = gDriverConfig->fTCling__GetInterpreter();
+      if (!isGenreflex && !onepcm) {
+         std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(&interp, filesIncludedByLinkdef));
+         interpPtr->setCallbacks(std::move(callBacks));
+      }
+   } else {
+      owningInterpPtr.reset(new cling::Interpreter(clingArgsC.size(), &clingArgsC[0],
+                                                   resourceDir.c_str()));
+      interpPtr = owningInterpPtr.get();
    }
-#else
-   cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
-                             resourceDir.c_str());
-#endif // ROOT_STAGE1_BUILD
+   cling::Interpreter &interp = *interpPtr;
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
       ROOT::TMetaUtils::Info(0, "\n");
@@ -4175,7 +4118,7 @@ int RootCling(int argc,
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
 #ifdef ROOTINCDIR
-   const bool useROOTINCDIR = !buildingROOT;
+   const bool useROOTINCDIR = !gBuildingROOT;
 #else
    const bool useROOTINCDIR = false;
 #endif
@@ -4296,10 +4239,10 @@ int RootCling(int argc,
       }
    }
 
-#ifndef ROOT_STAGE1_BUILD
-   for (const auto & baseModule : baseModules)
-      AddAncestorPCMROOTFile(baseModule.c_str());
-#endif
+   if (gDriverConfig->fAddAncestorPCMROOTFile) {
+      for (const auto & baseModule : baseModules)
+         gDriverConfig->fAddAncestorPCMROOTFile(baseModule.c_str());
+   }
 
    if (!firstInputFile) {
       ROOT::TMetaUtils::Error(0, "%s: no input files specified\n", argv[0]);
@@ -4327,7 +4270,7 @@ int RootCling(int argc,
    // Until the module are actually enabled in ROOT, we need to register
    // the 'current' directory to make it relocatable (i.e. have a way
    // to find the headers).
-   if (!buildingROOT && !noIncludePaths){
+   if (!gBuildingROOT && !noIncludePaths){
       string incCurDir = "-I";
       incCurDir += currentDirectory;
       pcmArgs.push_back(incCurDir);
@@ -4373,23 +4316,23 @@ int RootCling(int argc,
                            inlineInputHeader,
                            sharedLibraryPathName);
 
-#ifndef ROOT_STAGE1_BUILD
-   if (filesIncludedByLinkdef.size() !=0)
+   if (!gDriverConfig->fBuildingROOTStage1 && filesIncludedByLinkdef.size() !=0)
       pcmArgs.push_back(argv[linkdefLoc]);
-#endif
+   }
 
    modGen.ParseArgs(pcmArgs);
-#ifndef ROOT_STAGE1_BUILD
-   // Forward the -I, -D, -U
-   for (const std::string & inclPath : modGen.GetIncludePaths()) {
-      interp.AddIncludePath(inclPath);
+
+   if (!gDriverConfig->fBuildingROOTStage1) {
+      // Forward the -I, -D, -U
+      for (const std::string & inclPath : modGen.GetIncludePaths()) {
+         interp.AddIncludePath(inclPath);
+      }
+      std::stringstream definesUndefinesStr;
+      modGen.WritePPDefines(definesUndefinesStr);
+      modGen.WritePPUndefines(definesUndefinesStr);
+      if (!definesUndefinesStr.str().empty())
+         interp.declare(definesUndefinesStr.str());
    }
-   std::stringstream definesUndefinesStr;
-   modGen.WritePPDefines(definesUndefinesStr);
-   modGen.WritePPUndefines(definesUndefinesStr);
-   if (!definesUndefinesStr.str().empty())
-      interp.declare(definesUndefinesStr.str());
-#endif
 
    if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
          || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
@@ -4457,7 +4400,7 @@ int RootCling(int argc,
 
    // Exclude string not to re-generatre the dictionary
    std::vector<std::pair<std::string, std::string>> namesForExclusion;
-   if (!buildingROOT) {
+   if (!gBuildingROOT) {
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name, "std::string"));
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::pattern, "ROOT::Meta::Selection*"));
    }
@@ -4673,9 +4616,10 @@ int RootCling(int argc,
       if (doSplit) {
          GenerateNecessaryIncludes(splitDictStream, includeForSource, extraIncludes);
       }
-#ifndef ROOT_STAGE1_BUILD
-      InitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
-#endif
+      if (gDriverConfig->fInitializeStreamerInfoROOTFile) {
+         gDriverConfig->fInitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
+      }
+
       // The order of addition to the list of constructor type
       // is significant.  The list is sorted by with the highest
       // priority first.
@@ -4692,9 +4636,9 @@ int RootCling(int argc,
       rootclingRetCode += CheckClassesForInterpreterOnlyDicts(interp, scan);
       // generate an empty pcm nevertheless for consistency
       // Negate as true is 1 and true is returned in case of success.
-#ifndef ROOT_STAGE1_BUILD
-      rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
-#endif
+      if (!gDriverConfig->fBuildingROOTStage1) {
+         rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
+      }
    } else {
       rootclingRetCode += GenerateFullDict(splitDictStream,
                                  interp,
@@ -4743,12 +4687,14 @@ int RootCling(int argc,
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
                                                                                       detectedUmbrella,
                                                                                       true);
-      const std::string fwdDeclsString =
-#ifndef ROOT_STAGE1_BUILD
-         writeEmptyRootPCM ? "nullptr" : GenerateFwdDeclString(scan, interp);
-#else
-         "\"\"";
-#endif
+      std::string fwdDeclsString = "\"\"";
+      if (!gDriverConfig->fBuildingROOTStage1) {
+         if (writeEmptyRootPCM) {
+            fwdDeclsString = "nullptr";
+         } else {
+            fwdDeclsString = GenerateFwdDeclString(scan, interp);
+         }
+      }
       GenerateModule(modGen,
                      CI,
                      currentDirectory,
@@ -5133,10 +5079,10 @@ namespace genreflex {
       }
 
       char **argv =  & (argvVector[0]);
-      int rootclingReturnCode = RootCling(argc,
-                                          argv,
-                                          isDeep,
-                                          true);
+      int rootclingReturnCode = RootClingMain(argc,
+                                              argv,
+                                              isDeep,
+                                              true);
 
       for (int i = 0; i < argc; i++)
          delete [] argvVector[i];
@@ -5300,7 +5246,7 @@ bool IsGoodLibraryName(const std::string &name)
 /// The --deep option of genreflex is passed as function parameter to rootcling
 /// since it's not needed at the moment there.
 
-int GenReflex(int argc, char **argv)
+int GenReflexMain(int argc, char **argv)
 {
    using namespace genreflex;
 
@@ -5862,23 +5808,16 @@ int GenReflex(int argc, char **argv)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __ICC
-#pragma warning disable 69
-#endif
-
-int main(int argc, char **argv)
+int ROOT::Internal::RootCling::rootcling_driver(int argc, char **argv,
+                                                const ROOT::Internal::RootCling::DriverConfig& config)
 {
-   // Force the emission of the symbol - the compiler cannot know that argv
-   // is always set.
-   if (!argv) {
 
-      auto dummyVal =  (int)(long)&usedToIdentifyRootClingByDlSym;
-      return dummyVal;
-   }
+   assert(!gDriverConfig && "Driver configuration already set!");
+   gDriverConfig = &config;
 
-   const std::string exePath(GetExePath());
+   gBuildingROOT = config.fBuildingROOTStage1; // gets refined later
 
-   std::string exeName = ExtractFileName(exePath);
+   std::string exeName = ExtractFileName(config.fExePath);
 
    // Select according to the name of the executable the procedure to follow:
    // 1) RootCling
@@ -5888,16 +5827,18 @@ int main(int argc, char **argv)
    int retVal = 0;
 
    if (std::string::npos != exeName.find("rootcling")) {
-      retVal = RootCling(argc, argv);
+      retVal = RootClingMain(argc, argv);
    } else if (std::string::npos != exeName.find("genreflex")) {
-      retVal = GenReflex(argc, argv);
+      retVal = GenReflexMain(argc, argv);
    } else { //default
-      retVal = RootCling(argc, argv);
+      retVal = RootClingMain(argc, argv);
    }
 
    auto nerrors = ROOT::TMetaUtils::GetNumberOfWarningsAndErrors();
    if (nerrors > 0){
       ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
    }
+
+   gDriverConfig = nullptr;
    return nerrors + retVal;
 }
