@@ -194,7 +194,7 @@ protected:
    ClassDef(TNDArrayT, 1); // N-dimensional array
 };
 
-#ifndef __CINT__
+// FIXME: Remove once we implement https://sft.its.cern.ch/jira/browse/ROOT-6284
 // When building with -fmodules, it instantiates all pending instantiations,
 // instead of delaying them until the end of the translation unit.
 // We 'got away with' probably because the use and the definition of the
@@ -204,7 +204,6 @@ protected:
 // specialization in order to compile the dictionary G__Hist.cxx.
 template<> void TNDArrayT<double>::Streamer(TBuffer &R__b);
 template<> TClass *TNDArrayT<double>::Class();
-#endif // __CINT__
 
 
 #endif // ROOT_TNDArray
