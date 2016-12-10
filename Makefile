@@ -1193,18 +1193,18 @@ changelog:
 
 releasenotes:
 	@$(MAKERELNOTES)
-ROOTCLING_CXXFLAGS := $(CXXFLAGS)
+ROOTPCHCXXFLAGS := $(CXXFLAGS)
 # rootcling uses our internal version of clang. Passing the modules flags here
 # would allow rootcling to find module files built by the external compiler
 # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
 # different clang version (even different commit revision) as the modules files
 # are not guaranteed to be compatible among clang revisions.
 ifeq ($(CXXMODULES),yes)
-ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(CXXFLAGS))
+ROOTPCHCXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(ROOTPCHCXXFLAGS))
 endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTCLING_CXXFLAGS)
+	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS)
 	@$(MAKEPCH) $@
 
 $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
