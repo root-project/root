@@ -24,7 +24,6 @@ METAUTILSS     := $(filter-out $(MODDIRS)/RStl.%,\
 
 METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
 METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx $(MODDIRS)/RStl.cxx
-METAUTILSTH     += $(MODDIRI)/root_std_complex.h
 METAUTILSTH     += $(MODDIRI)/libcpp_string_view.h
 METAUTILSTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
 
