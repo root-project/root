@@ -92,5 +92,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-$(COCOAOBJCPPO) $(COCOADO) $(COCOAO): CXXFLAGS += $(COCOANDEBUG) $(FREETYPEINC)
-
+ifeq ($(CXXMODULES),yes)
+# We cannot compile objc/objc++ TU with -fmodules-local-submodule-visibility.
+$(COCOAOBJCPPO) $(COCOADO) $(COCOAO):
+OBJCXXFLAGS := $(CXXFLAGS) $(COCOANDEBUG) $(FREETYPEINC)
+# FIXME: Until we resolve the TMVA Pattern vs cocoa Pattern Quick*.h
+OBJCXXFLAGS  := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(OBJCXXFLAGS))
+else
+$(COCOAOBJCPPO) $(COCOADO) $(COCOAO): OBJCXXFLAGS := $(CXXFLAGS) $(COCOANDEBUG) $(FREETYPEINC)
+endif

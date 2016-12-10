@@ -71,4 +71,6 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 ifneq ($(BUILDCOCOA),yes)
 $(ROOTXXO): CXXFLAGS += $(X11INCDIR:%=-I%)
+else
+$(ROOTXXO): OBJCXXFLAGS += $(CXXFLAGS)
 endif

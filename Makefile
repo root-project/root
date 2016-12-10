@@ -672,8 +672,8 @@ $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.c
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.mm
 	$$(MAKEDIR)
-	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXMKDEPFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
+	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(OBJCXXFLAGS) -D__cplusplus -- $$<
+	$$(CXX) $$(OPT) $$(OBJCXXFLAGS) $$(CXXMKDEPFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.f
 	$$(MAKEDIR)
@@ -702,8 +702,8 @@ $(foreach module,$(MODULESGENERIC),$(eval $(call SRCTOOBJ_template,$(module))))
 	$(CC) $(OPT) $(CFLAGS) $(CXXMKDEPFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.mm
-	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXMKDEPFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(OBJCXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(OBJCXXFLAGS) $(CXXMKDEPFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
 
 %.o: %.f
 ifeq ($(F77),f2c)

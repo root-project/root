@@ -93,4 +93,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-$(QUARTZOBJCPPO): CXXFLAGS += $(QUARTZNDEBUG)
+$(QUARTZOBJCPPO): OBJCXXFLAGS += $(CXXFLAGS) $(QUARTZNDEBUG)
