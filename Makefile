@@ -630,7 +630,6 @@ CFLAGS   += --gcc-toolchain=$(GCCTOOLCHAIN)
 LDFLAGS  += --gcc-toolchain=$(GCCTOOLCHAIN)
 endif
 
-
 ALLLIBS      := $(CORELIB)
 ALLMAPS      := $(COREMAP)
 ALLEXECS     :=
