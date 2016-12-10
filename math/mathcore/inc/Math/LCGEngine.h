@@ -13,9 +13,10 @@
 #ifndef ROOT_Math_LCGEngine
 #define ROOT_Math_LCGEngine
 
-#include <cstdint>
-#include <vector>
 #include <cassert>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 class TRandomEngine  {
 public:

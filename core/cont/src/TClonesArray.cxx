@@ -123,13 +123,15 @@ When investigating misuse of TClonesArray, please make sure of the following:
      run.
 */
 
-#include <stdlib.h>
 #include "TClonesArray.h"
+
 #include "TError.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TObject.h"
 #include "TObjectTable.h"
 
+#include <stdlib.h>
 
 ClassImp(TClonesArray)
 
