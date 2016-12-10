@@ -34,7 +34,7 @@ ifeq ($(CXXMODULES),yes)
   CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ROOTXH_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Roofit_$(MODNAME) { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
-  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
   CXXMODULES_MODULEMAP_CONTENTS += // link no-library-created \\n
   CXXMODULES_MODULEMAP_CONTENTS += } \\n
 endif

@@ -9,11 +9,12 @@ module ThreadLocalStorage {
 }
 // These can be used in C mode.
 module ROOT_Types {
-  header "RtypesCore.h"
-  textual header "RConfig.h"
-  textual header "RConfigure.h"
-  textual header "RVersion.h"
-  textual header "TException.h" // This should go in RConfig.h as it defines macros.
+  module "RtypesCore.h" { header "RtypesCore.h" export * }
+  module "RConfig.h" { textual header "RConfig.h" export * }
+  module "RConfigure.h" { textual header "RConfigure.h" export * }
+  module "RVersion.h" { textual header "RVersion.h" export * }
+  // This should go in RConfig.h as it defines macros.
+  module "TException.h" { textual header "TException.h" export * }
   export *
 }
 
@@ -26,30 +27,31 @@ module ROOT_Core_Config_C {
  //requires cplusplus
  
  // needs C++ and in some cases we build with C (ZTrees.h, through ZDeflate.c)
- textual header "RConversionRuleParser.h"
+ module "RConversionRuleParser.h" { textual header "RConversionRuleParser.h" export * }
  // FIXME: #included by RConversionRuleParser.h. Do we need the dependency on
  // RConversionRuleParser.h at all?
- header "TSchemaRuleProcessor.h"
+ module "TSchemaRuleProcessor.h" { header "TSchemaRuleProcessor.h" export * }
  exclude header "RtypesImp.h"
- header "Rtypes.h"
- header "TClassEdit.h"
- header "TMetaUtils.h"
- header "TSchemaType.h"
- header "DllImport.h" // Should merge in RConfig.h.
- header "TGenericClassInfo.h"
- header "TSchemaHelper.h"
- header "ESTLType.h"
- header "RStringView.h"
- header "Varargs.h" // Old should revisit, either drop or delete.
- header "RootMetaSelection.h"
- header "TString.h"
- header "snprintf.h" // #included by Rtypes, could go away?
- header "strlcpy.h" // #included by Rtypes, could go away?
+ module "Rtypes.h" { header "Rtypes.h" export * }
+ module "TClassEdit.h" { header "TClassEdit.h" export * }
+ module "TMetaUtils.h" { header "TMetaUtils.h" export * }
+ module "TSchemaType.h" { header "TSchemaType.h" export * }
+ module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
+ module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * }
+ module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
+ module "ESTLType.h" { header "ESTLType.h" export * }
+ module "RStringView.h" { header "RStringView.h" export * }
+ module "Varargs.h" { header "Varargs.h" export * } // Old should revisit, either drop or delete.
+ module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
+ module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
+ module "strlcpy.h" { header "strlcpy.h" export * } // #included by Rtypes, could go away?
 
- header "TMathBase.h"
+ // Those two are involved in some weird cyclic dependency ROOT->ROOT_Core_Config->ROOT
+ //module "TString.h" { header "TString.h" export * }
+ //module "TMathBase.h" { header "TMathBase.h" export * }
  // Should we marked textual because of inclusion libcpp_string_view.h,
  // using macros to set up the header file.
- textual header "RWrap_libcpp_string_view.h"
+ module "RWrap_libcpp_string_view.h" {  textual header "RWrap_libcpp_string_view.h" export * }
 
  export *
 }

@@ -876,21 +876,17 @@ CXXMODULES_CORE_HEADERS := $(patsubst %,header \"%\"\\n, $(COREDICTH_REL))
 CXXMODULES_CORE_MODULEMAP_CONTENTS := module Core { \\n \
   requires cplusplus \\n \
   $(CXXMODULES_CORE_HEADERS) \
-  export *  \\n \
+  "export * \\n" \
   link \"$(CORELIB)\" \\n \
   } \\n
+CXXMODULES_ROOT_MODULE := "module ROOT {\\n" \
+	                  "$(CXXMODULES_CORE_MODULEMAP_CONTENTS)" \
+                          "$(CXXMODULES_MODULEMAP_CONTENTS)" \
+			  "\\n } //module ROOT \\n"
 include/module.modulemap: $(ROOT_SRCDIR)/build/unix/module.modulemap
 	cp $< $@
-ifneq ($(PLATFORM),macosx)
-# FIXME: We should be able to remove this once OSX supports properly
-# -fmodules-local-submodule-visibility flag and we can turn it on.
-	@echo "module ROOT {\\n" >> $@
-endif
-	@echo "$(CXXMODULES_CORE_MODULEMAP_CONTENTS)" >> $@
-	@echo "$(CXXMODULES_MODULEMAP_CONTENTS)" >> $@
-ifneq ($(PLATFORM),macosx)
-	@echo "} //module ROOT \\n" >> $@
-endif
+	@echo "$(value CXXMODULES_ROOT_MODULE)" | sed -E 's|(\s*)(.*) header "(.*)"|\1 module "\3" { \2 header "\3" export * }|g' >> $@
+
 endif
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.
