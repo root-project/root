@@ -128,24 +128,27 @@ if(cxxmodules)
   set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
   if(CXX_SUPPORTS_MODULES)
     file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
+    set(ROOT_CXXMODULES_COMMONFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack")
+    if (APPLE)
+      # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+      # trickery to override the contents of system's OpenGL.
+      # On OSX #include TGLIncludes.h will trigger the creation of the system
+      # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+      # the translation units which it needs to 'rewrite'. The translation units
+      # which need glew support are in graf3d. However, depending on the modulemap
+      # organization we could request it implicitly (eg. one big module for ROOT).
+      # In these cases we need to 'prepend' this include path to the compiler in order
+      # for glew.h to it its trick.
+      #set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem"
+
+      # Workaround the issue described above by not picking up the system module
+      # maps. In this way we can use the -fmodules-local-submodule-visibility
+      # flag.
+      set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
+    endif(APPLE)
     # This var is useful when we want to compile things without cxxmodules.
-    set(ROOT_CXXMODULES_CXXFLAGS "-fmodules -fcxx-modules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
-    if(APPLE)
-     # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
-     # trickery to override the contents of system's OpenGL.
-     # On OSX #include TGLIncludes.h will trigger the creation of the system
-     # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
-     # the translation units which it needs to 'rewrite'. The translation units
-     # which need glew support are in graf3d. However, depending on the modulemap
-     # organization we could request it implicitly (eg. one big module for ROOT).
-     # In these cases we need to 'prepend' this include path to the compiler in order
-     # for glew.h to it its trick.
-      set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_CFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem ")
-      set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_CXXFLAGS}  -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem ")
-    else()
-      set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_CXXFLAGS} -Xclang -fmodules-local-submodule-visibility")
-    endif(NOT APPLE)
-    set(ROOT_CXXMODULES_CFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/")
+    set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility")
+    set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
   else()
