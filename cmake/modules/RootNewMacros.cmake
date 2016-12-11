@@ -410,6 +410,15 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     list(APPEND found_headers "${dir_headers}")
   endforeach()
 
+  if (APPLE)
+    # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
+    # problem.
+    # FIXME: error: declaration of 'NSObject' must be imported from module 'ROOT.libBonjour.so.TBonjourBrowser.h' before it is required
+    if (${library} MATCHES "libKrb5Auth.so" OR ${library} MATCHES "(libGCocoa|libGQuartz)\..*")
+      return()
+    endif()
+  endif(APPLE)
+
   set(excluded_headers "RConversionRuleParser.h TSchemaRuleProcessor.h 
                         RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
 			Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h
