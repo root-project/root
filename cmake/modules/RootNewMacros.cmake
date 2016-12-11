@@ -411,7 +411,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   endforeach()
 
   set(excluded_headers "RConversionRuleParser.h TSchemaRuleProcessor.h 
-                        RConfig.h RVersion.h RtypesImp.h
+                        RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
 			Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h
 			TSchemaType.h DllImport.h TGenericClassInfo.h
 			TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
