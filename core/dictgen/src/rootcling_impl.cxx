@@ -4073,6 +4073,7 @@ int RootClingMain(int argc,
    std::unique_ptr<cling::Interpreter> owningInterpPtr;
    cling::Interpreter* interpPtr = nullptr;
 
+   std::list<std::string> filesIncludedByLinkdef;
    if (!gDriverConfig->fBuildingROOTStage1) {
       // Pass the interpreter arguments to TCling's interpreter:
       clingArgsC.push_back("-resource-dir");
@@ -4082,7 +4083,7 @@ int RootClingMain(int argc,
       extraArgs = &clingArgsC[1]; // skip binary name
       interpPtr = gDriverConfig->fTCling__GetInterpreter();
       if (!isGenreflex && !onepcm) {
-         std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(&interp, filesIncludedByLinkdef));
+         std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(interpPtr, filesIncludedByLinkdef));
          interpPtr->setCallbacks(std::move(callBacks));
       }
    } else {
@@ -4316,7 +4317,7 @@ int RootClingMain(int argc,
                            inlineInputHeader,
                            sharedLibraryPathName);
 
-   if (!gDriverConfig->fBuildingROOTStage1 && filesIncludedByLinkdef.size() !=0)
+   if (!gDriverConfig->fBuildingROOTStage1 && filesIncludedByLinkdef.size() !=0) {
       pcmArgs.push_back(argv[linkdefLoc]);
    }
 
@@ -4605,11 +4606,11 @@ int RootClingMain(int argc,
    //---------------------------------------------------------------------------
    // Write all the necessary #include
    /////////////////////////////////////////////////////////////////////////////
-#ifndef ROOT_STAGE1_BUILD
-   for (auto&& includedFromLinkdef : filesIncludedByLinkdef) {
-      includeForSource += "#include \"" + includedFromLinkdef + "\"\n";
+   if (!gDriverConfig->fBuildingROOTStage1) {
+      for (auto &&includedFromLinkdef : filesIncludedByLinkdef) {
+         includeForSource += "#include \"" + includedFromLinkdef + "\"\n";
+      }
    }
-#endif
 
    if (!onepcm) {
       GenerateNecessaryIncludes(dictStream, includeForSource, extraIncludes);
