@@ -498,14 +498,28 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
+int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
                                       const clang::Type* req_type,
                                       const clang::RecordDecl* recordDecl,
                                       const std::string& attr_name,
                                       const clang::TypedefNameDecl* typedefNameDecl,
                                       unsigned int indexOffset)
 {
-   if (selected->HasAttributeName()) {
+
+   bool has_attr_name = selected->HasAttributeName();
+
+   if (recordDecl->isUnion() &&
+       0 != ROOT::TMetaUtils::GetClassVersion(recordDecl,fInterpreter)) {
+      std::string normName;
+      TMetaUtils::GetNormalizedName(normName,
+                                    recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                    fInterpreter,
+                                    fNormCtxt);
+      ROOT::TMetaUtils::Error(0,"Union %s has been selected for I/O. This is not supported. Interactive usage of unions is supported, as all C++ entities, without the need of dictionaries.\n",normName.c_str());
+      return 1;
+   }
+
+   if (has_attr_name) {
       fSelectedClasses.emplace_back(selected->GetIndex() + indexOffset,
                                     req_type,
                                     recordDecl,
@@ -552,6 +566,7 @@ void RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
       << normName
       << "\n";
    }
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -742,7 +757,10 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          clang::QualType thisType(req_type, 0);
          std::string attr_name = selected->GetAttributeName().c_str();
 
-         AddAnnotatedRecordDecl(selected, req_type, recordDecl, attr_name, typedefNameDecl);
+         auto sc = AddAnnotatedRecordDecl(selected, req_type, recordDecl, attr_name, typedefNameDecl);
+         if (sc != 0) {
+            return false;
+         }
 
          if (llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
             if (!req_type) {
