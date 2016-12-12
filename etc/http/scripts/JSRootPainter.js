@@ -5914,17 +5914,19 @@
          if ((this.zoom_ymin === this.zoom_ymax) && (this.Dimension()==1))
             this.scale_ymax*=1.8;
 
-         if ((this.scale_ymin <= 0) && (this.nbinsy>0))
+         // this is for 2/3 dim histograms - find first non-negative bin
+         if ((this.scale_ymin <= 0) && (this.nbinsy>0) && (this.Dimension()>1))
             for (var i=0;i<this.nbinsy;++i) {
                this.scale_ymin = Math.max(this.scale_ymin, this.GetBinY(i));
                if (this.scale_ymin>0) break;
             }
 
-         if ((this.scale_ymin <= 0) && ('ymin_nz' in this) && (this.ymin_nz > 0))
+         if ((this.scale_ymin <= 0) && ('ymin_nz' in this) && (this.ymin_nz > 0) && (this.ymin_nz < 1e-2*this.ymax))
             this.scale_ymin = 0.3*this.ymin_nz;
 
          if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
-            this.scale_ymin = 0.000001 * this.scale_ymax;
+            this.scale_ymin = 3e-4 * this.scale_ymax;
+         
          this.y = d3.scale.log();
       } else
       if (this.y_kind=='time') {
