@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.8.x 5/12/2016";
+   JSROOT.version = "4.8.x 12/12/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -443,6 +443,17 @@
       return obj;
    }
 
+   /** @memberOf JSROOT 
+    * Method should be used to parse JSON code, produced by multi.json of THttpServer */
+   JSROOT.parse_multi = function(arg) {
+      if (!arg) return null;
+      var arr = JSON.parse(arg);
+      if (arr && arr.length)
+         for (var i=0;i<arr.length;++i)
+            arr[i] = this.JSONR_unref(arr[i]);
+      return arr;
+   }
+   
    /** @memberOf JSROOT */
    JSROOT.GetUrlOption = function(opt, url, dflt) {
       // analyzes document.URL and extracts options after '?' mark
@@ -610,6 +621,7 @@
       //  "object" - returns JSROOT.parse(req.responseText)
       //  "xml" - returns res.responseXML
       //  "head" - returns request itself, uses "HEAD" method
+      //  "multi" - returns correctly parsed multi.json request, uses "POST" method
       // Result will be returned to the callback functions
       // Request will be set as this pointer in the callback
       // If failed, request returns null
@@ -621,7 +633,9 @@
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
-      var pthis = this;
+      var pthis = this, method = "GET";
+      if (kind === "head") method = "HEAD"; else
+      if (kind === "multi") method = "POST";
 
       if (window.ActiveXObject) {
 
@@ -636,6 +650,7 @@
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(pthis.parse(xhr.responseText));
+            if (kind == "multi") return callback(pthis.parse_multi(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             if ((kind == "buf") && ('responseType' in xhr) &&
@@ -650,7 +665,7 @@
             callback(filecontent);
          }
 
-         xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
+         xhr.open(method, url, true);
 
          if (kind=="buf") {
             if (('Uint8Array' in window) && ('responseType' in xhr))
@@ -670,6 +685,7 @@
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(pthis.parse(xhr.responseText));
+            if (kind == "multi") return callback(pthis.parse_multi(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             // if no response type is supported, return as text (most probably, will fail)
@@ -690,7 +706,7 @@
             callback(xhr.response);
          }
 
-         xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
+         xhr.open(method, url, true);
 
          if ((kind == "bin") || (kind == "buf")) {
             if (('Uint8Array' in window) && ('responseType' in xhr)) {
@@ -702,6 +718,7 @@
          }
 
       }
+      
       return xhr;
    }
 
@@ -1040,10 +1057,11 @@
 
    // function can be used to draw supported ROOT classes,
    // required functionality will be loaded automatically
-   // if painter pointer required, one should load '2d' functionlity itself
-   JSROOT.draw = function(divid, obj, opt) {
+   // if painter pointer required, one should load '2d' functionlity itself 
+   // or use callback function which provides painter pointer as first argument  
+   JSROOT.draw = function(divid, obj, opt, callback) {
       JSROOT.AssertPrerequisites("2d", function() {
-         JSROOT.draw(divid, obj, opt);
+         JSROOT.draw(divid, obj, opt, callback);
       });
    }
 

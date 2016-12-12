@@ -6,6 +6,9 @@
    - object references stored as {"$ref":12}
    - pair objects for std::map marked with "$pair" : "pair<type1,type2>" data memeber
    - old JSON format will be recognized automatically and supported as well 
+2. Fix - better selection of Y range for log scale
+3. Provide JSROOT.parse_multi function to corretcly parse response of multi.json request,
+   support it in the JSROOT.NewHttpRequest method as well.  
 
 
 ## Changes in 4.8.0
