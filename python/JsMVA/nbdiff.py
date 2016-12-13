@@ -29,7 +29,7 @@ def compareNotebooks(inNBName,outNBName):
     outNBLines = getFilteredLines(outNBName)
     areDifferent = False
     for line in difflib.unified_diff(inNBLines, outNBLines, fromfile=inNBName, tofile=outNBName):
-	if line.find("Welcome to JupyROOT")==-1:
+        if line.find("Welcome to JupyROOT") == -1:
             areDifferent = True
             sys.stdout.write(line)
     if areDifferent: print "\n"
