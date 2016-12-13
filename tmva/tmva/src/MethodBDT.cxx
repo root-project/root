@@ -146,6 +146,7 @@ the selection.
 #include <algorithm>
 #include <fstream>
 #include <math.h>
+#include <unordered_map>
 
 
 using std::vector;
@@ -1477,24 +1478,26 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 
 Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls)
 {
-   std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> > leaves;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      Double_t weight = (*e)->GetWeight();
-      TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));
-      if ((leaves[node]).empty()){
-         (leaves[node]).push_back((*e)->GetTarget(cls)* weight);
-         (leaves[node]).push_back(fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight);
-      }
-      else {
-         (leaves[node])[0]+=((*e)->GetTarget(cls)* weight);
-         (leaves[node])[1]+=fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight;
-      }
-   }
-   for (std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> >::iterator iLeave=leaves.begin();
-        iLeave!=leaves.end();++iLeave){
-      if ((iLeave->second)[1]<1e-30) (iLeave->second)[1]=1e-30;
+   struct LeafInfo {
+      Double_t sumWeightTarget = 0;
+      Double_t sum2 = 0;
+   };
 
-      (iLeave->first)->SetResponse(fShrinkage/DataInfo().GetNClasses()*(iLeave->second)[0]/((iLeave->second)[1]));
+   std::unordered_map<TMVA::DecisionTreeNode*, LeafInfo> leaves;
+   for (auto e : eventSample) {
+      Double_t weight = e->GetWeight();
+      TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
+      auto &v = leaves[node];
+      auto target = e->GetTarget(cls);
+      v.sumWeightTarget += target * weight;
+      v.sum2 += fabs(target) * (1.0-fabs(target)) * weight * weight;
+   }
+   for (auto &iLeave : leaves) {
+      constexpr auto minValue = 1e-30;
+      if (iLeave.second.sum2 < minValue) {
+         iLeave.second.sum2 = minValue;
+      }
+      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second.sumWeightTarget/iLeave.second.sum2);
    }
 
    //call UpdateTargets before next tree is grown
