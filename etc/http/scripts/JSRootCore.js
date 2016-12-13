@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.8.x 12/12/2016";
+   JSROOT.version = "4.8.1 13/12/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -1460,37 +1460,49 @@
          m.evalPar = function(x, y) {
             if (! ('_func' in this) || (this._title !== this.fTitle)) {
 
-              var _func = this.fTitle;
+              var _func = this.fTitle, isformula = false;
               if (_func === "gaus") _func = "gaus(0)";
+              if (this.fFormula && typeof this.fFormula.fFormula == "string")
+                 if (this.fFormula.fFormula.indexOf("[](double*x,double*p)")==0) {
+                    isformula = true;
+                    _func = this.fFormula.fFormula.substr(21);
+                 }
 
               if ('formulas' in this)
                  for (var i=0;i<this.formulas.length;++i)
                     while (_func.indexOf(this.formulas[i].fName) >= 0)
                        _func = _func.replace(this.formulas[i].fName, this.formulas[i].fTitle);
-              _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs');
-              _func = _func.replace('TMath::Exp(', 'Math.exp(');
-              _func = _func.replace('TMath::Abs(', 'Math.abs(');
+              _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs')
+                           .replace(/TMath::Exp\(/g, 'Math.exp(')
+                           .replace(/TMath::Abs\(/g, 'Math.abs(');
               if (typeof JSROOT.Math == 'object') {
                  this._math = JSROOT.Math;
-                 _func = _func.replace('TMath::Prob(', 'this._math.Prob(');
-                 _func = _func.replace('TMath::Gaus(', 'this._math.Gaus(');
-                 _func = _func.replace('gaus(', 'this._math.gaus(this, x, ');
-                 _func = _func.replace('gausn(', 'this._math.gausn(this, x, ');
-                 _func = _func.replace('expo(', 'this._math.expo(this, x, ');
-                 _func = _func.replace('landau(', 'this._math.landau(this, x, ');
-                 _func = _func.replace('landaun(', 'this._math.landaun(this, x, ');
+                 _func = _func.replace(/TMath::Prob\(/g, 'this._math.Prob(')
+                              .replace(/TMath::Gaus\(/g, 'this._math.Gaus(')
+                              .replace(/gaus\(/g, 'this._math.gaus(this, x, ')
+                              .replace(/gausn\(/g, 'this._math.gausn(this, x, ')
+                              .replace(/expo\(/g, 'this._math.expo(this, x, ')
+                              .replace(/landau\(/g, 'this._math.landau(this, x, ')
+                              .replace(/landaun\(/g, 'this._math.landaun(this, x, ')
+                              .replace(/ROOT::Math::/g, 'this._math.');
               }
-              _func = _func.replace('pi', 'Math.PI');
-              for (var i=0;i<this.fNpar;++i)
-                 while(_func.indexOf('['+i+']') != -1)
-                    _func = _func.replace('['+i+']', '('+this.GetParValue(i)+')');
-              _func = _func.replace(/\b(sin)\b/gi, 'Math.sin');
-              _func = _func.replace(/\b(cos)\b/gi, 'Math.cos');
-              _func = _func.replace(/\b(tan)\b/gi, 'Math.tan');
-              _func = _func.replace(/\b(exp)\b/gi, 'Math.exp');
+              for (var i=0;i<this.fNpar;++i) {
+                 var parname = (isformula ? "p[" : "[") + i + "]";
+                 while(_func.indexOf(parname) != -1)
+                    _func = _func.replace(parname, '('+this.GetParValue(i)+')');
+              }
+              _func = _func.replace(/\b(sin)\b/gi, 'Math.sin')
+                           .replace(/\b(cos)\b/gi, 'Math.cos')
+                           .replace(/\b(tan)\b/gi, 'Math.tan')
+                           .replace(/\b(exp)\b/gi, 'Math.exp')
+                           .replace(/pi/g, 'Math.PI');
               for (var n=2;n<10;++n)
                  _func = _func.replace('x^'+n, 'Math.pow(x,'+n+')');
 
+              if (isformula) {
+                 _func = _func.replace(/x\[0\]/g,"x");
+                 this._func = new Function("x", _func).bind(this);
+              } else
               if (this._typename==="TF2")
                  this._func = new Function("x", "y", "return " + _func).bind(this);
               else

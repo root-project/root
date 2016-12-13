@@ -257,7 +257,7 @@
       if ( code != 0 )
          x = -x;
       return( x );
-   }
+   };
 
    /** @memberOf JSROOT.Math */
    JSROOT.Math.igam = function(a,x) {
@@ -272,12 +272,12 @@
       if (x <= 0)  return 0.0;
 
       if( (x > 1.0) && (x > a ) )
-         return( 1.0 - this.igamc(a,x) );
+         return 1.0 - this.igamc(a,x);
 
       /* Compute  x**a * exp(-x) / gamma(a)  */
       ax = a * Math.log(x) - x - this.lgam(a);
       if( ax < -kMAXLOG )
-         return( 0.0 );
+         return 0.0;
 
       ax = Math.exp(ax);
 
@@ -294,8 +294,8 @@
       }
       while( c/ans > kMACHEP );
 
-      return( ans * ax/a );
-   }
+      return ans * ax/a;
+   };
 
    /** @memberOf JSROOT.Math */
    JSROOT.Math.igamc = function(a,x) {
@@ -363,15 +363,13 @@
       }
       while( t > kMACHEP );
 
-      return( ans * ax );
-   }
-
+      return ans * ax;
+   };
 
    /** @memberOf JSROOT.Math */
    JSROOT.Math.igami = function(a, y0) {
-      var x0, x1, x, yl, yh, y, d, lgm, dithresh;
-      var i, dir;
-      var kMACHEP = 1.11022302462515654042363166809e-16;
+      var x0, x1, x, yl, yh, y, d, lgm, dithresh, i, dir,
+          kMACHEP = 1.11022302462515654042363166809e-16;
 
       // check the domain
       if (a <= 0) {
@@ -481,7 +479,7 @@
             dir -= 1;
          }
       }
-      return( x );
+      return x;
    };
 
    /** @memberOf JSROOT.Math */
@@ -503,6 +501,7 @@
    JSROOT.Math.landau_pdf = function(x, xi, x0) {
       // LANDAU pdf : algorithm from CERNLIB G110 denlan
       // same algorithm is used in GSL
+      if (x0===undefined) x0 = 0;
       if (xi <= 0) return 0;
       var v = (x - x0)/xi;
       var u, ue, us, denlan;
@@ -563,16 +562,43 @@
       var den = JSROOT.Math.landau_pdf((x - mpv) / sigma, 1, 0);
       if (!norm) return den;
       return den/sigma;
-   }
+   };
 
    /** @memberOf JSROOT.Math */
    JSROOT.Math.inc_gamma_c = function(a,x) {
       return JSROOT.Math.igamc(a,x);
-   }
+   };
 
    /** @memberOf JSROOT.Math */
+   JSROOT.Math.inc_gamma = function(a,x) {
+      return JSROOT.Math.igam(a,x);
+   };
+
+   JSROOT.Math.lgamma = function(z) {
+      return JSROOT.Math.lgam(z);
+   };
+   
+   /** @memberOf JSROOT.Math */
    JSROOT.Math.chisquared_cdf_c = function(x,r,x0) {
-      return JSROOT.Math.inc_gamma_c ( 0.5 * r , 0.5* (x-x0) );
+      if (x0===undefined) x0 = 0;
+      return JSROOT.Math.inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
+   };
+   
+   /** @memberOf JSROOT.Math */
+   JSROOT.Math.chisquared_cdf = function(x,r,x0) {
+      if (x0===undefined) x0 = 0;
+      return JSROOT.Math.inc_gamma ( 0.5 * r , 0.5*(x-x0) );
+   };
+   
+   /** @memberOf JSROOT.Math */
+   JSROOT.Math.chisquared_pdf = function(x,r,x0) {
+      if (x0===undefined) x0 = 0;
+      if ((x-x0) < 0) return 0.0;
+      var a = r/2 -1.;
+      // let return inf for case x  = x0 and treat special case of r = 2 otherwise will return nan
+      if (x == x0 && a == 0) return 0.5;
+
+      return Math.exp ((r/2 - 1) * Math.log((x-x0)/2) - (x-x0)/2 - JSROOT.Math.lgamma(r/2))/2;
    };
 
    /** @memberOf JSROOT.Math */
