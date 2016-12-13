@@ -118,7 +118,7 @@ class JupyROOTDeclarer(Runner):
     ''' Asynchrously execute declarations
     >>> import ROOT
     >>> d = JupyROOTDeclarer()
-    >>> d.Run("int f(){return 3;}")
+    >>> d.Run("int f(){return 3;}".encode("utf-8"))
     1
     >>> ROOT.f()
     3
@@ -130,7 +130,7 @@ class JupyROOTExecutor(Runner):
     r''' Asynchrously execute process lines
     >>> import ROOT
     >>> d = JupyROOTExecutor()
-    >>> d.Run('cout << "Here am I" << endl;')
+    >>> d.Run('cout << "Here am I" << endl;'.encode("utf-8"))
     1
     '''
     def __init__(self):
