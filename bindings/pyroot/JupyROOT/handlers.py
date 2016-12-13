@@ -65,7 +65,7 @@ class Runner(object):
     ''' Asynchrously run functions
     >>> import time
     >>> def f(code):
-    ...    print code
+    ...    print(code)
     >>> r= Runner(f)
     >>> r.Run("ss")
     ss
@@ -73,16 +73,16 @@ class Runner(object):
     ss
     >>> def g(msg):
     ...    time.sleep(.5)
-    ...    print msg
+    ...    print(msg)
     >>> r= Runner(g)
-    >>> r.AsyncRun("Asynchronous");print "Synchronous";time.sleep(1)
+    >>> r.AsyncRun("Asynchronous");print("Synchronous");time.sleep(1)
     Synchronous
     Asynchronous
-    >>> r.AsyncRun("Asynchronous"); print r.HasFinished()
+    >>> r.AsyncRun("Asynchronous"); print(r.HasFinished())
     False
     >>> time.sleep(1)
     Asynchronous
-    >>> print r.HasFinished()
+    >>> print(r.HasFinished())
     True
     '''
     def __init__(self, function):
