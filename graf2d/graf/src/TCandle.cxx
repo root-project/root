@@ -224,7 +224,7 @@ int TCandle::ParseOption(char * opt) {
          if (brOpen && brClose) {
             useIndivOption = true;
             bool isHorizontal = IsHorizontal();
-            strncpy(indivOption, brOpen, brClose-brOpen +1); //Now the string "(....)" including brackets is in this array
+            strlcpy(indivOption, brOpen, brClose-brOpen +2); //Now the string "(....)" including brackets is in this array
             sscanf(indivOption,"(%d)", (int*) &fOption);
             if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
             strncpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
