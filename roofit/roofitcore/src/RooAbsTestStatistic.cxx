@@ -313,7 +313,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     }
 
     outfile << "\", \"pid\": \"" << getpid()
-            << "\"}," << std::endl;
+            << "\"}," << "\n";
 
     outfile.close();
 

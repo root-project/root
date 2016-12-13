@@ -428,7 +428,7 @@ void RooRealMPFE::calculate() const
     outfile << "{\"calculate_init_walltime_s\": \"" << timing_s
             << "\", \"pid\": \"" << getpid()
             << "\", \"tid\": \"" << pthread_self()
-            << "\"}," << std::endl;
+            << "\"}," << "\n";
 
     outfile.close();
   }
@@ -451,7 +451,7 @@ void RooRealMPFE::calculate() const
     outfile << "{\"calculate_inline_walltime_s\": \"" << timing_s
           << "\", \"pid\": \"" << getpid()
           << "\", \"tid\": \"" << pthread_self()
-          << "\"}," << std::endl;
+          << "\"}," << "\n";
 
     outfile.close();
   }
@@ -540,7 +540,7 @@ void RooRealMPFE::calculate() const
     outfile << "{\"calculate_dispatch_walltime_s\": \"" << timing_s
             << "\", \"pid\": \"" << getpid()
             << "\", \"tid\": \"" << pthread_self()
-            << "\"}," << std::endl;
+            << "\"}," << "\n";
 
     outfile.close();
 
@@ -702,7 +702,7 @@ Double_t RooRealMPFE::evaluate() const
 
     outfile << "\", \"pid\": \"" << getpid()
             << "\", \"tid\": \"" << pthread_self()
-            << "\"}," << std::endl;
+            << "\"}," << "\n";
 
     outfile.close();
 
