@@ -4,8 +4,7 @@
 #ifndef ROOT_TSchemaRuleProcessor
 #define ROOT_TSchemaRuleProcessor
 
-#if !defined(__CINT__)
-// Do no clutter the dictionary (in particular with STL containers)
+// NOTE: #included by libCore and libCling. All symbols must be inline.
 
 #include <stdlib.h>
 #include <cstring>
@@ -253,6 +252,5 @@ namespace Internal {
    };
 } // namespace Internal
 } // namespace ROOT
-#endif // defined(__CINT__)
 
 #endif // ROOT_TSchemaRuleProcessor
