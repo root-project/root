@@ -32,7 +32,7 @@ def compareNotebooks(inNBName,outNBName):
         if line.find("Welcome to JupyROOT") == -1:
             areDifferent = True
             sys.stdout.write(line)
-    if areDifferent: print "\n"
+    if areDifferent: print("\n")
     return areDifferent
 
 def getInterpreterName():
@@ -53,14 +53,14 @@ def canReproduceNotebook(inNBName):
 
 def isInputNotebookFileName(filename):
     if not filename.endswith(".ipynb"):
-        print "Notebook files shall have the %s extension" %nbExtension
+        print("Notebook files shall have the %s extension" %nbExtension)
         return False
     return True
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        print "Usage: nbdiff.py myNotebook.ipynb"
+        print("Usage: nbdiff.py myNotebook.ipynb")
         sys.exit(1)
     nbFileName = sys.argv[1]
     if not isInputNotebookFileName(nbFileName):
