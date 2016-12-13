@@ -200,7 +200,7 @@ def _codeToFilename(code):
     >>> _codeToFilename("int f(i){return i*i;}")
     'dbf7e731.C'
     '''
-    fileNameBase = sha1(code).hexdigest()[0:8]
+    fileNameBase = sha1(code.encode('utf-8')).hexdigest()[0:8]
     return fileNameBase + ".C"
 
 def _dumpToUniqueFile(code):
