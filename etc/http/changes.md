@@ -1,14 +1,16 @@
 # JSROOT changelog
 
 
-## Changes in 4.8.x
+## Changes in 4.8.1
 1. Support new JSON format, produced with newest TBufferJSON
    - object references stored as {"$ref":12}
-   - pair objects for std::map marked with "$pair" : "pair<type1,type2>" data memeber
+   - pair objects for std::map marked with "$pair" : "pair<type1,type2>" data member
    - old JSON format will be recognized automatically and supported as well 
 2. Fix - better selection of Y range for log scale
-3. Provide JSROOT.parse_multi function to corretcly parse response of multi.json request,
+3. Provide JSROOT.parse_multi function to correctly parse response of multi.json request,
    support it in the JSROOT.NewHttpRequest method as well.  
+4. Fix - correctly calculate integral for TH1
+5. Partially support new TFormula with complex C code inside 
 
 
 ## Changes in 4.8.0
