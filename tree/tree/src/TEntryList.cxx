@@ -73,22 +73,24 @@ an entry list. Example:
      void loopChain() {
         TFile *fe = TFile::Open("myelist.root");
         TEntryList *myelist = (TEntryList*)fe->Get("myelist");
-        TChain *ch = new TChain("ntuple");
-        ch->Add("hsimple.root");
-        ch->Add("hsimple2.root");
+        TChain *chain = new TChain("ntuple");
+        chain->Add("hsimple.root");
+        chain->Add("hsimple2.root");
         Long64_t listEntries = myelist->GetN();
-        Long64_t chainEntries = ch->GetEntries();
+        Long64_t chainEntries = chain->GetEntries();
         Int_t treenum = 0;
-        ch->SetEntryList(myelist);
+        chain->SetEntryList(myelist);
 
         for (entry=start;entry < end;entry++) {
-           entryNumber = treechain->GetEntryNumber(entry);
+           entryNumber = chain->GetEntryNumber(entry);
            if (entryNumber < 0) break;
-           localEntry = fTree->LoadTree(entryNumber);
+           localEntry = chain->LoadTree(entryNumber);
            if (localEntry < 0) break;
            ....
-           then either call branch->GetEntry(localEntry);
-           or  entryNumber->GetEntry(entryNumber);
+           then either call
+              branch->GetEntry(localEntry);
+           or
+              chain->GetEntry(entryNumber);
            In the later case the LoadTree is then somewhat redudant.
            ...
         }
