@@ -498,6 +498,25 @@ void MethodPyRandomForest::ReadModelFromFile()
 }
 
 //_______________________________________________________________________
+const Ranking* MethodPyRandomForest::CreateRanking()
+{
+   // Get feature importance from classifier as an array with length equal
+   // number of variables, higher value signals a higher importance
+   PyArrayObject* pRanking = (PyArrayObject*) PyObject_GetAttrString(fClassifier, "feature_importances_");
+   if(pRanking == 0) Log() << kFATAL << "Failed to get ranking from classifier" << Endl;
+
+   // Fill ranking object and return it
+   fRanking = new Ranking(GetName(), "Variable Importance");
+   Double_t* rankingData = (Double_t*) PyArray_DATA(pRanking);
+   for(UInt_t iVar=0; iVar<fNvars; iVar++){
+      fRanking->AddRank(Rank(GetInputLabel(iVar), rankingData[iVar]));
+   }
+
+   Py_DECREF(pRanking);
+   return fRanking;
+}
+
+//_______________________________________________________________________
 void MethodPyRandomForest::GetHelpMessage() const
 {
    // typical length of text line:
