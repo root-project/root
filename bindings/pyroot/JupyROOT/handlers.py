@@ -48,11 +48,18 @@ class IOHandler(object):
     def EndCapture(self):
         _lib.JupyROOTExecutorHandler_EndCapture()
 
+    def Decode(self, obj):
+        import sys
+        if sys.version_info >= (3, 0):
+            return obj.decode('utf-8')
+        else:
+            return obj
+
     def GetStdout(self):
-       return _lib.JupyROOTExecutorHandler_GetStdout()
+       return self.Decode(_lib.JupyROOTExecutorHandler_GetStdout())
 
     def GetStderr(self):
-       return _lib.JupyROOTExecutorHandler_GetStderr()
+       return self.Decode(_lib.JupyROOTExecutorHandler_GetStderr())
 
     def GetStreamsDicts(self):
        out = self.GetStdout()
