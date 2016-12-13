@@ -38,8 +38,8 @@ namespace ROOT {
       enum ESourceFileKind {
          kSFKNotC,
          kSFKHeader,
-         kSFKSource,
-         kSFKLinkdef
+         kSFKSource /*,
+      kSFKLinkdef*/
       };
 
       TModuleGenerator(clang::CompilerInstance *CI,
@@ -148,7 +148,6 @@ namespace ROOT {
       std::string fContentName; // name of content description header in PCM
 
       std::vector<std::string> fHeaders; // exported headers in PCM
-      std::string fLinkDefFile; // The name of the linkdef file
       std::vector<std::string> fCompI; // -I; needed only for ACLiC without PCMs
 
       StringPairVec_t fCompD; // -Dfirst=second
