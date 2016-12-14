@@ -29,7 +29,7 @@
  **********************************************************************************/
 
 /*! \class TMVA::MethodBDT
-\ingroup  TMVA
+\ingroup TMVA
 
 Analysis of Boosted Decision Trees
 
