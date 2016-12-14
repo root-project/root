@@ -188,6 +188,32 @@ const char *rootClingHelp =
 #include <unordered_set>
 #include <numeric>
 
+
+#ifdef _WIN32
+#ifdef system
+#undef system
+#endif
+#include <windows.h>
+#include <Tlhelp32.h> // for MAX_MODULE_NAME32
+#include <process.h>
+#define PATH_MAX _MAX_PATH
+#ifdef interface
+// prevent error coming from clang/AST/Attrs.inc
+#undef interface
+#endif
+#endif
+
+#ifdef __APPLE__
+#include <libgen.h> // Needed for basename
+#include <mach-o/dyld.h>
+#endif
+
+#if !defined(R__WIN32)
+#include <limits.h>
+#include <unistd.h>
+#endif
+
+
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -347,6 +373,45 @@ static void GetCurrentDirectory(std::string &output)
       delete [] currWorkDir;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the executable path name, used e.g. by SetRootSys().
+
+const char *GetExePath()
+{
+  static std::string exepath;
+  if (exepath == "") {
+#ifdef __APPLE__
+    exepath = _dyld_get_image_name(0);
+#endif
+#if defined(__linux) || defined(__linux__)
+    char linkname[PATH_MAX];  // /proc/<pid>/exe
+    char buf[PATH_MAX];     // exe path name
+    pid_t pid;
+
+    // get our pid and build the name of the link in /proc
+    pid = getpid();
+    snprintf(linkname, PATH_MAX, "/proc/%i/exe", pid);
+    int ret = readlink(linkname, buf, 1024);
+    if (ret > 0 && ret < 1024) {
+      buf[ret] = 0;
+      exepath = buf;
+    }
+#endif
+#ifdef _WIN32
+    char *buf = new char[MAX_MODULE_NAME32 + 1];
+      ::GetModuleFileName(NULL, buf, MAX_MODULE_NAME32 + 1);
+      char *p = buf;
+      while ((p = strchr(p, '\\')))
+         * (p++) = '/';
+      exepath = buf;
+      delete[] buf;
+#endif
+  }
+  return exepath.c_str();
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert to path relative to $PWD
@@ -625,7 +690,7 @@ bool IsSelectionFile(const char *filename)
 
 void SetRootSys()
 {
-   const char *exepath = gDriverConfig->fExePath.c_str();
+   const char *exepath = GetExePath();
    if (exepath && *exepath) {
 #if !defined(_WIN32)
       char *ep = new char[PATH_MAX];
@@ -5818,7 +5883,7 @@ int ROOT::Internal::RootCling::rootcling_driver(int argc, char **argv,
 
    gBuildingROOT = config.fBuildingROOTStage1; // gets refined later
 
-   std::string exeName = ExtractFileName(config.fExePath);
+   std::string exeName = ExtractFileName(GetExePath());
 
    // Select according to the name of the executable the procedure to follow:
    // 1) RootCling

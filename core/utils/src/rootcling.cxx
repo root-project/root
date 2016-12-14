@@ -52,43 +52,6 @@ extern "C" {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the executable path name, used e.g. by SetRootSys().
-
-const char *GetExePath()
-{
-   static std::string exepath;
-   if (exepath == "") {
-#ifdef __APPLE__
-      exepath = _dyld_get_image_name(0);
-#endif
-#if defined(__linux) || defined(__linux__)
-      char linkname[PATH_MAX];  // /proc/<pid>/exe
-      char buf[PATH_MAX];     // exe path name
-      pid_t pid;
-
-      // get our pid and build the name of the link in /proc
-      pid = getpid();
-      snprintf(linkname, PATH_MAX, "/proc/%i/exe", pid);
-      int ret = readlink(linkname, buf, 1024);
-      if (ret > 0 && ret < 1024) {
-         buf[ret] = 0;
-         exepath = buf;
-      }
-#endif
-#ifdef _WIN32
-      char *buf = new char[MAX_MODULE_NAME32 + 1];
-      ::GetModuleFileName(NULL, buf, MAX_MODULE_NAME32 + 1);
-      char *p = buf;
-      while ((p = strchr(p, '\\')))
-         * (p++) = '/';
-      exepath = buf;
-      delete[] buf;
-#endif
-   }
-   return exepath.c_str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __ICC
 #pragma warning disable 69
