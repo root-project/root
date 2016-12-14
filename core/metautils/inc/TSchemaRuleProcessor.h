@@ -8,6 +8,7 @@
 // Do no clutter the dictionary (in particular with STL containers)
 
 #include <stdlib.h>
+#include <cstring>
 #include <string>
 #include <list>
 #include <utility>
