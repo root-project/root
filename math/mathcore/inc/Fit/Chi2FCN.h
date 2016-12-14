@@ -155,7 +155,7 @@ private:
       // return FitUtilParallel::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 // #else
 //       if (!BaseFCN::Data().HaveCoordErrors() )
-         return FitUtil::EvalChi2<T>::DoEval(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
+         return FitUtil::Evaluate<T>::EvalChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
 //       else
 //          return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 // #endif

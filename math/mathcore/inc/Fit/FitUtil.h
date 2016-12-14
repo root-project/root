@@ -51,7 +51,7 @@ namespace FitUtil {
        evaluate the Chi2 given a model function and the data at the point x.
        return also nPoints as the effective number of used points in the Chi2 evaluation
    */
-   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks=1 );
+   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks=0);
 
    /**
        evaluate the effective Chi2 given a model function and the data at the point x.
@@ -70,7 +70,7 @@ namespace FitUtil {
        evaluate the LogL given a model function and the data at the point x.
        return also nPoints as the effective number of used points in the LogL evaluation
    */
-   double EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * x, int iWeight, bool extended, unsigned int & nPoints);
+      double EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * x, int iWeight, bool extended, unsigned int & nPoints);
 
    /**
        evaluate the LogL gradient given a model function and the data at the point x.
@@ -126,8 +126,8 @@ namespace FitUtil {
    unsigned setAutomaticChunking(unsigned nEvents);
 
   template<class T>
-  struct EvalChi2{
-    static double DoEval(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0){
+  struct Evaluate{
+    static double EvalChi2(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0){
       // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
       // the actual number of used points
       // normal chi2 using only error on values (from fitting histogram)
@@ -211,13 +211,13 @@ namespace FitUtil {
     #endif
 
       return res.sum();
-    }
+   }
   };
 
   template<>
-  struct EvalChi2<double>{
-    static double DoEval(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy,unsigned nChunks = 1) {
-      // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
+  struct Evaluate<double>{
+    static double EvalChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy,unsigned nChunks=0) {
+      // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
       // the actual number of used points
       // normal chi2 using only error on values (from fitting histogram)
       // optionally the integral of function in the bin is used
