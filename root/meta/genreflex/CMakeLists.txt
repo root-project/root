@@ -1,5 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-8509
+ROOTTEST_ADD_TEST(noIncludePaths
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/noIncludePaths.h
+                          --noIncludePaths --select=${CMAKE_CURRENT_SOURCE_DIR}/noIncludePaths_selection.xml
+                  POSTCMD ./noIncludePathsPostCmd.sh
+                  )
+
 # ROOT-8380
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(canSplit canSplit.h SELECTION canSplit_selection.xml)
 
