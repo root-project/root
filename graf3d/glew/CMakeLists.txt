@@ -4,8 +4,15 @@
 
 include_directories(${OPENGL_INCLUDE_DIR})
 
-# We need to disallow the direct use of gl.h. This way people will see the error
-# and the suggested fix. This happens by providing our own "fake" system gl.h.
-set(CMAKE_C_FLAGS " -isystem ${CMAKE_CURRENT_SOURCE_DIR}/isystem ${GLEW_C_FLAGS}")
+# Do not install headers for all platforms and configurations.
+if(UNIX)
+  set(installoptions OPTIONS REGEX "wglew" EXCLUDE)
+else() # Windows
+  set(installoptions OPTIONS REGEX "glew" EXCLUDE)
+endif()
+if(NOT x11)
+  set(installoptions ${installoptions} OPTIONS REGEX "glxew" EXCLUDE)
+endif()
+
 ROOT_LINKER_LIBRARY(GLEW *.c LIBRARIES ${OPENGL_LIBRARIES})
-ROOT_INSTALL_HEADERS()
+ROOT_INSTALL_HEADERS(${installoptions})

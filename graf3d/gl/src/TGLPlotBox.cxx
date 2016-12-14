@@ -9,12 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <algorithm>
+#include "TGLPlotBox.h"
 
 #include "TColor.h"
-
 #include "TGLIncludes.h"
-#include "TGLPlotBox.h"
+
+#include <algorithm>
+
 
 /** \class TGLPlotBox
 \ingroup opengl

@@ -37,6 +37,8 @@
 #include "rpddefs.h"
 #endif
 
+#include "rpdp.h"
+
 
 extern Int_t SrvAuthImpl(TSocket *socket, const char *, const char *,
                          std::string &user, Int_t &meth,
@@ -52,42 +54,7 @@ namespace ROOT {
 extern ErrorHandler_t gErrSys;
 extern ErrorHandler_t gErrFatal;
 extern ErrorHandler_t gErr;
-
-int  GetErrno();
-void ResetErrno();
-void ErrorInit(const char *ident);
-void ErrorInfo(const char *fmt, ...);
-void Perror(char *buf, int size);
-void Error(ErrorHandler_t ErrHand,int code,const char *fmt, ...);
-
-void RpdAuthCleanup(const char *sstr, int opt);
-int  RpdCleanupAuthTab(const char *crypttoken);
-int  RpdGenRSAKeys(int);
-void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
-                        ErrorHandler_t Fatal);
-void RpdSetMethInitFlag(int methinit);
-int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
-void RpdInit(EService serv, int pid, int sproto,
-             unsigned int opts, int rumsk, int sshp,
-             const char *tmpd, const char *asrpp, int login = 0);
-
 void SrvSetSocket(TSocket *socket);
-
-void NetClose();
-int NetParOpen(int port, int size);
-int NetRecv(char *msg, int max);
-int NetRecv(char *msg, int len, EMessageTypes &kind);
-int NetRecv(void *&buf, int &len, EMessageTypes &kind);
-int NetRecvRaw(void *buf, int len);
-int NetRecvRaw(int sock, void *buf, int len);
-int NetSend(int code, EMessageTypes kind);
-int NetSend(const char *msg, EMessageTypes kind);
-int NetSend(const void *buf, int len, EMessageTypes kind);
-int NetSendAck();
-int NetSendError(ERootdErrors err);
-int NetSendRaw(const void *buf, int len);
-void NetGetRemoteHost(std::string &openhost);
-int NetGetSockFd();
 
 }
 

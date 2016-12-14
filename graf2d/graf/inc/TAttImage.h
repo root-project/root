@@ -16,10 +16,6 @@
 #include "TObject.h"
 #endif
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-
 class TAttImage;
 
 class TPaletteEditor {

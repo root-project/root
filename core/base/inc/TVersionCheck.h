@@ -21,6 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TObject
+#error "TVersionCheck.h must be included only by TObject. Please #include TObject.h"
+#endif
+
 #ifndef ROOT_RVersion
 #include "RVersion.h"
 #endif
@@ -30,8 +34,13 @@ public:
    TVersionCheck(int versionCode);  // implemented in TSystem.cxx
 };
 
+// FIXME: Due to a modules bug: https://llvm.org/bugs/show_bug.cgi?id=31056
+// our .o files get polluted with the gVersionCheck symbol despite it was not
+// visible in this TU.
+#ifndef R__CXXMODULES
 #ifndef __CINT__
 static TVersionCheck gVersionCheck(ROOT_VERSION_CODE);
+#endif
 #endif
 
 #endif

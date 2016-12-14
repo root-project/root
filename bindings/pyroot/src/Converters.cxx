@@ -24,6 +24,10 @@
 #include <utility>
 #include <sstream>
 
+// FIXME: Should refer to PyROOT::TParameter in the code.
+#ifdef R__CXXMODULES
+  #define TParameter PyROOT::TParameter
+#endif
 
 //- data ______________________________________________________________________
 namespace PyROOT {

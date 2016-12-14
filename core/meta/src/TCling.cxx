@@ -78,6 +78,11 @@ clang/LLVM technology.
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/RecordLayout.h"
+#ifdef R__CXXMODULES
+// mmprivate.h exports macro named BLOCK (through TStreamerInfo.h) which
+// conflicts with the one in DeclNodes.inc coming through RecursiveASTVisitor.h.
+#undef BLOCK
+#endif
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"

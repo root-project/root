@@ -104,6 +104,9 @@ def makepch():
                                                                          extraHeaders,
                                                                          alllinkdefsFilename)
 
+   if "VERBOSE" in os.environ:
+      print(command)
+
    ret = subprocess.call(command,shell=True)
    if ret == 0:
       shutil.move("allDict_rdict.pch",pchFileName)

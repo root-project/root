@@ -14,13 +14,13 @@
 
 
 #include "RConfigure.h"
-#include "Riosfwd.h"
 #include "Rtypes.h"
 #include "TStorage.h"
 #include "TVersionCheck.h"
 
 #include <stdarg.h>
 #include <string>
+#include <iosfwd>
 
 #ifdef WIN32
 #undef RemoveDirectory

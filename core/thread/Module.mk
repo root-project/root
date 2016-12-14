@@ -27,6 +27,10 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/ROOT/TExecutor.hxx $(MODDIRI)/ROOT/TThreadedObject.hxx \
                 $(MODDIRI)/ROOT/TSpinMutex.hxx
 
+ifeq ($(IMT),yes)
+THREADH      += $(MODDIRI)/ROOT/TThreadExecutor.hxx
+endif
+
 ifneq ($(ARCH),win32)
 THREADH      += $(MODDIRI)/TPosixCondition.h $(MODDIRI)/TPosixMutex.h \
                 $(MODDIRI)/TPosixThread.h $(MODDIRI)/TPosixThreadFactory.h \
@@ -71,9 +75,22 @@ THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 THREADMAP    := $(THREADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%,include/%,$(THREADH) $(THREADH_EXT))
+THREADH_REL  := $(patsubst $(MODDIRI)/%,include/%,$(THREADH))
+ALLHDRS      += $(THREADH_REL) $(patsubst $(MODDIRI)/%,include/%, $(THREADH_EXT))
 ALLLIBS      += $(THREADLIB)
 ALLMAPS      += $(THREADMAP)
+ifeq ($(CXXMODULES),yes)
+  # We need to prefilter ThreadLocalStorage.h because this is a non-modular header,
+  # on which depends libCore. Otherwise we end up having a libThread->libCore->libThread
+  # header file dependency.
+  THREADH_FILTERED_REL := $(filter-out include/ThreadLocalStorage.h, $(THREADH_REL))
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(THREADH_FILTERED_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Core_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(THREADLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 CXXFLAGS     += $(OSTHREADFLAG)
 CFLAGS       += $(OSTHREADFLAG)

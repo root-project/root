@@ -4737,7 +4737,6 @@ int RootCling(int argc,
    }
 
 
-
    if (liblistPrefix.length()) {
       string liblist_filename = liblistPrefix + ".out";
 

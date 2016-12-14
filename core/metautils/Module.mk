@@ -24,7 +24,6 @@ METAUTILSS     := $(filter-out $(MODDIRS)/RStl.%,\
 
 METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
 METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx $(MODDIRS)/RStl.cxx
-METAUTILSTH     += $(MODDIRI)/root_std_complex.h
 METAUTILSTH     += $(MODDIRI)/libcpp_string_view.h
 METAUTILSTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
 
@@ -41,7 +40,8 @@ METAUTILSL     := $(MODDIRI)/LinkDef.h
 METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAUTILSH) $(METAUTILSTH))
+METAUTILSH_REL := $(patsubst $(MODDIRI)/%,include/%,$(METAUTILSH) $(METAUTILSTH))
+ALLHDRS     += $(METAUTILSH_REL)
 
 # include all dependency files
 INCLUDEFILES += $(METAUTILSDEP)

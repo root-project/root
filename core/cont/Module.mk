@@ -23,7 +23,8 @@ CONTO        := $(call stripsrc,$(CONTS:.cxx=.o))
 CONTDEP      := $(CONTO:.o=.d) $(CONTDO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%,include/%,$(CONTH))
+CONTH_REL   := $(patsubst $(MODDIRI)/%,include/%,$(CONTH))
+ALLHDRS     += $(CONTH_REL)
 
 # include all dependency files
 INCLUDEFILES += $(CONTDEP)

@@ -17,7 +17,6 @@
 #define ROO_TRACE
 
 #include <assert.h>
-#include "Riosfwd.h"
 #include "RooLinkedList.h"
 
 #define TRACE_CREATE

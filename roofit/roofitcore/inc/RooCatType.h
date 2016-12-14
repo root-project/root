@@ -16,7 +16,6 @@
 #ifndef ROO_CAT_TYPE
 #define ROO_CAT_TYPE
 
-#include "Riosfwd.h"
 #include "TObject.h"
 #include "RooPrintable.h"
 

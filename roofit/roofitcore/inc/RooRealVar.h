@@ -18,7 +18,6 @@
 
 #include <list>
 #include <string>
-#include "Riosfwd.h"
 #include <math.h>
 #include <float.h>
 #include "TString.h"

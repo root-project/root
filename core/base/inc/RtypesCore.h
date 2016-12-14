@@ -24,6 +24,8 @@
 #include "RConfig.h"
 #endif
 
+#include <stddef.h>
+
 //---- Tag used by rootcling to determine constructor used for I/O.
 
 class TRootIOCtor;
@@ -81,5 +83,43 @@ typedef short          SCoord_t;    //Screen coordinates (short)
 typedef double         Coord_t;     //Pad world coordinates (double)
 typedef float          Angle_t;     //Graphics angle (float)
 typedef float          Size_t;      //Attribute size (float)
+
+//---- constants ---------------------------------------------------------------
+
+#ifndef NULL
+#define NULL 0
+#endif
+
+#ifndef R__NULLPTR
+#ifndef nullptr
+#define nullptr 0
+#endif
+#endif
+
+const Bool_t kTRUE  = true;
+const Bool_t kFALSE = false;
+
+const Int_t     kMaxUChar    = 256;
+const Int_t     kMaxChar     = kMaxUChar >> 1;
+const Int_t     kMinChar     = -kMaxChar - 1;
+
+const Int_t     kMaxUShort   = 65534;
+const Int_t     kMaxShort    = kMaxUShort >> 1;
+const Int_t     kMinShort    = -kMaxShort - 1;
+
+const UInt_t    kMaxUInt     = UInt_t(~0);
+const Int_t     kMaxInt      = Int_t(kMaxUInt >> 1);
+const Int_t     kMinInt      = -kMaxInt - 1;
+
+const ULong_t   kMaxULong    = ULong_t(~0);
+const Long_t    kMaxLong     = Long_t(kMaxULong >> 1);
+const Long_t    kMinLong     = -kMaxLong - 1;
+
+const ULong64_t kMaxULong64  = ULong64_t(~0LL);
+const Long64_t  kMaxLong64   = Long64_t(kMaxULong64 >> 1);
+const Long64_t  kMinLong64   = -kMaxLong64 - 1;
+
+const size_t    kBitsPerByte = 8;
+const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
 
 #endif

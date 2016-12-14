@@ -16,10 +16,6 @@
 #include "TVirtualPS.h"
 #include "TGLViewer.h"
 #include "TSystem.h" // For gSystem
-// FIXME: Some gl2ps.h versions (see ROOT-8219) rely on including gl.h, which
-// in we shadow in our isystem/gl.h intentionally. Including TGLIncludes.h, will
-// temporary workaround the issue.
-#include "TGLIncludes.h"
 #include "gl2ps.h"
 #include "TError.h"
 #include <assert.h>

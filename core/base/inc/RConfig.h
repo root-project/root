@@ -26,6 +26,12 @@
 
 /*---- new C++ features ------------------------------------------------------*/
 
+#if defined __has_feature
+# if __has_feature(modules)
+#  define R__CXXMODULES
+# endif
+#endif
+
 #define R__USE_SHADOW_CLASS
 
 /* Now required, thus defined by default for backward compatibility */

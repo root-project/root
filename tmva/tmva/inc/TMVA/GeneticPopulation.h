@@ -36,9 +36,6 @@
 #include <string>
 #include <vector>
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 #ifndef ROOT_TMVA_GeneticGenes
 #include "TMVA/GeneticGenes.h"
 #endif

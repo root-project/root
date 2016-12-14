@@ -12,9 +12,6 @@
 #define ROOT_TCurlyLine
 
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 #ifndef ROOT_TPolyLine
 #include "TPolyLine.h"
 #endif

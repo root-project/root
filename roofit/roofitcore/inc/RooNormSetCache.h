@@ -21,7 +21,6 @@
 #include <map>
 
 #include "Rtypes.h"
-#include "Riosfwd.h"
 #include "RooNameSet.h"
 
 class RooAbsArg;

@@ -8,7 +8,8 @@
 
 #include "Math/Util.h"
 
-#include "MethodBase.h"
+#include "TMVA/Pattern.h"
+#include "TMVA/MethodBase.h"
 
 namespace TMVA
 {

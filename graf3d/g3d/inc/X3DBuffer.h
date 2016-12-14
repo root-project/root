@@ -12,8 +12,6 @@
 #ifndef ROOT_X3DBuffer
 #define ROOT_X3DBuffer
 
-#include "DllImport.h"
-
 typedef struct _x3d_data_ {
    int  numPoints;
    int  numSegs;
