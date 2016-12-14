@@ -95,6 +95,10 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
 {
    if (filename[0] == '-') return kSFKNotC;
 
+   if (ROOT::TMetaUtils::IsLinkdefFile(filename)) {
+      return kSFKLinkdef;
+   }
+
    const size_t len = strlen(filename);
    const char *ext = filename + len - 1;
    while (ext >= filename && *ext != '.') --ext;
@@ -144,14 +148,6 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
          }
    } // switch extension length
 
-   /*
-   static const size_t lenLinkdefdot = 8;
-   if (ret == kSFKHeader && len - lenExt >= lenLinkdefdot) {
-      if ((strstr(filename,"LinkDef") || strstr(filename,"Linkdef") ||
-           strstr(filename,"linkdef")) && strstr(filename,".h")) {
-         ret = kSFKLinkdef;
-      }
-   }*/
    return ret;
 }
 
@@ -179,6 +175,8 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
       ESourceFileKind sfk = GetSourceFileKind(args[iPcmArg].c_str());
       if (sfk == kSFKHeader || sfk == kSFKSource) {
          fHeaders.push_back(args[iPcmArg]);
+      } else if (sfk == kSFKLinkdef) {
+         fLinkDefFile = args[iPcmArg];
       } else if (sfk == kSFKNotC && args[iPcmArg][0] == '-') {
          switch (args[iPcmArg][1]) {
             case 'I':
@@ -338,6 +336,8 @@ std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
    return out;
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
@@ -382,26 +382,36 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
    payloadCode += definesAndUndefines.str();
 
    // If necessary, inline the headers
+   std::string hdrFullPath;
    std::string inlinedHeaders;
+
+   auto findAndAddToInlineHeaders = [&](const std::string& hdrName) {
+      bool headerFound = FindHeader(hdrName,hdrFullPath);
+      if (!headerFound) {
+         ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
+      } else {
+         std::ifstream headerFile(hdrFullPath.c_str());
+         const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),
+                                            std::istreambuf_iterator<char>());
+         inlinedHeaders += headerFileAsStr;
+      }
+   };
+
    if (fInlineInputHeaders) {
-      std::string hdrFullPath;
       for (auto const & hdrName : fHeaders) {
-         bool headerFound = FindHeader(hdrName,hdrFullPath);
-         if (!headerFound) {
-            ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
-         } else {
-            std::ifstream headerFile(hdrFullPath.c_str());
-            const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),
-                                              std::istreambuf_iterator<char>());
-            inlinedHeaders += headerFileAsStr;
-         }
+        findAndAddToInlineHeaders(hdrName);
       }
 
    } else {
-      // Now, if not, just #include them in the payload
+      // Now, if not, just #include them in the payload except for the linkdef
+      // file, if any.
       for (auto & hdrName : fHeaders) {
          inlinedHeaders += "#include \"" + hdrName + "\"\n";
       }
+   }
+
+   if (0 != fLinkDefFile.size() && !fIsPCH) {
+      findAndAddToInlineHeaders(fLinkDefFile);
    }
 
    // Recover old genreflex behaviour, i.e. do not print warnings due to glitches

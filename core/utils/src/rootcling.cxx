@@ -210,6 +210,7 @@ const char *rootClingHelp =
 #include <numeric>
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
@@ -633,41 +634,16 @@ bool IsSelectionXml(const char *filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool IsLinkdefFile(const char *filename)
-{
-   // Note, should change this into take llvm::StringRef.
-
-   if ((strstr(filename, "LinkDef") || strstr(filename, "Linkdef") ||
-         strstr(filename, "linkdef")) && strstr(filename, ".h")) {
-      return true;
-   }
-   size_t len = strlen(filename);
-   size_t linkdeflen = 9; /* strlen("linkdef.h") */
-   if (len >= 9) {
-      if (0 == strncasecmp(filename + (len - linkdeflen), "linkdef", linkdeflen - 2)
-            && 0 == strcmp(filename + (len - 2), ".h")
-         ) {
-         return true;
-      } else {
-         return false;
-      }
-   } else {
-      return false;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool IsLinkdefFile(const clang::PresumedLoc& PLoc)
 {
-   return IsLinkdefFile(PLoc.getFilename());
+   return ROOT::TMetaUtils::IsLinkdefFile(PLoc.getFilename());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool IsSelectionFile(const char *filename)
 {
-   return IsLinkdefFile(filename) || IsSelectionXml(filename);
+   return ROOT::TMetaUtils::IsLinkdefFile(filename) || IsSelectionXml(filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2462,21 +2438,6 @@ void AdjustRootMapNames(std::string &rootmapFileName,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool IsHeaderName(const std::string &filename)
-{
-   return llvm::sys::path::extension(filename) == ".h" ||
-          llvm::sys::path::extension(filename) == ".hh" ||
-          llvm::sys::path::extension(filename) == ".hpp" ||
-          llvm::sys::path::extension(filename) == ".H" ||
-          llvm::sys::path::extension(filename) == ".h++" ||
-          llvm::sys::path::extension(filename) == "hxx" ||
-          llvm::sys::path::extension(filename) == "Hxx" ||
-          llvm::sys::path::extension(filename) == "HXX";
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Extract the proper autoload key for nested classes
 /// The routine does not erase the name, just updates it
 
@@ -2591,7 +2552,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
                   auto &header = headers.front();
                   if (treatedHeaders.insert(header).second &&
                         headersToIgnore.find(header) == headersToIgnore.end() &&
-                        IsHeaderName(header)){
+                        ROOT::TMetaUtils::IsHeaderName(header)){
                         rootmapFile << "header " << header << std::endl;
                   }
                }
@@ -3658,7 +3619,7 @@ const std::string GenerateStringFromHeadersForClasses(const HeadersDeclsMap_t &h
 
 bool IsImplementationName(const std::string &filename)
 {
-   return !IsHeaderName(filename);
+   return !ROOT::TMetaUtils::IsHeaderName(filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3726,6 +3687,52 @@ int CheckForUnsupportedClasses(const RScanner::ClassColl_t &annotatedRcds)
    }
    return nerrors;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class TRootClingCallbacks : public cling::InterpreterCallbacks {
+private:
+    std::list<std::string>& fFilesIncludedByLinkdef;
+    bool isLocked = false;
+public:
+    TRootClingCallbacks(cling::Interpreter* interp, std::list<std::string>& filesIncludedByLinkdef):
+      InterpreterCallbacks(interp),
+      fFilesIncludedByLinkdef(filesIncludedByLinkdef){};
+
+   ~TRootClingCallbacks(){};
+
+   virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
+                                   const clang::Token &/*IncludeTok*/,
+                                   llvm::StringRef FileName,
+                                   bool IsAngled,
+                                   clang::CharSourceRange /*FilenameRange*/,
+                                   const clang::FileEntry */*File*/,
+                                   llvm::StringRef /*SearchPath*/,
+                                   llvm::StringRef /*RelativePath*/,
+                                   const clang::Module */*Imported*/) {
+      if (isLocked) return;
+      if (IsAngled) return;
+      auto& PP = m_Interpreter->getCI()->getPreprocessor();
+      auto curLexer = PP.getCurrentFileLexer();
+      if (!curLexer) return;
+      auto fileEntry = curLexer->getFileEntry();
+      if (!fileEntry) return;
+      auto thisFileName = fileEntry->getName();
+      auto fileNameAsString = FileName.str();
+      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName);
+      if (isThisLinkdef) {
+         auto isTheIncludedLinkdef = ROOT::TMetaUtils::IsLinkdefFile(fileNameAsString.c_str());
+         if (isTheIncludedLinkdef) {
+            fFilesIncludedByLinkdef.clear();
+            isLocked = true;
+         } else {
+            fFilesIncludedByLinkdef.emplace_back(fileNameAsString.c_str());
+         }
+      }
+   }
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4132,11 +4139,16 @@ int RootCling(int argc,
    const char ** &extraArgs = *TROOT__GetExtraInterpreterArgs();
    extraArgs = &clingArgsC[1]; // skip binary name
    cling::Interpreter &interp = *TCling__GetInterpreter();
+   std::list<std::string> filesIncludedByLinkdef;
+   if (!isGenreflex && !onepcm) {
+      std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(&interp, filesIncludedByLinkdef));
+      interp.setCallbacks(std::move(callBacks));
+   }
 #else
-
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
 #endif // ROOT_STAGE1_BUILD
+
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
       ROOT::TMetaUtils::Info(0, "\n");
       ROOT::TMetaUtils::Info(0, "==== INTERPRETER CONFIGURATION ====\n");
@@ -4321,10 +4333,6 @@ int RootCling(int argc,
       pcmArgs.push_back(incCurDir);
    }
 
-   TModuleGenerator modGen(interp.getCI(),
-                           inlineInputHeader,
-                           sharedLibraryPathName);
-
    // Add the diagnostic pragmas distilled from the -Wno-xyz
    {
       std::stringstream res;
@@ -4334,19 +4342,6 @@ int RootCling(int argc,
                 std::ostream_iterator<std::string>(res, delim));
       interp.declare(res.str());
    }
-
-   modGen.ParseArgs(pcmArgs);
-#ifndef ROOT_STAGE1_BUILD
-   // Forward the -I, -D, -U
-   for (const std::string & inclPath : modGen.GetIncludePaths()) {
-      interp.AddIncludePath(inclPath);
-   }
-   std::stringstream definesUndefinesStr;
-   modGen.WritePPDefines(definesUndefinesStr);
-   modGen.WritePPUndefines(definesUndefinesStr);
-   if (!definesUndefinesStr.str().empty())
-      interp.declare(definesUndefinesStr.str());
-#endif
 
    class IgnoringPragmaHandler: public clang::PragmaNamespace {
    public:
@@ -4372,6 +4367,29 @@ int RootCling(int argc,
       ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
       return 1;
    }
+
+
+   TModuleGenerator modGen(interp.getCI(),
+                           inlineInputHeader,
+                           sharedLibraryPathName);
+
+#ifndef ROOT_STAGE1_BUILD
+   if (filesIncludedByLinkdef.size() !=0)
+      pcmArgs.push_back(argv[linkdefLoc]);
+#endif
+
+   modGen.ParseArgs(pcmArgs);
+#ifndef ROOT_STAGE1_BUILD
+   // Forward the -I, -D, -U
+   for (const std::string & inclPath : modGen.GetIncludePaths()) {
+      interp.AddIncludePath(inclPath);
+   }
+   std::stringstream definesUndefinesStr;
+   modGen.WritePPDefines(definesUndefinesStr);
+   modGen.WritePPUndefines(definesUndefinesStr);
+   if (!definesUndefinesStr.str().empty())
+      interp.declare(definesUndefinesStr.str());
+#endif
 
    if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
          || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
@@ -4500,7 +4518,7 @@ int RootCling(int argc,
          ROOT::TMetaUtils::Error(0, "XML file %s couldn't be opened!\n", linkdefFilename.c_str());
       }
 
-   } else if (IsLinkdefFile(linkdefFilename.c_str())) {
+   } else if (ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
 
       std::ifstream file(linkdefFilename.c_str());
       if (file.is_open()) {
@@ -4644,6 +4662,11 @@ int RootCling(int argc,
    //---------------------------------------------------------------------------
    // Write all the necessary #include
    /////////////////////////////////////////////////////////////////////////////
+#ifndef ROOT_STAGE1_BUILD
+   for (auto&& includedFromLinkdef : filesIncludedByLinkdef) {
+      includeForSource += "#include \"" + includedFromLinkdef + "\"\n";
+   }
+#endif
 
    if (!onepcm) {
       GenerateNecessaryIncludes(dictStream, includeForSource, extraIncludes);
@@ -4706,7 +4729,7 @@ int RootCling(int argc,
 
       std::string detectedUmbrella;
       for (auto & arg : pcmArgs) {
-         if (inlineInputHeader && !IsLinkdefFile(arg.c_str()) && IsHeaderName(arg)) {
+         if (inlineInputHeader && !ROOT::TMetaUtils::IsLinkdefFile(arg.c_str()) && ROOT::TMetaUtils::IsHeaderName(arg)) {
             detectedUmbrella = arg;
             break;
          }
@@ -4813,7 +4836,7 @@ int RootCling(int argc,
       std::unordered_set<std::string> headersToIgnore;
       if (inlineInputHeader) {
          for (int index = 0; index < argc; ++index) {
-            if (*argv[index] != '-' && IsHeaderName(argv[index])) {
+            if (*argv[index] != '-' && ROOT::TMetaUtils::IsHeaderName(argv[index])) {
                headersToIgnore.insert(argv[index]);
             }
          }
@@ -4859,7 +4882,7 @@ namespace genreflex {
       for (std::vector<std::string>::iterator it = headersNames.begin();
             it != headersNames.end(); it++) {
          const std::string headername(*it);
-         if (IsHeaderName(headername)) {
+         if (ROOT::TMetaUtils::IsHeaderName(headername)) {
             numberOfHeaders++;
          } else {
             ROOT::TMetaUtils::Warning(0,

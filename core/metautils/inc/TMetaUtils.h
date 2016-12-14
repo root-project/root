@@ -822,6 +822,12 @@ bool EndsWith(const std::string &theString, const std::string &theSubstring);
 bool BeginsWith(const std::string &theString, const std::string &theSubstring);
 
 //______________________________________________________________________________
+bool IsLinkdefFile(const char *filename);
+
+//______________________________________________________________________________
+bool IsHeaderName(const std::string &filename);
+
+//______________________________________________________________________________
 namespace AST2SourceTools {
 
 //______________________________________________________________________________
