@@ -3,8 +3,13 @@ import subprocess
 import shutil
 import os
 
+import sys
+if sys.version_info >= (3, 0):
+    kernelName = 'python3'
+else:
+    kernelName = 'python2'
 nbExtension=".ipynb"
-convCmdTmpl = "%s nbconvert  --to notebook --ExecutePreprocessor.enabled=True --ExecutePreprocessor.timeout=3600 %s --output %s"
+convCmdTmpl = "%s nbconvert  --to notebook --ExecutePreprocessor.kernel_name=%s --ExecutePreprocessor.enabled=True --ExecutePreprocessor.timeout=3600 %s --output %s"
 
 # Replace the criterion according to which a line shall be skipped
 def customLineJunkFilter(line):
@@ -47,7 +52,7 @@ def getInterpreterName():
 def canReproduceNotebook(inNBName):
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     interpName = getInterpreterName()
-    convCmd = convCmdTmpl %(interpName, inNBName, outNBName)
+    convCmd = convCmdTmpl %(interpName, kernelName, inNBName, outNBName)
     subprocess.check_output(convCmd.split(), env = os.environ)
     return compareNotebooks(inNBName,outNBName)
 
