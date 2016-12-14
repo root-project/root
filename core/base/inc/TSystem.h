@@ -268,11 +268,9 @@ protected:
    TFdSet          *fWritemask;        //!Files that should be checked for write events
    TFdSet          *fReadready;        //!Files with reads waiting
    TFdSet          *fWriteready;       //!Files with writes waiting
-   TFdSet          *fSignals;          //!Signals that were trapped
    Int_t            fNfd;              //Number of fd's in masks
    Int_t            fMaxrfd;           //Largest fd in read mask
    Int_t            fMaxwfd;           //Largest fd in write mask
-   Int_t            fSigcnt;           //Number of pending signals
    TString          fWdpath;           //Working directory
    TString          fHostname;         //Hostname
    Bool_t           fInsideNotify;     //Used by DispatchTimers()
@@ -284,7 +282,6 @@ protected:
    Int_t            fLevel;            //Level of nested eventloops
 
    TSeqCollection  *fTimers;           //List of timers
-   TSeqCollection  *fSignalHandler;    //List of signal handlers
    TSeqCollection  *fFileHandler;      //List of file handlers
    TSeqCollection  *fStdExceptionHandler; //List of std::exception handlers
    TSeqCollection  *fOnExitList;       //List of items to be cleaned-up on exit
@@ -368,7 +365,7 @@ public:
    virtual void            ResetSignals();
    virtual void            IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
-   virtual TSeqCollection *GetListOfSignalHandlers() const { return fSignalHandler; }
+   virtual TSeqCollection *GetListOfSignalHandlers();
    virtual void            AddFileHandler(TFileHandler *fh);
    virtual TFileHandler   *RemoveFileHandler(TFileHandler *fh);
    virtual TSeqCollection *GetListOfFileHandlers() const { return fFileHandler; }
