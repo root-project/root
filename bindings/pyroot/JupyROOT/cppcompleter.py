@@ -5,7 +5,7 @@
 #  Author: Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
 #-----------------------------------------------------------------------------
 
-import utils
+from JupyROOT import utils
 import ROOT
 
 # Jit a wrapper for the ttabcom

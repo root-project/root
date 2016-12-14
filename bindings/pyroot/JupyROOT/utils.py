@@ -14,7 +14,7 @@ import pty
 import itertools
 import re
 import fnmatch
-import handlers
+from JupyROOT import handlers
 import time
 from hashlib import sha1
 from contextlib import contextmanager
@@ -24,7 +24,7 @@ from IPython.display import HTML
 from IPython.core.extensions import ExtensionManager
 import IPython.display
 import ROOT
-import cppcompleter
+from JupyROOT import cppcompleter
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
