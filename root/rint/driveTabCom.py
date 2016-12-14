@@ -22,7 +22,7 @@ while True:
     #ret = master_stdin.write(data)
     os.write(master, data)
     while select.select([master],[],[],1.0)[0]:
-        sys.stdout.write(os.read(master, 1))
+        os.write(1, os.read(master, 1))
 
 # Wait until the subprocess has exited...
 proc.wait()
