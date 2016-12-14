@@ -56,6 +56,7 @@ clang/LLVM technology.
 #include "TEnum.h"
 #include "TEnumConstant.h"
 #include "THashTable.h"
+#include "RConversionRuleParser.h"
 #include "RConfigure.h"
 #include "compiledata.h"
 #include "TMetaUtils.h"
@@ -1857,6 +1858,13 @@ void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
          return;
       }
    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a conversion rule.
+Bool_t TCling::ParseClassConversionRule(const std::string &rule, MembersMap_t &result, std::string &error_string) {
+   return ROOT::ParseRule(rule, result, error_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

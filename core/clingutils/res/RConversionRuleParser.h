@@ -14,13 +14,7 @@
 #include "RConfigure.h"
 #endif
 
-#ifndef R__TSCHEMATYPE_H
 #include "TSchemaType.h"
-#endif
-
-//namespace clang {
-//   class CXXRecordDecl;
-//}
 
 namespace ROOT
 {
@@ -33,7 +27,6 @@ namespace ROOT
    extern SchemaRuleClassMap_t gReadRawRules;
 
    typedef std::map<std::string, ROOT::Internal::TSchemaType> MembersTypeMap_t;
-   typedef std::map<std::string, std::string> MembersMap_t;
 
    //---------------------------------------------------------------------------
    // Create the data member name-type map
@@ -74,7 +67,7 @@ namespace ROOT
    //---------------------------------------------------------------------------
    // Parse read pragma
    //---------------------------------------------------------------------------
-   bool ParseRule( std::string rule, MembersMap_t &result, std::string &error_string );
+   bool ParseRule(std::string rule, ROOT::Internal::MembersMap_t &result, std::string &error_string );
 
    //---------------------------------------------------------------------------
    // Parse read pragma

@@ -195,6 +195,7 @@ public: // Public Interface
    Int_t   ReloadAllSharedLibraryMaps();
    Int_t   UnloadAllSharedLibraryMaps();
    Int_t   UnloadLibraryMap(const char* library);
+   Bool_t  ParseClassConversionRule(const std::string &rule, MembersMap_t &result, std::string &error_string);
    Long_t  ProcessLine(const char* line, EErrorCode* error = 0);
    Long_t  ProcessLineAsynch(const char* line, EErrorCode* error = 0);
    Long_t  ProcessLineSynch(const char* line, EErrorCode* error = 0);

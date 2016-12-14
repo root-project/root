@@ -6,6 +6,7 @@
 // NOTE: #included by libCore and libCling. All symbols must be inline.
 
 #include <string>
+#include <map>
 
 namespace ROOT {
 namespace Internal {
@@ -16,6 +17,7 @@ namespace Internal {
       std::string fType;
       std::string fDimensions;
    };
+   typedef std::map<std::string, std::string> MembersMap_t;
 }
 }
 #endif // R__TSCHEMATYPE_H

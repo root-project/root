@@ -88,7 +88,7 @@ namespace ROOT
    /// Parse the schema rule as specified in the LinkDef file
 
    Bool_t ParseRule( std::string command,
-                     std::map<std::string, std::string> &result,
+                     ROOT::Internal::MembersMap_t &result,
                      std::string &error_string )
    {
       std::string::size_type l=0;
