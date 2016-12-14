@@ -2067,7 +2067,3 @@ module v5 {
   umbrella "v5"
   module * { export * }
 }
-module vdt {
-  umbrella "vdt"
-  module * { export * }
-}
