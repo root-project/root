@@ -126,7 +126,9 @@ The following interfaces have been removed, after deprecation in v6.08.
   [here](https://sft.its.cern.ch/jira/browse/ROOT-8092).
 - Improve the error bars drawing in TLegend to better match the plot's error
   drawing. This improvement was requested [here](https://sft.its.cern.ch/jira/browse/ROOT-5468).
-
+- Implement text clipping in TASImage as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-4538).
+  Also the text size in batch mode for png (gif jpeg) files better matches the
+  size on screen and pdf.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
