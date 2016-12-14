@@ -4327,7 +4327,7 @@ int RootCling(int argc,
    // Until the module are actually enabled in ROOT, we need to register
    // the 'current' directory to make it relocatable (i.e. have a way
    // to find the headers).
-   if (!buildingROOT){
+   if (!buildingROOT && !noIncludePaths){
       string incCurDir = "-I";
       incCurDir += currentDirectory;
       pcmArgs.push_back(incCurDir);
