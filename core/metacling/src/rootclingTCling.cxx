@@ -22,7 +22,7 @@
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include <memory>
 #include <iostream>
 #include <unordered_set>

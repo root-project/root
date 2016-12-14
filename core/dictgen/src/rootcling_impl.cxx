@@ -236,7 +236,7 @@ const char *rootClingHelp =
 #include "Rtypes.h"
 #include "TModuleGenerator.h"
 #include "TClassEdit.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "RStl.h"
 #include "XMLReader.h"
 #include "LinkdefReader.h"

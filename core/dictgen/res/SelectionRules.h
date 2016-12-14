@@ -18,7 +18,7 @@
 #include "VariableSelectionRule.h"
 #include "clang/AST/Decl.h"
 
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 
 namespace cling {
    class Interpreter;

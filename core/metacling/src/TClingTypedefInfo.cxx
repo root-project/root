@@ -23,7 +23,7 @@ compiler, not CINT.
 
 #include "TDictionary.h"
 #include "TError.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "Rtypes.h" // for gDebug
 #include "ThreadLocalStorage.h"
 

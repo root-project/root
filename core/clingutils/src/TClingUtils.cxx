@@ -56,7 +56,7 @@
 // Intentionally access non-public header ...
 #include "../../../interpreter/llvm/src/tools/clang/lib/Sema/HackForDefaultTemplateArg.h"
 
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 
 namespace ROOT {
 namespace TMetaUtils {

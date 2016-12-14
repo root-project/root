@@ -4,7 +4,7 @@
 
 #include "ClassSelectionRule.h"
 #include "SelectionRules.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "TClassEdit.h"
 
 #include "RootMetaSelection.h"

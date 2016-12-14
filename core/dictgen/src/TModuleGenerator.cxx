@@ -18,7 +18,7 @@
 
 #include "TModuleGenerator.h"
 
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "RConfigure.h"
 #include "RConfig.h"
 

@@ -26,7 +26,7 @@
 
 #include "llvm/IR/Module.h"
 
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 
 namespace clang {
    class ClassTemplatePartialSpecializationDecl;

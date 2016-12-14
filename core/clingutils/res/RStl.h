@@ -26,7 +26,7 @@
 #include <string>
 #include <set>
 
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 
 namespace clang {
    class CXXRecordDecl;

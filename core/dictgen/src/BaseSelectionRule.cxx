@@ -20,6 +20,9 @@
 
 #include "BaseSelectionRule.h"
 
+#include "TClassEdit.h"
+#include "TClingUtils.h"
+
 #include <iostream>
 #include <string.h>
 #include <cctype>

@@ -14,7 +14,7 @@
 
 #include "RStl.h"
 #include "TClassEdit.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 using namespace TClassEdit;
 
 #include <stdio.h>

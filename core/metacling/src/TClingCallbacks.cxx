@@ -30,7 +30,7 @@
 #include "clang/Lex/PPCallbacks.h"
 #include "llvm/Support/FileSystem.h"
 
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "ClingRAII.h"
 
 using namespace clang;

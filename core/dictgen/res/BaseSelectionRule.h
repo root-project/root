@@ -27,8 +27,6 @@
 #include <list>
 #include <iosfwd>
 
-#include "TMetaUtils.h"
-
 namespace clang {
    class NamedDecl;
    class CXXRecordDecl;

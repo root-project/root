@@ -23,7 +23,7 @@ but the type metadata comes from the Clang C++ compiler, not CINT.
 #include "TDictionary.h"
 #include "Rtypes.h" // for gDebug
 #include "TClassEdit.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "TInterpreter.h"
 #include "ThreadLocalStorage.h"
 

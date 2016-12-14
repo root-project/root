@@ -28,7 +28,7 @@ but the class metadata comes from the Clang C++ compiler, not CINT.
 #include "TDictionary.h"
 #include "TClingTypeInfo.h"
 #include "TError.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/Interpreter.h"

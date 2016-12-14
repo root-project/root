@@ -27,7 +27,7 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include "TClingClassInfo.h"
 #include "TClingMethodInfo.h"
 #include "TInterpreterValue.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "TSystem.h"
 
 #include "TError.h"

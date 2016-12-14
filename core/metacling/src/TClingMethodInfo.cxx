@@ -27,7 +27,7 @@ compiler, not CINT.
 #include "TDictionary.h"
 #include "TClingTypeInfo.h"
 #include "TError.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "TCling.h"
 #include "ThreadLocalStorage.h"
 

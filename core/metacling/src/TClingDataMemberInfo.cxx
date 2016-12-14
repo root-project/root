@@ -24,7 +24,7 @@ from the Clang C++ compiler, not CINT.
 
 #include "TDictionary.h"
 #include "TClingTypeInfo.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "TClassEdit.h"
 #include "TError.h"
 

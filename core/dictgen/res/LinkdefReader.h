@@ -26,7 +26,7 @@
 #include <map>
 #include "llvm/ADT/StringRef.h"
 
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 
 namespace cling {
    class Interpreter;

@@ -19,7 +19,7 @@
 
 #include "XMLReader.h"
 #include "SelectionRules.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 
 std::map<std::string, XMLReader::ETagNames> XMLReader::fgMapTagNames;
 

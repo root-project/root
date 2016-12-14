@@ -3,7 +3,7 @@
 
 #include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 
 #include <iostream>
 #include <algorithm>

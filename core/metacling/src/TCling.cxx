@@ -59,7 +59,7 @@ clang/LLVM technology.
 #include "RConversionRuleParser.h"
 #include "RConfigure.h"
 #include "compiledata.h"
-#include "TMetaUtils.h"
+#include "TClingUtils.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 #include "TListOfDataMembers.h"
