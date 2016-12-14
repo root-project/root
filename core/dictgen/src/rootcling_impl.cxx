@@ -4128,12 +4128,9 @@ int RootClingMain(int argc,
       clingArgsC.push_back(clingArg.c_str());
    }
 
-   std::string resourceDir;
-#ifdef R__LLVMRESOURCEDIR
-   resourceDir = "@R__LLVMRESOURCEDIR@";
-#else
-   resourceDir = TMetaUtils::GetLLVMResourceDir(gBuildingROOT);
-#endif
+   std::string resourceDir = gDriverConfig->fLLVMResourceDir;
+   if (resourceDir.empty())
+      resourceDir = TMetaUtils::GetLLVMResourceDir(gBuildingROOT);
 
    std::unique_ptr<cling::Interpreter> owningInterpPtr;
    cling::Interpreter* interpPtr = nullptr;

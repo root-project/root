@@ -68,7 +68,10 @@ int main(int argc, char **argv)
    }
 
    ROOT::Internal::RootCling::DriverConfig config{};
-   config.fExePath = GetExePath();
+#ifdef R__HAVE_LLVMRESOURCEDIR
+  config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
+#endif
+
 #ifdef ROOT_STAGE1_BUILD
    config.fBuildingROOTStage1 = true;
 #else

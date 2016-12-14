@@ -19,7 +19,7 @@ namespace Internal {
 namespace RootCling {
    struct DriverConfig {
       bool fBuildingROOTStage1 = false;
-      std::string fExePath;
+      std::string fLLVMResourceDir;
 
       // Function that might (rootcling) or might not (rootcling_tmp) be there.
       const char ** * (*fTROOT__GetExtraInterpreterArgs)() = nullptr;
