@@ -12,44 +12,20 @@
 // Provides bindings to TCling (compiled with rtti) from rootcling (compiled
 // without rtti).
 
-#include "rootclingTCling.h"
-
 #include "TClass.h"
-#include "TCling.h"
 #include "TEnum.h"
+#include "TError.h"
 #include "TFile.h"
 #include "TProtoClass.h"
-#include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
-#include "TClingUtils.h"
 #include <memory>
-#include <iostream>
-#include <unordered_set>
 
 std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
 std::vector<std::string> gTypedefsToStore;
 std::vector<std::string> gEnumsToStore;
 std::vector<std::string> gAncestorPCMNames;
-
-extern "C"
-const char ** *TROOT__GetExtraInterpreterArgs()
-{
-   return &TROOT::GetExtraInterpreterArgs();
-}
-
-extern "C"
-cling::Interpreter *TCling__GetInterpreter()
-{
-   static bool isInitialized = false;
-   gROOT; // trigger initialization
-   if (!isInitialized) {
-      gCling->SetClassAutoloading(false);
-      isInitialized = true;
-   }
-   return ((TCling *)gCling)->GetInterpreter();
-}
 
 extern "C"
 void InitializeStreamerInfoROOTFile(const char *filename)
@@ -91,15 +67,14 @@ static bool IsUniquePtrOffsetZero()
    bool isZero = uniquePtr.get() == *regularPtr_2;
    uniquePtr.release();
    if (!isZero) {
-      ROOT::TMetaUtils::Error("CloseStreamerInfoROOTFile",
-                              "UniquePtr points to %p, reinterpreting it gives %p and should have %p\n", uniquePtr.get(), *(regularPtr_2), regularPtr);
+      Error("CloseStreamerInfoROOTFile",
+            "UniquePtr points to %p, reinterpreting it gives %p and should have %p\n", uniquePtr.get(), *(regularPtr_2), regularPtr);
    }
    return isZero;
 }
 
 static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
 {
-   using namespace ROOT::TMetaUtils;
    auto dmTypeName = dm->GetTypeName();
    static bool isUniquePtrOffsetZero = IsUniquePtrOffsetZero(); // call this only once
    if (TClassEdit::IsUniquePtr(dmTypeName)) {
@@ -175,8 +150,6 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
       obj.Write("EMPTY");
       return true;
    };
-
-   using namespace ROOT::TMetaUtils;
 
    TObjArray protoClasses(gClassesToStore.size());
    for (const auto & normName : gClassesToStore) {
