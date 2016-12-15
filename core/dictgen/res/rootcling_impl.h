@@ -31,8 +31,15 @@ namespace RootCling {
       void (*fAddAncestorPCMROOTFile)(const char *pcmName) = nullptr;
       bool (*fCloseStreamerInfoROOTFile)(bool writeEmptyRootPCM) = nullptr;
    };
-
-   int rootcling_driver(int argc, char **argv, const DriverConfig& config);
 } // namespace RootCling
 } // namespace Internal
 } // namespace ROOT
+
+#ifdef _MSC_VER
+#define R__DLLEXPORT __declspec(dllexport)
+#else
+#define R__DLLEXPORT __attribute__ ((visibility ("default")))
+#endif
+
+extern "C" R__DLLEXPORT
+int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling::DriverConfig& config);

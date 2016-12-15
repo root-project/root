@@ -5870,8 +5870,8 @@ int GenReflexMain(int argc, char **argv)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int ROOT::Internal::RootCling::rootcling_driver(int argc, char **argv,
-                                                const ROOT::Internal::RootCling::DriverConfig& config)
+extern "C"
+int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling::DriverConfig& config)
 {
 
    assert(!gDriverConfig && "Driver configuration already set!");
