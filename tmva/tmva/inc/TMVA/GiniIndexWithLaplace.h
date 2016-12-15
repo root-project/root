@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      Heidelberg U., Germany                                                    * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      Heidelberg U., Germany                                                    *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -32,24 +32,24 @@
 //                                                                      //
 // GiniIndexWithLaplace                                                 //
 //                                                                      //
-// Implementation of the GiniIndex With Laplace correction              // 
+// Implementation of the GiniIndex With Laplace correction              //
 //     as separation criterion                                          //
 //                                                                      //
 //     Large Gini Indices (maximum 0.5) mean , that the sample is well  //
 //     mixed (same amount of signal and bkg)                            //
 //     bkg. Small Indices mean, well separated.                         //
-//     general defniniton:                                              //     
-//     Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2   // 
-//     Where: M is a smaple of whatever N elements (events)             //
+//     general definition:                                              //
+//     Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2   //
+//     Where: M is a sample of whatever N elements (events)             //
 //            that belong to K different classes                        //
 //            c(k) is the number of elements that belong to class k     //
 //     for just Signal and Background classes this boils down to:       //
-//     the "Lapalace correction to the probability distribution would   //
+//     The Laplace's correction to the probability distribution would   //
 //       turn the c(1)/N into (c(1)+1)/(N+2)                            //
 //     using this the simple Gini Index  for two classes                //
-//               Gini(Sample) = 2s*b/(s+b)^2                            //  
+//               Gini(Sample) = 2s*b/(s+b)^2                            //
 //       turns into                                                     //
-//        GiniLaplace(Sample) = 2(s*b+s+b+1)/(s+b+2)^2                  //  
+//        GiniLaplace(Sample) = 2(s*b+s+b+1)/(s+b+2)^2                  //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TMVA_SeparationBase
@@ -59,9 +59,9 @@
 namespace TMVA {
 
    class GiniIndexWithLaplace : public SeparationBase {
-      
+
    public:
-      
+
       // construtor for the GiniIndexWithLaplace
       GiniIndexWithLaplace() { fName="GiniLaplace"; }
 
@@ -70,14 +70,14 @@ namespace TMVA {
 
       //destructor
       virtual ~GiniIndexWithLaplace(){}
-      
+
       // Return the separation index (a measure for "purity" of the sample")
       virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b );
 
    protected:
-      
+
       ClassDef(GiniIndexWithLaplace,0); // Implementation of the GiniIndexWithLaplace as separation criterion
-   };  
+   };
 
 } // namespace TMVA
 

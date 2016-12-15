@@ -63,10 +63,10 @@ namespace TMVA {
 
    public:
 
-      // default constructur
+      // default constructor
       IMethod() {}
 
-      // default destructur
+      // default destructor
       virtual ~IMethod() {}
 
       // ------- virtual member functions to be implemented by each MVA method
@@ -105,7 +105,7 @@ namespace TMVA {
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const = 0;
 
-      // get specific help message from classifer
+      // get specific help message from classifier
       virtual void GetHelpMessage() const = 0;
 
       ClassDef(IMethod,0); // Method Interface
