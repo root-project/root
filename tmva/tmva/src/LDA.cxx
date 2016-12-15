@@ -8,20 +8,25 @@
  * Description:                                                                   *
  *      Local LDA method used by MethodKNN to compute MVA value.                  *
  *      This is experimental code under development. This class computes          *
- *      parameters of signal and background PDFs using Gaussian aproximation.     *
+ *      parameters of signal and background PDFs using Gaussian approximation.    *
  *                                                                                *
  * Author:                                                                        *
  *      John Alison John.Alison@cern.ch - University of Pennsylvania, USA         *
  *                                                                                *
  * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      University of Pennsylvania, USA                                           *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
+/*! \class TMVA::LDA
+\ingroup TMVA
+
+*/
 
 // Local
 #include "TMVA/LDA.h"
@@ -30,26 +35,26 @@
 #include <iostream>
 
 #ifndef ROOT_TDecompSVD
-#include "TDecompSVD.h"       
+#include "TDecompSVD.h"
 #endif
 #ifndef ROOT_TMatrixF
-#include "TMatrixF.h"       
+#include "TMatrixF.h"
 #endif
 #ifndef ROOT_TMath
-#include "TMath.h"       
+#include "TMath.h"
 #endif
 
 #ifndef ROOT_TMVA_Types
-#include "TMVA/Types.h"       
+#include "TMVA/Types.h"
 #endif
 #ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"       
+#include "TMVA/MsgLogger.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::LDA::LDA( Float_t tolerence, Bool_t debug ) 
+TMVA::LDA::LDA( Float_t tolerence, Bool_t debug )
    : fTolerence(tolerence),
      fNumParams(0),
      fSigma(0),
@@ -76,7 +81,7 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
    Log() << kDEBUG << "There are: " << inputBackgroundEvents.size() << " input background events " << Endl;
 
    fNumParams = inputSignalEvents[0].size();
-  
+
    UInt_t numSignalEvents = inputSignalEvents.size();
    UInt_t numBackEvents  = inputBackgroundEvents.size();
    UInt_t numTotalEvents = numSignalEvents + numBackEvents;
@@ -106,10 +111,10 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
       for (UInt_t param=0; param < inputBackgroundEvents[0].size(); ++param)
          Log() << kDEBUG << m_muBackground[param] << Endl;
    }
-  
+
    // sigma is a sum of two symmetric matrices, one for the background and one for signal
-   // get the matricies seperately (def not be the best way to do it!)
-  
+   // get the matrices separately (def not be the best way to do it!)
+
    // the signal, background, and total matrix
    TMatrixF sigmaSignal(fNumParams, fNumParams);
    TMatrixF sigmaBack(fNumParams, fNumParams);
@@ -130,19 +135,19 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
          }
       }
    }
-  
+
    for (UInt_t eventNumber=0; eventNumber < numBackEvents; ++eventNumber) {
       for (UInt_t row=0; row < fNumParams; ++row) {
          for (UInt_t col=0; col < fNumParams; ++col) {
             sigmaBack[row][col] += (inputBackgroundEvents[eventNumber][row] - m_muBackground[row]) * (inputBackgroundEvents[eventNumber][col] - m_muBackground[col] );
          }
       }
-   }   
+   }
 
-   // the total matrix 
+   // the total matrix
    *fSigma = sigmaBack + sigmaSignal;
    *fSigma *= 1.0/(numTotalEvents - K);
-  
+
    if (fDebug) {
       Log() << "after filling sigmaSignal" <<Endl;
       sigmaSignal.Print();
@@ -173,12 +178,12 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
       decomposed = solutionSVD.GetV();
       decomposed *= diag;
       decomposed *= solutionSVD.GetU();
-    
+
       if (fDebug) {
          Log() << "the decomposition " <<Endl;
          decomposed.Print();
       }
-    
+
       *fSigmaInverse = uTrans.Transpose(solutionSVD.GetU());
       *fSigmaInverse /= diag;
       *fSigmaInverse *= vTrans.Transpose(solutionSVD.GetV());
@@ -186,25 +191,25 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
       if (fDebug) {
          Log() << "the SigmaInverse " <<Endl;
          fSigmaInverse->Print();
-        
+
          Log() << "the real " <<Endl;
          fSigma->Invert();
          fSigma->Print();
-      
+
          Bool_t problem = false;
          for (UInt_t i =0; i< fNumParams; ++i) {
             for (UInt_t j =0; j< fNumParams; ++j) {
                if (TMath::Abs((Float_t)(*fSigma)(i,j) - (Float_t)(*fSigmaInverse)(i,j)) > 0.01) {
-                  Log() << "problem, i= "<< i << " j= " << j << Endl; 
-                  Log() << "Sigma(i,j)= "<< (*fSigma)(i,j) << " SigmaInverse(i,j)= " << (*fSigmaInverse)(i,j) <<Endl; 
+                  Log() << "problem, i= "<< i << " j= " << j << Endl;
+                  Log() << "Sigma(i,j)= "<< (*fSigma)(i,j) << " SigmaInverse(i,j)= " << (*fSigmaInverse)(i,j) <<Endl;
                   Log() << "The difference is : " << TMath::Abs((Float_t)(*fSigma)(i,j) - (Float_t)(*fSigmaInverse)(i,j)) <<Endl;
                   problem = true;
                }
             }
          }
          if (problem) Log() << kWARNING << "Problem with the inversion!" << Endl;
-         
-      }    
+
+      }
    }
 }
 
@@ -217,7 +222,7 @@ Float_t TMVA::LDA::FSub(const std::vector<Float_t>& x, Int_t k)
 {
    Float_t prefactor  = 1.0/(TMath::TwoPi()*TMath::Sqrt(fSigma->Determinant()));
    std::vector<Float_t> m_transPoseTimesSigmaInverse;
-  
+
    for (UInt_t j=0; j < fNumParams; ++j) {
       Float_t m_temp = 0;
       for (UInt_t i=0; i < fNumParams; ++i) {
@@ -225,12 +230,12 @@ Float_t TMVA::LDA::FSub(const std::vector<Float_t>& x, Int_t k)
       }
       m_transPoseTimesSigmaInverse.push_back(m_temp);
    }
-  
+
    Float_t exponent = 0.0;
    for (UInt_t i=0; i< fNumParams; ++i) {
       exponent += m_transPoseTimesSigmaInverse[i]*(x[i] - fMu[k][i]);
    }
-  
+
    exponent *= -0.5;
 
    return prefactor*TMath::Exp( exponent );
