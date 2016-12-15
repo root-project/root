@@ -14,7 +14,6 @@ if sys.version_info >= (3, 0):
 else:
     import DataLoader, Factory
 from JsMVA import OutputTransformer
-import types
 
 
 ## Function inserter class
@@ -97,15 +96,15 @@ class functions:
         else:
             opt = ""
         for key in kwargs:
-            if type(kwargs[key]) == types.BooleanType:
+            if isinstance(kwargs[key], bool):
                 if kwargs[key] == True:
                     opt += key + ":"
                 else:
                     opt += "!" + key + ":"
-            elif type(kwargs[key]) == types.ListType:
+            elif isinstance(kwargs[key], list):
                 ss = ""
                 for o in kwargs[key]:
-                    if type(o) == types.DictType:
+                    if isinstance(o, dict):
                         sst = ""
                         for kk in o:
                             sst += kk + "=" + str(o[kk]) + ","
