@@ -10,34 +10,31 @@
 
 #ifndef ROOT_STAGE1_BUILD
 #include "rootclingTCling.h"
+#include "rootclingIO.h"
 #endif
 
 #include "rootcling_impl.h"
 #include "RConfigure.h"
 #include "RConfig.h"
 
-#ifdef _MSC_VER
-  #define R__DLLEXPORT __declspec(dllexport)
-#else
-  #define R__DLLEXPORT
-#endif
-
-extern "C" {
-   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
-}
+#include <iostream>
 
 #ifdef _WIN32
-#ifdef system
-#undef system
-#endif
-#include <windows.h>
-#include <Tlhelp32.h> // for MAX_MODULE_NAME32
-#include <process.h>
-#define PATH_MAX _MAX_PATH
-#ifdef interface
+# ifdef system
+#  undef system
+# endif
+# include <windows.h>
+# include <Tlhelp32.h> // for MAX_MODULE_NAME32
+# include <process.h>
+# define PATH_MAX _MAX_PATH
+# ifdef interface
 // prevent error coming from clang/AST/Attrs.inc
-#undef interface
-#endif
+#  undef interface
+# endif
+#else // _WIN32
+# include <limits.h>
+# include <unistd.h>
+# include <dlfcn.h>
 #endif
 
 #ifdef __APPLE__
@@ -45,11 +42,9 @@ extern "C" {
 #include <mach-o/dyld.h>
 #endif
 
-#if !defined(R__WIN32)
-#include <limits.h>
-#include <unistd.h>
-#endif
-
+extern "C" {
+R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
