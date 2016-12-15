@@ -8,7 +8,7 @@
  * Web    : http://oproject.org                                                   *
  *                                                                                *
  * Description:                                                                   *
- *      scikit-learn Package RandomForestClassifier  method based on python       *
+ *      scikit-learn Package RandomForestClassifier method based on python        *
  *                                                                                *
  **********************************************************************************/
 
@@ -27,9 +27,9 @@
 
 namespace TMVA {
 
-   class Factory;  // DSMTEST
-   class Reader;   // DSMTEST
-   class DataSetManager;  // DSMTEST
+   class Factory;
+   class Reader;
+   class DataSetManager;
    class Types;
    class MethodPyRandomForest : public PyMethodBase {
 
@@ -68,14 +68,14 @@ namespace TMVA {
       // the actual "weights"
       virtual void AddWeightsXMLTo(void * /* parent */) const {} // = 0;
       virtual void ReadWeightsFromXML(void * /* wghtnode */) {} // = 0;
-      virtual void ReadWeightsFromStream(std::istream &) {} //= 0; // backward compatibility
+      virtual void ReadWeightsFromStream(std::istream &) {} //= 0; backward compatibility
 
       void ReadModelFromFile();
 
    private :
-      DataSetManager *fDataSetManager;     // DSMTEST
-      friend class Factory;                   // DSMTEST
-      friend class Reader;                    // DSMTEST
+      DataSetManager *fDataSetManager;
+      friend class Factory;
+      friend class Reader;
 
    protected:
       std::vector<Double_t> mvaValues;
