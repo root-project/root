@@ -4,6 +4,7 @@
 # This class will transform the TMVA original output to HTML formated output.
 
 from JsMVA import DataLoader
+from JsMVA.Utils import xrange
 import cgi
 import re
 

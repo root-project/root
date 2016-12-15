@@ -11,6 +11,7 @@ if sys.version_info >= (3, 0):
     from JsMVA import JPyInterface
 else:
     import JPyInterface
+from JsMVA.Utils import xrange
 from xml.etree.ElementTree import ElementTree
 import json
 from IPython.core.display import display, HTML, clear_output

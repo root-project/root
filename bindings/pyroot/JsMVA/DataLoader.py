@@ -10,6 +10,7 @@ if sys.version_info >= (3, 0):
     from JsMVA import JPyInterface
 else:
     import JPyInterface
+from JsMVA.Utils import xrange
 import ROOT
 
 
