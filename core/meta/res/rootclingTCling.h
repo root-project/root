@@ -15,17 +15,7 @@
 namespace cling {
    class Interpreter;
 }
-namespace clang {
-   class CXXRecordDecl;
-}
-
 extern "C" {
    const char ** *TROOT__GetExtraInterpreterArgs();
    cling::Interpreter *TCling__GetInterpreter();
-   void InitializeStreamerInfoROOTFile(const char *filename);
-   void AddStreamerInfoToROOTFile(const char *normName);
-   void AddTypedefToROOTFile(const char *tdname);
-   void AddEnumToROOTFile(const char *tdname);
-   void AddAncestorPCMROOTFile(const char *pcmName);
-   bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM);
 }
