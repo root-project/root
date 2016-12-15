@@ -23,7 +23,7 @@ from IPython.display import HTML
 from IPython.core.extensions import ExtensionManager
 import IPython.display
 import ROOT
-from JupyROOT import cppcompleter, handlers
+from JupyROOT import handlers
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
@@ -471,14 +471,13 @@ def setStyle():
 
 captures = []
 
-def loadExtensionsAndCapturers():
+def loadMagicsAndCapturers():
     global captures
     extNames = ["JupyROOT.magics." + name for name in ["cppmagic","jsrootmagic"]]
     ip = get_ipython()
     extMgr = ExtensionManager(ip)
     for extName in extNames:
         extMgr.load_extension(extName)
-    cppcompleter.load_ipython_extension(ip)
     captures.append(StreamCapture())
     captures.append(CaptureDrawnPrimitives())
 
@@ -497,7 +496,7 @@ def enableCppHighlighting():
 
 def iPythonize():
     setStyle()
-    loadExtensionsAndCapturers()
+    loadMagicsAndCapturers()
     enableCppHighlighting()
     enhanceROOTModule()
     welcomeMsg()
