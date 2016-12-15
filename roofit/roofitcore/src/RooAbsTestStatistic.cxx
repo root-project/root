@@ -56,6 +56,11 @@ combined in the main thread.
 #include <chrono>
 #include <fstream>
 
+class Global {
+public:
+  static int timing_flag;
+}
+
 using namespace std;
 
 ClassImp(RooAbsTestStatistic)
@@ -236,12 +241,19 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 
 Double_t RooAbsTestStatistic::evaluate() const
 {
-  // One-time Initialization
+  ofstream timing_outfile;
+  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
+
+    // One-time Initialization
   if (!_init) {
     const_cast<RooAbsTestStatistic*>(this)->initialize() ;
   }
 
   if (SimMaster == _gofOpMode) {
+    if (Global::timing_flag == 2) {
+      timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
+      timing_begin = std::chrono::high_resolution_clock::now();
+    }
     // Evaluate array of owned GOF objects
     Double_t ret = 0.;
 
@@ -270,58 +282,87 @@ Double_t RooAbsTestStatistic::evaluate() const
       _evalCarry /= norm;
     }
 
+    if (Global::timing_flag == 2) {
+      timing_end = std::chrono::high_resolution_clock::now();
+
+      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+
+      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
+
+      timing_outfile.close();
+    }
+
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
-    // EGP: open file before calculate, otherwise this will take time from in between calculate dispatch and
-    // waiting for calculation to finish in the getValV loop.
-    ofstream outfile("RATS_timings.json", ios::app);
-    // EGP: also do other preparations
-    std::vector< std::chrono::time_point<std::chrono::system_clock> > begin_part;
-    std::vector< std::chrono::time_point<std::chrono::system_clock> > end_part;
-    begin_part.reserve(_nCPU);
-    end_part.reserve(_nCPU);
+    if (Global::timing_flag == 2) {
+      timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
+      timing_begin = std::chrono::high_resolution_clock::now();
+    }
+    std::vector<double> timings;
+    if (Global::timing_flag == 3) {
+      timings.reserve(_nCPU);
+      timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json", ios::app);
+    }
 
     // Start calculations in parallel
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
 
     Double_t sum(0), carry = 0.;
 
-    auto begin = std::chrono::high_resolution_clock::now();
     for (Int_t i = 0; i < _nCPU; ++i) {
-      begin_part[i] = std::chrono::high_resolution_clock::now();
+      if (Global::timing_flag == 3) {
+        timing_begin = std::chrono::high_resolution_clock::now();
+      }
       Double_t y = _mpfeArray[i]->getValV();
       carry += _mpfeArray[i]->getCarry();
       y -= carry;
       const Double_t t = sum + y;
       carry = (t - sum) - y;
       sum = t;
-      end_part[i] = std::chrono::high_resolution_clock::now();
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-
-    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-                      (end-begin).count() / 1.e9;
-//    std::cout << "evaluate mpmaster collect timing (wallclock): " << timing_s << "s" << std::endl;
-
-    outfile << "{\"evaluate_mpmaster_collect_walltime_s\": \"" << timing_s;
-
-    for (Int_t i = 0; i < _nCPU; ++i) {
-      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-                  (end_part[i]-begin_part[i]).count() / 1.e9;
-      outfile << "\", \"evaluate_mpmaster_collect_it" << i << "_timing_s\": \"" << timing_s;
+      if (Global::timing_flag == 3) {
+        timing_end = std::chrono::high_resolution_clock::now();
+        timings[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+      }
     }
 
-    outfile << "\", \"pid\": \"" << getpid()
-            << "\"}," << "\n";
+    if (Global::timing_flag == 3) {
+      timing_outfile << "{";
 
-    outfile.close();
+      for (Int_t i = 0; i < _nCPU; ++i) {
+        timing_outfile << "\"RATS_evaluate_mpmaster_it" << i << "_wall_s\": \"" << timings[i] << "\", ";
+      }
+
+      timing_outfile << "\"pid\": \"" << getpid() << "\""
+                     << "}," << "\n";
+
+      timing_outfile.close();
+    }
 
     Double_t ret = sum ;
     _evalCarry = carry;
+
+    if (Global::timing_flag == 2) {
+      timing_end = std::chrono::high_resolution_clock::now();
+
+      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+
+      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
+
+      timing_outfile.close();
+    }
+
     return ret ;
 
   } else {
+    if (Global::timing_flag == 2) {
+      timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
+      timing_begin = std::chrono::high_resolution_clock::now();
+    }
 
     // Evaluate as straight FUNC
     Int_t nFirst(0), nLast(_nEvents), nStep(1) ;
@@ -357,7 +398,19 @@ Double_t RooAbsTestStatistic::evaluate() const
       ret /= norm;
       _evalCarry /= norm;
     }
-    
+
+    if (Global::timing_flag == 2) {
+      timing_end = std::chrono::high_resolution_clock::now();
+
+      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+
+      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
+
+      timing_outfile.close();
+    }
+
     return ret ;
 
   }

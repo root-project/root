@@ -71,6 +71,11 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 
+class Global {
+public:
+  static int timing_flag;
+}
+
 using namespace std;
 using namespace RooFit;
 
@@ -409,59 +414,64 @@ void RooRealMPFE::serverLoop()
 
 void RooRealMPFE::calculate() const
 {
+  ofstream timing_outfile;
+  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
 
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << endl ;
-    ofstream outfile("RRMPFE_init_timings.json", ios::app);
-
-    auto begin = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 7) {
+      timing_outfile.open("timing_RRMPFE_calculate_initialize.json", ios::app);
+      timing_begin = std::chrono::high_resolution_clock::now();
+    }
 
     const_cast<RooRealMPFE*>(this)->initialize() ;
 
-    auto end = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 7) {
+      timing_end = std::chrono::high_resolution_clock::now();
 
-    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-          (end-begin).count() / 1.e9;
-//    std::cout << "calculate initialize timing (wallclock): " << timing_s << "s" << std::endl;
+      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
-    outfile << "{\"calculate_init_walltime_s\": \"" << timing_s
-            << "\", \"pid\": \"" << getpid()
-            << "\", \"tid\": \"" << pthread_self()
-            << "\"}," << "\n";
+      timing_outfile << "{\"RRMPFE_calculate_initialize_wall_s\": \"" << timing_s
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
-    outfile.close();
+      timing_outfile.close();
+    }
   }
 
   // Inline mode -- Calculate value now
   if (_state==Inline) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
-    ofstream outfile("RRMPFE_inline_timings.json", ios::app);
-    auto begin = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 7) {
+      timing_outfile.open("timing_RRMPFE_calculate_inline.json", ios::app);
+      timing_begin = std::chrono::high_resolution_clock::now();
+    }
 
     _value = _arg ;
     clearValueDirty() ;
 
-    auto end = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 7) {
+      timing_end = std::chrono::high_resolution_clock::now();
 
-    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-          (end-begin).count() / 1.e9;
-//    std::cout << "calculate inline timing (wallclock): " << timing_s << "s" << std::endl;
+      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
-    outfile << "{\"calculate_inline_walltime_s\": \"" << timing_s
-          << "\", \"pid\": \"" << getpid()
-          << "\", \"tid\": \"" << pthread_self()
-          << "\"}," << "\n";
+      timing_outfile << "{\"RRMPFE_calculate_inline_wall_s\": \"" << timing_s
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
-    outfile.close();
+      timing_outfile.close();
+    }
   }
 
 #ifndef _WIN32
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
     // timing stuff
-    ofstream outfile("RRMPFE_timings.json", ios::app);
-    auto begin = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 7) {
+      timing_outfile.open("timing_RRMPFE_calculate_client.json", ios::app);
+      timing_begin = std::chrono::high_resolution_clock::now();
+    }
 
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << endl ;
     Int_t i(0) ;
@@ -531,18 +541,17 @@ void RooRealMPFE::calculate() const
     _retrieveDispatched = kTRUE ;
 
     // end timing
-    auto end = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 7) {
+      timing_end = std::chrono::high_resolution_clock::now();
 
-    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-                      (end-begin).count() / 1.e9;
-//    std::cout << "calculate dispatch timing: " << timing_s << "s" << std::endl;
+      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
-    outfile << "{\"calculate_dispatch_walltime_s\": \"" << timing_s
-            << "\", \"pid\": \"" << getpid()
-            << "\", \"tid\": \"" << pthread_self()
-            << "\"}," << "\n";
+      timing_outfile << "{\"RRMPFE_calculate_client_wall_s\": \"" << timing_s
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
-    outfile.close();
+      timing_outfile.close();
+    }
 
   } else if (_state!=Inline) {
     cout << "RooRealMPFE::calculate(" << GetName()
@@ -592,16 +601,30 @@ Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 
 Double_t RooRealMPFE::evaluate() const
 {
+  ofstream timing_outfile;
+  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end,
+                                                     timing_before_retrieve, timing_after_retrieve;
+  struct timespec c_timing_begin, c_timing_end, c_timing_before_retrieve, c_timing_after_retrieve;
+
+  if (Global::timing_flag == 4) {
+    timing_outfile.open("timing_RRMPFE_evaluate_full.json", ios::app);
+    timing_begin = std::chrono::high_resolution_clock::now();
+  }
+
   // Retrieve value of arg
   Double_t return_value = 0;
   if (_state==Inline) {
     return_value = _arg ;
   } else if (_state==Client) {
 #ifndef _WIN32
-    ofstream outfile("RRMPFE_eval_timings.json", ios::app);
-
-    std::clock_t c_begin = std::clock();
-    auto begin = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 5) {
+      timing_outfile.open("timing_wall_RRMPFE_evaluate_client.json", ios::app);
+      timing_begin = std::chrono::high_resolution_clock::now();
+    }
+    if (Global::timing_flag == 6) {
+      timing_outfile.open("timing_cpu_RRMPFE_evaluate_client.json", ios::app);
+      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_begin);
+    }
 
     bool needflush = false;
     int msg;
@@ -630,13 +653,21 @@ Double_t RooRealMPFE::evaluate() const
 
     Int_t numError;
 
-      std::clock_t c_before_retrieve = std::clock();
-    auto before_retrieve = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 5) {
+      timing_before_retrieve = std::chrono::high_resolution_clock::now();
+    }
+    if (Global::timing_flag == 6) {
+      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_before_retrieve);
+    }
 
     *_pipe >> msg >> value >> _evalCarry >> numError;
 
-      std::clock_t c_after_retrieve = std::clock();
-    auto after_retrieve = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 5) {
+      timing_after_retrieve = std::chrono::high_resolution_clock::now();
+    }
+    if (Global::timing_flag == 6) {
+      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_after_retrieve);
+    }
 
     if (msg!=ReturnValue) {
       cout << "RooRealMPFE::evaluate(" << GetName()
@@ -670,43 +701,67 @@ Double_t RooRealMPFE::evaluate() const
     _calcInProgress = kFALSE ;
     return_value = value ;
 
-    std::clock_t c_end = std::clock();
-    auto end = std::chrono::high_resolution_clock::now();
+    if (Global::timing_flag == 5) {
+      timing_end = std::chrono::high_resolution_clock::now();
+    }
+    if (Global::timing_flag == 6) {
+      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_end);
+    }
 
-    double c_timing_s = (c_end - c_begin) / static_cast<double>(CLOCKS_PER_SEC);
-    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-                      (end-begin).count() / 1.e9;
-//    std::cout << "evaluate MPFE client timing (wallclock): " << timing_s << "s" << std::endl;
-//    std::cout << "evaluate MPFE client timing (cpu time): " << c_timing_s << "s" << std::endl;
+    if (Global::timing_flag == 5) {
+      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
-    outfile << "{\"evaluate_MPFE_client_walltime_s\": \"" << timing_s;
-    outfile << "\", \"evaluate_MPFE_client_cputime_s\": \"" << c_timing_s;
+      timing_outfile << "{\"RRMPFE_evaluate_client_wall_s\": \"" << timing_s;
 
-    c_timing_s = (c_before_retrieve - c_begin) / static_cast<double>(CLOCKS_PER_SEC);
-    timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-                (before_retrieve-begin).count() / 1.e9;
-//    std::cout << "evaluate MPFE client (before retrieve) timing (wallclock): " << timing_s  << "s" << std::endl;
-//    std::cout << "evaluate MPFE client (before retrieve) timing (cpu time): " << c_timing_s  << "s" << std::endl;
+      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_before_retrieve - timing_begin).count() / 1.e9;
 
-    outfile << "\", \"evaluate_MPFE_client_before_retrieve_walltime_s\": \"" << timing_s;
-    outfile << "\", \"evaluate_MPFE_client_before_retrieve_cputime_s\": \"" << c_timing_s;
+      timing_outfile << "\", \"RRMPFE_evaluate_client_before_retrieve_wall_s\": \"" << timing_s;
 
-    c_timing_s = (c_after_retrieve - c_before_retrieve) / static_cast<double>(CLOCKS_PER_SEC);
-    timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>
-                (after_retrieve-before_retrieve).count() / 1.e9;
-//    std::cout << "evaluate MPFE client (retrieve) timing (wallclock): " << timing_s << "s" << std::endl;
-//    std::cout << "evaluate MPFE client (retrieve) timing (cpu time): " << c_timing_s << "s" << std::endl;
+      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_after_retrieve - timing_before_retrieve).count() / 1.e9;
 
-    outfile << "\", \"evaluate_MPFE_client_retrieve_walltime_s\": \"" << timing_s;
-    outfile << "\", \"evaluate_MPFE_client_retrieve_cputime_s\": \"" << c_timing_s;
+      timing_outfile << "\", \"RRMPFE_evaluate_client_retrieve_wall_s\": \"" << timing_s;
 
-    outfile << "\", \"pid\": \"" << getpid()
-            << "\", \"tid\": \"" << pthread_self()
-            << "\"}," << "\n";
+      timing_outfile << "\", \"pid\": \"" << getpid()
+//              << "\", \"tid\": \"" << pthread_self()
+              << "\"}," << "\n";
 
-    outfile.close();
+      timing_outfile.close();
+    }
+    
+    if (Global::timing_flag == 6) {
+      double c_timing_s = (c_timing_end.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
+
+      timing_outfile << "\", \"RRMPFE_evaluate_client_cpu_s\": \"" << c_timing_s;
+
+      c_timing_s = (c_timing_before_retrieve.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
+
+      timing_outfile << "\", \"RRMPFE_evaluate_client_before_retrieve_cpu_s\": \"" << c_timing_s;
+
+      c_timing_s = (c_timing_after_retrieve.tv_nsec - c_timing_before_retrieve.tv_nsec) / 1.e9;
+
+      timing_outfile << "\", \"RRMPFE_evaluate_client_retrieve_cpu_s\": \"" << c_timing_s;
+
+      timing_outfile << "\", \"pid\": \"" << getpid()
+//              << "\", \"tid\": \"" << pthread_self()
+              << "\"}," << "\n";
+
+      timing_outfile.close();
+    }
+
 
 #endif // _WIN32
+  }
+
+  if (Global::timing_flag == 4) {
+    timing_end = std::chrono::high_resolution_clock::now();
+
+    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+
+    timing_outfile << "{\"RRMPFE_evaluate_wall_s\": \"" << timing_s
+                   << "\", \"pid\": \"" << getpid()
+                   << "\"}," << "\n";
+
+    timing_outfile.close();
   }
 
   return return_value;
