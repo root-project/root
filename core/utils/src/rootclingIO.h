@@ -23,6 +23,6 @@ extern "C" {
    void AddEnumToROOTFile(const char *tdname);
    void AddAncestorPCMROOTFile(const char *pcmName);
    bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM);
-};
+}
 
 #endif //ROOT_ROOTCLINGIO_H_H
