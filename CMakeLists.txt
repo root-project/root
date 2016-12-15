@@ -164,7 +164,7 @@ get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 
-string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS})
+string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS} ${CORE_OS_DICT_CXX_FLAGS}")
 if(cxxmodules)
   # rootcling uses our internal version of clang. Passing the modules flags here
   # would allow rootcling to find module files built by the external compiler

@@ -1,50 +1,37 @@
 # Module.mk for utilities for libMeta and rootcint
-# Copyright (c) 2002 Rene Brun and Fons Rademakers
+# Copyright (c) 1995-2016 Rene Brun and Fons Rademakers
 #
-# Author: Philippe Canal 9/1/2004
+# Author: Axel Naumann, 2016-12-14
 
-MODNAME        := metautils
+MODNAME        := clingutils
 MODDIR         := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS        := $(MODDIR)/src
 MODDIRI        := $(MODDIR)/inc
 
-METAUTILSDIR   := $(MODDIR)
-METAUTILSDIRS  := $(METAUTILSDIR)/src
-METAUTILSDIRI  := $(METAUTILSDIR)/inc
-METAUTILSDIRR  := $(METAUTILSDIR)/res
+CLINGUTILSDIR   := $(MODDIR)
+CLINGUTILSDIRS  := $(CLINGUTILSDIR)/src
+CLINGUTILSDIRI  := $(CLINGUTILSDIR)/inc
+CLINGUTILSDIRR  := $(CLINGUTILSDIR)/res
 
-##### $(METAUTILSO) #####
-METAUTILSH     := $(filter-out $(MODDIRI)/TMetaUtils.%,\
-  $(filter-out $(MODDIRI)/libcpp_string_view.h,\
-  $(filter-out $(MODDIRI)/RWrap_libcpp_string_view.h,\
-  $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)))))
-METAUTILSS     := $(filter-out $(MODDIRS)/RStl.%,\
-  $(filter-out $(MODDIRS)/TMetaUtils.%,\
-  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))))
+##### $(CLINGUTILSO) #####
+CLINGUTILSS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+CLINGUTILSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 
-METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
-METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx $(MODDIRS)/RStl.cxx
-METAUTILSTH     += $(MODDIRI)/libcpp_string_view.h
-METAUTILSTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
-
-METAUTILSCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
+CLINGUTILSCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
-METAUTILSCXXFLAGS += -Wno-shadow -Wno-unused-parameter
+CLINGUTILSCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
 
-METAUTILSO     := $(call stripsrc,$(METAUTILSS:.cxx=.o))
-METAUTILSTO    := $(call stripsrc,$(METAUTILSTS:.cxx=.o))
+CLINGUTILSO     := $(call stripsrc,$(CLINGUTILSS:.cxx=.o))
 
-METAUTILSL     := $(MODDIRI)/LinkDef.h
-
-METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d)
+CLINGUTILSDEP   := $(CLINGUTILSO:.o=.d)
 
 # used in the main Makefile
-METAUTILSH_REL := $(patsubst $(MODDIRI)/%,include/%,$(METAUTILSH) $(METAUTILSTH))
-ALLHDRS     += $(METAUTILSH_REL)
+CLINGUTILS_REL := $(patsubst $(MODDIRI)/%,include/%,$(CLINGUTILSH))
+ALLHDRS     += $(CLINGUTILS_REL)
 
 # include all dependency files
-INCLUDEFILES += $(METAUTILSDEP)
+INCLUDEFILES += $(CLINGUTILSDEP)
 
 #### STL dictionary (replacement for cintdlls)
 
@@ -68,23 +55,23 @@ ifneq ($(PLATFORM),win32)
 STLDICTS += lib/libvalarrayDict.$(SOEXT)
 endif
 
-STLDICTS_SRC := $(call stripsrc,$(patsubst lib/lib%Dict.$(SOEXT),$(METAUTILSDIRS)/G__std__%.cxx,$(STLDICTS)))
-STLDICTS_HDR := $(call stripsrc,$(patsubst lib/lib%Dict.$(SOEXT),$(METAUTILSDIRS)/G__std__%.h,$(STLDICTS)))
+STLDICTS_SRC := $(call stripsrc,$(patsubst lib/lib%Dict.$(SOEXT),$(CLINGUTILSDIRS)/G__std__%.cxx,$(STLDICTS)))
+STLDICTS_HDR := $(call stripsrc,$(patsubst lib/lib%Dict.$(SOEXT),$(CLINGUTILSDIRS)/G__std__%.h,$(STLDICTS)))
 STLDICTS_OBJ := $(patsubst %.cxx,%.o,$(STLDICTS_SRC))
 STLDICTS_DEP := $(patsubst %.cxx,%.d,$(STLDICTS_SRC))
 
-$(call stripsrc,$(METAUTILSDIRS)/G__std__%.cxx): $(METAUTILSDIRS)/%Linkdef.h $(ROOTCLINGSTAGE1DEP)
-	$(ROOTCLINGSTAGE1) -f $@ -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT)) -c $(subst multi,,${*:2=}) $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
+$(call stripsrc,$(CLINGUTILSDIRS)/G__std__%.cxx): $(CLINGUTILSDIRS)/%Linkdef.h $(ROOTCLINGSTAGE1DEP)
+	$(ROOTCLINGSTAGE1) -f $@ -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT)) -c $(subst multi,,${*:2=}) $(ROOT_SRCDIR)/core/clingutils/src/$*Linkdef.h
 
-$(STLDICTS): lib/lib%Dict.$(SOEXT): $(call stripsrc,$(METAUTILSDIRS)/G__std__%.o) $(ORDER_) $(MAINLIBS)
+$(STLDICTS): lib/lib%Dict.$(SOEXT): $(call stripsrc,$(CLINGUTILSDIRS)/G__std__%.o) $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$(filter-out $(MAINLIBS),$^)" ""
 
-lib/lib%Dict.rootmap: $(METAUTILSDIRS)/%Linkdef.h $(ROOTCLINGSTAGE1DEP)
-	$(ROOTCLINGSTAGE1) -r $(METAUTILSDIRS)/G__std__%.cxx -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT))\
+lib/lib%Dict.rootmap: $(CLINGUTILSDIRS)/%Linkdef.h $(ROOTCLINGSTAGE1DEP)
+	$(ROOTCLINGSTAGE1) -r $(CLINGUTILSDIRS)/G__std__%.cxx -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT))\
 	   -c $(subst multi,,${*:2=}) \
-	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
+	   $(ROOT_SRCDIR)/core/clingutils/src/$*Linkdef.h
 
-METAUTILSDEP   += $(STLDICTS_DEP)
+CLINGUTILSDEP   += $(STLDICTS_DEP)
 
 STLDICTSMAPS = $(STLDICTS:.$(SOEXT)=.rootmap)
 
@@ -97,24 +84,24 @@ ALLMAPS    += $(STLDICTSMAPS)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/%.h:    $(METAUTILSDIRI)/%.h
+include/%.h:    $(CLINGUTILSDIRI)/%.h
 		cp $< $@
 
-all-$(MODNAME): $(METAUTILSO) $(STLDICTS)
+all-$(MODNAME): $(CLINGUTILSO) $(STLDICTS)
 
 clean-$(MODNAME):
-		@rm -f $(METAUTILSO) $(STLDICTS_OBJ) \
+		@rm -f $(CLINGUTILSO) $(STLDICTS_OBJ) \
 		   $(STLDICTS_DEP)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(METAUTILSDEP) \
+		@rm -f $(CLINGUTILSDEP) \
 		   $(STLDICTS_OBJ) $(STLDICTS_DEP) $(STLDICTS_SRC) \
 		   $(STLDICTS_HDR) $(STLDICTSMAPS)
 
 distclean::     distclean-$(MODNAME)
 
-##### extra rules ######
-$(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS) -I$(METAUTILSDIRR)
-$(METAUTILSTO): $(LLVMDEP)
+ ##### extra rules ######
+ $(CLINGUTILSO): CXXFLAGS += $(CLINGUTILSCXXFLAGS) -I$(DICTGENDIRR) -I$(CLINGUTILSDIRR) -I$(FOUNDATIONDIRR)
+ $(CLINGUTILSO): $(LLVMDEP)

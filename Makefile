@@ -26,6 +26,19 @@ include config/Makefile.config
 ##### bit build options.
 CONFIG_SITE =
 
+##### Make sure build products are taken instead of        #####
+##### binaries from a different, existing build.           #####
+export PATH := $(ROOT_OBJDIR)/bin:$(PATH)
+ifeq ($(subst win,,$(ARCH)),$(ARCH))
+# not windows
+ifeq ($(LD_LIBRARY_PATH),)
+export LD_LIBRARY_PATH := $(ROOT_OBJDIR)/lib
+else
+export LD_LIBRARY_PATH := $(ROOT_OBJDIR)/lib:$(LD_LIBRARY_PATH)
+endif
+endif
+
+
 ##### Include compiler overrides specified via ./configure #####
 ##### However, if we are building packages or cleaning, we #####
 ##### don't include this file since it may screw up things #####
@@ -76,7 +89,8 @@ include $(MAKEFILEDEP)
 
 ##### Modules to build #####
 
-MODULES       = build interpreter/llvm interpreter/cling core/metautils \
+MODULES       = build interpreter/llvm interpreter/cling core/foundation \
+                core/clingutils core/dictgen core/metacling \
                 core/pcre core/clib \
                 core/textinput core/base core/cont core/meta core/thread \
                 io/io math/mathcore net/net core/zip core/lzma math/matrix \
@@ -96,7 +110,7 @@ ifeq ($(ARCH),win32)
 MODULES      += core/winnt graf2d/win32gdk
 MODULES      := $(filter-out core/newdelete,$(MODULES))
 SYSTEMDH      = $(WINNTH1)
-SYSTEMDICTH   = -DSYSTEM_TYPE_winnt $(SYSTEMDH)
+SYTSTEMDEF   := -DSYSTEM_TYPE_winnt
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
@@ -104,14 +118,14 @@ else
 ifeq ($(ARCH),win32gcc)
 MODULES      += core/unix
 SYSTEMDH      = $(UNIXH)
-SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
+SYSTEMDEF     = -DSYSTEM_TYPE_unix
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
 MODULES      += core/unix
 SYSTEMDH      = $(UNIXH)
-SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
+SYSTEMDEF     = -DSYSTEM_TYPE_unix
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
@@ -124,23 +138,29 @@ endif # not win32
 ifeq ($(BUILDCOCOA),yes)
 MODULES += core/macosx
 endif
+
 # utils/rootcling depends on system; must come after:
 MODULES += core/utils
 
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
+
 ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
 MODULES      += rootx
 SYSTEMDH     += $(MACOSXH1)
-SYSTEMDICTH   = -DSYSTEM_TYPE_macosx $(SYSTEMDH)
+SYSTEMDEF    := -DSYSTEM_TYPE_macosx
 SYSTEML      += $(MACOSXL)
 SYSTEMO      += $(MACOSXO)
 SYSTEMDO     += $(MACOSXDO)
 CORELIBEXTRA += -framework Cocoa
 endif
+
+SYSTEMDICTH = $(SYTSTEMDEF) $(SYSTEMDH)
+
+
 ifeq ($(BUILDX11),yes)
 MODULES      += graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
 endif
@@ -341,7 +361,7 @@ endif
 MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
 
 ifeq ($(BUILDTOOLS),yes)
-MODULES       = build interpreter/llvm interpreter/cling core/metautils \
+MODULES       = build interpreter/llvm interpreter/cling core/foundation core/dictgen \
                 core/clib core/base core/meta core/utils
 endif
 
@@ -353,12 +373,14 @@ ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 NEWLIBS      := -lNew
 BOOTLIBS     := -lCore
+ROOTCLINGLIBS:= -lRIO $(BOOTLIBS) -lCling
 ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad -lTree \
                 -lMatrix -lNet -lThread -lMathCore $(BOOTLIBS)
 RINTLIBS     := -lRint
 else
 NEWLIBS      := $(LPATH)/libNew.lib
 BOOTLIBS     := $(LPATH)/libCore.lib
+ROOTCLINGLIBS:= $(LPATH)/libRIO.lib $(BOOTLIBS) $(LPATH)/libCling.lib
 ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
                 $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
                 $(LPATH)/libGpad.lib $(LPATH)/libTree.lib \
@@ -374,6 +396,7 @@ PROOFSERVA   := bin/proofserva
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 BOOTLIBSDEP   = $(ORDER_) $(CORELIB)
+ROOTCLINGLIBSDEP = $(ORDER_) $(CORELIB) $(IOLIB) $(CLINGLIB)
 ROOTLIBSDEP   = $(BOOTLIBSDEP) $(MATHCORELIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 
@@ -554,16 +577,17 @@ COREBASEDIRS := $(ROOT_SRCDIR)/core/base/src
 COREBASEDIRI := $(ROOT_SRCDIR)/core/base/inc
 COREL0        = -I$(ROOT_SRCDIR) $(COREBASEDIRI)/LinkDef.h
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
+                $(SYSTEML) $(CLIBL) $(FOUNDATIONL) $(DICTGENL) \
+                $(METACLINGL) $(TEXTINPUTL)
 COREDS       := $(call stripsrc,$(COREBASEDIRS)/G__Core.cxx)
 COREDO       := $(COREDS:.cxx=.o)
 COREDH       := $(COREDS:.cxx=.h)
-COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDH) $(ZIPDICTH) \
-		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
-COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
-                $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
-COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
-                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO)
+COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDH) \
+		$(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
+COREDICTH     = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDICTH) \
+                $(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
+COREO         = $(BASEO) $(CONTO) $(FOUNDATIONO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
+                $(CLIBO) $(TEXTINPUTO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
@@ -1211,7 +1235,7 @@ ROOTPCHCXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(ROOTPCHCXXFLAGS))
 endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS)
+	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS) $(SYSTEMDEF)
 	@$(MAKEPCH) $@
 
 $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
