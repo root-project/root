@@ -288,6 +288,9 @@ std::vector<Double_t> MethodPyAdaBoost::GetMvaValues(Long64_t firstEvt, Long64_t
       mvaValues[i] = proba[fNoutputs*i + TMVA::Types::kSignal];
    }
 
+   Py_DECREF(pEvent);
+   Py_DECREF(result);
+
    return mvaValues;
 }
 
@@ -394,6 +397,7 @@ const Ranking* MethodPyAdaBoost::CreateRanking()
    }
 
    Py_DECREF(pRanking);
+
    return fRanking;
 }
 
