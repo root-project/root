@@ -391,7 +391,7 @@ bool test23() {
    TF1 f3("f3","f1+[0]");
    // param order should be the same
    f3.SetParameters( f2.GetParameters() );
-   ok &= fpEqual(f2.Eval(1) , f0.Eval(1) );
+   ok &= fpEqual(f3.Eval(1) , f0.Eval(1) );
    return ok;
 }
 
@@ -657,7 +657,19 @@ bool test37() {
   ok &= TMath::AreEqualAbs( f1.Eval(0.5), ref(0.5), 1.E-10);
   return ok; 
 }
-   
+
+bool test38() {
+  // test for missing parameters  (bug ROOT-8182)
+  bool ok = true;
+  TF1 f1("f1","[1]",0,1);
+  f1.SetParameters(999,2);
+  ok &= (f1.Eval(0) == 2.);
+  TF1 f2("f2","[A]+[1]*x",0,1);
+  f2.SetParameters(999,2,3);
+  ok &= (f2.Eval(2) == 7.);  
+  return ok; 
+}
+ 
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -712,6 +724,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test35() ) { PrintError(itest); }
    IncrTest(itest); if (!test36() ) { PrintError(itest); }
    IncrTest(itest); if (!test37() ) { PrintError(itest); }
+   IncrTest(itest); if (!test38() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
