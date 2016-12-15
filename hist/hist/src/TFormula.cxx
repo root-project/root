@@ -1390,10 +1390,25 @@ void TFormula::ExtractFunctors(TString &formula)
          }
          i++;
          //rename parameter name XX to pXX
-         if (param.IsDigit() ) param.Insert(0,'p');
-         // handle whitespace characters in parname
-         param.ReplaceAll("\\s"," ");
-         DoAddParameter(param,0,false);
+	 //std::cout << "examine parameters " << param << std::endl;
+	 int paramIndex = -1; 
+         if (param.IsDigit() ) {
+	   paramIndex = param.Atoi();
+	   param.Insert(0,'p');  // needed for the replacement
+	   if (paramIndex >= fNpar || fParams.find(param) == fParams.end() ) {
+	     // add all parameters up to given index found
+	     for (int idx = 0; idx <= paramIndex; ++idx) {
+	       TString pname = TString::Format("p%d",idx);
+	       if (fParams.find(pname) == fParams.end())
+		 DoAddParameter(pname,0,false);
+	     }
+	   }
+	 }
+	 else { 
+	   // handle whitespace characters in parname
+	   param.ReplaceAll("\\s"," ");
+	   DoAddParameter(param,0,false);
+	 }
          TString replacement = TString::Format("{[%s]}",param.Data());
          formula.Replace(tmp,i - tmp, replacement,replacement.Length());
          fFuncs.push_back(TFormulaFunction(param));
