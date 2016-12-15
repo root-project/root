@@ -670,7 +670,7 @@ endif()
 
 #---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
-
+file(REMOVE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
