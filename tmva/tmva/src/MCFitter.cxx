@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$ 
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -17,23 +17,20 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::MCFitter
+\ingroup TMVA
 
-/*
-  MCFitter
-  
-  Fitter using Monte Carlo sampling of parameters 
+Fitter using Monte Carlo sampling of parameters.
+
 */
-//_______________________________________________________________________
-
 
 #include "TMVA/MCFitter.h"
 
@@ -51,10 +48,10 @@ ClassImp(TMVA::MCFitter)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::MCFitter::MCFitter( IFitterTarget& target, 
-                          const TString& name, 
-                          const std::vector<Interval*>& ranges, 
-                          const TString& theOption ) 
+TMVA::MCFitter::MCFitter( IFitterTarget& target,
+                          const TString& name,
+                          const std::vector<Interval*>& ranges,
+                          const TString& theOption )
 : TMVA::FitterBase( target, name, ranges, theOption ),
    fSamples( 0 ),
    fSigma  ( 1 ),
@@ -62,17 +59,17 @@ TMVA::MCFitter::MCFitter( IFitterTarget& target,
 {
    DeclareOptions();
    ParseOptions();
-}            
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Declare MCFitter options
 
-void TMVA::MCFitter::DeclareOptions() 
+void TMVA::MCFitter::DeclareOptions()
 {
-   DeclareOptionRef( fSamples = 100000, "SampleSize", "Number of Monte Carlo events in toy sample" );  
-   DeclareOptionRef( fSigma   = -1.0,   "Sigma", 
-                     "If > 0: new points are generated according to Gauss around best value and with \"Sigma\" in units of interval length" );  
-   DeclareOptionRef( fSeed    = 100,    "Seed",       "Seed for the random generator (0 takes random seeds)" );  
+   DeclareOptionRef( fSamples = 100000, "SampleSize", "Number of Monte Carlo events in toy sample" );
+   DeclareOptionRef( fSigma   = -1.0,   "Sigma",
+                     "If > 0: new points are generated according to Gauss around best value and with \"Sigma\" in units of interval length" );
+   DeclareOptionRef( fSeed    = 100,    "Seed",       "Seed for the random generator (0 takes random seeds)" );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,26 +86,26 @@ void TMVA::MCFitter::SetParameters( Int_t samples )
 Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 {
    Log() << kHEADER << "<MCFitter> Sampling, please be patient ..." << Endl;
-   
+
    // sanity check
    if ((Int_t)pars.size() != GetNpars())
       Log() << kFATAL << "<Run> Mismatch in number of parameters: "
             << GetNpars() << " != " << pars.size() << Endl;
 
    // timing of MC
-   Timer timer( fSamples, GetName() ); 
+   Timer timer( fSamples, GetName() );
    if (fIPyMaxIter) *fIPyMaxIter = fSamples;
-   
+
    std::vector<Double_t> parameters;
    std::vector<Double_t> bestParameters;
 
    TRandom3*rnd = new TRandom3( fSeed );
    rnd->Uniform(0.,1.);
-      
+
    std::vector<TMVA::GeneticRange*> rndRanges;
 
    // initial parameters (given by argument) are ignored
-   std::vector< TMVA::Interval* >::const_iterator rIt; 
+   std::vector< TMVA::Interval* >::const_iterator rIt;
    Double_t val;
    for (rIt = fRanges.begin(); rIt<fRanges.end(); rIt++) {
       rndRanges.push_back( new TMVA::GeneticRange( rnd, (*rIt) ) );
@@ -119,7 +116,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 
    std::vector<Double_t>::iterator parIt;
    std::vector<Double_t>::iterator parBestIt;
-      
+
    Double_t estimator = 0;
    Double_t bestFit   = 0;
 
@@ -160,8 +157,8 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
    pars.swap( bestParameters ); // return best parameters found
 
    // get elapsed time
-   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
-         << "                           " << Endl;  
-   
+   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()
+         << "                           " << Endl;
+
    return bestFit;
 }
