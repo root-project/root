@@ -308,8 +308,7 @@ struct SetROOTSYS {
       // "Our" libCore needs "our" ROOTSYS:
       SetRootSys();
    }
-} sROOTSYSSetter;
-
+} gROOTSYSSetter;
 
 ////////////////////////////////////////////////////////////////////////////////
 
