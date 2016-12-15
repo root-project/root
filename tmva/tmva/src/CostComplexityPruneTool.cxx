@@ -24,6 +24,30 @@
  *                                                                                *
  **********************************************************************************/
 
+/*! \class TMVA::CostComplexityPruneTool
+\ingroup TMVA
+A class to prune a decision tree using the Cost Complexity method.
+(see "Classification and Regression Trees" by Leo Breiman et al)
+
+### Some definitions:
+
+  - \f$ T_{max} \f$ - the initial, usually highly overtrained tree, that is to be pruned back
+  - \f$ R(T) \f$ - quality index (Gini, misclassification rate, or other) of a tree \f$ T \f$
+  - \f$ \sim T \f$ - set of terminal nodes in \f$ T \f$
+  - \f$ T' \f$ - the pruned subtree of \f$ T_max \f$ that has the best quality index \f$ R(T') \f$
+  - \f$ \alpha \f$ - the prune strength parameter in Cost Complexity pruning \f$ (R_{\alpha}(T) = R(T) + \alpha*|\sim T|) \f$
+
+There are two running modes in CCPruner: (i) one may select a prune strength and prune back
+the tree \f$ T_{max}\f$  until the criterion:
+\f[
+ \alpha <  \frac{R(T) - R(t)}{|\sim T_t| - 1}
+\f]
+
+is true for all nodes t in \f$ T \f$, or (ii) the algorithm finds the sequence of critical points
+\f$ \alpha_k < \alpha_{k+1} ... < \alpha_K \f$ such that \f$ T_K = root(T_{max}) \f$ and then selects the optimally-pruned
+subtree, defined to be the subtree with the best quality index for the validation sample.
+*/
+
 #include "TMVA/CostComplexityPruneTool.h"
 
 #include "TMVA/MsgLogger.h"
@@ -40,9 +64,9 @@ using namespace TMVA;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// the constructor for the cost complexity prunig
+/// the constructor for the cost complexity pruning
 
-CostComplexityPruneTool::CostComplexityPruneTool( SeparationBase* qualityIndex ) : 
+CostComplexityPruneTool::CostComplexityPruneTool( SeparationBase* qualityIndex ) :
    IPruneTool(),
    fLogger(new MsgLogger("CostComplexityPruneTool") )
 {
@@ -51,9 +75,9 @@ CostComplexityPruneTool::CostComplexityPruneTool( SeparationBase* qualityIndex )
    // !! changed from Dougs code. Now use the QualityIndex stored already
    // in the nodes when no "new" QualityIndex calculator is given. Like this
    // I can easily implement the Regression. For Regression, the pruning uses the
-   // same sepearation index as in the tree building, hence doesn't need to re-calculate
+   // same separation index as in the tree building, hence doesn't need to re-calculate
    // (which would need more info than simply "s" and "b")
-   
+
    fQualityIndexTool = qualityIndex;
 
    //fLogger->SetMinType( kDEBUG );
@@ -61,22 +85,21 @@ CostComplexityPruneTool::CostComplexityPruneTool( SeparationBase* qualityIndex )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// the destructor for the cost complexity prunig
+/// the destructor for the cost complexity pruning
 
 CostComplexityPruneTool::~CostComplexityPruneTool( ) {
    if(fQualityIndexTool != NULL) delete fQualityIndexTool;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// the routine that basically "steers" the pruning process. Call the calculation of
+/// the pruning sequence, the tree quality and alike..
 
 PruningInfo*
 CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
                                                const IPruneTool::EventSample* validationSample,
                                                Bool_t isAutomatic )
 {
-   // the routine that basically "steers" the pruning process. Call the calculation of
-   // the pruning sequence, the tree quality and alike..
-   
    if( isAutomatic ) SetAutomatic();
 
    if( dt == NULL || (IsAutomatic() && validationSample == NULL) ) {
@@ -117,7 +140,7 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
       Optimize( dt, W );  // run the cost complexity pruning algorithm
    }
    catch(std::string error) {
-      Log() << kERROR << "Error optimzing pruning sequence ("
+      Log() << kERROR << "Error optimizing pruning sequence ("
             << error << ")" << Endl;
       return NULL;
    }
@@ -132,8 +155,8 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
       info->PruneStrength = 0;
       info->QualityIndex = Q/W;
       info->PruneSequence.clear();
-      Log() << kINFO << "no proper pruning could be calulated. Tree "   
-            <<  dt->GetTreeID() << " will not be pruned. Do not worry if this " 
+      Log() << kINFO << "no proper pruning could be calculated. Tree "
+            <<  dt->GetTreeID() << " will not be pruned. Do not worry if this "
             << " happens for a few trees " << Endl;
       return info;
    }
@@ -176,7 +199,7 @@ void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
       // set R(T) = sum[n' in ~T]{ R(n') }
       n->SetSubTreeR( (n->GetLeft()->GetSubTreeR() +
                        n->GetRight()->GetSubTreeR()));
-      // set alpha_c, the alpha value at which it becomes advantageaus to prune at node n
+      // set alpha_c, the alpha value at which it becomes advantageous to prune at node n
       n->SetAlpha( ((n->GetNodeR() - n->GetSubTreeR()) /
                     (n->GetNTerminal() - 1)));
 
@@ -202,11 +225,12 @@ void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// after the critical alpha values (at which the corresponding nodes would
+/// after the critical \f$ \alpha \f$ values (at which the corresponding nodes would
 /// be pruned away) had been established in the "InitMetaData" we need now:
 /// automatic pruning:
-///   find the value of "alpha" for which the test sample gives minimal error,
-///   on the tree with all nodes pruned that have alpha_critital < alpha,
+///
+/// find the value of \f$ \alpha \f$ for which the test sample gives minimal error,
+/// on the tree with all nodes pruned that have \f$ \alpha_{critical} < \alpha \f$,
 /// fixed parameter pruning
 ///
 
@@ -227,12 +251,12 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
       qmin = dt->TestPrunedTreeQuality()/weights;
    }
 
-   // now prune the tree in steps until it is gone. At each pruning step, the pruning 
+   // now prune the tree in steps until it is gone. At each pruning step, the pruning
    // takes place at the node that is regarded as the "weakest link".
-   // for automatic pruning, at each step, we calculate the current quality of the 
-   //     tree and in the end we will prune at the minimum of the tree quality   
-   // for the fixed parameter pruing, the cut is simply set at a relative position
-   //     in the sequence according to the "lenght" of the sequence of pruned trees.
+   // for automatic pruning, at each step, we calculate the current quality of the
+   //     tree and in the end we will prune at the minimum of the tree quality
+   // for the fixed parameter pruning, the cut is simply set at a relative position
+   //     in the sequence according to the "length" of the sequence of pruned trees.
    //     100: at the end (pruned until the root node would be the next pruning candidate
    //     50: in the middle of the sequence
    //     etc...
@@ -288,7 +312,7 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
          t->SetCC(t->GetAlpha());
       }
       k += 1;
-   
+
       Log() << kDEBUG << "after this pruning step I would have " << R->GetNTerminal() << " remaining terminal nodes " << Endl;
 
       if(IsAutomatic()) {

@@ -42,18 +42,18 @@ A helper class to prune a decision tree using the Cost Complexity method
 
   - \f$ T_{max} \f$ - the initial, usually highly overtrained tree, that is to be pruned back
   - \f$ R(T) \f$ - quality index (Gini, misclassification rate, or other) of a tree \f$ T \f$
-  - \f$ ~T \f$ - set of terminal nodes in \f$ T \f$
+  - \f$ \sim T \f$ - set of terminal nodes in \f$ T \f$
   - \f$ T' \f$ - the pruned subtree of \f$ T_max \f$ that has the best quality index \f$ R(T') \f$
-  - \f$ \alpha \f$ - the prune strength parameter in Cost Complexity pruning \f$ (R_{\alpha}(T) = R(T) + \alpha// |~T|) \f$
+  - \f$ \alpha \f$ - the prune strength parameter in Cost Complexity pruning \f$ (R_{\alpha}(T) = R(T) + \alpha*|\sim T|) \f$
 
 There are two running modes in CCPruner: (i) one may select a prune strength and prune back
 the tree \f$ T_{max}\f$  until the criterion:
 \f[
- \alpha <  \frac{R(T) - R(t)}{|~T_t| - 1}
+ \alpha <  \frac{R(T) - R(t)}{|\sim T_t| - 1}
 \f]
 
 is true for all nodes t in \f$ T \f$, or (ii) the algorithm finds the sequence of critical points
-\f$ \alpha_k < \alpha_{k+1} ... < \alpha_K \f$ such that \f$ T_K = \sqrt{T_{max}} \f$ and then selects the optimally-pruned
+\f$ \alpha_k < \alpha_{k+1} ... < \alpha_K \f$ such that \f$ T_K = root(T_{max}) \f$ and then selects the optimally-pruned
 subtree, defined to be the subtree with the best quality index for the validation sample.
 */
 

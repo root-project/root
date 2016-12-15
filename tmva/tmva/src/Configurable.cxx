@@ -25,12 +25,12 @@
  *                                                                                *
  **********************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::
+\ingroup TMVA
 
-/* Begin_Html
    Base Class for all classes that need option parsing
-   End_Html */
-//________________________________________________________________________
+
+*/
 
 #include <string>
 #include <iostream>
@@ -83,7 +83,7 @@ TMVA::Configurable::Configurable( const TString& theOption)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// default destructur
+/// default destructor
 
 TMVA::Configurable::~Configurable()
 {
@@ -101,7 +101,7 @@ void TMVA::Configurable::SplitOptions(const TString& theOpt, TList& loo) const
       if (!splitOpt.Contains(':')) {
          loo.Add(new TObjString(splitOpt));
          splitOpt = "";
-      } 
+      }
       else {
          TString toSave = splitOpt(0,splitOpt.First(':'));
          loo.Add(new TObjString(toSave.Data()));
@@ -111,10 +111,10 @@ void TMVA::Configurable::SplitOptions(const TString& theOpt, TList& loo) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// resets the IsSet falg for all declare options
+/// resets the IsSet flag for all declare options
 /// to be called before options are read from stream
 
-void TMVA::Configurable::ResetSetFlag() 
+void TMVA::Configurable::ResetSetFlag()
 {
    TListIter decOptIt(&fListOfOptions); // declared options
    while (OptionBase* decOpt = (OptionBase*) decOptIt()) { // loop over declared options
@@ -125,17 +125,17 @@ void TMVA::Configurable::ResetSetFlag()
 ////////////////////////////////////////////////////////////////////////////////
 /// options parser
 
-void TMVA::Configurable::ParseOptions() 
+void TMVA::Configurable::ParseOptions()
 {
    Log() << kVERBOSE << "Parsing option string: " << Endl;
    TString optionsWithoutTilde(fOptions);
    optionsWithoutTilde.ReplaceAll(TString("~"),TString(""));
    Log() << kVERBOSE << "... \"" << optionsWithoutTilde << "\"" << Endl;
-   
+
    TList loo; // the List Of Options in the parsed string
-   
+
    fOptions = fOptions.Strip(TString::kLeading, ':');
-   
+
    // separate the options by the ':' marker
    SplitOptions(fOptions, loo);
    fOptions = "";
@@ -161,7 +161,7 @@ void TMVA::Configurable::ParseOptions()
 
       Bool_t paramParsed = kFALSE;
       if (s.Contains('=')) { // desired way of setting an option: "...:optname=optvalue:..."
-         TString optname = s(0,s.First('=')); optname.ToLower(); 
+         TString optname = s(0,s.First('=')); optname.ToLower();
          TString optval = s(s.First('=')+1,s.Length());
          Int_t idx = -1;
 
@@ -184,7 +184,7 @@ void TMVA::Configurable::ParseOptions()
          TListIter optIt(&fListOfOptions);
          if (decOpt!=0) {
             if (decOpt->IsSet())
-               Log() << kWARNING << "Value for option " << decOpt->GetName() 
+               Log() << kWARNING << "Value for option " << decOpt->GetName()
                      << " was previously set to " << decOpt->GetValue() << Endl;
 
             if (!decOpt->HasPreDefinedVal() || (decOpt->HasPreDefinedVal() && decOpt->IsPreDefinedVal(optval)) ) {
@@ -192,14 +192,14 @@ void TMVA::Configurable::ParseOptions()
                   // if no index was found then we assume the value is to be set for the entire array
                   if (idx==-1) {
                      decOpt->SetValue(optval);
-                  } 
+                  }
                   else {
-                     // since we don't know what else is comming we just put everthing into a map
+                     // since we don't know what else is coming we just put everthing into a map
                      if (!decOpt->SetValue(optval, idx))
                         Log() << kFATAL << "Index " << idx << " too large for option " << decOpt->TheName()
                               << ", allowed range is [0," << decOpt->GetArraySize()-1 << "]" << Endl;
                   }
-               } 
+               }
                else { // no arrays
                   if (idx!=-1)
                      Log() << kFATAL << "Option " << decOpt->TheName()
@@ -208,12 +208,12 @@ void TMVA::Configurable::ParseOptions()
                }
                paramParsed = kTRUE;
             }
-            else Log() << kFATAL << "Option " << decOpt->TheName() 
-                       << " does not have predefined value: \"" << optval << "\"" << Endl;               
+            else Log() << kFATAL << "Option " << decOpt->TheName()
+                       << " does not have predefined value: \"" << optval << "\"" << Endl;
          }
       }
 
-      // boolean variables can be specified by just their name (!name), 
+      // boolean variables can be specified by just their name (!name),
       // which will set the to true (false):  ...:V:...:!S:..
       Bool_t preserveNotSign = kFALSE;
       if (!paramParsed) {
@@ -231,22 +231,22 @@ void TMVA::Configurable::ParseOptions()
             if (predOptName == optname) break;
          }
 
-         
+
          if (decOpt != 0) {
             decOpt->SetValue( hasNotSign ? "0" : "1" );
             paramParsed = kTRUE;
-         } 
+         }
          else {
             if (optionExists && hasNotSign) {
                Log() << kFATAL << "Negating a non-boolean variable " << optname
-                     << ", please check the opions for method: " << GetName() << Endl;
+                     << ", please check the options for method: " << GetName() << Endl;
             }
          }
       }
 
 
       if (!paramParsed && LooseOptionCheckingEnabled()) {
-         // loose options specification, loops through the possible string 
+         // loose options specification, loops through the possible string
          // values any parameter can have not applicable for boolean or floats
          decOptIt.Reset();
          while (OptionBase* decOpt = (OptionBase*) decOptIt()) {
@@ -256,11 +256,11 @@ void TMVA::Configurable::ParseOptions()
             }
          }
       }
-   
+
       if (fOptions!="") fOptions += ":";
       if (paramParsed || preserveTilde) fOptions += '~';
       if (preserveNotSign) fOptions += '!';
-      fOptions += s;      
+      fOptions += s;
    }
 
    // print options summary
@@ -271,11 +271,11 @@ void TMVA::Configurable::ParseOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// checks for unused options in option string
 
-void TMVA::Configurable::CheckForUnusedOptions() const 
+void TMVA::Configurable::CheckForUnusedOptions() const
 {
    TString theOpt(fOptions);
    theOpt = theOpt.Strip(TString::kLeading, ':');
-   
+
    // separate the options by the ':' marker
    TList loo; // the List of Options in the parsed string
    SplitOptions(theOpt, loo);
@@ -300,7 +300,7 @@ void TMVA::Configurable::CheckForUnusedOptions() const
 ////////////////////////////////////////////////////////////////////////////////
 /// prints out the options set in the options string and the defaults
 
-void TMVA::Configurable::PrintOptions() const 
+void TMVA::Configurable::PrintOptions() const
 {
    Log() << kVERBOSE << "The following options are set:" << Endl;
 
@@ -308,8 +308,8 @@ void TMVA::Configurable::PrintOptions() const
    Log() << kVERBOSE << "- By User:" << Endl;
    Bool_t found = kFALSE;
    while (OptionBase* opt = (OptionBase *) optIt()) {
-      if (opt->IsSet()) { 
-          Log() << kVERBOSE << "    "; 
+      if (opt->IsSet()) {
+          Log() << kVERBOSE << "    ";
           std::ostringstream oss;
           opt->Print(oss);
           Log() << oss.str();
@@ -321,8 +321,8 @@ void TMVA::Configurable::PrintOptions() const
    Log() << kVERBOSE << "- Default:" << Endl;
    found = kFALSE;
    while (OptionBase* opt = (OptionBase *) optIt()) {
-      if (!opt->IsSet()) { 
-          Log() << kVERBOSE << "    "; 
+      if (!opt->IsSet()) {
+          Log() << kVERBOSE << "    ";
           std::ostringstream oss;
           opt->Print(oss);
           Log() << oss.str();
@@ -334,15 +334,15 @@ void TMVA::Configurable::PrintOptions() const
 ////////////////////////////////////////////////////////////////////////////////
 /// write options to output stream (e.g. in writing the MVA weight files
 
-void TMVA::Configurable::WriteOptionsToStream( std::ostream& o, const TString& prefix ) const 
+void TMVA::Configurable::WriteOptionsToStream( std::ostream& o, const TString& prefix ) const
 {
    TListIter optIt( &fListOfOptions );
    o << prefix << "# Set by User:" << std::endl;
-   while (OptionBase * opt = (OptionBase *) optIt()) 
+   while (OptionBase * opt = (OptionBase *) optIt())
       if (opt->IsSet()) { o << prefix; opt->Print(o); o << std::endl; }
    optIt.Reset();
    o << prefix << "# Default:" << std::endl;
-   while (OptionBase * opt = (OptionBase *) optIt()) 
+   while (OptionBase * opt = (OptionBase *) optIt())
       if (!opt->IsSet()) { o << prefix; opt->Print(o); o << std::endl; }
    o << prefix << "##" << std::endl;
 }
@@ -350,7 +350,7 @@ void TMVA::Configurable::WriteOptionsToStream( std::ostream& o, const TString& p
 ////////////////////////////////////////////////////////////////////////////////
 /// write options to XML file
 
-void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const 
+void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const
 {
    if (!parent) return;
    void* opts = gTools().AddChild(parent, "Options");
@@ -420,13 +420,13 @@ void TMVA::Configurable::WriteOptionsReferenceToFile()
       Log() << kFATAL << "<WriteOptionsToInfoFile> Unable to open output file: " << fReferenceFile << Endl;
    }
 
-   TListIter optIt( &fListOfOptions );   
+   TListIter optIt( &fListOfOptions );
    o << "# List of options:" << std::endl;
    o << "# Configurable: " << GetConfigName() << std::endl;
    o << "# Description: " << GetConfigDescription() << std::endl;
    while (OptionBase * opt = (OptionBase *) optIt()) {
-      opt->Print( o, 1 ); 
-      o << std::endl << "# ------------------------------------------------" << std::endl; 
+      opt->Print( o, 1 );
+      o << std::endl << "# ------------------------------------------------" << std::endl;
    }
 
    o.close();
