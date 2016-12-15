@@ -686,7 +686,12 @@ def ChangeCallOriginal__init__(*args,  **kwargs):
     hasColor = False
     args = list(args)
     for arg_idx in xrange(len(args)):
-        if isinstance(args[arg_idx], basestring) and args[arg_idx].find(":")!=-1:
+        # basestring==(str, unicode) in Python2, which translates to str in Python3
+        if sys.version_info >= (3, 0):
+            is_string = isinstance(args[arg_idx], str)
+        else:
+            is_string = isinstance(args[arg_idx], basestring)
+        if is_string and args[arg_idx].find(":")!=-1:
             if args[arg_idx].find("Color")!=-1:
                 hasColor = True
                 if args[arg_idx].find("!Color")==-1:
