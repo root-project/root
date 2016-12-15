@@ -80,5 +80,5 @@ int main(int argc, char **argv)
    config.fAddAncestorPCMROOTFile = &AddAncestorPCMROOTFile;
    config.fCloseStreamerInfoROOTFile = &CloseStreamerInfoROOTFile;
 #endif
-   return rootcling_driver(argc, argv, config);
+   return ROOT_rootcling_Driver(argc, argv, config);
 }
