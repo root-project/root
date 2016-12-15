@@ -3,8 +3,8 @@
 #include "core/base/inc/LinkDef3.h"
 #include "core/clib/inc/LinkDef.h"
 #include "core/cont/inc/LinkDef.h"
+#include "core/foundation/inc/LinkDef.h"
 #include "core/meta/inc/LinkDef.h"
-#include "core/metautils/inc/LinkDef.h"
 #include "core/textinput/inc/LinkDef.h"
 #include "core/zip/inc/LinkDef.h"
 
