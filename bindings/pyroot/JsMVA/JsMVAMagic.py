@@ -23,7 +23,7 @@ class JsMVAMagic(Magics):
     @magic_arguments()
     @argument('arg', nargs="?", default="on", help='Enable/Disable JavaScript visualisation for TMVA')
     def jsmva(self, line):
-        from JPyInterface import functions
+        from JsMVA.JPyInterface import functions
         args = parse_argstring(self.jsmva, line)
         if args.arg == 'on':
            functions.register()

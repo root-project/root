@@ -6,7 +6,11 @@
 
 import ROOT
 from ROOT import TMVA
-import JPyInterface
+import sys
+if sys.version_info >= (3, 0):
+    from JsMVA import JPyInterface
+else:
+    import JPyInterface
 from xml.etree.ElementTree import ElementTree
 import json
 from IPython.core.display import display, HTML, clear_output
