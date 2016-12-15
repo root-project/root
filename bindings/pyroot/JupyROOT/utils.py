@@ -288,8 +288,8 @@ class StreamCapture(object):
         out = self.ioHandler.GetStdout()
         err = self.ioHandler.GetStderr()
         if not transformers:
-            self.nbOutStream.write(out.decode(sys.stdout.encoding))
-            self.nbErrStream.write(err.decode(sys.stderr.encoding))
+            self.nbOutStream.write(out)
+            self.nbErrStream.write(err)
         else:
             for t in transformers:
                 (out, err, otype) = t(out, err)
