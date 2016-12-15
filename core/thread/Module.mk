@@ -94,8 +94,6 @@ endif
 
 CXXFLAGS     += $(OSTHREADFLAG)
 CFLAGS       += $(OSTHREADFLAG)
-CINTCXXFLAGS += $(OSTHREADFLAG)
-CINTCFLAGS   += $(OSTHREADFLAG)
 
 # include all dependency files
 INCLUDEFILES += $(THREADDEP)
