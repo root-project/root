@@ -21,6 +21,14 @@
 #include <iostream>
 #include <memory>
 
+/*! \class TMVA::CrossValidationResult
+\ingroup TMVA
+*/
+
+/*! \class TMVA::CrossValidation
+\ingroup TMVA
+*/
+
 TMVA::CrossValidationResult::CrossValidationResult():fROCCurves(new TMultiGraph())
 {
 }
