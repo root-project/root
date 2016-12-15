@@ -1,5 +1,5 @@
-// @(#)Root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)Root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -14,18 +14,17 @@
  *      Joerg Stelzer   <stelzer@cern.ch>        - DESY, Germany                  *
  *                                                                                *
  * Copyright (c) 2008:                                                            *
- *      DESY, Germany                                                             * 
+ *      DESY, Germany                                                             *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// This is the MVA factory
-//_______________________________________________________________________
-
+/*! \class TMVA::ClassifierFactory
+\ingroup TMVA
+This is the MVA factory.
+*/
 
 #include "TMVA/ClassifierFactory.h"
 
@@ -56,7 +55,7 @@ TMVA::ClassifierFactory& TMVA::ClassifierFactory::Instance()
 ////////////////////////////////////////////////////////////////////////////////
 /// destroy the singleton instance
 
-void TMVA::ClassifierFactory::DestroyInstance() 
+void TMVA::ClassifierFactory::DestroyInstance()
 {
    if (fgInstance!=0) delete fgInstance;
 }
@@ -64,8 +63,8 @@ void TMVA::ClassifierFactory::DestroyInstance()
 ////////////////////////////////////////////////////////////////////////////////
 /// registers a classifier creator function under the method type name
 
-Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creator ) 
-{ 
+Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creator )
+{
    if(fCalls.find(name) != fCalls.end())
       {
          std::cerr << "ClassifierFactory<>::Register - " << name << " already exists" << std::endl;
@@ -78,9 +77,9 @@ Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creat
 ////////////////////////////////////////////////////////////////////////////////
 /// unregisters a classifier type name
 
-Bool_t TMVA::ClassifierFactory::Unregister( const std::string &name ) 
-{ 
-   return fCalls.erase(name) == 1; 
+Bool_t TMVA::ClassifierFactory::Unregister( const std::string &name )
+{
+   return fCalls.erase(name) == 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,19 +90,19 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
                                                 const TString& job,
                                                 const TString& title,
                                                 DataSetInfo& dsi,
-                                                const TString& option ) 
+                                                const TString& option )
 {
    // additional options are passed to the creator function (the
    // method constructor)
 
    CallMap::const_iterator it = fCalls.find(name);
-   
+
    // handle unknown algorithm request
    if (it == fCalls.end()) {
       std::cerr << "ClassifierFactory<>::Create - don't know anything about " << name << std::endl;
       assert(0);
    }
-   
+
    return (it->second)(job, title, dsi, option);
 }
 
@@ -119,13 +118,13 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
    // second method constructor)
 
    CallMap::const_iterator it = fCalls.find(name);
-   
+
    // handle unknown algorithm request
    if (it == fCalls.end()) {
       std::cerr << "ClassifierFactory<>::Create - don't know anything about " << name << std::endl;
       assert(0);
    }
-   
+
    return (it->second)("", "", dsi, weightfile);
 }
 
@@ -147,7 +146,7 @@ const std::vector<std::string> TMVA::ClassifierFactory::List() const
 
 void TMVA::ClassifierFactory::Print() const
 {
-   std::cout << "Print: ClassifierFactory<> knows about " << fCalls.size() << " objects" << std::endl;  
+   std::cout << "Print: ClassifierFactory<> knows about " << fCalls.size() << " objects" << std::endl;
 
    CallMap::const_iterator it = fCalls.begin();
    for (; it != fCalls.end(); ++it) std::cout << "Registered object name " << it -> first << std::endl;

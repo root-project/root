@@ -25,6 +25,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::ClassInfo
+\ingroup TMVA
+
+Class that contains all the information of a class.
+
+*/
+
 #include "TMVA/ClassInfo.h"
 
 #include <vector>
@@ -42,7 +49,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::ClassInfo::ClassInfo( const TString& name ) 
+TMVA::ClassInfo::ClassInfo( const TString& name )
     : TNamed(name.Data(),name.Data()),
      fWeight( "" ),
      fCut( "" ),
@@ -55,7 +62,7 @@ TMVA::ClassInfo::ClassInfo( const TString& name )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::ClassInfo::~ClassInfo() 
+TMVA::ClassInfo::~ClassInfo()
 {
    if (fCorrMatrix) delete fCorrMatrix;
    delete fLogger;

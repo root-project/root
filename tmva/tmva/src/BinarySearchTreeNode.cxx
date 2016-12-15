@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$    
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -16,26 +16,27 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * CopyRight (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Node for the BinarySearch or Decision Trees 
-//                        
-// for the binary search tree, it basically consists of the EVENT, and 
-// pointers to the parent and daughters
-//                                                                       
-// in case of the Decision Tree, it specifies parent and daughters, as
-// well as "which variable is used" in the selection of this node, including
-// the respective cut value.
-//______________________________________________________________________
+/*! \class TMVA::BinarySearchTreeNode
+\ingroup TMVA
+
+Node for the BinarySearch or Decision Trees
+
+for the binary search tree, it basically consists of the EVENT, and
+pointers to the parent and daughters
+
+in case of the Decision Tree, it specifies parent and daughters, as
+well as "which variable is used" in the selection of this node, including
+the respective cut value.
+*/
 
 #include <stdexcept>
 #include <iomanip>
@@ -55,7 +56,7 @@ ClassImp(TMVA::BinarySearchTreeNode)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor of a node for the search tree
 
-TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* signalClass */ ) 
+TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* signalClass */ )
 : TMVA::Node(),
    fEventV  ( std::vector<Float_t>() ),
    fTargets ( std::vector<Float_t>() ),
@@ -74,7 +75,7 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* sign
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor of a daughter node as a daughter of 'p'
 
-TMVA::BinarySearchTreeNode::BinarySearchTreeNode( BinarySearchTreeNode* parent, char pos ) : 
+TMVA::BinarySearchTreeNode::BinarySearchTreeNode( BinarySearchTreeNode* parent, char pos ) :
    TMVA::Node(parent,pos),
    fEventV  ( std::vector<Float_t>() ),
    fTargets ( std::vector<Float_t>() ),
@@ -89,7 +90,7 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( BinarySearchTreeNode* parent, 
 /// the node and recursively all it's daughters
 
 TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode &n,
-                                                   BinarySearchTreeNode* parent ) : 
+                                                   BinarySearchTreeNode* parent ) :
    TMVA::Node(n),
    fEventV  ( n.fEventV   ),
    fTargets ( n.fTargets  ),
@@ -100,7 +101,7 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode &n
    this->SetParent( parent );
    if (n.GetLeft() == 0 ) this->SetLeft(NULL);
    else this->SetLeft( new BinarySearchTreeNode( *((BinarySearchTreeNode*)(n.GetLeft())),this));
-   
+
    if (n.GetRight() == 0 ) this->SetRight(NULL);
    else this->SetRight( new BinarySearchTreeNode( *((BinarySearchTreeNode*)(n.GetRight())),this));
 
@@ -114,16 +115,16 @@ TMVA::BinarySearchTreeNode::~BinarySearchTreeNode()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// check if the event fed into the node goes/decends to the right daughter
+/// check if the event fed into the node goes/descends to the right daughter
 
-Bool_t TMVA::BinarySearchTreeNode::GoesRight( const TMVA::Event& e ) const 
+Bool_t TMVA::BinarySearchTreeNode::GoesRight( const TMVA::Event& e ) const
 {
    if (e.GetValue(fSelector) > GetEventV()[fSelector]) return true;
    else return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// check if the event fed into the node goes/decends to the left daughter
+/// check if the event fed into the node goes/descends to the left daughter
 
 Bool_t TMVA::BinarySearchTreeNode::GoesLeft(const TMVA::Event& e) const
 {
@@ -161,7 +162,7 @@ void TMVA::BinarySearchTreeNode::Print( std::ostream& os ) const
    if (this->GetParent() != NULL) os << " parent at addr: " << long(this->GetParent()) ;
    if (this->GetLeft() != NULL) os << " left daughter at addr: " << long(this->GetLeft());
    if (this->GetRight() != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
-   
+
    os << " **** > "<< std::endl;
 }
 
@@ -185,7 +186,7 @@ void TMVA::BinarySearchTreeNode::PrintRec( std::ostream& os ) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the data block
 
-Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( std::istream& is, UInt_t /* Tmva_Version_Code */  ) 
+Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( std::istream& is, UInt_t /* Tmva_Version_Code */  )
 {
    Int_t       itmp;
    std::string tmp;
@@ -253,7 +254,7 @@ void TMVA::BinarySearchTreeNode::AddAttributesToNode(void* node) const {
 ////////////////////////////////////////////////////////////////////////////////
 /// adding attributes to tree node
 
-void TMVA::BinarySearchTreeNode::AddContentToNode( std::stringstream& s ) const 
+void TMVA::BinarySearchTreeNode::AddContentToNode( std::stringstream& s ) const
 {
    std::ios_base::fmtflags ff = s.flags();
    s.precision( 16 );
@@ -264,7 +265,7 @@ void TMVA::BinarySearchTreeNode::AddContentToNode( std::stringstream& s ) const
 ////////////////////////////////////////////////////////////////////////////////
 /// read events from node
 
-void TMVA::BinarySearchTreeNode::ReadContent( std::stringstream& s ) 
+void TMVA::BinarySearchTreeNode::ReadContent( std::stringstream& s )
 {
    Float_t temp=0;
    for (UInt_t i=0; i<fEventV.size(); i++){
