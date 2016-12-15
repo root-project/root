@@ -409,6 +409,9 @@ std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long
       mvaValues[i] = proba[fNoutputs*i + TMVA::Types::kSignal];
    }
 
+   Py_DECREF(pEvent);
+   Py_DECREF(result);
+
    return mvaValues;
 }
 
@@ -467,6 +470,9 @@ std::vector<Float_t>& MethodPyRandomForest::GetMulticlassValues()
    if(UInt_t(classValues.size()) != fNoutputs) classValues.resize(fNoutputs);
    for(UInt_t i = 0; i < fNoutputs; i++) classValues[i] = proba[i];
 
+   Py_DECREF(pEvent);
+   Py_DECREF(result);
+
    return classValues;
 }
 
@@ -513,6 +519,7 @@ const Ranking* MethodPyRandomForest::CreateRanking()
    }
 
    Py_DECREF(pRanking);
+
    return fRanking;
 }
 
