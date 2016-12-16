@@ -21,9 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef R__CXXMODULES
 #ifndef ROOT_TObject
-#error "TVersionCheck.h must be included only by TObject. Please #include TObject.h"
+#error "Building with modules currently requires this file to be #included through TObject.h"
 #endif
+#endif // R__CXXMODULES
 
 #ifndef ROOT_RVersion
 #include "RVersion.h"
