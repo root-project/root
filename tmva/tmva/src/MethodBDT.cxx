@@ -1131,6 +1131,7 @@ void TMVA::MethodBDT::SetTuneParameters(std::map<TString,Double_t> tuneParameter
 ////////////////////////////////////////////////////////////////////////////////
 /// BDT training
 
+
 void TMVA::MethodBDT::Train()
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
@@ -1260,6 +1261,7 @@ void TMVA::MethodBDT::Train()
    Int_t itree=0;
    Bool_t continueBoost=kTRUE;
    //for (int itree=0; itree<fNTrees; itree++) {
+  
    while (itree < fNTrees && continueBoost){
      if (fExitFromTraining) break;
      fIPyCurrentIter = itree;
@@ -1374,6 +1376,22 @@ void TMVA::MethodBDT::Train()
       }
       itree++;
    }
+
+   std::cout << std::endl;
+   double time = timer.ElapsedSeconds();
+   std::cout << "### Done timing BDT Training..." << std::endl;
+   std::cout << "    +++ Elapsed Time: " << timer.GetElapsedTime() << std::endl;
+   TString timing_csv_titles = "ntrees, depth, ncuts, nvars, ntrain, time";
+   TString timing_csv_line = Form("%d,%d,%d,%d,%d,%10.3f,", fNTrees, fMaxDepth, fNCuts, fTrainSample->at(0)->GetNVariables(), fTrainSample->size(), time);
+   std::cout << "    +++ " << timing_csv_titles << std::endl;
+   std::cout << "    +++ " << timing_csv_line << std::endl;
+   std::cout << std::endl;
+
+   TString savefilename = "/afs/cern.ch/work/a/acarnes/public/iml/root_dev_latest/tmva_evaluation/csv/";
+   savefilename+=Form("ntrees%d_depth%d_ncuts%d_nvars%d_ntrain%d.csv", fNTrees, fMaxDepth, fNCuts, fTrainSample->at(0)->GetNVariables(), fTrainSample->size());
+   std::ofstream file(savefilename, std::ofstream::out);
+   file << timing_csv_line << std::endl;
+   file.close();
 
    // get elapsed time
    Log() << kDEBUG << "\t<Train> elapsed time: " << timer.GetElapsedTime()
