@@ -27,6 +27,14 @@
  *                                                                                *
  **********************************************************************************/
 
+/*! \class TMVA::MethodLD
+\ingroup TMVA
+Linear Discriminant.
+
+Can compute multidimensional output for regression
+(although it computes every dimension separately)
+*/
+
 #include "TMVA/MethodLD.h"
 
 #include "TMVA/ClassifierFactory.h"
@@ -96,7 +104,7 @@ void TMVA::MethodLD::Init( void )
 
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
    for (Int_t iout = 0; iout<fNRegOut; iout++){
-      (*fLDCoeff)[iout] = new std::vector<Double_t>( GetNvar()+1 ); 
+      (*fLDCoeff)[iout] = new std::vector<Double_t>( GetNvar()+1 );
    }
 
    // the minimum requirement to declare an event signal-like
@@ -153,7 +161,7 @@ void TMVA::MethodLD::Train( void )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the MVA classification output
+/// Returns the MVA classification output
 
 Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
@@ -161,7 +169,7 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
 
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new vector< Float_t >();
    fRegressionReturnVal->resize( fNRegOut );
-   
+
    for (Int_t iout = 0; iout<fNRegOut; iout++) {
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
@@ -178,7 +186,7 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Calculates the regression output
+/// Calculates the regression output
 
 const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 {
@@ -186,17 +194,17 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new vector< Float_t >();
    fRegressionReturnVal->resize( fNRegOut );
-   
+
    for (Int_t iout = 0; iout<fNRegOut; iout++) {
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
-      int icoeff = 0;      
+      int icoeff = 0;
       for (std::vector<Float_t>::const_iterator it = ev->GetValues().begin();it!=ev->GetValues().end();++it){
          (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * (*it);
       }
    }
 
-   // perform inverse transformation 
+   // perform inverse transformation
    Event* evT = new Event(*ev);
    for (Int_t iout = 0; iout<fNRegOut; iout++) evT->SetTarget(iout,(*fRegressionReturnVal)[iout]);
 
@@ -209,18 +217,18 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initializaton method; creates global matrices and vectors
+/// Initialization method; creates global matrices and vectors
 
 void TMVA::MethodLD::InitMatrices( void )
 {
    fSumMatx    = new TMatrixD( GetNvar()+1, GetNvar()+1 );
-   fSumValMatx = new TMatrixD( GetNvar()+1, fNRegOut ); 
-   fCoeffMatx  = new TMatrixD( GetNvar()+1, fNRegOut ); 
+   fSumValMatx = new TMatrixD( GetNvar()+1, fNRegOut );
+   fCoeffMatx  = new TMatrixD( GetNvar()+1, fNRegOut );
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the matrix transposed(X)*W*X with W being the diagonal weight matrix 
+/// Calculates the matrix transposed(X)*W*X with W being the diagonal weight matrix
 /// and X the coordinates values
 
 void TMVA::MethodLD::GetSum( void )
@@ -258,7 +266,7 @@ void TMVA::MethodLD::GetSum( void )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Calculates the vector transposed(X)*W*Y with Y being the target vector
+/// Calculates the vector transposed(X)*W*Y with Y being the target vector
 
 void TMVA::MethodLD::GetSumVal( void )
 {
@@ -278,7 +286,7 @@ void TMVA::MethodLD::GetSumVal( void )
       Double_t weight = ev->GetWeight();
 
       // in case event with neg weights are to be ignored
-      if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue; 
+      if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue;
 
       for (Int_t ivar=0; ivar<fNRegOut; ivar++) {
 
@@ -287,9 +295,9 @@ void TMVA::MethodLD::GetSumVal( void )
          if (!DoRegression()){
             val *= DataInfo().IsSignal(ev); // yes it works.. but I'm still surprised (Helge).. would have not set y_B to zero though..
          }else {//for regression
-            val *= ev->GetTarget( ivar ); 
+            val *= ev->GetTarget( ivar );
          }
-         (*fSumValMatx)( 0,ivar ) += val; 
+         (*fSumValMatx)( 0,ivar ) += val;
          for (UInt_t jvar=0; jvar<nvar; jvar++) {
             (*fSumValMatx)(jvar+1,ivar ) += ev->GetValue(jvar) * val;
          }
@@ -298,7 +306,7 @@ void TMVA::MethodLD::GetSumVal( void )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Calculates the coeffiecients used for classification/regression
+/// Calculates the coefficients used for classification/regression
 
 void TMVA::MethodLD::GetLDCoeff( void )
 {
@@ -308,14 +316,14 @@ void TMVA::MethodLD::GetLDCoeff( void )
       TMatrixD invSum( *fSumMatx );
       if ( TMath::Abs(invSum.Determinant()) < 10E-24 ) {
          Log() << kWARNING << "<GetCoeff> matrix is almost singular with determinant="
-               << TMath::Abs(invSum.Determinant()) 
-               << " did you use the variables that are linear combinations or highly correlated?" 
+               << TMath::Abs(invSum.Determinant())
+               << " did you use the variables that are linear combinations or highly correlated?"
                << Endl;
       }
       if ( TMath::Abs(invSum.Determinant()) < 10E-120 ) {
          Log() << kFATAL << "<GetCoeff> matrix is singular with determinant="
-               << TMath::Abs(invSum.Determinant())  
-               << " did you use the variables that are linear combinations?" 
+               << TMath::Abs(invSum.Determinant())
+               << " did you use the variables that are linear combinations?"
                << Endl;
       }
       invSum.Invert();
@@ -331,7 +339,7 @@ void TMVA::MethodLD::GetLDCoeff( void )
          }
          (*(*fLDCoeff)[ivar])[0]/=-2.0;
       }
-      
+
    }
 }
 
@@ -348,10 +356,10 @@ void  TMVA::MethodLD::ReadWeightsFromStream( std::istream& istr )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// create XML description for LD classification and regression 
+/// create XML description for LD classification and regression
 /// (for arbitrary number of output classes/targets)
 
-void TMVA::MethodLD::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodLD::AddWeightsXMLTo( void* parent ) const
 {
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NOut",   fNRegOut    );
@@ -365,22 +373,22 @@ void TMVA::MethodLD::AddWeightsXMLTo( void* parent ) const
       }
    }
 }
-  
+
 ////////////////////////////////////////////////////////////////////////////////
 /// read coefficients from xml weight file
 
-void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode ) 
+void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
 {
    UInt_t ncoeff;
    gTools().ReadAttr( wghtnode, "NOut",   fNRegOut );
    gTools().ReadAttr( wghtnode, "NCoeff", ncoeff   );
-   
+
    // sanity checks
-   if (ncoeff != GetNvar()+1) Log() << kFATAL << "Mismatch in number of output variables/coefficients: " 
+   if (ncoeff != GetNvar()+1) Log() << kFATAL << "Mismatch in number of output variables/coefficients: "
                                     << ncoeff << " != " << GetNvar()+1 << Endl;
 
    // create vector with coefficients (double vector due to arbitrary output dimension)
-   if (fLDCoeff) { 
+   if (fLDCoeff) {
       for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++){
          if (*vi) { delete *vi; *vi = 0; }
       }
@@ -461,7 +469,7 @@ const TMVA::Ranking* TMVA::MethodLD::CreateRanking()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///MethodLD options
+/// MethodLD options
 
 void TMVA::MethodLD::DeclareOptions()
 {
@@ -477,9 +485,9 @@ void TMVA::MethodLD::ProcessOptions()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Display the classification/regression coefficients for each variable
+/// Display the classification/regression coefficients for each variable
 
-void TMVA::MethodLD::PrintCoefficients( void ) 
+void TMVA::MethodLD::PrintCoefficients( void )
 {
    Log() << kHEADER << "Results for LD coefficients:" << Endl;
 
@@ -508,8 +516,8 @@ void TMVA::MethodLD::PrintCoefficients( void )
 
       // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         Log() << kINFO 
-               << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
+         Log() << kINFO
+               << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*("
                << std::setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
                << std::setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
                << std::setw(6) << TMath::Abs(GetXmin(ivar)) << std::setw(3) << ")/"
@@ -527,7 +535,7 @@ void TMVA::MethodLD::PrintCoefficients( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// get help message text
 ///
-/// typical length of text line: 
+/// typical length of text line:
 ///         "|--------------------------------------------------------------|"
 
 void TMVA::MethodLD::GetHelpMessage() const

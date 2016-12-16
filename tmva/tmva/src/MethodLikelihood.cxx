@@ -28,81 +28,84 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::MethodLikelihood
+\ingroup TMVA
 
-/* Begin_Html
+Likelihood analysis ("non-parametric approach")
 
-   Likelihood analysis ("non-parametric approach")
 
-   <p>
-   Also implemented is a "diagonalized likelihood approach",
-   which improves over the uncorrelated likelihood ansatz by
-   transforming linearly the input variables into a diagonal space,
-   using the square-root of the covariance matrix
+Also implemented is a "diagonalized likelihood approach",
+which improves over the uncorrelated likelihood approach by
+transforming linearly the input variables into a diagonal space,
+using the square-root of the covariance matrix
 
-   <p>
-   The method of maximum likelihood is the most straightforward, and
-   certainly among the most elegant multivariate analyser approaches.
-   We define the likelihood ratio, <i>R<sub>L</sub></i>, for event
-   <i>i</i>, by:<br>
-   <center>
-   <img vspace=6 src="gif/tmva_likratio.gif" align="bottom" >
-   </center>
-   Here the signal and background likelihoods, <i>L<sub>S</sub></i>,
-   <i>L<sub>B</sub></i>, are products of the corresponding probability
-   densities, <i>p<sub>S</sub></i>, <i>p<sub>B</sub></i>, of the
-   <i>N</i><sub>var</sub> discriminating variables used in the MVA: <br>
-   <center>
-   <img vspace=6 src="gif/tmva_lik.gif" align="bottom" >
-   </center>
-   and accordingly for L<sub>B</sub>.
-   In practise, TMVA uses polynomial splines to estimate the probability
-   density functions (PDF) obtained from the distributions of the
-   training variables.<br>
 
-   <p>
-   Note that in TMVA the output of the likelihood ratio is transformed
-   by<br>
-   <center>
-   <img vspace=6 src="gif/tmva_likratio_trans.gif" align="bottom"/>
-   </center>
-   to avoid the occurrence of heavy peaks at <i>R<sub>L</sub></i>=0,1.
+The method of maximum likelihood is the most straightforward, and
+certainly among the most elegant multivariate analyser approaches.
+We define the likelihood ratio, \f$ R_L \f$, for event
+\f$ i \f$, by:
 
-   <b>Decorrelated (or "diagonalized") Likelihood</b>
+\f[
+R_L(i) = \frac{L_S(i)}{L_B(i) + L_B(i)}
+\f]
 
-   <p>
-   The biggest drawback of the Likelihood approach is that it assumes
-   that the discriminant variables are uncorrelated. If it were the case,
-   it can be proven that the discrimination obtained by the above likelihood
-   ratio is optimal, ie, no other method can beat it. However, in most
-   practical applications of MVAs correlations are present. <br><p></p>
+Here the signal and background likelihoods, \f$ L_S \f$,
+\f$ L_B \f$, are products of the corresponding probability
+densities, \f$ p_S \f$, \f$ p_B \f$, of the
+\f$ N_{var} \f$  discriminating variables used in the MVA:
 
-   <p>
-   Linear correlations, measured from the training sample, can be taken
-   into account in a straightforward manner through the square-root
-   of the covariance matrix. The square-root of a matrix
-   <i>C</i> is the matrix <i>C&prime;</i> that multiplied with itself
-   yields <i>C</i>: <i>C</i>=<i>C&prime;C&prime;</i>. We compute the
-   square-root matrix (SQM) by means of diagonalising (<i>D</i>) the
-   covariance matrix: <br>
-   <center>
-   <img vspace=6 src="gif/tmva_sqm.gif" align="bottom" >
-   </center>
-   and the linear transformation of the linearly correlated into the
-   uncorrelated variables space is then given by multiplying the measured
-   variable tuple by the inverse of the SQM. Note that these transformations
-   are performed for both signal and background separately, since the
-   correlation pattern is not the same in the two samples.
+\f[
+L_S(i) \ \prod_{j=1}^{N_{var}} p_{Sj} (i)
+\f]
 
-   <p>
-   The above diagonalisation is complete for linearly correlated,
-   Gaussian distributed variables only. In real-world examples this
-   is not often the case, so that only little additional information
-   may be recovered by the diagonalisation procedure. In these cases,
-   non-linear methods must be applied.
+and accordingly for \f$ L_B \f$.
+In practise, TMVA uses polynomial splines to estimate the probability
+density functions (PDF) obtained from the distributions of the
+training variables.
 
-   End_Html */
-//_______________________________________________________________________
+
+Note that in TMVA the output of the likelihood ratio is transformed by:
+
+\f[
+R_L(i) \to R'_L(i) = -\frac{1}{\tau} ln(R_L^{-1}(i) -1)
+\f]
+
+to avoid the occurrence of heavy peaks at \f$ R_L = 0.1 \f$ .
+
+#### Decorrelated (or "diagonalized") Likelihood
+
+The biggest drawback of the Likelihood approach is that it assumes
+that the discriminant variables are uncorrelated. If it were the case,
+it can be proven that the discrimination obtained by the above likelihood
+ratio is optimal, ie, no other method can beat it. However, in most
+practical applications of MVAs correlations are present. </p>
+
+
+Linear correlations, measured from the training sample, can be taken
+into account in a straightforward manner through the square-root
+of the covariance matrix. The square-root of a matrix
+\f$ C \f$ is the matrix \f$ C&prime; \f$ that multiplied with itself
+yields \f$ C \f$: \f$ C \f$=\f$ C&prime;C&prime; \f$. We compute the
+square-root matrix (SQM) by means of diagonalising (\f$ D \f$) the
+covariance matrix:
+
+\f[
+D = S^TCS \Rightarrow C' = S \sqrt{DS^T}
+\f]
+
+and the linear transformation of the linearly correlated into the
+uncorrelated variables space is then given by multiplying the measured
+variable tuple by the inverse of the SQM. Note that these transformations
+are performed for both signal and background separately, since the
+correlation pattern is not the same in the two samples.
+
+
+The above diagonalisation is complete for linearly correlated,
+Gaussian distributed variables only. In real-world examples this
+is not often the case, so that only little additional information
+may be recovered by the diagonalisation procedure. In these cases,
+non-linear methods must be applied.
+*/
 
 #include "TMVA/MethodLikelihood.h"
 
@@ -159,7 +162,7 @@ ClassImp(TMVA::MethodLikelihood)
    fNsmoothVarS   ( 0 ),
    fNsmoothVarB   ( 0 ),
    fAverageEvtPerBin( 0 ),
-   fAverageEvtPerBinVarS (0), 
+   fAverageEvtPerBinVarS (0),
    fAverageEvtPerBinVarB (0),
    fKDEfineFactor ( 0 ),
    fInterpolateString(0)
@@ -186,7 +189,7 @@ TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
    fNsmoothVarS   ( 0 ),
    fNsmoothVarB   ( 0 ),
    fAverageEvtPerBin( 0 ),
-   fAverageEvtPerBinVarS (0), 
+   fAverageEvtPerBinVarS (0),
    fAverageEvtPerBinVarB (0),
    fKDEfineFactor ( 0 ),
    fInterpolateString(0)
@@ -238,6 +241,7 @@ void TMVA::MethodLikelihood::Init( void )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// define the options (their key words) that can be set in the option string
+///
 /// TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
 
 void TMVA::MethodLikelihood::DeclareOptions()
@@ -281,7 +285,7 @@ void TMVA::MethodLikelihood::DeclareCompatibilityOptions()
    DeclareOptionRef( fAverageEvtPerBin = 50, "NAvEvtPerBin",
                      "Average number of events per PDF bin");
    DeclareOptionRef( fKDEfineFactor =1. , "KDEFineFactor",
-                     "Fine tuning factor for Adaptive KDE: Factor to multyply the width of the kernel");
+                     "Fine tuning factor for Adaptive KDE: Factor to multiply the width of the kernel");
    DeclareOptionRef( fBorderMethodString = "None", "KDEborder",
                      "Border effects treatment (1=no treatment , 2=kernel renormalization, 3=sample mirroring)" );
    DeclareOptionRef( fKDEiterString = "Nonadaptive", "KDEiter",
@@ -309,15 +313,12 @@ void TMVA::MethodLikelihood::DeclareCompatibilityOptions()
    DeclareOptionRef(fInterpolateString, GetNvar(), "PDFInterpol", "Method of interpolating reference histograms (e.g. Spline2 or KDE)");
 }
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
+/// process user options
+/// reference cut value to distinguish signal-like from background-like events
 
 void TMVA::MethodLikelihood::ProcessOptions()
 {
-   // process user options
-   // reference cut value to distingiush signal-like from background-like events
    SetSignalReferenceCut( TransformLikelihoodOutput( 0.5, 0.5 ) );
 
    fDefaultPDFLik->ProcessOptions();
@@ -389,7 +390,7 @@ void TMVA::MethodLikelihood::Train( void )
                                        Form("%s_%s_%s background training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
       }
    }
-   
+
    // ----- fill the reference histograms
    Log() << kINFO << "Filling reference histograms" << Endl;
 
@@ -663,6 +664,7 @@ void  TMVA::MethodLikelihood::WriteWeightsToStream( TFile& ) const
       (*fPDFBgd)[ivar]->Write( pname + GetInputVar( ivar ) + "_B" );
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// read weights from XML
 
@@ -691,6 +693,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
    }
    TH1::AddDirectory(addDirStatus);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// read weight info from file
 /// nothing to do for this method
