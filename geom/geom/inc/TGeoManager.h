@@ -431,7 +431,6 @@ public:
    static Int_t           GetMaxXtruVert();
    Int_t                  GetMaxThreads() const {return fMaxThreads-1;}
    void                   SetMaxThreads(Int_t nthreads);
-   void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
    Int_t                  GetRTmode() const {return fRaytraceMode;}
    void                   SetRTmode(Int_t mode); // *MENU*
    Bool_t                 IsMultiThread() const {return fMultiThread;}
