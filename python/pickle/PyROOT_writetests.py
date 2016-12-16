@@ -18,6 +18,9 @@ __all__ = [
    'PickleWritingSimpleObjectsTestCase'
 ]
 
+if not os.path.exists('PickleTypes.C'): 
+    os.chdir(os.path.dirname(__file__))
+
 gROOT.LoadMacro( "PickleTypes.C+" )
 SomeDataObject = ROOT.SomeDataObject
 
@@ -75,7 +78,7 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+   sys.path.append(os.path.dirname(os.path.dirname(__file__)))
    from MyTextTestRunner import MyTextTestRunner
 
    loader = unittest.TestLoader()

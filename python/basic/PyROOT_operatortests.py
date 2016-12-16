@@ -7,7 +7,9 @@
 
 import sys, os, unittest
 sys.path.append(os.path.dirname( os.path.dirname(__file__)))
-os.chdir(os.path.dirname(__file__))
+
+if not os.path.exists('Operators.C'):
+    os.chdir(os.path.dirname(__file__))
 
 import ROOT
 from ROOT import gROOT

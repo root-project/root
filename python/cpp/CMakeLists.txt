@@ -1,20 +1,20 @@
 if(ROOT_python_FOUND)
   ROOTTEST_ADD_TEST(cpp
                     MACRO PyROOT_cpptests.py
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    COPY_TO_BUILDDIR Namespace.C PointerPassing.C  Namespace2.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Namespace.C+ 
                                          -e .L\ PointerPassing.C+ 
                                          -e .L\ Namespace2.C+)
 
   ROOTTEST_ADD_TEST(advanced
                     MACRO PyROOT_advancedtests.py
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    COPY_TO_BUILDDIR AdvancedCpp.C Template.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ AdvancedCpp.C+
-                                         -e .L\ Template.C+)
+                                                     -e .L\ Template.C+)
                                          
   ROOTTEST_ADD_TEST(cpp11
                     MACRO PyROOT_cpp11tests.py
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    COPY_TO_BUILDDIR Cpp11Features.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Cpp11Features.C+)
                                          
 endif()

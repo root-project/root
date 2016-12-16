@@ -6,7 +6,10 @@
 """Memory tests for PyROOT package."""
 
 import os, sys, unittest
-sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+if not os.path.exists('MemTester.C'):
+    os.chdir(os.path.dirname(__file__))
 
 import ROOT
 from ROOT import gROOT, TH1F, SetMemoryPolicy

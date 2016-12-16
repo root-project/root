@@ -6,7 +6,10 @@
 """Regression tests, lacking a better place, for PyROOT package."""
 
 import sys, os, unittest
-sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+if not os.path.exists('Scott.C'):
+    os.chdir(os.path.dirname(__file__))
 
 try:
    import commands

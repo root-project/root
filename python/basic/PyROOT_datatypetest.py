@@ -7,7 +7,6 @@
 
 import os, sys, unittest
 sys.path.append(os.path.dirname( os.path.dirname(__file__)))
-os.chdir(os.path.dirname(__file__))
 
 from common import *
 from pytest import raises
@@ -21,10 +20,11 @@ PYTEST_MIGRATION = True
 
 def setup_module(mod):
     import sys, os
-    sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
-    err = os.system("make DataTypes_C")
-    if err:
-        raise OSError("'make' failed (see stderr)")
+    if not os.path.exists('DataTypes.C'):
+        os.chdir(os.path.dirname(__file__))
+        err = os.system("make DataTypes_C")
+        if err:
+            raise OSError("'make' failed (see stderr)")
 
 
 class TestClassDATATYPES:

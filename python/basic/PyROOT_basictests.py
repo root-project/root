@@ -7,7 +7,6 @@
 
 import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-os.chdir(os.path.dirname(__file__))
 
 import ROOT
 from ROOT import gROOT, gApplication, gSystem, gInterpreter, gDirectory, TLorentzVector,\
@@ -23,6 +22,9 @@ __all__ = [
    'Basic6ReturnValueTestCase',
 ]
 
+def setup_module(mod):
+    if not os.path.exists('SimpleClass.C'):
+        os.chdir(os.path.dirname(__file__))
 
 ### basic module test cases ==================================================
 class Basic1ModuleTestCase( MyTestCase ):

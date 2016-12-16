@@ -7,7 +7,6 @@
 
 import os, sys
 sys.path.append(os.path.dirname( os.path.dirname(__file__)))
-os.chdir(os.path.dirname(__file__))
 
 from common import *
 from pytest import raises
@@ -18,10 +17,12 @@ PYTEST_MIGRATION = True
 
 def setup_module(mod):
     import sys, os
-    sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
-    err = os.system("make Overloads_C")
-    if err:
-        raise OSError("'make' failed (see stderr)")
+    if not os.path.exists('Overloads_C.so'):
+        os.chdir(os.path.dirname(__file__))
+        sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+        err = os.system("make Overloads_C")
+        if err:
+            raise OSError("'make' failed (see stderr)")
 
 
 class TestClassOVERLOADS:

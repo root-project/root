@@ -6,7 +6,7 @@
 """TTree reading/writing unit tests for PyROOT package."""
 
 import sys, os, unittest
-sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
 from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, MakeNullPointer, TObjArray, TNamed
@@ -17,6 +17,9 @@ __all__ = [
    'TTree1ReadWriteSimpleObjectsTestCase',
    'TTree2BranchCreation'
 ]
+
+if not os.path.exists('TTreeTypes.C'):
+    os.chdir(os.path.dirname(__file__))
 
 gROOT.LoadMacro( "TTreeTypes.C+" )
 SomeDataObject = ROOT.SomeDataObject

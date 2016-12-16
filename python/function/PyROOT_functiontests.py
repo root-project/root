@@ -6,7 +6,7 @@
 """Unit tests for PyROOT python/TF1 function interactions."""
 
 import sys, os, unittest
-sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from math import exp
 import ROOT
@@ -20,6 +20,9 @@ __all__ = [
    'Func4GlobalCppFunctionAsMethodTestCase',
    'Func5MinuitTestCase'
 ]
+
+if not os.path.exists('InstallableFunction.C'):
+    os.chdir(os.path.dirname(__file__))
 
 # needs to be early to prevent "ifunc_table overflow!"
 gROOT.LoadMacro( "InstallableFunction.C+" )

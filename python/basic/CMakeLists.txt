@@ -1,23 +1,21 @@
 if(ROOT_python_FOUND)
   ROOTTEST_ADD_TEST(basic
                     MACRO PyROOT_basictests.py
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ ArgumentPassingCompiled.C+
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyROOT_basictests.ref)
+                    COPY_TO_BUILDDIR ArgumentPassingCompiled.C ReturnValues.C SimpleClass.C ArgumentPassingInterpreted.C
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ ArgumentPassingCompiled.C+)
 
   ROOTTEST_ADD_TEST(datatype
                     MACRO PyROOT_datatypetest.py
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyROOT_datatypetest.ref)
+                    COPY_TO_BUILDDIR DataTypes.C DataTypes.h
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+ )
 
   ROOTTEST_ADD_TEST(operator
                     MACRO PyROOT_operatortests.py
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Operators.C+
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyROOT_operatortests.ref)
+                    COPY_TO_BUILDDIR Operators.C
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Operators.C+)
 
   ROOTTEST_ADD_TEST(overload
                     MACRO PyROOT_overloadtests.py
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyROOT_overloadtests.ref)
+                    COPY_TO_BUILDDIR Overloads.C Overloads.h
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+)
 endif()
