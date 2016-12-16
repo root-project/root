@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TAtomicCountWin32
-#define ROOT_TAtomicCountWin32
+#ifndef ROOT_TWin32AtomicCount
+#define ROOT_TWin32AtomicCount
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAtomicCountWin32                                                    //
+// TWin32AtomicCount                                                    //
 //                                                                      //
 // Class providing atomic operations on a long. Setting, getting,       //
 // incrementing and decrementing are atomic, thread safe, operations.   //

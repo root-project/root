@@ -41,7 +41,7 @@ THREADH_EXT  += $(MODDIRI)/TAtomicCountGcc.h $(MODDIRI)/TAtomicCountPthread.h
 else
 THREADH      += $(MODDIRI)/TWin32Condition.h $(MODDIRI)/TWin32Mutex.h \
                 $(MODDIRI)/TWin32Thread.h $(MODDIRI)/TWin32ThreadFactory.h
-THREADH_EXT  += $(MODDIRI)/TAtomicCountWin32.h
+THREADH_EXT  += $(MODDIRI)/TWin32AtomicCount.h
 endif
 
 THREADS      := $(MODDIRS)/TCondition.cxx $(MODDIRS)/TConditionImp.cxx \
