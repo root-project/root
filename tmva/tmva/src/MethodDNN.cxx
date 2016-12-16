@@ -25,10 +25,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//______________________________________________________________________________
-//
-// Deep Neural Network Implementation
-//______________________________________________________________________________
+/*! \class TMVA::MethodDNN
+\ingroup TMVA
+Deep Neural Network Implementation.
+*/
 
 #include "TMVA/MethodDNN.h"
 
@@ -71,7 +71,9 @@ using TMVA::DNN::EOutputFunction;
 namespace TMVA
 {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodDNN::MethodDNN(const TString& jobName,
                            const TString& methodTitle,
                            DataSetInfo& theData,
@@ -81,10 +83,11 @@ TMVA::MethodDNN::MethodDNN(const TString& jobName,
      fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
      fTrainingSettings(), fResume(false), fSettings()
 {
-   // standard constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from a weight file
+
 TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
                            const TString& theWeightFile)
     : MethodBase( Types::kDNN, theData, theWeightFile),
@@ -92,23 +95,24 @@ TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
      fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
      fTrainingSettings(), fResume(false), fSettings()
 {
-   // constructor from a weight file
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodDNN::~MethodDNN()
 {
-   // destructor
    // nothing to be done
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MLP can handle classification with 2 classes and regression with
+/// one regression-target
+
 Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
                                         UInt_t numberClasses,
                                         UInt_t /*numberTargets*/ )
 {
-   // MLP can handle classification with 2 classes and regression with
-   // one regression-target
    if (type == Types::kClassification && numberClasses == 2 ) return kTRUE;
    if (type == Types::kMulticlass ) return kTRUE;
    if (type == Types::kRegression ) return kTRUE;
@@ -116,30 +120,32 @@ Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initializations
+
 void TMVA::MethodDNN::Init()
 {
-   // default initializations
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Options to be set in the option string:
+///
+///  - LearningRate    <float>      DNN learning rate parameter.
+///  - DecayRate       <float>      Decay rate for learning parameter.
+///  - TestRate        <int>        Period of validation set error computation.
+///  - BatchSize       <int>        Number of event per batch.
+
 void TMVA::MethodDNN::DeclareOptions()
 {
-   // Options to be set in the option string:
-   //
-   // LearningRate    <float>      DNN learning rate parameter.
-   // DecayRate       <float>      Decay rate for learning parameter.
-   // TestRate        <int>        Period of validation set error computation.
-   // BatchSize       <int>        Number of event per batch.
 
    DeclareOptionRef(fLayoutString="SOFTSIGN|(N+100)*2,LINEAR",
                                   "Layout",
-                                  "Layou of the network.");
+                                  "Layout of the network.");
 
    DeclareOptionRef(fErrorStrategy="CROSSENTROPY",
                     "ErrorStrategy",
                     "Loss function: Mean squared error (regression)"
-                    " or cross entropy (binary classifcation).");
+                    " or cross entropy (binary classification).");
    AddPreDefVal(TString("CROSSENTROPY"));
    AddPreDefVal(TString("SUMOFSQUARES"));
 
@@ -151,7 +157,7 @@ void TMVA::MethodDNN::DeclareOptions()
 
    DeclareOptionRef(fArchitectureString="STANDARD",
                     "Architecture",
-                    "Which architecture to perfrom the training on.");
+                    "Which architecture to perform the training on.");
    AddPreDefVal(TString("STANDARD"));
    AddPreDefVal(TString("CPU"));
    AddPreDefVal(TString("GPU"));
@@ -182,12 +188,13 @@ void TMVA::MethodDNN::DeclareOptions()
                                  "Defines the training strategies.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// parse layout specification string and return a vector, each entry
+/// containing the number of neurons to go in each successive layer
+
 auto TMVA::MethodDNN::ParseLayoutString(TString layoutString)
     -> LayoutVector_t
 {
-   // parse layout specification string and return a vector, each entry
-   // containing the number of neurons to go in each successive layer
    LayoutVector_t layout;
    const TString layerDelimiter(",");
    const TString subDelimiter("|");
@@ -247,8 +254,9 @@ auto TMVA::MethodDNN::ParseLayoutString(TString layoutString)
    return layout;
 }
 
-// parse key value pairs in blocks -> return vector of blocks with map of key value pairs
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// parse key value pairs in blocks -> return vector of blocks with map of key value pairs
+
 auto TMVA::MethodDNN::ParseKeyValueString(TString parseString,
                                           TString blockDelim,
                                           TString tokenDelim)
@@ -290,7 +298,8 @@ auto TMVA::MethodDNN::ParseKeyValueString(TString parseString,
    return blockKeyValues;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TString fetchValue (const std::map<TString, TString>& keyValueMap, TString key)
 {
    key.ToUpper ();
@@ -301,13 +310,15 @@ TString fetchValue (const std::map<TString, TString>& keyValueMap, TString key)
    return it->second;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename T>
 T fetchValue(const std::map<TString,TString>& keyValueMap,
               TString key,
               T defaultValue);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template <>
 int fetchValue(const std::map<TString,TString>& keyValueMap,
                TString key,
@@ -320,7 +331,8 @@ int fetchValue(const std::map<TString,TString>& keyValueMap,
    return value.Atoi ();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template <>
 double fetchValue (const std::map<TString,TString>& keyValueMap,
                    TString key, double defaultValue)
@@ -332,7 +344,8 @@ double fetchValue (const std::map<TString,TString>& keyValueMap,
    return value.Atof ();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template <>
 TString fetchValue (const std::map<TString,TString>& keyValueMap,
                     TString key, TString defaultValue)
@@ -344,7 +357,8 @@ TString fetchValue (const std::map<TString,TString>& keyValueMap,
    return value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template <>
 bool fetchValue (const std::map<TString,TString>& keyValueMap,
                  TString key, bool defaultValue)
@@ -360,7 +374,8 @@ bool fetchValue (const std::map<TString,TString>& keyValueMap,
    return false;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template <>
 std::vector<double> fetchValue(const std::map<TString, TString> & keyValueMap,
                                TString key,
@@ -387,7 +402,8 @@ std::vector<double> fetchValue(const std::map<TString, TString> & keyValueMap,
    return values;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::ProcessOptions()
 {
    if (IgnoreEventsWithNegWeightsInTraining()) {
@@ -507,7 +523,8 @@ void TMVA::MethodDNN::ProcessOptions()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::Train()
 {
    if (fInteractive && fInteractive->NotInitialized()){
@@ -726,7 +743,8 @@ void TMVA::MethodDNN::Train()
    ExitFromTraining();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::TrainGpu()
 {
 
@@ -895,7 +913,8 @@ void TMVA::MethodDNN::TrainGpu()
 #endif // DNNCUDA
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::TrainCpu()
 {
 
@@ -1023,7 +1042,7 @@ void TMVA::MethodDNN::TrainCpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
-	    if (fInteractive){
+       if (fInteractive){
                fInteractive->AddPoint(stepCount, trainingError, testError);
                fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
                if (fExitFromTraining) break;
@@ -1071,7 +1090,8 @@ void TMVA::MethodDNN::TrainCpu()
 #endif // DNNCPU
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpper*/ )
 {
    size_t nVariables = GetEvent()->GetNVariables();
@@ -1087,7 +1107,8 @@ Double_t TMVA::MethodDNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUp
    return YHat(0,0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const std::vector<Float_t> & TMVA::MethodDNN::GetRegressionValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
@@ -1147,7 +1168,8 @@ const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
    return *fMulticlassReturnVal;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
 {
    void* nn = gTools().xmlengine().NewChild(parent, 0, "Weights");
@@ -1172,7 +1194,8 @@ void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
 {
    auto netXML = gTools().GetChild(rootXML, "Weights");
@@ -1223,12 +1246,14 @@ void TMVA::MethodDNN::ReadWeightsFromXML(void* rootXML)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::ReadWeightsFromStream( std::istream & /*istr*/)
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::Ranking* TMVA::MethodDNN::CreateRanking()
 {
    fRanking = new Ranking( GetName(), "Importance" );
@@ -1238,13 +1263,15 @@ const TMVA::Ranking* TMVA::MethodDNN::CreateRanking()
    return fRanking;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::MakeClassSpecific( std::ostream& /*fout*/,
                                          const TString& /*className*/ ) const
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDNN::GetHelpMessage() const
 {
    // get help message text
@@ -1258,7 +1285,7 @@ void TMVA::MethodDNN::GetHelpMessage() const
    Log() << col << "--- Short description:" << colres << Endl;
    Log() << Endl;
    Log() << "The DNN neural network is a feedforward" << Endl;
-   Log() << "multilayer perceptron impementation. The DNN has a user-" << Endl;
+   Log() << "multilayer perceptron implementation. The DNN has a user-" << Endl;
    Log() << "defined hidden layer architecture, where the number of input (output)" << Endl;
    Log() << "nodes is determined by the input variables (output classes, i.e., " << Endl;
    Log() << "signal and one background, regression or multiclass). " << Endl;
@@ -1340,7 +1367,7 @@ reduction of overfitting: \n \
              . ConvergenceSteps :  \n \
                Assume that convergence is reached after \"ConvergenceSteps\" cycles where no improvement \n \
                of the error on the test samples has been found. (Mind that only at each \"TestRepetitions\"  \n \
-               cycle the test sampes are evaluated and thus the convergence is checked) \n \
+               cycle the test samples are evaluated and thus the convergence is checked) \n \
              . BatchSize \n \
                Size of the mini-batches.  \n \
              . TestRepetitions \n \
