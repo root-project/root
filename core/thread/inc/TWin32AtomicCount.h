@@ -21,10 +21,11 @@
 //                                                                      //
 // This implementation uses the Win32 InterLocked API for locking.      //
 //                                                                      //
-// ATTENTION: Don't use this file directly, it is included by           //
-//            TAtomicCount.h.                                           //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifndef ROOT_TAtomicCount
+#error "Do not use TWin32AtomicCount.h directly. #include \"TAtomicCount.h\" instead."
+#endif // ROOT_TAtomicCount
 
 # include "Windows4Root.h"
 
