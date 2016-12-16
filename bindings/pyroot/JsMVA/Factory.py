@@ -152,7 +152,7 @@ def GetDeepNetworkOld(xml_file, returnObj=False):
     network["synapses"] = synapses
     if returnObj:
         return network
-    return json.dumps(network)
+    return json.dumps(network, sort_keys = True)
 
 ## Reads deep neural network weights from file and returns it in JSON format.
 # @param xml_file path to DNN weight file
@@ -196,7 +196,7 @@ def GetDeepNetwork(xml_file, returnObj=False):
     network["layers"] = layers
     if returnObj:
         return network
-    return json.dumps(network)
+    return json.dumps(network, sort_keys = True)
 
 ## Reads neural network weights from file and returns it in JSON format
 # @param xml_file path to weight file
@@ -231,7 +231,7 @@ def GetNetwork(xml_file):
             neurons[label]["weights"] = weights
         net["layer_"+str(layer.get('Index'))] = neurons
     network["layout"] = net
-    return json.dumps(network)
+    return json.dumps(network, sort_keys = True)
 
 ## Helper class for reading decision tree from XML file
 class TreeReader:
