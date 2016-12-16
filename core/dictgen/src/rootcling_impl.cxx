@@ -303,12 +303,10 @@ namespace genreflex {
 
 void SetRootSys();
 
-struct SetROOTSYS {
-   SetROOTSYS() {
-      // "Our" libCore needs "our" ROOTSYS:
-      SetRootSys();
-   }
-} gROOTSYSSetter;
+ROOT::Internal::RootCling::TROOTSYSSetter::TROOTSYSSetter() {
+   // rootcling's libCore needs "our" ROOTSYS:
+   SetRootSys();
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 

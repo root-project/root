@@ -31,6 +31,10 @@ namespace RootCling {
       void (*fAddAncestorPCMROOTFile)(const char *pcmName) = nullptr;
       bool (*fCloseStreamerInfoROOTFile)(bool writeEmptyRootPCM) = nullptr;
    };
+
+   struct TROOTSYSSetter {
+     TROOTSYSSetter();
+   };
 } // namespace RootCling
 } // namespace Internal
 } // namespace ROOT
