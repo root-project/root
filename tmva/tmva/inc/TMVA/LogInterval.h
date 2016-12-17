@@ -5,7 +5,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *          Extension of the Interval to "logarithmic" invarvals                  *
+ *          Extension of the Interval to "logarithmic" intervals                  *
  *                                                                                *
  *                                                                                *
  *                                                                                *
@@ -13,8 +13,8 @@
  *      Helge Voss <helge.voss@cern.ch>  - MPI-K Heidelberg, Germany              *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -39,7 +39,7 @@
 //     i=1 --> 10                   StepSize(ibin=1) = 9                    //
 //     i=2 --> 100                  StepSize(ibin=2) = 99                   //
 //     i=3 --> 1000                 StepSize(ibin=3) = 999                  //
-//     i=4 --> 10000                StepSize(ibin=4) = 9999                 //          
+//     i=4 --> 10000                StepSize(ibin=4) = 9999                 //
 //                                                                          //
 // LogInterval(1,1000,11)                                                   //
 //    i=0 --> 1                                                             //
@@ -68,11 +68,11 @@
 //    i=10 --> 1024                                                         //
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef ROOT_Rtypes                                                         
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
 
-#ifndef TMVA_Interval                                                         
+#ifndef TMVA_Interval
 #include "Interval.h"
 #endif
 
@@ -83,7 +83,7 @@ class TRandom3;
 namespace TMVA {
 
    class MsgLogger;
-   
+
    class LogInterval : public Interval {
 
    public:
@@ -99,7 +99,7 @@ namespace TMVA {
       virtual Int_t    GetNbins() const { return fNbins; }
       virtual Double_t GetMean()  const;
       virtual Double_t GetRndm( TRandom3& )  const;
-      virtual Double_t GetElement( Int_t position ) const;      
+      virtual Double_t GetElement( Int_t position ) const;
       virtual Double_t GetStepSize(Int_t iBin=0) const;
 
       void SetMax( Double_t m ) { fMax = m; }

@@ -22,6 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Rtypes.h"
+
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif

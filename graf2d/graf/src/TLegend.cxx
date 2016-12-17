@@ -798,21 +798,9 @@ void TLegend::PaintPrimitives()
          }
       }
 
-      // Draw error only
-
-      if (opt.Contains("e") && !(opt.Contains("l") || opt.Contains("f"))) {
-         if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
-            dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
-         }
-         TLine entryline(xsym, ysym - yspace*0.30,
-                         xsym, ysym + yspace*0.30);
-         entryline.SetBit(TLine::kLineNDC);
-         entry->TAttLine::Copy(entryline);
-         entryline.Paint();
-      }
-
       // Draw Polymarker
 
+      Double_t symbolsize = 0.;
       if ( opt.Contains("p")) {
 
          if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
@@ -822,6 +810,40 @@ void TLegend::PaintPrimitives()
          entrymarker.SetNDC();
          entry->TAttMarker::Copy(entrymarker);
          entrymarker.Paint();
+         symbolsize = entrymarker.GetMarkerSize();
+      }
+
+      // Draw error only
+
+      if (opt.Contains("e") && !(opt.Contains("l") || opt.Contains("f"))) {
+         if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
+            dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
+         }
+         if ( !opt.Contains("p")) {
+            TLine entryline(xsym, ysym - yspace*0.30,
+                            xsym, ysym + yspace*0.30);
+            entryline.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline);
+            entryline.Paint();
+         } else {
+            Double_t sy  =-gPad->PixeltoY(Int_t(symbolsize)) + gPad->PixeltoY(0);
+            TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
+            entryline1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline1);
+            entryline1.Paint();
+            TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*0.30);
+            entryline2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline2);
+            entryline2.Paint();
+         }
+         TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+         entrytop1.SetBit(TLine::kLineNDC);
+         entry->TAttLine::Copy(entrytop1);
+         entrytop1.Paint();
+         TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+         entrytop2.SetBit(TLine::kLineNDC);
+         entry->TAttLine::Copy(entrytop2);
+         entrytop2.Paint();
       }
    }
 

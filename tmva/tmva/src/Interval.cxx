@@ -24,48 +24,47 @@
  * File and Version Information:                                                  *
  **********************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// Interval                                                                 //
-//                                                                          //
-// Interval definition, continuous and discrete                             //
-//                                                                          //
-// Interval(min,max)  : a continous interval [min,max]                      //
-// Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers: //
-//          min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max  //
-//   e.g.: Interval(1,5,5)=1,2,3,4,5                                        //
-//         Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0                      //
-//                                                                          //
-//  Note: **bin** counting starts from ZERO unlike in ROOT histograms       //
-//////////////////////////////////////////////////////////////////////////////
-/* Begin_Html
-   <center><h2>the TMVA::Interval Class</h2></center>
+/*! \class TMVA::Interval
+\ingroup TMVA
 
-   <ul>
-   <li> Interval definition, continuous and discrete
-   <ul>
-   <li>  Interval(min,max)  : a continous interval [min,max]
-   <li>  Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
-   min, min+step, min+2*step,...., min+(n-1)*step=max <br>
-   e.g.: Interval(1,5,5)=1,2,3,4,5                    <br>
-   Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0        <br>
+The TMVA::Interval Class
 
-   </ul>
-   </ul>
-   <pre>
+Interval definition, continuous and discrete
 
+  - Interval(min,max)  : a continous interval [min,max]
+  - Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:
+         min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max
+
+  e.g.:
+
+  - Interval(1,5,5) = 1,2,3,4,5
+  - Interval(.5,1.,6) = .5, .6., .7, .8, .9, 1.0
+
+ Note: **bin** counting starts from ZERO unlike in ROOT histograms
+
+  - Interval definition, continuous and discrete
+
+    - Interval(min,max)  : a continous interval [min,max]
+    - Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:
+
+      min, min+step, min+2*step,...., min+(n-1)*step=max
+
+      e.g.:
+
+      - Interval(1,5,5)=1,2,3,4,5                    <br>
+      - Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0        <br>
+
+~~~ {.cpp}
    Example:   Interval(.5,1.,6)
 
-   [ min                           max ]
-   ------------------------------------------------------------
-   |     |     |     |     |     |
-   .5    .6    .7    .8    .9    1.0
+             [ min                           max ]
+         -----------------------------------------------
+                |     |     |     |     |     |
+               .5    .6    .7    .8    .9    1.0
 
-   bin    0     1     2     3     4     5
-
-
-   </pre>
-   End_Html */
+         bin    0     1     2     3     4     5
+~~~
+*/
 
 #include "TMath.h"
 #include "TRandom3.h"
@@ -79,9 +78,8 @@ ClassImp(TMVA::Interval)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// defines minimum and maximum of an interval
-/// when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
-/// when nbins == 0, interval describes a continous interval
-///
+///  - when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
+///  - when nbins == 0, interval describes a continous interval
 
 TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
 fMin(min),
@@ -133,7 +131,7 @@ Double_t TMVA::Interval::GetElement( Int_t bin ) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// retuns the step size between the numbers of a "discrete Interval"
+/// returns the step size between the numbers of a "discrete Interval"
 
 Double_t TMVA::Interval::GetStepSize( Int_t iBin )  const
 {
@@ -148,7 +146,7 @@ Double_t TMVA::Interval::GetStepSize( Int_t iBin )  const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get uniformely distributed number within interval
+/// get uniformly distributed number within interval
 
 Double_t TMVA::Interval::GetRndm( TRandom3& rnd )  const
 {

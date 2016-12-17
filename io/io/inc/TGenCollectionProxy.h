@@ -23,10 +23,6 @@
 #include "TCollectionProxyInfo.h"
 #endif
 
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
-
 #include <atomic>
 #include <string>
 #include <map>

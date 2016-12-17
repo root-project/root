@@ -2589,7 +2589,7 @@
 
       if (resize)  {
 
-         if (this.Resize3D()) this.Render3D();
+         if ((main === this) && (this.Resize3D !== undefined) && this.Resize3D()) this.Render3D();
 
       } else {
 
@@ -2629,7 +2629,7 @@
 
       if (resize) {
 
-         if (this.Resize3D()) this.Render3D();
+         if ((main === this) && (this.Resize3D !== undefined) && this.Resize3D()) this.Render3D();
 
       } else {
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -22,10 +22,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Base definition for genetic algorithm                                
-//_______________________________________________________________________
+/*! \class TMVA::GeneticAlgorithm
+\ingroup TMVA
+
+Base definition for genetic algorithm
+
+*/
 
 #include <iostream>
 #include <algorithm>
@@ -50,19 +52,22 @@ namespace TMVA {
 }
 
 ClassImp(TMVA::GeneticAlgorithm)
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
-/// Parameters: 
-///     int populationSize : defines the number of "Individuals" which are created and tested 
+///
+/// Parameters:
+///
+///  - int populationSize : defines the number of "Individuals" which are created and tested
 ///                          within one Generation (Iteration of the Evolution)
-///     std::vector<TMVA::Interval*> ranges : Interval holds the information of an interval, where the GetMin 
+///  - std::vector<TMVA::Interval*> ranges : Interval holds the information of an interval, where the GetMin
 ///                          gets the low and GetMax gets the high constraint of the variable
 ///                          the size of "ranges" is the number of coefficients which are optimised
-/// Purpose: 
+/// Purpose:
+///
 ///     Creates a random population with individuals of the size ranges.size()
 
-TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populationSize, 
+TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populationSize,
                                           const std::vector<Interval*>& ranges, UInt_t seed )
 : fConvCounter(-1),
    fFitterTarget( target ),
@@ -81,7 +86,7 @@ TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populatio
    fPopulation.SetRandomSeed( seed );
 }
 
-TMVA::GeneticAlgorithm::~GeneticAlgorithm() 
+TMVA::GeneticAlgorithm::~GeneticAlgorithm()
 {
    // destructor; deletes fLogger
    delete fLogger;
@@ -89,10 +94,10 @@ TMVA::GeneticAlgorithm::~GeneticAlgorithm()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// calls evolution, but if it is not the first time. 
+/// calls evolution, but if it is not the first time.
 /// If it's the first time, the random population created by the
-/// constructor is still not evaluated, .. therefore we wait for the 
-/// second time init is called. 
+/// constructor is still not evaluated, .. therefore we wait for the
+/// second time init is called.
 
 void TMVA::GeneticAlgorithm::Init()
 {
@@ -103,16 +108,16 @@ void TMVA::GeneticAlgorithm::Init()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// if the "fitnessFunction" is called multiple times for one set of 
-/// factors (because i.e. each event of a TTree has to be assessed with 
-/// each set of Factors proposed by the Genetic Algorithm) the value 
+/// if the "fitnessFunction" is called multiple times for one set of
+/// factors (because i.e. each event of a TTree has to be assessed with
+/// each set of Factors proposed by the Genetic Algorithm) the value
 /// of the current calculation has to be added(? or else) to the value
-/// obtained up to now. 
-/// example: some chi-square is calculated for every event, 
+/// obtained up to now.
+/// example: some chi-square is calculated for every event,
 /// after every event the new chi-square (newValue) has to be simply
-/// added to the oldValue. 
+/// added to the oldValue.
 ///
-/// this function has to be overridden eventually 
+/// this function has to be overridden eventually
 /// it might contain only the following return statement.
 ///        return oldValue + newValue;
 
@@ -123,10 +128,10 @@ Double_t TMVA::GeneticAlgorithm::NewFitness( Double_t /*oldValue*/, Double_t new
 
 ////////////////////////////////////////////////////////////////////////////////
 /// starts the evaluation of the fitness of all different individuals of
-/// the population. 
+/// the population.
 ///
 /// this function calls implicitly (many times) the "fitnessFunction" which
-/// has been overridden by the user. 
+/// has been overridden by the user.
 
 Double_t TMVA::GeneticAlgorithm::CalculateFitness()
 {
@@ -145,46 +150,47 @@ Double_t TMVA::GeneticAlgorithm::CalculateFitness()
       for ( int index = 0; index < fPopulation.GetPopulationSize(); ++index )
          {
             GeneticGenes* genes = fPopulation.GetGenes(index);
-            Double_t fitness = NewFitness( genes->GetFitness(), 
+            Double_t fitness = NewFitness( genes->GetFitness(),
                                            fFitterTarget.EstimatorFunction(genes->GetFactors()) );
             genes->SetFitness( fitness );
-         
+
             if ( bests[thread_number] > fitness )
                bests[thread_number] = fitness;
          }
    }
-   
+
    fBestFitness = *std::min_element(bests, bests+nt);
 
-#else 
+#else
 
    for ( int index = 0; index < fPopulation.GetPopulationSize(); ++index ) {
       GeneticGenes* genes = fPopulation.GetGenes(index);
       Double_t fitness = NewFitness( genes->GetFitness(),
                                      fFitterTarget.EstimatorFunction(genes->GetFactors()) );
       genes->SetFitness( fitness );
-      
+
       if ( fBestFitness  > fitness )
          fBestFitness = fitness;
-      
+
    }
 
 #endif
 
    fPopulation.Sort();
 
-   return fBestFitness; 
+   return fBestFitness;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// this function is called from "init" and controls the evolution of the 
-/// individuals. 
-/// the function can be overridden to change the parameters for mutation rate
+/// this function is called from "init" and controls the evolution of the
+/// individuals.
+///
+/// The function can be overridden to change the parameters for mutation rate
 /// sexual reproduction and so on.
 
 void TMVA::GeneticAlgorithm::Evolution()
 {
-   if ( fMakeCopies ) 
+   if ( fMakeCopies )
       fPopulation.MakeCopies( 5 );
    fPopulation.MakeChildren();
 
@@ -194,27 +200,28 @@ void TMVA::GeneticAlgorithm::Evolution()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// this function provides the ability to change the stepSize of a mutation according to
-/// the success of the last generations. 
-/// 
+/// the success of the last generations.
+///
 /// Parameters:
-///      int ofSteps :  = if OF the number of STEPS given in this variable (ofSteps)
-///      int successSteps : >sucessSteps Generations could improve the result
-///      double factor : than multiply the stepSize ( spread ) by this factor
+///
+///  - int ofSteps :  = if OF the number of STEPS given in this variable (ofSteps)
+///  - int successSteps : >sucessSteps Generations could improve the result
+///  - double factor : than multiply the stepSize ( spread ) by this factor
+///
 /// (if ofSteps == successSteps nothing is changed, if ofSteps < successSteps, the spread
-/// is divided by the factor) 
+/// is divided by the factor)
 ///
-/// using this function one can increase the stepSize of the mutation when we have 
+/// using this function one can increase the stepSize of the mutation when we have
 /// good success (to pass fast through the easy phase-space) and reduce the stepSize
-/// if we are in a difficult "territory" of the phase-space. 
-///
+/// if we are in a difficult "territory" of the phase-space.
 
 Double_t TMVA::GeneticAlgorithm::SpreadControl( Int_t ofSteps, Int_t successSteps, Double_t factor )
 {
    // < is valid for "less" comparison
-   if ( fBestFitness < fLastResult || fSuccessList.size() <=0 ) { 
+   if ( fBestFitness < fLastResult || fSuccessList.size() <=0 ) {
       fLastResult = fBestFitness;
       fSuccessList.push_front( 1 ); // it got better
-   } 
+   }
    else {
       fSuccessList.push_front( 0 ); // it stayed the same
    }
@@ -247,10 +254,9 @@ Double_t TMVA::GeneticAlgorithm::SpreadControl( Int_t ofSteps, Int_t successStep
 ////////////////////////////////////////////////////////////////////////////////
 /// gives back true if the last "steps" steps have lead to an improvement of the
 /// "fitness" of the "individuals" of at least "improvement"
-/// 
-/// this gives a simple measure of if the fitness of the individuals is
-/// converging and no major improvement is to be expected soon. 
 ///
+/// this gives a simple measure of if the fitness of the individuals is
+/// converging and no major improvement is to be expected soon.
 
 Bool_t TMVA::GeneticAlgorithm::HasConverged( Int_t steps, Double_t improvement )
 {
@@ -259,7 +265,7 @@ Bool_t TMVA::GeneticAlgorithm::HasConverged( Int_t steps, Double_t improvement )
    }
    if (TMath::Abs(fBestFitness - fConvValue) <= improvement || steps<0) {
       fConvCounter ++;
-   } 
+   }
    else {
       fConvCounter = 0;
       fConvValue = fBestFitness;

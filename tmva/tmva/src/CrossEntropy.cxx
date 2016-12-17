@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$       
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description: Implementation of the CrossEntropy as separation criterion        *
- *              -p log (p) - (1-p)log(1-p);     p=purity                          * 
+ *              -p log (p) - (1-p)log(1-p);     p=purity                          *
  *                                                                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
@@ -17,29 +17,32 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      Heidelberg U., Germany                                                    * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      Heidelberg U., Germany                                                    *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Implementation of the CrossEntropy as separation criterion           
-//             -p log (p) - (1-p)log(1-p);     p=purity                        
-//_______________________________________________________________________
+/*! \class TMVA::CrossEntropy
+\ingroup TMVA
+
+Implementation of the CrossEntropy as separation criterion
+
+             -p log (p) - (1-p)log(1-p);     p=purity
+*/
 
 #include "TMath.h"
 #include "TMVA/CrossEntropy.h"
 
 ClassImp(TMVA::CrossEntropy)
-   
+
 ////////////////////////////////////////////////////////////////////////////////
-///  Cross Entropy defined as
-///  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)                       
+///  Cross Entropy defined as:
+///
+///             -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)
 
 Double_t  TMVA::CrossEntropy::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {

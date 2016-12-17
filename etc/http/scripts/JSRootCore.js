@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.8.0 2/12/2016";
+   JSROOT.version = "4.8.1 13/12/2016";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -281,7 +281,7 @@
          if ((proto.indexOf('[object')==0) && (proto.indexOf('Array]')>0)) {
              for (i = 0; i < value.length; ++i) {
                 res = unref_value(value[i]);
-                if (res) value[i] = res;
+                if (res!==undefined) value[i] = res;
              }
              return;
          }
@@ -293,6 +293,17 @@
             if (isNaN(ref) || (ref < 0) || (ref >= map.length)) return;
             newfmt = true;
             return map[ref];
+         }
+         
+         if ((newfmt!==false) && (len===3) && (ks[0]==='$pair') && (ks[1]==='first') && (ks[2]==='second')) {
+            newfmt = true;
+            var f1 = unref_value(value.first),
+                s1 = unref_value(value.second);
+            if (f1!==undefined) value.first = f1;
+            if (s1!==undefined) value.second = s1;
+            value._typename = value['$pair'];
+            delete value['$pair'];
+            return; // pair object is not counted in the objects map  
          }
 
          // debug code, can be commented out later
@@ -310,7 +321,7 @@
          for (k = 0; k < len; ++k) {
             i = ks[k];
             res = unref_value(value[i]);
-            if (res) value[i] = res;
+            if (res!==undefined) value[i] = res;
          }
       }
 
@@ -423,7 +434,8 @@
       return src;
    }
 
-
+   /** @memberOf JSROOT 
+    * Method should be used to parse JSON code, produced with TBufferJSON */
    JSROOT.parse = function(arg) {
       if ((arg==null) || (arg=="")) return null;
       var obj = JSON.parse(arg);
@@ -431,6 +443,17 @@
       return obj;
    }
 
+   /** @memberOf JSROOT 
+    * Method should be used to parse JSON code, produced by multi.json of THttpServer */
+   JSROOT.parse_multi = function(arg) {
+      if (!arg) return null;
+      var arr = JSON.parse(arg);
+      if (arr && arr.length)
+         for (var i=0;i<arr.length;++i)
+            arr[i] = this.JSONR_unref(arr[i]);
+      return arr;
+   }
+   
    /** @memberOf JSROOT */
    JSROOT.GetUrlOption = function(opt, url, dflt) {
       // analyzes document.URL and extracts options after '?' mark
@@ -598,6 +621,7 @@
       //  "object" - returns JSROOT.parse(req.responseText)
       //  "xml" - returns res.responseXML
       //  "head" - returns request itself, uses "HEAD" method
+      //  "multi" - returns correctly parsed multi.json request, uses "POST" method
       // Result will be returned to the callback functions
       // Request will be set as this pointer in the callback
       // If failed, request returns null
@@ -609,7 +633,9 @@
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
-      var pthis = this;
+      var pthis = this, method = "GET";
+      if (kind === "head") method = "HEAD"; else
+      if (kind === "multi") method = "POST";
 
       if (window.ActiveXObject) {
 
@@ -624,6 +650,7 @@
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(pthis.parse(xhr.responseText));
+            if (kind == "multi") return callback(pthis.parse_multi(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             if ((kind == "buf") && ('responseType' in xhr) &&
@@ -638,7 +665,7 @@
             callback(filecontent);
          }
 
-         xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
+         xhr.open(method, url, true);
 
          if (kind=="buf") {
             if (('Uint8Array' in window) && ('responseType' in xhr))
@@ -658,6 +685,7 @@
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(pthis.parse(xhr.responseText));
+            if (kind == "multi") return callback(pthis.parse_multi(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             // if no response type is supported, return as text (most probably, will fail)
@@ -678,7 +706,7 @@
             callback(xhr.response);
          }
 
-         xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
+         xhr.open(method, url, true);
 
          if ((kind == "bin") || (kind == "buf")) {
             if (('Uint8Array' in window) && ('responseType' in xhr)) {
@@ -690,6 +718,7 @@
          }
 
       }
+      
       return xhr;
    }
 
@@ -1028,10 +1057,11 @@
 
    // function can be used to draw supported ROOT classes,
    // required functionality will be loaded automatically
-   // if painter pointer required, one should load '2d' functionlity itself
-   JSROOT.draw = function(divid, obj, opt) {
+   // if painter pointer required, one should load '2d' functionlity itself 
+   // or use callback function which provides painter pointer as first argument  
+   JSROOT.draw = function(divid, obj, opt, callback) {
       JSROOT.AssertPrerequisites("2d", function() {
-         JSROOT.draw(divid, obj, opt);
+         JSROOT.draw(divid, obj, opt, callback);
       });
    }
 
@@ -1430,37 +1460,49 @@
          m.evalPar = function(x, y) {
             if (! ('_func' in this) || (this._title !== this.fTitle)) {
 
-              var _func = this.fTitle;
+              var _func = this.fTitle, isformula = false;
               if (_func === "gaus") _func = "gaus(0)";
+              if (this.fFormula && typeof this.fFormula.fFormula == "string")
+                 if (this.fFormula.fFormula.indexOf("[](double*x,double*p)")==0) {
+                    isformula = true;
+                    _func = this.fFormula.fFormula.substr(21);
+                 }
 
               if ('formulas' in this)
                  for (var i=0;i<this.formulas.length;++i)
                     while (_func.indexOf(this.formulas[i].fName) >= 0)
                        _func = _func.replace(this.formulas[i].fName, this.formulas[i].fTitle);
-              _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs');
-              _func = _func.replace('TMath::Exp(', 'Math.exp(');
-              _func = _func.replace('TMath::Abs(', 'Math.abs(');
+              _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs')
+                           .replace(/TMath::Exp\(/g, 'Math.exp(')
+                           .replace(/TMath::Abs\(/g, 'Math.abs(');
               if (typeof JSROOT.Math == 'object') {
                  this._math = JSROOT.Math;
-                 _func = _func.replace('TMath::Prob(', 'this._math.Prob(');
-                 _func = _func.replace('TMath::Gaus(', 'this._math.Gaus(');
-                 _func = _func.replace('gaus(', 'this._math.gaus(this, x, ');
-                 _func = _func.replace('gausn(', 'this._math.gausn(this, x, ');
-                 _func = _func.replace('expo(', 'this._math.expo(this, x, ');
-                 _func = _func.replace('landau(', 'this._math.landau(this, x, ');
-                 _func = _func.replace('landaun(', 'this._math.landaun(this, x, ');
+                 _func = _func.replace(/TMath::Prob\(/g, 'this._math.Prob(')
+                              .replace(/TMath::Gaus\(/g, 'this._math.Gaus(')
+                              .replace(/gaus\(/g, 'this._math.gaus(this, x, ')
+                              .replace(/gausn\(/g, 'this._math.gausn(this, x, ')
+                              .replace(/expo\(/g, 'this._math.expo(this, x, ')
+                              .replace(/landau\(/g, 'this._math.landau(this, x, ')
+                              .replace(/landaun\(/g, 'this._math.landaun(this, x, ')
+                              .replace(/ROOT::Math::/g, 'this._math.');
               }
-              _func = _func.replace('pi', 'Math.PI');
-              for (var i=0;i<this.fNpar;++i)
-                 while(_func.indexOf('['+i+']') != -1)
-                    _func = _func.replace('['+i+']', '('+this.GetParValue(i)+')');
-              _func = _func.replace(/\b(sin)\b/gi, 'Math.sin');
-              _func = _func.replace(/\b(cos)\b/gi, 'Math.cos');
-              _func = _func.replace(/\b(tan)\b/gi, 'Math.tan');
-              _func = _func.replace(/\b(exp)\b/gi, 'Math.exp');
+              for (var i=0;i<this.fNpar;++i) {
+                 var parname = (isformula ? "p[" : "[") + i + "]";
+                 while(_func.indexOf(parname) != -1)
+                    _func = _func.replace(parname, '('+this.GetParValue(i)+')');
+              }
+              _func = _func.replace(/\b(sin)\b/gi, 'Math.sin')
+                           .replace(/\b(cos)\b/gi, 'Math.cos')
+                           .replace(/\b(tan)\b/gi, 'Math.tan')
+                           .replace(/\b(exp)\b/gi, 'Math.exp')
+                           .replace(/pi/g, 'Math.PI');
               for (var n=2;n<10;++n)
                  _func = _func.replace('x^'+n, 'Math.pow(x,'+n+')');
 
+              if (isformula) {
+                 _func = _func.replace(/x\[0\]/g,"x");
+                 this._func = new Function("x", _func).bind(this);
+              } else
               if (this._typename==="TF2")
                  this._func = new Function("x", "y", "return " + _func).bind(this);
               else

@@ -2001,7 +2001,6 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                }
                const char *function = gSystem->BaseName(fname);
                mod_line = function + arguments + io;
-               cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
                indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
             }
          }
@@ -2021,7 +2020,6 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          }
 
          fCurExecutingMacros.push_back(fname);
-         cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
          if (unnamedMacroOpenCurly != std::string::npos) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
                                                         unnamedMacroOpenCurly);
@@ -2037,7 +2035,6 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       if (0!=strncmp(sLine.Data(), ".autodict ",10) && sLine != ".autodict") {
          // explicitly ignore .autodict without having to support it
          // in cling.
-         cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
 
          // Turn off autoparsing if this is an include directive
          bool isInclusionDirective = sLine.Contains("\n#include") || sLine.BeginsWith("#include");
@@ -2826,7 +2823,6 @@ Int_t TCling::Load(const char* filename, Bool_t system)
          // For the non system libs, we'd like to be able to unload them.
          // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
          cling::Interpreter::CompilationResult compRes;
-         cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
          HandleInterpreterException(fMetaProcessor, Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
          if (compRes == cling::Interpreter::kSuccess)
             res = cling::DynamicLibraryManager::kLoadLibSuccess;
@@ -6284,7 +6280,6 @@ int TCling::GetSecurityError() const
 int TCling::LoadFile(const char* path) const
 {
    cling::Interpreter::CompilationResult compRes;
-   cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
    HandleInterpreterException(fMetaProcessor, TString::Format(".L %s", path), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
@@ -6400,7 +6395,6 @@ int TCling::UnloadFile(const char* path) const
    }
    // Unload a shared library or a source file.
    cling::Interpreter::CompilationResult compRes;
-   cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
    HandleInterpreterException(fMetaProcessor, Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }

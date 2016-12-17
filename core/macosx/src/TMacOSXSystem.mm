@@ -9,20 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdexcept>
-#include <vector>
-#include <map>
-#include <set>
+#include "TMacOSXSystem.h"
 
 #include <Cocoa/Cocoa.h>
 
-#include "TSeqCollection.h"
-#include "TMacOSXSystem.h"
 #include "CocoaUtils.h"
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TROOT.h"
 
+#include <stdexcept>
+#include <vector>
+#include <map>
+#include <set>
+
+class TSeqCollection;
 //Handle deprecated symbols
 namespace ROOT {
 namespace MacOSX {

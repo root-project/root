@@ -16,7 +16,6 @@
 #ifndef ROO_FIT_RESULT
 #define ROO_FIT_RESULT
 
-#include "Riosfwd.h"
 #include "RooAbsArg.h"
 #include "RooPrintable.h"
 #include "RooDirItem.h"

@@ -88,9 +88,18 @@ MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 MATHCOREMAP  := $(MATHCORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%,include/%,$(MATHCOREMH))
+MATHCOREMH_REL := $(patsubst $(MODDIRI)/%,include/%,$(MATHCOREMH))
+ALLHDRS      += $(MATHCOREMH_REL)
 ALLLIBS      += $(MATHCORELIB)
 ALLMAPS      += $(MATHCOREMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MATHCOREMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_Core { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MATHCORELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(MATHCOREDEP)

@@ -16,7 +16,6 @@
 #ifndef ROO_ABS_REAL_LVALUE
 #define ROO_ABS_REAL_LVALUE
 
-#include "Riosfwd.h"
 #include <math.h>
 #include <float.h>
 #include "TString.h"

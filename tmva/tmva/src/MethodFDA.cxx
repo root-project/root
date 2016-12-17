@@ -25,17 +25,20 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// Function discriminant analysis (FDA). This simple classifier         //
-// fits any user-defined TFormula (via option configuration string) to  //
-// the training data by requiring a formula response of 1 (0) to signal //
-// (background) events. The parameter fitting is done via the abstract  //
-// class FitterBase, featuring Monte Carlo sampling, Genetic            //
-// Algorithm, Simulated Annealing, MINUIT and combinations of these.    //
-//                                                                      //
-// Can compute regression value for one dimensional output              //
-//_______________________________________________________________________
+/*! \class TMVA::MethodFDA
+\ingroup TMVA
+
+Function discriminant analysis (FDA).
+
+This simple classifier
+fits any user-defined TFormula (via option configuration string) to
+the training data by requiring a formula response of 1 (0) to signal
+(background) events. The parameter fitting is done via the abstract
+class FitterBase, featuring Monte Carlo sampling, Genetic
+Algorithm, Simulated Annealing, MINUIT and combinations of these.
+
+Can compute regression value for one dimensional output
+*/
 
 #include "TMVA/MethodFDA.h"
 
@@ -145,14 +148,17 @@ void TMVA::MethodFDA::Init( void )
 /// define the options (their key words) that can be set in the option string
 ///
 /// format of function string:
-///    "x0*(0)+((1)/x1)**(2)..."
+///
+///      "x0*(0)+((1)/x1)**(2)..."
+///
 /// where "[i]" are the parameters, and "xi" the input variables
 ///
 /// format of parameter string:
-///    "(-1.2,3.4);(-2.3,4.55);..."
+///
+///      "(-1.2,3.4);(-2.3,4.55);..."
+///
 /// where the numbers in "(a,b)" correspond to the a=min, b=max parameter ranges;
 /// each parameter defined in the function string must have a corresponding range
-///
 
 void TMVA::MethodFDA::DeclareOptions()
 {
@@ -179,7 +185,7 @@ void TMVA::MethodFDA::CreateFormula()
    // process transient strings
    fFormulaStringT  = fFormulaStringP;
 
-   // intepret formula string
+   // interpret formula string
 
    // replace the parameters "(i)" by the TFormula style "[i]"
    for (UInt_t ipar=0; ipar<fNPars; ipar++) {
@@ -229,7 +235,7 @@ void TMVA::MethodFDA::CreateFormula()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// the option string is decoded, for availabel options see "DeclareOptions"
+/// the option string is decoded, for available options see "DeclareOptions"
 
 void TMVA::MethodFDA::ProcessOptions()
 {
@@ -345,14 +351,14 @@ void TMVA::MethodFDA::ClearAll( void )
    for (UInt_t ipar=0; ipar<fParRange.size() && ipar<fNPars; ipar++) {
       if (fParRange[ipar] != 0) { delete fParRange[ipar]; fParRange[ipar] = 0; }
    }
-   fParRange.clear(); 
-   
+   fParRange.clear();
+
    if (fFormula  != 0) { delete fFormula; fFormula = 0; }
    fBestPars.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// FDA training 
+/// FDA training
 
 void TMVA::MethodFDA::Train( void )
 {
@@ -363,7 +369,7 @@ void TMVA::MethodFDA::Train( void )
 
    for (UInt_t ievt=0; ievt<GetNEvents(); ievt++) {
 
-      // read the training event 
+      // read the training event
       const Event* ev = GetEvent(ievt);
 
       // true event copy
@@ -379,12 +385,12 @@ void TMVA::MethodFDA::Train( void )
    // sanity check
    if (!DoRegression()) {
       if (fSumOfWeightsSig <= 0 || fSumOfWeightsBkg <= 0) {
-         Log() << kFATAL << "<Train> Troubles in sum of weights: " 
+         Log() << kFATAL << "<Train> Troubles in sum of weights: "
                << fSumOfWeightsSig << " (S) : " << fSumOfWeightsBkg << " (B)" << Endl;
       }
    }
    else if (fSumOfWeights <= 0) {
-      Log() << kFATAL << "<Train> Troubles in sum of weights: " 
+      Log() << kFATAL << "<Train> Troubles in sum of weights: "
             << fSumOfWeights << Endl;
    }
 
@@ -396,7 +402,7 @@ void TMVA::MethodFDA::Train( void )
 
    // execute the fit
    Double_t estimator = fFitter->Run( fBestPars );
-      
+
    // print results
    PrintResults( fFitMethod, fBestPars, estimator );
 
@@ -418,15 +424,13 @@ void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>
    Log() << kHEADER << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    std::vector<TString>  parNames;
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
-   gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", Log(), "%g" );   
+   gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", Log(), "%g" );
    Log() << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
    Log() << "Value of estimator at minimum: " << estimator << Endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// compute estimator for given parameter set (to be minimised)
-///   const Double_t sumOfWeights[]                = { fSumOfWeightsSig, fSumOfWeightsBkg, fSumOfWeights };
 
 Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
 {
@@ -439,7 +443,7 @@ Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
    // calculate the deviation from the desired value
    if( DoRegression() ){
       for (UInt_t ievt=0; ievt<GetNEvents(); ievt++) {
-         // read the training event 
+         // read the training event
          const TMVA::Event* ev = GetEvent(ievt);
 
          for( Int_t dim = 0; dim < fOutputDimensions; ++dim ){
@@ -455,7 +459,7 @@ Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
 
    }else if( DoMulticlass() ){
       for (UInt_t ievt=0; ievt<GetNEvents(); ievt++) {
-         // read the training event 
+         // read the training event
          const TMVA::Event* ev = GetEvent(ievt);
 
          CalculateMulticlassValues( ev, pars, *fMulticlassReturnVal );
@@ -466,7 +470,7 @@ Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
             Double_t t = (ev->GetClass() == static_cast<UInt_t>(dim) ? 1.0 : 0.0 );
             crossEntropy += t*log(y);
          }
-         estimator[2] += ev->GetWeight()*crossEntropy; 
+         estimator[2] += ev->GetWeight()*crossEntropy;
       }
       estimator[2] /= sumOfWeights[2];
       // return value is sum over normalised signal and background contributions
@@ -474,7 +478,7 @@ Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
 
    }else{
       for (UInt_t ievt=0; ievt<GetNEvents(); ievt++) {
-         // read the training event 
+         // read the training event
          const TMVA::Event* ev = GetEvent(ievt);
 
          desired = (DataInfo().IsSignal(ev) ? 1.0 : 0.0);
@@ -517,7 +521,7 @@ Double_t TMVA::MethodFDA::GetMvaValue( Double_t* err, Double_t* errUpper )
 
    // cannot determine error
    NoErrorCalc(err, errUpper);
-   
+
    return InterpretFormula( ev, fBestPars.begin(), fBestPars.end() );
 }
 
@@ -534,7 +538,7 @@ const std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
 
    for( Int_t dim = 0; dim < fOutputDimensions; ++dim ){
       Int_t offset = dim*fNPars;
-      evT->SetTarget(dim,InterpretFormula( ev, fBestPars.begin()+offset, fBestPars.begin()+offset+fNPars ) ); 
+      evT->SetTarget(dim,InterpretFormula( ev, fBestPars.begin()+offset, fBestPars.begin()+offset+fNPars ) );
    }
    const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
    fRegressionReturnVal->push_back(evT2->GetTarget(0));
@@ -543,7 +547,6 @@ const std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
 
    return (*fRegressionReturnVal);
 }
-  
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -597,8 +600,6 @@ void TMVA::MethodFDA::CalculateMulticlassValues( const TMVA::Event*& evt, std::v
    //    // normalize to sum of value (commented out, .. have to think of how to treat negative classifier values)
    //    std::transform( fMulticlassReturnVal.begin(), fMulticlassReturnVal.end(), fMulticlassReturnVal.begin(), bind2nd( std::divides<float>(), sum) );
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read back the training results from a file (stream)

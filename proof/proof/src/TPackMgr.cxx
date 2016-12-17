@@ -18,6 +18,8 @@ standalone usage.
 
 */
 
+#include "TPackMgr.h"
+
 #include "TError.h"
 #include "TFile.h"
 #include "TFunction.h"
@@ -28,30 +30,14 @@ standalone usage.
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TObjString.h"
-#include "TPackMgr.h"
 #include "TParameter.h"
 #include "TMap.h"
+#include "TProof.h" // for constants such as kRM and kLS.
 #include "TROOT.h"
 #include "TSystem.h"
 
 ClassImp(TPackMgr)
 
-
-#ifndef R__WIN32
-const char* const kRM     = "/bin/rm -rf";
-const char* const kLS     = "/bin/ls -l";
-const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
-const char* const kUNTAR3 = "%s -c %s | (tar xf -)";
-const char* const kGUNZIP = "gunzip";
-#else
-const char* const kCP     = "copy";
-const char* const kRM     = "delete";
-const char* const kLS     = "dir";
-const char* const kUNTAR  = "...";
-const char* const kUNTAR2 = "...";
-const char* const kUNTAR3 = "...";
-const char* const kGUNZIP = "gunzip";
-#endif
 
 static void DefaultLogger(const char *msg) { Printf("%s", msg); }
 

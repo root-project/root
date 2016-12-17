@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$ 
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,18 +14,20 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Fitter using a Genetic Algorithm
-//_______________________________________________________________________
+/*! \class TMVA::GeneticFitter
+\ingroup TMVA
+
+Fitter using a Genetic Algorithm.
+
+*/
 
 #include "TMVA/GeneticFitter.h"
 
@@ -47,38 +49,38 @@ ClassImp(TMVA::GeneticFitter)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::GeneticFitter::GeneticFitter( IFitterTarget& target, 
-                                    const TString& name, 
-                                    const std::vector<TMVA::Interval*>& ranges, 
-                                    const TString& theOption ) 
+TMVA::GeneticFitter::GeneticFitter( IFitterTarget& target,
+                                    const TString& name,
+                                    const std::vector<TMVA::Interval*>& ranges,
+                                    const TString& theOption )
 : FitterBase( target, name, ranges, theOption )
 {
    // default parameters settings for Genetic Algorithm
    DeclareOptions();
    ParseOptions();
-}            
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// declare GA options
 
-void TMVA::GeneticFitter::DeclareOptions() 
+void TMVA::GeneticFitter::DeclareOptions()
 {
-   DeclareOptionRef( fPopSize=300,    "PopSize",   "Population size for GA" );  
-   DeclareOptionRef( fNsteps=40,      "Steps",     "Number of steps for convergence" );  
-   DeclareOptionRef( fCycles=3,       "Cycles",    "Independent cycles of GA fitting" );  
-   DeclareOptionRef( fSC_steps=10,    "SC_steps",  "Spread control, steps" );  
-   DeclareOptionRef( fSC_rate=5,      "SC_rate",   "Spread control, rate: factor is changed depending on the rate" );  
-   DeclareOptionRef( fSC_factor=0.95, "SC_factor", "Spread control, factor" );  
-   DeclareOptionRef( fConvCrit=0.001, "ConvCrit",   "Convergence criteria" );  
+   DeclareOptionRef( fPopSize=300,    "PopSize",   "Population size for GA" );
+   DeclareOptionRef( fNsteps=40,      "Steps",     "Number of steps for convergence" );
+   DeclareOptionRef( fCycles=3,       "Cycles",    "Independent cycles of GA fitting" );
+   DeclareOptionRef( fSC_steps=10,    "SC_steps",  "Spread control, steps" );
+   DeclareOptionRef( fSC_rate=5,      "SC_rate",   "Spread control, rate: factor is changed depending on the rate" );
+   DeclareOptionRef( fSC_factor=0.95, "SC_factor", "Spread control, factor" );
+   DeclareOptionRef( fConvCrit=0.001, "ConvCrit",   "Convergence criteria" );
 
-   DeclareOptionRef( fSaveBestFromGeneration=1, "SaveBestGen", 
-                     "Saves the best n results from each generation. They are included in the last cycle" );  
-   DeclareOptionRef( fSaveBestFromCycle=10,     "SaveBestCycle", 
-                     "Saves the best n results from each cycle. They are included in the last cycle. The value should be set to at least 1.0" );  
-   
-   DeclareOptionRef( fTrim=kFALSE, "Trim", 
-                     "Trim the population to PopSize after assessing the fitness of each individual" );  
-   DeclareOptionRef( fSeed=100, "Seed", "Set seed of random generator (0 gives random seeds)" );  
+   DeclareOptionRef( fSaveBestFromGeneration=1, "SaveBestGen",
+                     "Saves the best n results from each generation. They are included in the last cycle" );
+   DeclareOptionRef( fSaveBestFromCycle=10,     "SaveBestCycle",
+                     "Saves the best n results from each cycle. They are included in the last cycle. The value should be set to at least 1.0" );
+
+   DeclareOptionRef( fTrim=kFALSE, "Trim",
+                     "Trim the population to PopSize after assessing the fitness of each individual" );
+   DeclareOptionRef( fSeed=100, "Seed", "Set seed of random generator (0 gives random seeds)" );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +117,7 @@ Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
    //   gstore.SetMakeCopies(kTRUE);  // commented out, because it reduces speed
 
    // timing of GA
-   Timer timer( 100*(fCycles), GetName() ); 
+   Timer timer( 100*(fCycles), GetName() );
    if (fIPyMaxIter) *fIPyMaxIter = 100*(fCycles);
    timer.DrawProgressBar( 0 );
 
@@ -126,9 +128,9 @@ Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
      if (fExitFromTraining && *fExitFromTraining) break;
       GetFitterTarget().ProgressNotifier( "GA", "cycle" );
       // ---- perform series of fits to achieve best convergence
-         
+
       // "m_ga_spread" times the number of variables
-      GeneticAlgorithm ga( GetFitterTarget(), fPopSize, fRanges, fSeed ); 
+      GeneticAlgorithm ga( GetFitterTarget(), fPopSize, fRanges, fSeed );
       //      ga.SetMakeCopies(kTRUE);  // commented out, because it reduces speed
 
       if ( pars.size() == fRanges.size() ){
@@ -154,30 +156,30 @@ Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
 
          // monitor progrss
          if (ga.fConvCounter > n) n = Double_t(ga.fConvCounter);
-         progress = 100*((Double_t)cycle) + 100*(n/Double_t(fNsteps)); 
+         progress = 100*((Double_t)cycle) + 100*(n/Double_t(fNsteps));
 
          timer.DrawProgressBar( (Int_t)progress );
-          
+
          // Copy the best genes of the generation
          ga.GetGeneticPopulation().Sort();
          for ( Int_t i = 0; i<fSaveBestFromGeneration && i<fPopSize; i++ ) {
-            gstore.GetGeneticPopulation().GiveHint( ga.GetGeneticPopulation().GetGenes(i)->GetFactors(), 
+            gstore.GetGeneticPopulation().GiveHint( ga.GetGeneticPopulation().GetGenes(i)->GetFactors(),
                                                     ga.GetGeneticPopulation().GetGenes(i)->GetFitness() );
          }
-      } while (!ga.HasConverged( fNsteps, fConvCrit ));                
+      } while (!ga.HasConverged( fNsteps, fConvCrit ));
 
       timer.DrawProgressBar( 100*(cycle+1) );
-      
+
       ga.GetGeneticPopulation().Sort();
       for ( Int_t i = 0; i<fSaveBestFromGeneration && i<fPopSize; i++ ) {
-         gstore.GetGeneticPopulation().GiveHint( ga.GetGeneticPopulation().GetGenes(i)->GetFactors(), 
+         gstore.GetGeneticPopulation().GiveHint( ga.GetGeneticPopulation().GetGenes(i)->GetFactors(),
                                                  ga.GetGeneticPopulation().GetGenes(i)->GetFitness() );
       }
    }
 
-   // get elapsed time   
-   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
-         << "                            " << Endl;  
+   // get elapsed time
+   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()
+         << "                            " << Endl;
 
    Double_t fitness = gstore.CalculateFitness();
    gstore.GetGeneticPopulation().Sort();

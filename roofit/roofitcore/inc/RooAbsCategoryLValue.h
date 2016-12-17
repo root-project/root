@@ -16,7 +16,6 @@
 #ifndef ROO_ABS_CATEGORY_LVALUE
 #define ROO_ABS_CATEGORY_LVALUE
 
-#include "Riosfwd.h"
 #include "RooAbsCategory.h"
 #include "RooAbsLValue.h"
 

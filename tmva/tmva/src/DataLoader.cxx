@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Omar Zapata
 // Mentors: Lorenzo Moneta, Sergei Gleyzer
 //NOTE: Based on TMVA::Factory
@@ -26,6 +26,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+
+/*! \class TMVA::DataLoader
+\ingroup TMVA
+
+*/
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -73,11 +78,11 @@
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/Types.h"
 
-
 ClassImp(TMVA::DataLoader)
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::DataLoader::DataLoader( TString thedlName)
 : Configurable( ),
    fDataSetManager       ( NULL ), //DSMTEST
@@ -93,8 +98,8 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fLogger->SetSource("DataLoader");
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_______________________________________________________________________
 TMVA::DataLoader::~DataLoader( void )
 {
    // destructor
@@ -116,30 +121,33 @@ TMVA::DataLoader::~DataLoader( void )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::DataSetInfo& TMVA::DataLoader::AddDataSet( DataSetInfo &dsi )
 {
    return fDataSetManager->AddDataSetInfo(dsi); // DSMTEST
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::DataSetInfo& TMVA::DataLoader::AddDataSet( const TString& dsiName )
 {
    DataSetInfo* dsi = fDataSetManager->GetDataSetInfo(dsiName); // DSMTEST
 
    if (dsi!=0) return *dsi;
-   
+
    return fDataSetManager->AddDataSetInfo(*(new DataSetInfo(dsiName))); // DSMTEST
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::DataSetInfo& TMVA::DataLoader::GetDataSetInfo()
 {
    return DefaultDataSetInfo(); // DSMTEST
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Transforms the variables and return a new DataLoader with the transformed 
+/// Transforms the variables and return a new DataLoader with the transformed
 /// variables
 
 TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
@@ -182,13 +190,14 @@ TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
    return this;
 }
 
-// ________________________________________________
-// the next functions are to assign events directly 
+////////////////////////////////////////////////////////////////////////////////
+// the next functions are to assign events directly
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create the data assignment tree (for event-wise data assignment by user)
+
 TTree* TMVA::DataLoader::CreateEventAssignTrees( const TString& name )
 {
-   // create the data assignment tree (for event-wise data assignment by user)
    TTree * assignTree = new TTree( name, name );
    assignTree->SetDirectory(0);
    assignTree->Branch( "type",   &fATreeType,   "ATreeType/I" );
@@ -217,54 +226,61 @@ TTree* TMVA::DataLoader::CreateEventAssignTrees( const TString& name )
    return assignTree;
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddSignalTrainingEvent( const std::vector<Double_t>& event, Double_t weight ) 
+////////////////////////////////////////////////////////////////////////////////
+/// add signal training event
+
+void TMVA::DataLoader::AddSignalTrainingEvent( const std::vector<Double_t>& event, Double_t weight )
 {
-   // add signal training event
    AddEvent( "Signal", Types::kTraining, event, weight );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddSignalTestEvent( const std::vector<Double_t>& event, Double_t weight ) 
+////////////////////////////////////////////////////////////////////////////////
+/// add signal testing event
+
+void TMVA::DataLoader::AddSignalTestEvent( const std::vector<Double_t>& event, Double_t weight )
 {
-   // add signal testing event
    AddEvent( "Signal", Types::kTesting, event, weight );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddBackgroundTrainingEvent( const std::vector<Double_t>& event, Double_t weight ) 
+////////////////////////////////////////////////////////////////////////////////
+/// add signal training event
+
+void TMVA::DataLoader::AddBackgroundTrainingEvent( const std::vector<Double_t>& event, Double_t weight )
 {
-   // add signal training event
    AddEvent( "Background", Types::kTraining, event, weight );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddBackgroundTestEvent( const std::vector<Double_t>& event, Double_t weight ) 
+////////////////////////////////////////////////////////////////////////////////
+/// add signal training event
+
+void TMVA::DataLoader::AddBackgroundTestEvent( const std::vector<Double_t>& event, Double_t weight )
 {
-   // add signal training event
    AddEvent( "Background", Types::kTesting, event, weight );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddTrainingEvent( const TString& className, const std::vector<Double_t>& event, Double_t weight ) 
+////////////////////////////////////////////////////////////////////////////////
+/// add signal training event
+
+void TMVA::DataLoader::AddTrainingEvent( const TString& className, const std::vector<Double_t>& event, Double_t weight )
 {
-   // add signal training event
    AddEvent( className, Types::kTraining, event, weight );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddTestEvent( const TString& className, const std::vector<Double_t>& event, Double_t weight ) 
+////////////////////////////////////////////////////////////////////////////////
+/// add signal test event
+
+void TMVA::DataLoader::AddTestEvent( const TString& className, const std::vector<Double_t>& event, Double_t weight )
 {
-   // add signal test event
    AddEvent( className, Types::kTesting, event, weight );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add event
+/// vector event : the order of values is: variables + targets + spectators
+
 void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
-                                 const std::vector<Double_t>& event, Double_t weight ) 
+                                 const std::vector<Double_t>& event, Double_t weight )
 {
-   // add event
-   // vector event : the order of values is: variables + targets + spectators
    ClassInfo* theClass = DefaultDataSetInfo().AddClass(className); // returns class (creates it if necessary)
    UInt_t clIndex = theClass->GetNumber();
 
@@ -273,7 +289,7 @@ void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
    if( fAnalysisType == Types::kNoAnalysisType && DefaultDataSetInfo().GetNClasses() > 2 )
       fAnalysisType = Types::kMulticlass;
 
-   
+
    if (clIndex>=fTrainAssignTree.size()) {
       fTrainAssignTree.resize(clIndex+1, 0);
       fTestAssignTree.resize(clIndex+1, 0);
@@ -283,7 +299,7 @@ void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
       fTrainAssignTree[clIndex] = CreateEventAssignTrees( Form("TrainAssignTree_%s", className.Data()) );
       fTestAssignTree[clIndex]  = CreateEventAssignTrees( Form("TestAssignTree_%s",  className.Data()) );
    }
-   
+
    fATreeType   = clIndex;
    fATreeWeight = weight;
    for (UInt_t ivar=0; ivar<event.size(); ivar++) fATreeEvent[ivar] = event[ivar];
@@ -293,17 +309,19 @@ void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
 
 }
 
-//_______________________________________________________________________
-Bool_t TMVA::DataLoader::UserAssignEvents(UInt_t clIndex) 
+////////////////////////////////////////////////////////////////////////////////
+///
+
+Bool_t TMVA::DataLoader::UserAssignEvents(UInt_t clIndex)
 {
-   // 
    return fTrainAssignTree[clIndex]!=0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assign event-wise local trees to data set
+
 void TMVA::DataLoader::SetInputTreesFromEventAssignTrees()
 {
-   // assign event-wise local trees to data set
    UInt_t size = fTrainAssignTree.size();
    for(UInt_t i=0; i<size; i++) {
       if(!UserAssignEvents(i)) continue;
@@ -314,25 +332,27 @@ void TMVA::DataLoader::SetInputTreesFromEventAssignTrees()
    }
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight, 
+////////////////////////////////////////////////////////////////////////////////
+/// number of signal events (used to compute significance)
+
+void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight,
                                 const TCut& cut, const TString& treetype )
 {
-   // number of signal events (used to compute significance)
    Types::ETreeType tt = Types::kMaxTreeType;
    TString tmpTreeType = treetype; tmpTreeType.ToLower();
    if      (tmpTreeType.Contains( "train" ) && tmpTreeType.Contains( "test" )) tt = Types::kMaxTreeType;
    else if (tmpTreeType.Contains( "train" ))                                   tt = Types::kTraining;
    else if (tmpTreeType.Contains( "test" ))                                    tt = Types::kTesting;
    else {
-      Log() << kFATAL << "<AddTree> cannot interpret tree type: \"" << treetype 
+      Log() << kFATAL << "<AddTree> cannot interpret tree type: \"" << treetype
             << "\" should be \"Training\" or \"Test\" or \"Training and Testing\"" << Endl;
    }
    AddTree( tree, className, weight, cut, tt );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight, 
+////////////////////////////////////////////////////////////////////////////////
+
+void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t weight,
                                 const TCut& cut, Types::ETreeType tt )
 {
    if(!tree)
@@ -344,243 +364,268 @@ void TMVA::DataLoader::AddTree( TTree* tree, const TString& className, Double_t 
    if( fAnalysisType == Types::kNoAnalysisType && DefaultDataSetInfo().GetNClasses() > 2 )
       fAnalysisType = Types::kMulticlass;
 
-   Log() << kINFO<< "Add Tree " << tree->GetName() << " of type " << className 
+   Log() << kINFO<< "Add Tree " << tree->GetName() << " of type " << className
          << " with " << tree->GetEntries() << " events" << Endl;
    DataInput().AddTree( tree, className, weight, cut, tt );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// number of signal events (used to compute significance)
+
 void TMVA::DataLoader::AddSignalTree( TTree* signal, Double_t weight, Types::ETreeType treetype )
 {
-   // number of signal events (used to compute significance)
    AddTree( signal, "Signal", weight, TCut(""), treetype );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add signal tree from text file
+
 void TMVA::DataLoader::AddSignalTree( TString datFileS, Double_t weight, Types::ETreeType treetype )
 {
-   // add signal tree from text file
-
    // create trees from these ascii files
    TTree* signalTree = new TTree( "TreeS", "Tree (S)" );
    signalTree->ReadFile( datFileS );
- 
+
    Log() << kINFO << "Create TTree objects from ASCII input files ... \n- Signal file    : \""
          << datFileS << Endl;
-  
+
    // number of signal events (used to compute significance)
    AddTree( signalTree, "Signal", weight, TCut(""), treetype );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataLoader::AddSignalTree( TTree* signal, Double_t weight, const TString& treetype )
 {
    AddTree( signal, "Signal", weight, TCut(""), treetype );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// number of signal events (used to compute significance)
+
 void TMVA::DataLoader::AddBackgroundTree( TTree* signal, Double_t weight, Types::ETreeType treetype )
 {
-   // number of signal events (used to compute significance)
    AddTree( signal, "Background", weight, TCut(""), treetype );
 }
-//_______________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// add background tree from text file
+
 void TMVA::DataLoader::AddBackgroundTree( TString datFileB, Double_t weight, Types::ETreeType treetype )
 {
-   // add background tree from text file
-
    // create trees from these ascii files
    TTree* bkgTree = new TTree( "TreeB", "Tree (B)" );
    bkgTree->ReadFile( datFileB );
- 
+
    Log() << kINFO << "Create TTree objects from ASCII input files ... \n- Background file    : \""
          << datFileB << Endl;
-  
+
    // number of signal events (used to compute significance)
    AddTree( bkgTree, "Background", weight, TCut(""), treetype );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataLoader::AddBackgroundTree( TTree* signal, Double_t weight, const TString& treetype )
 {
    AddTree( signal, "Background", weight, TCut(""), treetype );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataLoader::SetSignalTree( TTree* tree, Double_t weight )
 {
    AddTree( tree, "Signal", weight );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataLoader::SetBackgroundTree( TTree* tree, Double_t weight )
 {
    AddTree( tree, "Background", weight );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set background tree
+
 void TMVA::DataLoader::SetTree( TTree* tree, const TString& className, Double_t weight )
 {
-   // set background tree
    AddTree( tree, className, weight, TCut(""), Types::kMaxTreeType );
 }
 
-//_______________________________________________________________________
-void  TMVA::DataLoader::SetInputTrees( TTree* signal, TTree* background, 
+////////////////////////////////////////////////////////////////////////////////
+/// define the input trees for signal and background; no cuts are applied
+
+void  TMVA::DataLoader::SetInputTrees( TTree* signal, TTree* background,
                                        Double_t signalWeight, Double_t backgroundWeight )
 {
-   // define the input trees for signal and background; no cuts are applied
    AddTree( signal,     "Signal",     signalWeight,     TCut(""), Types::kMaxTreeType );
    AddTree( background, "Background", backgroundWeight, TCut(""), Types::kMaxTreeType );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::SetInputTrees( const TString& datFileS, const TString& datFileB, 
+////////////////////////////////////////////////////////////////////////////////
+
+void TMVA::DataLoader::SetInputTrees( const TString& datFileS, const TString& datFileB,
                                       Double_t signalWeight, Double_t backgroundWeight )
 {
    DataInput().AddTree( datFileS, "Signal", signalWeight );
    DataInput().AddTree( datFileB, "Background", backgroundWeight );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the input trees for signal and background from single input tree,
+/// containing both signal and background events distinguished by the type
+/// identifiers: SigCut and BgCut
+
 void TMVA::DataLoader::SetInputTrees( TTree* inputTree, const TCut& SigCut, const TCut& BgCut )
 {
-   // define the input trees for signal and background from single input tree,
-   // containing both signal and background events distinguished by the type 
-   // identifiers: SigCut and BgCut
    AddTree( inputTree, "Signal",     1.0, SigCut, Types::kMaxTreeType );
    AddTree( inputTree, "Background", 1.0, BgCut , Types::kMaxTreeType );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddVariable( const TString& expression, const TString& title, const TString& unit, 
+////////////////////////////////////////////////////////////////////////////////
+/// user inserts discriminating variable in data set info
+
+void TMVA::DataLoader::AddVariable( const TString& expression, const TString& title, const TString& unit,
                                     char type, Double_t min, Double_t max )
 {
-   // user inserts discriminating variable in data set info
-   DefaultDataSetInfo().AddVariable( expression, title, unit, min, max, type ); 
+   DefaultDataSetInfo().AddVariable( expression, title, unit, min, max, type );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// user inserts discriminating variable in data set info
+
 void TMVA::DataLoader::AddVariable( const TString& expression, char type,
                                     Double_t min, Double_t max )
 {
-   // user inserts discriminating variable in data set info
-   DefaultDataSetInfo().AddVariable( expression, "", "", min, max, type ); 
+   DefaultDataSetInfo().AddVariable( expression, "", "", min, max, type );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddTarget( const TString& expression, const TString& title, const TString& unit, 
+////////////////////////////////////////////////////////////////////////////////
+/// user inserts target in data set info
+
+void TMVA::DataLoader::AddTarget( const TString& expression, const TString& title, const TString& unit,
                                   Double_t min, Double_t max )
 {
-   // user inserts target in data set info
-
    if( fAnalysisType == Types::kNoAnalysisType )
       fAnalysisType = Types::kRegression;
 
-   DefaultDataSetInfo().AddTarget( expression, title, unit, min, max ); 
+   DefaultDataSetInfo().AddTarget( expression, title, unit, min, max );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddSpectator( const TString& expression, const TString& title, const TString& unit, 
+////////////////////////////////////////////////////////////////////////////////
+/// user inserts target in data set info
+
+void TMVA::DataLoader::AddSpectator( const TString& expression, const TString& title, const TString& unit,
                                      Double_t min, Double_t max )
 {
-   // user inserts target in data set info
-   DefaultDataSetInfo().AddSpectator( expression, title, unit, min, max ); 
+   DefaultDataSetInfo().AddSpectator( expression, title, unit, min, max );
 }
 
-//_______________________________________________________________________
-TMVA::DataSetInfo& TMVA::DataLoader::DefaultDataSetInfo() 
-{ 
-   // default creation
+////////////////////////////////////////////////////////////////////////////////
+/// default creation
+
+TMVA::DataSetInfo& TMVA::DataLoader::DefaultDataSetInfo()
+{
    return AddDataSet( fName );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::SetInputVariables( std::vector<TString>* theVariables ) 
-{ 
-   // fill input variables in data set
+////////////////////////////////////////////////////////////////////////////////
+/// fill input variables in data set
+
+void TMVA::DataLoader::SetInputVariables( std::vector<TString>* theVariables )
+{
    for (std::vector<TString>::iterator it=theVariables->begin();
         it!=theVariables->end(); it++) AddVariable(*it);
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::SetSignalWeightExpression( const TString& variable)  
-{ 
-   DefaultDataSetInfo().SetWeightExpression(variable, "Signal"); 
+////////////////////////////////////////////////////////////////////////////////
+
+void TMVA::DataLoader::SetSignalWeightExpression( const TString& variable)
+{
+   DefaultDataSetInfo().SetWeightExpression(variable, "Signal");
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::SetBackgroundWeightExpression( const TString& variable) 
+////////////////////////////////////////////////////////////////////////////////
+
+void TMVA::DataLoader::SetBackgroundWeightExpression( const TString& variable)
 {
    DefaultDataSetInfo().SetWeightExpression(variable, "Background");
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::SetWeightExpression( const TString& variable, const TString& className )  
+////////////////////////////////////////////////////////////////////////////////
+
+void TMVA::DataLoader::SetWeightExpression( const TString& variable, const TString& className )
 {
    //Log() << kWarning << DefaultDataSetInfo().GetNClasses() /*fClasses.size()*/ << Endl;
    if (className=="") {
       SetSignalWeightExpression(variable);
       SetBackgroundWeightExpression(variable);
-   } 
+   }
    else  DefaultDataSetInfo().SetWeightExpression( variable, className );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataLoader::SetCut( const TString& cut, const TString& className ) {
    SetCut( TCut(cut), className );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::SetCut( const TCut& cut, const TString& className ) 
+////////////////////////////////////////////////////////////////////////////////
+
+void TMVA::DataLoader::SetCut( const TCut& cut, const TString& className )
 {
    DefaultDataSetInfo().SetCut( cut, className );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddCut( const TString& cut, const TString& className ) 
+////////////////////////////////////////////////////////////////////////////////
+
+void TMVA::DataLoader::AddCut( const TString& cut, const TString& className )
 {
    AddCut( TCut(cut), className );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::AddCut( const TCut& cut, const TString& className ) 
+////////////////////////////////////////////////////////////////////////////////
+void TMVA::DataLoader::AddCut( const TCut& cut, const TString& className )
 {
    DefaultDataSetInfo().AddCut( cut, className );
 }
 
-//_______________________________________________________________________
-void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut, 
+////////////////////////////////////////////////////////////////////////////////
+/// prepare the training and test trees
+
+void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut,
                                                    Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest,
                                                    const TString& otherOpt )
 {
-   // prepare the training and test trees
    SetInputTreesFromEventAssignTrees();
 
    AddCut( cut  );
 
-   DefaultDataSetInfo().SetSplitOptions( Form("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:%s", 
+   DefaultDataSetInfo().SetSplitOptions( Form("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:%s",
                                               NsigTrain, NbkgTrain, NsigTest, NbkgTest, otherOpt.Data()) );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prepare the training and test trees
+/// kept for backward compatibility
+
 void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut, Int_t Ntrain, Int_t Ntest )
 {
-   // prepare the training and test trees 
-   // kept for backward compatibility
    SetInputTreesFromEventAssignTrees();
 
    AddCut( cut  );
 
-   DefaultDataSetInfo().SetSplitOptions( Form("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:SplitMode=Random:EqualTrainSample:!V", 
+   DefaultDataSetInfo().SetSplitOptions( Form("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:SplitMode=Random:EqualTrainSample:!V",
                                               Ntrain, Ntrain, Ntest, Ntest) );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prepare the training and test trees
+/// -> same cuts for signal and background
+
 void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut, const TString& opt )
 {
-   // prepare the training and test trees
-   // -> same cuts for signal and background
    SetInputTreesFromEventAssignTrees();
 
    DefaultDataSetInfo().PrintClasses();
@@ -588,11 +633,11 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut, const TStrin
    DefaultDataSetInfo().SetSplitOptions( opt );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prepare the training and test trees
+
 void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, const TString& splitOpt )
 {
-   // prepare the training and test trees
-
    // if event-wise data assignment, add local trees to dataset first
    SetInputTreesFromEventAssignTrees();
 
@@ -603,22 +648,21 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
    DefaultDataSetInfo().SetSplitOptions( splitOpt );
 }
 
-//______________________________________________________________________
-// Function required to split the training and testing datasets into a
-// number of folds. Required by the CrossValidation and HyperParameterOptimisation
-// classes. The option to split the training dataset into a training set and
-// a validation set is implemented but not currently used.
+////////////////////////////////////////////////////////////////////////////////
+/// Function required to split the training and testing datasets into a
+/// number of folds. Required by the CrossValidation and HyperParameterOptimisation
+/// classes. The option to split the training dataset into a training set and
+/// a validation set is implemented but not currently used.
+
 void TMVA::DataLoader::MakeKFoldDataSet(UInt_t numberFolds, bool validationSet){
-
-
    // No need to do it again if the sets have already been split.
    if(fMakeFoldDataSet){
       Log() << kInfo << "Splitting in k-folds has been already done" << Endl;
       return;
    }
 
-   fMakeFoldDataSet = kTRUE; 
-  
+   fMakeFoldDataSet = kTRUE;
+
    // Get the original event vectors for testing and training from the dataset.
    const std::vector<Event*> TrainingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTraining);
    const std::vector<Event*> TestingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTesting);
@@ -632,7 +676,7 @@ void TMVA::DataLoader::MakeKFoldDataSet(UInt_t numberFolds, bool validationSet){
    for(UInt_t i=0; i<TrainingData.size(); ++i){
       if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TrainSigData.push_back(TrainingData.at(i)); }
       else if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TrainBkgData.push_back(TrainingData.at(i)); }
-      else{ 
+      else{
          Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
       }
    }
@@ -664,8 +708,9 @@ void TMVA::DataLoader::MakeKFoldDataSet(UInt_t numberFolds, bool validationSet){
    fTestBkgEvents = SplitSets(TestBkgData,0,numberFolds);
 }
 
-//______________________________________________________________________
-// Function for assigning the correct folds to the testing or training set.
+////////////////////////////////////////////////////////////////////////////////
+/// Function for assigning the correct folds to the testing or training set.
+
 void TMVA::DataLoader::PrepareFoldDataSet(UInt_t foldNumber, Types::ETreeType tt){
 
    UInt_t numFolds = fTrainSigEvents.size();
@@ -754,8 +799,9 @@ void TMVA::DataLoader::PrepareFoldDataSet(UInt_t foldNumber, Types::ETreeType tt
 
 }
 
-//______________________________________________________________________
-// Splits the input vector in to equally sized randomly sampled folds.
+////////////////////////////////////////////////////////////////////////////////
+/// Splits the input vector in to equally sized randomly sampled folds.
+
 std::vector<std::vector<TMVA::Event*>> TMVA::DataLoader::SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, int numFolds){
 
    ULong64_t nEntries = oldSet.size();
@@ -789,8 +835,9 @@ std::vector<std::vector<TMVA::Event*>> TMVA::DataLoader::SplitSets(std::vector<T
 
 }
 
-//_______________________________________________________________________
-//Copy method use in VI and CV
+////////////////////////////////////////////////////////////////////////////////
+/// Copy method use in VI and CV
+
 TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
 {
    TMVA::DataLoader* des=new TMVA::DataLoader(name);
@@ -798,10 +845,11 @@ TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
    return des;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Loading Dataset from DataInputHandler for subseed
+
 void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
 {
-   //Loading Dataset from DataInputHandler for subseed
    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
    {
       des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
@@ -813,13 +861,12 @@ void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the correlation matrix of datasets
+
 TH2* TMVA::DataLoader::GetCorrelationMatrix(const TString& className)
 {
-   //returns the correlation matrix of datasets
    const TMatrixD * m = DefaultDataSetInfo().CorrelationMatrix(className);
    return DefaultDataSetInfo().CreateCorrelationMatrixHist(m,
                                                            "CorrelationMatrix"+className, "Correlation Matrix ("+className+")");
 }
-
-

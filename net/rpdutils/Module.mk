@@ -85,7 +85,17 @@ AUTHLIBS      += -lz
 endif
 
 # used in the main Makefile
+RPDH_REL      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH) $(RPDCONNH) $(RPDPRIVH))
+ALLHDRS       += $(RPDH_REL)
 ALLLIBS       += $(SRVAUTHLIB)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RPDH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SRVAUTHLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES  += $(RPDUTILDEP) $(RPDCONNDEP) $(RPDPRIVDEP)

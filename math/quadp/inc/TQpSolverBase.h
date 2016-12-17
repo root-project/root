@@ -47,6 +47,7 @@
 #include "TError.h"
 #endif
 
+#include "TObject.h"
 #ifndef ROOT_TQpVar
 #include "TQpVar.h"
 #endif

@@ -17,7 +17,6 @@
 #define ROO_SET_PROXY
 
 #include "TObject.h"
-#include "Riosfwd.h"
 #include "RooAbsProxy.h"
 #include "RooAbsArg.h"
 #include "RooArgSet.h"

@@ -26,15 +26,14 @@
 #ifndef ROOT_DllImport
 #include "DllImport.h"
 #endif
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
 
-#include <stdio.h>
-#include <string.h>
 #include "snprintf.h"   // part of stdio.h on systems that have it
 #include "strlcpy.h"    // part of string.h on systems that have it
+
 #include <atomic>
+#include <stdio.h>
+#include <string.h>
+#include <typeinfo>
 
 
 //---- forward declared class types --------------------------------------------
@@ -74,46 +73,6 @@ class TVirtualCollectionProxy;
 typedef void    (*VoidFuncPtr_t)();  //pointer to void function
 typedef TClass* (*DictFuncPtr_t)();  //pointer to dictionary function
 // NOTE: the previous name must be changed.
-
-
-//---- constants ---------------------------------------------------------------
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-#ifndef R__NULLPTR
-#ifndef nullptr
-#define nullptr 0
-#endif
-#endif
-
-const Bool_t kTRUE  = true;
-const Bool_t kFALSE = false;
-
-const Int_t     kMaxUChar    = 256;
-const Int_t     kMaxChar     = kMaxUChar >> 1;
-const Int_t     kMinChar     = -kMaxChar - 1;
-
-const Int_t     kMaxUShort   = 65534;
-const Int_t     kMaxShort    = kMaxUShort >> 1;
-const Int_t     kMinShort    = -kMaxShort - 1;
-
-const UInt_t    kMaxUInt     = UInt_t(~0);
-const Int_t     kMaxInt      = Int_t(kMaxUInt >> 1);
-const Int_t     kMinInt      = -kMaxInt - 1;
-
-const ULong_t   kMaxULong    = ULong_t(~0);
-const Long_t    kMaxLong     = Long_t(kMaxULong >> 1);
-const Long_t    kMinLong     = -kMaxLong - 1;
-
-const ULong64_t kMaxULong64  = ULong64_t(~0LL);
-const Long64_t  kMaxLong64   = Long64_t(kMaxULong64 >> 1);
-const Long64_t  kMinLong64   = -kMaxLong64 - 1;
-
-const size_t    kBitsPerByte = 8;
-const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
-
 
 //--- bit manipulation ---------------------------------------------------------
 

@@ -23,22 +23,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include <string.h>
-#include <stdio.h>
-#endif
-
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-
 #ifndef ROOT_TMathBase
 #include "TMathBase.h"
 #endif
 
+#include "RStringView.h"
+
+#include <iosfwd>
 #include <stdarg.h>
+#include <stdio.h>
 #include <string>
-#include <RStringView.h>
 
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }

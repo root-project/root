@@ -323,37 +323,40 @@ long TClingDataMemberInfo::Offset()
 
       if (long addr = reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD))))
          return addr;
-      if (const APValue* val = VD->evaluateValue()) {
-         if (VD->getType()->isIntegralType(C)) {
-            return reinterpret_cast<long>(val->getInt().getRawData());
-         } else {
-            // The VD stores the init value; its lifetime should the lifetime of
-            // this offset.
-            switch (val->getKind()) {
-            case APValue::Int: {
-               if (val->getInt().isSigned())
-                  fConstInitVal.fLong = (long)val->getInt().getSExtValue();
-               else
-                  fConstInitVal.fLong = (long)val->getInt().getZExtValue();
-               return (long) &fConstInitVal.fLong;
-            }
-            case APValue::Float:
-               if (&val->getFloat().getSemantics()
-                   == &llvm::APFloat::IEEEsingle) {
-                  fConstInitVal.fFloat = val->getFloat().convertToFloat();
-                  return (long)&fConstInitVal.fFloat;
-               } else if (&val->getFloat().getSemantics()
-                          == &llvm::APFloat::IEEEdouble) {
-                  fConstInitVal.fDouble = val->getFloat().convertToDouble();
-                  return (long)&fConstInitVal.fDouble;
+      auto evalStmt = VD->ensureEvaluatedStmt();
+      if (evalStmt && evalStmt->Value) {
+         if (const APValue* val = VD->evaluateValue()) {
+            if (VD->getType()->isIntegralType(C)) {
+               return reinterpret_cast<long>(val->getInt().getRawData());
+            } else {
+               // The VD stores the init value; its lifetime should the lifetime of
+               // this offset.
+               switch (val->getKind()) {
+               case APValue::Int: {
+                  if (val->getInt().isSigned())
+                     fConstInitVal.fLong = (long)val->getInt().getSExtValue();
+                  else
+                     fConstInitVal.fLong = (long)val->getInt().getZExtValue();
+                  return (long) &fConstInitVal.fLong;
                }
-               // else fall-through
-            default:
-               ;// fall-through
-            };
-            // fall-through
-         }
-      }
+               case APValue::Float:
+                  if (&val->getFloat().getSemantics()
+                      == &llvm::APFloat::IEEEsingle) {
+                     fConstInitVal.fFloat = val->getFloat().convertToFloat();
+                     return (long)&fConstInitVal.fFloat;
+                  } else if (&val->getFloat().getSemantics()
+                             == &llvm::APFloat::IEEEdouble) {
+                     fConstInitVal.fDouble = val->getFloat().convertToDouble();
+                     return (long)&fConstInitVal.fDouble;
+                  }
+                  // else fall-through
+               default:
+                  ;// fall-through
+               };
+               // fall-through
+            } // not integral type
+         } // have an APValue
+      } // have an initializing value
    }
    // FIXME: We have to explicitly check for not enum constant because the
    // implementation of getAddressOfGlobal relies on mangling the name and in

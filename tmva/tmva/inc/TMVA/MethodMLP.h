@@ -107,7 +107,7 @@ namespace TMVA {
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
-      void Train(); 
+      void Train();
       // for GA
       Double_t ComputeEstimator ( std::vector<Double_t>& parameters );
       Double_t EstimatorFunction( std::vector<Double_t>& parameters );
@@ -174,7 +174,7 @@ namespace TMVA {
 
       // genetic algorithm functions
       void GeneticMinimize();
-      
+
 
 #ifdef MethodMLP_UseMinuit__
       // minuit functions -- commented out because they rely on a static pointer
@@ -208,7 +208,7 @@ namespace TMVA {
       Double_t        fTau;            // line search variable
       Int_t           fResetStep;      // reset time (how often we clear hessian matrix)
 
-      // backpropagation variable
+      // back propagation variable
       Double_t        fLearnRate;      // learning rate for synapse weight adjustments
       Double_t        fDecayRate;      // decay rate for above learning rate
       EBPTrainingMode fBPMode;         // backprop learning mode (sequential or batch)
@@ -216,7 +216,7 @@ namespace TMVA {
       Int_t           fBatchSize;      // batch size, only matters if in batch learning mode
       Int_t           fTestRate;       // test for overtraining performed at each #th epochs
       Bool_t          fEpochMon;       // create and fill epoch-wise monitoring histograms (makes outputfile big!)
-      
+
       // genetic algorithm variables
       Int_t           fGA_nsteps;      // GA settings: number of steps
       Int_t           fGA_preCalc;     // GA settings: number of pre-calc steps

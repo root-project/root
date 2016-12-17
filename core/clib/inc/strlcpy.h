@@ -12,6 +12,7 @@
 #ifndef ROOT_RConfig
 #include "RConfig.h"
 #endif
+#include "Rtypes.h"
 
 #ifndef HAS_STRLCPY
 

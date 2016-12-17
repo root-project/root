@@ -17,7 +17,6 @@
 #define ROO_AIC_REGISTRY
 
 #include <vector>
-#include "Riosfwd.h"
 #include <assert.h>
 #include "Rtypes.h"
 class RooArgSet ;

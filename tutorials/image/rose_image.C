@@ -20,7 +20,7 @@ TCanvas *c1;
 
 void rose_image()
 {
-   TString dir = TROOT::GetTutorialDir();
+   TString dir = TROOT::GetTutorialsDir();
 
    TImage *img = TImage::Open(dir + "/image/rose512.jpg");
 

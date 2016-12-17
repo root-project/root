@@ -56,7 +56,18 @@ XPDINCEXTRA  += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA  := $(XROOTDDIRL)/libXrdClient.lib
 
 # used in the main Makefile
+PROOFDEXEH   := $(MODDIRI)/proofdp.h
+PROOFDEXEH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
+ALLHDRS      += $(PROOFDEXEH_REL)
 ALLLIBS      += $(XPDLIB)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PROOFDEXEH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Proof_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(XPDLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(XPDDEP)

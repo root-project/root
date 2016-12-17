@@ -8,14 +8,14 @@
  * Description:                                                                   *
  *      Local LDA method used by MethodKNN to compute MVA value.                  *
  *      This is experimental code under development. This class computes          *
- *      parameters of signal and background PDFs using Gaussian aproximation.     *
+ *      parameters of signal and background PDFs using Gaussian approximation.    *
  *                                                                                *
  * Author:                                                                        *
  *      John Alison John.Alison@cern.ch - University of Pennsylvania, USA         *
  *                                                                                *
  * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      University of Pennsylvania, USA                                           *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -33,10 +33,10 @@
 
 // ROOT
 #ifndef ROOT_Rtypes
-#include "Rtypes.h"       
+#include "Rtypes.h"
 #endif
 #ifndef ROOT_TMatrixFfwd
-#include "TMatrixFfwd.h"       
+#include "TMatrixFfwd.h"
 #endif
 
 typedef std::vector<std::vector<Float_t> >  LDAEvents;
@@ -48,10 +48,10 @@ namespace TMVA {
    class LDA {
 
    public:
-      
+
       LDA(Float_t tolerence = 1.0e-5, Bool_t debug = false);
       ~LDA();
-  
+
       // Signal probability with Gaussian approximation
       Float_t GetProb(const std::vector<Float_t>& x, Int_t k);
 
@@ -60,7 +60,7 @@ namespace TMVA {
 
       // Create LDA matrix using local events found by knn method
       void Initialize(const LDAEvents& inputSignal, const LDAEvents& inputBackground);
-    
+
    private:
 
       // Probability value using Gaussian approximation

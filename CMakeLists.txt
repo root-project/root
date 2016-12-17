@@ -198,7 +198,13 @@ if(cxxmodules)
                     DEPENDS build/unix/module.modulemap
                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
                     )
-  add_dependencies(copymodulemap move_headers)
+  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+  string(REPLACE ";" "" __modulemap_extra_content "module ROOT {\\n ${__modulemap_extra_content} \\n }")
+  add_custom_command(TARGET copymodulemap POST_BUILD
+                     COMMAND echo ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
+                     VERBATIM
+                    )
+  add_dependencies(move_headers copymodulemap)
 endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---

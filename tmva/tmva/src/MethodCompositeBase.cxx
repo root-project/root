@@ -28,13 +28,16 @@
  * (http://tmva.sourceforge.net/LICENSE)                                     *
  *****************************************************************************/
 
-//_______________________________________________________________________
-//
-// This class is virtual class meant to combine more than one classifier//
-// together. The training of the classifiers is done by classes that are//
-// derived from this one, while the saving and loading of weights file  //
-// and the evaluation is done here.                                     //
-//_______________________________________________________________________
+/*! \class TMVA::MethodCompositeBase
+\ingroup TMVA
+
+Virtual base class for combining several TMVA method.
+
+This class is virtual class meant to combine more than one classifier
+together. The training of the classifiers is done by classes that are
+derived from this one, while the saving and loading of weights file
+and the evaluation is done here.
+*/
 
 #include "TMVA/MethodCompositeBase.h"
 
@@ -80,7 +83,7 @@ TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
                                                 DataSetInfo& dsi,
                                                 const TString& weightFile)
    : TMVA::MethodBase( methodType, dsi, weightFile),
-     fCurrentMethodIdx(0), fCurrentMethod(0)     
+     fCurrentMethodIdx(0), fCurrentMethod(0)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +203,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
          Log() << kFATAL << "Could not read method from XML" << Endl;
 
       void* methXML = gTools().GetChild(ch);
-      
+
       TString _fFileDir= meth->DataInfo().GetName();
       _fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
       meth->SetWeightFileDir(_fFileDir);

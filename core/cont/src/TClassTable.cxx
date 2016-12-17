@@ -17,15 +17,8 @@ ctor of a special init class when a global of this init class is
 initialized when the program starts (see the ClassImp macro).
 */
 
-#include "RConfig.h"
-#include <stdlib.h>
-#include <string>
-#include <map>
-#include <typeinfo>
-#include "Riostream.h"
-#include <memory>
-
 #include "TClassTable.h"
+
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TProtoClass.h"
@@ -38,6 +31,14 @@ initialized when the program starts (see the ClassImp macro).
 #include "TMap.h"
 
 #include "TInterpreter.h"
+
+#include <map>
+#include <memory>
+#include "Riostream.h"
+#include <typeinfo>
+#include <stdlib.h>
+#include <string>
+
 using namespace ROOT;
 
 TClassTable *gClassTable;

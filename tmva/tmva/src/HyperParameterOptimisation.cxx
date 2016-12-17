@@ -18,6 +18,16 @@
 #include <iostream>
 #include <vector>
 
+/*! \class TMVA::HyperParameterOptimisationResult
+\ingroup TMVA
+
+*/
+
+/*! \class TMVA::HyperParameterOptimisation
+\ingroup TMVA
+
+*/
+
 TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult():fROCCurves(new TMultiGraph())
 {
 }

@@ -29,7 +29,12 @@
 
 // temp
 #include <iostream>
-typedef PyROOT::TParameter TParameter;
+// FIXME: Should refer to PyROOT::TParameter in the code.
+#ifdef R__CXXMODULES
+  #define TParameter PyROOT::TParameter
+#else
+  typedef PyROOT::TParameter TParameter;
+#endif
 // --temp
 
 

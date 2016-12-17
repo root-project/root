@@ -12,7 +12,10 @@
 #ifndef ROOT_TEveGeoPolyShape
 #define ROOT_TEveGeoPolyShape
 
+#include "Rtypes.h"
 #include "TGeoBBox.h"
+
+#include <vector>
 
 class TBuffer3D;
 class TGLFaceSet;

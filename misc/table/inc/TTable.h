@@ -33,10 +33,6 @@
 # include "TCut.h"
 #endif
 
-# ifndef ROOT_Riosfwd
-#  include "Riosfwd.h"
-# endif
-
 #ifndef __CINT__
 #  include <string.h>
 #  include <assert.h>

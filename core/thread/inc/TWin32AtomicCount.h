@@ -9,22 +9,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TAtomicCountWin32
-#define ROOT_TAtomicCountWin32
+#ifndef ROOT_TWin32AtomicCount
+#define ROOT_TWin32AtomicCount
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAtomicCountWin32                                                    //
+// TWin32AtomicCount                                                    //
 //                                                                      //
 // Class providing atomic operations on a long. Setting, getting,       //
 // incrementing and decrementing are atomic, thread safe, operations.   //
 //                                                                      //
 // This implementation uses the Win32 InterLocked API for locking.      //
 //                                                                      //
-// ATTENTION: Don't use this file directly, it is included by           //
-//            TAtomicCount.h.                                           //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifndef ROOT_TAtomicCount
+#error "Do not use TWin32AtomicCount.h directly. #include \"TAtomicCount.h\" instead."
+#endif // ROOT_TAtomicCount
 
 # include "Windows4Root.h"
 

@@ -4976,6 +4976,46 @@ bool ROOT::TMetaUtils::BeginsWith(const std::string &theString, const std::strin
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool ROOT::TMetaUtils::IsLinkdefFile(const char *filename)
+{
+   // Note, should change this into take llvm::StringRef.
+
+   if ((strstr(filename, "LinkDef") || strstr(filename, "Linkdef") ||
+         strstr(filename, "linkdef")) && strstr(filename, ".h")) {
+      return true;
+   }
+   size_t len = strlen(filename);
+   size_t linkdeflen = 9; /* strlen("linkdef.h") */
+   if (len >= 9) {
+      if (0 == strncasecmp(filename + (len - linkdeflen), "linkdef", linkdeflen - 2)
+            && 0 == strcmp(filename + (len - 2), ".h")
+         ) {
+         return true;
+      } else {
+         return false;
+      }
+   } else {
+      return false;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool ROOT::TMetaUtils::IsHeaderName(const std::string &filename)
+{
+   return llvm::sys::path::extension(filename) == ".h" ||
+          llvm::sys::path::extension(filename) == ".hh" ||
+          llvm::sys::path::extension(filename) == ".hpp" ||
+          llvm::sys::path::extension(filename) == ".H" ||
+          llvm::sys::path::extension(filename) == ".h++" ||
+          llvm::sys::path::extension(filename) == "hxx" ||
+          llvm::sys::path::extension(filename) == "Hxx" ||
+          llvm::sys::path::extension(filename) == "HXX";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls, cling::Interpreter::IgnoreFilesFunc_t ignoreFiles, const cling::Interpreter &interp)

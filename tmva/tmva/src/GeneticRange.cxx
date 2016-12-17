@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -24,10 +24,12 @@
  * File and Version Information:                                                  *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Range definition for genetic algorithm                               
-//_______________________________________________________________________
+/*! \class TMVA::GeneticRange
+\ingroup TMVA
+
+Range definition for genetic algorithm.
+
+*/
 
 #include "TRandom3.h"
 
@@ -39,12 +41,11 @@ ClassImp(TMVA::GeneticRange)
 ////////////////////////////////////////////////////////////////////////////////
 /// defines the "f" (from) and "t" (to) of the coefficient
 /// and takes a randomgenerator
-///
 
 TMVA::GeneticRange::GeneticRange( TRandom3*rnd, Interval *interval )
 {
    fInterval = interval;
-   
+
    fFrom = fInterval->GetMin();
    fTo   = fInterval->GetMax();
    fNbins= fInterval->GetNbins();
@@ -55,7 +56,6 @@ TMVA::GeneticRange::GeneticRange( TRandom3*rnd, Interval *interval )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// creates a new random value for the coefficient; returns a discrete value
-///
 
 Double_t TMVA::GeneticRange::RandomDiscrete()
 {
@@ -66,13 +66,12 @@ Double_t TMVA::GeneticRange::RandomDiscrete()
 ////////////////////////////////////////////////////////////////////////////////
 /// creates a new random value for the coefficient
 /// Parameters:
-///        Bool_t near     : takes a random value near the current value
-///        double value  : this is the current value
-///        double spread : the sigma of the gaussian which is taken to calculate the new value
-///        Bool_t mirror   : if the new value would be outside of the range, mirror = false
+///     -  Bool_t near   : takes a random value near the current value
+///     -  double value  : this is the current value
+///     -  double spread : the sigma of the gaussian which is taken to calculate the new value
+///     -  Bool_t mirror : if the new value would be outside of the range, mirror = false
 ///                        maps the value between the constraints by periodic boundary conditions.
 ///                        With mirror = true, the value gets "reflected" on the boundaries.
-///
 
 Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t spread, Bool_t mirror )
 {
@@ -93,7 +92,6 @@ Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t sprea
 
 ////////////////////////////////////////////////////////////////////////////////
 /// remapping the value to the allowed space
-///
 
 Double_t TMVA::GeneticRange::ReMap( Double_t val )
 {
@@ -104,8 +102,7 @@ Double_t TMVA::GeneticRange::ReMap( Double_t val )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// remapping the value to the allowed space by reflecting on the 
-/// boundaries
+/// remapping the value to the allowed space by reflecting on the boundaries
 
 Double_t TMVA::GeneticRange::ReMapMirror( Double_t val )
 {
