@@ -424,7 +424,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
 			Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h
 			TSchemaType.h DllImport.h TGenericClassInfo.h
 			TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
-			RootMetaSelection.h
+			RootMetaSelection.h libcpp_string_view.h
 			RWrap_libcpp_string_view.h TAtomicCountGcc.h
 			TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h

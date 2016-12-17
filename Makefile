@@ -871,7 +871,7 @@ CXXMODULES_CORE_EXCLUDE := RConversionRuleParser.h TSchemaRuleProcessor.h \
 			   Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h \
 			   TSchemaType.h DllImport.h TGenericClassInfo.h \
 			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
-			   RootMetaSelection.h \
+			   RootMetaSelection.h libcpp_string_view.h \
 			   RWrap_libcpp_string_view.h TAtomicCountGcc.h \
 			   TException.h ROOT/TThreadExecutor.hxx TBranchProxyTemplate.h \
 			   TGLIncludes.h TGLWSIncludes.h snprintf.h strlcpy.h

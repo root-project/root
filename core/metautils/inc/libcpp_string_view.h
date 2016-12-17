@@ -11,6 +11,10 @@
 #ifndef _LIBCPP_LFTS_STRING_VIEW
 #define _LIBCPP_LFTS_STRING_VIEW
 
+#ifndef RWrap_libcpp_string_view_h
+#error "Do not use libcpp_string_view.h directly. #include \"RWrap_libcpp_string_view.h\" instead."
+#endif // RWrap_libcpp_string_view_h
+
 /*
 string_view synopsis
 
