@@ -16,6 +16,10 @@
 #ifndef RWrap_libcpp_string_view_h
 #define RWrap_libcpp_string_view_h
 
+#ifndef RStringView_H
+#error "Do not use RWrap_libcpp_string_view.h directly. #include \"RStringView.h\" instead."
+#endif // RStringView_H
+
 // In case we are connected with a libc++ which defines those, we need
 // to include it first, so we avoid being silently over-ridden.
 
