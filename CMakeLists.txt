@@ -201,7 +201,7 @@ if(cxxmodules)
   get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
   string(REPLACE ";" "" __modulemap_extra_content "module ROOT {\\n ${__modulemap_extra_content} \\n }")
   add_custom_command(TARGET copymodulemap POST_BUILD
-                     COMMAND echo ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
+                     COMMAND echo -e ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
                      VERBATIM
                     )
   add_dependencies(move_headers copymodulemap)
