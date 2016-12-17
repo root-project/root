@@ -54,4 +54,14 @@ if(PY_SKLEARN_FOUND)
    ROOT_EXECUTABLE(testPyGTBMulticlass testPyGTBMulticlass.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-GTB-Multiclass COMMAND testPyGTBMulticlass)
+
+   # Test PyAdaBoost: Classification
+   ROOT_EXECUTABLE(testPyAdaBoostClassification testPyAdaBoostClassification.C
+      LIBRARIES ${Libraries})
+   ROOT_ADD_TEST(PyMVA-AdaBoost-Classification COMMAND testPyAdaBoostClassification)
+
+   # Test PyAdaBoost: Multi-class classification
+   ROOT_EXECUTABLE(testPyAdaBoostMulticlass testPyAdaBoostMulticlass.C
+      LIBRARIES ${Libraries})
+   ROOT_ADD_TEST(PyMVA-AdaBoost-Multiclass COMMAND testPyAdaBoostMulticlass)
 endif(PY_SKLEARN_FOUND)
