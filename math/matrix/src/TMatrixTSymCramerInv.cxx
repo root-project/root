@@ -37,6 +37,8 @@
 
 #include "TMatrixTSymCramerInv.h"
 
+#include "TError.h"
+
 #if !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
 NamespaceImp(TMatrixTSymCramerInv);
 #endif

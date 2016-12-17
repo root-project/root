@@ -23,9 +23,6 @@
 #ifndef ROOT_TF2
 #include "TF2.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 class TF12 : public TF1 {
 

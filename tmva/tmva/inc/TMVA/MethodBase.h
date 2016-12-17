@@ -84,6 +84,17 @@ class TH1F;
 class TH1D;
 class TMultiGraph;
 
+/*! \class TMVA::IPythonInteractive
+\ingroup TMVA
+
+This class is needed by JsMVA, and it's a helper class for tracking errors during
+the training in Jupyter notebook. It’s only initialized in Jupyter notebook context.
+In initialization we specify some title, and a TGraph will be created for every title.
+We can add new data points easily to all TGraphs. These graphs are added to a
+TMultiGraph, and during an interactive training we get this TMultiGraph object
+and plot it with JsROOT.
+*/
+
 namespace TMVA {
 
    class Ranking;
@@ -93,12 +104,6 @@ namespace TMVA {
    class MethodBoost;
    class DataSetInfo;
 
-   /** \class IPythonInteractive 
-This class is needed by JsMVA, and it's a helper class for tracking errors during the training in Jupyter notebook.   
-It’s only initialized in Jupyter notebook context. In initialization we specify some title, 
-and a TGraph will be created for every title. We can add new data points easily to all TGraphs. 
-These graphs are added to a TMultiGraph, and during an interactive training we get this TMultiGraph object and plot it with JsROOT.
-*/
    class IPythonInteractive {
    public:
        IPythonInteractive();
@@ -125,7 +130,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
 
       enum EWeightFileType { kROOT=0, kTEXT };
 
-      // default constructur
+      // default constructor
       MethodBase( const TString& jobName,
                   Types::EMVA methodType,
                   const TString& methodTitle,
@@ -138,7 +143,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
                   DataSetInfo& dsi,
                   const TString& weightFile );
 
-      // default destructur
+      // default destructor
       virtual ~MethodBase();
 
       // declaration, processing and checking of configuration options
@@ -208,7 +213,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
       // helper function to set errors to -1
       void NoErrorCalc(Double_t* const err, Double_t* const errUpper);
 
-      // signal/background classification response for all current set of data 
+      // signal/background classification response for all current set of data
       virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
 
 
@@ -233,7 +238,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
       }
 
       // probability of classifier response (mvaval) to be signal (requires "CreateMvaPdf" option set)
-      virtual Double_t GetProba( const Event *ev); // the simple one, automatically calcualtes the mvaVal and uses the SAME sig/bkg ratio as given in the training sample (typically 50/50 .. (NormMode=EqualNumEvents) but can be different)
+      virtual Double_t GetProba( const Event *ev); // the simple one, automatically calculates the mvaVal and uses the SAME sig/bkg ratio as given in the training sample (typically 50/50 .. (NormMode=EqualNumEvents) but can be different)
       virtual Double_t GetProba( Double_t mvaVal, Double_t ap_sig );
 
       // Rarity of classifier response (signal or background (default) is uniform in [0,1])
@@ -299,12 +304,12 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
 
       // ---------- public evaluation methods --------------------------------------
 
-      // individual initialistion for testing of each method
+      // individual initialization for testing of each method
       // overload this one for individual initialisation of the testing,
       // it is then called automatically within the global "TestInit"
 
-      // variables (and private menber functions) for the Evaluation:
-      // get the effiency. It fills a histogram for efficiency/vs/bkg
+      // variables (and private member functions) for the Evaluation:
+      // get the efficiency. It fills a histogram for efficiency/vs/bkg
       // and returns the one value fo the efficiency demanded for
       // in the TString argument. (Watch the string format)
       virtual Double_t GetEfficiency( const TString&, Types::ETreeType, Double_t& err );
@@ -364,20 +369,20 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
       TDirectory*      BaseDir()       const;
       TDirectory*      MethodBaseDir() const;
       TFile*           GetFile() const {return fFile;}
-      
+
       void             SetMethodDir ( TDirectory* methodDir ) { fBaseDir = fMethodBaseDir  = methodDir; }
       void             SetBaseDir( TDirectory* methodDir ){ fBaseDir = methodDir; }
       void             SetMethodBaseDir( TDirectory* methodDir ){ fMethodBaseDir = methodDir; }
       void             SetFile(TFile* file){fFile=file;}
-      
+
       //Silent file
       void SetSilentFile(Bool_t status){fSilentFile=status;}
       Bool_t IsSilentFile(){return fSilentFile;}
-      
+
       //Model Persistence
       void SetModelPersistence(Bool_t status){fModelPersistence=status;}//added support to create/remove dir here if exits or not
       Bool_t IsModelPersistence(){return fModelPersistence;}
-      
+
       // the TMVA version can be obtained and checked using
       //    if (GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}
       // or
@@ -409,7 +414,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
 
       // event reference and update
       // NOTE: these Event accessors make sure that you get the events transformed according to the
-      //        particular clasifiers transformation chosen
+      //        particular classifiers transformation chosen
       UInt_t           GetNEvents      () const { return Data()->GetNEvents(); }
       const Event*     GetEvent        () const;
       const Event*     GetEvent        ( const TMVA::Event* ev ) const;
@@ -476,7 +481,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
 
    protected:
 
-      // ---------- protected acccessors -------------------------------------------
+      // ---------- protected accessors -------------------------------------------
 
       //TDirectory*  LocalTDir() const { return Data().LocalRootDir(); }
 
@@ -545,7 +550,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
       enum ECutOrientation { kNegative = -1, kPositive = +1 };
       ECutOrientation  GetCutOrientation() const { return fCutOrientation; }
 
-      // ---------- private acccessors ---------------------------------------------
+      // ---------- private accessors ---------------------------------------------
 
       // reset required for RootFinder
       void             ResetThisBase();
@@ -556,9 +561,9 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
       void             CreateMVAPdfs();
 
       // for root finder
-      //virtual method to find ROOT 
+      //virtual method to find ROOT
       virtual Double_t         GetValueForRoot ( Double_t );  // implementation
-      
+
       // used for file parsing
       Bool_t           GetLine( std::istream& fin, char * buf );
 
@@ -625,7 +630,7 @@ These graphs are added to a TMultiGraph, and during an interactive training we g
       Bool_t fSilentFile;
       //Model Persistence
       Bool_t fModelPersistence;
-      
+
       TString          fParentDir;           // method parent name, like booster name
 
       TString          fFileDir;             // unix sub-directory for weight files (default: DataLoader's Name + "weights")

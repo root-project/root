@@ -32,6 +32,9 @@
 //#include <cblas.h>
 #endif
 
+#include "Rtypes.h"
+#include "TError.h"
+
 
 template<class Element> class TMatrixTSym;
 template<class Element> class TMatrixTSparse;

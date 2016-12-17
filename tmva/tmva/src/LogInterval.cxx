@@ -5,7 +5,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *          Extension of the Interval to "logarithmic" invarvals                  *
+ *          Extension of the Interval to "logarithmic" intervals                  *
  *                                                                                *
  *                                                                                *
  *                                                                                *
@@ -20,21 +20,24 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
-/* Begin_Html
-   <center><h2>the TMVA::Interval Class</h2></center>
 
-   <ul>
-   <li> LogInterval definition, continuous and discrete
-   <ul>
-   <li>  LogInterval(min,max)  : a continous interval [min,max]
-   <li>  LogInterval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
-   1,10,100,1000  <br>
-   1,2,4,8,16,32,64,128,512,1024 <br>
-   or alike .. <br>
+/*! \class TMVA::LogInterval
+\ingroup TMVA
 
-   </ul>
-   </ul>
-   <pre>
+The TMVA::Interval Class.
+
+  - LogInterval definition, continuous and discrete
+
+    - LogInterval(min,max)  : a continous interval [min,max]
+    - LogInterval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:
+
+      1,10,100,1000
+
+      1,2,4,8,16,32,64,128,512,1024
+
+      or alike ..
+
+~~~ {.cpp}
    Example:
    LogInterval(1,10000,5)
    i=0 --> 1               note: StepSize(ibin=0) =  not defined !!
@@ -68,10 +71,8 @@
    i=8 --> 256
    i=9 --> 512
    i=10 --> 1024
-
-
-   </pre>
-   End_Html */
+~~~
+*/
 
 #include "TMath.h"
 #include "TRandom3.h"
@@ -105,9 +106,9 @@ TMVA::LogInterval::~LogInterval()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// calculates the value of the "number" bin in a discrete interval.
-/// Parameters:
-///        Double_t position
 ///
+/// Parameters:
+///  - Double_t position
 
 Double_t TMVA::LogInterval::GetElement( Int_t bin ) const
 {
@@ -123,7 +124,7 @@ Double_t TMVA::LogInterval::GetElement( Int_t bin ) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// retuns the step size between the numbers of a "discrete LogInterval"
+/// returns the step size between the numbers of a "discrete LogInterval"
 
 Double_t TMVA::LogInterval::GetStepSize( Int_t iBin )  const
 {
@@ -138,21 +139,28 @@ Double_t TMVA::LogInterval::GetStepSize( Int_t iBin )  const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get uniformely distributed number within interval
+/// get uniformly distributed number within interval
 
 Double_t TMVA::LogInterval::GetRndm( TRandom3& rnd )  const
 {
    return TMath::Exp(rnd.Rndm()*(TMath::Log(fMax/fMin) - TMath::Log(fMin)) + TMath::Log(fMin));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::LogInterval::GetWidth() const
 {
    return fMax - fMin;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::LogInterval::GetMean()  const
 {
    return (fMax + fMin)/2;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MsgLogger& TMVA::LogInterval::Log() const {
    TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"LogInterval");   // message logger

@@ -14,8 +14,8 @@
  *      Rustem Ospanov <rustem@fnal.gov> - U. of Texas at Austin, USA             *
  *                                                                                *
  * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Texas at Austin, USA                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -45,13 +45,13 @@
 #include "TMVA/ModulekNN.h"
 #endif
 
-// SVD and linear discriminat code
+// SVD and linear discriminant code
 #ifndef ROOT_TMVA_LDA
 #include "TMVA/LDA.h"
 #endif
 
 namespace TMVA
-{   
+{
    namespace kNN
    {
       class ModulekNN;
@@ -61,16 +61,16 @@ namespace TMVA
    {
    public:
 
-      MethodKNN(const TString& jobName, 
-                const TString& methodTitle, 
+      MethodKNN(const TString& jobName,
+                const TString& methodTitle,
                 DataSetInfo& theData,
                 const TString& theOption = "KNN");
 
-      MethodKNN(DataSetInfo& theData, 
+      MethodKNN(DataSetInfo& theData,
                 const TString& theWeightFile);
-      
+
       virtual ~MethodKNN( void );
-    
+
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       void Train( void );
@@ -116,18 +116,18 @@ namespace TMVA
 
       Double_t getKernelRadius(const kNN::List &rlist) const;
       const std::vector<Double_t> getRMS(const kNN::List &rlist, const kNN::Event &event_knn) const;
-      
+
       double getLDAValue(const kNN::List &rlist, const kNN::Event &event_knn);
 
    private:
 
       // number of events (sumOfWeights)
       Double_t fSumOfWeightsS;        // sum-of-weights for signal training events
-      Double_t fSumOfWeightsB;        // sum-of-weights for background training events      
+      Double_t fSumOfWeightsB;        // sum-of-weights for background training events
 
       kNN::ModulekNN *fModule;        //! module where all work is done
 
-      Int_t fnkNN;            // number of k-nearest neighbors 
+      Int_t fnkNN;            // number of k-nearest neighbors
       Int_t fBalanceDepth;    // number of binary tree levels used for balancing tree
 
       Float_t fScaleFrac;     // fraction of events used to compute variable width
@@ -138,7 +138,7 @@ namespace TMVA
       Bool_t fTrim;           // set equal number of signal and background events
       Bool_t fUseKernel;      // use polynomial kernel weight function
       Bool_t fUseWeight;      // use weights to count kNN
-      Bool_t fUseLDA;         // use local linear discriminat analysis to compute MVA
+      Bool_t fUseLDA;         // use local linear discriminant analysis to compute MVA
 
       kNN::EventVec fEvent;   //! (untouched) events used for learning
 

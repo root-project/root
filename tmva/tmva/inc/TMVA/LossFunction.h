@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Jan Therhaag
 
 /**********************************************************************************
@@ -18,9 +18,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -40,11 +40,11 @@
 #endif
 
 namespace TMVA {
-   
+
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Data Structure  used by LossFunction and LossFunctionBDT to calculate errors, targets, etc
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    class LossFunctionEventInfo{
 
    public:
@@ -56,17 +56,17 @@ namespace TMVA {
       }
       ~LossFunctionEventInfo(){};
 
-      Double_t trueValue; 
+      Double_t trueValue;
       Double_t predictedValue;
       Double_t weight;
    };
 
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   // Loss Function interface defining base class for general error calculations in 
+   // Loss Function interface defining base class for general error calculations in
    // regression/classification
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    class LossFunction {
 
    public:
@@ -87,7 +87,7 @@ namespace TMVA {
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Loss Function interface for boosted decision trees. Inherits from LossFunction
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    /* Must inherit LossFunction with the virtual keyword so that we only have to implement
    * the LossFunction interface once.
    *
@@ -101,7 +101,7 @@ namespace TMVA {
    * Without the virtual keyword the two would point to their own LossFunction objects
    * and SomeLossFunctionBDT would have to implement the virtual functions of LossFunction twice, once
    * for each object. See diagram below.
-   * 
+   *
    * LossFunction  LossFunction
    *     |             |
    *SomeLossFunction  LossFunctionBDT
@@ -109,10 +109,10 @@ namespace TMVA {
    *       \          /
    *     SomeLossFunctionBDT
    *
-   * Multiple inhertiance is often frowned upon. To avoid this, We could make LossFunctionBDT separate 
+   * Multiple inheritance is often frowned upon. To avoid this, We could make LossFunctionBDT separate
    * from LossFunction but it really is a type of loss function.
-   * We could also put LossFunction into LossFunctionBDT. In either of these scenarios, if you are doing 
-   * different regression methods and want to compare the Loss this makes it more convoluted. 
+   * We could also put LossFunction into LossFunctionBDT. In either of these scenarios, if you are doing
+   * different regression methods and want to compare the Loss this makes it more convoluted.
    * I think that multiple inheritance seems justified in this case, but we could change it if it's a problem.
    * Usually it isn't a big deal with interfaces and this results in the simplest code in this case.
    */
@@ -135,7 +135,7 @@ namespace TMVA {
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Huber loss function for regression error calculations
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    class HuberLossFunction : public virtual LossFunction{
 
    public:
@@ -152,7 +152,7 @@ namespace TMVA {
       TString Name(){ return TString("Huber"); };
       Int_t Id(){ return 0; } ;
 
-      // Functions needed beyond the interface 
+      // Functions needed beyond the interface
       void Init(std::vector<LossFunctionEventInfo>& evs);
       Double_t CalculateQuantile(std::vector<LossFunctionEventInfo>& evs, Double_t whichQuantile, Double_t sumOfWeights, bool abs);
       Double_t CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs);
@@ -168,16 +168,16 @@ namespace TMVA {
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Huber loss function with boosted decision tree functionality
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    // The bdt loss function implements the LossFunctionBDT interface and inherits the HuberLossFunction
    // functionality.
    class HuberLossFunctionBDT : public LossFunctionBDT, public HuberLossFunction{
-   
+
    public:
       HuberLossFunctionBDT();
       HuberLossFunctionBDT(Double_t quantile):HuberLossFunction(quantile){};
       ~HuberLossFunctionBDT(){};
-      
+
       // The LossFunctionBDT methods
       void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
       void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
@@ -191,7 +191,7 @@ namespace TMVA {
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // LeastSquares loss function for regression error calculations
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    class LeastSquaresLossFunction : public virtual LossFunction{
 
    public:
@@ -211,15 +211,15 @@ namespace TMVA {
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Least Squares loss function with boosted decision tree functionality
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    // The bdt loss function implements the LossFunctionBDT interface and inherits the LeastSquaresLossFunction
    // functionality.
    class LeastSquaresLossFunctionBDT : public LossFunctionBDT, public LeastSquaresLossFunction{
-   
+
    public:
       LeastSquaresLossFunctionBDT(){};
       ~LeastSquaresLossFunctionBDT(){};
-      
+
       // The LossFunctionBDT methods
       void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
       void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
@@ -230,7 +230,7 @@ namespace TMVA {
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Absolute Deviation loss function for regression error calculations
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    class AbsoluteDeviationLossFunction : public virtual LossFunction{
 
    public:
@@ -250,15 +250,15 @@ namespace TMVA {
    ///////////////////////////////////////////////////////////////////////////////////////////////
    // Absolute Deviation loss function with boosted decision tree functionality
    ///////////////////////////////////////////////////////////////////////////////////////////////
-   
+
    // The bdt loss function implements the LossFunctionBDT interface and inherits the AbsoluteDeviationLossFunction
    // functionality.
    class AbsoluteDeviationLossFunctionBDT : public LossFunctionBDT, public AbsoluteDeviationLossFunction{
-   
+
    public:
       AbsoluteDeviationLossFunctionBDT(){};
       ~AbsoluteDeviationLossFunctionBDT(){};
-      
+
       // The LossFunctionBDT methods
       void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
       void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);

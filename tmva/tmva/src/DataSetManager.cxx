@@ -24,6 +24,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::DataSetManager
+\ingroup TMVA
+
+Class that contains all the data information.
+
+*/
+
 #include <vector>
 #include <iostream>
 using std::endl;
@@ -46,7 +53,6 @@ using std::endl;
 
 #include "TMVA/Types.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -57,6 +63,9 @@ TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
      fLogger( new MsgLogger("DataSetManager", kINFO) )
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
 
 TMVA::DataSetManager::DataSetManager( )
 : fDatasetFactory(0),
@@ -86,7 +95,7 @@ TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
    DataSetInfo* dsi = GetDataSetInfo( dsiName );
    if (!dsi) Log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
    if (!fDataInput ) Log() << kFATAL << "DataInputHandler object 'fDataInput' not found" << Endl;
-   
+
    // factory to create dataset from datasetinfo and datainput
    if(!fDatasetFactory) { fDatasetFactory =new  DataSetFactory(); }
    return fDatasetFactory->CreateDataSet( *dsi, *fDataInput );

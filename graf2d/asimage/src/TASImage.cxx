@@ -124,6 +124,9 @@ THashTable *TASImage::fgPlugList = new THashTable(50);
 // default icon paths
 static char *gIconPaths[7] = {0, 0, 0, 0, 0, 0, 0};
 
+// To scale fonts to the same size as the old TT version
+const Float_t kScale = 0.985;
+
 ///////////////////////////// alpha-blending macros ///////////////////////////////
 
 #if defined(__GNUC__) && __GNUC__ >= 4 && ((__GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 1) || (__GNUC_MINOR__ >= 3)) && !__INTEL_COMPILER
@@ -5762,25 +5765,33 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
    yy = y0;
    ARGB32 acolor;
+
+   Int_t clipx1 = gPad->XtoAbsPixel(gPad->GetX1());
+   Int_t clipx2 = gPad->XtoAbsPixel(gPad->GetX2());
+   Int_t clipy1 = gPad->YtoAbsPixel(gPad->GetY1());
+   Int_t clipy2 = gPad->YtoAbsPixel(gPad->GetY2());
+
    for (y = 0; y < (int) source->rows; y++) {
       byy = by + y;
-      if ((byy >= (int)fImage->height) || (byy <0)) continue;
 
       for (x = 0; x < (int) source->width; x++) {
          bxx = bx + x;
-         //if ((bxx >= (int)fImage->width) || (bxx < 0)) continue;
 
          d = *s++ & 0xff;
          d = ((d + 10) * 5) >> 8;
          if (d > 4) d = 4;
 
-         if (d && (x < (int) source->width) && (bxx < (int)fImage->width) && (bxx >= 0)) {
-            idx = Idx(bxx + yy);
-            acolor = (ARGB32)col[d];
-            if (has_alpha) {
-               _alphaBlend(&fImage->alt.argb32[idx], &acolor);
-            } else {
-               fImage->alt.argb32[idx] = acolor;
+         if (d) {
+            if ( (x < (int) source->width) &&
+                 (bxx <  (int)clipx2) && (bxx >= (int)clipx1) &&
+                 (byy >= (int)clipy2) && (byy <  (int)clipy1) ) {
+               idx    = Idx(bxx + yy);
+               acolor = (ARGB32)col[d];
+               if (has_alpha) {
+                  _alphaBlend(&fImage->alt.argb32[idx], &acolor);
+               } else {
+                  fImage->alt.argb32[idx] = acolor;
+               }
             }
          }
       }
@@ -5821,7 +5832,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    } else {
       ttfsize = text->GetTextSize()*hh;
    }
-   TTF::SetTextSize(ttfsize);
+   TTF::SetTextSize(ttfsize*kScale);
 
    // set text angle
    TTF::SetRotationMatrix(text->GetTextAngle());

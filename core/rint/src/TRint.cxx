@@ -342,7 +342,10 @@ void TRint::ExecLogon()
 
 void TRint::Run(Bool_t retrn)
 {
-   Getlinem(kInit, GetPrompt());
+   if (!QuitOpt()) {
+      // Promt prompt only if we are expecting / allowing input.
+      Getlinem(kInit, GetPrompt());
+   }
 
    Long_t retval = 0;
    Int_t  error = 0;

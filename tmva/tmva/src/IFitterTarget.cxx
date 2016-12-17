@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$ 
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -15,22 +15,21 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// IFitterTarget
-//
-// Interface for a fitter 'target'. Defines interface to the estimator
-// function
-//
-//_______________________________________________________________________
+/*! \class TMVA::IFitterTarget
+\ingroup TMVA
+
+Interface for a fitter 'target'. Defines interface to the estimator function
+
+*/
+
 
 #include "TMVA/IFitterTarget.h"
 
@@ -41,7 +40,7 @@ ClassImp(TMVA::IFitterTarget)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::IFitterTarget::IFitterTarget() 
+TMVA::IFitterTarget::IFitterTarget()
 {
-}            
+}
 

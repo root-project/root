@@ -6,7 +6,7 @@
  *                                                                                *
  * Description: a light wrapper of a decision tree, used to perform cost          *
  *              complexity pruning "in-place" Cost Complexity Pruning             *
- *                                                                                *  
+ *                                                                                *
  * Author: Doug Schouten (dschoute@sfu.ca)                                        *
  *                                                                                *
  *                                                                                *
@@ -19,6 +19,11 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
+/*! \class TMVA::CCTreeWrapper
+\ingroup TMVA
+
+*/
 
 #include "TMVA/CCTreeWrapper.h"
 #include "TMVA/DecisionTree.h"
@@ -74,16 +79,16 @@ Bool_t TMVA::CCTreeWrapper::CCTreeNode::ReadDataRecord( std::istream& in, UInt_t
 /// printout of the node (can be read in with ReadDataRecord)
 
 void TMVA::CCTreeWrapper::CCTreeNode::Print( std::ostream& os ) const {
-   os << "----------------------" << std::endl 
-      << "|~T_t| " << fNLeafDaughters << std::endl 
-      << "R(t): " << fNodeResubstitutionEstimate << std::endl 
+   os << "----------------------" << std::endl
+      << "|~T_t| " << fNLeafDaughters << std::endl
+      << "R(t): " << fNodeResubstitutionEstimate << std::endl
       << "R(T_t): " << fResubstitutionEstimate << std::endl
       << "g(t): " << fAlphaC << std::endl
       << "G(t): " << fMinAlphaC << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// recursive printout of the node and its daughters 
+/// recursive printout of the node and its daughters
 
 void TMVA::CCTreeWrapper::CCTreeNode::PrintRec( std::ostream& os ) const {
    this->Print(os);
@@ -104,13 +109,13 @@ TMVA::CCTreeWrapper::CCTreeWrapper( DecisionTree* T, SeparationBase* qualityInde
    fQualityIndex = qualityIndex;
    InitTree(fRoot);
 }
-  
+
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 TMVA::CCTreeWrapper::~CCTreeWrapper( ) {
-   delete fRoot; 
-}  
+   delete fRoot;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// initialize the node t and all its descendants
@@ -125,20 +130,20 @@ void TMVA::CCTreeWrapper::InitTree( CCTreeNode* t )
    t->SetNodeResubstitutionEstimate((s+b)*fQualityIndex->GetSeparationIndex(s,b));
 
    if(t->GetLeft() != NULL && t->GetRight() != NULL) { // n is an interior (non-leaf) node
-      // traverse the tree 
+      // traverse the tree
       InitTree(t->GetLeftDaughter());
       InitTree(t->GetRightDaughter());
       // set |~T_t|
-      t->SetNLeafDaughters(t->GetLeftDaughter()->GetNLeafDaughters() + 
-                           t->GetRightDaughter()->GetNLeafDaughters());    
+      t->SetNLeafDaughters(t->GetLeftDaughter()->GetNLeafDaughters() +
+                           t->GetRightDaughter()->GetNLeafDaughters());
       // set R(T) = sum[t' in ~T]{ R(t) }
       t->SetResubstitutionEstimate(t->GetLeftDaughter()->GetResubstitutionEstimate() +
                                    t->GetRightDaughter()->GetResubstitutionEstimate());
       // set g(t)
-      t->SetAlphaC((t->GetNodeResubstitutionEstimate() - t->GetResubstitutionEstimate()) / 
+      t->SetAlphaC((t->GetNodeResubstitutionEstimate() - t->GetResubstitutionEstimate()) /
                    (t->GetNLeafDaughters() - 1));
       // G(t) = min( g(t), G(l(t)), G(r(t)) )
-      t->SetMinAlphaC(std::min(t->GetAlphaC(), std::min(t->GetLeftDaughter()->GetMinAlphaC(), 
+      t->SetMinAlphaC(std::min(t->GetAlphaC(), std::min(t->GetLeftDaughter()->GetMinAlphaC(),
                                                         t->GetRightDaughter()->GetMinAlphaC())));
    }
    else { // n is a terminal node
@@ -180,7 +185,7 @@ Double_t TMVA::CCTreeWrapper::TestTreeQuality( const EventList* validationSample
    Double_t ncorrect=0, nfalse=0;
    for (UInt_t ievt=0; ievt < validationSample->size(); ievt++) {
       Bool_t isSignalType = (CheckEvent(*(*validationSample)[ievt]) > fDTParent->GetNodePurityLimit() ) ? 1 : 0;
-      
+
       if (isSignalType == ((*validationSample)[ievt]->GetClass() == 0)) {
          ncorrect += (*validationSample)[ievt]->GetWeight();
       }
@@ -198,13 +203,13 @@ Double_t TMVA::CCTreeWrapper::TestTreeQuality( const EventList* validationSample
 Double_t TMVA::CCTreeWrapper::TestTreeQuality( const DataSet* validationSample )
 {
    validationSample->SetCurrentType(Types::kValidation);
-   // test the tree quality.. in terms of Miscalssification
+   // test the tree quality.. in terms of Misclassification
    Double_t ncorrect=0, nfalse=0;
    for (Long64_t ievt=0; ievt<validationSample->GetNEvents(); ievt++){
       const Event *ev = validationSample->GetEvent(ievt);
 
       Bool_t isSignalType = (CheckEvent(*ev) > fDTParent->GetNodePurityLimit() ) ? 1 : 0;
-      
+
       if (isSignalType == (ev->GetClass() == 0)) {
          ncorrect += ev->GetWeight();
       }
@@ -216,7 +221,7 @@ Double_t TMVA::CCTreeWrapper::TestTreeQuality( const DataSet* validationSample )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the decision tree output for an event 
+/// return the decision tree output for an event
 
 Double_t TMVA::CCTreeWrapper::CheckEvent( const TMVA::Event & e, Bool_t useYesNoLeaf )
 {
@@ -237,7 +242,7 @@ Double_t TMVA::CCTreeWrapper::CheckEvent( const TMVA::Event & e, Bool_t useYesNo
          current = t->GetDTNode();
       }
    }
-  
+
    if (useYesNoLeaf) return (current->GetPurity() > fDTParent->GetNodePurityLimit() ? 1.0 : -1.0);
    else return current->GetPurity();
 }

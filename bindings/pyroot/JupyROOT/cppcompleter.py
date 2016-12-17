@@ -5,7 +5,7 @@
 #  Author: Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
 #-----------------------------------------------------------------------------
 
-import utils
+from JupyROOT import utils
 import ROOT
 
 # Jit a wrapper for the ttabcom
@@ -35,7 +35,7 @@ class CppCompleter(object):
     >>> comp = CppCompleter()
     >>> comp.activate()
     >>> for suggestion in comp._completeImpl("TH1"):
-    ...     print suggestion
+    ...     print(suggestion)
     TH1
     TH1C
     TH1D
@@ -45,7 +45,7 @@ class CppCompleter(object):
     TH1K
     TH1S
     >>> for suggestion in comp._completeImpl("TH2"):
-    ...     print suggestion
+    ...     print(suggestion)
     TH2
     TH2C
     TH2D
@@ -58,20 +58,20 @@ class CppCompleter(object):
     TH2S
     >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F* h")
     >>> for suggestion in comp._completeImpl("h->GetA"):
-    ...     print suggestion
+    ...     print(suggestion)
     h->GetArray
     h->GetAsymmetry
     h->GetAt
     h->GetAxisColor
     >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F aa")
     >>> for suggestion in comp._completeImpl("aa.Add("):
-    ...     print suggestion.replace("\\t"," ")
+    ...     print(suggestion.replace("\\t"," "))
     <BLANKLINE>
     Bool_t Add(TF1* h1, Double_t c1 = 1, Option_t* option = "")
     Bool_t Add(const TH1* h, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1)  // *MENU*
     Bool_t Add(const TH1* h1, Double_t c1 = 1)
     >>> for suggestion in comp._completeImpl("TROOT::Is"):
-    ...     print suggestion
+    ...     print(suggestion)
     IsA
     IsBatch
     IsEqual
@@ -89,7 +89,7 @@ class CppCompleter(object):
     IsZombie
     >>> comp.deactivate()
     >>> for suggestion in comp._completeImpl("TG"):
-    ...     print suggestion
+    ...     print(suggestion)
     '''
 
     def __init__(self):

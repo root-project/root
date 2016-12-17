@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Jan Therhaag
 
 /**********************************************************************************
@@ -18,15 +18,22 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
+
+/*! \class TMVA::HuberLossFunction
+\ingroup TMVA
+
+Huber Loss Function.
+
+*/
 
 #include "TMVA/LossFunction.h"
 
@@ -36,13 +43,6 @@
 #include "TMath.h"
 
 #include <iostream>
-
-////////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-// Huber Loss Function
-//-----------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// huber constructor
@@ -68,7 +68,7 @@ TMVA::HuberLossFunction::~HuberLossFunction(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// figure out the residual that determines the separation between the 
+/// figure out the residual that determines the separation between the
 /// "core" and the "tails" of the residuals distribution
 
 void TMVA::HuberLossFunction::Init(std::vector<LossFunctionEventInfo>& evs){
@@ -100,10 +100,10 @@ Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEven
    // (sort them in ascending order of residual magnitude) if abs is true
    // otherwise sort them in ascending order of residual
    if(abs)
-      std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){ 
+      std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){
                                            return TMath::Abs(a.trueValue-a.predictedValue) < TMath::Abs(b.trueValue-b.predictedValue); });
    else
-      std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){ 
+      std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){
                                            return (a.trueValue-a.predictedValue) < (b.trueValue-b.predictedValue); });
    UInt_t i = 0;
    Double_t temp = 0.0;
@@ -117,7 +117,7 @@ Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEven
 
    // usual returns
    if(abs) return TMath::Abs(evs[i].trueValue-evs[i].predictedValue);
-   else return evs[i].trueValue-evs[i].predictedValue; 
+   else return evs[i].trueValue-evs[i].predictedValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,14 +126,14 @@ Double_t TMVA::HuberLossFunction::CalculateQuantile(std::vector<LossFunctionEven
 
 void TMVA::HuberLossFunction::SetTransitionPoint(std::vector<LossFunctionEventInfo>& evs){
    fTransitionPoint = CalculateQuantile(evs, fQuantile, fSumOfWeights, true);
-  
+
    // if the transition point corresponding to the quantile is 0 then the loss function will not function
    // the quantile was chosen too low. Let's use the first nonzero residual as the transition point instead.
    if(fTransitionPoint == 0){
       // evs should already be sorted according to the magnitude of the residuals, since CalculateQuantile does this
       for(UInt_t i=0; i<evs.size(); i++){
          Double_t residual = TMath::Abs(evs[i].trueValue - evs[i].predictedValue);
-         if(residual != 0){ 
+         if(residual != 0){
             fTransitionPoint = residual;
             break;
          }
@@ -142,8 +142,8 @@ void TMVA::HuberLossFunction::SetTransitionPoint(std::vector<LossFunctionEventIn
 
    // Let the user know that the transition point is zero and the loss function won't work properly
    if(fTransitionPoint == 0){
-      //std::cout << "The residual transition point for the Huber loss function corresponding to quantile, " << fQuantile << ", is zero." 
-      //<< " This implies that all of the residuals are zero and the events have been predicted perfectly. Perhaps the regression is too complex" 
+      //std::cout << "The residual transition point for the Huber loss function corresponding to quantile, " << fQuantile << ", is zero."
+      //<< " This implies that all of the residuals are zero and the events have been predicted perfectly. Perhaps the regression is too complex"
       //<< " for the amount of data." << std::endl;
    }
 }
@@ -164,7 +164,7 @@ Double_t TMVA::HuberLossFunction::CalculateLoss(LossFunctionEventInfo& e){
    if(fSumOfWeights == -9999){
       std::vector<LossFunctionEventInfo> evs;
       evs.push_back(e);
-       
+
       SetSumOfWeights(evs);
       SetTransitionPoint(evs);
    }
@@ -172,9 +172,9 @@ Double_t TMVA::HuberLossFunction::CalculateLoss(LossFunctionEventInfo& e){
    Double_t residual = TMath::Abs(e.trueValue - e.predictedValue);
    Double_t loss = 0;
    // Quadratic loss in terms of the residual for small residuals
-   if(residual <= fTransitionPoint) loss = 0.5*residual*residual; 
+   if(residual <= fTransitionPoint) loss = 0.5*residual*residual;
    // Linear loss for large residuals, so that the tails don't dominate the net loss calculation
-   else loss = fQuantile*residual - 0.5*fQuantile*fQuantile;  
+   else loss = fQuantile*residual - 0.5*fQuantile*fQuantile;
    return e.weight*loss;
 }
 
@@ -212,11 +212,12 @@ Double_t TMVA::HuberLossFunction::CalculateMeanLoss(std::vector<LossFunctionEven
    return netloss/fSumOfWeights;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-// Huber BDT Loss Function
-//-----------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::HuberLossFunctionBDT
+\ingroup TMVA
+
+Huber BDT Loss Function.
+
+*/
 
 TMVA::HuberLossFunctionBDT::HuberLossFunctionBDT(){
 }
@@ -276,14 +277,14 @@ Double_t TMVA::HuberLossFunctionBDT::Target(LossFunctionEventInfo& e){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// huber BDT, determine the fit value for the terminal node based upon the 
+/// huber BDT, determine the fit value for the terminal node based upon the
 /// events in the terminal node
 
 Double_t TMVA::HuberLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs){
 // The fit in the terminal node for huber is basically the median of the residuals.
 // Then you add the average difference from the median to that.
 // The tails are discounted. If a residual is in the tails then we just use the
-// cutoff residual that sets the "core" and the "tails" instead of the large residual. 
+// cutoff residual that sets the "core" and the "tails" instead of the large residual.
 // So we get something between least squares (mean as fit) and absolute deviation (median as fit).
    Double_t sumOfWeights = CalculateSumOfWeights(evs);
    Double_t shift=0,diff= 0;
@@ -293,7 +294,7 @@ Double_t TMVA::HuberLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs
       diff = residual-residualMedian;
       // if we are using weights then I'm not sure why this isn't weighted
       shift+=1.0/evs.size()*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
-      // I think this should be 
+      // I think this should be
       // shift+=evs[j].weight/sumOfWeights*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
       // not sure why it was originally coded like this
    }
@@ -301,11 +302,12 @@ Double_t TMVA::HuberLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-// Least Squares Loss Function
-//-----------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::LeastSquaresLossFunction
+\ingroup TMVA
+
+Least Squares Loss Function.
+
+*/
 
 // Constructor and destructor are in header file. They don't do anything.
 
@@ -315,7 +317,7 @@ Double_t TMVA::HuberLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs
 Double_t TMVA::LeastSquaresLossFunction::CalculateLoss(LossFunctionEventInfo& e){
    Double_t residual = (e.trueValue - e.predictedValue);
    Double_t loss = 0;
-   loss = residual*residual;  
+   loss = residual*residual;
    return e.weight*loss;
 }
 
@@ -345,11 +347,12 @@ Double_t TMVA::LeastSquaresLossFunction::CalculateMeanLoss(std::vector<LossFunct
    return netloss/sumOfWeights;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-// Least Squares BDT Loss Function
-//-----------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::LeastSquaresLossFunctionBDT
+\ingroup TMVA
+
+Least Squares BDT Loss Function.
+
+*/
 
 // Constructor and destructor defined in header. They don't do anything.
 
@@ -357,7 +360,7 @@ Double_t TMVA::LeastSquaresLossFunction::CalculateMeanLoss(std::vector<LossFunct
 /// least squares BDT, initialize the targets and prepare for the regression
 
 void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
-// Run this once before building the foresut. Set initial prediction to the weightedMean
+// Run this once before building the forest. Set initial prediction to the weightedMean
 
    std::vector<LossFunctionEventInfo> evinfovec;
    for (auto &e: evinfomap){
@@ -401,7 +404,7 @@ Double_t TMVA::LeastSquaresLossFunctionBDT::Target(LossFunctionEventInfo& e){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// huber BDT, determine the fit value for the terminal node based upon the 
+/// huber BDT, determine the fit value for the terminal node based upon the
 /// events in the terminal node
 
 Double_t TMVA::LeastSquaresLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs){
@@ -419,11 +422,12 @@ Double_t TMVA::LeastSquaresLossFunctionBDT::Fit(std::vector<LossFunctionEventInf
    return weightedMean;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-// Absolute Deviation Loss Function
-//-----------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::AbsoluteDeviationLossFunction
+\ingroup TMVA
+
+Absolute Deviation Loss Function.
+
+*/
 
 // Constructors in the header. They don't do anything.
 
@@ -459,11 +463,12 @@ Double_t TMVA::AbsoluteDeviationLossFunction::CalculateMeanLoss(std::vector<Loss
    return netloss/sumOfWeights;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//-----------------------------------------------------------------------------
-// Absolute Deviation BDT Loss Function
-//-----------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::AbsoluteDeviationLossFunctionBDT
+\ingroup TMVA
+
+Absolute Deviation BDT Loss Function.
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, initialize the targets and prepare for the regression
@@ -512,7 +517,7 @@ Double_t TMVA::AbsoluteDeviationLossFunctionBDT::Target(LossFunctionEventInfo& e
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// absolute deviation BDT, determine the fit value for the terminal node based upon the 
+/// absolute deviation BDT, determine the fit value for the terminal node based upon the
 /// events in the terminal node
 
 Double_t TMVA::AbsoluteDeviationLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs){
@@ -520,7 +525,7 @@ Double_t TMVA::AbsoluteDeviationLossFunctionBDT::Fit(std::vector<LossFunctionEve
 
    // use a lambda function to tell the vector how to sort the LossFunctionEventInfo data structures
    // sort in ascending order of residual value
-   std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){ 
+   std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){
                                         return (a.trueValue-a.predictedValue) < (b.trueValue-b.predictedValue); });
 
    // calculate the sum of weights, used in the weighted median calculation
@@ -535,9 +540,9 @@ Double_t TMVA::AbsoluteDeviationLossFunctionBDT::Fit(std::vector<LossFunctionEve
       temp += evs[i].weight;
       i++;
    }
-   if (i >= evs.size()) return 0.; // prevent uncontrolled memory access in return value calculation 
+   if (i >= evs.size()) return 0.; // prevent uncontrolled memory access in return value calculation
 
    // return the median residual
-   return evs[i].trueValue-evs[i].predictedValue; 
+   return evs[i].trueValue-evs[i].predictedValue;
 }
 

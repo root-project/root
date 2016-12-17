@@ -9,9 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGeoManager.h"
-
 #include "TVirtualGeoTrack.h"
+
+#include "Rtypes.h"
+#include "TGeoManager.h"
+#include "TObject.h"
 
 /** \class TVirtualGeoTrack
 \ingroup Geometry_classes

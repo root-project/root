@@ -35,10 +35,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// Multilayer Perceptron class built off of MethodANNBase
-//_______________________________________________________________________
+/*! \class TMVA::MethodMLP
+\ingroup TMVA
+
+Multilayer Perceptron class built off of MethodANNBase
+
+*/
 
 #include "TMVA/MethodMLP.h"
 
@@ -140,8 +142,8 @@ TMVA::MethodMLP::~MethodMLP()
 }
 
 void TMVA::MethodMLP::Train()
-{ 
-   Train(NumCycles()); 
+{
+   Train(NumCycles());
 }
 
 
@@ -172,21 +174,25 @@ void TMVA::MethodMLP::Init()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// define the options (their key words) that can be set in the option string
+///
 /// know options:
-/// TrainingMethod  <string>     Training method
-///    available values are:         BP   Back-Propagation <default>
-///                                  GA   Genetic Algorithm (takes a LONG time)
 ///
-/// LearningRate    <float>      NN learning rate parameter
-/// DecayRate       <float>      Decay rate for learning parameter
-/// TestRate        <int>        Test for overtraining performed at each #th epochs
+///  - TrainingMethod  <string>     Training method
+///        available values are:
+///       - BP   Back-Propagation <default>
+///       - GA   Genetic Algorithm (takes a LONG time)
 ///
-/// BPMode          <string>     Back-propagation learning mode
-///    available values are:         sequential <default>
-///                                  batch
+///  - LearningRate    <float>      NN learning rate parameter
+///  - DecayRate       <float>      Decay rate for learning parameter
+///  - TestRate        <int>        Test for overtraining performed at each #th epochs
 ///
-/// BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode,
-///                                          -1 for BatchSize=number_of_events
+///  - BPMode          <string>     Back-propagation learning mode
+///      available values are:
+///       - sequential <default>
+///       - batch
+///
+///  - BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode,
+///       - -1 for BatchSize=number_of_events
 
 void TMVA::MethodMLP::DeclareOptions()
 {
@@ -237,7 +243,6 @@ void TMVA::MethodMLP::DeclareOptions()
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// process user options
 
@@ -270,7 +275,7 @@ void TMVA::MethodMLP::ProcessOptions()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// initialize learning rates of synapses, used only by backpropagation
+/// initialize learning rates of synapses, used only by back propagation
 
 void TMVA::MethodMLP::InitializeLearningRates()
 {
@@ -439,7 +444,7 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
       Log() << kFATAL <<"ANN Network is not initialized, doing it now!"<< Endl;
       SetAnalysisType(GetAnalysisType());
    }
-   Log() << kDEBUG << "reinitalize learning rates" << Endl;
+   Log() << kDEBUG << "reinitialize learning rates" << Endl;
    InitializeLearningRates();
    Log() << kHEADER;
    PrintMessage("Training Network");
@@ -453,7 +458,7 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    if (fInteractive && fInteractive->NotInitialized()){
      std::vector<TString> titles = {"Error on training set", "Error on test set"};
      fInteractive->Init(titles);
-   }   
+   }
 
 #ifdef MethodMLP_UseMinuit__
    if (useMinuit) MinuitMinimize();
@@ -496,7 +501,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
        fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator",
                                    nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
    }
-   
+
    Int_t nSynapses = fSynapses->GetEntriesFast();
    Int_t nWeights  = nSynapses;
 
@@ -923,7 +928,7 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer,
    SetDirWeights(Origin, Dir, fLastAlpha);
 
    // leaving these lines uncommented is a heavy price to pay for only a warning message
-   // (which shoulnd't appear anyway)
+   // (which shouldn't appear anyway)
    // --> about 15% of time is spent in the final GetError().
    //
    Double_t finalError = GetError();
@@ -1031,7 +1036,7 @@ Double_t TMVA::MethodMLP::GetCEErr( const Event* ev, UInt_t index )  //zjh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// minimize estimator / train network with backpropagation algorithm
+/// minimize estimator / train network with back propagation algorithm
 
 void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
 {
@@ -1091,7 +1096,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
       // monitor convergence of training and control sample
       if ((i+1)%fTestRate == 0) {
          trainE = CalculateEstimator( Types::kTraining, i ); // estimator for training sample
-         testE  = CalculateEstimator( Types::kTesting,  i );  // estimator for test samplea
+         testE  = CalculateEstimator( Types::kTesting,  i );  // estimator for test sample
          if (fInteractive) fInteractive->AddPoint(i+1, trainE, testE);
          if(!IsSilentFile())
          {
@@ -1136,7 +1141,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// train network over a single epoch/cyle of events
+/// train network over a single epoch/cycle of events
 
 void TMVA::MethodMLP::TrainOneEpoch()
 {
@@ -1179,10 +1184,11 @@ void TMVA::MethodMLP::TrainOneEpoch()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Input:
-///   index: the array to shuffle
-///   n: the size of the array
+///  - index: the array to shuffle
+///  - n: the size of the array
 /// Output:
-///   index: the shuffled indexes
+///  - index: the shuffled indexes
+///
 /// This method is used for sequential training
 
 void TMVA::MethodMLP::Shuffle(Int_t* index, Int_t n)
@@ -1277,7 +1283,6 @@ Double_t TMVA::MethodMLP::GetDesiredOutput( const Event* ev )
    return DataInfo().IsSignal(ev)?fOutput->GetMax():fOutput->GetMin(); //zjh
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// update the network based on how closely
 /// the output matched the desired output
@@ -1309,9 +1314,8 @@ void TMVA::MethodMLP::UpdateNetwork(const std::vector<Float_t>& desired, Double_
    UpdateSynapses();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// have each neuron calculate its delta by backpropagation
+/// have each neuron calculate its delta by back propagation
 
 void TMVA::MethodMLP::CalculateNeuronDeltas()
 {
@@ -1320,7 +1324,7 @@ void TMVA::MethodMLP::CalculateNeuronDeltas()
    Int_t    numLayers = fNetwork->GetEntriesFast();
    TObjArray* curLayer;
 
-   // step backwards through the network (backpropagation)
+   // step backwards through the network (back propagation)
    // deltas calculated starting at output layer
    for (Int_t i = numLayers-1; i >= 0; i--) {
       curLayer = (TObjArray*)fNetwork->At(i);
@@ -1538,7 +1542,7 @@ Double_t TMVA::MethodMLP::GetMvaValue( Double_t* errLower, Double_t* errUpper )
 {
    Double_t MvaValue = MethodANNBase::GetMvaValue();// contains back propagation
 
-   // no hessian (old training file) or no error reqested
+   // no hessian (old training file) or no error requested
    if (!fCalculateErrors || errLower==0 || errUpper==0)
       return MvaValue;
 
@@ -1635,22 +1639,22 @@ void TMVA::MethodMLP::MinuitMinimize()
    }
 }
 
-_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the minimisation function
+///
+///  Input parameters:
+///   - npars:   number of currently variable parameters
+///             CAUTION: this is not (necessarily) the dimension of the fitPars vector !
+///   - fitPars: array of (constant and variable) parameters
+///   - iflag:   indicates what is to be calculated (see example below)
+///   - grad:    array of gradients
+///
+///  Output parameters:
+///   - f:       the calculated function value.
+///   - grad:    the (optional) vector of first derivatives).
+
 void TMVA::MethodMLP::IFCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* fitPars, Int_t iflag )
 {
-   // Evaluate the minimisation function ----------------------------------------------------
-   //
-   //  Input parameters:
-   //    npars:   number of currently variable parameters
-   //             CAUTION: this is not (necessarily) the dimension of the fitPars vector !
-   //    fitPars: array of (constant and variable) parameters
-   //    iflag:   indicates what is to be calculated (see example below)
-   //    grad:    array of gradients
-   //
-   //  Output parameters:
-   //    f:       the calculated function value.
-   //    grad:    the (optional) vector of first derivatives).
-   // ---------------------------------------------------------------------------------------
    ((MethodMLP*)GetThisPtr())->FCN( npars, grad, f, fitPars, iflag );
 }
 
@@ -1709,7 +1713,7 @@ void TMVA::MethodMLP::GetHelpMessage() const
    Log() << col << "--- Short description:" << colres << Endl;
    Log() << Endl;
    Log() << "The MLP artificial neural network (ANN) is a traditional feed-" << Endl;
-   Log() << "forward multilayer perceptron impementation. The MLP has a user-" << Endl;
+   Log() << "forward multilayer perceptron implementation. The MLP has a user-" << Endl;
    Log() << "defined hidden layer architecture, while the number of input (output)" << Endl;
    Log() << "nodes is determined by the input variables (output classes, i.e., " << Endl;
    Log() << "signal and one background). " << Endl;
@@ -1733,11 +1737,11 @@ void TMVA::MethodMLP::GetHelpMessage() const
          << "only the TMlpANN performs an explicit separation of the" << Endl;
    Log() << "full training sample into independent training and validation samples." << Endl;
    Log() << "We have found that in most high-energy physics applications the " << Endl;
-   Log() << "avaliable degrees of freedom (training events) are sufficient to " << Endl;
+   Log() << "available degrees of freedom (training events) are sufficient to " << Endl;
    Log() << "constrain the weights of the relatively simple architectures required" << Endl;
    Log() << "to achieve good performance. Hence no overtraining should occur, and " << Endl;
    Log() << "the use of validation samples would only reduce the available training" << Endl;
-   Log() << "information. However, if the perrormance on the training sample is " << Endl;
+   Log() << "information. However, if the performance on the training sample is " << Endl;
    Log() << "found to be significantly better than the one found with the inde-" << Endl;
    Log() << "pendent test sample, caution is needed. The results for these samples " << Endl;
    Log() << "are printed to standard output at the end of each training job." << Endl;

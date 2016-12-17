@@ -163,6 +163,12 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
       newfile = TFile::Open(url, "READ");
    }
 
+   // Zombie files should also be skipped
+   if (newfile && newfile->IsZombie()) {
+      delete newfile;
+      newfile = 0;
+   }
+
    if (!newfile) {
       if (fLocal)
          Error("AddFile", "cannot open local copy %s of URL %s",
@@ -236,6 +242,12 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
       newfile = TFile::Open(localcopy, "READ");
    } else {
       newfile = source;
+   }
+
+   // Zombie files should also be skipped 
+   if (newfile && newfile->IsZombie()) {
+      delete newfile;
+      newfile = 0;
    }
 
    if (!newfile) {

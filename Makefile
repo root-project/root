@@ -558,7 +558,7 @@ COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
 COREDS       := $(call stripsrc,$(COREBASEDIRS)/G__Core.cxx)
 COREDO       := $(COREDS:.cxx=.o)
 COREDH       := $(COREDS:.cxx=.h)
-COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMH) $(ZIPDICTH) \
+COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDH) $(ZIPDICTH) \
 		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
 COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
                 $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
@@ -592,15 +592,38 @@ endif
 ##### all #####
 ALLHDRS :=
 ifeq ($(CXXMODULES),yes)
+# Add the ROOT Core module. It is organized differently and we cannot do it in
+# a Module.mk
+CXXMODULES_HEADERS :=
+CXXMODULES_MODULEMAP_CONTENTS :=
+
 # Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS  := include/module.modulemap
-ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
-ROOT_CXXMODULES_CFLAGS =  -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+# FIXME: Remove -fno-autolink once the clang's modules autolinking is done on a
+#use of a header not unconditionally.
+ROOT_CXXMODULES_COMMONFLAGS := -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack
+ifeq ($(PLATFORM),macosx)
 # FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
-# Frameworks' modulemaps predate the flag.
-ifneq ($(PLATFORM),macosx)
-ROOT_CXXMODULES_CXXFLAGS += -Xclang -fmodules-local-submodule-visibility
-endif # not macos
+# Frameworks' modulemaps predate the flag. Here we exclude the system module maps
+# and use only the ROOT one. This is suboptimal, because module-aware systems
+# should give us better performance.
+ROOT_CXXMODULES_COMMONFLAGS += -fno-implicit-module-maps -fmodule-map-file=$(ROOT_OBJDIR)/include/module.modulemap
+# FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+# trickery to override the contents of system's OpenGL.
+# On OSX #include TGLIncludes.h will trigger the creation of the system
+# OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+# the translation units which it needs to 'rewrite'. The translation units
+# which need glew support are in graf3d. However, depending on the modulemap
+# organization we could request it implicitly (eg. one big module for ROOT).
+# In these cases we need to 'prepend' this include path to the compiler in order
+# for glew.h to it its trick.
+#
+# Turn on when we remove -fno-implicit-module-maps
+#ROOT_CXXMODULES_COMMONFLAGS +=  -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/
+endif # macosx
+
+ROOT_CXXMODULES_CXXFLAGS :=  $(ROOT_CXXMODULES_COMMONFLAGS) -fcxx-modules -Xclang -fmodules-local-submodule-visibility
+ROOT_CXXMODULES_CFLAGS := $(ROOT_CXXMODULES_COMMONFLAGS)
 
 CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
 CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
@@ -611,7 +634,6 @@ CXXFLAGS += --gcc-toolchain=$(GCCTOOLCHAIN)
 CFLAGS   += --gcc-toolchain=$(GCCTOOLCHAIN)
 LDFLAGS  += --gcc-toolchain=$(GCCTOOLCHAIN)
 endif
-
 
 ALLLIBS      := $(CORELIB)
 ALLMAPS      := $(COREMAP)
@@ -654,8 +676,8 @@ $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.c
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.mm
 	$$(MAKEDIR)
-	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXMKDEPFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
+	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(OBJCXXFLAGS) -D__cplusplus -- $$<
+	$$(CXX) $$(OPT) $$(OBJCXXFLAGS) $$(CXXMKDEPFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.f
 	$$(MAKEDIR)
@@ -684,8 +706,8 @@ $(foreach module,$(MODULESGENERIC),$(eval $(call SRCTOOBJ_template,$(module))))
 	$(CC) $(OPT) $(CFLAGS) $(CXXMKDEPFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.mm
-	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXMKDEPFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(OBJCXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(OBJCXXFLAGS) $(CXXMKDEPFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
 
 %.o: %.f
 ifeq ($(F77),f2c)
@@ -830,8 +852,43 @@ $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp Make
 	   "$(EXPLICITLINK)"
 
 ifeq ($(CXXMODULES),yes)
-include/module.modulemap:    $(ROOT_SRCDIR)/build/unix/module.modulemap
+
+# We cannot use the usual way of setting CXXMODULES_MODULEMAP_CONTENTS for core,
+# because we require information from the core submodules. Thus we have to access
+# the information at the target.
+#
+# We use the relative path of COREDICT.
+# FIXME: We probably should be chaning the COREDICTH to use relative paths, too.
+# COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
+#                $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
+include/module.modulemap:
+COREDICTH_REL := $(BASEH_REL) $(CONTH_REL) $(METAH_REL) $(METAUTILSH_REL)
+COREDICTH_REL := $(patsubst include/%,%, $(COREDICTH_REL))
+CXXMODULES_CORE_EXCLUDE := RConversionRuleParser.h TSchemaRuleProcessor.h \
+			   RConfig.h RVersion.h  RtypesImp.h \
+			   Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h \
+			   TSchemaType.h DllImport.h TGenericClassInfo.h \
+			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
+			   RootMetaSelection.h \
+			   RWrap_libcpp_string_view.h TAtomicCountGcc.h \
+			   TException.h ROOT/TThreadExecutor.hxx TBranchProxyTemplate.h \
+			   TGLIncludes.h TGLWSIncludes.h snprintf.h strlcpy.h
+COREDICTH_REL := $(filter-out $(CXXMODULES_CORE_EXCLUDE),$(COREDICTH_REL))
+CXXMODULES_CORE_HEADERS := $(patsubst %,header \"%\"\\n, $(COREDICTH_REL))
+CXXMODULES_CORE_MODULEMAP_CONTENTS := module Core { \\n \
+  requires cplusplus \\n \
+  $(CXXMODULES_CORE_HEADERS) \
+  "export * \\n" \
+  link \"$(CORELIB)\" \\n \
+  } \\n
+CXXMODULES_ROOT_MODULE := "module ROOT {\\n" \
+	                  "$(CXXMODULES_CORE_MODULEMAP_CONTENTS)" \
+                          "$(CXXMODULES_MODULEMAP_CONTENTS)" \
+			  "\\n } //module ROOT \\n"
+include/module.modulemap: $(ROOT_SRCDIR)/build/unix/module.modulemap
 	cp $< $@
+	@echo "$(value CXXMODULES_ROOT_MODULE)" | sed -E 's|(\s*)(.*) header "(.*)"|\1 module "\3" { \2 header "\3" export * }|g' >> $@
+
 endif
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.
@@ -865,7 +922,7 @@ endif
 $(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating dictionary $@..."
-	$(ROOTCLINGSTAGE1) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
+	$(ROOTCLINGSTAGE1) -f $@ -s $(CORELIB) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0) && touch lib/libCore_rdict.pcm
 
 $(call pcmname,$(CORELIB)): $(COREDS)
@@ -1139,18 +1196,18 @@ changelog:
 
 releasenotes:
 	@$(MAKERELNOTES)
-ROOTCLING_CXXFLAGS := $(CXXFLAGS)
+ROOTPCHCXXFLAGS := $(CXXFLAGS)
 # rootcling uses our internal version of clang. Passing the modules flags here
 # would allow rootcling to find module files built by the external compiler
 # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
 # different clang version (even different commit revision) as the modules files
 # are not guaranteed to be compatible among clang revisions.
 ifeq ($(CXXMODULES),yes)
-ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(CXXFLAGS))
+ROOTPCHCXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(ROOTPCHCXXFLAGS))
 endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTCLING_CXXFLAGS)
+	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS)
 	@ROOTIGNOREPREFIX=1 $(MAKEPCH) $@
 
 $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)

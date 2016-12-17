@@ -24,8 +24,17 @@ ROOTDDEP     := $(ROOTDO:.o=.d)
 ROOTD        := bin/rootd
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOTDH))
+ROOTDH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOTDH))
+ALLHDRS      += $(ROOTDH_REL)
 ALLEXECS     += $(ROOTD)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ROOTDH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += // link no-library-created \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(ROOTDDEP)

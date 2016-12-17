@@ -27,9 +27,6 @@
 #ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
 #endif
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
 
 #include <set>
 #include <unordered_set>

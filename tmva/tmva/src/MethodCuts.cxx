@@ -28,65 +28,51 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::MethodCuts
+\ingroup TMVA
 
-/* Begin_Html
    Multivariate optimisation of signal efficiency for given background
    efficiency, applying rectangular minimum and maximum requirements.
 
-   <p>
-   Also implemented is a "decorrelate/diagonlized cuts approach",
-   which improves over the uncorrelated cuts ansatz by
+   Also implemented is a "decorrelate/diagonalized cuts approach",
+   which improves over the uncorrelated cuts approach by
    transforming linearly the input variables into a diagonal space,
    using the square-root of the covariance matrix.
 
-   <p>
-   <font size="-1">
    Other optimisation criteria, such as maximising the signal significance-
-   squared, S^2/(S+B), with S and B being the signal and background yields,
+   squared, \f$ \frac{S^2}{(S+B)} \f$, with S and B being the signal and background yields,
    correspond to a particular point in the optimised background rejection
    versus signal efficiency curve. This working point requires the knowledge
    of the expected yields, which is not the case in general. Note also that
    for rare signals, Poissonian statistics should be used, which modifies
    the significance criterion.
-   </font>
 
-   <p>
    The rectangular cut of a volume in the variable space is performed using
    a binary tree to sort the training events. This provides a significant
    reduction in computing time (up to several orders of magnitudes, depending
    on the complexity of the problem at hand).
 
-   <p>
    Technically, optimisation is achieved in TMVA by two methods:
 
-   <ol>
-   <li>Monte Carlo generation using uniform priors for the lower cut value,
+   1. Monte Carlo generation using uniform priors for the lower cut value,
    and the cut width, thrown within the variable ranges.
 
-   <li>A Genetic Algorithm (GA) searches for the optimal ("fittest") cut sample.
+   2. A Genetic Algorithm (GA) searches for the optimal ("fittest") cut sample.
    The GA is configurable by many external settings through the option
    string. For difficult cases (such as many variables), some tuning
    may be necessary to achieve satisfying results
-   </ol>
 
-   <p>
-   <font size="-1">
    Attempts to use Minuit fits (Simplex ot Migrad) instead have not shown
    superior results, and often failed due to convergence at local minima.
-   </font>
 
-   <p>
    The tests we have performed so far showed that in generic applications,
    the GA is superior to MC sampling, and hence GA is the default method.
    It is worthwhile trying both anyway.
 
-   <b>Decorrelated (or "diagonalized") Cuts</b>
+   **Decorrelated (or "diagonalized") Cuts**
 
-   <p>
    See class description for Method Likelihood for a detailed explanation.
-   End_Html */
-//
+*/
 
 #include "TMVA/MethodCuts.h"
 
@@ -176,15 +162,15 @@ TMVA::MethodCuts::MethodCuts( const TString& jobName,
    fVarPdfS    ( 0 ),
    fVarPdfB    ( 0 ),
    fNegEffWarning( kFALSE )
-{ 
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// construction from weight file
 
-TMVA::MethodCuts::MethodCuts( DataSetInfo& theData, 
+TMVA::MethodCuts::MethodCuts( DataSetInfo& theData,
                               const TString& theWeightFile) :
-   MethodBase( Types::kCuts, theData, theWeightFile), 
+   MethodBase( Types::kCuts, theData, theWeightFile),
    fFitMethod  ( kUseGeneticAlgorithm ),
    fEffMethod  ( kUseEventSelection ),
    fFitParams (0),
@@ -222,7 +208,7 @@ TMVA::MethodCuts::MethodCuts( DataSetInfo& theData,
 ////////////////////////////////////////////////////////////////////////////////
 /// Cuts can only handle classification with 2 classes
 
-Bool_t TMVA::MethodCuts::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, 
+Bool_t TMVA::MethodCuts::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses,
                                           UInt_t /*numberTargets*/ )
 {
    return (type == Types::kClassification && numberClasses == 2);
@@ -231,25 +217,25 @@ Bool_t TMVA::MethodCuts::HasAnalysisType( Types::EAnalysisType type, UInt_t numb
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation called by all constructors
 
-void TMVA::MethodCuts::Init( void ) 
+void TMVA::MethodCuts::Init( void )
 {
-   fVarHistS          = fVarHistB = 0;                 
+   fVarHistS          = fVarHistB = 0;
    fVarHistS_smooth   = fVarHistB_smooth = 0;
-   fVarPdfS           = fVarPdfB = 0; 
+   fVarPdfS           = fVarPdfB = 0;
    fFitParams         = 0;
    fBinaryTreeS       = fBinaryTreeB = 0;
    fEffSMin           = 0;
-   fEffSMax           = 0; 
+   fEffSMax           = 0;
 
    // vector with fit results
    fNpar      = 2*GetNvar();
    fRangeSign = new std::vector<Int_t>   ( GetNvar() );
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*fRangeSign)[ivar] = +1;
 
-   fMeanS     = new std::vector<Double_t>( GetNvar() ); 
-   fMeanB     = new std::vector<Double_t>( GetNvar() ); 
-   fRmsS      = new std::vector<Double_t>( GetNvar() );  
-   fRmsB      = new std::vector<Double_t>( GetNvar() );  
+   fMeanS     = new std::vector<Double_t>( GetNvar() );
+   fMeanB     = new std::vector<Double_t>( GetNvar() );
+   fRmsS      = new std::vector<Double_t>( GetNvar() );
+   fRmsB      = new std::vector<Double_t>( GetNvar() );
 
    // get the variable specific options, first initialize default
    fFitParams = new std::vector<EFitParameters>( GetNvar() );
@@ -265,7 +251,7 @@ void TMVA::MethodCuts::Init( void )
       fCutMin[i] = new Double_t[fNbins];
       fCutMax[i] = new Double_t[fNbins];
    }
-  
+
    // init
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       for (Int_t ibin=0; ibin<fNbins; ibin++) {
@@ -312,24 +298,25 @@ TMVA::MethodCuts::~MethodCuts( void )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// define the options (their key words) that can be set in the option string 
+/// define the options (their key words) that can be set in the option string.
+///
 /// know options:
-/// Method             <string> Minimisation method
-///    available values are:        MC Monte Carlo <default>
-///                                 GA Genetic Algorithm
-///                                 SA Simulated annealing
+///  - Method <string> Minimisation method. Available values are:
+///    - MC Monte Carlo <default>
+///    - GA Genetic Algorithm
+///    - SA Simulated annealing
 ///
-/// EffMethod          <string> Efficiency selection method
-///    available values are:        EffSel <default>
-///                                 EffPDF
+///  - EffMethod <string> Efficiency selection method. Available values are:
+///    - EffSel <default>
+///    - EffPDF
 ///
-/// VarProp            <string> Property of variable 1 for the MC method (taking precedence over the
+///  - VarProp <string> Property of variable 1 for the MC method (taking precedence over the
 ///    globale setting. The same values as for the global option are available. Variables 1..10 can be
 ///    set this way
 ///
-/// CutRangeMin/Max    <float>  user-defined ranges in which cuts are varied
+///  - CutRangeMin/Max <float>  user-defined ranges in which cuts are varied
 
-void TMVA::MethodCuts::DeclareOptions() 
+void TMVA::MethodCuts::DeclareOptions()
 {
    DeclareOptionRef(fFitMethodS = "GA", "FitMethod", "Minimisation Method (GA, SA, and MC are the primary methods to be used; the others have been introduced for testing purposes and are depreciated)");
    AddPreDefVal(TString("GA"));
@@ -344,7 +331,7 @@ void TMVA::MethodCuts::DeclareOptions()
    AddPreDefVal(TString("EffSel"));
    AddPreDefVal(TString("EffPDF"));
 
-   // cut ranges 
+   // cut ranges
    fCutRange.resize(GetNvar());
    fCutRangeMin = new Double_t[GetNvar()];
    fCutRangeMax = new Double_t[GetNvar()];
@@ -354,13 +341,13 @@ void TMVA::MethodCuts::DeclareOptions()
    }
 
    DeclareOptionRef( fCutRangeMin, GetNvar(), "CutRangeMin", "Minimum of allowed cut range (set per variable)" );
-   DeclareOptionRef( fCutRangeMax, GetNvar(), "CutRangeMax", "Maximum of allowed cut range (set per variable)" );   
+   DeclareOptionRef( fCutRangeMax, GetNvar(), "CutRangeMax", "Maximum of allowed cut range (set per variable)" );
 
    fAllVarsI = new TString[GetNvar()];
 
-   for (UInt_t i=0; i<GetNvar(); i++) fAllVarsI[i] = "NotEnforced";  
+   for (UInt_t i=0; i<GetNvar(); i++) fAllVarsI[i] = "NotEnforced";
 
-   DeclareOptionRef(fAllVarsI, GetNvar(), "VarProp", "Categorisation of cuts");  
+   DeclareOptionRef(fAllVarsI, GetNvar(), "VarProp", "Categorisation of cuts");
    AddPreDefVal(TString("NotEnforced"));
    AddPreDefVal(TString("FMax"));
    AddPreDefVal(TString("FMin"));
@@ -368,11 +355,12 @@ void TMVA::MethodCuts::DeclareOptions()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// process user options
-/// sanity check, do not allow the input variables to be normalised, because this 
+/// process user options.
+///
+/// sanity check, do not allow the input variables to be normalised, because this
 /// only creates problems when interpreting the cuts
 
-void TMVA::MethodCuts::ProcessOptions() 
+void TMVA::MethodCuts::ProcessOptions()
 {
    if (IsNormalised()) {
       Log() << kWARNING << "Normalisation of the input variables for cut optimisation is not" << Endl;
@@ -385,7 +373,7 @@ void TMVA::MethodCuts::ProcessOptions()
 
    if (IgnoreEventsWithNegWeightsInTraining()) {
       Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
-            << GetMethodTypeName() 
+            << GetMethodTypeName()
             << " --> Please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
    }
@@ -406,12 +394,12 @@ void TMVA::MethodCuts::ProcessOptions()
    else                               fEffMethod = kUseEventSelection;
 
    // options output
-   Log() << kINFO << Form("Use optimization method: \"%s\"", 
-                          (fFitMethod == kUseMonteCarlo) ? "Monte Carlo" : 
-                          (fFitMethod == kUseMonteCarlo) ? "Monte-Carlo-Event sampling" : 
+   Log() << kINFO << Form("Use optimization method: \"%s\"",
+                          (fFitMethod == kUseMonteCarlo) ? "Monte Carlo" :
+                          (fFitMethod == kUseMonteCarlo) ? "Monte-Carlo-Event sampling" :
                           (fFitMethod == kUseEventScan)  ? "Full Event Scan (slow)" :
                           (fFitMethod == kUseMinuit)     ? "MINUIT" : "Genetic Algorithm" ) << Endl;
-   Log() << kINFO << Form("Use efficiency computation method: \"%s\"", 
+   Log() << kINFO << Form("Use efficiency computation method: \"%s\"",
                           (fEffMethod == kUseEventSelection) ? "Event Selection" : "PDF" ) << Endl;
 
    // cut ranges
@@ -421,7 +409,7 @@ void TMVA::MethodCuts::ProcessOptions()
 
    // individual options
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      EFitParameters theFitP = kNotEnforced;      
+      EFitParameters theFitP = kNotEnforced;
       if (fAllVarsI[ivar] == "" || fAllVarsI[ivar] == "NotEnforced") theFitP = kNotEnforced;
       else if (fAllVarsI[ivar] == "FMax" )                           theFitP = kForceMax;
       else if (fAllVarsI[ivar] == "FMin" )                           theFitP = kForceMin;
@@ -431,9 +419,9 @@ void TMVA::MethodCuts::ProcessOptions()
                << "\' for fit parameter option " << Form("VarProp[%i]",ivar) << Endl;
       }
       (*fFitParams)[ivar] = theFitP;
-      
-      if (theFitP != kNotEnforced) 
-         Log() << kINFO << "Use \"" << fAllVarsI[ivar] 
+
+      if (theFitP != kNotEnforced)
+         Log() << kINFO << "Use \"" << fAllVarsI[ivar]
                << "\" cuts for variable: " << "'" << (*fInputVars)[ivar] << "'" << Endl;
    }
 }
@@ -502,7 +490,7 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
          varVec->push_back( DataInfo().GetVariableInfo(ivar).GetLabel() + " [transformed]" );
       }
    }
-   
+
    UInt_t maxL = 0;
    for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
       if ((UInt_t)(*varVec)[ivar].Length() > maxL) maxL = (*varVec)[ivar].Length();
@@ -514,7 +502,7 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
    Log() << kHEADER << "Cut values for requested signal efficiency: " << trueEffS << Endl;
    Log() << kINFO << "Corresponding background efficiency       : " << fEffBvsSLocal->GetBinContent( ibin ) << Endl;
    if (GetTransformationHandler().GetNumOfTransformations() == 1) {
-      Log() << kINFO << "Transformation applied to input variables : \"" 
+      Log() << kINFO << "Transformation applied to input variables : \""
             << GetTransformationHandler().GetNameOfLastTransform() << "\"" << Endl;
    }
    else if (GetTransformationHandler().GetNumOfTransformations() > 1) {
@@ -527,18 +515,18 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
    for (UInt_t i=0; i<maxLine; i++) Log() << "-";
    Log() << Endl;
    for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
-      Log() << kINFO 
-            << "Cut[" << std::setw(2) << ivar << "]: " 
-            << std::setw(10) << cutsMin[ivar] 
-            << " < " 
+      Log() << kINFO
+            << "Cut[" << std::setw(2) << ivar << "]: "
+            << std::setw(10) << cutsMin[ivar]
+            << " < "
             << std::setw(maxL) << (*varVec)[ivar]
-            << " <= " 
+            << " <= "
             << std::setw(10) << cutsMax[ivar] << Endl;
    }
    for (UInt_t i=0; i<maxLine; i++) Log() << "-";
    Log() << Endl;
 
-   delete varVec; // yes, ownership has been given to us 
+   delete varVec; // yes, ownership has been given to us
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -553,15 +541,15 @@ Double_t TMVA::MethodCuts::GetCuts( Double_t effS, Double_t* cutMin, Double_t* c
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       cutMin[ivar] = cMin[ivar];
       cutMax[ivar] = cMax[ivar];
-   }   
+   }
    return trueEffS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve cut values for given signal efficiency
 
-Double_t TMVA::MethodCuts::GetCuts( Double_t effS, 
-                                    std::vector<Double_t>& cutMin, 
+Double_t TMVA::MethodCuts::GetCuts( Double_t effS,
+                                    std::vector<Double_t>& cutMin,
                                     std::vector<Double_t>& cutMax ) const
 {
    // find corresponding bin
@@ -579,7 +567,7 @@ Double_t TMVA::MethodCuts::GetCuts( Double_t effS,
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       cutMin.push_back( fCutMin[ivar][ibin]  );
       cutMax.push_back( fCutMax[ivar][ibin] );
-   }   
+   }
 
    return trueEffS;
 }
@@ -595,10 +583,10 @@ void  TMVA::MethodCuts::Train( void )
    if (fBinaryTreeS != 0) { delete fBinaryTreeS; fBinaryTreeS = 0; }
    if (fBinaryTreeB != 0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
 
-   // the variables may be transformed by a transformation method: to coherently 
-   // treat signal and background one must decide which transformation type shall 
+   // the variables may be transformed by a transformation method: to coherently
+   // treat signal and background one must decide which transformation type shall
    // be used: our default is signal-type
-   
+
    fBinaryTreeS = new BinarySearchTree();
    fBinaryTreeS->Fill( GetEventCollection(Types::kTraining), fSignalClass );
    fBinaryTreeB = new BinarySearchTree();
@@ -611,9 +599,9 @@ void  TMVA::MethodCuts::Train( void )
       (*fRmsB)[ivar]  = fBinaryTreeB->RMS (Types::kBackground, ivar);
 
       // update interval ?
-      Double_t xmin = TMath::Min(fBinaryTreeS->Min(Types::kSignal,     ivar), 
+      Double_t xmin = TMath::Min(fBinaryTreeS->Min(Types::kSignal,     ivar),
                                  fBinaryTreeB->Min(Types::kBackground, ivar));
-      Double_t xmax = TMath::Max(fBinaryTreeS->Max(Types::kSignal,     ivar), 
+      Double_t xmax = TMath::Max(fBinaryTreeS->Max(Types::kSignal,     ivar),
                                  fBinaryTreeB->Max(Types::kBackground, ivar));
 
       // redefine ranges to be slightly smaller and larger than xmin and xmax, respectively
@@ -624,26 +612,26 @@ void  TMVA::MethodCuts::Train( void )
       if (TMath::Abs(fCutRange[ivar]->GetMin() - fCutRange[ivar]->GetMax()) < 1.0e-300 ) {
          fCutRange[ivar]->SetMin( xmin );
          fCutRange[ivar]->SetMax( xmax );
-      }         
+      }
       else if (xmin > fCutRange[ivar]->GetMin()) fCutRange[ivar]->SetMin( xmin );
       else if (xmax < fCutRange[ivar]->GetMax()) fCutRange[ivar]->SetMax( xmax );
-   }   
+   }
 
    std::vector<TH1F*> signalDist, bkgDist;
 
    // this is important: reset the branch addresses of the training tree to the current event
    delete fEffBvsSLocal;
-   fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal", 
+   fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
    fEffBvsSLocal->SetDirectory(0); // it's local
 
    // init
-   for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 ); 
+   for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 );
 
    // --------------------------------------------------------------------------
-   if (fFitMethod == kUseGeneticAlgorithm || 
-       fFitMethod == kUseMonteCarlo       || 
-       fFitMethod == kUseMinuit           || 
+   if (fFitMethod == kUseGeneticAlgorithm ||
+       fFitMethod == kUseMonteCarlo       ||
+       fFitMethod == kUseMinuit           ||
        fFitMethod == kUseSimulatedAnnealing) {
 
       // ranges
@@ -658,8 +646,8 @@ void  TMVA::MethodCuts::Train( void )
 
          if ((*fFitParams)[ivar] == kForceSmart) {
             if ((*fMeanS)[ivar] > (*fMeanB)[ivar]) (*fFitParams)[ivar] = kForceMax;
-            else                                   (*fFitParams)[ivar] = kForceMin;          
-         }         
+            else                                   (*fFitParams)[ivar] = kForceMin;
+         }
 
          if ((*fFitParams)[ivar] == kForceMin) {
             ranges.push_back( new Interval( fCutRange[ivar]->GetMin(), fCutRange[ivar]->GetMin(), nbins ) );
@@ -667,7 +655,7 @@ void  TMVA::MethodCuts::Train( void )
          }
          else if ((*fFitParams)[ivar] == kForceMax) {
             ranges.push_back( new Interval( fCutRange[ivar]->GetMin(), fCutRange[ivar]->GetMax(), nbins ) );
-            ranges.push_back( new Interval( fCutRange[ivar]->GetMax() - fCutRange[ivar]->GetMin(), 
+            ranges.push_back( new Interval( fCutRange[ivar]->GetMax() - fCutRange[ivar]->GetMin(),
                                             fCutRange[ivar]->GetMax() - fCutRange[ivar]->GetMin(), nbins ) );
          }
          else {
@@ -678,7 +666,7 @@ void  TMVA::MethodCuts::Train( void )
 
       // create the fitter
       FitterBase* fitter = NULL;
-      
+
       switch (fFitMethod) {
       case kUseGeneticAlgorithm:
          fitter = new GeneticFitter( *this, Form("%sFitter_GA",     GetName()), ranges, GetOptions() );
@@ -701,12 +689,12 @@ void  TMVA::MethodCuts::Train( void )
       fitter->CheckForUnusedOptions();
 
       // perform the fit
-      fitter->Run();      
+      fitter->Run();
 
       // clean up
       for (UInt_t ivar=0; ivar<ranges.size(); ivar++) delete ranges[ivar];
       delete fitter;
-      
+
    }
    // --------------------------------------------------------------------------
    else if (fFitMethod == kUseEventScan) {
@@ -716,7 +704,7 @@ void  TMVA::MethodCuts::Train( void )
 
       // timing of MC
       Int_t nsamples = Int_t(0.5*nevents*(nevents - 1));
-      Timer timer( nsamples, GetName() ); 
+      Timer timer( nsamples, GetName() );
       fIPyMaxIter = nsamples;
 
       Log() << kINFO << "Running full event scan: " << Endl;
@@ -738,15 +726,15 @@ void  TMVA::MethodCuts::Train( void )
 
       Int_t  nsamples = 200000;
       UInt_t seed     = 100;
-      DeclareOptionRef( nsamples, "SampleSize", "Number of Monte-Carlo-Event samples" );  
-      DeclareOptionRef( seed,     "Seed",       "Seed for the random generator (0 takes random seeds)" );  
+      DeclareOptionRef( nsamples, "SampleSize", "Number of Monte-Carlo-Event samples" );
+      DeclareOptionRef( seed,     "Seed",       "Seed for the random generator (0 takes random seeds)" );
       ParseOptions();
 
       Int_t nevents = Data()->GetNEvents();
       Int_t ic = 0;
 
       // timing of MC
-      Timer timer( nsamples, GetName() ); 
+      Timer timer( nsamples, GetName() );
       fIPyMaxIter = nsamples;
 
       // random generator
@@ -754,13 +742,13 @@ void  TMVA::MethodCuts::Train( void )
 
       Log() << kINFO << "Running Monte-Carlo-Event sampling over " << nsamples << " events" << Endl;
       std::vector<Double_t> pars( 2*GetNvar() );
-      
+
       for (Int_t itoy=0; itoy<nsamples; itoy++) {
         fIPyCurrentIter = ic;
         if (fExitFromTraining) break;
 
          for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-            
+
             // generate minimum and delta cuts for this variable
 
             // retrieve signal events
@@ -779,9 +767,9 @@ void  TMVA::MethodCuts::Train( void )
                const Event *ev2 = GetEvent(ievt2);
                isSignal &= DataInfo().IsSignal(ev2);
                evt2 = ev2->GetValue( ivar );
-               
-               if (nbreak++ > 10000) Log() << kFATAL << "<MCEvents>: could not find signal events" 
-                                           << " after 10000 trials - do you have signal events in your sample ?" 
+
+               if (nbreak++ > 10000) Log() << kFATAL << "<MCEvents>: could not find signal events"
+                                           << " after 10000 trials - do you have signal events in your sample ?"
                                            << Endl;
                isSignal = 1;
             }
@@ -794,7 +782,7 @@ void  TMVA::MethodCuts::Train( void )
 
          // compute estimator
          EstimatorFunction( pars );
-         
+
          // what's the time please?
          ic++;
          if ((nsamples<1000) || ic%1000 == 0) timer.DrawProgressBar( ic );
@@ -891,12 +879,14 @@ Double_t TMVA::MethodCuts::EstimatorFunction( std::vector<Double_t>& pars )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns estimator for "cut fitness" used by GA
+/// returns estimator for "cut fitness" used by GA.
+///
 /// there are two requirements:
-/// 1) the signal efficiency must be equal to the required one in the 
+///  1. the signal efficiency must be equal to the required one in the
 ///    efficiency scan
-/// 2) the background efficiency must be as small as possible
-/// the requirement 1) has priority over 2)
+///  2. the background efficiency must be as small as possible
+///
+/// the requirement 1. has priority over 2.
 
 Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
 {
@@ -919,16 +909,16 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
       this->GetEffsfromSelection (&fTmpCutMin[0], &fTmpCutMax[0], effS, effB);
    }
 
-   Double_t eta = 0;      
-   
+   Double_t eta = 0;
+
    // test for a estimator function which optimizes on the whole background-rejection signal-efficiency plot
-   
+
    // get the backg-reject. and sig-eff for the parameters given to this function
    // effS, effB
-      
+
    // get best background rejection for given signal efficiency
-   Int_t ibinS = fEffBvsSLocal->FindBin( effS );      
-      
+   Int_t ibinS = fEffBvsSLocal->FindBin( effS );
+
    Double_t effBH       = fEffBvsSLocal->GetBinContent( ibinS );
    Double_t effBH_left  = (ibinS > 1     ) ? fEffBvsSLocal->GetBinContent( ibinS-1 ) : effBH;
    Double_t effBH_right = (ibinS < fNbins) ? fEffBvsSLocal->GetBinContent( ibinS+1 ) : effBH;
@@ -936,14 +926,14 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
    Double_t average = 0.5*(effBH_left + effBH_right);
    if (effBH < effB) average = effBH;
 
-   // if the average of the bin right and left is larger than this one, add the difference to 
+   // if the average of the bin right and left is larger than this one, add the difference to
    // the current value of the estimator (because you can do at least so much better)
-   eta = ( -TMath::Abs(effBH-average) + (1.0 - (effBH - effB))) / (1.0 + effS); 
+   eta = ( -TMath::Abs(effBH-average) + (1.0 - (effBH - effB))) / (1.0 + effS);
    // alternative idea
    //if (effBH<0) eta = (1.e-6+effB)/(1.0 + effS);
    //else eta =  (effB - effBH) * (1.0 + 10.* effS);
 
-   // if a point is found which is better than an existing one, ... replace it. 
+   // if a point is found which is better than an existing one, ... replace it.
    // preliminary best event -> backup
    if (effBH < 0 || effBH > effB) {
       fEffBvsSLocal->SetBinContent( ibinS, effB );
@@ -952,14 +942,14 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
          fCutMax[ivar][ibinS-1] = fTmpCutMax[ivar];
       }
    }
-   
+
    // caution (!) this value is not good for a decision for MC, .. it is designed for GA
    // but .. it doesn't matter, as MC samplings are independent from the former ones
-   // and the replacement of the best variables by better ones is done about 10 lines above. 
+   // and the replacement of the best variables by better ones is done about 10 lines above.
    // ( if (effBH < 0 || effBH > effB) { .... )
 
    if (ibinS<=1) {
-      // add penalty for effS=0 bin 
+      // add penalty for effS=0 bin
       // to avoid that the minimizer gets stuck in the zero-bin
       // force it towards higher efficiency
       Double_t penalty=0.,diff=0.;
@@ -979,25 +969,25 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
 ////////////////////////////////////////////////////////////////////////////////
 /// translates parameters into cuts
 
-void TMVA::MethodCuts::MatchParsToCuts( const std::vector<Double_t> & pars, 
+void TMVA::MethodCuts::MatchParsToCuts( const std::vector<Double_t> & pars,
                                         Double_t* cutMin, Double_t* cutMax )
 {
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       Int_t ipar = 2*ivar;
       cutMin[ivar] = ((*fRangeSign)[ivar] > 0) ? pars[ipar] : pars[ipar] - pars[ipar+1];
-      cutMax[ivar] = ((*fRangeSign)[ivar] > 0) ? pars[ipar] + pars[ipar+1] : pars[ipar]; 
+      cutMax[ivar] = ((*fRangeSign)[ivar] > 0) ? pars[ipar] + pars[ipar+1] : pars[ipar];
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// translate the cuts into parameters (obsolete function)
 
-void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars, 
+void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars,
                                         Double_t** cutMinAll, Double_t** cutMaxAll, Int_t ibin )
 {
    if (ibin < 1 || ibin > fNbins) Log() << kFATAL << "::MatchCutsToPars: bin error: "
                                         << ibin << Endl;
-   
+
    const UInt_t nvar = GetNvar();
    Double_t *cutMin = new Double_t[nvar];
    Double_t *cutMax = new Double_t[nvar];
@@ -1005,7 +995,7 @@ void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars,
       cutMin[ivar] = cutMinAll[ivar][ibin-1];
       cutMax[ivar] = cutMaxAll[ivar][ibin-1];
    }
-   
+
    MatchCutsToPars( pars, cutMin, cutMax );
    delete [] cutMin;
    delete [] cutMax;
@@ -1014,7 +1004,7 @@ void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars,
 ////////////////////////////////////////////////////////////////////////////////
 /// translates cuts into parameters
 
-void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars, 
+void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars,
                                         Double_t* cutMin, Double_t* cutMax )
 {
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -1025,7 +1015,7 @@ void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute signal and background efficiencies from PDFs 
+/// compute signal and background efficiencies from PDFs
 /// for given cut sample
 
 void TMVA::MethodCuts::GetEffsfromPDFs( Double_t* cutMin, Double_t* cutMax,
@@ -1052,17 +1042,17 @@ void TMVA::MethodCuts::GetEffsfromPDFs( Double_t* cutMin, Double_t* cutMax,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute signal and background efficiencies from event counting 
+/// compute signal and background efficiencies from event counting
 /// for given cut sample
 
 void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
                                              Double_t& effS, Double_t& effB)
 {
    Float_t nTotS = 0, nTotB = 0;
-   Float_t nSelS = 0, nSelB = 0;  
-   
+   Float_t nSelS = 0, nSelB = 0;
+
    Volume* volume = new Volume( cutMin, cutMax, GetNvar() );
-  
+
    // search for all events lying in the volume, and add up their weights
    nSelS = fBinaryTreeS->SearchVolume( volume );
    nSelB = fBinaryTreeB->SearchVolume( volume );
@@ -1072,7 +1062,7 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
    // total number of "events" (sum of weights) as reference to compute efficiency
    nTotS = fBinaryTreeS->GetSumOfWeights();
    nTotB = fBinaryTreeB->GetSumOfWeights();
-   
+
    // sanity check
    if (nTotS == 0 && nTotB == 0) {
       Log() << kFATAL << "<GetEffsfromSelection> fatal error in zero total number of events:"
@@ -1093,7 +1083,7 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
    else {
       effS = nSelS/nTotS;
       effB = nSelB/nTotB;
-   }  
+   }
 
    // quick fix to prevent from efficiencies < 0
    if( effS < 0.0 ) {
@@ -1133,7 +1123,7 @@ void TMVA::MethodCuts::CreateVariablePDFs( void )
       if( val < maxVal ) maxVal = val;
    }
 
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) { 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
 
       // ---- signal
       TString histTitle = (*fInputVars)[ivar] + " signal training";
@@ -1164,7 +1154,7 @@ void TMVA::MethodCuts::CreateVariablePDFs( void )
 
 
       (*fVarHistB)[ivar] = new TH1F(histName.Data(), histTitle.Data(), fNbins, minVal, maxVal );
-      
+
       for( UInt_t ievt=0; ievt<Data()->GetNEvents(); ievt++ ){
          const Event *ev = GetEvent(ievt);
          Float_t val = ev->GetValue(ievt);
@@ -1262,7 +1252,7 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
       Log() << kWARNING << "unknown method: " << fFitMethod << Endl;
    }
    Log() << kINFO << "in " << fNbins << " signal efficiency bins and for " << GetNvar() << " variables" << Endl;
-   
+
    // now read the cuts
    char buffer[200];
    istr.getline(buffer,200);
@@ -1271,7 +1261,7 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
    Int_t   tmpbin;
    Float_t tmpeffS, tmpeffB;
    if (fEffBvsSLocal != 0) delete fEffBvsSLocal;
-   fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal", 
+   fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
    fEffBvsSLocal->SetDirectory(0); // it's local
 
@@ -1289,10 +1279,10 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// create XML description for LD classification and regression 
+/// create XML description for LD classification and regression
 /// (for arbitrary number of output classes/targets)
 
-void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
 {
    // write all necessary information to the stream
    std::vector<Double_t> cutsMin;
@@ -1304,19 +1294,19 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "nbins",              fNbins );
    gTools().AddComment( wght, Form( "Below are the optimised cuts for %i variables: Format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0] ... cutMin[ivar=n-1] cutMax[ivar=n-1]", GetNvar() ) );
 
-   // NOTE: The signal efficiency written out into 
-   //       the weight file does not correspond to the center of the bin within which the 
-   //       background rejection is maximised (as before) but to the lower left edge of it. 
-   //       This is because the cut optimisation algorithm determines the best background 
-   //       rejection for all signal efficiencies belonging into a bin. Since the best background 
-   //       rejection is in general obtained for the lowest possible signal efficiency, the 
-   //       reference signal efficeincy is the lowest value in the bin.
+   // NOTE: The signal efficiency written out into
+   //       the weight file does not correspond to the center of the bin within which the
+   //       background rejection is maximised (as before) but to the lower left edge of it.
+   //       This is because the cut optimisation algorithm determines the best background
+   //       rejection for all signal efficiencies belonging into a bin. Since the best background
+   //       rejection is in general obtained for the lowest possible signal efficiency, the
+   //       reference signal efficiency is the lowest value in the bin.
 
    for (Int_t ibin=0; ibin<fNbins; ibin++) {
       Double_t effS     = fEffBvsSLocal->GetBinCenter ( ibin + 1 );
       Double_t trueEffS = GetCuts( effS, cutsMin, cutsMax );
       if (TMath::Abs(trueEffS) < 1e-10) trueEffS = 0;
-      
+
       void* binxml = gTools().AddChild( wght, "Bin" );
       gTools().AddAttr( binxml, "ibin", ibin+1   );
       gTools().AddAttr( binxml, "effS", trueEffS );
@@ -1325,14 +1315,14 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          gTools().AddAttr( cutsxml, Form( "cutMin_%i", ivar ), cutsMin[ivar] );
          gTools().AddAttr( cutsxml, Form( "cutMax_%i", ivar ), cutsMax[ivar] );
-      }      
+      }
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read coefficients from xml weight file
 
-void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode ) 
+void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
 {
    // delete old min and max
    for (UInt_t i=0; i<GetNvar(); i++) {
@@ -1346,7 +1336,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    gTools().ReadAttr( wghtnode, "OptimisationMethod", tmpEffMethod );
    gTools().ReadAttr( wghtnode, "FitMethod",          tmpFitMethod );
    gTools().ReadAttr( wghtnode, "nbins",              fNbins       );
-   
+
    fEffMethod = (EEffMethod)tmpEffMethod;
    fFitMethod = (EFitMethodType)tmpFitMethod;
 
@@ -1372,7 +1362,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    Log() << kINFO << "Reading " << fNbins << " signal efficiency bins for " << GetNvar() << " variables" << Endl;
 
    delete fEffBvsSLocal;
-   fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal", 
+   fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
    fEffBvsSLocal->SetDirectory(0); // it's local
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 ); // Init
@@ -1384,7 +1374,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
       fCutMax[i] = new Double_t[fNbins];
    }
 
-   // read efficeincies and cuts
+   // read efficiencies and cuts
    Int_t   tmpbin;
    Float_t tmpeffS, tmpeffB;
    void* ch = gTools().GetChild(wghtnode,"Bin");
@@ -1419,32 +1409,33 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
 void TMVA::MethodCuts::WriteMonitoringHistosToFile( void ) const
 {
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
-  
+
    fEffBvsSLocal->Write();
 
    // save reference histograms to file
    if (fEffMethod == kUsePDFs) {
-      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) { 
-         (*fVarHistS)[ivar]->Write();    
+      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+         (*fVarHistS)[ivar]->Write();
          (*fVarHistB)[ivar]->Write();
-         (*fVarHistS_smooth)[ivar]->Write();    
+         (*fVarHistS_smooth)[ivar]->Write();
          (*fVarHistB_smooth)[ivar]->Write();
          (*fVarPdfS)[ivar]->GetPDFHist()->Write();
          (*fVarPdfB)[ivar]->GetPDFHist()->Write();
       }
-   }  
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// - overloaded function to create background efficiency (rejection) versus
-///   signal efficiency plot (first call of this function)
-/// - the function returns the signal efficiency at background efficiency
-///   indicated in theString
+/// Overloaded function to create background efficiency (rejection) versus
+/// signal efficiency plot (first call of this function).
+///
+/// The function returns the signal efficiency at background efficiency
+/// indicated in theString
 ///
 /// "theString" must have two entries:
-/// [0]: "Efficiency"
-/// [1]: the value of background efficiency at which the signal efficiency 
-///      is to be returned
+///  - `[0]`: "Efficiency"
+///  - `[1]`: the value of background efficiency at which the signal efficiency
+///           is to be returned
 
 Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
 {
@@ -1459,7 +1450,7 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
    }
 
    Results* results = Data()->GetResults(GetMethodName(), Types::kTesting, GetAnalysisType());
-   
+
    // that will be the value of the efficiency retured (does not affect
    // the efficiency-vs-bkg plot which is done anyway.
    Float_t effBref  = atof( ((TObjString*)list->At(1))->GetString() );
@@ -1478,7 +1469,7 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
       fBinaryTreeB->Fill( GetEventCollection(Types::kTraining), fBackgroundClass );
       // there is no really good equivalent to the fEffS; fEffB (efficiency vs cutvalue)
       // for the "Cuts" method (unless we had only one cut). Maybe later I might add here
-      // histograms for each of the cuts...but this would require also a change in the 
+      // histograms for each of the cuts...but this would require also a change in the
       // base class, and it is not really necessary, as we get exactly THIS info from the
       // "evaluateAllVariables" anyway.
 
@@ -1503,20 +1494,20 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
          }
          // find cut value corresponding to a given signal efficiency
          Double_t effS, effB;
-         this->GetEffsfromSelection( &tmpCutMin[0], &tmpCutMax[0], effS, effB);    
+         this->GetEffsfromSelection( &tmpCutMin[0], &tmpCutMax[0], effS, effB);
          // check that effS matches bini
          Int_t effBin = eff_bvss_tr->GetXaxis()->FindBin(effS);
          if (effBin != bini){
-            Log()<< kVERBOSE << "unable to fill efficiency bin " << bini<< " " << effBin <<Endl; 
+            Log()<< kVERBOSE << "unable to fill efficiency bin " << bini<< " " << effBin <<Endl;
             nFailedBins++;
          }
          else{
             // and fill histograms
-            eff_bvss_tr->SetBinContent( bini, effB     );    
-            rej_bvss_tr->SetBinContent( bini, 1.0-effB ); 
+            eff_bvss_tr->SetBinContent( bini, effB     );
+            rej_bvss_tr->SetBinContent( bini, 1.0-effB );
          }
       }
-      if (nFailedBins>0) Log()<< kWARNING << " unable to fill "<< nFailedBins <<" efficiency bins " <<Endl;  
+      if (nFailedBins>0) Log()<< kWARNING << " unable to fill "<< nFailedBins <<" efficiency bins " <<Endl;
 
       delete [] tmpCutMin;
       delete [] tmpCutMax;
@@ -1541,22 +1532,23 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
       // find signal efficiency that corresponds to required background efficiency
       if ((effB - effBref)*(effB_ - effBref) < 0) break;
       effS_ = effS;
-      effB_ = effB;  
+      effB_ = effB;
    }
 
    return 0.5*(effS + effS_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// - overloaded function to create background efficiency (rejection) versus
-///   signal efficiency plot (first call of this function)
-/// - the function returns the signal efficiency at background efficiency
-///   indicated in theString
+/// Overloaded function to create background efficiency (rejection) versus
+/// signal efficiency plot (first call of this function).
+///
+/// The function returns the signal efficiency at background efficiency
+/// indicated in theString
 ///
 /// "theString" must have two entries:
-/// [0]: "Efficiency"
-/// [1]: the value of background efficiency at which the signal efficiency 
-///      is to be returned
+///  - `[0]`: "Efficiency"
+///  - `[1]`: the value of background efficiency at which the signal efficiency
+///           is to be returned
 
 Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETreeType type, Double_t& effSerr )
 {
@@ -1574,9 +1566,9 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
             << " | required format, e.g., Efficiency:0.05, or empty string" << Endl;
       return -1;
    }
-   
+
    // sanity check
-   Bool_t computeArea = (list->GetSize() < 2); // the area is computed 
+   Bool_t computeArea = (list->GetSize() < 2); // the area is computed
 
    // that will be the value of the efficiency retured (does not affect
    // the efficiency-vs-bkg plot which is done anyway.
@@ -1591,8 +1583,8 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
       if (fBinaryTreeS!=0) { delete fBinaryTreeS; fBinaryTreeS = 0; }
       if (fBinaryTreeB!=0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
 
-      // the variables may be transformed by a transformation method: to coherently 
-      // treat signal and background one must decide which transformation type shall 
+      // the variables may be transformed by a transformation method: to coherently
+      // treat signal and background one must decide which transformation type shall
       // be used: our default is signal-type
       fBinaryTreeS = new BinarySearchTree();
       fBinaryTreeS->Fill( GetEventCollection(Types::kTesting), fSignalClass );
@@ -1601,7 +1593,7 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
 
       // there is no really good equivalent to the fEffS; fEffB (efficiency vs cutvalue)
       // for the "Cuts" method (unless we had only one cut). Maybe later I might add here
-      // histograms for each of the cuts...but this would require also a change in the 
+      // histograms for each of the cuts...but this would require also a change in the
       // base class, and it is not really necessary, as we get exactly THIS info from the
       // "evaluateAllVariables" anyway.
 
@@ -1615,7 +1607,7 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
 
       Double_t xmin = 0.;
       Double_t xmax = 1.000001;
-      
+
       TH1* eff_s = new TH1F( GetTestvarName() + "_effS", GetTestvarName() + " (signal)",     fNbins, xmin, xmax);
       for (Int_t ibin=1; ibin<=fNbins; ibin++) eff_s->SetBinContent( ibin, -0.1 ); // Init
       TH1* eff_b = new TH1F( GetTestvarName() + "_effB", GetTestvarName() + " (background)", fNbins, xmin, xmax);
@@ -1628,7 +1620,7 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
       // make the background-vs-signal efficiency plot
       Double_t* tmpCutMin = new Double_t[GetNvar()];
       Double_t* tmpCutMax = new Double_t[GetNvar()];
-      TGraph* tmpBvsS = new TGraph(fNbins+1);      
+      TGraph* tmpBvsS = new TGraph(fNbins+1);
       tmpBvsS->SetPoint(0, 0., 0.);
 
       for (Int_t bini=1; bini<=fNbins; bini++) {
@@ -1638,7 +1630,7 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
          }
          // find cut value corresponding to a given signal efficiency
          Double_t effS, effB;
-         this->GetEffsfromSelection( &tmpCutMin[0], &tmpCutMax[0], effS, effB);             
+         this->GetEffsfromSelection( &tmpCutMin[0], &tmpCutMax[0], effS, effB);
          tmpBvsS->SetPoint(bini, effS, effB);
 
          eff_s->SetBinContent(bini, effS);
@@ -1654,8 +1646,8 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
       for (Int_t bini=1; bini<=fNbins; bini++) {
          Double_t effS = (bini - 0.5)/Float_t(fNbins);
          Double_t effB = fSpleffBvsS->Eval( effS );
-         eff_BvsS->SetBinContent( bini, effB     );    
-         rej_BvsS->SetBinContent( bini, 1.0-effB ); 
+         eff_BvsS->SetBinContent( bini, effB     );
+         rej_BvsS->SetBinContent( bini, 1.0-effB );
       }
    }
 
@@ -1671,14 +1663,14 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
       // compute area of rej-vs-eff plot
       Double_t integral = 0;
       for (Int_t bini=1; bini<=nbins_; bini++) {
-         
+
          // get corresponding signal and background efficiencies
          effS = (bini - 0.5)/Float_t(nbins_);
          effB = fSpleffBvsS->Eval( effS );
          integral += (1.0 - effB);
-      }   
-      integral /= nbins_;      
-      
+      }
+      integral /= nbins_;
+
       return integral;
    }
    else {
@@ -1688,25 +1680,25 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
          // get corresponding signal and background efficiencies
          effS = (bini - 0.5)/Float_t(nbins_);
          effB = fSpleffBvsS->Eval( effS );
-         
+
          // find signal efficiency that corresponds to required background efficiency
          if ((effB - effBref)*(effB_ - effBref) < 0) break;
          effS_ = effS;
-         effB_ = effB;  
+         effB_ = effB;
       }
 
       effS    = 0.5*(effS + effS_);
       effSerr = 0;
-      if (Data()->GetNEvtSigTest() > 0) 
+      if (Data()->GetNEvtSigTest() > 0)
          effSerr = TMath::Sqrt( effS*(1.0 - effS)/Double_t(Data()->GetNEvtSigTest()) );
-   
+
       return effS;
 
    }
 
    return -1;
 }
- 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// write specific classifier response
 
@@ -1719,7 +1711,7 @@ void TMVA::MethodCuts::MakeClassSpecific( std::ostream& fout, const TString& cla
 ////////////////////////////////////////////////////////////////////////////////
 /// get help message text
 ///
-/// typical length of text line: 
+/// typical length of text line:
 ///         "|--------------------------------------------------------------|"
 
 void TMVA::MethodCuts::GetHelpMessage() const
@@ -1780,7 +1772,7 @@ void TMVA::MethodCuts::GetHelpMessage() const
    Log() << "" << Endl;
    Log() << "\"Increasing Adaptive\" approach:" << Endl;
    Log() << "" << Endl;
-   Log() << "The algorithm seeks local minima and explores their neighborhood, while" << Endl;
+   Log() << "The algorithm seeks local minima and explores their neighborhoods, while" << Endl;
    Log() << "changing the ambient temperature depending on the number of failures" << Endl;
    Log() << "in the previous steps. The performance can be improved by increasing" << Endl;
    Log() << "the number of iteration steps (\"MaxCalls\"), or by adjusting the" << Endl;
@@ -1791,7 +1783,7 @@ void TMVA::MethodCuts::GetHelpMessage() const
    Log() << "  -> adjust   \"MinTemperature\"" << brk << Endl;
    Log() << "  -> adjust   \"TemperatureScale\"" << brk << Endl;
    Log() << "  -> adjust   \"AdaptiveSpeed\"" << Endl;
-   Log() << "" << Endl;   
+   Log() << "" << Endl;
    Log() << "\"Decreasing Adaptive\" approach:" << Endl;
    Log() << "" << Endl;
    Log() << "The algorithm calculates the initial temperature (based on the effect-" << Endl;
@@ -1806,7 +1798,7 @@ void TMVA::MethodCuts::GetHelpMessage() const
    Log() << "" << Endl;
    Log() << "Alternative ways of counting the temperature change are implemented. " << Endl;
    Log() << "Each of them starts with the maximum temperature (\"MaxTemperature\")" << Endl;
-   Log() << "and descreases while changing the temperature according to a given" << Endl;
+   Log() << "and decreases while changing the temperature according to a given" << Endl;
    Log() << "prescription:" << brk << Endl;
    Log() << "CurrentTemperature =" << brk << Endl;
    Log() << "  - Sqrt: InitialTemperature / Sqrt(StepNumber+2) * TemperatureScale" << brk << Endl;
@@ -1817,7 +1809,7 @@ void TMVA::MethodCuts::GetHelpMessage() const
    Log() << "" << Endl;
    Log() << "Their performance can be improved by adjusting initial temperature" << Endl;
    Log() << "(\"InitialTemperature\"), the number of iteration steps (\"MaxCalls\")," << Endl;
-   Log() << "and the multiplier that scales the termperature descrease" << Endl;
+   Log() << "and the multiplier that scales the temperature decrease" << Endl;
    Log() << "(\"TemperatureScale\")" << brk << Endl;
    Log() << "  -> increase \"MaxCalls\"" << brk << Endl;
    Log() << "  -> adjust   \"InitialTemperature\"" << brk << Endl;

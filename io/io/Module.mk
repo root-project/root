@@ -28,9 +28,18 @@ IOLIB        := $(LPATH)/libRIO.$(SOEXT)
 IOMAP        := $(IOLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(IOH))
+IOH_REL      := $(patsubst $(MODDIRI)/%.h,include/%.h,$(IOH))
+ALLHDRS      += $(IOH_REL)
 ALLLIBS      += $(IOLIB)
 ALLMAPS      += $(IOMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(IOH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(IOLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(IODEP)

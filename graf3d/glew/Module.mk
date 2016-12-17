@@ -13,7 +13,13 @@ GLEWDIRS     := $(GLEWDIR)/src
 GLEWDIRI     := $(GLEWDIR)/inc
 
 ##### libGLEW #####
-GLEWH        := $(filter-out $(MODDIRI)/GL/LinkDef%,$(wildcard $(MODDIRI)/GL/*.h))
+GLEWH        := $(MODDIRI)/GL/glew.h
+ifeq ($(BUILDX11),yes)
+GLEWH        += $(MODDIRI)/GL/glxew.h
+endif
+ifeq ($(ARCH),win32)
+GLEWH        += $(MODDIRI)/GL/wglew.h
+endif
 GLEWS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.c))
 GLEWO        := $(call stripsrc,$(GLEWS:.c=.o))
 
@@ -22,7 +28,8 @@ GLEWDEP      := $(GLEWO:.o=.d)
 GLEWLIB      := $(LPATH)/libGLEW.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLEWH))
+GLEWH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLEWH))
+ALLHDRS     += $(GLEWH_REL)
 ALLLIBS     += $(GLEWLIB)
 
 # include all dependency files
@@ -58,6 +65,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-# We need to disallow the direct use of gl.h. This way people will see the error
-# and the suggested fix. This happens by providing our own "fake" system gl.h
-$(GLEWO): CFLAGS += -isystem $(GLEWDIR)/isystem $(OPENGLINCDIR:%=-I%)
+$(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I%)

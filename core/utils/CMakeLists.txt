@@ -26,6 +26,8 @@ ROOT_OBJECT_LIBRARY(RootclingUtils
   ${CMAKE_SOURCE_DIR}/core/metautils/src/RStl.cxx
 )
 
+add_dependencies(RootclingUtils CLING)
+
 ROOT_EXECUTABLE(rootcling src/rootcling.cxx src/rootclingTCling.cxx
                           $<TARGET_OBJECTS:BaseTROOT>
                           $<TARGET_OBJECTS:MetaLLVM>

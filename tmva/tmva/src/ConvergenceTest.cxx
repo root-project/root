@@ -25,14 +25,19 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::ConvergenceTest
+\ingroup TMVA
+
+Check for convergence.
+
+*/
 #include "TMVA/ConvergenceTest.h"
 #include "TMath.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::ConvergenceTest::ConvergenceTest() 
+TMVA::ConvergenceTest::ConvergenceTest()
    : fCurrentValue( 0 ),
      fImprovement( 0 ),
      fSteps( 0 ),
@@ -47,19 +52,16 @@ TMVA::ConvergenceTest::ConvergenceTest()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::ConvergenceTest::~ConvergenceTest() 
+TMVA::ConvergenceTest::~ConvergenceTest()
 {
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// gives back true if the last "steps" steps have lead to an improvement of the
 /// "fitness" of the "individuals" of at least "improvement"
-/// 
-/// this gives a simple measure of if the estimator of the MLP is
-/// converging and no major improvement is to be expected. 
 ///
+/// this gives a simple measure of if the estimator of the MLP is
+/// converging and no major improvement is to be expected.
 
 Bool_t TMVA::ConvergenceTest::HasConverged( Bool_t withinConvergenceBand )
 {
@@ -68,7 +70,7 @@ Bool_t TMVA::ConvergenceTest::HasConverged( Bool_t withinConvergenceBand )
    if (fCounter < 0) {
       fConvValue = fCurrentValue;
    }
-   Float_t improvement = 0; 
+   Float_t improvement = 0;
    if( withinConvergenceBand )
       improvement = TMath::Abs(fCurrentValue - fConvValue);
    else
@@ -88,29 +90,29 @@ Bool_t TMVA::ConvergenceTest::HasConverged( Bool_t withinConvergenceBand )
 
 Float_t TMVA::ConvergenceTest::Progress()
 {
-   if( fCounter > fMaxCounter ) 
-      fMaxCounter = fCounter; 
-   return Float_t(fMaxCounter)/Float_t(fSteps);  
+   if( fCounter > fMaxCounter )
+      fMaxCounter = fCounter;
+   return Float_t(fMaxCounter)/Float_t(fSteps);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// this function provides the ability to change the learning rate according to
-/// the success of the last generations. 
-/// 
+/// the success of the last generations.
+///
 /// Parameters:
-///      int ofSteps :  = if OF the number of STEPS given in this variable (ofSteps) the 
+///
+///  - int ofSteps :  = if OF the number of STEPS given in this variable (ofSteps) the
 ///                       rate of improvement has to be calculated
 ///
-/// using this function one can increase the stepSize of the mutation when we have 
+/// using this function one can increase the stepSize of the mutation when we have
 /// good success (to pass fast through the easy phase-space) and reduce the learning rate
-/// if we are in a difficult "territory" of the phase-space. 
-///
+/// if we are in a difficult "territory" of the phase-space.
 
 Float_t TMVA::ConvergenceTest::SpeedControl( UInt_t ofSteps )
 {
-   // < is valid for "less" comparison (for minimiztions)
-   if ( fBestResult > fLastResult || fSuccessList.size() <=0 ) { 
+   // < is valid for "less" comparison (for minimization)
+   if ( fBestResult > fLastResult || fSuccessList.size() <=0 ) {
       fLastResult = fBestResult;
       fSuccessList.push_front( 1 ); // it got better
    } else {

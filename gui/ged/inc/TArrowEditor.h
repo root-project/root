@@ -20,9 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGedFrame
+#include "GuiTypes.h"
 #include "TGedFrame.h"
-#endif
+#include "TGFrame.h"
 
 class TGComboBox;
 class TGNumberEntry;

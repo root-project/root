@@ -9,10 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TText.h"
+
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
-#include "TText.h"
 #  include <ft2build.h>
 #  include FT_FREETYPE_H
 #  include FT_GLYPH_H

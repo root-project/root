@@ -133,7 +133,6 @@
 #include "RConfigure.h"
 
 //#if ROOT_VERSION_CODE >= ROOT_VERSION(3,03,5)
-#include "Riosfwd.h"
 #include "Riostream.h"
 //#include <iomanip.h>
 

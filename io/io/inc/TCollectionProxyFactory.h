@@ -18,10 +18,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
-
 #include <vector>
 
 #ifndef ROOT_TCollectionProxyInfo

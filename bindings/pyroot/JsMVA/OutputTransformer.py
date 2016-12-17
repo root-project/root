@@ -3,7 +3,8 @@
 #  @author Attila Bagoly <battila93@gmail.com>
 # This class will transform the TMVA original output to HTML formated output.
 
-import DataLoader
+from JsMVA import DataLoader
+from JsMVA.Utils import xrange
 import cgi
 import re
 

@@ -5914,17 +5914,19 @@
          if ((this.zoom_ymin === this.zoom_ymax) && (this.Dimension()==1))
             this.scale_ymax*=1.8;
 
-         if ((this.scale_ymin <= 0) && (this.nbinsy>0))
+         // this is for 2/3 dim histograms - find first non-negative bin
+         if ((this.scale_ymin <= 0) && (this.nbinsy>0) && (this.Dimension()>1))
             for (var i=0;i<this.nbinsy;++i) {
                this.scale_ymin = Math.max(this.scale_ymin, this.GetBinY(i));
                if (this.scale_ymin>0) break;
             }
 
-         if ((this.scale_ymin <= 0) && ('ymin_nz' in this) && (this.ymin_nz > 0))
+         if ((this.scale_ymin <= 0) && ('ymin_nz' in this) && (this.ymin_nz > 0) && (this.ymin_nz < 1e-2*this.ymax))
             this.scale_ymin = 0.3*this.ymin_nz;
 
          if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
-            this.scale_ymin = 0.000001 * this.scale_ymax;
+            this.scale_ymin = 3e-4 * this.scale_ymax;
+         
          this.y = d3.scale.log();
       } else
       if (this.y_kind=='time') {
@@ -7380,7 +7382,7 @@
           right = this.GetSelectIndex("x", "right"),
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null,
-          res = { meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: stat_sumw, entries: this.stat_entries, xmax:0, wmax:0 };
+          res = { meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax:0, wmax:0 };
 
       for (i = left; i < right; ++i) {
          xx = this.GetBinX(i+0.5);
@@ -7409,6 +7411,8 @@
          stat_sumwx2 = this.histo.fTsumwx2;
       }
 
+      res.integral = stat_sumw;
+      
       if (stat_sumw > 0) {
          res.meanx = stat_sumwx / stat_sumw;
          res.meany = stat_sumwy / stat_sumw;
@@ -8685,7 +8689,7 @@
 
                if (xmin>=xmax) {
                   xmax = xmin;
-                  if (Math.abs(xmin<100)) { xmin-=1; xmax+=1; } else
+                  if (Math.abs(xmin)<100) { xmin-=1; xmax+=1; } else
                   if (xmin>0) { xmin*=0.9; xmax*=1.1; } else
                               { xmin*=1.1; xmax*=0.9; }
                } else

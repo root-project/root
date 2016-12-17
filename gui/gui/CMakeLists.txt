@@ -12,8 +12,8 @@ set(headers1 TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h
              TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h TGButtonGroup.h
              TGNumberEntry.h TGTableLayout.h WidgetMessageTypes.h
              TGIdleHandler.h TGInputDialog.h TGPack.h)
-set(headers2 TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h
-             TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h
+set(headers2 TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h
+             TGTab.h TGSlider.h  TGListView.h TGMimeTypes.h
              TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h
              TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h
              TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h
@@ -28,8 +28,8 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
              TGuiBuilder.h TGRedirectOutputGuard.h TGPasswdDialog.h
              TGTextEditor.h TGSpeedo.h TGDNDManager.h TGTable.h
              TGSimpleTableInterface.h TGSimpleTable.h TGTableCell.h
-             TGTableHeader.h TGTableContainer.h TGTextEditor.h TGSpeedo.h
-             TGDNDManager.h TGCommandPlugin.h TGFileBrowser.h
+             TGTableHeader.h TGTableContainer.h
+             TGCommandPlugin.h TGFileBrowser.h
              TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
              TGTextViewStream.h)
 

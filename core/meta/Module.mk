@@ -61,7 +61,8 @@ ALLLIBS      += $(CLINGLIB)
 ALLMAPS      += $(CLINGMAP)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH))
+METAH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH))
+ALLHDRS     += $(METAH_REL)
 
 # include all dependency files
 INCLUDEFILES += $(METADEP)

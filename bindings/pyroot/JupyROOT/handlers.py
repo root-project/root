@@ -48,11 +48,18 @@ class IOHandler(object):
     def EndCapture(self):
         _lib.JupyROOTExecutorHandler_EndCapture()
 
+    def Decode(self, obj):
+        import sys
+        if sys.version_info >= (3, 0):
+            return obj.decode('utf-8')
+        else:
+            return obj
+
     def GetStdout(self):
-       return _lib.JupyROOTExecutorHandler_GetStdout()
+       return self.Decode(_lib.JupyROOTExecutorHandler_GetStdout())
 
     def GetStderr(self):
-       return _lib.JupyROOTExecutorHandler_GetStderr()
+       return self.Decode(_lib.JupyROOTExecutorHandler_GetStderr())
 
     def GetStreamsDicts(self):
        out = self.GetStdout()
@@ -65,7 +72,7 @@ class Runner(object):
     ''' Asynchrously run functions
     >>> import time
     >>> def f(code):
-    ...    print code
+    ...    print(code)
     >>> r= Runner(f)
     >>> r.Run("ss")
     ss
@@ -73,16 +80,16 @@ class Runner(object):
     ss
     >>> def g(msg):
     ...    time.sleep(.5)
-    ...    print msg
+    ...    print(msg)
     >>> r= Runner(g)
-    >>> r.AsyncRun("Asynchronous");print "Synchronous";time.sleep(1)
+    >>> r.AsyncRun("Asynchronous");print("Synchronous");time.sleep(1)
     Synchronous
     Asynchronous
-    >>> r.AsyncRun("Asynchronous"); print r.HasFinished()
+    >>> r.AsyncRun("Asynchronous"); print(r.HasFinished())
     False
     >>> time.sleep(1)
     Asynchronous
-    >>> print r.HasFinished()
+    >>> print(r.HasFinished())
     True
     '''
     def __init__(self, function):
@@ -118,7 +125,7 @@ class JupyROOTDeclarer(Runner):
     ''' Asynchrously execute declarations
     >>> import ROOT
     >>> d = JupyROOTDeclarer()
-    >>> d.Run("int f(){return 3;}")
+    >>> d.Run("int f(){return 3;}".encode("utf-8"))
     1
     >>> ROOT.f()
     3
@@ -130,7 +137,7 @@ class JupyROOTExecutor(Runner):
     r''' Asynchrously execute process lines
     >>> import ROOT
     >>> d = JupyROOTExecutor()
-    >>> d.Run('cout << "Here am I" << endl;')
+    >>> d.Run('cout << "Here am I" << endl;'.encode("utf-8"))
     1
     '''
     def __init__(self):

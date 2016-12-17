@@ -14,10 +14,11 @@
 
 #include "TEveElement.h"
 
-#include "TRootBrowser.h"
-#include "TGListTree.h"
-
 #include "TContextMenu.h"
+#include "TGListTree.h"
+#include "TRootBrowser.h"
+#include "TString.h"
+
 
 class TGFileBrowser;
 class TGSplitter;

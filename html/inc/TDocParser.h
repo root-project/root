@@ -33,9 +33,6 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 class TBaseClass;
 class TClass;

@@ -31,9 +31,18 @@ TREEPLAYERLIB := $(LPATH)/libTreePlayer.$(SOEXT)
 TREEPLAYERMAP := $(TREEPLAYERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEPLAYERH) $(MODDIRI)/TBranchProxyTemplate.h)
+TREEPLAYERH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEPLAYERH))
+ALLHDRS       += $(TREEPLAYERH_REL) $(MODDIRI)/TBranchProxyTemplate.h
 ALLLIBS       += $(TREEPLAYERLIB)
 ALLMAPS       += $(TREEPLAYERMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TREEPLAYERH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Tree_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(TREEPLAYERLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(TREEPLAYERDEP)

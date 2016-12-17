@@ -6,7 +6,12 @@
 
 import ROOT
 from ROOT import TMVA
-import JPyInterface
+import sys
+if sys.version_info >= (3, 0):
+    from JsMVA import JPyInterface
+else:
+    import JPyInterface
+from JsMVA.Utils import xrange
 from xml.etree.ElementTree import ElementTree
 import json
 from IPython.core.display import display, HTML, clear_output
@@ -147,7 +152,7 @@ def GetDeepNetworkOld(xml_file, returnObj=False):
     network["synapses"] = synapses
     if returnObj:
         return network
-    return json.dumps(network)
+    return json.dumps(network, sort_keys = True)
 
 ## Reads deep neural network weights from file and returns it in JSON format.
 # @param xml_file path to DNN weight file
@@ -191,7 +196,7 @@ def GetDeepNetwork(xml_file, returnObj=False):
     network["layers"] = layers
     if returnObj:
         return network
-    return json.dumps(network)
+    return json.dumps(network, sort_keys = True)
 
 ## Reads neural network weights from file and returns it in JSON format
 # @param xml_file path to weight file
@@ -226,7 +231,7 @@ def GetNetwork(xml_file):
             neurons[label]["weights"] = weights
         net["layer_"+str(layer.get('Index'))] = neurons
     network["layout"] = net
-    return json.dumps(network)
+    return json.dumps(network, sort_keys = True)
 
 ## Helper class for reading decision tree from XML file
 class TreeReader:
@@ -681,7 +686,12 @@ def ChangeCallOriginal__init__(*args,  **kwargs):
     hasColor = False
     args = list(args)
     for arg_idx in xrange(len(args)):
-        if isinstance(args[arg_idx], basestring) and args[arg_idx].find(":")!=-1:
+        # basestring==(str, unicode) in Python2, which translates to str in Python3
+        if sys.version_info >= (3, 0):
+            is_string = isinstance(args[arg_idx], str)
+        else:
+            is_string = isinstance(args[arg_idx], basestring)
+        if is_string and args[arg_idx].find(":")!=-1:
             if args[arg_idx].find("Color")!=-1:
                 hasColor = True
                 if args[arg_idx].find("!Color")==-1:

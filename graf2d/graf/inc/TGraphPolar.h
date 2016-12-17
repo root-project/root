@@ -15,9 +15,6 @@
 #ifndef ROOT_TGraphErrors
 #include "TGraphErrors.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 #ifndef ROOT_TAttText
 #include "TAttText.h"
 #endif

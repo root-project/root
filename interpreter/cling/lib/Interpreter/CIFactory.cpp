@@ -352,7 +352,9 @@ namespace {
     Opts.RTTIData = 0;
     Opts.setDefaultCallingConv(clang::LangOptions::DCC_CDecl);
 #ifdef _DEBUG
-    Opts.setStackProtector(clang::LangOptions::SSPStrong);
+    // FIXME: This requires bufferoverflowu.lib, but adding:
+    // #pragma comment(lib, "bufferoverflowu.lib") still gives errors!
+    // Opts.setStackProtector(clang::LangOptions::SSPStrong);
 #endif
 #else
     Opts.Exceptions = 1;
@@ -513,6 +515,12 @@ std::string stringifyPreprocSetting(const char* name, int val) {
 #ifdef _GLIBCXX_USE_CXX11_ABI
     PPOpts.addMacroDef("_GLIBCXX_USE_CXX11_ABI="
                        ClingStringify(_GLIBCXX_USE_CXX11_ABI));
+#endif
+
+#if defined(LLVM_ON_WIN32)
+    PPOpts.addMacroDef("CLING_EXPORT=__declspec(dllimport)");
+#else
+    PPOpts.addMacroDef("CLING_EXPORT=");
 #endif
   }
 

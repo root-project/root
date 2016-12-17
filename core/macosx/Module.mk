@@ -52,4 +52,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-$(MACOSXO): CXXFLAGS += $(MACOSXNDEBUG)
+$(MACOSXO): OBJCXXFLAGS += $(CXXFLAGS) $(MACOSXNDEBUG)

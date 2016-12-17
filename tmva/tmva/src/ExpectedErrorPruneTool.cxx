@@ -24,6 +24,24 @@
  *                                                                                *
  **********************************************************************************/
 
+/*! \class TMVA::ExpectedErrorPruneTool
+\ingroup TMVA
+
+A helper class to prune a decision tree using the expected error (C4.5) method
+
+Uses an upper limit on the error made by the classification done by each node.
+If the \f$ \frac{S}{S+B} \f$ of the node is \f$ f \f$, then according to the
+training sample, the error rate (fraction of misclassified events by this
+node) is \f$ (1-f) \f$. Now \f$ f \f$ has a statistical error according to the
+binomial distribution hence the error on \f$ f \f$ can be estimated (same error
+as the binomial error for efficiency calculations
+\f$ (\sigma = \sqrt{\frac{(eff(1-eff)}{nEvts}}) \f$
+
+This tool prunes branches from a tree if the expected error of a node is less
+than that of the sum of the error in its descendants.
+
+*/
+
 #include "TMVA/ExpectedErrorPruneTool.h"
 #include "TMVA/DecisionTree.h"
 #include "TMVA/IPruneTool.h"
@@ -62,7 +80,7 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
    if( isAutomatic ) {
       //SetAutomatic( );
       isAutomatic = kFALSE;
-      Log() << kWARNING << "Sorry autmoatic pruning strength determination is not implemented yet" << Endl;
+      Log() << kWARNING << "Sorry automatic pruning strength determination is not implemented yet" << Endl;
    }
    if( dt == NULL || (IsAutomatic() && validationSample == NULL) ) {
       // must have a valid decision tree to prune, and if the prune strength
@@ -72,8 +90,8 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
    }
    fNodePurityLimit = dt->GetNodePurityLimit();
 
-   if(IsAutomatic()) { 
-      Log() << kFATAL << "Sorry autmoatic pruning strength determination is not implemented yet" << Endl;
+   if(IsAutomatic()) {
+      Log() << kFATAL << "Sorry automatic pruning strength determination is not implemented yet" << Endl;
       /*
         dt->ApplyValidationSample(validationSample);
         Double_t weights = dt->GetSumWeights(validationSample);
@@ -87,8 +105,8 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
         Int_t errCount = 0,
         lastNodeCount = nnodes;
 
-        // find the maxiumum prune strength that still leaves the root's daughter nodes
-      
+        // find the maximum prune strength that still leaves the root's daughter nodes
+
         while ( nnodes > 1 && !forceStop ) {
         fPruneStrength += fDeltaPruneStrength;
         Log() << "----------------------------------------------------" << Endl;
@@ -151,7 +169,7 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
 ////////////////////////////////////////////////////////////////////////////////
 /// recursive pruning of nodes using the Expected Error Pruning (EEP)
 
-void TMVA::ExpectedErrorPruneTool::FindListOfNodes( DecisionTreeNode* node ) 
+void TMVA::ExpectedErrorPruneTool::FindListOfNodes( DecisionTreeNode* node )
 {
    TMVA::DecisionTreeNode *l = (TMVA::DecisionTreeNode*)node->GetLeft();
    TMVA::DecisionTreeNode *r = (TMVA::DecisionTreeNode*)node->GetRight();
@@ -169,7 +187,7 @@ void TMVA::ExpectedErrorPruneTool::FindListOfNodes( DecisionTreeNode* node )
 /// calculate the expected statistical error on the subtree below "node"
 /// which is used in the expected error pruning
 
-Double_t TMVA::ExpectedErrorPruneTool::GetSubTreeError( DecisionTreeNode* node ) const 
+Double_t TMVA::ExpectedErrorPruneTool::GetSubTreeError( DecisionTreeNode* node ) const
 {
    DecisionTreeNode *l = (DecisionTreeNode*)node->GetLeft();
    DecisionTreeNode *r = (DecisionTreeNode*)node->GetRight();
@@ -192,9 +210,10 @@ Double_t TMVA::ExpectedErrorPruneTool::GetSubTreeError( DecisionTreeNode* node )
 /// this node) is (1-f)
 /// Now f has a statistical error according to the binomial distribution
 /// hence the error on f can be estimated (same error as the binomial error
-/// for efficency calculations ( sigma = sqrt(eff(1-eff)/nEvts ) )
+/// for efficiency calculations
+/// \f$ (\sigma = \sqrt{\frac{(eff(1-eff)}{nEvts}}) \f$
 
-Double_t TMVA::ExpectedErrorPruneTool::GetNodeError( DecisionTreeNode *node ) const 
+Double_t TMVA::ExpectedErrorPruneTool::GetNodeError( DecisionTreeNode *node ) const
 {
    Double_t errorRate = 0;
 
@@ -224,13 +243,13 @@ Double_t TMVA::ExpectedErrorPruneTool::GetNodeError( DecisionTreeNode *node ) co
    //          leaf node ( N_leaf / N_parent)
    // step 3:
 
-   // Minimum Error Pruning (MEP) accordig to Niblett/Bratko
+   // Minimum Error Pruning (MEP) according to Niblett/Bratko
    //# of correctly classified events by this node:
    //Double_t n=f*nEvts ;
    //Double_t p_apriori = 0.5, m=100;
    //errorRate = (nEvts  - n + (1-p_apriori) * m ) / (nEvts  + m);
 
-   // Pessimistic error Pruing (proposed by Quinlan (error estimat with continuity approximation)
+   // Pessimistic error Pruning (proposed by Quinlan (error estimat with continuity approximation)
    //# of correctly classified events by this node:
    //Double_t n=f*nEvts ;
    //errorRate = (nEvts  - n + 0.5) / nEvts ;
@@ -245,5 +264,4 @@ Double_t TMVA::ExpectedErrorPruneTool::GetNodeError( DecisionTreeNode *node ) co
 
    return errorRate;
 }
-
 

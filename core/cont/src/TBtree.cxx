@@ -167,6 +167,7 @@ item's own key).
 
 #include "TBtree.h"
 #include "TBuffer.h"
+#include "TObject.h"
 
 #include <stdlib.h>
 

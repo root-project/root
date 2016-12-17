@@ -11,5 +11,8 @@
 
 #ifndef ROOT_Rtypeinfo
 #define ROOT_Rtypeinfo
+
+#warning "Rtypeinfo.h is deprecated. It will be removed in ROOT v6.12. Please use #include <typeinfo>, instead.")
+
 #include <typeinfo>
 #endif

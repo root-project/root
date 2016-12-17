@@ -64,7 +64,7 @@
 #if (defined(__GLIBCPP__) || defined(__GLIBCXX__)) && !defined(__CINT__)
 #include "TAtomicCountGcc.h"
 #elif defined(_WIN32) && !defined(__CINT__)
-#include "TAtomicCountWin32.h"
+#include "TWin32AtomicCount.h"
 #elif defined(R__HAS_PTHREAD) && !defined(__CINT__)
 #include "TAtomicCountPthread.h"
 #else

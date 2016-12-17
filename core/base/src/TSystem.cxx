@@ -40,6 +40,7 @@ allows a simple partial implementation for new OS'es.
 #include "TBrowser.h"
 #include "TString.h"
 #include "TOrdCollection.h"
+#include "TObject.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "TTimer.h"
@@ -48,6 +49,7 @@ allows a simple partial implementation for new OS'es.
 #include "TPluginManager.h"
 #include "TUrl.h"
 #include "TVirtualMutex.h"
+#include "TVersionCheck.h"
 #include "compiledata.h"
 #include "RConfigure.h"
 

@@ -1638,7 +1638,9 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
                                             (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
       fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
+      // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
+      TGlobalMappedFunction::GetEarlyRegisteredGlobals().SetOwner(kFALSE);
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().Clear();
    }
 

@@ -71,7 +71,8 @@ endif()
 
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  xml/*.C
-                histfactory/*.C)   # histfactory requires xml
+                histfactory/*.C    # histfactory requires xml
+                unfold/*.C)        # unfold requires xml
 endif()
 
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
@@ -140,8 +141,12 @@ set(gui_veto fit/fitpanel_playback.C
              tree/tvdemo.C
              eve/*.C)
 
-#---These do not need to run for TMVA
-set (tmva_veto tmva/createData.C)
+if (NOT ROOT_tmva_FOUND)
+  set(tmva_veto tmva/*.C tmva/*.py tmva/keras/*.C tmva/keras/*.py)
+else()
+  #---These do not need to run for TMVA
+  set(tmva_veto tmva/createData.C)
+endif()
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
