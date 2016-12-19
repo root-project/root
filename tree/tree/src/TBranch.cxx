@@ -321,11 +321,11 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          TLeaf* leaf = 0;
 	 if (leaftype[1] == '[') {
-	   Warning("TBranch", "Array size for branch '%s' must be specified after leaf name, not after the type name!", name);
-	   // and continue for backward compatibility?
+	    Warning("TBranch", "Array size for branch '%s' must be specified after leaf name, not after the type name!", name);
+	    // and continue for backward compatibility?
 	 } else if (leaftype[1]) {
-	   Warning("TBranch", "Extra characters after type tag '%s' for branch '%s'; must be one character.", leaftype, name);
-	   // and continue for backward compatibility?
+	    Warning("TBranch", "Extra characters after type tag '%s' for branch '%s'; must be one character.", leaftype, name);
+	    // and continue for backward compatibility?
 	 }
          if (*leaftype == 'C') {
             leaf = new TLeafC(this, leafname, leaftype);
