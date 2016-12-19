@@ -51,6 +51,7 @@ combined in the main thread.
 #include "TTimeStamp.h"
 #include "RooProdPdf.h"
 #include "RooRealSumPdf.h"
+#include "RooConstVar.h"
 
 #include <string>
 #include <chrono>
@@ -248,7 +249,7 @@ Double_t RooAbsTestStatistic::evaluate() const
   }
 
   if (SimMaster == _gofOpMode) {
-    if (*(Int_t*) gROOT->Get("timing_flag") == 2) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
@@ -280,7 +281,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       _evalCarry /= norm;
     }
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 2) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -295,12 +296,12 @@ Double_t RooAbsTestStatistic::evaluate() const
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
-    if (*(Int_t*) gROOT->Get("timing_flag") == 2) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
     std::vector<double> timings;
-    if (*(Int_t*) gROOT->Get("timing_flag") == 3) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
       timings.reserve(_nCPU);
       timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json", ios::app);
     }
@@ -311,7 +312,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     Double_t sum(0), carry = 0.;
 
     for (Int_t i = 0; i < _nCPU; ++i) {
-      if (*(Int_t*) gROOT->Get("timing_flag") == 3) {
+      if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
         timing_begin = std::chrono::high_resolution_clock::now();
       }
       Double_t y = _mpfeArray[i]->getValV();
@@ -320,13 +321,13 @@ Double_t RooAbsTestStatistic::evaluate() const
       const Double_t t = sum + y;
       carry = (t - sum) - y;
       sum = t;
-      if (*(Int_t*) gROOT->Get("timing_flag") == 3) {
+      if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
         timing_end = std::chrono::high_resolution_clock::now();
         timings[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
       }
     }
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 3) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
       timing_outfile << "{";
 
       for (Int_t i = 0; i < _nCPU; ++i) {
@@ -342,7 +343,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     Double_t ret = sum ;
     _evalCarry = carry;
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 2) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -357,33 +358,33 @@ Double_t RooAbsTestStatistic::evaluate() const
     return ret ;
 
   } else {
-    if (*(Int_t*) gROOT->Get("timing_flag") == 2) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
 
     // Evaluate as straight FUNC
     Int_t nFirst(0), nLast(_nEvents), nStep(1) ;
-    
+
     switch (_mpinterl) {
     case RooFit::BulkPartition:
       nFirst = _nEvents * _setNum / _numSets ;
       nLast  = _nEvents * (_setNum+1) / _numSets ;
       nStep  = 1 ;
       break;
-      
+
     case RooFit::Interleave:
       nFirst = _setNum ;
       nLast  = _nEvents ;
       nStep  = _numSets ;
       break ;
-      
+
     case RooFit::SimComponents:
       nFirst = 0 ;
       nLast  = _nEvents ;
       nStep  = 1 ;
       break ;
-      
+
     case RooFit::Hybrid:
       throw(std::string("this should never happen")) ;
       break ;
@@ -397,7 +398,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       _evalCarry /= norm;
     }
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 2) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;

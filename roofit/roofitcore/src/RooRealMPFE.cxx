@@ -62,6 +62,7 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooMsgService.h"
 #include "RooNLLVar.h"
 #include "RooTrace.h"
+#include "RooConstVar.h"
 
 #include "TSystem.h"
 
@@ -418,14 +419,14 @@ void RooRealMPFE::calculate() const
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << endl ;
-    if (*(Int_t*) gROOT->Get("timing_flag") == 7) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_initialize.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
 
     const_cast<RooRealMPFE*>(this)->initialize() ;
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 7) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -441,7 +442,7 @@ void RooRealMPFE::calculate() const
   // Inline mode -- Calculate value now
   if (_state==Inline) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
-    if (*(Int_t*) gROOT->Get("timing_flag") == 7) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_inline.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
@@ -449,7 +450,7 @@ void RooRealMPFE::calculate() const
     _value = _arg ;
     clearValueDirty() ;
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 7) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -466,7 +467,7 @@ void RooRealMPFE::calculate() const
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
     // timing stuff
-    if (*(Int_t*) gROOT->Get("timing_flag") == 7) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_client.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
@@ -539,7 +540,7 @@ void RooRealMPFE::calculate() const
     _retrieveDispatched = kTRUE ;
 
     // end timing
-    if (*(Int_t*) gROOT->Get("timing_flag") == 7) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -604,7 +605,7 @@ Double_t RooRealMPFE::evaluate() const
                                                      timing_before_retrieve, timing_after_retrieve;
   struct timespec c_timing_begin, c_timing_end, c_timing_before_retrieve, c_timing_after_retrieve;
 
-  if (*(Int_t*) gROOT->Get("timing_flag") == 4) {
+  if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 4) {
     timing_outfile.open("timing_RRMPFE_evaluate_full.json", ios::app);
     timing_begin = std::chrono::high_resolution_clock::now();
   }
@@ -615,11 +616,11 @@ Double_t RooRealMPFE::evaluate() const
     return_value = _arg ;
   } else if (_state==Client) {
 #ifndef _WIN32
-    if (*(Int_t*) gROOT->Get("timing_flag") == 5) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 5) {
       timing_outfile.open("timing_wall_RRMPFE_evaluate_client.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
-    if (*(Int_t*) gROOT->Get("timing_flag") == 6) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 6) {
       timing_outfile.open("timing_cpu_RRMPFE_evaluate_client.json", ios::app);
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_begin);
     }
@@ -651,19 +652,19 @@ Double_t RooRealMPFE::evaluate() const
 
     Int_t numError;
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 5) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 5) {
       timing_before_retrieve = std::chrono::high_resolution_clock::now();
     }
-    if (*(Int_t*) gROOT->Get("timing_flag") == 6) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 6) {
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_before_retrieve);
     }
 
     *_pipe >> msg >> value >> _evalCarry >> numError;
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 5) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 5) {
       timing_after_retrieve = std::chrono::high_resolution_clock::now();
     }
-    if (*(Int_t*) gROOT->Get("timing_flag") == 6) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 6) {
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_after_retrieve);
     }
 
@@ -699,14 +700,14 @@ Double_t RooRealMPFE::evaluate() const
     _calcInProgress = kFALSE ;
     return_value = value ;
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 5) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 5) {
       timing_end = std::chrono::high_resolution_clock::now();
     }
-    if (*(Int_t*) gROOT->Get("timing_flag") == 6) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 6) {
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_end);
     }
 
-    if (*(Int_t*) gROOT->Get("timing_flag") == 5) {
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 5) {
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
       timing_outfile << "{\"RRMPFE_evaluate_client_wall_s\": \"" << timing_s;
@@ -725,8 +726,8 @@ Double_t RooRealMPFE::evaluate() const
 
       timing_outfile.close();
     }
-    
-    if (*(Int_t*) gROOT->Get("timing_flag") == 6) {
+
+    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 6) {
       double c_timing_s = (c_timing_end.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
 
       timing_outfile << "\", \"RRMPFE_evaluate_client_cpu_s\": \"" << c_timing_s;
@@ -750,7 +751,7 @@ Double_t RooRealMPFE::evaluate() const
 #endif // _WIN32
   }
 
-  if (*(Int_t*) gROOT->Get("timing_flag") == 4) {
+  if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 4) {
     timing_end = std::chrono::high_resolution_clock::now();
 
     double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
