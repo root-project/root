@@ -139,6 +139,7 @@
 #include "TMatrixTSym.h"
 #include "TObjString.h"
 #include "TGraph.h"
+#include "TSystem.h"
 
 #include <algorithm>
 #include <fstream>
@@ -1253,10 +1254,23 @@ void TMVA::MethodBDT::Train()
    Int_t nNodesBeforePruning = 0;
    Int_t nNodesAfterPruning = 0;
 
+   
+   // #### CPU info tells us max threads available for parallelization studies
+   SysInfo_t s;
+   gSystem->GetSysInfo(&s);
+   auto ncpu  = s.fCpus;
+   std::cout << "### NCPUs: " << ncpu << std::endl;
 
+   // #### Init timing info for parallelization studies
+   TStopwatch initWatch;
+   initWatch.Start();
    if(fBoostType=="Grad"){
       InitGradBoost(fEventSample);
    }
+   // #### Done with Init timing
+   initWatch.Stop();
+   std::cout << "### Done timing init..." << std::endl;
+   std::cout << "    +++ Elapsed Time: " << initWatch.RealTime() << std::endl;
 
    Int_t itree=0;
    Bool_t continueBoost=kTRUE;
@@ -1308,6 +1322,9 @@ void TMVA::MethodBDT::Train()
          }
       }
       else{
+         // #### Time how long it takes to train one BDT Tree w/ boosting and the DT (parallelization studies)
+         TStopwatch watch;
+         watch.Start();
          fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), fSignalClass,
                                               fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                               itree, fNodePurityLimit, itree));
@@ -1318,11 +1335,22 @@ void TMVA::MethodBDT::Train()
             fForest.back()->SetUseExclusiveVars(fUseExclusiveVars); 
          }
          
+         // #### Time only the tree building
+         TStopwatch buildTreeWatch;
+         buildTreeWatch.Start();
          nNodesBeforePruning = fForest.back()->BuildTree(*fTrainSample);
+         std::cout << std::endl;
+         std::cout << "    ### Done timing sumNode      :" << fForest.back()->sumNodeTime << std::endl;
+         std::cout << "    ### Done timing trainNodeFast:" << fForest.back()->trainNodeTime << std::endl;
+         std::cout << "    ### Done timing filterNode   : " << fForest.back()->filterNodeTime << std::endl;
          
          if (fUseYesNoLeaf && !DoRegression() && fBoostType!="Grad") { // remove leaf nodes where both daughter nodes are of same type
             nNodesBeforePruning = fForest.back()->CleanTree();
          }
+         // #### Done timing tree building
+         buildTreeWatch.Stop();
+         std::cout << "### Done timing buildTree..." << std::endl;
+         std::cout << "    +++ Elapsed Time: " << buildTreeWatch.RealTime() << std::endl;
 
          nNodesBeforePruningCount += nNodesBeforePruning;
          nodesBeforePruningVsTree->SetBinContent(itree+1,nNodesBeforePruning);
@@ -1333,6 +1361,9 @@ void TMVA::MethodBDT::Train()
          std::vector<const Event*> * validationSample = NULL;
          if(fAutomatic) validationSample = &fValidationSample;
          
+         // #### Time boosting for parallelization
+         TStopwatch boostWatch;
+         boostWatch.Start();
          Double_t bw = this->Boost(*fTrainSample, fForest.back());
          if (bw > 0) {
             fBoostWeights.push_back(bw);
@@ -1341,8 +1372,10 @@ void TMVA::MethodBDT::Train()
             Log() << kWARNING << "stopped boosting at itree="<<itree << Endl;
             continueBoost=kFALSE;
          }
-         
-
+         // #### Done timing boosting
+         boostWatch.Stop();
+         std::cout << "### Done timing boosting..." << std::endl;
+         std::cout << "    +++ Elapsed Time: " << boostWatch.RealTime() << std::endl;
          
          // if fAutomatic == true, pruneStrength will be the optimal pruning strength
          // determined by the pruning algorithm; otherwise, it is simply the strength parameter
@@ -1373,10 +1406,15 @@ void TMVA::MethodBDT::Train()
                      ) BoostMonitor(itree);
             }
          }
+         // #### Done timing the entire BDT process for one Tree
+         watch.Stop();
+         std::cout << "### Done timing one Tree..." << std::endl;
+         std::cout << "    +++ Elapsed Time: " << watch.RealTime() << std::endl;
       }
       itree++;
    }
 
+   // ### output the timing information to a csv for parallelization studies
    std::cout << std::endl;
    double time = timer.ElapsedSeconds();
    std::cout << "### Done timing BDT Training..." << std::endl;
@@ -1474,13 +1512,45 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
 void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& eventSample, Bool_t first)
 {
+   // #### Time how long it takes to update the predictions for the tree
+   TStopwatch watchPredict;
+   watchPredict.Start();
+
+   // Need to update the predictions for the next tree
+   // #### Do this in parallel by partitioning the data into nPartitions
    if(!first){
-      for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
-         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE); 
-      }
+      UInt_t nPartitions = 8;
+      auto seeds = ROOT::TSeqU(nPartitions);
+
+      // need a lambda function to pass to TThreadExecutor::MapReduce
+      auto f = [this, &eventSample, &nPartitions](UInt_t partition = 0) -> Int_t{
+
+         Int_t start = 1.0*partition/nPartitions*eventSample.size();
+         Int_t end   = (partition+1.0)/nPartitions*eventSample.size();
+
+         for(Int_t i=start; i<end; i++)
+            fLossFunctionEventInfo[eventSample[i]].predictedValue += fForest.back()->CheckEvent(eventSample[i],kFALSE);
+
+         return 0;
+      };
+
+      fPool.Map(f, seeds);
    }
+   // #### Done with prediction timing
+   watchPredict.Stop();
+   std::cout << "    #### Done UpdateTargetsRegression Update Predictions: " << watchPredict.RealTime() << std::endl;
    
+   // #### Time how long it takes to update the targets for the tree
+   TStopwatch watchTargets;
+   watchTargets.Start();
+
+   // #### Parallelized at the loss function level
    fRegressionLossFunctionBDTG->SetTargets(eventSample, fLossFunctionEventInfo);
+
+   // #### Done with target timing
+   watchTargets.Stop();
+   std::cout << "    #### Done UpdateTargetsRegression Update Targets: " << watchTargets.RealTime() << std::endl;
+   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1519,23 +1589,50 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
 
 Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt )
 {
+   // #### time leaves
+   TStopwatch watchLeaves;
+   watchLeaves.Start();
+
    // get the vector of events for each terminal so that we can calculate the constant fit value in each
    // terminal node
+   // #### Not sure how many events are in each node in advance, so I can't parallelize this
    std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > > leaves;
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));      
       (leaves[node]).push_back(fLossFunctionEventInfo[*e]);
    }
 
+   // #### done timing leaves
+   watchLeaves.Stop();
+   std::cout << "    #### Done GradBoostRegression leaf events: " << watchLeaves.RealTime() << std::endl;
+
+   // #### time fit
+   TStopwatch watchFit;
+   watchFit.Start();
+
    // calculate the constant fit for each terminal node based upon the events in the node
    // node (iLeave->first), vector of event information (iLeave->second)
+   // #### could parallelize this and do the leaves at the same time, but this doesn't take very long at the moment
+   // #### focus on things that take more time for now
    for (std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
       Double_t fit = fRegressionLossFunctionBDTG->Fit(iLeave->second);
       (iLeave->first)->SetResponse(fShrinkage*fit);          
    }
+   // #### done timing fit
+   watchFit.Stop();
+   std::cout << "    #### Done GradBoostRegression fit events: " << watchFit.RealTime() << std::endl;
+
    
+   // #### time update targets regression
+   TStopwatch watchTargets;
+   watchTargets.Start();
+
    UpdateTargetsRegression(*fTrainSample);
+   // #### done timing targets
+   watchTargets.Stop();
+   std::cout << "    #### Done GradBoostRegression UpdateTargets: " << watchTargets.RealTime() << std::endl;
+
    return 1;
 }
 
@@ -1553,8 +1650,21 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
          fLossFunctionEventInfo[*e]= TMVA::LossFunctionEventInfo((*e)->GetTarget(0), 0, (*e)->GetWeight());
       }
 
+      // #### time lf init
+      TStopwatch watchInitLF;
+      watchInitLF.Start();
       fRegressionLossFunctionBDTG->Init(fLossFunctionEventInfo, fBoostWeights);
+      // #### done timing lf init
+      watchInitLF.Stop();
+      std::cout << "    #### Done Timing LF Init: " << watchInitLF.RealTime() << std::endl;
+
+      // #### time lf update targets
+      TStopwatch watchUpdateTargets;
+      watchUpdateTargets.Start();
       UpdateTargetsRegression(*fTrainSample,kTRUE);
+      // #### done timing lf update targets
+      watchUpdateTargets.Stop();
+      std::cout << "    #### Done Timing LF Update Targets: " << watchUpdateTargets.RealTime() << std::endl;
       return;
    }
    else if(DoMulticlass()){

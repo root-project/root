@@ -35,6 +35,7 @@
 #include <vector>
 #include <map>
 #include "TMVA/Event.h"
+#include <ROOT/TThreadExecutor.hxx>
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
@@ -82,6 +83,8 @@ namespace TMVA {
 
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
+   protected:
+      ROOT::TThreadExecutor fPool;
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////

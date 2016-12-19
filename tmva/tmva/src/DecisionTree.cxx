@@ -66,6 +66,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TMatrix.h"
+#include "TStopwatch.h"
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/DecisionTree.h"
@@ -83,6 +84,8 @@
 #include "TMVA/IPruneTool.h"
 #include "TMVA/CostComplexityPruneTool.h"
 #include "TMVA/ExpectedErrorPruneTool.h"
+#include <ROOT/TThreadExecutor.hxx>
+#include <mutex>
 
 const Int_t TMVA::DecisionTree::fgRandomSeed = 0; // set nonzero for debugging and zero for random seeds
 
@@ -285,6 +288,76 @@ TMVA::DecisionTree* TMVA::DecisionTree::CreateFromXML(void* node, UInt_t tmva_Ve
    return dt;
 }
 
+//====================================================================================
+// Had to define this struct to enable parallelization.
+// Using NodeInfo, each thread can return the information needed.
+// After each thread returns we can then merge the results, hence the + operator.
+//====================================================================================
+struct NodeInfo{
+
+   NodeInfo(Int_t fNvars){
+
+      nvars = fNvars;
+      xmin = new Float_t[fNvars];
+      xmax = new Float_t[fNvars];
+
+      // initializing xmin and xmax for each variable
+      for (Int_t ivar=0; ivar<nvars; ivar++){
+         xmin[ivar]=0;
+         xmax[ivar]=0;
+      }
+   };
+   NodeInfo(){};
+   //~NodeInfo(){
+   //   delete [] xmin;
+   //   delete [] xmax;
+   //};
+
+   Int_t nvars = 0;
+   Double_t s = 0;
+   Double_t suw = 0;
+   Double_t sub = 0;
+   Double_t b = 0;
+   Double_t buw = 0;
+   Double_t bub = 0;
+   Double_t target = 0;
+   Double_t target2 = 0;;   
+   Float_t* xmin = 0;
+   Float_t* xmax = 0;
+
+   // Define the addition operator for NodeInfo
+   // Make sure both NodeInfos have the same nvars if we add them
+   NodeInfo operator+(const NodeInfo& other)
+   {           
+       NodeInfo ret(nvars);
+       if(nvars != other.nvars) 
+       {
+          std::cout << "!!! ERROR NodeInfo1+NodeInfo2 failure. Nvars1 != Nvars2." << std::endl;
+          return ret;
+       }
+       ret.s = s + other.s;
+       ret.suw = suw + other.suw;
+       ret.sub = sub + other.sub;
+       ret.b = b + other.b;
+       ret.buw = buw + other.buw;
+       ret.bub = bub + other.bub;
+       ret.target = target + other.target;
+       ret.target2 = target2 + other.target2;
+
+       // xmin is the min of both, xmax is the max of both
+       for(Int_t i=0; i<nvars; i++)
+       {
+           ret.xmin[i]=xmin[i]<other.xmin[i]?xmin[i]:other.xmin[i];
+           ret.xmax[i]=xmax[i]>other.xmax[i]?xmax[i]:other.xmax[i];
+       }
+       return ret;
+   };
+ 
+};
+//===========================================================================
+// Done with NodeInfo declaration
+//===========================================================================
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// building the decision tree by recursively calling the splitting of
@@ -318,47 +391,81 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    }
    else Log() << kFATAL << ":<BuildTree> eventsample Size == 0 " << Endl;
 
-   Double_t s=0, b=0;
-   Double_t suw=0, buw=0;
-   Double_t sub=0, bub=0; // unboosted!
-   Double_t target=0, target2=0;
-   Float_t *xmin = new Float_t[fNvars];
-   Float_t *xmax = new Float_t[fNvars];
+
+   // sum up the totals
+   // sig and bkg for classification
+   // err and err2 for regression
+   // #### time sums
+   TStopwatch sumWatch;
+   sumWatch.Start();
+
+   // #### Set up prerequisite info for multithreading
+   UInt_t nPartitions = 8;
+   auto seeds = ROOT::TSeqU(nPartitions);
+
+   // #### need a lambda function to pass to TThreadExecutor::MapReduce
+   auto f = [this, &eventSample, &nPartitions](UInt_t partition = 0){
+
+      Int_t start = 1.0*partition/nPartitions*eventSample.size();
+      Int_t end   = (partition+1.0)/nPartitions*eventSample.size();
+
+      NodeInfo nodeInfof(fNvars);
+
+      for(Int_t iev=start; iev<end; iev++){
+         const TMVA::Event* evt = eventSample[iev];
+         const Double_t weight = evt->GetWeight();
+         const Double_t orgWeight = evt->GetOriginalWeight(); // unboosted!
+         if (evt->GetClass() == fSigClass) {
+            nodeInfof.s += weight;
+            nodeInfof.suw += 1;
+            nodeInfof.sub += orgWeight; 
+         }
+         else {
+            nodeInfof.b += weight;
+            nodeInfof.buw += 1;
+            nodeInfof.bub += orgWeight;
+         }
+         if ( DoRegression() ) {
+            const Double_t tgt = evt->GetTarget(0);
+            nodeInfof.target +=weight*tgt;
+            nodeInfof.target2+=weight*tgt*tgt;
+         }
+
+         // save the min and max for each feature
+         for (UInt_t ivar=0; ivar<fNvars; ivar++) {
+            const Double_t val = evt->GetValue(ivar);
+            if (iev==0) nodeInfof.xmin[ivar]=nodeInfof.xmax[ivar]=val;
+            if (val < nodeInfof.xmin[ivar]) nodeInfof.xmin[ivar]=val;
+            if (val > nodeInfof.xmax[ivar]) nodeInfof.xmax[ivar]=val;
+         }
+      }
+      return nodeInfof;
+   };
+
+   // #### The net information for the node
+   // #### We will merge the parallelization results then store them in here
+   NodeInfo nodeInfoInit(fNvars);
+   // save the min and max for each feature
    for (UInt_t ivar=0; ivar<fNvars; ivar++) {
-      xmin[ivar]=xmax[ivar]=0;
-   }
-   for (UInt_t iev=0; iev<eventSample.size(); iev++) {
-      const TMVA::Event* evt = eventSample[iev];
-      const Double_t weight = evt->GetWeight();
-      const Double_t orgWeight = evt->GetOriginalWeight(); // unboosted!
-      if (evt->GetClass() == fSigClass) {
-         s += weight;
-         suw += 1;
-         sub += orgWeight; 
-      }
-      else {
-         b += weight;
-         buw += 1;
-         bub += orgWeight;
-      }
-      if ( DoRegression() ) {
-         const Double_t tgt = evt->GetTarget(0);
-         target +=weight*tgt;
-         target2+=weight*tgt*tgt;
-      }
-
-      for (UInt_t ivar=0; ivar<fNvars; ivar++) {
-         const Double_t val = evt->GetValue(ivar);
-         if (iev==0) xmin[ivar]=xmax[ivar]=val;
-         if (val < xmin[ivar]) xmin[ivar]=val;
-         if (val > xmax[ivar]) xmax[ivar]=val;
-      }
+      const TMVA::Event* evt = eventSample[0];
+      const Double_t val = evt->GetValue(ivar);
+      if (val < nodeInfoInit.xmin[ivar]) nodeInfoInit.xmin[ivar]=val;
+      if (val > nodeInfoInit.xmax[ivar]) nodeInfoInit.xmax[ivar]=val;
    }
 
+   // #### Run the threads in parallel then merge the results
+   //auto redfunc = [](std::vector<NodeInfo> v, NodeInfo nodeInfoInit) -> NodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
+   auto redfunc = [nodeInfoInit](std::vector<NodeInfo> v) -> NodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
+   NodeInfo nodeInfo = fPool.MapReduce(f, seeds, redfunc);
+   //NodeInfo nodeInfo(fNvars);
 
-   if (s+b < 0) {
+   // #### done timing sum
+   sumWatch.Stop();
+   sumNodeTime+=sumWatch.RealTime();
+
+   if (nodeInfo.s+nodeInfo.b < 0) {
       Log() << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. "
-            << "(Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle "
+            << "(Nsig="<<nodeInfo.s<<" Nbkg="<<nodeInfo.b<<" Probaby you use a Monte Carlo with negative weights. That should in principle "
             << "be fine as long as on average you end up with something positive. For this you have to make sure that the "
             << "minimul number of (unweighted) events demanded for a tree node (currently you use: MinNodeSize="<<fMinNodeSize
             << "% of training events, you can set this via the BDT option string when booking the classifier) is large enough "
@@ -376,24 +483,24 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
       Log() << kDEBUG << " that gives in total: " << nBkg<<Endl;
    }
 
-   node->SetNSigEvents(s);
-   node->SetNBkgEvents(b);
-   node->SetNSigEvents_unweighted(suw);
-   node->SetNBkgEvents_unweighted(buw);
-   node->SetNSigEvents_unboosted(sub);
-   node->SetNBkgEvents_unboosted(bub);
+   node->SetNSigEvents(nodeInfo.s);
+   node->SetNBkgEvents(nodeInfo.b);
+   node->SetNSigEvents_unweighted(nodeInfo.suw);
+   node->SetNBkgEvents_unweighted(nodeInfo.buw);
+   node->SetNSigEvents_unboosted(nodeInfo.sub);
+   node->SetNBkgEvents_unboosted(nodeInfo.bub);
    node->SetPurity();
    if (node == this->GetRoot()) {
-      node->SetNEvents(s+b);
-      node->SetNEvents_unweighted(suw+buw);
-      node->SetNEvents_unboosted(sub+bub);
+      node->SetNEvents(nodeInfo.s+nodeInfo.b);
+      node->SetNEvents_unweighted(nodeInfo.suw+nodeInfo.buw);
+      node->SetNEvents_unboosted(nodeInfo.sub+nodeInfo.bub);
    }
+
+   // save the min and max for each feature
    for (UInt_t ivar=0; ivar<fNvars; ivar++) {
-      node->SetSampleMin(ivar,xmin[ivar]);
-      node->SetSampleMax(ivar,xmax[ivar]);
+      node->SetSampleMin(ivar,nodeInfo.xmin[ivar]);
+      node->SetSampleMax(ivar,nodeInfo.xmax[ivar]);
    }
-   delete[] xmin;
-   delete[] xmax;
 
    // I now demand the minimum number of events for both daughter nodes. Hence if the number
    // of events in the parent node is not at least two times as big, I don't even need to try
@@ -406,42 +513,81 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    // std::cout << "------------------------------------------------------------------"<<std::endl;
    // std::cout << "------------------------------------------------------------------"<<std::endl;
    // std::cout << " eveSampleSize = "<< eventSample.size() << " s+b="<<s+b << std::endl;
-   if ((eventSample.size() >= 2*fMinSize  && s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth 
-       && ( ( s!=0 && b !=0 && !DoRegression()) || ( (s+b)!=0 && DoRegression()) ) ) {
+   if ((eventSample.size() >= 2*fMinSize  && nodeInfo.s+nodeInfo.b >= 2*fMinSize) && node->GetDepth() < fMaxDepth 
+       && ( ( nodeInfo.s!=0 && nodeInfo.b !=0 && !DoRegression()) || ( (nodeInfo.s+nodeInfo.b)!=0 && DoRegression()) ) ) {
+
+      // Train the node and figure out the separation gain and split points
       Double_t separationGain;
       if (fNCuts > 0){
          separationGain = this->TrainNodeFast(eventSample, node);
-      } else {
+      } 
+      else {
          separationGain = this->TrainNodeFull(eventSample, node);
       }
+
+      // The node has been trained and there is nothing to be gained by splitting
       if (separationGain < std::numeric_limits<double>::epsilon()) { // we could not gain anything, e.g. all events are in one bin,
-         /// if (separationGain < 0.00000001) { // we could not gain anything, e.g. all events are in one bin,
          // no cut can actually do anything to improve the node
          // hence, naturally, the current node is a leaf node
          if (DoRegression()) {
-            node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
-            node->SetResponse(target/(s+b));
-            if( almost_equal_double(target2/(s+b),target/(s+b)*target/(s+b)) ){
+            node->SetSeparationIndex(fRegType->GetSeparationIndex(nodeInfo.s+nodeInfo.b,nodeInfo.target,nodeInfo.target2));
+            node->SetResponse(nodeInfo.target/(nodeInfo.s+nodeInfo.b));
+            if( almost_equal_double(nodeInfo.target2/(nodeInfo.s+nodeInfo.b),nodeInfo.target/(nodeInfo.s+nodeInfo.b)*nodeInfo.target/(nodeInfo.s+nodeInfo.b)) ){
                node->SetRMS(0);
             }else{
-               node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+               node->SetRMS(TMath::Sqrt(nodeInfo.target2/(nodeInfo.s+nodeInfo.b) - nodeInfo.target/(nodeInfo.s+nodeInfo.b)*nodeInfo.target/(nodeInfo.s+nodeInfo.b)));
             }
          }
          else {
-            node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
+            node->SetSeparationIndex(fSepType->GetSeparationIndex(nodeInfo.s,nodeInfo.b));
            
             if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
             else node->SetNodeType(-1);
          }
          if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
          
-      } else {
+      } 
+      else {
+         // #### See how long it takes to filter the events to right and left
+         // #### Ok let's parallelize this next... how to avoid the push_back...
+         TStopwatch filterWatch;
+         filterWatch.Start();
 
          std::vector<const TMVA::Event*> leftSample; leftSample.reserve(nevents);
          std::vector<const TMVA::Event*> rightSample; rightSample.reserve(nevents);
 
          Double_t nRight=0, nLeft=0;
          Double_t nRightUnBoosted=0, nLeftUnBoosted=0;
+
+         // #### need to have a left vector and right vector for each thread
+         // #### then merge the lefts and the rights
+         // #### This doesn't seem like we can gain...
+         //std::mutex mu;
+         //auto filter = [this, &mu, &eventSample, node, &leftSample, &rightSample, &nRight, &nLeft, 
+         //               &nRightUnBoosted, &nLeftUnBoosted, &nPartitions](UInt_t partition = 0) -> Int_t{
+        
+         //   Int_t start = 1.0*partition/nPartitions*eventSample.size();
+         //   Int_t end   = (partition+1.0)/nPartitions*eventSample.size();
+
+         //   for(Int_t ie=start; ie<end; ie++){
+         //      if (node->GoesRight(*eventSample[ie])) {
+         //         mu.lock();
+         //         rightSample.push_back(eventSample[ie]);
+         //         mu.unlock();
+         //         nRight += eventSample[ie]->GetWeight();
+         //         nRightUnBoosted += eventSample[ie]->GetOriginalWeight();
+         //      }
+         //      else {
+         //         mu.lock();
+         //         leftSample.push_back(eventSample[ie]);
+         //         mu.unlock();
+         //         nLeft += eventSample[ie]->GetWeight();
+         //         nLeftUnBoosted += eventSample[ie]->GetOriginalWeight();
+         //      }
+         //   }
+         //   return 0;
+         //};
+         //fPool.Map(filter, seeds);
 
          for (UInt_t ie=0; ie< nevents ; ie++) {
             if (node->GoesRight(*eventSample[ie])) {
@@ -455,7 +601,6 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
                nLeftUnBoosted += eventSample[ie]->GetOriginalWeight();
             }
          }
-
          // sanity check
          if (leftSample.empty() || rightSample.empty()) {
 
@@ -489,6 +634,10 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          node->SetLeft(leftNode);
          node->SetRight(rightNode);
 
+         // #### done timing filtering
+         filterWatch.Stop();
+         filterNodeTime+=filterWatch.RealTime();
+
          this->BuildTree(rightSample, rightNode);
          this->BuildTree(leftSample,  leftNode );
 
@@ -496,16 +645,16 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    }
    else{ // it is a leaf node
       if (DoRegression()) {
-         node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
-         node->SetResponse(target/(s+b));
-         if( almost_equal_double(target2/(s+b), target/(s+b)*target/(s+b)) ) {
+         node->SetSeparationIndex(fRegType->GetSeparationIndex(nodeInfo.s+nodeInfo.b,nodeInfo.target,nodeInfo.target2));
+         node->SetResponse(nodeInfo.target/(nodeInfo.s+nodeInfo.b));
+         if( almost_equal_double(nodeInfo.target2/(nodeInfo.s+nodeInfo.b), nodeInfo.target/(nodeInfo.s+nodeInfo.b)*nodeInfo.target/(nodeInfo.s+nodeInfo.b)) ) {
             node->SetRMS(0);
          }else{
-            node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+            node->SetRMS(TMath::Sqrt(nodeInfo.target2/(nodeInfo.s+nodeInfo.b) - nodeInfo.target/(nodeInfo.s+nodeInfo.b)*nodeInfo.target/(nodeInfo.s+nodeInfo.b)));
          }
       }
       else {
-         node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
+         node->SetSeparationIndex(fSepType->GetSeparationIndex(nodeInfo.s,nodeInfo.b));
          if   (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
          else node->SetNodeType(-1);
          // loop through the event sample ending up in this node and check for events with negative weight
@@ -940,14 +1089,20 @@ void TMVA::DecisionTree::GetRandomisedVariables(Bool_t *useVariable, UInt_t *map
 Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                                             TMVA::DecisionTreeNode *node )
 {
+   TStopwatch trainWatch;
+   trainWatch.Start();
+
+// #### OK let's comment this one to see how to parallelize it
    Double_t  separationGainTotal = -1, sepTmp;
    Double_t *separationGain    = new Double_t[fNvars+1];
    Int_t    *cutIndex          = new Int_t[fNvars+1];  //-1;
 
+   // #### initialize the sep gain and cut index values
    for (UInt_t ivar=0; ivar <= fNvars; ivar++) {
       separationGain[ivar]=-1;
       cutIndex[ivar]=-1;
    }
+   // ### set up some other variables
    Int_t     mxVar = -1;
    Bool_t    cutType = kTRUE;
    Double_t  nTotS, nTotB;
@@ -962,6 +1117,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
    std::vector<Double_t> fisherCoeff;
  
+   // #### set up a map to the subset of variables using two arrays
    if (fRandomisedTree) { // choose for each node splitting a random subset of variables to choose from
       UInt_t tmp=fUseNvars;
       GetRandomisedVariables(useVariable,mapVariable,tmp);
@@ -972,8 +1128,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          mapVariable[ivar] = ivar;
       }
    }
+   // #### last variable entry is the fisher variable
    useVariable[fNvars] = kFALSE; //by default fisher is not used..
 
+   // #### Begin Fisher calculation
    Bool_t fisherOK = kFALSE; // flag to show that the fisher discriminant could be calculated correctly or not;
    if (fUseFisherCuts) {
       useVariable[fNvars] = kTRUE; // that's were I store the "fisher MVA"
@@ -1030,11 +1188,14 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       delete [] mapVarInFisher;
 
    }
+   // #### End Fisher calculation
 
 
    UInt_t cNvars = fNvars;
    if (fUseFisherCuts && fisherOK) cNvars++;  // use the Fisher output simple as additional variable
 
+   // #### Set up sig, bkg, target, cutvalues histograms for each var
+   // #### target, target2 for regression
    UInt_t*   nBins = new UInt_t [cNvars];
    Double_t* binWidth = new Double_t [cNvars];
    Double_t* invBinWidth = new Double_t [cNvars];
@@ -1047,7 +1208,11 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    Double_t** target2 = new Double_t* [cNvars];
    Double_t** cutValues = new Double_t* [cNvars];
 
+   // #### looping through to set up the number of bins for each variable
+   // #### target[ivar] is an array of type Double_t with size=nbins for ivar
+   // #### do this for all arrays: signal, bkg, target
    for (UInt_t ivar=0; ivar<cNvars; ivar++) {
+      // #### ncuts means that we need n+1 bins for each variable
       nBins[ivar] = fNCuts+1;
       if (ivar < fNvars) {
          if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I') {
@@ -1055,6 +1220,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          }
       }
      
+      // #### make some new arrays for the ith var, size=nbins for each array
       nSelS[ivar] = new Double_t [nBins[ivar]];
       nSelB[ivar] = new Double_t [nBins[ivar]];
       nSelS_unWeighted[ivar] = new Double_t [nBins[ivar]];
@@ -1065,9 +1231,11 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    
    }
 
+   // #### xmin and xmax for earch variable
    Double_t *xmin = new Double_t[cNvars]; 
    Double_t *xmax = new Double_t[cNvars];
 
+   // #### ok loop through vars and bins to initialize the arrays
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
       if (ivar < fNvars){
          xmin[ivar]=node->GetSampleMin(ivar);
@@ -1103,6 +1271,8 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
    }
 
+   // #### Figure out the cut values, loops through vars then through cuts
+   // #### if cuts is on the order of the amount of training data then we can parallelize this and get some gains
    // fill the cut values for the scan:
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
 
@@ -1137,10 +1307,76 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
    }
   
+   // #### Loop through the events to get the total sig and background
+   // #### Then loop through the vars to get the counts in each bin in each var
+   // #### So we have a loop through the events and a loop through the vars, but no loop through the cuts this is a calculation
    nTotS=0; nTotB=0;
    nTotS_unWeighted=0; nTotB_unWeighted=0;   
+
+   //UInt_t nPartitions = 8;
+   //auto seeds = ROOT::TSeqU(nPartitions);
+
+   //// need a lambda function to pass to TThreadExecutor::MapReduce
+   //// #### Should merge data structures so we don't have to deal with editing the same memory
+   //auto f = [this, &eventSample, &nTotS, &nTotB, &nTotS_unWeighted, &nTotB_unWeighted, &fisherCoeff, &nSelS, &nSelB, &nSelS_unWeighted, &nSelB_unWeighted, 
+   //         &target, &target2, &useVariable, &invBinWidth, &nBins, &xmin, &xmax, &cNvars, &nPartitions](UInt_t partition = 0) -> Int_t{
+
+   //   UInt_t start = 1.0*partition/nPartitions*eventSample.size();
+   //   UInt_t end   = (partition+1.0)/nPartitions*eventSample.size();
+
+   //   for(UInt_t iev=start; iev<end; iev++) {
+
+// //  for (UInt_t iev=0; iev<nevents; iev++) {
+
+   //      // #### Can parallelize this sum of weights everything is independent, just need to sum results at the end
+   //      Double_t eventWeight =  eventSample[iev]->GetWeight(); 
+   //      if (eventSample[iev]->GetClass() == fSigClass) {
+   //         nTotS+=eventWeight;
+   //         nTotS_unWeighted++;    }
+   //      else {
+   //         nTotB+=eventWeight;
+   //         nTotB_unWeighted++;
+   //      }
+   //      
+   //      // #### Count the number in each bin
+   //      // #### Can parallelize this loop through each variable, every var is independent
+   //      Int_t iBin=-1;
+   //      for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+   //         // now scan trough the cuts for each varable and find which one gives
+   //         // the best separationGain at the current stage.
+   //         if ( useVariable[ivar] ) {
+   //            Double_t eventData;
+   //            if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar); 
+   //            else { // the fisher variable
+   //               eventData = fisherCoeff[fNvars];
+   //               for (UInt_t jvar=0; jvar<fNvars; jvar++)
+   //                  eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+   //               
+   //            }
+   //            // #### figure out which bin it belongs in ...
+   //            // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
+   //            iBin = TMath::Min(Int_t(nBins[ivar]-1),TMath::Max(0,int (invBinWidth[ivar]*(eventData-xmin[ivar]) ) ));
+   //            if (eventSample[iev]->GetClass() == fSigClass) {
+   //               nSelS[ivar][iBin]+=eventWeight;
+   //               nSelS_unWeighted[ivar][iBin]++;
+   //            } 
+   //            else {
+   //               nSelB[ivar][iBin]+=eventWeight;
+   //               nSelB_unWeighted[ivar][iBin]++;
+   //            }
+   //            if (DoRegression()) {
+   //               target[ivar][iBin] +=eventWeight*eventSample[iev]->GetTarget(0);
+   //               target2[ivar][iBin]+=eventWeight*eventSample[iev]->GetTarget(0)*eventSample[iev]->GetTarget(0);
+   //            }
+   //         }
+   //      }
+   //   }
+   //   return 0;
+   //};
+   //fPool.Map(f, seeds);
    for (UInt_t iev=0; iev<nevents; iev++) {
 
+      // #### Can parallelize this sum of weights everything is independent, just need to sum results at the end
       Double_t eventWeight =  eventSample[iev]->GetWeight(); 
       if (eventSample[iev]->GetClass() == fSigClass) {
          nTotS+=eventWeight;
@@ -1150,6 +1386,8 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          nTotB_unWeighted++;
       }
       
+      // #### Count the number in each bin
+      // #### Can parallelize this loop through each variable, every var is independent
       Int_t iBin=-1;
       for (UInt_t ivar=0; ivar < cNvars; ivar++) {
          // now scan trough the cuts for each varable and find which one gives
@@ -1163,6 +1401,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                   eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
                
             }
+            // #### figure out which bin it belongs in ...
             // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
             iBin = TMath::Min(Int_t(nBins[ivar]-1),TMath::Max(0,int (invBinWidth[ivar]*(eventData-xmin[ivar]) ) ));
             if (eventSample[iev]->GetClass() == fSigClass) {
@@ -1181,6 +1420,8 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
    }   
    // now turn the "histogram" into a cumulative distribution
+   // #### loops through the vars and then the bins, if the bins are on the order of the training data this could be worth parallelizing
+   // #### Don't really want to parallelize nested things, should just pick vars or bins or data each time
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
       if (useVariable[ivar]) {
          for (UInt_t ibin=1; ibin < nBins[ivar]; ibin++) {
@@ -1209,6 +1450,9 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          }
       }
    }
+   // #### Loops over vars and bins, but not events ...
+   // #### if bins is on the order of the training data then this is probably worth parallelizing
+   // #### no wonder the time seems to depend on the number of bins so much...
    // now select the optimal cuts for each varable and find which one gives
    // the best separationGain at the current stage
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
@@ -1357,8 +1601,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    delete [] binWidth; 
    delete [] invBinWidth; 
 
-   return separationGainTotal;
+   trainWatch.Stop();
+   trainNodeTime+=trainWatch.RealTime();
 
+   return separationGainTotal;
 }
 
 
@@ -1567,9 +1813,14 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
    Double_t nTotS = 0.0, nTotB = 0.0;
    Int_t nTotS_unWeighted = 0, nTotB_unWeighted = 0;  
   
+   // #### need to do this for every variable if we want to parallelize ...
+   // #### can define lambda function to sort on different variables simultaneously
+   // #### need to sort by (*BDTEventWrapper)->GetValue(ivar)
+   // #### then we will have a sorted BDTEventWrapper vec for each var, each with the appropriate sum of weights
    std::vector<TMVA::BDTEventWrapper> bdtEventSample;
   
    // List of optimal cuts, separation gains, and cut types (removed background or signal) - one for each variable
+   // #### store the results for each variable, the size is set so we can access each spot in parallel no problem
    std::vector<Double_t> lCutValue( fNvars, 0.0 );
    std::vector<Double_t> lSepGain( fNvars, -1.0e6 );
    std::vector<Char_t> lCutType( fNvars ); // <----- bool is stored (for performance reasons, no std::vector<bool>  has been taken)
@@ -1586,6 +1837,7 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
          nTotB += (*it)->GetWeight();
          ++nTotB_unWeighted;
       }
+      // #### Need to do this for every variable if we want to parallelize, can't be sorting the same memory in parallel...
       bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
    }
   
@@ -1611,13 +1863,25 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
    else {
       for (UInt_t ivar=0; ivar < fNvars; ivar++) useVariable[ivar] = Char_t(kTRUE);
    }
-  
+ 
+   // #### Parallelize this ####
+   // #### need to split up into two for loops, one for sorting and one for running on the sorted vector
+   // #### can parallelize after the sorting, but sorting is the major operation... nlogn vs n
    for( UInt_t ivar = 0; ivar < fNvars; ivar++ ) { // loop over all discriminating variables
+     // #### ROOT::EnableThreadSafety();
+     // #### auto workItem = [](UInt_t ivar){
       if(!useVariable[ivar]) continue; // only optimze with selected variables
+
+      // #### static function also messes up parallelization...
       TMVA::BDTEventWrapper::SetVarIndex(ivar); // select the variable to sort by
+
+      // #### sorting the same memory messes up parallelizing over the features
       std::sort( bdtEventSample.begin(),bdtEventSample.end() ); // sort the event data 
     
       Double_t bkgWeightCtr = 0.0, sigWeightCtr = 0.0;
+
+      // #### iterating over all of the events, could parallelize this part instead of the features
+      // #### cannot parallelize this easity either since we need the values of the last ierations for the sum
       std::vector<TMVA::BDTEventWrapper>::iterator it = bdtEventSample.begin(), it_end = bdtEventSample.end();
       for( ; it != it_end; ++it ) {
          if((**it)->GetClass() == fSigClass ) // specify signal or background event
@@ -1633,6 +1897,9 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
       Bool_t cutType = kFALSE;
       Long64_t index = 0;
       Double_t separationGain = -1.0, sepTmp = 0.0, cutValue = 0.0, dVal = 0.0, norm = 0.0;
+
+      // #### looping over all of the events, can parallelize this part???
+      // #### looks like it, just need to know about two points next to eachother, can break into chunks with pairs
       // Locate the optimal cut for this (ivar-th) variable
       for( it = bdtEventSample.begin(); it != it_end; ++it ) {
          if( index == 0 ) { ++index; continue; }
@@ -1646,8 +1913,11 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
          // Only allow splits where both daughter nodes have the specified miniumum number of events
          // Splits are only sensible when the data are ordered (eg. don't split inside a sequence of 0's)
          if( index >= fMinSize && (nTotS_unWeighted + nTotB_unWeighted) - index >= fMinSize && TMath::Abs(dVal/(0.5*norm + 1)) > fPMin ) {
+
             sepTmp = fSepType->GetSeparationGain( it->GetCumulativeWeight(true), it->GetCumulativeWeight(false), sigWeightCtr, bkgWeightCtr );
             if( sepTmp > separationGain ) {
+               // #### may have issues with different threads accessing the same separationGain
+               // #### would need to return best sep gain and cutValue for each chunk then reduce to the max
                separationGain = sepTmp;
                cutValue = it->GetVal() - 0.5*dVal; 
                Double_t nSelS = it->GetCumulativeWeight(true);
@@ -1660,11 +1930,13 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
          }
          ++index;
       }
+      // #### setting the best split values for the variable
       lCutType[ivar] = Char_t(cutType);
       lCutValue[ivar] = cutValue;
       lSepGain[ivar] = separationGain;
    }
   
+   // #### figure out which var had the best separation gain
    Double_t separationGain = -1.0;
    Int_t iVarIndex = -1;
    for( UInt_t ivar = 0; ivar < fNvars; ivar++ ) {
@@ -1673,7 +1945,8 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
          separationGain = lSepGain[ivar];
       }
    }
-  
+ 
+   // #### storing the best values into the node 
    if(iVarIndex >= 0) {
       node->SetSelector(iVarIndex);
       node->SetCutValue(lCutValue[iVarIndex]);

@@ -147,7 +147,7 @@ auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typen
    using retType = decltype(func(start));
    std::vector<retType> reslist(end-start);
    auto lambda = [&](unsigned int i){
-                      reslist[i]+=func(i);
+                      reslist[i]=func(i);
                   };
    ParallelFor(start, end, 1, lambda);
 
