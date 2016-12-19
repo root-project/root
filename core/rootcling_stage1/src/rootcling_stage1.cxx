@@ -61,7 +61,11 @@ int main(int argc, char **argv)
 
    ROOT::Internal::RootCling::DriverConfig config{};
 #ifdef R__HAVE_LLVMRESOURCEDIR
-  config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
+   // This is ignored (in rootcling_impl.cxx) if R__EXTERN_LLVMDIR is defined.
+   // This is not configured (i.e. R__HAVE_LLVMRESOURCEDIR is undefined) for
+   // configure / make; the resource directory is instead determined by
+   // TMetaUtils::GetLLVMResourceDir() in rootcling_impl.cxx.
+   config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
 #endif
 
    config.fBuildingROOTStage1 = true;
