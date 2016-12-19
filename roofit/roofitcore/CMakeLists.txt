@@ -47,6 +47,6 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
 ROOT_GENERATE_DICTIONARY(G__RooFitCore MODULE RooFitCore ${headers1} ${headers2} ${headers3} ${headers4} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore.cxx LIBRARIES Core
-                    DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam)
+                    DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam rt)
 ROOT_INSTALL_HEADERS()
 
