@@ -5,13 +5,13 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Implementation of unsupervised variable transformation methods            *
+ *       Implementation of unsupervised variable transformation methods           *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Abhinav Moudgil <abhinav.moudgil@research.iiit.ac.in> - IIIT-H, India     *
+ *       Abhinav Moudgil <abhinav.moudgil@research.iiit.ac.in> - IIIT-H, India    *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         *
+ *       CERN, Switzerland                                                        *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
