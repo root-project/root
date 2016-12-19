@@ -85,22 +85,22 @@ namespace TMVA {
 
       // Stream modifier(s)
       static MsgLogger& Endmsg( MsgLogger& logger );
-      
+
       // Accept stream modifiers
       MsgLogger& operator<< ( MsgLogger& ( *_f )( MsgLogger& ) );
       MsgLogger& operator<< ( std::ostream& ( *_f )( std::ostream& ) );
       MsgLogger& operator<< ( std::ios& ( *_f )( std::ios& ) );
-      
+
       // Accept message type specification
       MsgLogger& operator<< ( EMsgType type );
-      
+
       // For all the "conventional" inputs
       template <class T> MsgLogger& operator<< ( T arg ) {
          *(std::ostringstream*)this << arg;
          return *this;
       }
 
-      // Temporaly disables all the loggers (Caution! Use with care !)
+      // Temporally disables all the loggers (Caution! Use with care !)
       static void  InhibitOutput();
       static void  EnableOutput();
 
@@ -118,13 +118,13 @@ namespace TMVA {
       EMsgType                 fActiveType;       // active type
       static const UInt_t      fgMaxSourceSize;   // maximum length of source name
 #if __cplusplus > 199711L
-      static std::atomic<Bool_t> fgOutputSupressed; // disable the output globaly (used by generic booster)
+      static std::atomic<Bool_t> fgOutputSupressed; // disable the output globally (used by generic booster)
       static std::atomic<Bool_t> fgInhibitOutput;   // flag to suppress all output
 
       static std::atomic<const std::map<EMsgType, std::string>*> fgTypeMap;   // matches output types with strings
       static std::atomic<const std::map<EMsgType, std::string>*> fgColorMap;  // matches output types with terminal colors
 #else
-      static Bool_t            fgOutputSupressed; // disable the output globaly (used by generic booster)
+      static Bool_t            fgOutputSupressed; // disable the output globally (used by generic booster)
       static Bool_t            fgInhibitOutput;   // flag to suppress all output
 
       static const std::map<EMsgType, std::string>* fgTypeMap;   // matches output types with strings

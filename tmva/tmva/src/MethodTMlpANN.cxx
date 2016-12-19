@@ -24,28 +24,24 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::MethodTMlpANN
+\ingroup TMVA
 
-/* Begin_Html
+This is the TMVA TMultiLayerPerceptron interface class. It provides the
+training and testing the ROOT internal MLP class in the TMVA framework.
 
-   This is the TMVA TMultiLayerPerceptron interface class. It provides the
-   training and testing the ROOT internal MLP class in the TMVA framework.<be>
+Available learning methods:<br>
 
-   Available learning methods:<br>
-   <ul>
-   <li>Stochastic      </li>
-   <li>Batch           </li>
-   <li>SteepestDescent </li>
-   <li>RibierePolak    </li>
-   <li>FletcherReeves  </li>
-   <li>BFGS            </li>
-   </ul>
-   End_Html */
-//
-//  See the TMultiLayerPerceptron class description
-//  for details on this ANN.
-//
-//_______________________________________________________________________
+  - Stochastic
+  - Batch
+  - SteepestDescent
+  - RibierePolak
+  - FletcherReeves
+  - BFGS
+
+See the TMultiLayerPerceptron class description
+for details on this ANN.
+*/
 
 #include "TMVA/MethodTMlpANN.h"
 
@@ -192,15 +188,18 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// define the options (their key words) that can be set in the option string
+///
 /// know options:
-/// NCycles       <integer>    Number of training cycles (too many cycles could overtrain the network)
-/// HiddenLayers  <string>     Layout of the hidden layers (nodes per layer)
-///   * specifiactions for each hidden layer are separated by commata
-///   * for each layer the number of nodes can be either absolut (simply a number)
-///        or relative to the number of input nodes to the neural net (N)
-///   * there is always a single node in the output layer
+///
+///  - NCycles       <integer>    Number of training cycles (too many cycles could overtrain the network)
+///  - HiddenLayers  <string>     Layout of the hidden layers (nodes per layer)
+///     * specifications for each hidden layer are separated by comma
+///     * for each layer the number of nodes can be either absolut (simply a number)
+///          or relative to the number of input nodes to the neural net (N)
+///     * there is always a single node in the output layer
+///
 ///   example: a net with 6 input nodes and "Hiddenlayers=N-1,N-2" has 6,5,4,1 nodes in the
-///   layers 1,2,3,4, repectively
+///   layers 1,2,3,4, respectively
 
 void TMVA::MethodTMlpANN::DeclareOptions()
 {
@@ -257,12 +256,12 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
 /// performs TMlpANN training
 /// available learning methods:
 ///
-///       TMultiLayerPerceptron::kStochastic
-///       TMultiLayerPerceptron::kBatch
-///       TMultiLayerPerceptron::kSteepestDescent
-///       TMultiLayerPerceptron::kRibierePolak
-///       TMultiLayerPerceptron::kFletcherReeves
-///       TMultiLayerPerceptron::kBFGS
+///  - TMultiLayerPerceptron::kStochastic
+///  - TMultiLayerPerceptron::kBatch
+///  - TMultiLayerPerceptron::kSteepestDescent
+///  - TMultiLayerPerceptron::kRibierePolak
+///  - TMultiLayerPerceptron::kFletcherReeves
+///  - TMultiLayerPerceptron::kBFGS
 ///
 /// TMultiLayerPerceptron wants test and training tree at once
 /// so merge the training and testing trees from the MVA factory first:
@@ -349,7 +348,6 @@ void TMVA::MethodTMlpANN::Train( void )
    delete localTrainingTree;
    delete [] vArr;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// write weights to xml file

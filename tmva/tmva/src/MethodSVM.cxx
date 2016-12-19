@@ -20,12 +20,12 @@
  *      Kamil Kraszewski      <kalq@cern.ch>     - IFJ PAN & UJ, Krakow, Poland   *
  *      Maciej Kruk           <mkruk@cern.ch>    - IFJ PAN & AGH, Krakow, Poland  *
  *                                                                                *
- * Introduction of kernel parameter optimisation                                  *   
- *            and additional kernel functions by:                                 *   
- *      Adrian Bevan          <adrian.bevan@cern.ch> -   Queen Mary               *   
- *                                                       University of London, UK *   
- *      Tom Stevenson <thomas.james.stevenson@cern.ch> - Queen Mary               *   
- *                                                       University of London, UK * 
+ * Introduction of kernel parameter optimisation                                  *
+ *            and additional kernel functions by:                                 *
+ *      Adrian Bevan          <adrian.bevan@cern.ch> -   Queen Mary               *
+ *                                                       University of London, UK *
+ *      Tom Stevenson <thomas.james.stevenson@cern.ch> - Queen Mary               *
+ *                                                       University of London, UK *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         *
@@ -37,10 +37,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// SMO Platt's SVM classifier with Keerthi & Shavade improvements
-//_______________________________________________________________________
+/*! \class TMVA::MethodSVM
+\ingroup TMVA
+SMO Platt's SVM classifier with Keerthi & Shavade improvements
+*/
 
 #include "TMVA/MethodSVM.h"
 
@@ -232,15 +232,15 @@ void TMVA::MethodSVM::DeclareOptions()
    DeclareOptionRef( fTheKernel = "RBF", "Kernel", "Pick which kernel ( RBF or MultiGauss )");
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma (size of the Kernel)");
-   // for polynomial kernel parameter(s)                                              
+   // for polynomial kernel parameter(s)
    DeclareOptionRef( fOrder = 3, "Order", "Polynomial Kernel parameter: polynomial order");
    DeclareOptionRef( fTheta = 1., "Theta", "Polynomial Kernel parameter: polynomial theta");
-   // for multi-gaussian kernel parameter(s)                                          
+   // for multi-gaussian kernel parameter(s)
    DeclareOptionRef( fGammas = "", "GammaList", "MultiGauss parameters" );
 
-   // for range and step number for kernel paramter optimisation                      
+   // for range and step number for kernel parameter optimisation
    DeclareOptionRef( fTune = "All", "Tune", "Tune Parameters");
-   // for list of kernels to be used with product or sum kernel                       
+   // for list of kernels to be used with product or sum kernel
    DeclareOptionRef( fMultiKernels = "None", "KernelList", "Sum or product of kernels");
    DeclareOptionRef( fLoss = "hinge", "Loss", "Loss function");
 
@@ -265,7 +265,7 @@ void TMVA::MethodSVM::DeclareCompatibilityOptions()
    DeclareOptionRef( fTheKernel = "Gauss", "Kernel", "Uses kernel function");
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fDoubleSigmaSquared = 2., "Sigma", "Kernel parameter: sigma");
-   // for polynomiarl kernel parameter(s)
+   // for polynomial kernel parameter(s)
    DeclareOptionRef( fOrder = 3, "Order", "Polynomial Kernel parameter: polynomial order");
    // for sigmoid kernel parameters
    DeclareOptionRef( fTheta = 1., "Theta", "Sigmoid Kernel parameter: theta");
@@ -301,9 +301,9 @@ void TMVA::MethodSVM::Train()
    Double_t CSig;
    Double_t CBkg;
 
-   // Use number of signal and background from above to weight the cost parameter     
-   // so that the training is not biased towards the larger dataset when the signal   
-   // and background samples are significantly different sizes.                       
+   // Use number of signal and background from above to weight the cost parameter
+   // so that the training is not biased towards the larger dataset when the signal
+   // and background samples are significantly different sizes.
    if(nSignal < nBackground){
       CSig = fCost;
       CBkg = CSig*((double)nSignal/nBackground);
@@ -313,7 +313,7 @@ void TMVA::MethodSVM::Train()
       CSig = CBkg*((double)nSignal/nBackground);
    }
 
-   // Loop over events and assign the correct cost parameter.                         
+   // Loop over events and assign the correct cost parameter.
    for (Int_t ievnt=0; ievnt<Data()->GetNEvents(); ievnt++){
       if (GetEvent(ievnt)->GetWeight() != 0){
          if(DataInfo().IsSignal(GetEvent(ievnt))){
@@ -327,9 +327,9 @@ void TMVA::MethodSVM::Train()
       }
    }
 
-   // Set the correct kernel function.                                                
-   // Here we only use valid Mercer kernels. In the literature some people have reported reasonable                                                                        
-   // results using Sigmoid kernel function however that is not a valid Mercer kernel and is not used here.                                                                           
+   // Set the correct kernel function.
+   // Here we only use valid Mercer kernels. In the literature some people have reported reasonable
+   // results using Sigmoid kernel function however that is not a valid Mercer kernel and is not used here.
    if( fTheKernel == "RBF"){
       fSVKernelFunction = new SVKernelFunction( SVKernelFunction::kRBF, fGamma);
    }
@@ -559,7 +559,7 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( std::istream& istr )
    delete fSVKernelFunction;
    if (fTheKernel == "Gauss" ) {
       fSVKernelFunction = new SVKernelFunction(1/fDoubleSigmaSquared);
-   } 
+   }
    else {
       SVKernelFunction::EKernelType k = SVKernelFunction::kLinear;
       if(fTheKernel == "Linear")           k = SVKernelFunction::kLinear;
@@ -665,7 +665,7 @@ void TMVA::MethodSVM::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "}" << std::endl;
    fout << std::endl;
 
-   // GetMvaValue__ function defninition
+   // GetMvaValue__ function definition
    fout << "inline double " << className << "::GetMvaValue__(const std::vector<double>& inputValues ) const" << std::endl;
    fout << "{" << std::endl;
    fout << "   double mvaval = 0; " << std::endl;
@@ -727,7 +727,7 @@ void TMVA::MethodSVM::GetHelpMessage() const
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;
-   Log() << "The Support Vector Machine (SVM) builds a hyperplance separating" << Endl;
+   Log() << "The Support Vector Machine (SVM) builds a hyperplane separating" << Endl;
    Log() << "signal and background events (vectors) using the minimal subset of " << Endl;
    Log() << "all vectors used for training (support vectors). The extension to" << Endl;
    Log() << "the non-linear case is performed by mapping input vectors into a " << Endl;
@@ -761,8 +761,12 @@ void TMVA::MethodSVM::GetHelpMessage() const
 /// This is used to optimise the kernel function parameters and cost. All kernel parameters
 /// are optimised by default with default ranges, however the parameters to be optimised can
 /// be set when booking the method with the option Tune.
-/// Example: "Tune=Gamma[0.01;1.0;100]" would only tune the RBF Gamma between 0.01 and 1.0
+///
+/// Example:
+///
+/// "Tune=Gamma[0.01;1.0;100]" would only tune the RBF Gamma between 0.01 and 1.0
 /// with 100 steps.
+
 std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fomType, TString fitType)
 {
    // Call the Optimizer with the set of kernel parameters and ranges that are meant to be tuned.
@@ -815,7 +819,7 @@ std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fom
                exit(1);
             }
          }
-      }  
+      }
    }
    else if( fTheKernel == "MultiGauss" ){
       if (fTune == "All"){
@@ -913,13 +917,13 @@ std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fom
    }
    OptimizeConfigParameters optimize(this, tuneParameters, fomType, fitType);
    tunedParameters=optimize.optimize();
-  
+
    return tunedParameters;
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the tuning parameters according to the arguement
+/// Set the tuning parameters according to the argument
 void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameters)
 {
    std::map<TString,Double_t>::iterator it;
@@ -943,7 +947,7 @@ void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameter
          stringstream s;
          s << fVarNames.at(i);
          string str = "Gamma_" + s.str();
-         Log() << kWARNING << tuneParameters.find(str)->first << " = " << tuneParameters.find(str)->second << Endl; 
+         Log() << kWARNING << tuneParameters.find(str)->first << " = " << tuneParameters.find(str)->second << Endl;
          fmGamma.push_back(tuneParameters.find(str)->second);
       }
       for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
@@ -1017,9 +1021,9 @@ void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameter
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Takes as input a string of values for multigaussian gammas and splits it, filling the 
+/// Takes as input a string of values for multigaussian gammas and splits it, filling the
 /// gamma vector required by the SVKernelFunction. Example: "GammaList=0.1,0.2,0.3" would
-/// make a vector with Gammas of 0.1,0.2 & 0.3 corresponding to input variables 1,2 & 3 
+/// make a vector with Gammas of 0.1,0.2 & 0.3 corresponding to input variables 1,2 & 3
 /// respectively.
 void TMVA::MethodSVM::SetMGamma(std::string & mg){
    std::stringstream tempstring(mg);
@@ -1051,8 +1055,12 @@ void TMVA::MethodSVM::GetMGamma(const std::vector<float> & gammas){
 /// Function providing string manipulation for product or sum of kernels functions
 /// to take list of kernels specified in the booking of the method and provide a vector
 /// of SV kernels to iterate over in SVKernelFunction.
-/// Example: "KernelList=RBF*Polynomial" would use a product of the RBF and Polynomial
+///
+/// Example:
+///
+/// "KernelList=RBF*Polynomial" would use a product of the RBF and Polynomial
 /// kernels.
+
 std::vector<TMVA::SVKernelFunction::EKernelType> TMVA::MethodSVM::MakeKernelList(std::string multiKernels, TString kernel)
 {
    std::vector<TMVA::SVKernelFunction::EKernelType> kernelsList;
@@ -1061,7 +1069,7 @@ std::vector<TMVA::SVKernelFunction::EKernelType> TMVA::MethodSVM::MakeKernelList
    if(kernel=="Prod"){
       while (std::getline(tempstring,value,'*')){
          if(value == "RBF"){ kernelsList.push_back(SVKernelFunction::kRBF);}
-         else if(value == "MultiGauss"){ 
+         else if(value == "MultiGauss"){
             kernelsList.push_back(SVKernelFunction::kMultiGauss);
             if(fGammas!=""){
                SetMGamma(fGammas);
@@ -1161,6 +1169,7 @@ std::map< TString,std::vector<Double_t> > TMVA::MethodSVM::GetTuningOptions()
 /// Calculates loss for testing dataset. The loss function can be specified when
 /// booking the method, otherwise defaults to hinge loss. Currently not used however
 /// is accesible if required.
+
 Double_t TMVA::MethodSVM::getLoss(TString lossFunction){
    Double_t loss = 0.0;
    Double_t sumW = 0.0;
@@ -1204,6 +1213,6 @@ Double_t TMVA::MethodSVM::getLoss(TString lossFunction){
       sumW += w;
    }
    loss = temp/sumW;
-  
+
    return loss;
 }

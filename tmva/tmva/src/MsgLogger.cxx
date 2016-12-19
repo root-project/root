@@ -27,6 +27,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::MsgLogger
+\ingroup TMVA
+ostringstream derivative to redirect and format output
+*/
+
 // Local include(s):
 #include "TMVA/MsgLogger.h"
 
@@ -64,7 +69,7 @@ const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgColorMap = 0;
 #endif
 static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnTypeMap;
 static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnColorMap;
- 
+
 
 void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }
 void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
@@ -77,7 +82,7 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
      fActiveType( kINFO ),
      fMinType   ( minType )
 {
-   InitMaps();   
+   InitMaps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +130,7 @@ TMVA::MsgLogger::~MsgLogger()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// assingment operator
+/// assignment operator
 
 TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
 {
@@ -220,21 +225,21 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
   if ((stype = fgTypeMap.load()->find( type )) != fgTypeMap.load()->end()) {
     if (!gConfig().IsSilent() || type==kFATAL) {
       if (gConfig().UseColor()) {
-	// no text for INFO or VERBOSE
-	if (type == kHEADER || type ==kWARNING)
-	  std::cout << fgPrefix << line << std::endl; 
-	else if (type == kINFO || type == kVERBOSE)
-	  //std::cout << fgPrefix << line << std::endl; // no color for info
-	  std::cout << line << std::endl;
-	else{
-	  //std::cout<<"prefix='"<<fgPrefix<<"'"<<std::endl;
-	  std::cout << fgColorMap.load()->find( type )->second << "<" << stype->second << ">" << line << "\033[0m" << std::endl;
+   // no text for INFO or VERBOSE
+   if (type == kHEADER || type ==kWARNING)
+     std::cout << fgPrefix << line << std::endl;
+   else if (type == kINFO || type == kVERBOSE)
+     //std::cout << fgPrefix << line << std::endl; // no color for info
+     std::cout << line << std::endl;
+   else{
+     //std::cout<<"prefix='"<<fgPrefix<<"'"<<std::endl;
+     std::cout << fgColorMap.load()->find( type )->second << "<" << stype->second << ">" << line << "\033[0m" << std::endl;
 }
       }
 
       else {
-	if (type == kINFO) std::cout << fgPrefix << line << std::endl;
-	else               std::cout << fgPrefix << "<" << stype->second << "> " << line << std::endl;
+   if (type == kINFO) std::cout << fgPrefix << line << std::endl;
+   else               std::cout << fgPrefix << "<" << stype->second << "> " << line << std::endl;
       }
     }
   }
@@ -243,7 +248,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    if (type == kFATAL) {
       std::cout << "***> abort program execution" << std::endl;
       throw std::runtime_error("FATAL error");
-      
+
       //std::exit(1);
       //assert(false);
    }
@@ -265,7 +270,7 @@ void TMVA::MsgLogger::InitMaps()
 {
    if(!fgTypeMap) {
       std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
-   
+
       (*tmp)[kVERBOSE]  = std::string("VERBOSE");
       (*tmp)[kDEBUG]    = std::string("DEBUG");
       (*tmp)[kINFO]     = std::string("INFO");
