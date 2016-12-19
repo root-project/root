@@ -199,9 +199,12 @@ if(cxxmodules)
                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
                     )
   get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-  string(REPLACE ";" "" __modulemap_extra_content "module ROOT {\\n ${__modulemap_extra_content} \\n }")
+  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+  if (NOT APPLE)
+    set(__echo_args "-e")
+  endif()
   add_custom_command(TARGET copymodulemap POST_BUILD
-                     COMMAND echo -e ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
+                     COMMAND echo ${__echo_args} ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
                      VERBATIM
                     )
   add_dependencies(move_headers copymodulemap)

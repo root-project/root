@@ -887,9 +887,12 @@ CXXMODULES_ROOT_MODULE := "module ROOT {\\n" \
 	                  "$(CXXMODULES_CORE_MODULEMAP_CONTENTS)" \
                           "$(CXXMODULES_MODULEMAP_CONTENTS)" \
 			  "\\n } //module ROOT \\n"
+ifneq ($(PLATFORM),macosx)
+CXXMODULES_ECHO_ARGS := -e
+endif
 include/module.modulemap: $(ROOT_SRCDIR)/build/unix/module.modulemap
 	cp $< $@
-	@echo -e "$(CXXMODULES_ROOT_MODULE)" | sed -e 's|export \\|export |g' | sed -e 's|(\s*)(.*) header "(.*)"|\1 module "\3" { \2 header "\3" export * }|g' >> $@
+	@echo $(CXXMODULES_ECHO_ARGS) "$(CXXMODULES_ROOT_MODULE)" | sed -e 's|export \\|export |g' | sed -E 's|(\s*)(.*) header "(.*)"|\1 module "\3" { \2 header "\3" export * }|g' >> $@
 endif
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.
