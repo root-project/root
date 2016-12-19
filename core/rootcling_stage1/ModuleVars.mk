@@ -1,24 +1,23 @@
-# ModuleVars.mk for utils module
+# ModuleVars.mk for rootcling_stage1 module
 # Copyright (c) 2008 Rene Brun and Fons Rademakers
 #
 # Author: Axel Naumann, 2008-06-10
 
 ifneq ($(HOST),)
 
-UTILSDIRS       := $(BUILDTOOLSDIR)/core/utils/src
+ROOTCLING1DIRS  := $(BUILDTOOLSDIR)/core/rootcling_stage1/src
 
-ROOTCLINGS      := $(UTILSDIRS)/rootcling.cxx
-ROOTCLINGTMPS   := $(ROOTCLINGS:.cxx=_tmp.cxx)
-ROOTCLINGTMPO   := $(ROOTCLINGS:.cxx=_tmp.o)
-ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
-ROOTCLINGSTAGE1 := $(ROOTCLINGTMPEXE)
+ROOTCLING1S     := $(ROOTCLING1DIRS)/rootcling_stage1.cxx
+ROOTCLING1O     := $(call stripsrc,$(ROOTCLING1S:.cxx=.o))
+ROOTCLING1EXE   := $(call stripsrc,$(UTILSDIRS)/rootcling_stage1$(EXEEXT))
+ROOTCLINGSTAGE1 := $(ROOTCLING1EXE)
 
 ##### Dependencies for all dictionaries
-ROOTCINTTMPDEP   = $(ROOTCLINGTMPO) $(ROOTCLINGTMPEXE)
+ROOTCINT1DEP   = $(ROOTCLING1O) $(ROOTCLING1EXE)
 
 else # ifneq ($(HOST),)
 
-MODNAME      := utils
+MODNAME      := rootcling_stage1
 
 MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
@@ -29,26 +28,18 @@ UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
 
 ##### rootcling #####
-ROOTCLINGS      := $(wildcard $(UTILSDIRS)/rootcling.cxx)
-ROOTCLINGO      := $(call stripsrc,$(ROOTCLINGS:.cxx=.o))
-ROOTCLINGTMPS   := $(call stripsrc,$(ROOTCLINGS:.cxx=_tmp.cxx))
-ROOTCLINGTMPO   := $(ROOTCLINGTMPS:.cxx=.o)
-ROOTCLINGDEP    := $(ROOTCLINGO:.o=.d) $(ROOTCLINGTMPO:.o=.d)
+ROOTCLING1S     := $(wildcard $(UTILSDIRS)/rootcling_stage1.cxx)
+ROOTCLING1O     := $(call stripsrc,$(ROOTCLING1S:.cxx=.o))
+ROOTCLING1DEP    := $(ROOTCLING1O:.o=.d)
 
-ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
-ROOTCLINGEXE    := bin/rootcling$(EXEEXT)
-ROOTCINTEXE     := bin/rootcint$(EXEEXT)
-GENREFLEXEXE    := bin/genreflex$(EXEEXT)
-ROOTCLINGSTAGE1 := $(ROOTCLINGTMPEXE)
-
-ROOTCLINGSTAGE2 := $(ROOTCLINGEXE) -rootbuild
+ROOTCLING1EXE   := $(call stripsrc,$(UTILSDIRS)/rootcling_stage1$(EXEEXT))
+ROOTCLINGSTAGE1 := $(ROOTCLING1EXE)
 
 ##### Dependencies for all dictionaries
-ROOTCLINGSTAGE1DEP := $(ROOTCLINGTMPEXE)
-ROOTCLINGSTAGE2DEP := $(ROOTCLINGEXE)
+ROOTCLINGSTAGE1DEP := $(ROOTCLINGSTAGE1)
 
 # include all dependency files
-INCLUDEFILES += $(ROOTCLINGDEP)
+INCLUDEFILES += $(ROOTCLING1DEP)
 
 ROOTCLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -Wcast-qual,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
