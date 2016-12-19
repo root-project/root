@@ -8,11 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_STAGE1_BUILD
 #include "rootclingTCling.h"
 #include "rootclingIO.h"
-#endif
-
 #include "rootcling_impl.h"
 #include "RConfigure.h"
 #include "RConfig.h"
@@ -69,9 +66,6 @@ int main(int argc, char **argv)
   config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
 #endif
 
-#ifdef ROOT_STAGE1_BUILD
-   config.fBuildingROOTStage1 = true;
-#else
    config.fBuildingROOTStage1 = false;
    config.fTROOT__GetExtraInterpreterArgs = &TROOT__GetExtraInterpreterArgs;
    config.fTCling__GetInterpreter = &TCling__GetInterpreter;
@@ -81,6 +75,6 @@ int main(int argc, char **argv)
    config.fAddEnumToROOTFile = &AddEnumToROOTFile;
    config.fAddAncestorPCMROOTFile = &AddAncestorPCMROOTFile;
    config.fCloseStreamerInfoROOTFile = &CloseStreamerInfoROOTFile;
-#endif
+
    return ROOT_rootcling_Driver(argc, argv, config);
 }
