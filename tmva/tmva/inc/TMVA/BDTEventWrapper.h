@@ -64,6 +64,7 @@ namespace TMVA {
       inline Double_t GetVal() const { return fEvent->GetValue(GetVarIndex()); }
       const Event* operator*() const { return fEvent; }
 
+      inline Double_t GetVal(Int_t var) const { return fEvent->GetValue(var); }
    private:
 
       // This is a workaround for OSx where static thread_local data members are
