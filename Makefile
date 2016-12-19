@@ -796,7 +796,7 @@ endif
 endif
 endif
 
-rootcling:      all-cling all-utils compiledata
+rootcling:      all-cling compiledata
 
 rootlibs:       rootcling $(ALLLIBS)
 
