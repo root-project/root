@@ -289,6 +289,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
           << "\", \"pid\": \"" << getpid()
           << "\", \"ppid\": \"" << getppid()
+          << "\", \"mode\": \"SimMaster"
           << "\"}," << "\n";
 
       timing_outfile.close();
@@ -353,6 +354,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
           << "\", \"pid\": \"" << getpid()
           << "\", \"ppid\": \"" << getppid()
+          << "\", \"mode\": \"MPMaster"
           << "\"}," << "\n";
 
       timing_outfile.close();
@@ -407,9 +409,10 @@ Double_t RooAbsTestStatistic::evaluate() const
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
       timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
-                     << "\", \"pid\": \"" << getpid()
-                     << "\", \"ppid\": \"" << getppid()
-                     << "\"}," << "\n";
+          << "\", \"pid\": \"" << getpid()
+          << "\", \"ppid\": \"" << getppid()
+          << "\", \"mode\": \"other"
+          << "\"}," << "\n";
 
       timing_outfile.close();
     }
