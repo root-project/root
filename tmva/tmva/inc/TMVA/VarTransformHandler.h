@@ -5,12 +5,10 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *          Extension of the Interval to "logarithmic" intervals                  *
- *                                                                                *
- *                                                                                *
+ *       Implementation of  unsupervised variable transformation methods          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Abhinav Moudgil                                                           *
+ *      Abhinav Moudgil <abhinav.moudgil@research.iiit.ac.in> - IIIT-H, India     *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         *
