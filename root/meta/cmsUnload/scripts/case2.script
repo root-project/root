@@ -1,4 +1,4 @@
-struct Marker { ~Marker() { fprintf(stderr,"dest\n"); } };
+struct Marker { ~Marker() { fprintf(stdout,"dest\n"); } };
 .L lib/libEdm.so 
 .L lib/libStrip.so 
 Marker m1;
