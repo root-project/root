@@ -1,11 +1,11 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : Interval                                                              *
+ * Class  : VarTransformHandler                                                   *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *       Implementation of  unsupervised variable transformation methods          *
+ *      Implementation of unsupervised variable transformation methods            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Abhinav Moudgil <abhinav.moudgil@research.iiit.ac.in> - IIIT-H, India     *
