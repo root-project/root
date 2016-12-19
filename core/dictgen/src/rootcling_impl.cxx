@@ -704,8 +704,8 @@ void SetRootSys()
       if ((s = strrchr(ep, '/'))) {
          // $ROOTSYS/bin/rootcling
          int removesubdirs = 2;
-         if (!strncmp(s + 1, "rootcling_tmp", 13))
-            // $ROOTSYS/core/utils/src/rootcling_tmp
+         if (!strncmp(s + 1, "rootcling_stage1", 13))
+            // $ROOTSYS/core/rootcling_stage1/src/rootcling_stage1
             removesubdirs = 4;
          for (int i = 1; s && i < removesubdirs; ++i) {
             *s = 0;

@@ -21,7 +21,7 @@ namespace RootCling {
       bool fBuildingROOTStage1 = false;
       std::string fLLVMResourceDir;
 
-      // Function that might (rootcling) or might not (rootcling_tmp) be there.
+      // Function that might (rootcling) or might not (rootcling_stage1) be there.
       const char ** * (*fTROOT__GetExtraInterpreterArgs)() = nullptr;
       cling::Interpreter *(*fTCling__GetInterpreter)() = nullptr;
       void (*fInitializeStreamerInfoROOTFile)(const char *filename) = nullptr;

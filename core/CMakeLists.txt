@@ -103,7 +103,7 @@ elseif(APPLE)
   endif()
 endif()
 
-add_subdirectory(utils)
+add_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
 ROOT_LINKER_LIBRARY(Core

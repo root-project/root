@@ -3,7 +3,7 @@
 ############################################################################
 
 # These files depend on cling/clang/llvm; they need to be linked into libCling.
-# They are used by rootcling_tmp, rootcling and libCling.
+# They are used by rootcling_stage1, rootcling and libCling.
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)

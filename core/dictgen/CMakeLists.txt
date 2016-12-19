@@ -5,7 +5,7 @@
 # Provides capabilities to parse Linkdef / selection files and generate
 # dictionaries.
 #
-# These files are linked into rootcling_tmp and libCling. rootcling accesses
+# These files are linked into rootcling_stage1 and libCling. rootcling accesses
 # them through rootcling_impl.
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
