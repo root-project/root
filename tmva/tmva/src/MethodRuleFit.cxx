@@ -23,7 +23,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-/*! \class TMVA::
+/*! \class TMVA::MethodRuleFit
 \ingroup TMVA
 J Friedman's RuleFit method
 */
