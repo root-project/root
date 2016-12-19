@@ -14,6 +14,10 @@
 #ifndef ROOT_TDataPoint_ICC
 #define ROOT_TDataPoint_ICC
 
+#ifndef ROOT_Math_TDataPoint
+#error "Do not use TDataPoint.icc directly. #include \"TDataPoint.h\" instead."
+#endif // ROOT_Math_TDataPoint
+
 #include <cassert>
 #include <math.h>
 
