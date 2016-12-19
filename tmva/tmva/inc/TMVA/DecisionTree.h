@@ -49,6 +49,7 @@
 #include "TMVA/SeparationBase.h"
 #include "TMVA/RegressionVariance.h"
 #include "TMVA/DataSetInfo.h"
+#include <ROOT/TThreadExecutor.hxx>
 
 class TRandom3;
 
@@ -63,6 +64,10 @@ namespace TMVA {
       static const Int_t fgRandomSeed; // set nonzero for debugging and zero for random seeds
 
    public:
+      // #### Some vars to save the timing info for parallelization studies
+      double trainNodeTime = 0;
+      double sumNodeTime = 0;
+      double filterNodeTime = 0;
 
       typedef std::vector<TMVA::Event*> EventList;
       typedef std::vector<const TMVA::Event*> EventConstList;
@@ -234,7 +239,8 @@ namespace TMVA {
       Types::EAnalysisType  fAnalysisType;   // kClassification(=0=false) or kRegression(=1=true)
 
       DataSetInfo*  fDataSetInfo;
-
+      
+      ROOT::TThreadExecutor fPool;
 
       ClassDef(DecisionTree,0);               // implementation of a Decision Tree
    };
