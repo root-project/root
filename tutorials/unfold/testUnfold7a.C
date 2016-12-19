@@ -265,7 +265,7 @@ void testUnfold7a()
   bgrTree->Branch("mrec",&mRec,"mrec[3]/F");
   bgrTree->Branch("discr",&discr,"discr/F");
   bgrTree->Branch("istriggered",&istriggered,"istriggered/I");
-  signalTree->Branch("weight",&weight,"weight/F");
+  bgrTree->Branch("weight",&weight,"weight/F");
 
   cout<<"fill background tree\n";
 
