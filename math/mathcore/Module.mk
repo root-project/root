@@ -93,7 +93,8 @@ ALLHDRS      += $(MATHCOREMH_REL)
 ALLLIBS      += $(MATHCORELIB)
 ALLMAPS      += $(MATHCOREMAP)
 ifeq ($(CXXMODULES),yes)
-  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MATHCOREMH_REL))
+  MATHCOREMH_NOICC_REL := $(filter-out $(patsubst $(MODDIRI)/%,include/%,$(MATHCOREMH3)), $(MATHCOREMH_REL))
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MATHCOREMH_NOICC_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Math_Core { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
   CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"

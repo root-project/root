@@ -74,7 +74,8 @@ ALLHDRS      += $(TMVA_REL)
 ALLLIBS      += $(TMVALIB)
 ALLMAPS      += $(TMVAMAP)
 ifeq ($(CXXMODULES),yes)
-  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TMVA_REL))
+  TMVA_NOICC_REL := $(filter-out include/TMVA/NeuralNet.icc, $(TMVA_REL))
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TMVA_NOICC_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Tmva_$(MODNAME) { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
   CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
