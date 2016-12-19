@@ -336,8 +336,8 @@ Double_t RooAbsTestStatistic::evaluate() const
         timing_outfile << "\"RATS_evaluate_mpmaster_it" << i << "_wall_s\": \"" << timings[i] << "\", ";
       }
 
-      timing_outfile << "\"pid\": \"" << getpid() << "\""
-          << "\", \"ppid\": \"" << getppid()
+      timing_outfile << "\"pid\": \"" << getpid()
+          << "\", \"ppid\": \"" << getppid() << "\""
           << "}," << "\n";
 
       timing_outfile.close();
