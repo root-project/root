@@ -16,9 +16,9 @@ The class representing the collection of selection rules.
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include "fnmatch.h"
+#include <fnmatch.h>
+#include "Rtypes.h"
 #include "SelectionRules.h"
-#include "TString.h"
 #include "llvm/Support/raw_ostream.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
