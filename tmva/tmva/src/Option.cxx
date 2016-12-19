@@ -26,6 +26,11 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
+/*! \class TMVA::OptionBase
+\ingroup TMVA
+Class for TMVA-option handling
+*/
+
 #include "TMVA/Option.h"
 
 #include "TMVA/Types.h"

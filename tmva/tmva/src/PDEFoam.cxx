@@ -26,43 +26,44 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// Implementation of PDEFoam
-//
-// The PDEFoam method is an extension of the PDERS method, which uses
-// self-adapting binning to divide the multi-dimensional phase space
-// in a finite number of hyper-rectangles (boxes).
-//
-// For a given number of boxes, the binning algorithm adjusts the size
-// and position of the boxes inside the multidimensional phase space,
-// minimizing the variance of the signal and background densities inside
-// the boxes. The binned density information is stored in binary trees,
-// allowing for a very fast and memory-efficient classification of
-// events.
-//
-// The implementation of the PDEFoam is based on the monte-carlo
-// integration package TFoam included in the analysis package ROOT.
-//
-// The class TMVA::PDEFoam defines the default interface for the
-// PDEFoam variants:
-//
-//   - PDEFoamEvent
-//   - PDEFoamDiscriminant
-//   - PDEFoamTarget
-//   - PDEFoamMultiTarget
-//   - PDEFoamDecisionTree
-//
-// Per default PDEFoam stores in the cells the number of events (event
-// weights) and therefore acts as an event density estimator.
-// However, the above listed derived classes override this behaviour
-// to implement certain PDEFoam variations.
-//
-// In order to use PDEFoam the user has to set the density estimator
-// of the type TMVA::PDEFoamDensityBase, which is used to during the foam
-// build-up.  The default PDEFoam should be used with
-// PDEFoamEventDensity.
-// _____________________________________________________________________
+/*! \class TMVA::PDEFoam
+\ingroup TMVA
+
+Implementation of PDEFoam
+
+The PDEFoam method is an extension of the PDERS method, which uses
+self-adapting binning to divide the multi-dimensional phase space
+in a finite number of hyper-rectangles (boxes).
+
+For a given number of boxes, the binning algorithm adjusts the size
+and position of the boxes inside the multidimensional phase space,
+minimizing the variance of the signal and background densities inside
+the boxes. The binned density information is stored in binary trees,
+allowing for a very fast and memory-efficient classification of
+events.
+
+The implementation of the PDEFoam is based on the monte-carlo
+integration package TFoam included in the analysis package ROOT.
+
+The class TMVA::PDEFoam defines the default interface for the
+PDEFoam variants:
+
+  - PDEFoamEvent
+  - PDEFoamDiscriminant
+  - PDEFoamTarget
+  - PDEFoamMultiTarget
+  - PDEFoamDecisionTree
+
+Per default PDEFoam stores in the cells the number of events (event
+weights) and therefore acts as an event density estimator.
+However, the above listed derived classes override this behaviour
+to implement certain PDEFoam variations.
+
+In order to use PDEFoam the user has to set the density estimator
+of the type TMVA::PDEFoamDensityBase, which is used to during the foam
+build-up.  The default PDEFoam should be used with
+PDEFoamEventDensity.
+*/
 
 #include "TMVA/PDEFoam.h"
 
@@ -428,7 +429,7 @@ Int_t TMVA::PDEFoam::CellFill(Int_t status, PDEFoamCell *parent)
 ///
 /// If fNmin > 0 then the total number of (training) events found in
 /// the cell during the exploration is stored in the cell.  This
-/// information is used withing PeekMax() to avoid splitting cells
+/// information is used within PeekMax() to avoid splitting cells
 /// which contain less than fNmin events.
 
 void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
@@ -509,10 +510,10 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
       if ( nevEff >= fNBin*fEvPerBin) break;
    }   // ||||||||||||||||||||||||||END MC LOOP|||||||||||||||||||||||||||||
    totevents *= dx;
-   
+
    if (fNSampl>0) totevents /= fNSampl;
 
-   // make shure that, if root cell is explored, more than zero
+   // make sure that, if root cell is explored, more than zero
    // events were found.
    if (cell==fCells[0] && ceSum[0]<=0.0){
       if (ceSum[0]==0.0)
@@ -562,7 +563,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal subrogram used by Create.
+/// Internal subprogram used by Create.
 /// In determines the best edge candidate and the position of the cell division plane
 /// in case of the variance reduction for future cell division,
 /// using results of the MC exploration run stored in fHistEdg
@@ -631,7 +632,7 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
 }          //PDEFoam::Varedu
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal subrogram used by Create.
+/// Internal subprogram used by Create.
 /// Provides random vector Alpha  0< Alpha(i) < 1
 
 void TMVA::PDEFoam::MakeAlpha()
@@ -702,7 +703,7 @@ Long_t TMVA::PDEFoam::PeekMax()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal subrogram used by Create.
+/// Internal subprogram used by Create.
 /// It divides cell iCell into two daughter cells.
 /// The iCell is retained and tagged as inactive, daughter cells are appended
 /// at the end of the buffer.
@@ -759,7 +760,7 @@ Double_t TMVA::PDEFoam::Eval(Double_t *xRand, Double_t &event_density)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Internal subrogram used by Create.
+/// Internal subprogram used by Create.
 /// It grow new cells by the binary division process.
 /// This function is overridden by the PDEFoam class to stop the foam buildup process
 /// if one of the cut conditions stop the cell split.
@@ -815,7 +816,7 @@ void  TMVA::PDEFoam::SetInhiDiv(Int_t iDim, Int_t inhiDiv)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  User utility, miscellaneous and debug.
-///  Checks all pointers in the tree of cells. This is useful autodiagnostic.
+///  Checks all pointers in the tree of cells. This is useful auto-diagnostic.
 ///  level=0, no printout, failures causes STOP
 ///  level=1, printout, failures lead to WARNINGS only
 
@@ -1476,7 +1477,7 @@ void TMVA::PDEFoam::OutputGrow( Bool_t finished )
 /// as rectangles in C++ format readable for ROOT.
 ///
 /// Parameters:
-/// - filename - filename of ouput root macro
+/// - filename - filename of output root macro
 ///
 /// - opt - cell_value, rms, rms_ov_mean
 ///   If cell_value is set, the following values will be filled into
@@ -1590,7 +1591,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
    outfile << "Float_t zmin = "<< zmin << ";" << std::endl;
    outfile << "Float_t zmax = "<< zmax << ";" << std::endl;
 
-   Float_t x1,y1,x2,y2,x,y; // box and text coordintates
+   Float_t x1,y1,x2,y2,x,y; // box and text coordinates
    Float_t offs  = 0.01;
    Float_t lpag  = 1-2*offs;
    Int_t ncolors  = colors ? gStyle->GetNumberOfColors() : 100;
