@@ -139,8 +139,8 @@ ifeq ($(BUILDCOCOA),yes)
 MODULES += core/macosx
 endif
 
-# utils/rootcling depends on system; must come after:
-MODULES += core/utils
+# rootcling_stage1 depends on system; must come after:
+MODULES += core/rootcling_stage1
 
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
@@ -362,7 +362,7 @@ MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
 
 ifeq ($(BUILDTOOLS),yes)
 MODULES       = build interpreter/llvm interpreter/cling core/foundation core/dictgen \
-                core/clib core/base core/meta core/utils
+                core/clib core/base core/meta core/rootcling_stage1
 endif
 
 ##### ROOT libraries #####
