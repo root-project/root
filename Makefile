@@ -93,7 +93,8 @@ MODULES       = build interpreter/llvm interpreter/cling core/foundation \
                 core/clingutils core/dictgen core/metacling \
                 core/pcre core/clib \
                 core/textinput core/base core/cont core/meta core/thread \
-                io/io math/mathcore net/net core/zip core/lzma math/matrix \
+                io/rootpcm io/io math/mathcore net/net core/zip core/lzma \
+                math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
                 graf2d/mathtext graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
