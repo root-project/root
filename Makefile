@@ -886,13 +886,13 @@ ifeq ($(CXXMODULES),yes)
 # We use the relative path of COREDICT.
 # FIXME: We probably should be chaning the COREDICTH to use relative paths, too.
 # COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
-#                $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
+#                $(ZIPDICTH) $(CLIBHH) $(CLINGUTILSH) $(TEXTINPUTH)
 include/module.modulemap:
-COREDICTH_REL := $(BASEH_REL) $(CONTH_REL) $(METAH_REL) $(METAUTILSH_REL)
+COREDICTH_REL := $(BASEH_REL) $(CONTH_REL) $(METAH_REL) $(CLINGUTILSH_REL)
 COREDICTH_REL := $(patsubst include/%,%, $(COREDICTH_REL))
 CXXMODULES_CORE_EXCLUDE := RConversionRuleParser.h TSchemaRuleProcessor.h \
 			   RConfig.h RVersion.h  RtypesImp.h \
-			   Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h \
+			   Rtypes.h RtypesCore.h TClassEdit.h TClingUtils.h \
 			   TSchemaType.h DllImport.h TGenericClassInfo.h \
 			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
 			   RootMetaSelection.h libcpp_string_view.h \
