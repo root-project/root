@@ -245,7 +245,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  rheaderfiles "${headerfiles}")
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
-    set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|utils|winnt|zip")
+    set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
     string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  rheaderfiles "${rheaderfiles}")
   endif()
 
