@@ -23,7 +23,7 @@ ROOT_EXECUTABLE(rootcling_stage1 ${ROOTCLING1TMPSRC}
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:ClingUtils>
                               $<TARGET_OBJECTS:Dictgen>
-                              $<TARGET_OBJECTS:Foundation>
+                              $<TARGET_OBJECTS:Foundation_Stage1>
                               LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
 add_dependencies(rootcling_stage1 CLING LLVMRES)
