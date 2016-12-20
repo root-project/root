@@ -320,8 +320,7 @@ namespace ROOT
          TSchemaRuleProcessor::SplitList( it2->second.substr( 1, it2->second.size()-2 ),
                                           lst );
          if( lst.empty() ) {
-            std::string warn = warning + " - the list of checksums is empty\n";
-            ROOT::TMetaUtils::Warning(0, warn.c_str());
+            error_string += warning + " - the list of checksums is empty\n";
          }
 
          for( lsIt = lst.begin(); lsIt != lst.end(); ++lsIt )
@@ -433,7 +432,8 @@ namespace ROOT
    /// Check if given rule contains references to valid data members
 
    Bool_t HasValidDataMembers(SchemaRuleMap_t& rule,
-                              MembersTypeMap_t& members )
+                              MembersTypeMap_t& members,
+                              std::string& error_string)
    {
       std::list<std::string>           mem;
       std::list<std::string>::iterator it;
@@ -447,11 +447,10 @@ namespace ROOT
 
       for( it = mem.begin(); it != mem.end(); ++it ) {
          if( members.find( *it ) == members.end() ) {
-            std::string warn = "IO rule for class " + rule["targetClass"];
-            warn += " data member: " + *it + " was specified as a ";
-            warn += "target in the rule but doesn't seem to appear in ";
-            warn += "target class\n";
-            ROOT::TMetaUtils::Warning(0, warn.c_str());
+            error_string += "IO rule for class " + rule["targetClass"]
+               + " data member: " + *it + " was specified as a "
+               "target in the rule but doesn't seem to appear in "
+               "target class\n";
             return false;
          }
       }
@@ -872,19 +871,17 @@ namespace ROOT
    /////////////////////////////////////////////////////////////////////////////
    /// I am being called when a read pragma is encountered
 
-   void ProcessReadPragma( const char* args )
+   void ProcessReadPragma( const char* args, std::string& error_string )
    {
       //-----------------------------------------------------------------------
       // Parse the rule and check it's validity
       //////////////////////////////////////////////////////////////////////////
 
       std::map<std::string, std::string> rule;
-      std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
          error_string += "\nThe following rule has been omitted:\n   read ";
          error_string += args;
          error_string += "\n";
-         ROOT::TMetaUtils::Error(0, error_string.c_str());
          return;
       }
 
@@ -907,19 +904,17 @@ namespace ROOT
    /////////////////////////////////////////////////////////////////////////////
    /// I am being called then a readraw pragma is encountered
 
-   void ProcessReadRawPragma( const char* args )
+   void ProcessReadRawPragma( const char* args, std::string& error_string)
    {
       //-----------------------------------------------------------------------
       // Parse the rule and check it's validity
       //////////////////////////////////////////////////////////////////////////
 
       std::map<std::string, std::string> rule;
-      std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
          error_string += "\nThe following rule has been omitted:\n   readraw ";
          error_string += args;
          error_string += "\n";
-         ROOT::TMetaUtils::Error(0, error_string.c_str());
          return;
       }
 

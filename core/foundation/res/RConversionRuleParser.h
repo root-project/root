@@ -36,7 +36,8 @@ namespace ROOT
    //---------------------------------------------------------------------------
    // Check if given rule contains references to valid data members
    //---------------------------------------------------------------------------
-   bool HasValidDataMembers( SchemaRuleMap_t& rule, MembersTypeMap_t& members );
+   bool HasValidDataMembers( SchemaRuleMap_t& rule, MembersTypeMap_t& members,
+                             std::string& error_string);
 
    //---------------------------------------------------------------------------
    // Write the conversion function for Read rule
@@ -72,12 +73,12 @@ namespace ROOT
    //---------------------------------------------------------------------------
    // Parse read pragma
    //---------------------------------------------------------------------------
-   void ProcessReadPragma( const char* args );
+   void ProcessReadPragma( const char* args, std::string& error_string );
 
    //---------------------------------------------------------------------------
    // Parse readraw pragma
    //---------------------------------------------------------------------------
-   void ProcessReadRawPragma( const char* args );
+   void ProcessReadRawPragma( const char* args, std::string& error_string );
 }
 
 #endif // R__CONVERSION_RULE_PARSER_H
