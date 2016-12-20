@@ -1,3 +1,8 @@
+/*! \class TMVA::ROCCalc
+\ingroup TMVA
+
+*/
+
 #include <algorithm>
 #include <cstdlib>
 #include <errno.h>
@@ -78,15 +83,15 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
 {
    fUseSplines = kTRUE;
    fNbins      = 100;
-   // fmvaS = (TH1*) mvaS->Clone("MVA Signal"); fmvaS->SetTitle("MVA Signal"); 
+   // fmvaS = (TH1*) mvaS->Clone("MVA Signal"); fmvaS->SetTitle("MVA Signal");
    // fmvaB = (TH1*) mvaB->Clone("MVA Backgr"); fmvaB->SetTitle("MVA Backgr");
    fmvaS =  mvaS; fmvaS->SetTitle("MVA Signal");
    fmvaB =  mvaB; fmvaB->SetTitle("MVA Backgr");
    fXmax = fmvaS->GetXaxis()->GetXmax();
-   fXmin = fmvaS->GetXaxis()->GetXmin(); 
- 
-   if (TMath::Abs(fXmax-fmvaB->GetXaxis()->GetXmax()) > 0.000001 || 
-       TMath::Abs(fXmin-fmvaB->GetXaxis()->GetXmin()) > 0.000001 || 
+   fXmin = fmvaS->GetXaxis()->GetXmin();
+
+   if (TMath::Abs(fXmax-fmvaB->GetXaxis()->GetXmax()) > 0.000001 ||
+       TMath::Abs(fXmin-fmvaB->GetXaxis()->GetXmin()) > 0.000001 ||
        fmvaB->GetNbinsX() != fmvaS->GetNbinsX()) {
       Log() << kERROR << "Cannot cal ROC curve etc, as in put mvaS and mvaB have differen #nbins or range "<<Endl;
       fStatus=kFALSE;
@@ -97,19 +102,19 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    if (!strcmp(fmvaB->GetYaxis()->GetTitle(),"")) fmvaB->SetYTitle("#entries");
    ApplySignalAndBackgroundStyle(fmvaS, fmvaB);
    //    std::cout<<"mvaS->GetNbinsX()"<<mvaS->GetNbinsX()<<std::endl;
-   //    std::cout<<"mvaB->GetNbinsX()"<<mvaB->GetNbinsX()<<std::endl; 
+   //    std::cout<<"mvaB->GetNbinsX()"<<mvaB->GetNbinsX()<<std::endl;
    //the output of mvaS->GetNbinsX() is about 40 and if we divide it by 100 the results is 0
    //the I will divide it by 10 anyway doing some tests ROC integral is the same
-   fmvaSpdf = mvaS->RebinX(mvaS->GetNbinsX()/10,"MVA Signal PDF"); 
+   fmvaSpdf = mvaS->RebinX(mvaS->GetNbinsX()/10,"MVA Signal PDF");
    fmvaBpdf = mvaB->RebinX(mvaB->GetNbinsX()/10,"MVA Backgr PDF");
    if(fmvaSpdf==0||fmvaBpdf==0)
       {
          Log() << kERROR << "Cannot Rebin Histograms mvaS and mvaB, ROC values will be calculated without Rebin histograms."<<Endl;
          fStatus=kFALSE;
-         fmvaSpdf = (TH1*)mvaS->Clone("MVA Signal PDF"); 
+         fmvaSpdf = (TH1*)mvaS->Clone("MVA Signal PDF");
          fmvaBpdf = (TH1*)mvaB->Clone("MVA Backgr PDF");
       }
-   fmvaSpdf->SetTitle("MVA Signal PDF"); 
+   fmvaSpdf->SetTitle("MVA Signal PDF");
    fmvaBpdf->SetTitle("MVA Backgr PDF");
    fmvaSpdf->Scale(1./fmvaSpdf->GetSumOfWeights());
    fmvaBpdf->Scale(1./fmvaBpdf->GetSumOfWeights());
@@ -120,15 +125,10 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    fCutOrientation = (fmvaS->GetMean() > fmvaB->GetMean()) ? +1 : -1;
 
    fNevtS = 0;
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Int_t c_Canvas         = TColor::GetColor( "#f0f0f0" );
-///  Int_t c_FrameFill      = TColor::GetColor( "#fffffd" );
-///  Int_t c_TitleBox       = TColor::GetColor( "#5D6B7D" );
-///  Int_t c_TitleBorder    = TColor::GetColor( "#7D8B9D" );
-///  Int_t c_TitleText      = TColor::GetColor( "#FFFFFF" );
 
 void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any ) {
    Int_t c_SignalLine     = TColor::GetColor( "#0000ee" );
@@ -158,7 +158,7 @@ void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any 
       sig->SetFillStyle( FillStyle__S );
       sig->SetFillColor( FillColor__S );
    }
- 
+
    if (bkg != NULL) {
       bkg->SetLineColor( LineColor__B );
       bkg->SetLineWidth( LineWidth__B );
@@ -173,7 +173,6 @@ void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any 
       any->SetFillColor( FillColor__S );
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
@@ -197,7 +196,7 @@ TMVA::ROCCalc::~ROCCalc() {
 /// get the ROC curve
 
 TH1D* TMVA::ROCCalc::GetROC(){
-   // first get the cumulative distributions of the mva distribution 
+   // first get the cumulative distributions of the mva distribution
    // --> efficiencies vs cut value
    fNevtS = fmvaS->GetSumOfWeights(); // needed to get the error on the eff.. will only be correct if the histogram is not scaled to "integral == 1" Yet;
    if (fNevtS < 2) {
@@ -223,7 +222,7 @@ TH1D* TMVA::ROCCalc::GetROC(){
    if(rejBvsS==0) rejBvsS = new TH1D( "rejBvsS", "ROC-Curve", fNbins, 0, 1 );
    rejBvsS->SetXTitle( "Signal eff" );
    rejBvsS->SetYTitle( "Backgr rejection (1-eff)" );
-   
+
    // inverse background eff (1/eff.) versus signal efficiency
    if(inveffBvsS ==0) inveffBvsS = new TH1D("invBeffvsSeff", "ROC-Curve" , fNbins, 0, 1 );
    inveffBvsS->SetXTitle( "Signal eff" );
@@ -257,21 +256,21 @@ TH1D* TMVA::ROCCalc::GetROC(){
       if (effB>std::numeric_limits<double>::epsilon())
          inveffBvsS->SetBinContent( bini, 1.0/effB );
    }
-   
+
    // create splines for histogram
    fSpleffBvsS = new TSpline1( "effBvsS", new TGraph( effBvsS ) );
-   
+
    // search for overlap point where, when cutting on it,
    // one would obtain: eff_S = rej_B = 1 - eff_B
 
    Double_t effS = 0., rejB = 0., effS_ = 0., rejB_ = 0.;
    Int_t    nbins = 5000;
    for (Int_t bini=1; bini<=nbins; bini++) {
-     
+
       // get corresponding signal and background efficiencies
       effS = (bini - 0.5)/Float_t(nbins);
       rejB = 1.0 - fSpleffBvsS->Eval( effS );
-     
+
       // find signal efficiency that corresponds to required background efficiency
       if ((effS - rejB)*(effS_ - rejB_) < 0) break;
       effS_ = effS;
@@ -279,7 +278,7 @@ TH1D* TMVA::ROCCalc::GetROC(){
    }
    // find cut that corresponds to signal efficiency and update signal-like criterion
    fSignalCut = Root( 0.5*(effS + effS_) );
-   
+
    return rejBvsS;
 }
 
@@ -294,19 +293,19 @@ Double_t TMVA::ROCCalc::GetROCIntegral(){
    // compute area of rej-vs-eff plot
    Double_t integral = 0;
    for (Int_t bini=1; bini<=nbins; bini++) {
-    
+
       // get corresponding signal and background efficiencies
       effS = (bini - 0.5)/Float_t(nbins);
       effB = fSpleffBvsS->Eval( effS );
       integral += (1.0 - effB);
    }
    integral /= nbins;
-  
+
    return integral;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the signal efficiency for a particular backgroud efficiency 
+/// get the signal efficiency for a particular background efficiency
 /// that will be the value of the efficiency retured (does not affect
 /// the efficiency-vs-bkg plot which is done anyway.
 
@@ -327,11 +326,11 @@ Double_t TMVA::ROCCalc::GetEffSForEffBof(Double_t effBref, Double_t &effSerr){
       effSOld = effS;
       effBOld = effB;
    }
-  
+
    // take mean between bin above and bin below
    effS = 0.5*(effS + effSOld);
-  
-  
+
+
    if (fNevtS > 0) effSerr = TMath::Sqrt( effS*(1.0 - effS)/fNevtS );
    else effSerr = 0;
 
@@ -348,7 +347,7 @@ Double_t TMVA::ROCCalc::GetEffForRoot( Double_t theCut )
    // retrieve the class object
    if (fUseSplines) retVal = fSplmvaCumS->Eval( theCut );
    else             retVal = fmvaScumul->GetBinContent( fmvaScumul->FindBin( theCut ) );
-   
+
    // caution: here we take some "forbidden" action to hide a problem:
    // in some cases, in particular for likelihood, the binned efficiency distributions
    // do not equal 1, at xmin, and 0 at xmax; of course, in principle we have the
@@ -374,7 +373,7 @@ Double_t TMVA::ROCCalc::Root( Double_t refValue  )
    if (fb*fa > 0) {
       Log() << kWARNING << "<ROCCalc::Root> initial interval w/o root: "
             << "(a=" << a << ", b=" << b << "),"
-            << " (Eff_a=" << GetEffForRoot( a ) 
+            << " (Eff_a=" << GetEffForRoot( a )
             << ", Eff_b=" << GetEffForRoot( b ) << "), "
             << "(fa=" << fa << ", fb=" << fb << "), "
             << "refValue = " << refValue << Endl;
@@ -392,7 +391,7 @@ Double_t TMVA::ROCCalc::Root( Double_t refValue  )
          c  = a; fc = fa;
          d  = b - a; e  = b - a;
       }
-  
+
       if (TMath::Abs(fc) < TMath::Abs(fb)) {
          ac_equal = kTRUE;
          a  = b;  b  = c;  c  = a;
@@ -402,14 +401,14 @@ Double_t TMVA::ROCCalc::Root( Double_t refValue  )
       Double_t tol = 0.5 * 2.2204460492503131e-16 * TMath::Abs(b);
       Double_t m   = 0.5 * (c - b);
       if (fb == 0 || TMath::Abs(m) <= tol || TMath::Abs(fb) < fAbsTol) return b;
-  
+
       // Bounds decreasing too slowly: use bisection
-      if (TMath::Abs (e) < tol || TMath::Abs (fa) <= TMath::Abs (fb)) { d = m; e = m; }      
+      if (TMath::Abs (e) < tol || TMath::Abs (fa) <= TMath::Abs (fb)) { d = m; e = m; }
       else {
          // Attempt inverse cubic interpolation
          Double_t p, q, r;
          Double_t s = fb / fa;
-      
+
          if (ac_equal) { p = 2 * m * s; q = 1 - s; }
          else {
             q = fa / fc; r = fb / fc;
@@ -419,7 +418,7 @@ Double_t TMVA::ROCCalc::Root( Double_t refValue  )
          // Check whether we are in bounds
          if (p > 0) q = -q;
          else       p = -p;
-      
+
          Double_t min1 = 3 * m * q - TMath::Abs (tol * q);
          Double_t min2 = TMath::Abs (e * q);
          if (2 * p < (min1 < min2 ? min1 : min2)) {
@@ -439,7 +438,7 @@ Double_t TMVA::ROCCalc::Root( Double_t refValue  )
    }
 
    // Return our best guess if we run out of iterations
-   Log() << kWARNING << "<ROCCalc::Root> maximum iterations (" << fMaxIter 
+   Log() << kWARNING << "<ROCCalc::Root> maximum iterations (" << fMaxIter
          << ") reached before convergence" << Endl;
 
    return b;
@@ -450,9 +449,9 @@ Double_t TMVA::ROCCalc::Root( Double_t refValue  )
 TH1* TMVA::ROCCalc::GetPurity( Int_t nStot, Int_t nBtot)
 {
    if (fnStot!=nStot || fnBtot!=nBtot || !fSignificance) {
-      GetSignificance(nStot, nBtot); 
-      fnStot=nStot; 
-      fnBtot=nBtot; 
+      GetSignificance(nStot, nBtot);
+      fnStot=nStot;
+      fnBtot=nBtot;
    }
    return fPurity;
 }
@@ -476,7 +475,7 @@ TH1* TMVA::ROCCalc::GetSignificance( Int_t nStot, Int_t nBtot)
    fPurity->SetYTitle("Purity: S/(S+B)");
    fPurity->SetLineColor(3);
    fPurity->SetLineWidth(5);
-   
+
    Double_t maxSig=0;
    for (Int_t i=1; i<=fSignificance->GetNbinsX(); i++) {
       Double_t S = fmvaScumul->GetBinContent( i ) * nStot;
@@ -498,7 +497,7 @@ TH1* TMVA::ROCCalc::GetSignificance( Int_t nStot, Int_t nBtot)
       fSignificance->SetBinContent( i, sig );
    }
 
-   /*   
+   /*
         TLatex*  line1;
         TLatex*  line2;
         TLatex tl;
@@ -508,18 +507,10 @@ TH1* TMVA::ROCCalc::GetSignificance( Int_t nStot, Int_t nBtot)
         line1 = tl.DrawLatex( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", nStot, nBtot));
         tl.DrawLatex( 0.15, 0.19, "events the maximum S/Sqrt(S+B) is");
 
-        line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f", 
-        maxSig, 
+        line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f",
+        maxSig,
         fSignificance->GetXaxis()->GetBinCenter(maxbin)) );
-   */   
+   */
    return fSignificance;
 
 }
-
-
-
-
-
-
-
-
