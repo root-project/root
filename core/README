@@ -10,7 +10,7 @@ rootcling_stage1 executable contains:
   - dictgen
   - rootcling_stage1
 
-Note: The public version of rootcling is hosted (outside of coer) in the
+Note: The public version of rootcling is hosted (outside of core) in the
 directory/package named 'main' 'and depends on libCore, libCling, libRIO
 and io/rootpcm.
 
