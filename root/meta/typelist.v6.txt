@@ -82,13 +82,6 @@ allocator<pair<TObject*const,TF1*> >::pointer
 allocator<pair<TObject*const,TF1*> >::reference
 allocator<pair<TObject*const,TF1*> >::size_type
 allocator<pair<TObject*const,TF1*> >::value_type
-allocator<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::const_pointer
-allocator<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::const_reference
-allocator<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::difference_type
-allocator<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::pointer
-allocator<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::reference
-allocator<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::size_type
-allocator<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::value_type
 allocator<ROOT::Fit::ParameterSettings>::const_pointer
 allocator<ROOT::Fit::ParameterSettings>::const_reference
 allocator<ROOT::Fit::ParameterSettings>::difference_type
@@ -571,18 +564,6 @@ list<pair<TDSetElement*,TString> >::reference
 list<pair<TDSetElement*,TString> >::reverse_iterator
 list<pair<TDSetElement*,TString> >::size_type
 list<pair<TDSetElement*,TString> >::value_type
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::allocator_type
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::const_iterator
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::const_pointer
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::const_reference
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::const_reverse_iterator
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::difference_type
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::iterator
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::pointer
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::reference
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::reverse_iterator
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::size_type
-list<pair<ROOT::Internal::TSchemaType,basic_string<char> > >::value_type
 list<ROOT::Detail::TBranchProxy*>::allocator_type
 list<ROOT::Detail::TBranchProxy*>::const_iterator
 list<ROOT::Detail::TBranchProxy*>::const_pointer
@@ -800,8 +781,6 @@ pair<llvm::StringRef,llvm::StringRef>::first_type
 pair<llvm::StringRef,llvm::StringRef>::second_type
 pair<TDSetElement*,TString>::first_type
 pair<TDSetElement*,TString>::second_type
-pair<ROOT::Internal::TSchemaType,basic_string<char> >::first_type
-pair<ROOT::Internal::TSchemaType,basic_string<char> >::second_type
 Pattern_t
 pid_t
 Pixel_t
@@ -837,14 +816,10 @@ ROOT::Math::FitMethodFunction
 ROOT::Math::FitMethodGradFunction
 ROOT::Math::FreeFunctionPtr
 ROOT::Math::TDataPoint<1,double>::value_type
-ROOT::MembersMap_t
-ROOT::MembersTypeMap_t
 ROOT::MergeFunc_t
 ROOT::NewArrFunc_t
 ROOT::NewFunc_t
 ROOT::ResetAfterMergeFunc_t
-ROOT::SchemaRuleClassMap_t
-ROOT::SchemaRuleMap_t
 ROOT::Internal::TArrayBoolProxy
 ROOT::Internal::TArrayDouble32Proxy
 ROOT::Internal::TArrayDoubleProxy
