@@ -17,11 +17,13 @@ ROOT_GENERATE_DICTIONARY(G__Core
                          ${Base_v7_dict_headers}
                          ${Clib_dict_headers}
                          ${Cont_dict_headers}
+                         ${Foundation_dict_headers}
                          ${Macosx_dict_headers}
                          ${Unix_dict_headers}
                          ${Winnt_dict_headers}
-                         ${MetaUtils_dict_headers}
+                         ${ClingUtils_dict_headers}
                          ${Meta_dict_headers}
+                         ${MetaCling_dict_headers}
                          ${TextInput_dict_headers}
                          STAGE1
                          MODULE Core

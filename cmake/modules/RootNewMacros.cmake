@@ -52,13 +52,11 @@ endif()
 #---Modify the behaviour for local and non-local builds--------------------------------------------
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-  set(rootcint_cmd rootcling_tmp)
-  set(rlibmap_cmd rlibmap)
+  set(rootcint_cmd rootcling_stage1)
   set(genreflex_cmd genreflex)
-  set(ROOTCINTDEP rootcling_tmp)
+  set(ROOTCINTDEP rootcling_stage1)
 else()
   set(rootcint_cmd rootcling)
-  set(rlibmap_cmd rlibmap)
   set(genreflex_cmd genreflex)
   set(ROOTCINTDEP)
 endif()
@@ -334,7 +332,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    set(command rootcling_tmp)
+    set(command rootcling_stage1)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
@@ -675,9 +673,9 @@ function(ROOT_GENERATE_ROOTMAP library)
     set(_library ${libprefix}${library}${CMAKE_SHARED_LIBRARY_SUFFIX})
   endif()
   #---Build the rootmap file--------------------------------------
-  add_custom_command(OUTPUT ${outfile}
-                     COMMAND ${rlibmap_cmd} -o ${outfile} -l ${_library} -d ${_dependencies} -c ${_linkdef}
-                     DEPENDS ${_linkdef} ${rlibmap_cmd} )
+  #add_custom_command(OUTPUT ${outfile}
+  #                   COMMAND ${rlibmap_cmd} -o ${outfile} -l ${_library} -d ${_dependencies} -c ${_linkdef}
+  #                   DEPENDS ${_linkdef} ${rlibmap_cmd} )
   add_custom_target( ${libprefix}${library}.rootmap ALL DEPENDS  ${outfile})
   set_target_properties(${libprefix}${library}.rootmap PROPERTIES FOLDER RootMaps )
   #---Install the rootmap file------------------------------------

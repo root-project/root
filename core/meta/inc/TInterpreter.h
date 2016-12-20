@@ -30,6 +30,8 @@
 #include "TVirtualMutex.h"
 #endif
 
+#include <map>
+#include <typeinfo>
 #include <vector>
 
 class TClass;
@@ -52,6 +54,9 @@ protected:
    friend class SuspendAutoParsing;
 
 public:
+   // See as in TSchemaType.h.
+   typedef class std::map<std::string, std::string> MembersMap_t;
+
    enum EErrorCode {
       kNoError     = 0,
       kRecoverable = 1,
