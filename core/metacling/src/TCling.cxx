@@ -1862,12 +1862,6 @@ void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Parse a conversion rule.
-Bool_t TCling::ParseClassConversionRule(const std::string &rule, MembersMap_t &result, std::string &error_string) {
-   return ROOT::ParseRule(rule, result, error_string);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Let cling process a command line.
 ///
 /// If the command is executed and the error is 0, then the return value

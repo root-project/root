@@ -3,7 +3,7 @@
 
 #include "TSchemaRule.h"
 
-#include "TInterpreter.h"
+#include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
 #include "TSchemaType.h"
 #include "TObjArray.h"
@@ -326,7 +326,7 @@ Bool_t TSchemaRule::SetFromRule( const char *rule )
    ROOT::Internal::MembersMap_t rule_values;
 
    std::string error_string;
-   if( !gInterpreter->ParseClassConversionRule(rule, rule_values, error_string) ) {
+   if( !ROOT::ParseRule(rule, rule_values, error_string) ) {
       Error("SetFromRule","The rule (%s) is invalid: %s",rule,error_string.c_str());
       return kFALSE;
    }
