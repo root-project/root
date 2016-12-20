@@ -2375,25 +2375,29 @@ const std::vector<Float_t>& TMVA::MethodBDT::GetMulticlassValues()
    if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
 
-   std::vector<double> temp;
-
    UInt_t nClasses = DataInfo().GetNClasses();
-   for(UInt_t iClass=0; iClass<nClasses; iClass++){
-      temp.push_back(0.0);
-      for(UInt_t itree = iClass; itree<fForest.size(); itree+=nClasses){
-         temp[iClass] += fForest[itree]->CheckEvent(e,kFALSE);
-      }
+   std::vector<Double_t> temp(nClasses);
+   auto forestSize = fForest.size();
+   // trees 0, nClasses, 2*nClasses, ... belong to class 0
+   // trees 1, nClasses+1, 2*nClasses+1, ... belong to class 1 and so forth
+   UInt_t classOfTree = 0;
+   for (UInt_t itree = 0; itree < forestSize; ++itree) {
+      temp[classOfTree] += fForest[itree]->CheckEvent(e, kFALSE);
+      if (++classOfTree == nClasses) classOfTree = 0; // cheap modulo
    }
+
+   // we want to calculate sum of exp(temp[j] - temp[i]) for all i,j (i!=j)
+   // first calculate exp(), then replace minus with division.
+   std::transform(temp.begin(), temp.end(), temp.begin(), [](Double_t d){return exp(d);});
 
    for(UInt_t iClass=0; iClass<nClasses; iClass++){
       Double_t norm = 0.0;
       for(UInt_t j=0;j<nClasses;j++){
          if(iClass!=j)
-            norm+=exp(temp[j]-temp[iClass]);
+            norm += temp[j] / temp[iClass];
       }
       (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));
    }
-
 
    return *fMulticlassReturnVal;
 }
