@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski 
+// Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,7 +19,7 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- **********************************************************************************/ 
+ **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSynapse
 #define ROOT_TMVA_TSynapse
@@ -48,10 +48,10 @@ namespace TMVA {
    class TSynapse : public TObject {
 
    public:
-    
+
       TSynapse();
       virtual ~TSynapse();
-     
+
       // set the weight of the synapse
       void SetWeight(Double_t weight);
 
@@ -70,7 +70,7 @@ namespace TMVA {
       // set the pre-neuron
       void SetPreNeuron(TNeuron* pre)      { fPreNeuron = pre;       }
 
-      // set hte post-neuron
+      // set the post-neuron
       void SetPostNeuron(TNeuron* post)    { fPostNeuron = post;     }
 
       // get the weighted output of the pre-neuron
@@ -82,10 +82,10 @@ namespace TMVA {
       // force the synapse to adjust its weight according to its error field
       void AdjustWeight();
 
-      // calulcate the error field of the synapse
+      // calculate the error field of the synapse
       void CalculateDelta();
 
-      // initialize the error field of the synpase to 0
+      // initialize the error field of the synapse to 0
       void InitDelta()           { fDelta = 0.0; fCount = 0; }
 
       void SetDEDw(Double_t DEDw)              { fDEDw = DEDw;           }
@@ -93,7 +93,7 @@ namespace TMVA {
       Double_t GetDelta()                      { return fDelta;          }
 
    private:
-  
+
       Double_t fWeight;            // weight of the synapse
       Double_t fLearnRate;         // learning rate parameter
       Double_t fDelta;             // local error field

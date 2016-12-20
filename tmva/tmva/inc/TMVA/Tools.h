@@ -107,11 +107,11 @@ namespace TMVA {
 
       template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=0);
       template <typename Iterator, typename WeightIterator> Double_t Mean ( Iterator first, Iterator last, WeightIterator w);
-      
+
       template <typename T> Double_t RMS(Long64_t n, const T *a, const Double_t *w=0);
       template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator w);
 
-   
+
       // simple statistics operations on tree entries
       void  ComputeStat( const std::vector<TMVA::Event*>&,
                          std::vector<Float_t>*,
@@ -140,7 +140,7 @@ namespace TMVA {
       // returns the square-root of a symmetric matrix: symMat = sqrtMat*sqrtMat
       TMatrixD* GetSQRootMatrix( TMatrixDSym* symMat );
 
-      // returns the covariance matrix of of the different classes (and the sum) 
+      // returns the covariance matrix of of the different classes (and the sum)
       // given the event sample
       std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
       std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
@@ -165,7 +165,7 @@ namespace TMVA {
       void Scale( std::vector<Float_t>&,  Float_t  );
 
       // re-arrange a vector of arrays (vectors) in a way such that the first array
-      // is ordered, and the other arrays reshuffeld accordingly
+      // is ordered, and the other arrays reshuffled accordingly
       void UsefulSortDescending( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
       void UsefulSortAscending ( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
 
@@ -180,11 +180,11 @@ namespace TMVA {
       TString ReplaceRegularExpressions( const TString& s, const TString& replace = "+" );
 
       // routines for formatted output -----------------
-      void FormattedOutput( const std::vector<Double_t>&, const std::vector<TString>&, 
+      void FormattedOutput( const std::vector<Double_t>&, const std::vector<TString>&,
                             const TString titleVars, const TString titleValues, MsgLogger& logger,
                             TString format = "%+1.3f" );
       void FormattedOutput( const TMatrixD&, const std::vector<TString>&, MsgLogger& logger );
-      void FormattedOutput( const TMatrixD&, const std::vector<TString>& vert, const std::vector<TString>& horiz, 
+      void FormattedOutput( const TMatrixD&, const std::vector<TString>& vert, const std::vector<TString>& horiz,
                             MsgLogger& logger );
 
       void WriteFloatArbitraryPrecision( Float_t  val, std::ostream& os );
@@ -224,7 +224,7 @@ namespace TMVA {
       // print TMVA citation (to be called from, eg, .TMVAlogon)
       enum ECitation { kPlainText = 1,
                        kBibTeX,
-                       kLaTeX, 
+                       kLaTeX,
                        kHtmlLink };
 
       void TMVAWelcomeMessage();
@@ -292,10 +292,11 @@ namespace TMVA {
 
 } // namespace TMVA
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read attribute from xml
+
 template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
 {
-   // read attribute from xml
    TString val;
    ReadAttr( node, attrname, val );
    std::stringstream s(val.Data());
@@ -303,27 +304,25 @@ template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrnam
    s >> value;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// add attribute to xml
 
-//_______________________________________________________________________
 template<typename T>
 void TMVA::Tools::AddAttr( void* node, const char* attrname, const T& value, Int_t precision )
 {
-   // add attribute to xml
    std::stringstream s;
    s.precision( precision );
    s << std::scientific << value;
    AddAttr( node, attrname, s.str().c_str() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute variance from given sums
+
 inline Double_t TMVA::Tools::ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx )
 {
-   // compute variance from given sums
    if (nx<2) return 0;
    return (sumx2 - ((sumx*sumx)/static_cast<Double_t>(nx)))/static_cast<Double_t>(nx-1);
 }
 
-
-  
 #endif
-

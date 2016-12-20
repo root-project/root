@@ -57,7 +57,7 @@ namespace TMVA {
    class Ranking;
    class VariableTransformBase;
    class MsgLogger;
-   
+
    class TransformationHandler {
    public:
 
@@ -78,13 +78,13 @@ namespace TMVA {
       const Event* InverseTransform(const Event*, Bool_t suppressIfNoTargets=true  ) const;
 
       // overrides the reference classes of all added transformations. Handle with care!!!
-      void         SetTransformationReferenceClass( Int_t cls ); 
+      void         SetTransformationReferenceClass( Int_t cls );
 
       VariableTransformBase* AddTransformation(VariableTransformBase*, Int_t cls );
       const TList& GetTransformationList()   const { return fTransformations; }
       Int_t        GetNumOfTransformations() const { return fTransformations.GetSize(); }
       const std::vector<Event*>* CalcTransformations( const std::vector<Event*>&, Bool_t createNewVector = kFALSE );
-      
+
       void         CalcStats( const std::vector<Event*>& events );
       void         AddStats ( Int_t k, UInt_t ivar, Double_t mean, Double_t rms, Double_t min, Double_t max );
       Double_t     GetMean  ( Int_t ivar, Int_t cls = -1 ) const;
@@ -118,12 +118,12 @@ namespace TMVA {
       void           PlotVariables( const std::vector<Event*>& events, TDirectory* theDirectory = 0 );
 
    private:
-      
+
       //      std::vector<TMVA::Event*>* TransformCollection( VariableTransformBase* trf,
       //                                                Int_t cls,
       //                                                std::vector<TMVA::Event*>* events,
       //                                                Bool_t replace ) const;
-      
+
       const TMVA::VariableInfo& Variable(UInt_t ivar) const { return fDataSetInfo.GetVariableInfos().at(ivar); }
       const TMVA::VariableInfo& Target  (UInt_t itgt) const { return fDataSetInfo.GetTargetInfos()[itgt]; }
 
@@ -138,9 +138,9 @@ namespace TMVA {
 
       std::vector<Ranking*> fRanking;            //! ranking object
       TDirectory*           fRootBaseDir;        //! if set put input var hists
-      TString               fCallerName;         //! name of the caller for output 
+      TString               fCallerName;         //! name of the caller for output
       mutable MsgLogger*    fLogger;             //! message logger
-      MsgLogger& Log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }
    };
 }
 

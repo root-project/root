@@ -25,8 +25,13 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://ttmva.sourceforge.net/LICENSE)                                         *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
+/*! \class TMVA::Tools
+\ingroup TMVA
+Global auxiliary applications and data treatment routines.
+*/
 
 #include "TMVA/Tools.h"
 
@@ -131,7 +136,9 @@ Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// compute "separation" defined as
-/// <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))^2/(S(x) + B(x)) dx }
+/// \f[
+/// <s2> = \frac{1}{2} \int_{-\infty}^{+\infty} \frac{(S(x) - B(x))^2}{(S(x) + B(x))} dx
+/// \f]
 
 Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
 {
@@ -182,7 +189,9 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// compute "separation" defined as
-/// <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))2/(S(x) + B(x)) dx }
+/// \f[
+/// <s2> = \frac{1}{2} \int_{-\infty}^{+\infty} \frac{(S(x) - B(x))^2}{(S(x) + B(x))} dx
+/// \f]
 
 Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
 {
@@ -336,7 +345,7 @@ TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
 
 const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
 {
- 
+
    if (covMat == 0) return 0;
    // sanity check
    Int_t nvar = covMat->GetNrows();
@@ -350,8 +359,8 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
          if (ivar != jvar) {
             Double_t d = (*covMat)(ivar, ivar)*(*covMat)(jvar, jvar);
             if (d > 1E-20) (*corrMat)(ivar, jvar) = (*covMat)(ivar, jvar)/TMath::Sqrt(d);
-	    else {
-	      Log() <<  "<GetCorrelationMatrix> zero variances for variables "
+    else {
+      Log() <<  "<GetCorrelationMatrix> zero variances for variables "
                      << "(" << ivar << ", " << jvar << ")" << Endl;
                (*corrMat)(ivar, jvar) = 0;
             }
@@ -436,26 +445,27 @@ TList* TMVA::Tools::ParseFormatLine( TString formatString, const char* sep )
 ////////////////////////////////////////////////////////////////////////////////
 /// parse option string for ANN methods
 /// default settings (should be defined in theOption string)
+///
+/// format and syntax of option string: "3000:N:N+2:N-3:6"
+///
+/// where:
+///      -  3000 - number of training cycles (epochs)
+///      -  N    - number of nodes in first hidden layer, where N is the number
+///                of discriminating variables used (note that the first ANN
+///                layer necessarily has N nodes, and hence is not given).
+///      -  N+2  - number of nodes in 2nd hidden layer (2 nodes more than
+///                number of variables)
+///      -  N-3  - number of nodes in 3rd hidden layer (3 nodes less than
+///                number of variables)
+///      -  6    - 6 nodes in last (4th) hidden layer (note that the last ANN
+///                layer in MVA has 2 nodes, each one for signal and background
+///                classes)
 
 vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar,
                                                   vector<Int_t>* nodes )
 {
    TList* list  = TMVA::Tools::ParseFormatLine( theOptions, ":" );
 
-   // format and syntax of option string: "3000:N:N+2:N-3:6"
-   //
-   // where:
-   //        3000 - number of training cycles (epochs)
-   //        N    - number of nodes in first hidden layer, where N is the number
-   //               of discriminating variables used (note that the first ANN
-   //               layer necessarily has N nodes, and hence is not given).
-   //        N+2  - number of nodes in 2nd hidden layer (2 nodes more than
-   //               number of variables)
-   //        N-3  - number of nodes in 3rd hidden layer (3 nodes less than
-   //               number of variables)
-   //        6    - 6 nodes in last (4th) hidden layer (note that the last ANN
-   //               layer in MVA has 2 nodes, each one for signal and background
-   //               classes)
 
    // sanity check
    if (list->GetSize() < 1) {
@@ -484,9 +494,11 @@ vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar
    return nodes;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// check quality of splining by comparing splines and histograms in each bin
+
 Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
 {
-   // check quality of splining by comparing splines and histograms in each bin
    const Double_t sanityCrit = 0.01; // relative deviation
 
    Bool_t retval = kTRUE;
@@ -801,7 +813,7 @@ Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// replace regular expressions
-/// helper function to remove all occurences "$!%^&()'<>?= " from a string
+/// helper function to remove all occurrences "$!%^&()'<>?= " from a string
 /// and replace all ::,$,*,/,+,- with _M_,_S_,_T_,_D_,_P_,_M_ respectively
 
 TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString& r )
@@ -1095,7 +1107,6 @@ void TMVA::Tools::ReadFloatArbitraryPrecision( Float_t& val, istream& is )
    val = a;
 }
 
-
 // XML file reading/writing helper functions
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1143,6 +1154,7 @@ Bool_t TMVA::Tools::AddComment( void* node, const char* comment ) {
    if( node == 0 ) return kFALSE;
    return gTools().xmlengine().AddComment(node, comment);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// get parent node
 
@@ -1152,6 +1164,7 @@ void* TMVA::Tools::GetParent( void* child)
 
    return par;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// get child node
 
@@ -1323,8 +1336,8 @@ void TMVA::Tools::TMVAWelcomeMessage()
 
 void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
 {
-   logger << "___________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE 
-	  << "" << Endl;
+   logger << "___________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE
+  << "" << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1340,7 +1353,7 @@ void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
    Int_t   imonth = (idatqq/100)%100;
    Int_t   iyear  = (idatqq/10000);
    TString versionDate = Form("%s %d, %4d",months[imonth-1],iday,iyear);
-   
+
    logger << kHEADER ;
    logger << "You are running ROOT Version: " << gROOT->GetVersion() << ", " << versionDate << Endl;
 }
@@ -1641,13 +1654,14 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
    return mat;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the weighted mean of an array defined by the first and
+/// last iterators. The w iterator should point to the first element
+/// of a vector of weights of the same size as the main array.
+
 template <typename Iterator, typename WeightIterator>
 Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
 {
-   // Return the weighted mean of an array defined by the first and
-   // last iterators. The w iterator should point to the first element
-   // of a vector of weights of the same size as the main array.
-
    Double_t sum = 0;
    Double_t sumw = 0;
    int i = 0;
@@ -1691,11 +1705,12 @@ Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
    return sum/sumw;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the weighted mean of an array a with length n.
+
 template <typename T>
 Double_t TMVA::Tools::Mean(Long64_t n, const T *a, const Double_t *w)
 {
-   // Return the weighted mean of an array a with length n.
-
    if (w) {
       return TMVA::Tools::Mean(a, a+n, w);
    } else {
@@ -1703,12 +1718,14 @@ Double_t TMVA::Tools::Mean(Long64_t n, const T *a, const Double_t *w)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the Standard Deviation of an array defined by the iterators.
+/// Note that this function returns the sigma(standard deviation) and
+/// not the root mean square of the array.
+
 template <typename Iterator, typename WeightIterator>
 Double_t TMVA::Tools::RMS(Iterator first, Iterator last, WeightIterator w)
 {
-   // Return the Standard Deviation of an array defined by the iterators.
-   // Note that this function returns the sigma(standard deviation) and
-   // not the root mean square of the array.
 
    Double_t sum = 0;
    Double_t sum2 = 0;
@@ -1742,12 +1759,14 @@ Double_t TMVA::Tools::RMS(Iterator first, Iterator last, WeightIterator w)
    return rms;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the Standard Deviation of an array a with length n.
+/// Note that this function returns the sigma(standard deviation) and
+/// not the root mean square of the array.
+
 template <typename T>
 Double_t TMVA::Tools::RMS(Long64_t n, const T *a, const Double_t *w)
 {
-   // Return the Standard Deviation of an array a with length n.
-   // Note that this function returns the sigma(standard deviation) and
-   // not the root mean square of the array.
 
    if (w) {
       return TMVA::Tools::RMS(a, a+n, w);
@@ -1756,10 +1775,11 @@ Double_t TMVA::Tools::RMS(Long64_t n, const T *a, const Double_t *w)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get the cumulative distribution of a histogram
 
 TH1* TMVA::Tools::GetCumulativeDist( TH1* h)
 {
-   // get the cumulative distribution of a histogram
    TH1* cumulativeDist= (TH1*) h->Clone(Form("%sCumul",h->GetTitle()));
    //cumulativeDist->Smooth(5); // with this, I get less beautiful ROC curves, hence out!
 

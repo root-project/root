@@ -5,7 +5,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *          Extension of the Interval to "logarithmic" invarvals                  *
+ *          Extension of the Interval to "logarithmic" intervals                  *
  *                                                                                *
  *                                                                                *
  *                                                                                *

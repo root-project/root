@@ -21,11 +21,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// Neuron class used by TMVA artificial neural network methods
-//
-//_______________________________________________________________________
+/*! \class TMVA::TNeuron
+\ingroup TMVA
+Neuron class used by TMVA artificial neural network methods
+*/
 
 #include "TMVA/TNeuron.h"
 
@@ -61,16 +60,20 @@ TMVA::TNeuron::TNeuron()
    InitNeuron();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TNeuron::~TNeuron()
 {
-   // destructor
    if (fLinksIn != NULL)  delete fLinksIn;
    if (fLinksOut != NULL) delete fLinksOut;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// initialize the neuron, most variables still need to be set via setters
+
 void TMVA::TNeuron::InitNeuron()
 {
-   // initialize the neuron, most variables still need to be set via setters
    fLinksIn = new TObjArray();
    fLinksOut = new TObjArray();
    fValue = UNINITIALIZED;
@@ -114,7 +117,6 @@ void TMVA::TNeuron::CalculateActivationValue()
    fActivationValue = fActivation->Eval(fValue);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// calculate error field
 
@@ -128,7 +130,6 @@ void TMVA::TNeuron::CalculateDelta()
 
    Double_t error;
 
-
    // output neuron should have error set all ready
    if (IsOutputNeuron()) error = fError;
 
@@ -138,7 +139,7 @@ void TMVA::TNeuron::CalculateDelta()
       TSynapse* synapse = NULL;
       // Replaced TObjArrayIter pointer by object, as creating it on the stack
       // is much faster (5-10% improvement seen) than re-allocating the new
-      // memory for the pointer each time. Thansk to Peter Elmer who pointed this out
+      // memory for the pointer each time. Thanks to Peter Elmer who pointed this out
       //      TObjArrayIter* iter = (TObjArrayIter*)fLinksOut->MakeIterator();
       TObjArrayIter iter(fLinksOut);
       while (true) {

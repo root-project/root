@@ -27,6 +27,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::VariablePCATransform
+\ingroup TMVA
+Linear interpolation class
+*/
+
 #include "TMVA/VariablePCATransform.h"
 
 #include "TMVA/DataSet.h"
@@ -99,7 +104,7 @@ Bool_t TMVA::VariablePCATransform::PrepareTransformation (const std::vector<Even
       return kFALSE;
    }
 
-   if (inputSize > 200) { 
+   if (inputSize > 200) {
       Log() << kINFO << "----------------------------------------------------------------------------"
             << Endl;
       Log() << kINFO
@@ -131,7 +136,7 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
    // If there is only one class, then no extra class for all events of all classes has to be created
 
    //if (cls < 0 || cls > GetNClasses()) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
-   // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
+   // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...)
    if (cls < 0 || cls >= (int) fMeanValues.size()) cls = fMeanValues.size()-1;
    // EVT workaround end
 
@@ -287,7 +292,7 @@ void TMVA::VariablePCATransform::X2P( std::vector<Float_t>& pc, const std::vecto
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform the back-transformation from the principal components
-/// pc, and return x 
+/// pc, and return x
 /// It's the users responsibility to make sure that both x and pc are
 /// of the right size (i.e., memory must be allocated for p)
 
@@ -386,7 +391,7 @@ void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
    Bool_t newFormat = kFALSE;
 
    void* inpnode = NULL;
-   
+
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
    if( inpnode!=NULL )
       newFormat = kTRUE; // new xml format
