@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      Heidelberg U., Germany                                                    * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      Heidelberg U., Germany                                                    *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -56,7 +56,7 @@ namespace TMVA {
       //destructor
       virtual ~SdivSqrtSplusB() {}
 
-      // Return the gain in separation of the original sample is splitted in two sub-samples
+      // Return the gain in separation of the original sample is split in two sub-samples
       // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
       virtual Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB,
                                           const Double_t& nTotS, const Double_t& nTotB );

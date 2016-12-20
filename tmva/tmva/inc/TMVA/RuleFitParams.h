@@ -21,9 +21,9 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -119,7 +119,7 @@ namespace TMVA {
 
       // Risk evaluation for all tau
       UInt_t RiskPerfTst();
-    
+
       // Penalty function; Lasso function (eq 8)
       Double_t Penalty() const;
 
@@ -199,7 +199,7 @@ namespace TMVA {
       UInt_t                fNRules;       // number of rules
       UInt_t                fNLinear;      // number of linear terms
       //
-      // Event indecis for path/validation - TODO: should let the user decide
+      // Event indices for path/validation - TODO: should let the user decide
       // Now it is just a simple one-fold cross validation.
       //
       UInt_t                fPathIdx1;       // first event index for path search
@@ -240,7 +240,7 @@ namespace TMVA {
       Double_t              fAverageTruth;   // average truth, ie sum(y)/N, y=+-1
       //
       std::vector<Double_t> fFstar;          // vector of F*() - filled in CalcFStar()
-      Double_t              fFstarMedian;    // median value of F*() using 
+      Double_t              fFstarMedian;    // median value of F*() using
       //
       TTree                *fGDNtuple;       // Gradient path ntuple, contains params for each step along the path
       Double_t              fNTRisk;         // GD path: risk
@@ -259,7 +259,7 @@ namespace TMVA {
    private:
 
       mutable MsgLogger*    fLogger;         //! message logger
-      MsgLogger& Log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }
 
    };
 

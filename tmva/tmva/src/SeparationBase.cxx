@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -7,7 +7,7 @@
  * Class  : SeparationBase                                                        *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
- * Description: An interface to different separation critiera useded in various   *
+ * Description: An interface to different separation criteria used in various     *
  *              training algorithms, as there are:                                *
  *                                                                                *
  *          There are two things: the Separation Index, and the Separation Gain   *
@@ -22,7 +22,7 @@
  *          the measure of how the quality of separation of the sample increases  *
  *          by splitting the sample e.g. into a "left-node" and a "right-node"    *
  *          (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)  *
- *          this is then the quality crition which is optimized for when trying   *
+ *          this is then the quality criterion which is optimized for when trying *
  *          to increase the information in the system (making the best selection  *
  *                                                                                *
  * Authors (alphabetical):                                                        *
@@ -31,15 +31,35 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      Heidelberg U., Germany                                                    * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      Heidelberg U., Germany                                                    *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://ttmva.sourceforge.net/LICENSE)                                         *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::SeparationBase
+\ingroup TMVA
+An interface to calculate the "SeparationGain" for different
+separation criteria used in various training algorithms
+
+There are two things: the Separation Index, and the Separation Gain
+Separation Index:
+Measure of the "purity" of a sample. If all elements (events) in the
+sample belong to the same class (e.g. signal or background), than the
+separation index is 0 (meaning 100% purity (or 0% purity as it is
+symmetric. The index becomes maximal, for perfectly mixed samples
+eg. purity=50% , N_signal = N_bkg
+
+Separation Gain:
+the measure of how the quality of separation of the sample increases
+by splitting the sample e.g. into a "left-node" and a "right-node"
+(N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
+this is then the quality criterion which is optimized for when trying
+to increase the information in the system (making the best selection
+*/
 #include "TMVA/SeparationBase.h"
 
 #include "TMath.h"
@@ -50,6 +70,9 @@
 
 ClassImp(TMVA::SeparationBase)
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TMVA::SeparationBase::SeparationBase() :
 fName(""),
    fPrecisionCut(TMath::Sqrt(std::numeric_limits<double>::epsilon()))
@@ -57,7 +80,9 @@ fName(""),
    // default constructor
 }
 
-//copy constructor
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TMVA::SeparationBase::SeparationBase( const SeparationBase& s ) :
    fName(s.fName),
    fPrecisionCut(TMath::Sqrt(std::numeric_limits<double>::epsilon()))
@@ -70,7 +95,7 @@ TMVA::SeparationBase::SeparationBase( const SeparationBase& s ) :
 /// the measure of how the quality of separation of the sample increases
 /// by splitting the sample e.g. into a "left-node" and a "right-node"
 /// (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
-/// this is then the quality crition which is optimized for when trying
+/// this is then the quality criterion which is optimized for when trying
 /// to increase the information in the system (making the best selection
 
 Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB,
@@ -95,8 +120,8 @@ Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Do
    //Double_t diff = (parentIndex - leftIndex - rightIndex)/(nTotS+nTotB);
 
    if(diff<fPrecisionCut ) {
-      // std::cout << " Warning value in GetSeparation is below numerical presicion " 
-      //           << diff/parentIndex 
+      // std::cout << " Warning value in GetSeparation is below numerical precision "
+      //           << diff/parentIndex
       //           << std::endl;
       return 0;
    }

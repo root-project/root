@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
+// Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -14,19 +14,19 @@
  *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch>  - Iowa State U., USA     *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-KP Heidelberg, Germany                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// J Friedman's RuleFit method
-//_______________________________________________________________________
+/*! \class TMVA::RuleFitAPI
+\ingroup TMVA
+J Friedman's RuleFit method
+*/
 
 #include "TMVA/RuleFitAPI.h"
 
@@ -163,7 +163,7 @@ void TMVA::RuleFitAPI::SetRFWorkDir(const char * wdir)
 /// check if the rulefit work dir is properly setup.
 /// it aborts (kFATAL) if not.
 ///
-/// Check existance of directory
+/// Check existence of directory
 
 void TMVA::RuleFitAPI::CheckRFWorkDir()
 {
@@ -380,7 +380,7 @@ Bool_t TMVA::RuleFitAPI::WriteRuleFitSum()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// write training data, columnwise
+/// write training data, column wise
 
 Bool_t TMVA::RuleFitAPI::WriteTrain()
 {
@@ -626,7 +626,7 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
    //--------------------------------------------
    //       read first part of rule info
    //--------------------------------------------
-   // 
+   //
    //   8       <int>   10      ???
    //   9       <float> 0.185   support
    //   10      <float> 0.051   coefficient
@@ -749,7 +749,7 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
       fLogger << kDEBUG << "  stdev    = " << stdev.back()  << Endl;
       fLogger << kDEBUG << "  coeff    = " << coeff.back()  << Endl;
    }
-   if (xmin.size()>0) {      
+   if (xmin.size()>0) {
       fRuleFit->GetRuleEnsemblePtr()->SetLinCoefficients(coeff);
       fRuleFit->GetRuleEnsemblePtr()->SetLinDM(xmin);
       fRuleFit->GetRuleEnsemblePtr()->SetLinDP(xmax);
@@ -774,7 +774,7 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
 Int_t TMVA::RuleFitAPI::RunRuleFit()
 {
    TString oldDir = gSystem->pwd();
-   TString cmd = "./rf_go.exe"; 
+   TString cmd = "./rf_go.exe";
    gSystem->cd(fRFWorkDir.Data());
    int rval = gSystem->Exec(cmd.Data());
    gSystem->cd(oldDir.Data());
