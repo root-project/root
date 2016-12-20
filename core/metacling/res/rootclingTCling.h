@@ -15,7 +15,17 @@
 namespace cling {
    class Interpreter;
 }
+
+#ifndef R__DLLEXPORT
+// I.e. we are imported.
+# if _WIN32
+#  define R__DLLEXPORT __declspec(dllimport)
+# else
+#  define R__DLLEXPORT __attribute__ ((visibility ("default")))
+# endif
+#endif
+
 extern "C" {
-   const char ** *TROOT__GetExtraInterpreterArgs();
-   cling::Interpreter *TCling__GetInterpreter();
+   R__DLLEXPORT const char ** *TROOT__GetExtraInterpreterArgs();
+   R__DLLEXPORT cling::Interpreter *TCling__GetInterpreter();
 }

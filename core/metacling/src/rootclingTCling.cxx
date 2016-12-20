@@ -8,7 +8,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef R__DLLEXPORT
+# if _WIN32
+#  define R__DLLEXPORT __declspec(dllexport)
+# else
+#  define R__DLLEXPORT __attribute__ ((visibility ("default")))
+# endif
+#endif
+
 #include "rootclingTCling.h"
+
+#undef R__DLLEXPORT
 
 #include "TROOT.h"
 #include "TCling.h"

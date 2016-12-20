@@ -129,7 +129,7 @@ clang/LLVM technology.
 
 #ifndef R__WIN32
 #include <cxxabi.h>
-#define R__DLLEXPORT
+#define R__DLLEXPORT __attribute__ ((visibility ("default")))
 #endif
 #include <limits.h>
 #include <stdio.h>
