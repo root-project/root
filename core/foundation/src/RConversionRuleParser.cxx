@@ -4,12 +4,13 @@
 #include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
 
-#include <iostream>
 #include <algorithm>
-#include <string>
-#include <utility>
+#include <iostream>
 #include <map>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace {
    static void RemoveEscapeSequences(std::string& rawString)
