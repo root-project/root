@@ -32,14 +32,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// PDEFoamEventDensity
-//
-// This is a concrete implementation of PDEFoam.  Density(...)
-// estimates the event (weight) density at a given phase-space point
-// using range-searching.
-// _____________________________________________________________________
+/*! \class TMVA::PDEFoamEventDensity
+\ingroup TMVA
+This is a concrete implementation of PDEFoam.  Density(...)
+estimates the event (weight) density at a given phase-space point
+using range-searching.
+*/
 
 #include "TMVA/PDEFoamEventDensity.h"
 
@@ -64,7 +62,7 @@ TMVA::PDEFoamEventDensity::PDEFoamEventDensity()
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// User construcor
+/// User constructor
 ///
 /// Parameters:
 ///

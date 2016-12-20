@@ -26,6 +26,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::PDEFoamVect
+\ingroup TMVA
+
+*/
 #include "TMVA/PDEFoamVect.h"
 
 #include "Rtypes.h"
