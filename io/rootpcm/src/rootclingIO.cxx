@@ -69,7 +69,7 @@ static bool IsUniquePtrOffsetZero()
    uniquePtr.release();
    if (!isZero) {
       Error("CloseStreamerInfoROOTFile",
-            "UniquePtr points to %p, reinterpreting it gives %p and should have %p\n", uniquePtr.get(), *(regularPtr_2), regularPtr);
+            "UniquePtr points to %p, reinterpreting it gives %p and should have %p", uniquePtr.get(), *(regularPtr_2), regularPtr);
    }
    return isZero;
 }
@@ -84,18 +84,18 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
 
       auto clm = TClass::GetClass(dmTypeName);
       if (!clm) {
-         Error("CloseStreamerInfoROOTFile", "Class %s is not available.\n", dmTypeName);
+         Error("CloseStreamerInfoROOTFile", "Class %s is not available.", dmTypeName);
          return true;
       }
 
       auto upDms = clm->GetListOfDataMembers();
       if (!upDms) {
-         Error("CloseStreamerInfoROOTFile", "Cannot determine unique pointer %s data members.\n", dmTypeName);
+         Error("CloseStreamerInfoROOTFile", "Cannot determine unique pointer %s data members.", dmTypeName);
          return true;
       }
 
       if (0 == upDms->GetSize()) {
-         Error("CloseStreamerInfoROOTFile", "Unique pointer %s has zero data members.\n", dmTypeName);
+         Error("CloseStreamerInfoROOTFile", "Unique pointer %s has zero data members.", dmTypeName);
          return true;
       }
 
@@ -105,7 +105,7 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
       TClassEdit::GetSplit(dmTypeName, out, i);
       // out[2] contains the deleter type.
       if (0 != out[2].find("default_delete<")) {
-         Error("CloseStreamerInfoROOTFile", "I/O is supported only for unique_ptrs with a default deleter. %s::%s  appears to have a custom one, %s.\n", normName, dm->GetName(), out[2].c_str());
+         Error("CloseStreamerInfoROOTFile", "I/O is supported only for unique_ptrs with a default deleter. %s::%s  appears to have a custom one, %s.", normName, dm->GetName(), out[2].c_str());
          return true;
       }
    }
@@ -156,7 +156,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
    for (const auto & normName : gClassesToStore) {
       TClass *cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
-         Error("CloseStreamerInfoROOTFile", "Cannot find class %s.\n", normName.c_str());
+         Error("CloseStreamerInfoROOTFile", "Cannot find class %s.", normName.c_str());
          return false;
       }
 
@@ -166,7 +166,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
       // deleter.
       auto dms = cl->GetListOfDataMembers();
       if (!dms) {
-         Error("CloseStreamerInfoROOTFile", "Cannot find data members for %s.\n", normName.c_str());
+         Error("CloseStreamerInfoROOTFile", "Cannot find data members for %s.", normName.c_str());
          return false;
       }
 
@@ -202,7 +202,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
    for (const auto & dtname : gTypedefsToStore) {
       TDataType *dt = (TDataType *)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
       if (!dt) {
-         Error("CloseStreamerInfoROOTFile", "Cannot find typedef %s.\n", dtname.c_str());
+         Error("CloseStreamerInfoROOTFile", "Cannot find typedef %s.", dtname.c_str());
          return false;
       }
       if (dt->GetType() == -1) {
@@ -221,12 +221,12 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          const std::string nsName = enumname.substr(0, lastSepPos - 1);
          TClass *tclassInstance = TClass::GetClass(nsName.c_str());
          if (!tclassInstance) {
-            Error("CloseStreamerInfoROOTFile", "Cannot find TClass instance for namespace %s.\n", nsName.c_str());
+            Error("CloseStreamerInfoROOTFile", "Cannot find TClass instance for namespace %s.", nsName.c_str());
             return false;
          }
          auto enumListPtr = tclassInstance->GetListOfEnums();
          if (!enumListPtr) {
-            Error("CloseStreamerInfoROOTFile", "TClass instance for namespace %s does not have any enum associated. This is an inconsistency.\n", nsName.c_str());
+            Error("CloseStreamerInfoROOTFile", "TClass instance for namespace %s does not have any enum associated. This is an inconsistency.", nsName.c_str());
             return false;
          }
          const std::string unqualifiedEnumName = enumname.substr(lastSepPos + 1);
@@ -237,7 +237,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          if (en) en->SetTitle("");
       }
       if (!en) {
-         Error("CloseStreamerInfoROOTFile", "Cannot find enum %s.\n", enumname.c_str());
+         Error("CloseStreamerInfoROOTFile", "Cannot find enum %s.", enumname.c_str());
          return false;
       }
       en->Property(); // Force initialization of the bits and property fields.
