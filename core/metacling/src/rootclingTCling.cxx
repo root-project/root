@@ -11,7 +11,7 @@
 #include "rootclingTCling.h"
 
 #include "TROOT.h"
-#include "TInterpreter.h"
+#include "TCling.h"
 
 extern "C"
 const char ** *TROOT__GetExtraInterpreterArgs()
@@ -28,6 +28,6 @@ cling::Interpreter *TCling__GetInterpreter()
     gInterpreter->SetClassAutoloading(false);
     isInitialized = true;
   }
-  return (cling::Interpreter*) gInterpreter->GetInterpreterImpl();
+  return (cling::Interpreter*) ((TCling*)gCling)->GetInterpreterImpl();
 }
 
