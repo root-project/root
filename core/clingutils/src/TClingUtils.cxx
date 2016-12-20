@@ -1728,7 +1728,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          // Check if the rules refer to valid data members
          ///////////////////////////////////////////////////////////////////////
 
-         if( !HasValidDataMembers( *rIt, nameTypeMap ) ) {
+         std::string error_string;
+         if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
+            Error(0, "%s", error_string.c_str());
             rIt = rulesIt1->second.erase(rIt);
             continue;
          }
@@ -1761,7 +1763,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          // Check if the rules refer to valid data members
          ///////////////////////////////////////////////////////////////////////
 
-         if( !HasValidDataMembers( *rIt, nameTypeMap ) ) {
+         std::string error_string;
+         if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
+            Error(0, "%s", error_string.c_str());
             rIt = rulesIt2->second.erase(rIt);
             continue;
          }

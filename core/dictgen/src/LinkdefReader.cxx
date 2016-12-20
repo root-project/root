@@ -820,7 +820,10 @@ public:
       } else {
          llvm::StringRef rule_text(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
 
-         ROOT::ProcessReadPragma(rule_text.str().c_str());
+         std::string error_string;
+         ROOT::ProcessReadPragma(rule_text.str().c_str(), error_string);
+         if (!error_string.empty())
+            std::cerr << error_string;
          //std::cerr << "Warning: #pragma read not yet handled: " << include.str() << "\n";
          //         if (!fOwner.AddInclude(include))
          //         {

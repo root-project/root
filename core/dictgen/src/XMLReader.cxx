@@ -858,10 +858,13 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
             // Now send them to the pragma processor. The info will be put
             // in a global then read by the TMetaUtils
             ROOT::TMetaUtils::Info(0,"Pragma generated for ioread rule: %s\n", pragmaLineStream.str().c_str());
+            std::string error_string;
             if (tagKind == kBeginIoread)
-              ROOT::ProcessReadPragma( pragmaLineStream.str().c_str() );
+              ROOT::ProcessReadPragma( pragmaLineStream.str().c_str(), error_string );
             else // this is a raw rule
-              ROOT::ProcessReadRawPragma( pragmaLineStream.str().c_str() );
+              ROOT::ProcessReadRawPragma( pragmaLineStream.str().c_str(), error_string );
+            if (!error_string.empty())
+               ROOT::TMetaUtils::Error(0, "%s", error_string.c_str());
             continue; // no need to go further
          } // end of ioread rules
 
