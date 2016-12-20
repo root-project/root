@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$ 
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk
 
 /**********************************************************************************
@@ -18,8 +18,8 @@
  *                                                                                *
  * Copyright (c) 2008:                                                            *
  *      IFJ-Krakow, Poland                                                        *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -50,14 +50,14 @@ namespace TMVA {
 
    public:
 
-      SimulatedAnnealingFitter( IFitterTarget& target, const TString& name, 
+      SimulatedAnnealingFitter( IFitterTarget& target, const TString& name,
                                 const std::vector<TMVA::Interval*>& ranges, const TString& theOption );
 
       virtual ~SimulatedAnnealingFitter() {}
 
-      void SetParameters( Int_t    fMaxCalls,              
-                          Double_t fInitialTemperature,    
-                          Double_t fMinTemperature,        
+      void SetParameters( Int_t    fMaxCalls,
+                          Double_t fInitialTemperature,
+                          Double_t fMinTemperature,
                           Double_t fEps,
                           TString  fKernelTemperatureS,
                           Double_t fTemperatureScale,
@@ -78,8 +78,8 @@ namespace TMVA {
       TString            fKernelTemperatureS;      // string just to set fKernelTemperature
       Double_t           fTemperatureScale;        // how fast temperature change
       Double_t           fAdaptiveSpeed;           // how fast temperature change in adaptive (in adaptive two variables describe
-                                                   // the change of temperature, but fAdaptiveSpeed should be 1.0 and its not 
-                                                   // recomended to change it)
+                                                   // the change of temperature, but fAdaptiveSpeed should be 1.0 and its not
+                                                   // recommended to change it)
       Double_t           fTemperatureAdaptiveStep; // used to calculate InitialTemperature if fUseDefaultTemperature
       Bool_t             fUseDefaultScale;         // if TRUE, SA calculates its own TemperatureScale
       Bool_t             fUseDefaultTemperature;   // if TRUE, SA calculates its own InitialTemperature (MinTemperautre)

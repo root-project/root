@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -17,8 +17,8 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -60,17 +60,17 @@ namespace TMVA {
    class MsgLogger;
 
    class Timer : public TStopwatch {
-  
+
    public:
-  
+
       Timer( const char* prefix = "", Bool_t colourfulOutput = kTRUE );
       Timer( Int_t ncounts, const char* prefix = "", Bool_t colourfulOutput = kTRUE );
       virtual ~Timer( void );
-  
+
       void Init ( Int_t ncounts );
       void Reset( void );
 
-      // when the "Scientific" flag set, time is returned with subdecimals
+      // when the "Scientific" flag set, time is returned with sub-decimals
       // for algorithm timing measurement
       TString   GetElapsedTime ( Bool_t Scientific = kTRUE  );
       Double_t  ElapsedSeconds ( void );
@@ -78,22 +78,22 @@ namespace TMVA {
       void      DrawProgressBar( Int_t, const TString& comment = "" );
       void      DrawProgressBar( TString );
       void      DrawProgressBar( void );
-                          
+
    private:
 
       TString   SecToText     ( Double_t, Bool_t ) const;
 
-      Int_t     fNcounts;               // reference number of "counts" 
+      Int_t     fNcounts;               // reference number of "counts"
       TString   fPrefix;                // prefix for outputs
       Bool_t    fColourfulOutput;       // flag for use of colors
 
       Int_t     fProgressBarStringLength;
-      
+
       static const TString fgClassName; // used for output
       static const Int_t   fgNbins;     // number of bins in progress bar
 
       mutable MsgLogger*   fLogger;     // the output logger
-      MsgLogger& Log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Timer,0); // Timing information for training and evaluation of MVA methods
    };

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andrzej Zemla
 
 /**********************************************************************************
@@ -13,17 +13,22 @@
  * Authors (alphabetical):                                                        *
  *      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
  *      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
- *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *   
+ *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      PAN, Krakow, Poland                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
+/*! \class TMVA::SVEvent
+\ingroup TMVA
+Event class for Support Vector Machine
+*/
 
 #include "TMVA/SVEvent.h"
 
@@ -37,7 +42,7 @@ ClassImp(TMVA::SVEvent)
 
 TMVA::SVEvent::SVEvent()
 : fDataVector(0),
-   fCweight(1.), 
+   fCweight(1.),
    fAlpha(0),
    fAlpha_p(0),
    fErrorCache(0),
@@ -47,7 +52,7 @@ TMVA::SVEvent::SVEvent()
    fNs(0),
    fIsShrinked(0),
    fLine(0),
-   fTarget(0)   
+   fTarget(0)
 {
 }
 
@@ -114,13 +119,13 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Floa
 TMVA::SVEvent::~SVEvent()
 {
    if (fLine != 0) {
-      delete fLine; 
+      delete fLine;
       fLine = 0;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// printout 
+/// printout
 
 void TMVA::SVEvent::Print( std::ostream& os ) const
 {
@@ -130,7 +135,7 @@ void TMVA::SVEvent::Print( std::ostream& os ) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// printout 
+/// printout
 
 void TMVA::SVEvent::PrintData()
 {
