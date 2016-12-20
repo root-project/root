@@ -50,8 +50,6 @@ R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
 #endif
 
 
-ROOT::Internal::RootCling::TROOTSYSSetter gROOTSYSSetter;
-
 int main(int argc, char **argv)
 {
    // Force the emission of the symbol - the compiler cannot know that argv
