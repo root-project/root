@@ -1730,7 +1730,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
          std::string error_string;
          if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
-            Error(0, "%s", error_string.c_str());
+            Warning(0, "%s", error_string.c_str());
             rIt = rulesIt1->second.erase(rIt);
             continue;
          }
@@ -1765,7 +1765,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
          std::string error_string;
          if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
-            Error(0, "%s", error_string.c_str());
+            Warning(0, "%s", error_string.c_str());
             rIt = rulesIt2->second.erase(rIt);
             continue;
          }
