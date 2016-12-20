@@ -730,7 +730,7 @@ Double_t RooRealMPFE::evaluate() const
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 6) {
       double c_timing_s = (c_timing_end.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
 
-      timing_outfile << "\", \"RRMPFE_evaluate_client_cpu_s\": \"" << c_timing_s;
+      timing_outfile << "{\"RRMPFE_evaluate_client_cpu_s\": \"" << c_timing_s;
 
       c_timing_s = (c_timing_before_retrieve.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
 
