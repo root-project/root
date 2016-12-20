@@ -24,11 +24,10 @@ FOUNDATIONTH     += $(MODDIRI)/libcpp_string_view.h
 FOUNDATIONTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
 
 FOUNDATIONO     := $(call stripsrc,$(FOUNDATIONS:.cxx=.o))
-FOUNDATIONTO    := $(call stripsrc,$(FOUNDATIONTS:.cxx=.o))
 
 FOUNDATIONL     := $(MODDIRI)/LinkDef.h
 
-FOUNDATIONDEP   := $(FOUNDATIONO:.o=.d) $(FOUNDATIONTO:.o=.d)
+FOUNDATIONDEP   := $(FOUNDATIONO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FOUNDATIONH) $(FOUNDATIONTH))
@@ -53,3 +52,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(FOUNDATIONDEP)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+$(FOUNDATIONO): CXXFLAGS += -I$(FOUNDATIONDIRR)

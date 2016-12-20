@@ -10,6 +10,8 @@ list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/RWrap_libcpp_string_vie
 
 set(Foundation_dict_headers ${headers} PARENT_SCOPE)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
+
 ROOT_OBJECT_LIBRARY(Foundation ${sources})
 
 ROOT_INSTALL_HEADERS()
