@@ -14,41 +14,9 @@
 #include "RConfigure.h"
 #include "RConfig.h"
 
-#include <iostream>
-
-#ifdef _WIN32
-# ifdef system
-#  undef system
-# endif
-# include <windows.h>
-# include <Tlhelp32.h> // for MAX_MODULE_NAME32
-# include <process.h>
-# define PATH_MAX _MAX_PATH
-# ifdef interface
-// prevent error coming from clang/AST/Attrs.inc
-#  undef interface
-# endif
-#else // _WIN32
-# include <limits.h>
-# include <unistd.h>
-# include <dlfcn.h>
-#endif
-
-#ifdef __APPLE__
-#include <libgen.h> // Needed for basename
-#include <mach-o/dyld.h>
-#endif
-
 extern "C" {
-R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
+   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef __ICC
-#pragma warning disable 69
-#endif
-
 
 int main(int argc, char **argv)
 {
