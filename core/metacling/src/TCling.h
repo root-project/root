@@ -154,7 +154,7 @@ public: // Public Interface
    virtual ~TCling();
    TCling(const char* name, const char* title);
 
-   cling::Interpreter *GetInterpreter() { return fInterpreter; }
+   cling::Interpreter *GetInterpreterImpl() { return fInterpreter; }
 
    void    AddIncludePath(const char* path);
    void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }

@@ -6430,8 +6430,7 @@ void TCling::CodeComplete(const std::string& line, size_t& cursor,
 int TCling::Evaluate(const char* code, TInterpreterValue& value)
 {
    auto V = reinterpret_cast<cling::Value*>(value.GetValAddr());
-   auto interpreter = this->GetInterpreter();
-   auto compRes = interpreter->evaluate(code, *V);
+   auto compRes = fInterpreter->evaluate(code, *V);
    return compRes!=cling::Interpreter::kSuccess ? 0 : 1 ;
 }
 
@@ -6466,8 +6465,6 @@ void TCling::RegisterTemporary(const cling::Value& value)
 
 TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
 {
-   cling::Interpreter *interpreter = ((TCling*)gCling)->GetInterpreter();
-
    // The call to FindSpecialObject might induces any kind of use
    // of the interpreter ... (library loading, function calling, etc.)
    // ... and we _know_ we are in the middle of parsing, so let's make
@@ -6485,10 +6482,10 @@ TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
    }
 
    // Save state of the PP
-   Sema &SemaR = interpreter->getSema();
+   Sema &SemaR = fInterpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
    Preprocessor &PP = SemaR.getPreprocessor();
-   Parser& P = const_cast<Parser&>(interpreter->getParser());
+   Parser& P = const_cast<Parser&>(fInterpreter->getParser());
    Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
    Parser::ParserCurTokRestoreRAII savedCurToken(P);
    // After we have saved the token reset the current one to something which
