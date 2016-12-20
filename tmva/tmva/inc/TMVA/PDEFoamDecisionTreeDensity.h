@@ -61,7 +61,7 @@ namespace TMVA
       PDEFoamDecisionTreeDensity(const PDEFoamDecisionTreeDensity&);
       virtual ~PDEFoamDecisionTreeDensity() {}
 
-      // returns allways 0
+      // returns always 0
       virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density);
 
       // fill histograms with events found in volume

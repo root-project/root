@@ -26,26 +26,24 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// PDEFoamDecisionTree
-//
-// This PDEFoam variant acts like a decision tree and stores in every
-// cell the discriminant
-//
-//    D = #events with given class / total number of events
-//
-// as well as the statistical error on the discriminant.  It therefore
-// acts as a discriminant estimator.  The decision tree-like behaviour
-// is achieved by overriding PDEFoamDiscriminant::Explore() to use a
-// decision tree-like cell splitting algorithm (given a separation
-// type).
-//
-// This PDEFoam variant should be booked together with the
-// PDEFoamDecisionTreeDensity density estimator, which returns the
-// events in a cell without sampling.
-//
-//_____________________________________________________________________
+/*! \class TMVA::PDEFoamDecisionTree
+\ingroup TMVA
+
+This PDEFoam variant acts like a decision tree and stores in every
+cell the discriminant
+
+     D = #events with given class / total number of events
+
+as well as the statistical error on the discriminant.  It therefore
+acts as a discriminant estimator.  The decision tree-like behaviour
+is achieved by overriding PDEFoamDiscriminant::Explore() to use a
+decision tree-like cell splitting algorithm (given a separation
+type).
+
+This PDEFoam variant should be booked together with the
+PDEFoamDecisionTreeDensity density estimator, which returns the
+events in a cell without sampling.
+*/
 
 #ifndef ROOT_TMVA_PDEFoamDecisionTree
 #include "TMVA/PDEFoamDecisionTree.h"
@@ -86,7 +84,7 @@ TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree()
 /// - sepType - separation type used for the cell splitting (will be
 ///   deleted in the destructor)
 ///
-/// - cls - class to consider as signal when calcualting the purity
+/// - cls - class to consider as signal when calculating the purity
 
 TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const TString& name, SeparationBase *sepType, UInt_t cls)
    : PDEFoamDiscriminant(name, cls)
@@ -125,7 +123,7 @@ TMVA::PDEFoamDecisionTree::~PDEFoamDecisionTree()
 /// this routine.
 ///
 /// Note, that according to the decision tree logic, a cell is only
-/// split, if the number of (unweighted) events in each dautghter
+/// split, if the number of (unweighted) events in each daughter
 /// cell is greater than fNmin.
 
 void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)
