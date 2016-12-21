@@ -678,7 +678,7 @@ fWeight(kDefWeight)
       SetName(newName);
 
       // are the histograms filled with weights?
-      if(!CheckWeights(passed,total))
+      if(CheckWeights(passed,total))
       {
          Info("TEfficiency","given histograms are filled with weights");
          SetUseWeightedEvents();
