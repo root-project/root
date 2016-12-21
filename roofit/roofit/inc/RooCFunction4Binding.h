@@ -47,7 +47,7 @@ class RooCFunction4Map {
   RooCFunction4Map() {} ;
 
   void add(const char* name, VO (*ptr)(VI1,VI2,VI3,VI4), const char* arg1name="x", const char* arg2name="y",
-           	                                         const char* arg3name="z", const char* arg4name="w") {
+                                                       const char* arg3name="z", const char* arg4name="w") {
     // Register function with given name and argument name
     _ptrmap[name] = ptr ;
     _namemap[ptr] = name ;
@@ -116,7 +116,7 @@ class RooCFunction4Ref : public TObject {
       return result ;
     }
     // This union is to avoid a warning message:
-    union { 
+    union {
        void *_ptr;
        func_t _funcptr;
     } temp;
@@ -192,8 +192,8 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
        _ptr = fmap().lookupPtr(tmpName.Data()) ;
 
        if (_ptr==0) {
-	 coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName
-			       << " but no such function is registered, object will not be functional" << std::endl ;
+    coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName
+                << " but no such function is registered, object will not be functional" << std::endl ;
        }
      }
 
@@ -209,7 +209,7 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
      TString tmpName = fmap().lookupName(_ptr) ;
      if (tmpName.Length()==0) {
        coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%lx",(ULong_t)_ptr)
-			     << " written object will not be functional when read back" <<  std::endl ;
+              << " written object will not be functional when read back" <<  std::endl ;
        tmpName="UNKNOWN" ;
      }
 
@@ -240,8 +240,8 @@ public:
     for (Int_t i=0 ; i<numProxies() ; i++) {
       RooAbsProxy* p = getProxy(i) ;
       if (!TString(p->name()).BeginsWith("!")) {
-	p->print(os) ;
-	os << " " ;
+   p->print(os) ;
+   os << " " ;
       }
     }
     os << "]" ;
@@ -268,7 +268,7 @@ private:
 
 template<class VO,class VI1, class VI2, class VI3, class VI4>
 RooCFunction4Binding<VO,VI1,VI2,VI3,VI4>::RooCFunction4Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4),
-						       RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w) :
+                         RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w) :
   RooAbsReal(name,title),
   func(_func),
   x(func.argName(0),func.argName(0),this,_x),
@@ -313,8 +313,8 @@ public:
     for (Int_t i=0 ; i<numProxies() ; i++) {
       RooAbsProxy* p = getProxy(i) ;
       if (!TString(p->name()).BeginsWith("!")) {
-	p->print(os) ;
-	os << " " ;
+   p->print(os) ;
+   os << " " ;
       }
     }
     os << "]" ;
@@ -341,7 +341,7 @@ private:
 
 template<class VO,class VI1, class VI2, class VI3, class VI4>
 RooCFunction4PdfBinding<VO,VI1,VI2,VI3,VI4>::RooCFunction4PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4),
-						       RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w) :
+                         RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w) :
   RooAbsPdf(name,title),
   func(_func),
   x(func.argName(0),func.argName(0),this,_x),
