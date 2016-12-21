@@ -25,7 +25,6 @@
 #include <vector>
 #include "Math/IFunction.h"
 
-
 namespace RooFit {
 
 RooAbsReal* bindFunction(const char* name, const ROOT::Math::IBaseFunctionMultiDim& ftor,const RooArgList& vars) ;
@@ -33,12 +32,11 @@ RooAbsPdf*  bindPdf(const char* name, const ROOT::Math::IBaseFunctionMultiDim& f
 
 }
 
-
 class RooFunctorBinding : public RooAbsReal {
 public:
   RooFunctorBinding() : func(0), x(0) {
     // Default constructor
-  } ; 
+  } ;
   RooFunctorBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorBinding(const RooFunctorBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooFunctorBinding(*this,newname); }
@@ -52,7 +50,7 @@ protected:
   const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
   RooListProxy                       vars ;    // Argument reference
   Double_t*                           x ; // Argument value array
-  
+
 
 private:
 
@@ -65,7 +63,7 @@ class RooFunctorPdfBinding : public RooAbsPdf {
 public:
   RooFunctorPdfBinding() : func(0), x(0) {
     // Default constructor
-  } ; 
+  } ;
   RooFunctorPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorPdfBinding(const RooFunctorPdfBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooFunctorPdfBinding(*this,newname); }
@@ -79,7 +77,7 @@ protected:
   const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
   RooListProxy                       vars ;    // Argument reference
   Double_t*                             x ; // Argument value array
-  
+
 
 private:
 
