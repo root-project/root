@@ -26,7 +26,7 @@ class RooGaussian : public RooAbsPdf {
 public:
   RooGaussian() {    } ;
   RooGaussian(const char *name, const char *title,
-	      RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
+         RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
   RooGaussian(const RooGaussian& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooGaussian(*this,newname); }
   inline virtual ~RooGaussian() {  }
@@ -44,7 +44,7 @@ protected:
   RooRealProxy x ;
   RooRealProxy mean ;
   RooRealProxy sigma ;
-  
+
   Double_t evaluate() const ;
 
 private:

@@ -28,39 +28,39 @@ class RooGExpModel : public RooResolutionModel {
 public:
 
   enum RooGExpBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
-		                 sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
-                                 cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23, 
-				 sinhBasisMinus=31,sinhBasisSum=32,sinhBasisPlus=33,
-				 coshBasisMinus=41,coshBasisSum=42,coshBasisPlus=43} ;
-  
+                       sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
+                                 cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
+             sinhBasisMinus=31,sinhBasisSum=32,sinhBasisPlus=33,
+             coshBasisMinus=41,coshBasisSum=42,coshBasisPlus=43} ;
+
 
 
   enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3, sinhBasis=4, coshBasis=5 } ;
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
-  enum Type { Normal, Flipped };  
+  enum Type { Normal, Flipped };
 
   // Constructors, assignment etc
-  inline RooGExpModel() { 
+  inline RooGExpModel() {
     // coverity[UNINIT_CTOR]
   }
-  RooGExpModel(const char *name, const char *title, RooRealVar& x, 
-	       RooAbsReal& sigma, RooAbsReal& rlife, 
-	       Bool_t nlo=kFALSE, Type type=Normal) ; 
+  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+          RooAbsReal& sigma, RooAbsReal& rlife,
+          Bool_t nlo=kFALSE, Type type=Normal) ;
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x, 
-	       RooAbsReal& sigma, RooAbsReal& rlife, 
-	       RooAbsReal& srSF, 
-	       Bool_t nlo=kFALSE, Type type=Normal) ; 
+  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+          RooAbsReal& sigma, RooAbsReal& rlife,
+          RooAbsReal& srSF,
+          Bool_t nlo=kFALSE, Type type=Normal) ;
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x, 
-	       RooAbsReal& sigma, RooAbsReal& rlife, 
-	       RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
-	       Bool_t nlo=kFALSE, Type type=Normal) ; 
+  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+          RooAbsReal& sigma, RooAbsReal& rlife,
+          RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
+          Bool_t nlo=kFALSE, Type type=Normal) ;
 
   RooGExpModel(const RooGExpModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooGExpModel(*this,newname) ; }
   virtual ~RooGExpModel();
-  
+
   virtual Int_t basisCode(const char* name) const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
@@ -77,13 +77,13 @@ protected:
   Double_t logErfC(Double_t x) const ;
 
   //Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
-  Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const ;  
-	// modified FMV,08/13/03
+  Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const ;
+   // modified FMV,08/13/03
   std::complex<Double_t> calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
   Double_t calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t rtau, Double_t fsign) const ;
-  std::complex<Double_t> calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega, 
-	                     Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // modified FMV,07/24/03
-  Double_t calcSinConvNorm(Double_t sign, Double_t tau, 
+  std::complex<Double_t> calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega,
+                        Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // modified FMV,07/24/03
+  Double_t calcSinConvNorm(Double_t sign, Double_t tau,
         Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // added FMV,08/18/03
   //Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   //Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
@@ -96,7 +96,7 @@ protected:
     std::complex<Double_t> z(swt*c,u+c);
     return (z.imag()>-4.0) ? RooMath::faddeeva_fast(z)*std::exp(-u*u) : evalCerfApprox(swt,u,c) ;
   }
-    
+
   // Calculate Re(exp(-u^2) cwerf(i(u+c)))
   // added FMV, 08/17/03
   inline Double_t evalCerfRe(Double_t u, Double_t c) const {
@@ -108,7 +108,7 @@ protected:
     }
   }
 
-  // Calculate common normalization factors 
+  // Calculate common normalization factors
   // added FMV,07/24/03
   std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
   Double_t evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
@@ -122,12 +122,7 @@ protected:
   Bool_t _flatSFInt ;
   Bool_t _asympInt ;  // added FMV,07/24/03
 
-  ClassDef(RooGExpModel,1) // Gauss (x) Expontial resolution model
+  ClassDef(RooGExpModel,1) // Gauss (x) Exponential resolution model
 };
 
 #endif
-
-
-
-
-

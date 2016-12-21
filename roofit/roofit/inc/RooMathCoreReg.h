@@ -18,6 +18,4 @@ public:
   RooMathCoreReg() ;
 } ;
 
-
- 
 #endif
