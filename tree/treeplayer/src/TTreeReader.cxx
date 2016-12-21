@@ -85,7 +85,7 @@ TTreeReaderValue and TTreeReaderArray would look like this:
 #include <vector>
 #include <iostream>
 
-bool CheckValue(ROOT::TTreeReaderValueBase* value) {
+bool CheckValue(ROOT::TTreeReaderValueBase& value) {
    if (value->GetSetupStatus() < 0) {
       std::cerr << "Error " << value->GetSetupStatus()
                 << "setting up reader for " << value->GetBranchName() << '\n';
@@ -130,37 +130,6 @@ bool analyze(TFile* file) {
    TH1F("hist", "TTreeReader example histogram", 10, 0., 100.);
 
    while (reader.Next()) {
-
-      if (reader.GetEntryStatus() == kEntryValid) {
-         std::cout << "Loaded entry " << reader.GetCurrentEntry() << '\n';
-      } else {
-         switch (reader.GetEntryStatus()) {
-         kEntryValid:
-            // Handled above.
-            break;
-         kEntryNotLoaded:
-            std::cerr << "Error: TTreeReader has not loaded any data yet!\n";
-            break;
-         kEntryNoTree:
-            std::cerr << "Error: TTreeReader cannot find a tree names \"MyTree\"!\n";
-            break;
-         kEntryNotFound:
-            // Can't really happen as TTreeReader::Next() knows when to stop.
-            std::cerr << "Error: The entry number doe not exist\n";
-            break;
-         kEntryChainSetupError:
-            std::cerr << "Error: TTreeReader cannot access a chain element, e.g. file without the tree\n";
-            break;
-         kEntryChainFileError:
-            std::cerr << "Error: TTreeReader cannot open a chain element, e.g. missing file\n";
-            break;
-         kEntryDictionaryError:
-            std::cerr << "Error: TTreeReader cannot find the dictionary for some data\n";
-            break;
-         }
-         return false;
-      }
-
       // Access the TriggerInfo object as if it's a pointer.
       if (!triggerInfo->hasMuonL1())
          continue;
@@ -177,11 +146,11 @@ bool analyze(TFile* file) {
 
       // Access the array of taus.
       if (!taus.IsEmpty()) {
+         // Access a float value - need to dereference as TTreeReaderValue
+         // behaves like an iterator
          float currentWeight = *weight;
-         for (int iTau = 0, nTau = taus.GetSize(); iTau < nTau; ++iTau) {
-            // Access a float value - need to dereference as TTreeReaderValue
-            // behaves like an iterator
-            hist->Fill(taus[iTau].eta(), currentWeight);
+         for (const Tau& tau: taus) {
+            hist->Fill(tau.eta(), currentWeight);
          }
       }
    } // TTree entry / event loop
