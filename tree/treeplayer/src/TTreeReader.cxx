@@ -238,57 +238,71 @@ TTreeReader::~TTreeReader()
 
 void TTreeReader::Initialize()
 {
+   fEntry = -1;
    if (!fTree) {
       MakeZombie();
       fEntryStatus = kEntryNoTree;
       fMostRecentTreeNumber = -1;
-   } else {
-      ResetBit(kZombie);
-      if (fTree->InheritsFrom(TChain::Class())) {
-         SetBit(kBitIsChain);
-      }
-      fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
+      return;
    }
+
+   ResetBit(kZombie);
+   if (fTree->InheritsFrom(TChain::Class())) {
+      SetBit(kBitIsChain);
+   }
+   fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the range of entries to be processed. This call is usually followed by
-/// an iteration of the range using TTreeReader::Next(), which will visit the
-/// the entries from `first` to `last - 1`.
-/// If last > first, this call is equivalent to
-/// `SetEntry(first - 1); SetLastEntry(last);`. Otherwise `last` is ignored and
-/// only `first` is set.
-/// \return the EEntryStatus that would be returned by SetEntry(first - 1)
+/// Set the range of entries to be loaded by `Next()`; end will not be loaded.
+///
+/// If end <= begin, `end` is ignored (set to `-1`) and only `begin` is used.
+/// Example:
+/// ```
+/// reader.SetEntriesRange(3, 5);
+/// while (reader.Next()) {
+///   // Will load entries 3 and 4.
+/// }
+/// ```
+///
+/// \param begin The first entry to be loaded by `Next()`.
+/// \param end  The entry where `Next()` will return kFALSE, not loading it.
 
-TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t last)
+void TTreeReader::SetEntriesRange(Long64_t beginEntry, Long64_t endEntry)
 {
-   if(last > first)
-      fLastEntry = last;
+   if (endEntry > beginEntry)
+      fEndEntry = endEntry;
    else
-      fLastEntry = -1;
-   return SetEntry(first - 1);
+      fEndEntry = -1;
+   SetEntry(beginEntry - 1);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Restart a Next() loop from the first entry.
 
 void TTreeReader::Restart() {
    fDirector->SetTree(nullptr);
    fDirector->SetReadEntry(-1);
    fProxiesSet = false; // we might get more value readers, meaning new proxies.
+   fEntry = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the index of the current entry being read
+/// Returns the number of entries of the TEntryList if one is provided, else
+/// of the TTree / TChain.
+///
+/// \param force If `IsChain()` and `force`, determines whether all TFiles of
+///   this TChain should be opened to determine the exact number of entries
+/// of the TChain. If `!IsChain()`, `force` is ignored.
 
-Long64_t TTreeReader::GetCurrentEntry() const {
-   if (!fDirector) return -1;
-   Long64_t currentTreeEntry = fDirector->GetReadEntry();
-   if (TestBit(kBitIsChain) && currentTreeEntry >= 0) {
-      return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
-   }
-   return currentTreeEntry;
+Long64_t TTreeReader::GetEntries(Bool_t force) const {
+   if (fEntryList)
+      return fEntryList->GetN();
+   if (!fTree)
+      return -1;
+   if (force)
+      return fTree->GetEntries();
+   return fTree->GetEntriesFast();
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load an entry into the tree, return the status of the read.
