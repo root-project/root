@@ -27,14 +27,14 @@ public:
 
   // Constructors, assignment etc
   inline RooBCPGenDecay() { }
-  RooBCPGenDecay(const char *name, const char *title, 
-		 RooRealVar& t, RooAbsCategory& tag,
-		 RooAbsReal& tau, RooAbsReal& dm,
-		 RooAbsReal& avgMistag, 
-		 RooAbsReal& a, RooAbsReal& b,
-		 RooAbsReal& delMistag,
+  RooBCPGenDecay(const char *name, const char *title,
+       RooRealVar& t, RooAbsCategory& tag,
+       RooAbsReal& tau, RooAbsReal& dm,
+       RooAbsReal& avgMistag,
+       RooAbsReal& a, RooAbsReal& b,
+       RooAbsReal& delMistag,
                  RooAbsReal& mu,
-		 const RooResolutionModel& model, DecayType type=DoubleSided) ;
+       const RooResolutionModel& model, DecayType type=DoubleSided) ;
 
   RooBCPGenDecay(const RooBCPGenDecay& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooBCPGenDecay(*this,newname) ; }
@@ -48,7 +48,7 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void initGenerator(Int_t code) ;
   void generateEvent(Int_t code) ;
-  
+
 protected:
 
   RooRealProxy _avgC ;
@@ -61,7 +61,7 @@ protected:
   RooRealProxy _dm ;
   RooCategoryProxy _tag ;
   Double_t _genB0Frac ;
-  
+
   DecayType _type ;
   Int_t _basisExp ;
   Int_t _basisSin ;

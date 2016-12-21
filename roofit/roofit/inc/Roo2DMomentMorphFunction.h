@@ -6,7 +6,7 @@
 // Written by Max Baak (mbaak@cern.ch)
 // 2-dimensional morph function between a list of input functions (varlist) as a function of one input parameter (m).
 // The vector mrefpoints assigns an m-number to each function in the function list.
-// For example: varlist can contain MC histograms (or single numbers) of a reconstructed mass, for certain 
+// For example: varlist can contain MC histograms (or single numbers) of a reconstructed mass, for certain
 // true Higgs masses indicated in mrefpoints. the input parameter m is the true (continous) Higgs mass.
 // Morphing can be set to be linear or non-linear, or mixture of the two.
 
@@ -31,16 +31,16 @@ class Roo2DMomentMorphFunction : public RooAbsReal {
 
   enum Setting { Linear, LinearPosFractions } ;
 
-  Roo2DMomentMorphFunction() {} ; 
+  Roo2DMomentMorphFunction() {} ;
 
   Roo2DMomentMorphFunction( const char *name, const char *title,
-	                  RooAbsReal& _m1, RooAbsReal& _m2, 
+                     RooAbsReal& _m1, RooAbsReal& _m2,
                           const TMatrixD& mrefpoints, const Setting& setting = Linear, const Bool_t& verbose=false ) ;
 
   Roo2DMomentMorphFunction( const char *name, const char *title,
                           RooAbsReal& _m1, RooAbsReal& _m2,
-                          const Int_t& nrows, const Double_t* dm1arr, const Double_t* dm2arr, const Double_t* dvalarr, 
-			  const Setting& setting = Linear, const Bool_t& verbose=false ) ;
+                          const Int_t& nrows, const Double_t* dm1arr, const Double_t* dm2arr, const Double_t* dvalarr,
+           const Setting& setting = Linear, const Bool_t& verbose=false ) ;
 
   Roo2DMomentMorphFunction( const Roo2DMomentMorphFunction& other, const char* name=0 );
 
@@ -64,7 +64,7 @@ class Roo2DMomentMorphFunction : public RooAbsReal {
   Setting _setting;
   Bool_t _verbose;
   Int_t _ixmin, _ixmax, _iymin, _iymax;
-  Int_t	_npoints;
+  Int_t   _npoints;
 
   mutable TMatrixD _mref;
   mutable TMatrixD _MSqr;
@@ -89,9 +89,8 @@ class Roo2DMomentMorphFunction : public RooAbsReal {
   };
 
  private:
-  ClassDef(Roo2DMomentMorphFunction,1) 
+  ClassDef(Roo2DMomentMorphFunction,1)
 
 };
- 
-#endif
 
+#endif
