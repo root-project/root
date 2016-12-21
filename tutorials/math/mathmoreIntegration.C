@@ -16,7 +16,7 @@
 /// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
 ///
 /// \macro_image
-/// \image_output
+/// \macro_output
 /// \macro_code
 ///
 /// \authors M. Slawinska, L. Moneta
@@ -50,6 +50,7 @@ double func( double x){
    nc++;
    return TMath::BreitWigner(x);
 }
+
 // TF1 requires the function to have the ( )( double *, double *) signature
 double func2(const double *x, const double * = 0){
    nc++;
