@@ -27,11 +27,11 @@ public:
 
   // Constructors, assignment etc
   inline RooBMixDecay() { }
-  RooBMixDecay(const char *name, const char *title, 
-	       RooRealVar& t, RooAbsCategory& mixState, RooAbsCategory& tagFlav,
-	       RooAbsReal& tau, RooAbsReal& dm,
-	       RooAbsReal& mistag, RooAbsReal& delMistag, const RooResolutionModel& model, 
-	       DecayType type=DoubleSided) ;
+  RooBMixDecay(const char *name, const char *title,
+          RooRealVar& t, RooAbsCategory& mixState, RooAbsCategory& tagFlav,
+          RooAbsReal& tau, RooAbsReal& dm,
+          RooAbsReal& mistag, RooAbsReal& delMistag, const RooResolutionModel& model,
+          DecayType type=DoubleSided) ;
 
   RooBMixDecay(const RooBMixDecay& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooBMixDecay(*this,newname) ; }
@@ -45,7 +45,7 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void initGenerator(Int_t code) ;
   void generateEvent(Int_t code);
-  
+
 protected:
 
   DecayType        _type ;
