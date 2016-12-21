@@ -200,28 +200,28 @@ namespace {
 //______________________________________________________________________________
 // These functions are helpers for debugging issues with non-LLVMDEV builds.
 //
-clang::DeclContext* TCling__DEBUG__getDeclContext(clang::Decl* D) {
+R__DLLEXPORT clang::DeclContext* TCling__DEBUG__getDeclContext(clang::Decl* D) {
    return D->getDeclContext();
 }
-clang::NamespaceDecl* TCling__DEBUG__DCtoNamespace(clang::DeclContext* DC) {
+R__DLLEXPORT clang::NamespaceDecl* TCling__DEBUG__DCtoNamespace(clang::DeclContext* DC) {
    return llvm::dyn_cast<clang::NamespaceDecl>(DC);
 }
-clang::RecordDecl* TCling__DEBUG__DCtoRecordDecl(clang::DeclContext* DC) {
+R__DLLEXPORT clang::RecordDecl* TCling__DEBUG__DCtoRecordDecl(clang::DeclContext* DC) {
    return llvm::dyn_cast<clang::RecordDecl>(DC);
 }
-void TCling__DEBUG__dump(clang::DeclContext* DC) {
+R__DLLEXPORT void TCling__DEBUG__dump(clang::DeclContext* DC) {
    return DC->dumpDeclContext();
 }
-void TCling__DEBUG__dump(clang::Decl* D) {
+R__DLLEXPORT void TCling__DEBUG__dump(clang::Decl* D) {
    return D->dump();
 }
-void TCling__DEBUG__dump(clang::FunctionDecl* FD) {
+R__DLLEXPORT void TCling__DEBUG__dump(clang::FunctionDecl* FD) {
    return FD->dump();
 }
-void TCling__DEBUG__decl_dump(void* D) {
+R__DLLEXPORT void TCling__DEBUG__decl_dump(void* D) {
    return ((clang::Decl*)D)->dump();
 }
-void TCling__DEBUG__printName(clang::Decl* D) {
+R__DLLEXPORT void TCling__DEBUG__printName(clang::Decl* D) {
    if (clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(D)) {
       std::string name;
       {
@@ -236,10 +236,10 @@ void TCling__DEBUG__printName(clang::Decl* D) {
 // These functions are helpers for testing issues directly rather than
 // relying on side effects.
 // This is used for the test for ROOT-7462/ROOT-6070
-bool TCling__TEST_isInvalidDecl(clang::Decl* D) {
+R__DLLEXPORT bool TCling__TEST_isInvalidDecl(clang::Decl* D) {
    return D->isInvalidDecl();
 }
-bool TCling__TEST_isInvalidDecl(ClassInfo_t *input) {
+R__DLLEXPORT bool TCling__TEST_isInvalidDecl(ClassInfo_t *input) {
    TClingClassInfo *info( (TClingClassInfo*) input);
    assert(info && info->IsValid());
    return info->GetDecl()->isInvalidDecl();
