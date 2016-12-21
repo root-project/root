@@ -10,19 +10,17 @@
  *                                                                           *
  *****************************************************************************/
 
-/**
-\file RooMathCoreReg.cxx
-\class RooMathCoreReg
-\ingroup Roofit
+/** \class RooMathCoreReg
+    \ingroup Roofit
 
 **/
 
-#include "Riostream.h" 
+#include "Riostream.h"
 #include "RooMathCoreReg.h"
-#include "RooCFunction1Binding.h" 
-#include "RooCFunction2Binding.h" 
-#include "RooCFunction3Binding.h" 
-#include "RooCFunction4Binding.h" 
+#include "RooCFunction1Binding.h"
+#include "RooCFunction2Binding.h"
+#include "RooCFunction3Binding.h"
+#include "RooCFunction4Binding.h"
 #include "Math/SpecFunc.h"
 #include "Math/DistFunc.h"
 
@@ -40,7 +38,7 @@ RooMathCoreReg::RooMathCoreReg()
   RooCFunction2Ref<double,double,double>::fmap().add("ROOT::Math::beta",ROOT::Math::beta,"x","y") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::inc_beta",ROOT::Math::inc_beta,"x","a","b") ;
 
-  // MathCore pdf functions from ROOT::Math namespace  
+  // MathCore pdf functions from ROOT::Math namespace
   RooCFunction2Ref<double,unsigned int,double>::fmap().add("ROOT::Math::poisson_pdf",ROOT::Math::poisson_pdf, "n","mu") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::beta_pdf",ROOT::Math::beta_pdf,"x","a","b") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::breitwigner_pdf",ROOT::Math::breitwigner_pdf,"x","gamma","x0") ;
