@@ -233,19 +233,19 @@ void TTreeReader::Initialize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range of entries to be processed. This call is usually followed by
 /// an iteration of the range using TTreeReader::Next(), which will visit the
-/// the entries from `first` to `last - 1`.
-/// If last > first, this call is equivalent to
-/// `SetEntry(first - 1); SetLastEntry(last);`. Otherwise `last` is ignored and
-/// only `first` is set.
-/// \return the EEntryStatus that would be returned by SetEntry(first - 1)
+/// the entries from `begiNEntry` to `endEntry - 1`.
+/// If endEntry > beginEntry, this call is equivalent to
+/// `SetEntry(beginEntry - 1); SetLastEntry(endEntry);`. Otherwise `endEntry` is ignored and
+/// only `beginEntry` is set.
+/// \return kEntryValid (more useful since ROOT v6.10).
 
-TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t first, Long64_t last)
+TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long64_t endEntry)
 {
-   if(last > first)
-      fLastEntry = last;
+   if (endEntry > beginEntry)
+      fLastEntry = endEntry;
    else
       fLastEntry = -1;
-   return SetEntry(first - 1);
+   return SetEntry(beginEntry - 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
