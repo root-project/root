@@ -24,13 +24,13 @@ class RooUnblindOffset : public RooAbsHiddenReal {
 public:
   // Constructors, assignment etc
   RooUnblindOffset() ;
-  RooUnblindOffset(const char *name, const char *title, 
-		   const char *blindString, Double_t scale, RooAbsReal& blindValue);
-  RooUnblindOffset(const char *name, const char *title, 
-		   const char *blindString, Double_t scale, RooAbsReal& blindValue,
-		   RooAbsCategory& blindState);
+  RooUnblindOffset(const char *name, const char *title,
+         const char *blindString, Double_t scale, RooAbsReal& blindValue);
+  RooUnblindOffset(const char *name, const char *title,
+         const char *blindString, Double_t scale, RooAbsReal& blindValue,
+         RooAbsCategory& blindState);
   RooUnblindOffset(const RooUnblindOffset& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooUnblindOffset(*this,newname); }  
+  virtual TObject* clone(const char* newname) const { return new RooUnblindOffset(*this,newname); }
   virtual ~RooUnblindOffset();
 
 protected:

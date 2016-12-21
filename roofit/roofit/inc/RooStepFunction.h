@@ -8,7 +8,7 @@
  *    Tristan du Pree, Nikhef, Amsterdam, tdupree@nikhef.nl                  *
  *                                                                           *
  * Copyright (c) 2000-2005, Stanford University. All rights reserved.        *
- *           
+ *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
@@ -30,7 +30,7 @@ class RooStepFunction : public RooAbsReal {
 
   RooStepFunction() ;
   RooStepFunction(const char *name, const char *title,
-		  RooAbsReal& x, const RooArgList& coefList, const RooArgList& limits, Bool_t interpolate=kFALSE) ;
+        RooAbsReal& x, const RooArgList& coefList, const RooArgList& limits, Bool_t interpolate=kFALSE) ;
 
   RooStepFunction(const RooStepFunction& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooStepFunction(*this, newname); }
@@ -40,7 +40,7 @@ class RooStepFunction : public RooAbsReal {
   const RooArgList& boundaries() { return _boundaryList; }
 
  protected:
-  
+
   Double_t evaluate() const;
 
  private:

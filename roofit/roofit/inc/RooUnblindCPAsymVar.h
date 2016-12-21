@@ -22,18 +22,18 @@
 #include "RooCategoryProxy.h"
 #include "RooBlindTools.h"
 
-class RooCategory ;
+class RooCategory;
 
 class RooUnblindCPAsymVar : public RooAbsHiddenReal {
 public:
   // Constructors, assignment etc
   RooUnblindCPAsymVar() ;
-  RooUnblindCPAsymVar(const char *name, const char *title, 
-			const char *blindString, RooAbsReal& cpasym);
-  RooUnblindCPAsymVar(const char *name, const char *title, 
-		      const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState);
+  RooUnblindCPAsymVar(const char *name, const char *title,
+         const char *blindString, RooAbsReal& cpasym);
+  RooUnblindCPAsymVar(const char *name, const char *title,
+            const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState);
   RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooUnblindCPAsymVar(*this,newname); }  
+  virtual TObject* clone(const char* newname) const { return new RooUnblindCPAsymVar(*this,newname); }
   virtual ~RooUnblindCPAsymVar();
 
 protected:

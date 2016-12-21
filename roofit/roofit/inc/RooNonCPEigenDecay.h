@@ -7,7 +7,7 @@
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
  *   JS, Jan Stark,        Paris,            stark@slac.stanford.edu         *
  *   WV, Wouter Verkerke,  UC Santa Barbara, verkerke@slac.stanford.edu      *
- *                                                                           *                  
+ *                                                                           *
  * Copyright (c) 2000-2005, Regents of the University of California,         *
  *                          IN2P3. All rights reserved.                      *
  *                                                                           *
@@ -40,56 +40,56 @@ public:
   inline RooNonCPEigenDecay( void ) { }
 
   // with explicit mischarge
-  RooNonCPEigenDecay( const char *name, const char *title, 
-		      RooRealVar&     t, 
-	              RooAbsCategory& tag,
-		      RooAbsReal&     tau, 
-		      RooAbsReal&     dm,
-		      RooAbsReal&     avgW, 
-		      RooAbsReal&     delW, 
-		      RooAbsCategory& rhoQ, 
-		      RooAbsReal&     correctQ, 
-		      RooAbsReal&     wQ,
-		      RooAbsReal&     a,
-		      RooAbsReal&     C,
-		      RooAbsReal&     delC,
-		      RooAbsReal&     S,
-		      RooAbsReal&     delS,
-		      const RooResolutionModel& model, 
-		      DecayType       type = DoubleSided );
+  RooNonCPEigenDecay( const char *name, const char *title,
+            RooRealVar&     t,
+                 RooAbsCategory& tag,
+            RooAbsReal&     tau,
+            RooAbsReal&     dm,
+            RooAbsReal&     avgW,
+            RooAbsReal&     delW,
+            RooAbsCategory& rhoQ,
+            RooAbsReal&     correctQ,
+            RooAbsReal&     wQ,
+            RooAbsReal&     a,
+            RooAbsReal&     C,
+            RooAbsReal&     delC,
+            RooAbsReal&     S,
+            RooAbsReal&     delS,
+            const RooResolutionModel& model,
+            DecayType       type = DoubleSided );
 
   // no explicit mischarge (=> set to zero)
-  RooNonCPEigenDecay( const char *name, const char *title, 
-		      RooRealVar&     t, 
-	              RooAbsCategory& tag,
-		      RooAbsReal&     tau, 
-		      RooAbsReal&     dm,
-		      RooAbsReal&     avgW, 
-		      RooAbsReal&     delW, 
-		      RooAbsCategory& rhoQ, 
-		      RooAbsReal&     correctQ, 
-		      RooAbsReal&     a,
-		      RooAbsReal&     C,
-		      RooAbsReal&     delC,
-		      RooAbsReal&     S,
-		      RooAbsReal&     delS,
-		      const RooResolutionModel& model, 
-		      DecayType       type = DoubleSided );
+  RooNonCPEigenDecay( const char *name, const char *title,
+            RooRealVar&     t,
+                 RooAbsCategory& tag,
+            RooAbsReal&     tau,
+            RooAbsReal&     dm,
+            RooAbsReal&     avgW,
+            RooAbsReal&     delW,
+            RooAbsCategory& rhoQ,
+            RooAbsReal&     correctQ,
+            RooAbsReal&     a,
+            RooAbsReal&     C,
+            RooAbsReal&     delC,
+            RooAbsReal&     S,
+            RooAbsReal&     delS,
+            const RooResolutionModel& model,
+            DecayType       type = DoubleSided );
 
   RooNonCPEigenDecay(const RooNonCPEigenDecay& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { 
-    return new RooNonCPEigenDecay(*this,newname); 
+  virtual TObject* clone(const char* newname) const {
+    return new RooNonCPEigenDecay(*this,newname);
   }
   virtual ~RooNonCPEigenDecay( void );
 
   virtual Double_t coefficient( Int_t basisIndex ) const;
 
-  virtual Int_t getCoefAnalyticalIntegral( Int_t coef, RooArgSet& allVars, 
-  					   RooArgSet& analVars, const char* rangeName=0 ) const;
+  virtual Int_t getCoefAnalyticalIntegral( Int_t coef, RooArgSet& allVars,
+                    RooArgSet& analVars, const char* rangeName=0 ) const;
   virtual Double_t coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const;
 
-  Int_t getGenerator( const RooArgSet& directVars, 
-		      RooArgSet&       generateVars, Bool_t staticInitOK=kTRUE ) const;
+  Int_t getGenerator( const RooArgSet& directVars,
+            RooArgSet&       generateVars, Bool_t staticInitOK=kTRUE ) const;
   void initGenerator( Int_t code );
   void generateEvent( Int_t code );
 
@@ -111,7 +111,7 @@ protected:
   RooRealProxy     _wQ;
   Double_t         _genB0Frac;
   Double_t         _genRhoPlusFrac;
-  
+
   DecayType        _type;
   Int_t            _basisExp;
   Int_t            _basisSin;
