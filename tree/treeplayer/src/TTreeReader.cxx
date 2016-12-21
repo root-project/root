@@ -222,6 +222,10 @@ void TTreeReader::Initialize()
       fEntryStatus = kEntryNoTree;
       fMostRecentTreeNumber = -1;
    } else {
+      if (fTree->GetEntryList()) {
+         Warning("Initialize()",
+                 "TTreeReader support for TEntryList only available since ROOT 6.10!");
+      }
       ResetBit(kZombie);
       if (fTree->InheritsFrom(TChain::Class())) {
          SetBit(kBitIsChain);
