@@ -161,8 +161,15 @@ public:
    Bool_t Next() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
    EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
+   /// \deprecated This is a very misleading interface, please read carefully:
+   ///
+   /// SetLastEntry() really sets the entry that `Next()` will not read, i.e. the
+   /// first entry number for which `Next()` will return kFALSE. It is equivalant
+   /// to end() for iterators.
+   /// This interface has been deprecated in ROOT 6.10 and will be removed in
+   /// ROOT 6.12. Please use SetEntriesRange() instead.
    void SetLastEntry(Long64_t entry) { fLastEntry = entry; }
-   EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
+   EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
    void Restart();
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
