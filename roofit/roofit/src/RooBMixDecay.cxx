@@ -14,13 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooBMixDecay.cxx
-\class RooBMixDecay
-\ingroup Roofit
+/** \class RooBMixDecay
+    \ingroup Roofit
 
 Class RooBMixDecay is a RooAbsAnaConvPdf implementation that describes
-the decay of B mesons with the effects of B0/B0bar mixing. 
+the decay of B mesons with the effects of B0/B0bar mixing.
 This function can be analytically convolved with any RooResolutionModel implementation
 **/
 
@@ -35,22 +33,19 @@ This function can be analytically convolved with any RooResolutionModel implemen
 
 using namespace std;
 
-ClassImp(RooBMixDecay) 
-;
-
-
+ClassImp(RooBMixDecay)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooBMixDecay::RooBMixDecay(const char *name, const char *title, 
-			   RooRealVar& t, RooAbsCategory& mixState,
-			   RooAbsCategory& tagFlav,
-			   RooAbsReal& tau, RooAbsReal& dm,			   
-			   RooAbsReal& mistag, RooAbsReal& delMistag,
-			   const RooResolutionModel& model, 
-			   DecayType type) :
-  RooAbsAnaConvPdf(name,title,model,t), 
+RooBMixDecay::RooBMixDecay(const char *name, const char *title,
+            RooRealVar& t, RooAbsCategory& mixState,
+            RooAbsCategory& tagFlav,
+            RooAbsReal& tau, RooAbsReal& dm,
+            RooAbsReal& mistag, RooAbsReal& delMistag,
+            const RooResolutionModel& model,
+            DecayType type) :
+  RooAbsAnaConvPdf(name,title,model,t),
   _type(type),
   _mistag("mistag","Mistag rate",this,mistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),
@@ -76,13 +71,11 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
   }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) : 
-  RooAbsAnaConvPdf(other,name), 
+RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
+  RooAbsAnaConvPdf(other,name),
   _type(other._type),
   _mistag("mistag",this,other._mistag),
   _delMistag("delMistag",this,other._delMistag),
@@ -100,8 +93,6 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -109,30 +100,26 @@ RooBMixDecay::~RooBMixDecay()
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Comp with tFit MC: must be (1 - tagFlav*...)
 
-Double_t RooBMixDecay::coefficient(Int_t basisIndex) const 
+Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
 {
   if (basisIndex==_basisExp) {
-    return (1 - _tagFlav*_delMistag) ; 
+    return (1 - _tagFlav*_delMistag) ;
   }
 
   if (basisIndex==_basisCos) {
-    return _mixState*(1-2*_mistag) ;   
+    return _mixState*(1-2*_mistag) ;
   }
-  
+
   return 0 ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
 
-Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   if (rangeName) {
     return 0 ;
@@ -144,21 +131,19 @@ Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars
   return 0 ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
-{  
+Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
+{
   switch(code) {
     // No integration
   case 0: return coefficient(basisIndex) ;
 
-    // Integration over 'mixState' and 'tagFlav' 
+    // Integration over 'mixState' and 'tagFlav'
   case 3:
     if (basisIndex==_basisExp) {
       return 4.0 ;
-    }    
+    }
     if (basisIndex==_basisCos) {
       return 0.0 ;
     }
@@ -168,7 +153,7 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, cons
   case 2:
     if (basisIndex==_basisExp) {
       return 2.0*coefficient(basisIndex) ;
-    }    
+    }
     if (basisIndex==_basisCos) {
       return 0.0 ;
     }
@@ -178,7 +163,7 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, cons
   case 1:
     if (basisIndex==_basisExp) {
       return 2.0 ;
-    }    
+    }
     if (basisIndex==_basisCos) {
       return 2.0*coefficient(basisIndex) ;
     }
@@ -187,27 +172,23 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, cons
   default:
     assert(0) ;
   }
-    
+
   return 0 ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (staticInitOK) {
-    if (matchArgs(directVars,generateVars,_t,_mixState,_tagFlav)) return 4 ;  
-    if (matchArgs(directVars,generateVars,_t,_mixState)) return 3 ;  
-    if (matchArgs(directVars,generateVars,_t,_tagFlav)) return 2 ;  
+    if (matchArgs(directVars,generateVars,_t,_mixState,_tagFlav)) return 4 ;
+    if (matchArgs(directVars,generateVars,_t,_mixState)) return 3 ;
+    if (matchArgs(directVars,generateVars,_t,_tagFlav)) return 2 ;
   }
 
-  if (matchArgs(directVars,generateVars,_t)) return 1 ;  
+  if (matchArgs(directVars,generateVars,_t)) return 1 ;
   return 0 ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -218,11 +199,11 @@ void RooBMixDecay::initGenerator(Int_t code)
     {
       // Calculate the fraction of B0bar events to generate
       Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tagFlav.arg())).getVal() ;
-      _tagFlav = 1 ; // B0 
+      _tagFlav = 1 ; // B0
       Double_t flavInt = RooRealIntegral("flavInt","flav integral",*this,RooArgSet(_t.arg())).getVal() ;
       _genFlavFrac = flavInt/sumInt ;
       break ;
-    }  
+    }
   case 3:
     {
       // Calculate the fraction of mixed events to generate
@@ -231,7 +212,7 @@ void RooBMixDecay::initGenerator(Int_t code)
       Double_t mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
       _genMixFrac = mixInt/sumInt ;
       break ;
-    }  
+    }
   case 4:
     {
       // Calculate the fraction of mixed events to generate
@@ -239,8 +220,8 @@ void RooBMixDecay::initGenerator(Int_t code)
       _mixState = -1 ; // mixed
       Double_t mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg(),_tagFlav.arg())).getVal() ;
       _genMixFrac = mixInt/sumInt ;
-      
-      // Calculate the fractio of B0bar tags for mixed and unmixed
+
+      // Calculate the fraction of B0bar tags for mixed and unmixed
       RooRealIntegral dtInt("mixInt","mix integral",*this,RooArgSet(_t.arg())) ;
       _mixState = -1 ; // Mixed
       _tagFlav  =  1 ; // B0
@@ -252,9 +233,6 @@ void RooBMixDecay::initGenerator(Int_t code)
     }
   }
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate mix-state dependent
@@ -308,10 +286,10 @@ void RooBMixDecay::generateEvent(Int_t code)
     Double_t maxAcceptProb = 1 + TMath::Abs(_delMistag) + TMath::Abs(dil) ;
     Double_t acceptProb = (1-_tagFlav*_delMistag) + _mixState*dil*cos(_dm*tval);
     Bool_t mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
-    
+
     if (tval<_t.max() && tval>_t.min() && mixAccept) {
       _t = tval ;
       break ;
     }
-  }  
+  }
 }
