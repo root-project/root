@@ -33,12 +33,16 @@ The following people have contributed to this new version:
 The following interfaces have been removed, after deprecation in v6.08.
 
 ### CINT remnants, dysfunctional for ROOT 6
+
 - `TInterpreter`'s `Getgvp()`, `Getp2f2funcname(void*)`, `Setgvp(Long_t)`, `SetRTLD_NOW()`, `SetRTLD_LAZY()`.
 - `SetFCN(void*)` from TVirtualFitter, TFitter, TBackCompFitter, TMinuit
 - `TFoam::SetRhoInt(void*)`
 
 
 ## Core Libraries
+
+- See "Build, Configuration and Testing Infrastructure" below for changes in the directory structure.
+- libCling now exports only a minimal set of symbols.
 
 ## Histogram Libraries
 
@@ -68,6 +72,10 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 
 ## TTree Libraries
+
+- `TTreeReader` now supports `TEntryList`s.
+- `TTreeReader::SetLastEntry()` has been deprecated. Its name is misleading; please use `TTreePlayer::SetEntriesRange()` instead.
+- `TTree::Branch()` now complains for wrong leaf list strings, e.g. "value/F[4]" (which should really be spelled as "value[4]/F").
 
 
 ## 2D Graphics Libraries
@@ -173,6 +181,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 
 ## Build, Configuration and Testing Infrastructure
+
+- rlibmap has been removed; it was deprecated for three years.
 - Added the CMake exported ROOT libraries into the ROOT:: namespace. In this way, projects based on CMake using ROOT can avoid
   conflicts in library target names. As an example, this is the way to build a project consisting of one library and one
   executable using ROOT.
@@ -192,5 +202,6 @@ The following interfaces have been removed, after deprecation in v6.08.
   target_link_libraries(Main Event)
   ```
 - Added option `builtin_all` to enable all the built in options.
-
-
+- For rootcling_stage1 (formerly known as rootcling_tmp), the package structure was changed to enable homogenous visibility
+  settings across object files. See core/README for an overview.
+- Several non-public headers are not copied into include/ anymore; they reside in the PACKAGE/res/ subdirectory in the source tree.
