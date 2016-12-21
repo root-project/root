@@ -1,7 +1,7 @@
-/***************************************************************************** 
- * Project: RooFit                                                           * 
+/*****************************************************************************
+ * Project: RooFit                                                           *
  * author: Max Baak (mbaak@cern.ch)                                          *
- *****************************************************************************/ 
+ *****************************************************************************/
 
 /** \class Roo1DMomentMorphFunction
     \ingroup Roofit
@@ -13,10 +13,10 @@ true Higgs masses indicated in mrefpoints. the input parameter m is the true (co
 Morphing can be set to be linear, non-linear or a mixture of the two.
 */
 
-#include "Riostream.h" 
+#include "Riostream.h"
 
-#include "Roo1DMomentMorphFunction.h" 
-#include "RooAbsCategory.h" 
+#include "Roo1DMomentMorphFunction.h"
+#include "RooAbsCategory.h"
 #include "RooRealIntegral.h"
 #include "RooRealConstant.h"
 #include "RooRealVar.h"
@@ -32,8 +32,7 @@ Morphing can be set to be linear, non-linear or a mixture of the two.
 
 using namespace std;
 
-ClassImp(Roo1DMomentMorphFunction) 
-
+ClassImp(Roo1DMomentMorphFunction)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -42,8 +41,6 @@ ClassImp(Roo1DMomentMorphFunction)
 {
   _varItr    = _varList.createIterator() ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -54,16 +51,16 @@ ClassImp(Roo1DMomentMorphFunction)
 /// \param[in] mrefpoints
 /// \param[in] setting
 
-Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char *title, 
-						   RooAbsReal& _m,
-						   const RooArgList& varList,
-						   const TVectorD& mrefpoints,
-						   const Setting& setting) :
-  RooAbsReal(name,title), 
+Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char *title,
+                     RooAbsReal& _m,
+                     const RooArgList& varList,
+                     const TVectorD& mrefpoints,
+                     const Setting& setting) :
+  RooAbsReal(name,title),
   m("m","m",this,_m),
   _varList("varList","List of variables",this),
   _setting(setting)
-{ 
+{
   // observables
   TIterator* varItr = varList.createIterator() ;
   RooAbsArg* var ;
@@ -82,33 +79,31 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
 
   // initialization
   initialize();
-} 
-
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 /// \param[in] other
 /// \param[in] name
 
-Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunction& other, const char* name) :  
-  RooAbsReal(other,name), 
+Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunction& other, const char* name) :
+  RooAbsReal(other,name),
   m("m",this,other.m),
   _varList("varList",this,other._varList),
   _setting(other._setting)
-{ 
+{
   _mref = new TVectorD(*other._mref) ;
   _frac = 0 ;
   _varItr    = _varList.createIterator() ;
 
   // initialization
   initialize();
-} 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
-Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction() 
+Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction()
 {
   if (_mref)   delete _mref;
   if (_frac)   delete _frac;
@@ -116,12 +111,9 @@ Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction()
   if (_M)      delete _M;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-
-void Roo1DMomentMorphFunction::initialize() 
+void Roo1DMomentMorphFunction::initialize()
 {
   Int_t nVar = _varList.getSize();
 
@@ -153,11 +145,10 @@ void Roo1DMomentMorphFunction::initialize()
   delete dm ;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t Roo1DMomentMorphFunction::evaluate() const 
-{ 
+Double_t Roo1DMomentMorphFunction::evaluate() const
+{
   calculateFractions(); // this sets _frac vector, based on function of m
 
   _varItr->Reset() ;
@@ -169,8 +160,7 @@ Double_t Roo1DMomentMorphFunction::evaluate() const
   }
 
   return ret ;
-} 
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -197,11 +187,11 @@ void Roo1DMomentMorphFunction::calculateFractions() const
     case NonLinear:
       // default already set above
     break;
-    case Linear: 
+    case Linear:
       for (Int_t i=0; i<nVar; ++i)
-        (*_frac)(i) = 0.;      
+        (*_frac)(i) = 0.;
       if (imax>imin) { // m in between mmin and mmax
-        (*_frac)(imin) = (1.-mfrac); 
+        (*_frac)(imin) = (1.-mfrac);
         (*_frac)(imax) = (mfrac);
       } else if (imax==imin) { // m outside mmin and mmax
         (*_frac)(imin) = (1.);
@@ -223,7 +213,7 @@ void Roo1DMomentMorphFunction::calculateFractions() const
         (*_frac)(i) = (*_frac)(i)/sumposfrac;
       }
     break;
-  } 
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,11 +223,10 @@ int Roo1DMomentMorphFunction::idxmin(const double& mval) const
   int imin(0);
   Int_t nVar = _varList.getSize();
   double mmin=-DBL_MAX;
-  for (Int_t i=0; i<nVar; ++i) 
+  for (Int_t i=0; i<nVar; ++i)
     if ( (*_mref)[i]>mmin && (*_mref)[i]<=mval ) { mmin=(*_mref)[i]; imin=i; }
   return imin;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -246,7 +235,7 @@ int Roo1DMomentMorphFunction::idxmax(const double& mval) const
   int imax(0);
   Int_t nVar = _varList.getSize();
   double mmax=DBL_MAX;
-  for (Int_t i=0; i<nVar; ++i) 
+  for (Int_t i=0; i<nVar; ++i)
     if ( (*_mref)[i]<mmax && (*_mref)[i]>=mval ) { mmax=(*_mref)[i]; imax=i; }
   return imax;
 }

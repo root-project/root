@@ -27,13 +27,13 @@ class RooUnblindPrecision : public RooAbsHiddenReal {
 public:
   // Constructors, assignment etc
   RooUnblindPrecision() ;
-  RooUnblindPrecision(const char *name, const char *title, 
-		      const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& blindValue, Bool_t sin2betaMode=kFALSE);
-  RooUnblindPrecision(const char *name, const char *title, 
-		      const char *blindString, Double_t centralValue, Double_t scale, 
-		      RooAbsReal& blindValue, RooAbsCategory& blindState, Bool_t sin2betaMode=kFALSE);
+  RooUnblindPrecision(const char *name, const char *title,
+            const char *blindString, Double_t centralValue, Double_t scale, RooAbsReal& blindValue, Bool_t sin2betaMode=kFALSE);
+  RooUnblindPrecision(const char *name, const char *title,
+            const char *blindString, Double_t centralValue, Double_t scale,
+            RooAbsReal& blindValue, RooAbsCategory& blindState, Bool_t sin2betaMode=kFALSE);
   RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooUnblindPrecision(*this,newname); }  
+  virtual TObject* clone(const char* newname) const { return new RooUnblindPrecision(*this,newname); }
   virtual ~RooUnblindPrecision();
 
 protected:

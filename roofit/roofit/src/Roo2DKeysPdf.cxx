@@ -143,7 +143,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   _2pi       = 2.0*TMath::Pi() ;   //use pi from math.h
   _sqrt2pi   = sqrt(_2pi);
   _nEvents   = (Int_t)data.numEntries();
-  if(_nEvents == 0) 
+  if(_nEvents == 0)
   {
     cout << "ERROR:  Roo2DKeysPdf::loadDataSet The input data set is empty.  Unable to begin generating the PDF" << endl;
     return 1;
@@ -167,7 +167,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   Double_t y1 = 0.0;
   Double_t y_2 = 0.0;
 
-  //check that the data contain the variable we are interested in  
+  //check that the data contain the variable we are interested in
   Int_t bad = 0;
   const RooAbsReal & xx = x.arg();
   const RooAbsReal & yy = y.arg();
@@ -193,7 +193,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   const RooRealVar* X = ((RooRealVar*)(values->find(xx.GetName())) ) ;
   const RooRealVar* Y = ((RooRealVar*)(values->find(yy.GetName())) ) ;
 
-  for (Int_t j=0;j<_nEvents;++j) 
+  for (Int_t j=0;j<_nEvents;++j)
   {
     data.get(j) ;
 
@@ -207,14 +207,14 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   //==========================================//
   //calculate the mean and sigma for the data //
   //==========================================//
-  if(_nEvents == 0) 
+  if(_nEvents == 0)
   {
     cout << "Roo2DKeysPdf::Roo2DKeysPdf Empty data set was used; can't generate a PDF"<<endl;
   }
 
   _xMean  = x1/x0;
   _xSigma = sqrt(x_2/_nEvents-_xMean*_xMean);
-  
+
   _yMean  = y1/y0;
   _ySigma = sqrt(y_2/_nEvents-_yMean*_yMean);
 
@@ -231,7 +231,7 @@ void Roo2DKeysPdf::setOptions(TString options)
 {
   if(_verbosedebug) { cout << "Roo2DKeysPdf::setOptions" << endl; }
 
-  options.ToLower(); 
+  options.ToLower();
   if( options.Contains("a") )   _BandWidthType    = 0;
   else                          _BandWidthType    = 1;
   if( options.Contains("n") )   _BandWidthType    = 1;
@@ -289,13 +289,13 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   Double_t sigProd      = _ySigma*_xSigma;
   if(sigProd != 0.0)  h = _n16*sqrt( sigSum/sigProd );
   if(sqrtSum == 0)
-  { 
+  {
     cout << "Roo2DKeysPdf::calculateBandWidth The sqr(variance sum) == 0.0. " << " Your dataset represents a delta function."<<endl;
     return 1;
   }
 
-  Double_t hXSigma = h * _xSigma; 
-  Double_t hYSigma = h * _ySigma; 
+  Double_t hXSigma = h * _xSigma;
+  Double_t hYSigma = h * _ySigma;
   Double_t xhmin   = hXSigma * sqrt(2.)/10;  //smallest anticipated bandwidth
   Double_t yhmin   = hYSigma * sqrt(2.)/10;
 
@@ -308,7 +308,7 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
     cout << "                                 h_j = n^{-1/6}*sigma_j for the j^th dimension and n events * "<<_widthScaleFactor<<endl;
     Double_t hxGaussian = _n16 * _xSigma * _widthScaleFactor;
     Double_t hyGaussian = _n16 * _ySigma * _widthScaleFactor;
-    for(Int_t j=0;j<_nEvents;++j) 
+    for(Int_t j=0;j<_nEvents;++j)
     {
       _hx[j] = hxGaussian;
       _hy[j] = hyGaussian;
@@ -322,7 +322,7 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
     cout << "                                 scaled by a factor of "<<_widthScaleFactor<<endl;
     Double_t xnorm   = h * TMath::Power(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
     Double_t ynorm   = h * TMath::Power(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
-    for(Int_t j=0;j<_nEvents;++j) 
+    for(Int_t j=0;j<_nEvents;++j)
     {
       Double_t f_ti =  TMath::Power( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
       _hx[j] = xnorm * f_ti;
@@ -340,7 +340,7 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 /// Evaluates the kernel estimation for x,y, interpolating between the points if necessary
 ///
 /// Uses the caching intrinsic in RFC to bypass the grid and remove
-/// the grid and extrapolation approximation in the kernel estimation method 
+/// the grid and extrapolation approximation in the kernel estimation method
 /// implementation.
 
 Double_t Roo2DKeysPdf::evaluate() const
@@ -368,7 +368,7 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY) const
   Double_t rx2, ry2, zx, zy;
   if( _MirrorAtBoundary )
   {
-    for (Int_t j = 0; j < _nEvents; ++j) 
+    for (Int_t j = 0; j < _nEvents; ++j)
     {
       rx2 = 0.0; ry2 = 0.0; zx = 0.0; zy = 0.0;
       if(_hx[j] != 0.0) rx2 = (thisX - _x[j])/_hx[j];
@@ -387,7 +387,7 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY) const
   }
   else
   {
-    for (Int_t j = 0; j < _nEvents; ++j) 
+    for (Int_t j = 0; j < _nEvents; ++j)
     {
       rx2 = 0.0; ry2 = 0.0; zx = 0.0; zy = 0.0;
       if(_hx[j] != 0.0) rx2 = (thisX - _x[j])/_hx[j];
@@ -453,10 +453,10 @@ Double_t Roo2DKeysPdf::g(Double_t varMean1, Double_t * _var1, Double_t sigma1, D
   Double_t d  = 4.0*c1*c2  /(_sqrt2pi*_nEvents);
   Double_t z  = 0.0;
 
-  for (Int_t i = 0; i < _nEvents; ++i) 
+  for (Int_t i = 0; i < _nEvents; ++i)
   {
-    Double_t r1 =  _var1[i] - varMean1; 
-    Double_t r2 =  _var2[i] - varMean2; 
+    Double_t r1 =  _var1[i] - varMean1;
+    Double_t r2 =  _var2[i] - varMean2;
     z          += exp( c1 * r1*r1 ) * exp( c2 * r2*r2 );
   }
   z = z*d;
@@ -481,7 +481,7 @@ Double_t Roo2DKeysPdf::getMean(const char * axis) const
 {
   if(!strcmp(axis,x.GetName()) || !strcmp(axis,"x") || !strcmp(axis,"X"))      return _xMean;
   else if(!strcmp(axis,y.GetName()) || !strcmp(axis,"y") || !strcmp(axis,"Y")) return _yMean;
-  else 
+  else
   {
     cout << "Roo2DKeysPdf::getMean unknown axis "<<axis<<endl;
   }
@@ -495,7 +495,7 @@ Double_t Roo2DKeysPdf::getSigma(const char * axis) const
 {
   if(!strcmp(axis,x.GetName()) || !strcmp(axis,"x") || !strcmp(axis,"X"))      return _xSigma;
   else if(!strcmp(axis,y.GetName()) || !strcmp(axis,"y") || !strcmp(axis,"Y")) return _ySigma;
-  else 
+  else
   {
     cout << "Roo2DKeysPdf::getSigma unknown axis "<<axis<<endl;
   }
@@ -528,7 +528,7 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) con
   TFile * file = 0;
   cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" <<endl;
   //make sure that any existing file is not over written
-  file = new TFile(outputFile, "UPDATE"); 
+  file = new TFile(outputFile, "UPDATE");
   if (!file)
   {
     cout << "Roo2DKeysPdf::writeHistToFile unable to open file "<< outputFile <<endl;
@@ -543,7 +543,7 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) con
   RooRealVar * yArg = ((RooRealVar*)(values.find(yy.GetName())) ) ;
 
   TH2F * hist = (TH2F*)xArg->createHistogram("hist", *yArg);
-  hist = (TH2F*)this->fillHistogram(hist, RooArgList(*xArg, *yArg) ); 
+  hist = (TH2F*)this->fillHistogram(hist, RooArgList(*xArg, *yArg) );
   hist->SetName(histName);
 
   file->Write();
@@ -563,7 +563,7 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   TFile * file = 0;
 
   //make sure that any existing file is not over written
-  file = new TFile(outputFile, "UPDATE"); 
+  file = new TFile(outputFile, "UPDATE");
   if (!file)
   {
     cout << "Roo2DKeysPdf::writeNTupleToFile unable to open file "<< outputFile <<endl;
@@ -623,5 +623,3 @@ void Roo2DKeysPdf::PrintInfo(ostream & out) const
 
   out << "END of info for Roo2DKeys pdf instance"<< endl;
 }
-
-
