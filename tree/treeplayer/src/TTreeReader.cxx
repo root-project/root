@@ -195,14 +195,9 @@ using namespace ROOT::Internal;
 ////////////////////////////////////////////////////////////////////////////////
 /// Access data from tree.
 
-TTreeReader::TTreeReader(TTree* tree):
+TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
    fTree(tree),
-   fDirectory(0),
-   fEntryStatus(kEntryNotLoaded),
-   fMostRecentTreeNumber(-1),
-   fDirector(0),
-   fLastEntry(-1),
-   fProxiesSet(kFALSE)
+   fEntryList(entryList)
 {
    if (!fTree) {
       Error("TTreeReader", "TTree is NULL!");
@@ -216,14 +211,9 @@ TTreeReader::TTreeReader(TTree* tree):
 /// dir, or the current directory if dir is NULL. If keyname cannot be
 /// found, or if it is not a TTree, IsZombie() will return true.
 
-TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
-   fTree(0),
+TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/):
    fDirectory(dir),
-   fEntryStatus(kEntryNotLoaded),
-   fMostRecentTreeNumber(-1),
-   fDirector(0),
-   fLastEntry(-1),
-   fProxiesSet(kFALSE)
+   fEntryList(entryList)
 {
    if (!fDirectory) fDirectory = gDirectory;
    fDirectory->GetObject(keyname, fTree);

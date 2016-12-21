@@ -137,15 +137,7 @@ public:
       kEntryLast, ///< last entry was reached
    };
 
-   TTreeReader():
-      fTree(0),
-      fDirectory(0),
-      fEntryStatus(kEntryNoTree),
-      fMostRecentTreeNumber(-1),
-      fDirector(0),
-      fLastEntry(-1),
-      fProxiesSet(false)
-   {}
+   TTreeReader() = default;
 
    TTreeReader(TTree* tree);
    TTreeReader(const char* keyname, TDirectory* dir = NULL );
@@ -194,19 +186,20 @@ private:
       kBitIsChain = BIT(14) ///< our tree is a chain
    };
 
-   TTree* fTree; ///< tree that's read
-   TDirectory* fDirectory; ///< directory (or current file for chains)
-   EEntryStatus fEntryStatus; ///< status of most recent read request
-   Int_t fMostRecentTreeNumber; ///< TTree::GetTreeNumber() of the most recent tree
-   ROOT::Internal::TBranchProxyDirector* fDirector; ///< proxying director, owned
+   TTree* fTree = nullptr; ///< tree that's read
+   TDirectory* fDirectory = nullptr; ///< directory (or current file for chains)
+   TEntryList* fEntryList = nullptr; ///< entry list to be used
+   EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
+   Int_t fMostRecentTreeNumber = -1; ///< TTree::GetTreeNumber() of the most recent tree
+   ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    THashTable   fProxies; ///< attached ROOT::TNamedBranchProxies; owned
 
    /// The last entry to be processed. When set (i.e. >= 0), it provides a way
    /// to stop looping over the TTree when we reach a certain entry: Next()
    /// returns kEntryLast when GetCurrentEntry() reaches fLastEntry
-   Long64_t fLastEntry;
-   Bool_t fProxiesSet; ///< True if the proxies have been set, false otherwise
+   Long64_t fLastEntry = -1;
+   Bool_t fProxiesSet = kFALSE; ///< True if the proxies have been set, false otherwise
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
