@@ -7,7 +7,7 @@
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
  *   JS, Jan Stark,        Paris,            stark@slac.stanford.edu         *
  *   WV, Wouter Verkerke,  UC Santa Barbara, verkerke@slac.stanford.edu      *
- *                                                                           *                  
+ *                                                                           *
  * Copyright (c) 2000-2005, Regents of the University of California,         *
  *                          IN2P3. All rights reserved.                      *
  *                                                                           *
@@ -24,18 +24,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooNonCPEigenDecay.cxx
-\class RooNonCPEigenDecay
-\ingroup Roofit
+/** \class RooNonCPEigenDecay
+    \ingroup Roofit
 
-Time-dependent RooAbsAnaConvPdf for CP violating decays 
+Time-dependent RooAbsAnaConvPdf for CP violating decays
 to Non-CP eigenstates (eg, \f$ B_0 \rightarrow \rho^\pm \pi^\mp\f$).
-For a description of the physics model see the 
+For a description of the physics model see the
 BaBar Physics Book, section 6.5.2.3 .
 The set of CP parameters used in this class is equivalent to
 the one used in the Physics Book, but it is not exactly the
-same. Starting from the set in the BaBar Book, in order to 
+same. Starting from the set in the BaBar Book, in order to
 get the parameters used here you have to change the sign of both
 \f$a_c^+\f$ and \f$a_c^-\f$, and then substitute:
 \f[
@@ -57,31 +55,31 @@ where Q denotes the charge of the \f$\rho\f$ meson.
 
 using namespace std;
 
-ClassImp(RooNonCPEigenDecay);
+ClassImp(RooNonCPEigenDecay)
 
 #define Debug_RooNonCPEigenDecay 1
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title, 
-					RooRealVar&     t, 
-					RooAbsCategory& tag,
-					RooAbsReal&     tau, 
-					RooAbsReal&     dm,
-					RooAbsReal&     avgW, 
-					RooAbsReal&     delW, 
-					RooAbsCategory& rhoQ, 
-					RooAbsReal&     correctQ,
-					RooAbsReal&     wQ,
-					RooAbsReal&     acp,
-					RooAbsReal&     C,
-					RooAbsReal&     delC,
-					RooAbsReal&     S,
-					RooAbsReal&     delS,
-					const RooResolutionModel& model, 
-					DecayType       type )
-  : RooAbsAnaConvPdf( name, title, model, t ), 
+RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
+               RooRealVar&     t,
+               RooAbsCategory& tag,
+               RooAbsReal&     tau,
+               RooAbsReal&     dm,
+               RooAbsReal&     avgW,
+               RooAbsReal&     delW,
+               RooAbsCategory& rhoQ,
+               RooAbsReal&     correctQ,
+               RooAbsReal&     wQ,
+               RooAbsReal&     acp,
+               RooAbsReal&     C,
+               RooAbsReal&     delC,
+               RooAbsReal&     S,
+               RooAbsReal&     delS,
+               const RooResolutionModel& model,
+               DecayType       type )
+  : RooAbsAnaConvPdf( name, title, model, t ),
   _acp      ( "acp",      "acp",                this, acp      ),
   _avgC        ( "C",        "C",                  this, C        ),
   _delC     ( "delC",     "delC",               this, delC     ),
@@ -120,26 +118,25 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title, 
-					RooRealVar&     t, 
-					RooAbsCategory& tag,
-					RooAbsReal&     tau, 
-					RooAbsReal&     dm,
-					RooAbsReal&     avgW, 
-					RooAbsReal&     delW, 
-					RooAbsCategory& rhoQ, 
-					RooAbsReal&     correctQ,
-					RooAbsReal&     acp,
-					RooAbsReal&     C,
-					RooAbsReal&     delC,
-					RooAbsReal&     S,
-					RooAbsReal&     delS,
-					const RooResolutionModel& model, 
-					DecayType       type )
-  : RooAbsAnaConvPdf( name, title, model, t ), 
+RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
+               RooRealVar&     t,
+               RooAbsCategory& tag,
+               RooAbsReal&     tau,
+               RooAbsReal&     dm,
+               RooAbsReal&     avgW,
+               RooAbsReal&     delW,
+               RooAbsCategory& rhoQ,
+               RooAbsReal&     correctQ,
+               RooAbsReal&     acp,
+               RooAbsReal&     C,
+               RooAbsReal&     delC,
+               RooAbsReal&     S,
+               RooAbsReal&     delS,
+               const RooResolutionModel& model,
+               DecayType       type )
+  : RooAbsAnaConvPdf( name, title, model, t ),
   _acp      ( "acp",      "acp",                this, acp      ),
   _avgC        ( "C",        "C",                  this, C        ),
   _delC     ( "delC",     "delC",               this, delC     ),
@@ -179,12 +176,11 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const char* name ) 
-  : RooAbsAnaConvPdf( other, name ), 
+RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const char* name )
+  : RooAbsAnaConvPdf( other, name ),
   _acp      ( "acp",      this, other._acp      ),
   _avgC        ( "C",        this, other._avgC        ),
   _delC     ( "delC",     this, other._delC     ),
@@ -208,7 +204,6 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const c
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -216,15 +211,14 @@ RooNonCPEigenDecay::~RooNonCPEigenDecay( void )
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// B0    : _tag  == -1 
-/// B0bar : _tag  == +1 
-/// rho+  : _rhoQ == +1
-/// rho-  : _rhoQ == -1
-/// the charge corrrection factor "_correctQ" serves to implement mis-charges
+///  - B0    : _tag  == -1
+///  - B0bar : _tag  == +1
+///  - rho+  : _rhoQ == +1
+///  - rho-  : _rhoQ == -1
+///  - the charge correction factor "_correctQ" serves to implement mis-charges
 
-Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const 
+Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 {
   Int_t rhoQc = _rhoQ * int(_correctQ);
   assert( rhoQc == 1 || rhoQc == -1 );
@@ -235,15 +229,15 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
   Double_t a_cos_m = _avgC - _delC;
 
   if (basisIndex == _basisExp) {
-    if (rhoQc == -1 || rhoQc == +1) 
+    if (rhoQc == -1 || rhoQc == +1)
       return (1 + rhoQc*_acp*(1 - 2*_wQ))*(1 + 0.5*_tag*(2*_delW));
     else
       return 1;
   }
 
   if (basisIndex == _basisSin) {
-    
-    if (rhoQc == -1) 
+
+    if (rhoQc == -1)
 
       return - ((1 - _acp)*a_sin_m*(1 - _wQ) + (1 + _acp)*a_sin_p*_wQ)*(1 - 2*_avgW)*_tag;
 
@@ -251,13 +245,13 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 
       return - ((1 + _acp)*a_sin_p*(1 - _wQ) + (1 - _acp)*a_sin_m*_wQ)*(1 - 2*_avgW)*_tag;
 
-    else 
+    else
        return - _tag*((a_sin_p + a_sin_m)/2)*(1 - 2*_avgW);
   }
 
   if (basisIndex == _basisCos) {
-    
-    if ( rhoQc == -1) 
+
+    if ( rhoQc == -1)
 
       return + ((1 - _acp)*a_cos_m*(1 - _wQ) + (1 + _acp)*a_cos_p*_wQ)*(1 - 2*_avgW)*_tag;
 
@@ -265,7 +259,7 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 
       return + ((1 + _acp)*a_cos_p*(1 - _wQ) + (1 - _acp)*a_cos_m*_wQ)*(1 - 2*_avgW)*_tag;
 
-    else 
+    else
       return _tag*((a_cos_p + a_cos_m)/2)*(1 - 2*_avgW);
   }
 
@@ -276,8 +270,8 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& allVars, 
-						     RooArgSet& analVars, const char* rangeName ) const 
+Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& allVars,
+                       RooArgSet& analVars, const char* rangeName ) const
 {
   if (rangeName) return 0 ;
 
@@ -288,12 +282,11 @@ Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& 
   return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// correct for the right/wrong charge...
 
-Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex, 
-						     Int_t code, const char* /*rangeName*/ ) const 
+Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
+                       Int_t code, const char* /*rangeName*/ ) const
 {
   Int_t rhoQc = _rhoQ*int(_correctQ);
 
@@ -319,11 +312,11 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 
     if (basisIndex == _basisSin)
 
-      return - ( (1 - _acp)*a_sin_m + (1 + _acp)*a_sin_p )*(1 - 2*_avgW)*_tag; 
+      return - ( (1 - _acp)*a_sin_m + (1 + _acp)*a_sin_p )*(1 - 2*_avgW)*_tag;
 
     if (basisIndex == _basisCos)
 
-      return + ( (1 - _acp)*a_cos_m + (1 + _acp)*a_cos_p )*(1 - 2*_avgW)*_tag; 
+      return + ( (1 - _acp)*a_cos_m + (1 + _acp)*a_cos_p )*(1 - 2*_avgW)*_tag;
 
     assert( kFALSE );
 
@@ -336,25 +329,23 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
   default:
     assert( kFALSE );
   }
-    
+
   return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars, 
-					RooArgSet&       generateVars, Bool_t staticInitOK ) const
+Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars,
+               RooArgSet&       generateVars, Bool_t staticInitOK ) const
 {
   if (staticInitOK) {
-    if (matchArgs( directVars, generateVars, _t, _tag, _rhoQ )) return 4;  
-    if (matchArgs( directVars, generateVars, _t, _rhoQ       )) return 3;  
-    if (matchArgs( directVars, generateVars, _t, _tag        )) return 2;  
+    if (matchArgs( directVars, generateVars, _t, _tag, _rhoQ )) return 4;
+    if (matchArgs( directVars, generateVars, _t, _rhoQ       )) return 3;
+    if (matchArgs( directVars, generateVars, _t, _tag        )) return 2;
   }
-  if (matchArgs( directVars, generateVars, _t              )) return 1;  
+  if (matchArgs( directVars, generateVars, _t              )) return 1;
   return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -362,40 +353,38 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 {
   if (code == 2 || code == 4) {
     // Calculate the fraction of mixed events to generate
-    Double_t sumInt1 = RooRealIntegral( "sumInt1", "sum integral1", *this, 
-					RooArgSet( _t.arg(), _tag.arg(), _rhoQ.arg() )
-				      ).getVal();
+    Double_t sumInt1 = RooRealIntegral( "sumInt1", "sum integral1", *this,
+               RooArgSet( _t.arg(), _tag.arg(), _rhoQ.arg() )
+                  ).getVal();
     _tag = -1;
     Double_t b0Int1 = RooRealIntegral( "mixInt1", "mix integral1", *this,
-				       RooArgSet( _t.arg(), _rhoQ.arg() )
-				     ).getVal();
+                   RooArgSet( _t.arg(), _rhoQ.arg() )
+                 ).getVal();
     _genB0Frac = b0Int1/sumInt1;
 
-    if (Debug_RooNonCPEigenDecay == 1) 
-      cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : " 
-	   << _genB0Frac 
-	   << ", tag dilution: " << (1 - 2*_avgW)
-	   << endl;
-  }  
+    if (Debug_RooNonCPEigenDecay == 1)
+      cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : "
+      << _genB0Frac
+      << ", tag dilution: " << (1 - 2*_avgW)
+      << endl;
+  }
 
   if (code == 3 || code == 4) {
     // Calculate the fraction of positive rho's to generate
-    Double_t sumInt2 = RooRealIntegral( "sumInt2", "sum integral2", *this, 
-					RooArgSet( _t.arg(), _tag.arg(), _rhoQ.arg() )
-				      ).getVal();
+    Double_t sumInt2 = RooRealIntegral( "sumInt2", "sum integral2", *this,
+               RooArgSet( _t.arg(), _tag.arg(), _rhoQ.arg() )
+                  ).getVal();
     _rhoQ = 1;
     Double_t b0Int2 = RooRealIntegral( "mixInt2", "mix integral2", *this,
-				       RooArgSet( _t.arg(), _tag.arg() )
-				     ).getVal();
+                   RooArgSet( _t.arg(), _tag.arg() )
+                 ).getVal();
     _genRhoPlusFrac = b0Int2/sumInt2;
 
-    if (Debug_RooNonCPEigenDecay == 1) 
-      cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: " 
-	   << _genRhoPlusFrac << endl;
-  }  
+    if (Debug_RooNonCPEigenDecay == 1)
+      cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: "
+      << _genRhoPlusFrac << endl;
+  }
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -417,11 +406,11 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     Double_t a_sin_m = _avgS - _delS;
     Double_t a_cos_p = _avgC + _delC;
     Double_t a_cos_m = _avgC - _delC;
-  
-    // maximum probability density 
+
+    // maximum probability density
     double a1 = 1 + sqrt(TMath::Power(a_cos_m, 2) + TMath::Power(a_sin_m, 2));
     double a2 = 1 + sqrt(TMath::Power(a_cos_p, 2) + TMath::Power(a_sin_p, 2));
- 
+
     Double_t maxAcceptProb = (1.10 + TMath::Abs(_acp)) * (a1 > a2 ? a1 : a2);
     // The 1.10 in the above line is a security feature to prevent crashes close to the limit at 1.00
 
@@ -447,7 +436,7 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     Double_t expC = coefficient( _basisExp );
     Double_t sinC = coefficient( _basisSin );
     Double_t cosC = coefficient( _basisCos );
-    
+
     // probability density
     Double_t acceptProb  = expC + sinC*sin(_dm*tval) + cosC*cos(_dm*tval);
 
@@ -456,11 +445,10 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
 
     // hit or miss...
     Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE;
-    
+
     if (accept && tval<_t.max() && tval>_t.min()) {
       _t = tval;
       break;
     }
-  }  
+  }
 }
-

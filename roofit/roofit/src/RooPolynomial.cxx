@@ -14,15 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooPolynomial.cxx
-\class RooPolynomial
-\ingroup Roofit
+/** \class RooPolynomial
+    \ingroup Roofit
 
 RooPolynomial implements a polynomial p.d.f of the form
 \f[ f(x) = \sum_{i} a_{i} * x^i \f]
 By default coefficient a_0 is chosen to be 1, as polynomial
-probability density functions have one degree of freedome
+probability density functions have one degree of freedom
 less than polynomial functions due to the normalization condition
 **/
 
@@ -39,7 +37,6 @@ less than polynomial functions due to the normalization condition
 using namespace std;
 
 ClassImp(RooPolynomial)
-;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
@@ -48,21 +45,20 @@ RooPolynomial::RooPolynomial()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooPolynomial::RooPolynomial(const char* name, const char* title, 
-			     RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
+RooPolynomial::RooPolynomial(const char* name, const char* title,
+              RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefList","List of coefficients",this),
-  _lowestOrder(lowestOrder) 
+  _lowestOrder(lowestOrder)
 {
   // Check lowest order
   if (_lowestOrder<0) {
-    coutE(InputArguments) << "RooPolynomial::ctor(" << GetName() 
-			  << ") WARNING: lowestOrder must be >=0, setting value to 0" << endl ;
+    coutE(InputArguments) << "RooPolynomial::ctor(" << GetName()
+           << ") WARNING: lowestOrder must be >=0, setting value to 0" << endl ;
     _lowestOrder=0 ;
   }
 
@@ -70,15 +66,13 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
   RooAbsArg* coef ;
   while((coef = (RooAbsArg*)coefIter.next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      coutE(InputArguments) << "RooPolynomial::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
-			    << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooPolynomial::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
+             << " is not of type RooAbsReal" << endl ;
       R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
   }
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -88,20 +82,17 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
   _x("x", "Dependent", this, x),
   _coefList("coefList","List of coefficients",this),
   _lowestOrder(1)
-{ }                                                                                                                                 
+{ }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooPolynomial::RooPolynomial(const RooPolynomial& other, const char* name) :
-  RooAbsPdf(other, name), 
-  _x("x", this, other._x), 
+  RooAbsPdf(other, name),
+  _x("x", this, other._x),
   _coefList("coefList",this,other._coefList),
-  _lowestOrder(other._lowestOrder) 
+  _lowestOrder(other._lowestOrder)
 { }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -109,12 +100,9 @@ RooPolynomial::RooPolynomial(const RooPolynomial& other, const char* name) :
 RooPolynomial::~RooPolynomial()
 { }
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooPolynomial::evaluate() const 
+Double_t RooPolynomial::evaluate() const
 {
   // Calculate and return value of polynomial
 
@@ -135,21 +123,17 @@ Double_t RooPolynomial::evaluate() const
   return retVal * std::pow(x, lowestOrder) + (lowestOrder ? 1.0 : 0.0);
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
