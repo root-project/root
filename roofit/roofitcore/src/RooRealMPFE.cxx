@@ -708,41 +708,76 @@ Double_t RooRealMPFE::evaluate() const
     }
 
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 5) {
+      // total
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
-      timing_outfile << "{\"RRMPFE_evaluate_client_wall_s\": \"" << timing_s;
+      timing_outfile << "{\"time s\": \"" << timing_s
+                     << "\", \"cpu/wall\": \"wall"
+                     << "\", \"segment\": \"all"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
+      // before retrieve
       timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_before_retrieve - timing_begin).count() / 1.e9;
 
-      timing_outfile << "\", \"RRMPFE_evaluate_client_before_retrieve_wall_s\": \"" << timing_s;
+      timing_outfile << "{\"time s\": \"" << timing_s
+                     << "\", \"cpu/wall\": \"wall"
+                     << "\", \"segment\": \"before_retrieve"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
+      // retrieve
       timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_after_retrieve - timing_before_retrieve).count() / 1.e9;
 
-      timing_outfile << "\", \"RRMPFE_evaluate_client_retrieve_wall_s\": \"" << timing_s;
+      timing_outfile << "{\"time s\": \"" << timing_s
+                     << "\", \"cpu/wall\": \"wall"
+                     << "\", \"segment\": \"retrieve"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
-      timing_outfile << "\", \"pid\": \"" << getpid()
-//              << "\", \"tid\": \"" << pthread_self()
-              << "\"}," << "\n";
+      // after retrieve
+      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_after_retrieve).count() / 1.e9;
+
+      timing_outfile << "{\"time s\": \"" << timing_s
+                     << "\", \"cpu/wall\": \"wall"
+                     << "\", \"segment\": \"after_retrieve"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
       timing_outfile.close();
     }
 
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 6) {
+      // total
       double c_timing_s = (c_timing_end.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
 
-      timing_outfile << "{\"RRMPFE_evaluate_client_cpu_s\": \"" << c_timing_s;
+      timing_outfile << "{\"time s\": \"" << c_timing_s
+                     << "\", \"cpu/wall\": \"cpu"
+                     << "\", \"segment\": \"all"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
       c_timing_s = (c_timing_before_retrieve.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
 
-      timing_outfile << "\", \"RRMPFE_evaluate_client_before_retrieve_cpu_s\": \"" << c_timing_s;
+      timing_outfile << "{\"time s\": \"" << c_timing_s
+                     << "\", \"cpu/wall\": \"cpu"
+                     << "\", \"segment\": \"before_retrieve"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
       c_timing_s = (c_timing_after_retrieve.tv_nsec - c_timing_before_retrieve.tv_nsec) / 1.e9;
 
-      timing_outfile << "\", \"RRMPFE_evaluate_client_retrieve_cpu_s\": \"" << c_timing_s;
+      timing_outfile << "{\"time s\": \"" << c_timing_s
+                     << "\", \"cpu/wall\": \"cpu"
+                     << "\", \"segment\": \"retrieve"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
-      timing_outfile << "\", \"pid\": \"" << getpid()
-//              << "\", \"tid\": \"" << pthread_self()
-              << "\"}," << "\n";
+      timing_outfile << "{\"time s\": \"" << c_timing_s
+                     << "\", \"cpu/wall\": \"cpu"
+                     << "\", \"segment\": \"after_retrieve"
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
 
       timing_outfile.close();
     }
