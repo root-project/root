@@ -10,6 +10,6 @@ cd /D %THIS%\..
 set ROOTSYS=%CD%
 cd /D %OLDPATH%
 set PATH=%ROOTSYS%\bin;%PATH%
-echo %PYTHONPATH%|find /i "%ROOTSYS%\bin">nul || set PYTHONPATH=%ROOTSYS%\bin;%PYTHONPATH%
+set PYTHONPATH=%ROOTSYS%\bin;%PYTHONPATH%
 set OLDPATH=
 set THIS=
