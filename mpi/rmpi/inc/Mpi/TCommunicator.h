@@ -13,6 +13,7 @@
 #endif
 
 #include<memory>
+
 #include<mpi.h>
 
 namespace ROOT {
@@ -37,7 +38,9 @@ namespace ROOT {
       };
 
       class TCommunicator: public TObject {
+      private:
          TComm fComm;
+         template<class T> MPI::Datatype GetDataType() const;
       public:
          TCommunicator(const TCommunicator &comm);
          TCommunicator(const MPI::Comm &comm = MPI::COMM_WORLD);
@@ -52,37 +55,60 @@ namespace ROOT {
             return fComm.Get_size();
          }
 
-         template<class ClassType> void Send(ClassType &obj, Int_t dest, Int_t tag) const;
-         template<class ClassType>  void Recv(ClassType &obj, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
+         template<class Type> void Send(Type &obj, Int_t dest, Int_t tag) const;
+         template<class Type>  void Recv(Type &obj, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
 
          ClassDef(TCommunicator, 1)
       };
 
-      template<class ClassType> void TCommunicator::Send(ClassType &obj, Int_t dest, Int_t tag) const
+      template<class T> MPI::Datatype TCommunicator::GetDataType() const
       {
+	if(typeid(T)==typeid(int)||typeid(T)==typeid(Int_t)) return MPI::INT;
+	if(typeid(T)==typeid(float)||typeid(T)==typeid(Float_t)) return MPI::FLOAT;
+	if(typeid(T)==typeid(double)||typeid(T)==typeid(Double_t)) return MPI::DOUBLE;
+	if(typeid(T)==typeid(bool)||typeid(T)==typeid(Bool_t)) return MPI::BYTE;
+	MPI::Datatype None;
+	
+	return None;
+	//TODO: error control here if type is not supported
+      }
+
+      
+      
+      template<class Type> void TCommunicator::Send(Type &var, Int_t dest, Int_t tag) const
+      {
+	if(std::is_class<Type>::value)
+	{
          TMpiMessage msg;
-         msg.WriteObject(obj);
+         msg.WriteObject(var);
          const Char_t *buffer = msg.Buffer();
          const UInt_t size = msg.BufferSize();
          fComm.Send(&size, 1, MPI::INT, dest, tag);
          fComm.Send(buffer, size, MPI::CHAR, dest, tag);
+	}else{
+	 fComm.Send(&var, 1, GetDataType<Type>(), dest, tag);
+          
+	}
       }
-      template<class ClassType>  void TCommunicator::Recv(ClassType &obj, Int_t source, Int_t tag) const
+      template<class Type>  void TCommunicator::Recv(Type &var, Int_t source, Int_t tag) const
       {
+	if(std::is_class<Type>::value)
+	{
          UInt_t size = 0;
-         MPI::COMM_WORLD.Recv(&size, 1, MPI::INT, source, tag);
+         fComm.Recv(&size, 1, MPI::INT, source, tag);
 
          Char_t *buffer = new Char_t[size];
-         MPI::COMM_WORLD.Recv(buffer, size, MPI::CHAR, source, tag);
+         fComm.Recv(buffer, size, MPI::CHAR, source, tag);
 
 
          TMpiMessage msg(buffer, size);
-         TClass *cl = gROOT->GetClass(typeid(obj));
-         ClassType *obj_tmp = (ClassType *)msg.ReadObjectAny(cl);
-         memcpy(&obj, obj_tmp, sizeof(ClassType));
+         TClass *cl = gROOT->GetClass(typeid(var));
+         Type *obj_tmp = (Type *)msg.ReadObjectAny(cl);
+         memcpy(&var, obj_tmp, sizeof(Type));
+	}else{
+	 fComm.Recv(&var, 1, GetDataType<Type>(), source, tag); 
+	}
       }
-
-
    }
 
 }
