@@ -1,4 +1,4 @@
-// @(#)root/mpi / Author: Omar.Zapata@cern.ch 2016 http://oproject.org 
+// @(#)root/mpi / Author: Omar.Zapata@cern.ch 2016 http://oproject.org
 #ifndef ROOT_Mpi_TEnvironment
 #define ROOT_Mpi_TEnvironment
 

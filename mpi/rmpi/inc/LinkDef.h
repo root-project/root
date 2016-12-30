@@ -18,8 +18,9 @@
 #pragma link C++ nestedtypedef;
 
 //classes
-#pragma link C++ class ROOT::Mpi::TMpiMessage;
+#pragma link C++ class ROOT::Mpi::TMpiMessage+;
 #pragma link C++ class ROOT::Mpi::TEnvironment;
+#pragma link C++ class ROOT::Mpi::TCommunicator;
 
 /*
  * Global communicator
