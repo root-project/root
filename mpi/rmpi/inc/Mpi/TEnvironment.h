@@ -12,6 +12,12 @@
 namespace ROOT {
 
    namespace Mpi {
+      /**
+      \class TEnvironment
+         Class manipulate mpi environment, with this class you can to start/stop the communication system and 
+         to hanlde some information about the communication environment.
+         \ingroup Mpi
+       */
 
       class TEnvironment: public TObject {
       public:

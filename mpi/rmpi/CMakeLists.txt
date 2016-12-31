@@ -15,6 +15,7 @@ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual ${MPI_CXX_COMPILE_FLAG
 set(RMPI_HEADERS ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TEnvironment.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TMpiMessage.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TCommunicator.h
+		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi.h
 		 )
 
 ROOT_GENERATE_DICTIONARY(G__RMpi ${RMPI_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)

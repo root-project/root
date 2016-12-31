@@ -5,11 +5,12 @@ using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TCommunicator::TCommunicator(const TCommunicator& comm):TObject(comm)
 {
-  fComm=comm.fComm;
+  fComm = comm.fComm;
+  fMainProcess = comm.fMainProcess;
 }
 
 //______________________________________________________________________________
-TCommunicator::TCommunicator(const MPI::Comm& comm):fComm(comm){}
+TCommunicator::TCommunicator(const TComm &comm):fComm(comm),fMainProcess(0){}
 
 //______________________________________________________________________________
 TCommunicator::~TCommunicator(){}
