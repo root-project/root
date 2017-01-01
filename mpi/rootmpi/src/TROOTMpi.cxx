@@ -1,4 +1,4 @@
-#include<TRun.h>
+#include<TROOTMpi.h>
 #include<Math/Error.h>
 #include<stdlib.h>
 #include<iostream>
@@ -6,7 +6,7 @@
 
 using namespace ROOT::Mpi;
 //______________________________________________________________________________
-TRun::TRun(int argc, char **argv, TString mpirun)
+TROOTMpi::TROOTMpi(int argc, char **argv, TString mpirun)
 {
    sMpirun = mpirun;
    sMpirunParams = " ";
@@ -17,7 +17,7 @@ TRun::TRun(int argc, char **argv, TString mpirun)
 }
 
 //______________________________________________________________________________
-Int_t TRun::Launch()
+Int_t TROOTMpi::Launch()
 {
 
    if (iArgc == 1) {
@@ -45,7 +45,7 @@ Int_t TRun::Launch()
 }
 
 //______________________________________________________________________________
-Bool_t TRun::ProcessArgs(TString *error)
+Bool_t TROOTMpi::ProcessArgs(TString *error)
 {
    sCompilerParams.Clear();
    sMpirunParams.Clear();
@@ -81,7 +81,7 @@ Bool_t TRun::ProcessArgs(TString *error)
       }
       return Execute();
    } else {
-      TString sRootParams;
+      TString sRootParams = " -l -q ";//added -l -q by default
       for (int i = 1; i < iArgc - 1; i++) {
          TString arg = cArgv[i];
          arg.ReplaceAll(" ", "");
@@ -104,18 +104,18 @@ Bool_t TRun::ProcessArgs(TString *error)
 }
 
 //______________________________________________________________________________
-Bool_t TRun::Compile()
+Bool_t TROOTMpi::Compile()
 {
    return gSystem->Exec(TStringLong(sCompiler + " " + sCompilerParams).Data());
 }
 
 //______________________________________________________________________________
-Bool_t TRun::Execute()
+Bool_t TROOTMpi::Execute()
 {
    return gSystem->Exec(TStringLong(sMpirun + " " + sMpirunParams).Data());
 }
 
-void TRun::InitHelp()
+void TROOTMpi::InitHelp()
 {
    sHelpMsg = "Usage for Macro: rootmpi [mpirun options] [root/cling options] [macro file.C ]\n";
    sHelpMsg += "Usage for Binary Executable: rootmpi -R [mpirun options] [Binary Executable]\n";

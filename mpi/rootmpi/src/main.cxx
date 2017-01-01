@@ -1,8 +1,8 @@
-#include<TRun.h>
+#include<TROOTMpi.h>
 
 int main(int argc, char *argv[])
 {
-   ROOT::Mpi::TRun rootmpi(argc, argv);
+   ROOT::Mpi::TROOTMpi rootmpi(argc, argv);
    return rootmpi.Launch();
 }
 

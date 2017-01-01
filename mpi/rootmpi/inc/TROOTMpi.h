@@ -13,7 +13,7 @@
 #include <TString.h>
 namespace ROOT {
    namespace Mpi {
-      class TRun {
+      class TROOTMpi {
       private:
          Int_t iArgc;               //command line number of arguements
          Char_t **cArgv;            //command line arguments
@@ -30,7 +30,7 @@ namespace ROOT {
          Bool_t Compile();
          void InitHelp();
       public:
-         TRun(int argc, char **argv, TString mpirun = "mpirun");
+         TROOTMpi(int argc, char **argv, TString mpirun = "mpirun");
          Int_t Launch();
       };
    }//end namespace Mpi
