@@ -31,8 +31,16 @@ Bool_t TEnvironment::IsFinalized()
 }
 
 //______________________________________________________________________________
+Bool_t TEnvironment::IsInitialized()
+{
+  return (Bool_t)MPI::Is_initialized();
+}
+
+
+//______________________________________________________________________________
 void TEnvironment::Finalize()
 {
   //Finalize the mpi's environment
   MPI::Finalize();
 }
+

@@ -121,6 +121,16 @@ namespace ROOT {
          {
             return fMainProcess;
          }
+         
+         /**
+         Method to abort  processes
+              \param integer with error code
+              */
+         inline void Abort(Int_t err) const
+         {
+              fComm.Abort(err);
+         }
+         
 
          /**
          Method to send a message for p2p communication

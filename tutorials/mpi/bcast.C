@@ -7,6 +7,8 @@ void bcast()
   TEnvironment env;
   TCommunicator comm;
 
+  if(comm.GetSize()==1) return; //needed to run ROOT tutorials in tests
+
   //data to send/recv
   TMatrixD mymat(2,2);                     //ROOT object
   

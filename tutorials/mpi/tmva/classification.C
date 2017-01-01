@@ -14,10 +14,14 @@ void classification()
 
    TEnvironment env;
    TCommunicator comm;
+   
+   if(comm.GetSize()==1) return; //needed to run ROOT tutorials in tests
+
+   
    auto rank = comm.GetRank();
    if (comm.GetSize() != 4) {
       Error("classification", "Please run wih 4 processors.");
-      return;
+      comm.Abort(1);
    }
 
    auto outputFile = TFile::Open(Form("TMVA%d.root", rank), "RECREATE");

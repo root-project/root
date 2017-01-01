@@ -6,6 +6,8 @@ void p2p()
 {
   TEnvironment env;
   TCommunicator comm;
+  
+  if(comm.GetSize()==1) return; //needed to run ROOT tutorials in tests
 
   //data to send/recv
   std::map<std::string,std::string> mymap; //std oebjct

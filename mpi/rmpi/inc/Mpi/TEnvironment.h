@@ -41,8 +41,11 @@ namespace ROOT {
          Method to check if the communication system is finalized.
               */
          static Bool_t IsFinalized();
-//          static void Abort(Int_t);
-//          static Bool_t IsInitialized();
+         /**
+         Method to check if the communication system is initialized.
+              */
+         static Bool_t IsInitialized();
+	 
 //          static TString GetProcessorName();
 //          static Int_t GetThreadLevel();
 //          static Bool_t IsMainThread();
