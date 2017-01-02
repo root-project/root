@@ -202,22 +202,13 @@ namespace ROOT {
       template<class Type> void TCommunicator::Bcast(Type &var, Int_t root) const
       {
          if (std::is_class<Type>::value) {
-            Char_t *buffer = nullptr ;
-            UInt_t size = 0;
+            TMpiMessage msg;
             if (GetRank() == root) {
-               TMpiMessage msg;
                msg.WriteObject(var);
-               size = msg.BufferSize();
-               buffer = new Char_t[size];
-               memcpy(buffer, msg.Buffer(), size * sizeof(Char_t));
             }
-            fComm.Bcast(&size, 1, MPI::INT, root);
-            if (GetRank() != root) {
-               buffer = new Char_t[size];
-            }
-            fComm.Bcast(buffer, size, MPI::CHAR, root);
-            if (GetRank() != root) {
-               TMpiMessage msg(buffer, size);
+            Bcast(msg, root);
+            
+	    if (GetRank() != root) {
                auto cl = gROOT->GetClass(typeid(var));
                auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
                memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
