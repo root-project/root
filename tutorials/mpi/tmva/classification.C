@@ -1,7 +1,6 @@
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
-
 #include<Mpi.h>
 
 using namespace ROOT::Mpi;
@@ -63,18 +62,19 @@ void classification()
       dataloader.SetBackgroundWeightExpression("weight");
 
       dataloader.PrepareTrainingAndTestTree("", "",
-                                            "nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V");
+                                            "nTrain_Signal=4000:nTrain_Background=4000:SplitMode=Random:NormMode=NumEvents:!V");
 
    }
 
    comm.Bcast(dataloader, comm.GetMainProcess());
 
    if (rank == 0) {
-      factory.BookMethod(&dataloader, TMVA::Types::kMLP, "MLP", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator");
+      factory.BookMethod(&dataloader, TMVA::Types::kMLP, "MLP",
+			 "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator");
    }
    if (rank == 1) {
       factory.BookMethod(&dataloader, TMVA::Types::kBDT, "BDT",
-                         "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
+                         "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5");
    }
    if (rank == 2) {
       factory.BookMethod(&dataloader, TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm");
