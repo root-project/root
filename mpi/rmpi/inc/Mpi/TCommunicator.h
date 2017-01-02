@@ -175,27 +175,21 @@ namespace ROOT {
          if (std::is_class<Type>::value) {
             TMpiMessage msg;
             msg.WriteObject(var);
-            const Char_t *buffer = msg.Buffer();
-            const UInt_t size = msg.BufferSize();
-            fComm.Send(&size, 1, MPI::INT, dest, tag);
-            fComm.Send(buffer, size, MPI::CHAR, dest, tag);
+            Send(msg,dest,tag);
          } else {
             fComm.Send(&var, 1, GetDataType<Type>(), dest, tag);
          }
       }
 
+      
       //______________________________________________________________________________
       template<class Type>  void TCommunicator::Recv(Type &var, Int_t source, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
-            UInt_t size = 0;
-            fComm.Recv(&size, 1, MPI::INT, source, tag);
-
-            Char_t *buffer = new Char_t[size];
-            fComm.Recv(buffer, size, MPI::CHAR, source, tag);
-
-
-            TMpiMessage msg(buffer, size);
+	    TMpiMessage msg;
+	    
+	    Recv(msg,source,tag);
+	    
             auto cl = gROOT->GetClass(typeid(var));
             auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
             memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
@@ -235,6 +229,13 @@ namespace ROOT {
 
       }
 
+      ////////////////////////////////
+      //specialized template methods
+      //______________________________________________________________________________
+      template<> void TCommunicator::Send<TMpiMessage>(TMpiMessage &var, Int_t dest, Int_t tag) const;
+      //______________________________________________________________________________
+      template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const;
+      
    }
 
 }
