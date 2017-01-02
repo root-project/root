@@ -235,6 +235,8 @@ namespace ROOT {
       template<> void TCommunicator::Send<TMpiMessage>(TMpiMessage &var, Int_t dest, Int_t tag) const;
       //______________________________________________________________________________
       template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const;
+      //______________________________________________________________________________
+      template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
       
    }
 
