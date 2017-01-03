@@ -39,6 +39,8 @@ public:
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    virtual ~TLeafElement();
 
+   virtual DeserializeType GetDeserializeType() const { return kDestructive; }
+
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    TMethodCall     *GetMethodCall(const char *name);
    virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
