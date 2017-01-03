@@ -37,6 +37,9 @@ namespace TStreamerInfoActions {
    class TActionSequence;
 }
 
+// Will be used to reallocate the contents of a shared buffer.
+char *R__ReAllocShared(void *obj_void, char *current, size_t new_size, size_t old_size);
+
 class TBuffer : public TObject {
 
 protected:
@@ -99,6 +102,23 @@ public:
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
    void     Expand(Int_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
    void     AutoExpand(Int_t size_needed);  // expand buffer to newsize
+
+////////////////////////////////////////////////////////////////////////////////
+/// Share the underlying memory allocation with another buffer.
+//
+// This causes the passed TBuffer object to share our memory buffer.  This is
+// useful if two objects want to have their own view of the TBuffer state but
+// see identical data.
+//
+// Internally, not only do both buffers get the same memory location but a
+// resize done by the "slave" buffer updates the "owner" buffer (the opposite
+// is not true!).
+//
+// This is most useful if the "slave" does all the writings and the "owner"
+// only does reads.
+//
+   virtual void       SetSlaveBuffer(TBuffer &other) // Share the underlying memory allocation with another TBuffer object.
+   { other.SetReAllocFunc(R__ReAllocShared, this); }
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
