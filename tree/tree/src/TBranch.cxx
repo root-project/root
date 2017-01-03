@@ -1384,6 +1384,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
 
 Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
 {
+   // TODO: eventually support multiple leaves.
    if (R__unlikely(fNleaves != 1)) {return -1;}
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
    if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {return -1;}
@@ -1404,6 +1405,8 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
 
    basket->PrepareBasket(entry);
    TBuffer* buf = basket->GetBufferRef();
+   user_buf.SetSlaveBuffer(*buf);
+
    // Test for very old ROOT files.
    if (R__unlikely(!buf)) {return -1;}
    // Test for displacements, which aren't supported in fast mode.
@@ -1415,11 +1418,6 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
    Int_t N = fNextBasketEntry-first;
    if (!leaf->ReadBasketFast(*buf, N)) {return -1;}
 
-   size_t bytes_to_copy = buf->Length() - bufbegin;
-   user_buf.Expand(bytes_to_copy, false);
-   // TODO: Eliminate the need for this copy.  Allow shared buffers
-   // when creating GetBasketAndFirst above.
-   memcpy(user_buf.GetCurrent(), buf->GetCurrent(), bytes_to_copy);
    return N;
 }
 
