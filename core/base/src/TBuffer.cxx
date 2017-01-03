@@ -276,6 +276,35 @@ void  TBuffer::SetReAllocFunc(ReAllocStateFun_t reallocfunc, void *reallocData)
    fReAllocData = reallocData;
 }
 
+char *R__ReAllocShared(void *obj_void, char *current, size_t new_size, size_t old_size)
+{
+   TBuffer *owner_buffer = static_cast<TBuffer*>(obj_void);
+   owner_buffer->Expand(new_size, old_size);  // If old_size is non-zero, then we are copying over the old memory.
+   return owner_buffer->Buffer();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Share the underlying memory allocation with another buffer.
+//
+// This causes the passed TBuffer object to share our memory buffer.  This is
+// useful if two objects want to have their own view of the TBuffer state but
+// see identical data.
+//
+// Internally, not only do both buffers get the same memory location but a
+// resize done by the "slave" buffer updates the "owner" buffer (the opposite
+// is not true!).
+//
+// This is most useful if the "slave" does all the writings and the "owner"
+// only does reads.
+//
+/*
+Bool_t TBuffer::SetSlaveBuffer(TBuffer &other)
+{
+   this->fBuffer = other.SetReAllocFunc(R__ReAllocShared, this);
+   return true;
+}
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set buffer in read mode.
 
