@@ -41,6 +41,8 @@ public:
 
    virtual Bool_t   CanGenerateOffsetArray() { return false; }
    virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
+   virtual DeserializeType GetDeserializeType() const { return kDestructive; }
+
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    TMethodCall     *GetMethodCall(const char *name);
    virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
