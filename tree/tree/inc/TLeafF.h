@@ -38,7 +38,7 @@ public:
 
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
-   virtual DeserializeType GetDeserializeType() const { return fLeafCount ? kDestructive : kZeroCopy; }
+   virtual DeserializeType GetDeserializeType() const { return fLeafCount ? kDestructive : kInPlace; }
    const char     *GetTypeName() const {return "Float_t";}
    Double_t        GetValue(Int_t i=0) const;
    virtual void   *GetValuePointer() const {return fValue;}
@@ -49,9 +49,7 @@ public:
    virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
    virtual void    SetAddress(void *add=0);
 
-   // Deserialize N events from an input buffer.  Since floats are stored unchanged, there
-   // is nothing to do here but return true if we don't have variable-length arrays.
-   virtual bool    ReadBasketFast(TBuffer&, Long64_t) { return !fLeafCount; }
+   virtual bool    ReadBasketFast(TBuffer&, Long64_t);
 
    ClassDef(TLeafF,1);  //A TLeaf for a 32 bit floating point data type.
 };
