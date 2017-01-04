@@ -1227,6 +1227,7 @@ const char* TBranch::GetIconName() const
 Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
                                  TBuffer* user_buffer)
 {
+   Long64_t updatedNext = fNextBasketEntry;
    Long64_t entry = fReadEntry;
    if (R__likely(fFirstBasketEntry <= entry && entry < fNextBasketEntry)) {
       // We have found the basket containing this entry.
@@ -1252,6 +1253,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
          } else {
             fNextBasketEntry = fBasketEntry[fReadBasket+1];
          }
+         updatedNext = fNextBasketEntry;
          first = fFirstBasketEntry = fBasketEntry[fReadBasket];
       }
       // We have found the basket containing this entry.
@@ -1265,6 +1267,10 @@ Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
             fNextBasketEntry = -1;
             return -1;
          }
+         // Getting the next basket might reset the current one and
+         // cause a reset of the first / next basket entries back to -1.
+         fFirstBasketEntry = first;
+         fNextBasketEntry = updatedNext;
       }
       fCurrentBasket = basket;
    }
@@ -1280,7 +1286,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
 ///
 /// On success, the caller should be able to access the contents of buf as
 ///
-/// static_cast<T*>(buf)
+/// static_cast<T*>(buf.GetCurrent())
 ///
 /// where T is the type stored on this branch.  The array's length is the return
 /// value of this function.
@@ -1308,21 +1314,25 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
    Int_t result = GetBasketAndFirst(basket, first, &user_buf);
    if (R__unlikely(result <= 0)) {return -1;}
    // Only support reading from full clusters.
-   if (R__unlikely(entry != first)) {return -1;}
+   if (R__unlikely(entry != first)) {
+       //printf("Failed to read from full cluster; first entry is %ld; requested entry is %ld.\n", first, entry);
+       return -1;
+   }
 
    basket->PrepareBasket(entry);
    TBuffer* buf = basket->GetBufferRef();
 
    // Test for very old ROOT files.
-   if (R__unlikely(!buf)) {return -1;}
+   if (R__unlikely(!buf)) {printf("Failed to get a new buffer.\n"); return -1;}
    // Test for displacements, which aren't supported in fast mode.
-   if (R__unlikely(basket->GetDisplacement())) {return -1;}
+   if (R__unlikely(basket->GetDisplacement())) {printf("Basket has displacement.\n"); return -1;}
 
    Int_t bufbegin = basket->GetKeylen();
    buf->SetBufferOffset(bufbegin);
 
-   Int_t N = fNextBasketEntry-first;
-   if (!leaf->ReadBasketFast(*buf, N)) {return -1;}
+   Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
+   //printf("Requesting %d events; fNextBasketEntry=%d; first=%d.\n", N, fNextBasketEntry, first);
+   if (R__unlikely(!leaf->ReadBasketFast(*buf, N))) {printf("Leaf failed to read.\n"); return -1;}
    user_buf.SetBufferOffset(bufbegin);
 
    return N;
