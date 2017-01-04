@@ -117,8 +117,15 @@ public:
 // This is most useful if the "slave" does all the writings and the "owner"
 // only does reads.
 //
-   virtual void       SetSlaveBuffer(TBuffer &other) // Share the underlying memory allocation with another TBuffer object.
-   { other.SetReAllocFunc(R__ReAllocShared, this); }
+   virtual void       SetSlaveBuffer(TBuffer &other) { // Share the underlying memory allocation with another TBuffer object.
+       if (other.Buffer() == Buffer()) {return;}
+       Int_t other_buf_size = BufferSize();
+       other.Expand(0, false); // Free up other buffer.
+       other.fBuffer = fBuffer;
+       ResetBit(other.kIsOwner);
+       other.SetReAllocFunc(R__ReAllocShared, this);
+       if (other_buf_size > BufferSize()) {other.Expand(other_buf_size);}
+   }
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
