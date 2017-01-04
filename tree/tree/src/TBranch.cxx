@@ -1394,29 +1394,27 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
 
    Bool_t enabled = !TestBit(kDoNotProcess);
    if (R__unlikely(!enabled)) {return -1;}
-   TBasket *basket; // will be initialized in the if/then clauses.
+   TBasket *basket = nullptr;
    Long64_t first;
-   // TODO: here, first is always equal to fFirstBasketEntry; eliminate
-   // unnecessary output variable.
-   Int_t result = GetBasketAndFirst(basket, first, nullptr);
+   Int_t result = GetBasketAndFirst(basket, first, &user_buf);
    if (R__unlikely(result <= 0)) {return -1;}
    // Only support reading from full clusters.
    if (R__unlikely(entry != first)) {return -1;}
 
    basket->PrepareBasket(entry);
    TBuffer* buf = basket->GetBufferRef();
-   user_buf.SetSlaveBuffer(*buf);
 
    // Test for very old ROOT files.
    if (R__unlikely(!buf)) {return -1;}
    // Test for displacements, which aren't supported in fast mode.
    if (R__unlikely(basket->GetDisplacement())) {return -1;}
 
-   Int_t bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
+   Int_t bufbegin = basket->GetKeylen();
    buf->SetBufferOffset(bufbegin);
 
    Int_t N = fNextBasketEntry-first;
    if (!leaf->ReadBasketFast(*buf, N)) {return -1;}
+   user_buf.SetBufferOffset(bufbegin);
 
    return N;
 }
@@ -1626,7 +1624,7 @@ TFile* TBranch::GetFile(Int_t mode)
 /// If the user_buffer argument is non-null, then the memory in the
 /// user-provided buffer will be utilized by the underlying basket.
 
-TBasket* TBranch::GetFreshBasket(TBuffer* /*user_buffer*/)
+TBasket* TBranch::GetFreshBasket(TBuffer* user_buffer)
 {
    TBasket *basket = 0;
    if (GetTree()->MemoryFull(0)) {
@@ -1662,6 +1660,9 @@ TBasket* TBranch::GetFreshBasket(TBuffer* /*user_buffer*/)
       }
    } else {
       basket = fTree->CreateBasket(this);
+   }
+   if (user_buffer) {
+      user_buffer->SetSlaveBuffer(*basket->GetBufferRef());
    }
    return basket;
 }
