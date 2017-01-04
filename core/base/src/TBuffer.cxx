@@ -279,6 +279,9 @@ void  TBuffer::SetReAllocFunc(ReAllocStateFun_t reallocfunc, void *reallocData)
 char *R__ReAllocShared(void *obj_void, char *current, size_t new_size, size_t old_size)
 {
    TBuffer *owner_buffer = static_cast<TBuffer*>(obj_void);
+   if (current != owner_buffer->Buffer()) {
+       owner_buffer->Fatal("ReAllocShared", "Re-allocating a non-shared buffer as shared.");
+   }
    owner_buffer->Expand(new_size, old_size);  // If old_size is non-zero, then we are copying over the old memory.
    return owner_buffer->Buffer();
 }
