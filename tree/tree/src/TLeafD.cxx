@@ -129,6 +129,20 @@ void TLeafD::ReadBasket(TBuffer &b)
    }
 }
 
+// Deserialize N events from an input buffer.
+bool TLeafD::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
+  if (R__unlikely(fLeafCount)) {return false;}
+
+   Long64_t *buf __attribute__((aligned(8)));
+   buf = reinterpret_cast<Long64_t*>(input_buf.GetCurrent());
+#ifdef R__BYTESWAP
+   for (int idx=0; idx<fLen*N; idx++) {
+      buf[idx] = __builtin_bswap64(buf[idx]);
+   }
+#endif
+   return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaf elements from Basket input buffer and export buffer to
 /// TClonesArray objects.
