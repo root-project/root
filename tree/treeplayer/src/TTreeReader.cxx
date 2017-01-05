@@ -85,7 +85,7 @@ TTreeReaderValue and TTreeReaderArray would look like this:
 #include <vector>
 #include <iostream>
 
-bool CheckValue(ROOT::TTreeReaderValueBase& value) {
+bool CheckValue(ROOT::Internal::TTreeReaderValueBase& value) {
    if (value->GetSetupStatus() < 0) {
       std::cerr << "Error " << value->GetSetupStatus()
                 << "setting up reader for " << value->GetBranchName() << '\n';
