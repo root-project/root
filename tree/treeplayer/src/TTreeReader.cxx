@@ -399,7 +399,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set (or update) the which tree to reader from. tree can be
+/// Set (or update) the which tree to read from. `tree` can be
 /// a TTree or a TChain.
 
 void TTreeReader::SetTree(TTree* tree, TEntryList* entryList /*= nullptr*/)
