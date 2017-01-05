@@ -106,23 +106,18 @@ bool analyze(TFile* file) {
 
    // Read a single float value in each tree entries:
    TTreeReaderValue<float> weight(reader, "event.weight");
-   if (!CheckValue(weight)) return false;
 
    // Read a TriggerInfo object from the tree entries:
    TTreeReaderValue<TriggerInfo> triggerInfo(reader, "triggerInfo");
-   if (!CheckValue(triggerInfo)) return false;
 
    //Read a vector of Muon objects from the tree entries:
    TTreeReaderValue<std::vector<Muon>> muons(reader, "muons");
-   if (!CheckValue(muons)) return false;
 
    //Read the pT for all jets in the tree entry:
    TTreeReaderArray<double> jetPt(reader, "jets.pT");
-   if (!CheckValue(jetPt)) return false;
 
    // Read the taus in the tree entry:
    TTreeReaderArray<Tau> taus(reader, "taus");
-   if (!CheckValue(taus)) return false;
 
 
    // Now iterate through the TTree entries and fill a histogram.
@@ -130,6 +125,12 @@ bool analyze(TFile* file) {
    TH1F("hist", "TTreeReader example histogram", 10, 0., 100.);
 
    while (reader.Next()) {
+      if (!CheckValue(weight)) return false;
+      if (!CheckValue(triggerInfo)) return false;
+      if (!CheckValue(muons)) return false;
+      if (!CheckValue(jetPt)) return false;
+      if (!CheckValue(taus)) return false;
+
       // Access the TriggerInfo object as if it's a pointer.
       if (!triggerInfo->hasMuonL1())
          continue;
