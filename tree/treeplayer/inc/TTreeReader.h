@@ -239,7 +239,6 @@ private:
    };
 
    TTree* fTree = nullptr; ///< tree that's read
-   TDirectory* fDirectory = nullptr; ///< directory (or current file for chains)
    TEntryList* fEntryList = nullptr; ///< entry list to be used
    EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
    Int_t fMostRecentTreeNumber = -1; ///< TTree::GetTreeNumber() of the most recent tree

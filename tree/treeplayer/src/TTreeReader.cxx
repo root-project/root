@@ -183,11 +183,10 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
 /// found, or if it is not a TTree, IsZombie() will return true.
 
 TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/):
-   fDirectory(dir),
    fEntryList(entryList)
 {
-   if (!fDirectory) fDirectory = gDirectory;
-   fDirectory->GetObject(keyname, fTree);
+   if (!dir) dir = gDirectory;
+   dir->GetObject(keyname, fTree);
    Initialize();
 }
 
