@@ -1595,7 +1595,7 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 
    // get the vector of events for each terminal so that we can calculate the constant fit value in each
    // terminal node
-   // #### Not sure how many events are in each node in advance, so I can't parallelize this
+   // #### Not sure how many events are in each node in advance, so I can't parallelize this in sections of the eventSample
    std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > > leaves;
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));      
@@ -1662,6 +1662,15 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
       TStopwatch watchUpdateTargets;
       watchUpdateTargets.Start();
       UpdateTargetsRegression(*fTrainSample,kTRUE);
+ 
+      // #### !!!! check for differences in targets
+      //Int_t counter = 0;
+      //for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      //   std::cout << counter << ": " << (*e)->GetTarget(0) << std::endl;;
+      //   counter++;
+      //}
+
+
       // #### done timing lf update targets
       watchUpdateTargets.Stop();
       std::cout << "    #### Done Timing LF Update Targets: " << watchUpdateTargets.RealTime() << std::endl;
