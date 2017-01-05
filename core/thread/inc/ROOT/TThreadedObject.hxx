@@ -132,7 +132,7 @@ namespace ROOT {
       std::shared_ptr<T> GetAtSlot(unsigned i)
       {
          if ( i >= fObjPointers.size()) {
-            Warning("TThreadedObject::Merge", "Maximum number of slots reached.");
+            Warning("TThreadedObject::GetAtSlot", "Maximum number of slots reached.");
             return nullptr;
          }
          auto objPointer = fObjPointers[i];
