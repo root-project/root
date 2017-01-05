@@ -106,7 +106,7 @@ TEST(TTreeReaderBasic, ErrorProbing) {
    EXPECT_EQ(TTreeReader::kEntryNoTree, tr.GetEntryStatus());
    EXPECT_EQ(nullptr, tr.GetTree());
 
-   tr.SetTree(nullptr);
+   tr.SetTree((TTree*)nullptr);
    EXPECT_EQ(TTreeReader::kEntryNoTree, tr.GetEntryStatus());
    EXPECT_EQ(nullptr, tr.GetTree());
 
