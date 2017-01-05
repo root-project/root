@@ -137,6 +137,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - Implement text clipping in TASImage as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-4538).
   Also the text size in batch mode for png (gif jpeg) files better matches the
   size on screen and pdf.
+- `TMathText` and `TTeXDump` implement the `TLatex` character `\bar`.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
