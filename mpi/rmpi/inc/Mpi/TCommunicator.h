@@ -1,4 +1,4 @@
-// @(#)root/mpi / Author: Omar.Zapata@cern.ch 2016 http://oproject.org
+// @(#)root/mpi / Author: Omar.Zapata@cern.ch 2016-2017 http://oproject.org
 #ifndef ROOT_Mpi_TCommunicator
 #define ROOT_Mpi_TCommunicator
 
