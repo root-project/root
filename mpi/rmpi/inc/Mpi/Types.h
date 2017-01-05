@@ -6,7 +6,7 @@
 #include "Rtypes.h"
 #endif
 
-#include<mpi.h>
+
 
 namespace ROOT {
    namespace Mpi {

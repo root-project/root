@@ -30,7 +30,6 @@ template<> void TCommunicator::Send<TMpiMessage>(TMpiMessage &var, Int_t dest, I
   msg.WriteObject(msgi);
   auto ibuffer = msg.Buffer();
   auto isize = msg.BufferSize();
-  fComm.Send(&isize, 1, MPI::INT, dest, tag);
   fComm.Send(ibuffer, isize, MPI::CHAR, dest, tag);
 }
 
@@ -38,8 +37,10 @@ template<> void TCommunicator::Send<TMpiMessage>(TMpiMessage &var, Int_t dest, I
 template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const
 {
   UInt_t isize = 0;
-  fComm.Recv(&isize, 1, MPI::INT, source, tag);
-
+  MPI::Status s;
+  fComm.Probe(source,tag,s);
+  isize=s.Get_elements(MPI::CHAR);
+	   
   Char_t *ibuffer = new Char_t[isize];
   fComm.Recv(ibuffer, isize, MPI::CHAR, source, tag);
 

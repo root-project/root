@@ -3,9 +3,9 @@
 #define ROOT_Mpi
 
 
-#include<Mpi/Types.h>
 
 #include<Mpi/TEnvironment.h>
+// #include<Mpi/Types.h>
 #include<Mpi/TMpiMessage.h>
 #include<Mpi/TCommunicator.h>
 

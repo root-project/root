@@ -175,6 +175,8 @@ namespace ROOT {
          if (std::is_class<Type>::value) {
             TMpiMessage msg;
             msg.WriteObject(var);
+            auto buffer = msg.Buffer();
+            auto size   = msg.BufferSize();
             Send(msg,dest,tag);
          } else {
             fComm.Send(&var, 1, GetDataType<Type>(), dest, tag);
@@ -187,7 +189,6 @@ namespace ROOT {
       {
          if (std::is_class<Type>::value) {
 	    TMpiMessage msg;
-	    
 	    Recv(msg,source,tag);
 	    
             auto cl = gROOT->GetClass(typeid(var));
