@@ -1290,11 +1290,11 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          fDblClick = kTRUE;
          if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
             act = action;
-            if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
-            else if (fBrowser && act.Contains("->Browse()")) obj->Browse(fBrowser);
+            if (fBrowser && act.Contains("->Browse()")) obj->Browse(fBrowser);
             else if (act.Contains("->Draw()")) obj->Draw(GetDrawOption());
             else {
-               act.Prepend(obj->GetName());
+               if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
+               else act.Prepend(obj->GetName());
                gInterpreter->SaveGlobalsContext();
                if (act[0] == '!') {
                   act.Remove(0, 1);
