@@ -1205,7 +1205,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    trainWatch.Start();
 
 // #### OK let's comment this one to see how to parallelize it
-   Double_t  separationGainTotal = -1, sepTmp;
+   Double_t  separationGainTotal = -1;
    Double_t *separationGain    = new Double_t[fNvars+1];
    Int_t    *cutIndex          = new Int_t[fNvars+1];  //-1;
 
@@ -1486,6 +1486,101 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    auto redfunc = [nodeInfoInit](std::vector<TrainNodeInfo> v) -> TrainNodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
    TrainNodeInfo nodeInfo = fPool.MapReduce(f, seeds, redfunc);
 
+   // #### Parallelize the next part by doing each part of the variable loop in parallel
+   auto varSeeds = ROOT::TSeqU(cNvars);
+
+   // now turn the "histogram" into a cumulative distribution
+   // #### loops through the vars and then the bins, if the bins are on the order of the training data this could be worth parallelizing
+   // #### Don't really want to parallelize nested things, should just pick vars or bins or data each time
+   //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+   auto fvarCumulative = [&nodeInfo, &useVariable, &nBins, this, &eventSample](UInt_t ivar = 0){
+      if (useVariable[ivar]) {
+         for (UInt_t ibin=1; ibin < nBins[ivar]; ibin++) {
+            nodeInfo.nSelS[ivar][ibin]+=nodeInfo.nSelS[ivar][ibin-1];
+            nodeInfo.nSelS_unWeighted[ivar][ibin]+=nodeInfo.nSelS_unWeighted[ivar][ibin-1];
+            nodeInfo.nSelB[ivar][ibin]+=nodeInfo.nSelB[ivar][ibin-1];
+            nodeInfo.nSelB_unWeighted[ivar][ibin]+=nodeInfo.nSelB_unWeighted[ivar][ibin-1];
+            if (DoRegression()) {
+               nodeInfo.target[ivar][ibin] +=nodeInfo.target[ivar][ibin-1] ;
+               nodeInfo.target2[ivar][ibin]+=nodeInfo.target2[ivar][ibin-1];
+            }
+         }
+         if (nodeInfo.nSelS_unWeighted[ivar][nBins[ivar]-1] +nodeInfo.nSelB_unWeighted[ivar][nBins[ivar]-1] != eventSample.size()) {
+            Log() << kFATAL << "Helge, you have a bug ....nodeInfo.nSelS_unw..+nodeInfo.nSelB_unw..= "
+                  << nodeInfo.nSelS_unWeighted[ivar][nBins[ivar]-1] +nodeInfo.nSelB_unWeighted[ivar][nBins[ivar]-1] 
+                  << " while eventsample size = " << eventSample.size()
+                  << Endl;
+         }
+         double lastBins=nodeInfo.nSelS[ivar][nBins[ivar]-1] +nodeInfo.nSelB[ivar][nBins[ivar]-1];
+         double totalSum=nodeInfo.nTotS+nodeInfo.nTotB;
+         if (TMath::Abs(lastBins-totalSum)/totalSum>0.01) {
+            Log() << kFATAL << "Helge, you have another bug ....nodeInfo.nSelS+nodeInfo.nSelB= "
+                  << lastBins
+                  << " while total number of events = " << totalSum
+                  << Endl;
+         }
+      }
+      return 0;
+   };
+   fPool.Map(fvarCumulative, varSeeds);
+
+   // #### Loops over vars and bins, but not events ...
+   // #### if bins is on the order of the training data then this is probably worth parallelizing
+   // #### no wonder the time seems to depend on the number of bins so much...
+   // now select the optimal cuts for each varable and find which one gives
+   // the best separationGain at the current stage
+   //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+   auto fvarMaxSep = [&nodeInfo, &useVariable, this, &separationGain, &cutIndex, &nBins] (UInt_t ivar = 0){
+      if (useVariable[ivar]) {
+         Double_t sepTmp;
+         for (UInt_t iBin=0; iBin<nBins[ivar]-1; iBin++) { // the last bin contains "all events" -->skip
+            // the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
+            // calculated by the "SamplePurities" fom the branches that would go to the
+            // left or the right from this node if "these" cuts were used in the Node:
+            // hereby: nodeInfo.nSelS and nodeInfo.nSelB would go to the right branch
+            //        (nodeInfo.nTotS - nodeInfo.nSelS) + (nodeInfo.nTotB - nodeInfo.nSelB)  would go to the left branch;
+
+            // only allow splits where both daughter nodes match the specified miniumum number
+            // for this use the "unweighted" events, as you are interested in statistically 
+            // significant splits, which is determined by the actual number of entries
+            // for a node, rather than the sum of event weights.
+
+            Double_t sl = nodeInfo.nSelS_unWeighted[ivar][iBin];
+            Double_t bl = nodeInfo.nSelB_unWeighted[ivar][iBin];
+            Double_t s  = nodeInfo.nTotS_unWeighted;
+            Double_t b  = nodeInfo.nTotB_unWeighted;
+            Double_t slW = nodeInfo.nSelS[ivar][iBin];
+            Double_t blW = nodeInfo.nSelB[ivar][iBin];
+            Double_t sW  = nodeInfo.nTotS;
+            Double_t bW  = nodeInfo.nTotB;
+            Double_t sr = s-sl;
+            Double_t br = b-bl;
+            Double_t srW = sW-slW;
+            Double_t brW = bW-blW;
+            //            std::cout << "sl="<<sl << " bl="<<bl<<" fMinSize="<<fMinSize << "sr="<<sr << " br="<<br  <<std::endl;
+            if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
+                 && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize) 
+                 ) {
+
+               if (DoRegression()) {
+                  sepTmp = fRegType->GetSeparationGain(nodeInfo.nSelS[ivar][iBin]+nodeInfo.nSelB[ivar][iBin], 
+                                                       nodeInfo.target[ivar][iBin],nodeInfo.target2[ivar][iBin],
+                                                       nodeInfo.nTotS+nodeInfo.nTotB,
+                                                       nodeInfo.target[ivar][nBins[ivar]-1],nodeInfo.target2[ivar][nBins[ivar]-1]);
+               } else {
+                  sepTmp = fSepType->GetSeparationGain(nodeInfo.nSelS[ivar][iBin], nodeInfo.nSelB[ivar][iBin], nodeInfo.nTotS, nodeInfo.nTotB);
+               }
+               if (separationGain[ivar] < sepTmp) {
+                  separationGain[ivar] = sepTmp;  
+                  cutIndex[ivar]       = iBin;
+               }
+            }
+         }
+      }
+      return 0;
+   };
+   fPool.Map(fvarMaxSep, varSeeds);
+
    // #### !!!!
    //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
    //   for (UInt_t ibin=0; ibin<nBins[ivar]; ibin++) {
@@ -1505,12 +1600,12 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    //std::cout << "   TrainNodeFast: nodeInfo.nTotS_unWeighted: " << nodeInfo.nTotS_unWeighted << std::endl;
    //std::cout << "   TrainNodeFast: nodeInfo.nTotB_unWeighted: " << nodeInfo.nTotB_unWeighted << std::endl;
 
+
    // ====================================================================
    // ====================================================================
    // Non Parallelized Version
    // ====================================================================
    // ====================================================================
-
 
    //for (UInt_t iev=0; iev<nevents; iev++) {
 
@@ -1559,90 +1654,89 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    //}   
 
 
-
    // now turn the "histogram" into a cumulative distribution
    // #### loops through the vars and then the bins, if the bins are on the order of the training data this could be worth parallelizing
    // #### Don't really want to parallelize nested things, should just pick vars or bins or data each time
-   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
-      if (useVariable[ivar]) {
-         for (UInt_t ibin=1; ibin < nBins[ivar]; ibin++) {
-            nodeInfo.nSelS[ivar][ibin]+=nodeInfo.nSelS[ivar][ibin-1];
-            nodeInfo.nSelS_unWeighted[ivar][ibin]+=nodeInfo.nSelS_unWeighted[ivar][ibin-1];
-            nodeInfo.nSelB[ivar][ibin]+=nodeInfo.nSelB[ivar][ibin-1];
-            nodeInfo.nSelB_unWeighted[ivar][ibin]+=nodeInfo.nSelB_unWeighted[ivar][ibin-1];
-            if (DoRegression()) {
-               nodeInfo.target[ivar][ibin] +=nodeInfo.target[ivar][ibin-1] ;
-               nodeInfo.target2[ivar][ibin]+=nodeInfo.target2[ivar][ibin-1];
-            }
-         }
-         if (nodeInfo.nSelS_unWeighted[ivar][nBins[ivar]-1] +nodeInfo.nSelB_unWeighted[ivar][nBins[ivar]-1] != eventSample.size()) {
-            Log() << kFATAL << "Helge, you have a bug ....nodeInfo.nSelS_unw..+nodeInfo.nSelB_unw..= "
-                  << nodeInfo.nSelS_unWeighted[ivar][nBins[ivar]-1] +nodeInfo.nSelB_unWeighted[ivar][nBins[ivar]-1] 
-                  << " while eventsample size = " << eventSample.size()
-                  << Endl;
-         }
-         double lastBins=nodeInfo.nSelS[ivar][nBins[ivar]-1] +nodeInfo.nSelB[ivar][nBins[ivar]-1];
-         double totalSum=nodeInfo.nTotS+nodeInfo.nTotB;
-         if (TMath::Abs(lastBins-totalSum)/totalSum>0.01) {
-            Log() << kFATAL << "Helge, you have another bug ....nodeInfo.nSelS+nodeInfo.nSelB= "
-                  << lastBins
-                  << " while total number of events = " << totalSum
-                  << Endl;
-         }
-      }
-   }
-   // #### Loops over vars and bins, but not events ...
-   // #### if bins is on the order of the training data then this is probably worth parallelizing
-   // #### no wonder the time seems to depend on the number of bins so much...
-   // now select the optimal cuts for each varable and find which one gives
-   // the best separationGain at the current stage
-   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
-      if (useVariable[ivar]) {
-         for (UInt_t iBin=0; iBin<nBins[ivar]-1; iBin++) { // the last bin contains "all events" -->skip
-            // the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
-            // calculated by the "SamplePurities" fom the branches that would go to the
-            // left or the right from this node if "these" cuts were used in the Node:
-            // hereby: nodeInfo.nSelS and nodeInfo.nSelB would go to the right branch
-            //        (nodeInfo.nTotS - nodeInfo.nSelS) + (nodeInfo.nTotB - nodeInfo.nSelB)  would go to the left branch;
+   //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+   //   if (useVariable[ivar]) {
+   //      for (UInt_t ibin=1; ibin < nBins[ivar]; ibin++) {
+   //         nodeInfo.nSelS[ivar][ibin]+=nodeInfo.nSelS[ivar][ibin-1];
+   //         nodeInfo.nSelS_unWeighted[ivar][ibin]+=nodeInfo.nSelS_unWeighted[ivar][ibin-1];
+   //         nodeInfo.nSelB[ivar][ibin]+=nodeInfo.nSelB[ivar][ibin-1];
+   //         nodeInfo.nSelB_unWeighted[ivar][ibin]+=nodeInfo.nSelB_unWeighted[ivar][ibin-1];
+   //         if (DoRegression()) {
+   //            nodeInfo.target[ivar][ibin] +=nodeInfo.target[ivar][ibin-1] ;
+   //            nodeInfo.target2[ivar][ibin]+=nodeInfo.target2[ivar][ibin-1];
+   //         }
+   //      }
+   //      if (nodeInfo.nSelS_unWeighted[ivar][nBins[ivar]-1] +nodeInfo.nSelB_unWeighted[ivar][nBins[ivar]-1] != eventSample.size()) {
+   //         Log() << kFATAL << "Helge, you have a bug ....nodeInfo.nSelS_unw..+nodeInfo.nSelB_unw..= "
+   //               << nodeInfo.nSelS_unWeighted[ivar][nBins[ivar]-1] +nodeInfo.nSelB_unWeighted[ivar][nBins[ivar]-1] 
+   //               << " while eventsample size = " << eventSample.size()
+   //               << Endl;
+   //      }
+   //      double lastBins=nodeInfo.nSelS[ivar][nBins[ivar]-1] +nodeInfo.nSelB[ivar][nBins[ivar]-1];
+   //      double totalSum=nodeInfo.nTotS+nodeInfo.nTotB;
+   //      if (TMath::Abs(lastBins-totalSum)/totalSum>0.01) {
+   //         Log() << kFATAL << "Helge, you have another bug ....nodeInfo.nSelS+nodeInfo.nSelB= "
+   //               << lastBins
+   //               << " while total number of events = " << totalSum
+   //               << Endl;
+   //      }
+   //   }
+   //}
+   //// #### Loops over vars and bins, but not events ...
+   //// #### if bins is on the order of the training data then this is probably worth parallelizing
+   //// #### no wonder the time seems to depend on the number of bins so much...
+   //// now select the optimal cuts for each varable and find which one gives
+   //// the best separationGain at the current stage
+   //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+   //   if (useVariable[ivar]) {
+   //      for (UInt_t iBin=0; iBin<nBins[ivar]-1; iBin++) { // the last bin contains "all events" -->skip
+   //         // the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
+   //         // calculated by the "SamplePurities" fom the branches that would go to the
+   //         // left or the right from this node if "these" cuts were used in the Node:
+   //         // hereby: nodeInfo.nSelS and nodeInfo.nSelB would go to the right branch
+   //         //        (nodeInfo.nTotS - nodeInfo.nSelS) + (nodeInfo.nTotB - nodeInfo.nSelB)  would go to the left branch;
 
-            // only allow splits where both daughter nodes match the specified miniumum number
-            // for this use the "unweighted" events, as you are interested in statistically 
-            // significant splits, which is determined by the actual number of entries
-            // for a node, rather than the sum of event weights.
+   //         // only allow splits where both daughter nodes match the specified miniumum number
+   //         // for this use the "unweighted" events, as you are interested in statistically 
+   //         // significant splits, which is determined by the actual number of entries
+   //         // for a node, rather than the sum of event weights.
 
-            Double_t sl = nodeInfo.nSelS_unWeighted[ivar][iBin];
-            Double_t bl = nodeInfo.nSelB_unWeighted[ivar][iBin];
-            Double_t s  = nodeInfo.nTotS_unWeighted;
-            Double_t b  = nodeInfo.nTotB_unWeighted;
-            Double_t slW = nodeInfo.nSelS[ivar][iBin];
-            Double_t blW = nodeInfo.nSelB[ivar][iBin];
-            Double_t sW  = nodeInfo.nTotS;
-            Double_t bW  = nodeInfo.nTotB;
-            Double_t sr = s-sl;
-            Double_t br = b-bl;
-            Double_t srW = sW-slW;
-            Double_t brW = bW-blW;
-            //            std::cout << "sl="<<sl << " bl="<<bl<<" fMinSize="<<fMinSize << "sr="<<sr << " br="<<br  <<std::endl;
-            if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
-                 && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize) 
-                 ) {
+   //         Double_t sl = nodeInfo.nSelS_unWeighted[ivar][iBin];
+   //         Double_t bl = nodeInfo.nSelB_unWeighted[ivar][iBin];
+   //         Double_t s  = nodeInfo.nTotS_unWeighted;
+   //         Double_t b  = nodeInfo.nTotB_unWeighted;
+   //         Double_t slW = nodeInfo.nSelS[ivar][iBin];
+   //         Double_t blW = nodeInfo.nSelB[ivar][iBin];
+   //         Double_t sW  = nodeInfo.nTotS;
+   //         Double_t bW  = nodeInfo.nTotB;
+   //         Double_t sr = s-sl;
+   //         Double_t br = b-bl;
+   //         Double_t srW = sW-slW;
+   //         Double_t brW = bW-blW;
+   //         //            std::cout << "sl="<<sl << " bl="<<bl<<" fMinSize="<<fMinSize << "sr="<<sr << " br="<<br  <<std::endl;
+   //         if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
+   //              && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize) 
+   //              ) {
 
-               if (DoRegression()) {
-                  sepTmp = fRegType->GetSeparationGain(nodeInfo.nSelS[ivar][iBin]+nodeInfo.nSelB[ivar][iBin], 
-                                                       nodeInfo.target[ivar][iBin],nodeInfo.target2[ivar][iBin],
-                                                       nodeInfo.nTotS+nodeInfo.nTotB,
-                                                       nodeInfo.target[ivar][nBins[ivar]-1],nodeInfo.target2[ivar][nBins[ivar]-1]);
-               } else {
-                  sepTmp = fSepType->GetSeparationGain(nodeInfo.nSelS[ivar][iBin], nodeInfo.nSelB[ivar][iBin], nodeInfo.nTotS, nodeInfo.nTotB);
-               }
-               if (separationGain[ivar] < sepTmp) {
-                  separationGain[ivar] = sepTmp;  
-                  cutIndex[ivar]       = iBin;
-               }
-            }
-         }
-      }
-   }
+   //            if (DoRegression()) {
+   //               sepTmp = fRegType->GetSeparationGain(nodeInfo.nSelS[ivar][iBin]+nodeInfo.nSelB[ivar][iBin], 
+   //                                                    nodeInfo.target[ivar][iBin],nodeInfo.target2[ivar][iBin],
+   //                                                    nodeInfo.nTotS+nodeInfo.nTotB,
+   //                                                    nodeInfo.target[ivar][nBins[ivar]-1],nodeInfo.target2[ivar][nBins[ivar]-1]);
+   //            } else {
+   //               sepTmp = fSepType->GetSeparationGain(nodeInfo.nSelS[ivar][iBin], nodeInfo.nSelB[ivar][iBin], nodeInfo.nTotS, nodeInfo.nTotB);
+   //            }
+   //            if (separationGain[ivar] < sepTmp) {
+   //               separationGain[ivar] = sepTmp;  
+   //               cutIndex[ivar]       = iBin;
+   //            }
+   //         }
+   //      }
+   //   }
+   //}
 
 
    // you found the best separation cut for each variable, now compare the variables
