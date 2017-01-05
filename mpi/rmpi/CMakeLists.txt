@@ -7,14 +7,10 @@
 
 set(libname RMpi)
 
-include_directories(${MPI_CXX_INCLUDE_PATH})
-
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual ${MPI_CXX_COMPILE_FLAGS} -Wno-literal-suffix)
-
-
 set(RMPI_HEADERS ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TEnvironment.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TMpiMessage.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TCommunicator.h
+		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/Types.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi.h
 		 )
 
