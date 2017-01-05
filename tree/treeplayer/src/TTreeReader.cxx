@@ -427,6 +427,23 @@ void TTreeReader::SetTree(TTree* tree, TEntryList* entryList /*= nullptr*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set (or update) the which tree to read from, passing the name of a tree in a
+/// directory.
+///
+/// \param keyname - name of the tree in `dir`
+/// \param dir - the `TDirectory` to load `keyname` from (or gDirectory if `nullptr`)
+/// \param entryList - the `TEntryList` to attach to the `TTreeReader`.
+
+void TTreeReader::SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/)
+{
+   TTree* tree = nullptr;
+   if (!dir)
+      dir = gDirectory;
+   dir->GetObject(keyname, tree);
+   SetTree(tree, entryList);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a value reader for this tree.
 
 Bool_t TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)

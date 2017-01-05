@@ -147,6 +147,10 @@ public:
    ~TTreeReader();
 
    void SetTree(TTree* tree, TEntryList* entryList = nullptr);
+   void SetTree(const char* keyname, TEntryList* entryList = nullptr) {
+      SetTree(keyname, nullptr, entryList);
+   }
+   void SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 
