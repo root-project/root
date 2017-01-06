@@ -447,7 +447,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    if (pf) {
       Int_t res = -1;
       Bool_t free = kTRUE;
-      char *buffer;
+      char *buffer = nullptr;
       res = pf->GetUnzipBuffer(&buffer, pos, len, &free);
       if (R__unlikely(res >= 0)) {
          len = ReadBasketBuffersUnzip(buffer, res, free, file);
