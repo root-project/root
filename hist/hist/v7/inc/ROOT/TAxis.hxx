@@ -774,7 +774,7 @@ public:
     TAxisBase(binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
     fBinBorders(std::move(binborders)) { }
 
-  /// Represents a `TAxisIrregular` with `binborders`.
+  /// Represents a `TAxisIrregular` with `binborders` and title.
   TAxisConfig(std::string_view title, std::vector<double> &&binborders) noexcept:
     TAxisBase(title, binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
     fBinBorders(std::move(binborders)) { }
