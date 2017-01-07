@@ -121,16 +121,16 @@ namespace ROOT {
          {
             return fMainProcess;
          }
-         
+
          /**
          Method to abort  processes
               \param integer with error code
               */
          inline void Abort(Int_t err) const
          {
-              fComm.Abort(err);
+            fComm.Abort(err);
          }
-         
+
 
          /**
          Method to send a message for p2p communication
@@ -175,22 +175,20 @@ namespace ROOT {
          if (std::is_class<Type>::value) {
             TMpiMessage msg;
             msg.WriteObject(var);
-            auto buffer = msg.Buffer();
-            auto size   = msg.BufferSize();
-            Send(msg,dest,tag);
+            Send(msg, dest, tag);
          } else {
             fComm.Send(&var, 1, GetDataType<Type>(), dest, tag);
          }
       }
 
-      
+
       //______________________________________________________________________________
       template<class Type>  void TCommunicator::Recv(Type &var, Int_t source, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
-	    TMpiMessage msg;
-	    Recv(msg,source,tag);
-	    
+            TMpiMessage msg;
+            Recv(msg, source, tag);
+
             auto cl = gROOT->GetClass(typeid(var));
             auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
             memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
@@ -208,8 +206,8 @@ namespace ROOT {
                msg.WriteObject(var);
             }
             Bcast(msg, root);
-            
-	    if (GetRank() != root) {
+
+            if (GetRank() != root) {
                auto cl = gROOT->GetClass(typeid(var));
                auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
                memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
@@ -229,7 +227,7 @@ namespace ROOT {
       template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const;
       //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
-      
+
    }
 
 }

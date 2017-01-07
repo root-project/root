@@ -10,6 +10,7 @@ set(libname RMpi)
 set(RMPI_HEADERS ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TEnvironment.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TMpiMessage.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TCommunicator.h
+		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TStatus.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/Types.h
 		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi.h
 		 )

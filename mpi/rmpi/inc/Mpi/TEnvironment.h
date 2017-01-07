@@ -14,7 +14,7 @@ namespace ROOT {
    namespace Mpi {
       /**
       \class TEnvironment
-         Class manipulate mpi environment, with this class you can to start/stop the communication system and 
+         Class manipulate mpi environment, with this class you can to start/stop the communication system and
          to hanlde some information about the communication environment.
          \ingroup Mpi
        */
@@ -45,7 +45,7 @@ namespace ROOT {
          Method to check if the communication system is initialized.
               */
          static Bool_t IsInitialized();
-	 
+
 //          static TString GetProcessorName();
 //          static Int_t GetThreadLevel();
 //          static Bool_t IsMainThread();

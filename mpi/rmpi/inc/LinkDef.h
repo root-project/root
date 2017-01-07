@@ -17,9 +17,18 @@
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
 
-//classes
+/*
+ * Some raw MPI datatypes
+ */
+#pragma link C++ class MPI::Status+;
+#pragma link C++ class MPI_Status+;
+
+/*
+ * ROOTMpi datatypes
+ */
 #pragma link C++ class ROOT::Mpi::TMpiMessage+;
 #pragma link C++ class ROOT::Mpi::TMpiMessageInfo+;
+#pragma link C++ class ROOT::Mpi::TStatus+;
 #pragma link C++ class ROOT::Mpi::TEnvironment;
 #pragma link C++ class ROOT::Mpi::TCommunicator;
 
@@ -31,5 +40,7 @@
 #ifdef USE_FOR_AUTLOADING
 #pragma link C++ class ROOT::Mpi;
 #endif
+
+
 
 #endif
