@@ -43,7 +43,7 @@ namespace ROOT {
             fTag = tag;
          }
 
-         inline TString GetDataTypeName()
+         inline TString GetDataTypeName() 
          {
             return fDataTypeName;
          }
@@ -83,7 +83,7 @@ namespace ROOT {
          TMpiMessage(UInt_t what = kMESS_ANY, Int_t bufsiz = TBuffer::kInitialSize);
 
          virtual ~TMpiMessage() {}
-         inline TString GetDataTypeName()
+         inline TString GetDataTypeName() const
          {
             return fDataTypeName;
          }

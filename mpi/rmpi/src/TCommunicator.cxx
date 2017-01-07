@@ -16,7 +16,7 @@ TCommunicator::TCommunicator(const TComm &comm): fComm(comm), fMainProcess(0) {}
 TCommunicator::~TCommunicator() {}
 
 //______________________________________________________________________________
-template<> void TCommunicator::Send<TMpiMessage>(TMpiMessage &var, Int_t dest, Int_t tag) const
+template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t dest, Int_t tag) const
 {
    auto buffer = var.Buffer();
    auto size   = var.BufferSize();

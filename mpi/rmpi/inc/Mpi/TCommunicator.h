@@ -126,7 +126,11 @@ namespace ROOT {
          Method to abort  processes
               \param integer with error code
               */
+	 #if OPEN_MPI
+         inline void Abort(Int_t err)
+	 #else
          inline void Abort(Int_t err) const
+         #endif
          {
             fComm.Abort(err);
          }
@@ -138,7 +142,7 @@ namespace ROOT {
               \param dest id with the destination(Rank/Process) of the message
               \param tag id of the message
               */
-         template<class Type> void Send(Type &var, Int_t dest, Int_t tag) const;
+         template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
          /**
          Method to receive a message for p2p communication
               \param var any selializable object reference to receive the message
@@ -170,7 +174,7 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
-      template<class Type> void TCommunicator::Send(Type &var, Int_t dest, Int_t tag) const
+      template<class Type> void TCommunicator::Send(const Type &var, Int_t dest, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
             TMpiMessage msg;
@@ -222,7 +226,7 @@ namespace ROOT {
       ////////////////////////////////
       //specialized template methods
       //______________________________________________________________________________
-      template<> void TCommunicator::Send<TMpiMessage>(TMpiMessage &var, Int_t dest, Int_t tag) const;
+      template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t dest, Int_t tag) const;
       //______________________________________________________________________________
       template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const;
       //______________________________________________________________________________

@@ -7,12 +7,12 @@
 
 set(libname RMpi)
 
-set(RMPI_HEADERS ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TEnvironment.h
-		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TMpiMessage.h
-		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TCommunicator.h
-		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/TStatus.h
-		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi/Types.h
-		 ${CMAKE_SOURCE_DIR}/mpi/rmpi/inc/Mpi.h
+set(RMPI_HEADERS Mpi/TEnvironment.h
+		 Mpi/TMpiMessage.h
+		 Mpi/TCommunicator.h
+		 Mpi/TStatus.h
+		 Mpi/Types.h
+		 Mpi.h
 		 )
 
 ROOT_GENERATE_DICTIONARY(G__RMpi ${RMPI_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)

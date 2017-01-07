@@ -1,4 +1,18 @@
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
+  cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
+  project(ROOTMpi)
+  set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/../cmake/modules)
+  include(RootBuildOptions)
+  include(RootNewMacros)
+  include(CheckCompiler)
+  include(MacroEnsureVersion)
+  include(StandaloneBuild)
+endif()
+
+
+
 #################
 #MPI ENVIRONMENT#
 #################

@@ -1,7 +1,7 @@
 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-include_directories(${CMAKE_SOURCE_DIR}/mpi/rootmpi/inc/)
+include_directories(inc/)
 add_definitions(-w)
 
 SET(ROOTMPI_SOURCES src/main.cxx src/TROOTMpi.cxx)
