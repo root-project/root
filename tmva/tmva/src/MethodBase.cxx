@@ -690,7 +690,7 @@ void TMVA::MethodBase::TrainMethod()
 
       Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "regression on training sample" << Endl;
       // #### commenting out because I don't care about this when timing the BDTs, should return this to the normal state when done
-      //AddRegressionOutput( Types::kTraining );
+      AddRegressionOutput( Types::kTraining );
 
       if (HasMVAPdfs() ) {
          Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Create PDFs" << Endl;
@@ -752,11 +752,22 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    regRes->Resize( nEvents );
+
+   // Drawing the progress bar every event was causing a huge slowdown in the evaluation time
+   // So we set some parameters to draw the progress bar a total of totalProgressDraws, i.e. only draw every 1 in 100 
+   
+   Int_t totalProgressDraws = 100; // total number of times to update the progress bar
+   Int_t drawProgressEvery = 1;    // draw every nth event such that we have a total of totalProgressDraws
+   if(nEvents >= totalProgressDraws) drawProgressEvery = nEvents/totalProgressDraws;
+
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
+
       Data()->SetCurrentEvent(ievt);
       std::vector< Float_t > vals = GetRegressionValues();
       regRes->SetValue( vals, ievt );
-      timer.DrawProgressBar( ievt );
+
+      // Only draw the progress bar once in a while, doing this every event causes the evaluation to be ridiculously slow
+      if(ievt % drawProgressEvery == 0 || ievt==nEvents-1) timer.DrawProgressBar( ievt );
    }
 
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())

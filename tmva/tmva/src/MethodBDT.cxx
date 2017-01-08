@@ -2592,6 +2592,7 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
       evT->SetTarget(0, rVal/Double_t(count) );
    }
    else if(fBoostType=="Grad"){
+      // #### Can parallelize this loop over the trees...
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
          myMVA += fForest[itree]->CheckEvent(ev,kFALSE);
       }

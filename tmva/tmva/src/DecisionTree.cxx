@@ -1418,62 +1418,138 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // ====================================================================
    // ====================================================================
 
-   // #### Parallelize by vectorizing the variable loop
+   TrainNodeInfo nodeInfo(cNvars, nBins);
+   UInt_t nPartitions = 8;
    auto varSeeds = ROOT::TSeqU(cNvars);
 
-   // #### need a lambda function to pass to TThreadExecutor::Map
-   // #### pass in a struct so we don't have to pass in a ton of arrays
-   TrainNodeInfo nodeInfo(cNvars, nBins);
+   // When nbins is low compared to ndata this version of parallelization is faster, so use it 
+   // Parallelize by chunking the data into the same number of sections as we have processors
+   if(eventSample.size() <= fNCuts*nPartitions*1.5)
+   {
+      auto seeds = ROOT::TSeqU(nPartitions);
 
-   auto fvarFillNodeInfo = [this, &nodeInfo, &eventSample, &fisherCoeff, &useVariable, &invBinWidth, &nBins, &xmin, &xmax, &cNvars](UInt_t ivar = 0){
+      // need a lambda function to pass to TThreadExecutor::MapReduce
+      // #### Should merge data structures so we don't have to deal with editing the same memory
+      auto f = [this, &eventSample, &fisherCoeff, &useVariable, &invBinWidth,
+                &nBins, &xmin, &xmax, &cNvars, &nPartitions](UInt_t partition = 0){
 
-      for(UInt_t iev=0; iev<eventSample.size(); iev++) {
+         UInt_t start = 1.0*partition/nPartitions*eventSample.size();
+         UInt_t end   = (partition+1.0)/nPartitions*eventSample.size();
 
-         Int_t iBin=-1;
-         Double_t eventWeight =  eventSample[iev]->GetWeight(); 
+         TrainNodeInfo nodeInfof(cNvars, nBins);
 
-         // Only count the net signal and background once
-         if(ivar==0){
-             if (eventSample[iev]->GetClass() == fSigClass) {
-                nodeInfo.nTotS+=eventWeight;
-                nodeInfo.nTotS_unWeighted++;    }
-             else {
-                nodeInfo.nTotB+=eventWeight;
-                nodeInfo.nTotB_unWeighted++;
-             }
-         }
-      
-         // Figure out which bin the event belongs in and increment the bin in each histogram vector appropriately
-         if ( useVariable[ivar] ) {
-            Double_t eventData;
-            if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar); 
-            else { // the fisher variable
-               eventData = fisherCoeff[fNvars];
-               for (UInt_t jvar=0; jvar<fNvars; jvar++)
-                  eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
-               
-            }
-            // #### figure out which bin it belongs in ...
-            // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
-            iBin = TMath::Min(Int_t(nBins[ivar]-1),TMath::Max(0,int (invBinWidth[ivar]*(eventData-xmin[ivar]) ) ));
+         for(UInt_t iev=start; iev<end; iev++) {
+
+            // #### Can parallelize this sum of weights everything is independent, just need to sum results at the end
+            Double_t eventWeight =  eventSample[iev]->GetWeight();
             if (eventSample[iev]->GetClass() == fSigClass) {
-               nodeInfo.nSelS[ivar][iBin]+=eventWeight;
-               nodeInfo.nSelS_unWeighted[ivar][iBin]++;
-            } 
+               nodeInfof.nTotS+=eventWeight;
+               nodeInfof.nTotS_unWeighted++;    }
             else {
-               nodeInfo.nSelB[ivar][iBin]+=eventWeight;
-               nodeInfo.nSelB_unWeighted[ivar][iBin]++;
+               nodeInfof.nTotB+=eventWeight;
+               nodeInfof.nTotB_unWeighted++;
             }
-            if (DoRegression()) {
-               nodeInfo.target[ivar][iBin] +=eventWeight*eventSample[iev]->GetTarget(0);
-               nodeInfo.target2[ivar][iBin]+=eventWeight*eventSample[iev]->GetTarget(0)*eventSample[iev]->GetTarget(0);
+
+            // #### Count the number in each bin
+            // #### Can parallelize this loop through each variable, every var is independent
+            Int_t iBin=-1;
+            for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+               // now scan trough the cuts for each varable and find which one gives
+               // the best separationGain at the current stage.
+               if ( useVariable[ivar] ) {
+                  Double_t eventData;
+                  if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar);
+                  else { // the fisher variable
+                     eventData = fisherCoeff[fNvars];
+                     for (UInt_t jvar=0; jvar<fNvars; jvar++)
+                        eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+
+                  }
+                  // #### figure out which bin it belongs in ...
+                  // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
+                  iBin = TMath::Min(Int_t(nBins[ivar]-1),TMath::Max(0,int (invBinWidth[ivar]*(eventData-xmin[ivar]) ) ));
+                  if (eventSample[iev]->GetClass() == fSigClass) {
+                     nodeInfof.nSelS[ivar][iBin]+=eventWeight;
+                     nodeInfof.nSelS_unWeighted[ivar][iBin]++;
+                  }
+                  else {
+                     nodeInfof.nSelB[ivar][iBin]+=eventWeight;
+                     nodeInfof.nSelB_unWeighted[ivar][iBin]++;
+                  }
+                  if (DoRegression()) {
+                     nodeInfof.target[ivar][iBin] +=eventWeight*eventSample[iev]->GetTarget(0);
+                     nodeInfof.target2[ivar][iBin]+=eventWeight*eventSample[iev]->GetTarget(0)*eventSample[iev]->GetTarget(0);
+                  }
+               }
             }
          }
-      }
-      return 0;
-   };
+         return nodeInfof;
+      };
 
-   fPool.Map(fvarFillNodeInfo, varSeeds);
+      // #### Need an intial struct to pass to std::accumulate
+      TrainNodeInfo nodeInfoInit(cNvars, nBins);
+
+      // #### Run the threads in parallel then merge the results
+      auto redfunc = [nodeInfoInit](std::vector<TrainNodeInfo> v) -> TrainNodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
+      nodeInfo = fPool.MapReduce(f, seeds, redfunc);
+   }
+ 
+
+   // When nbins is close to the order of the data this version of parallelization is faster
+   // Parallelize by vectorizing the variable loop
+   else {
+      // #### Parallelize by vectorizing the variable loop
+
+      auto fvarFillNodeInfo = [this, &nodeInfo, &eventSample, &fisherCoeff, &useVariable, &invBinWidth, &nBins, &xmin, &xmax, &cNvars](UInt_t ivar = 0){
+
+         for(UInt_t iev=0; iev<eventSample.size(); iev++) {
+
+            Int_t iBin=-1;
+            Double_t eventWeight =  eventSample[iev]->GetWeight(); 
+
+            // Only count the net signal and background once
+            if(ivar==0){
+                if (eventSample[iev]->GetClass() == fSigClass) {
+                   nodeInfo.nTotS+=eventWeight;
+                   nodeInfo.nTotS_unWeighted++;    }
+                else {
+                   nodeInfo.nTotB+=eventWeight;
+                   nodeInfo.nTotB_unWeighted++;
+                }
+            }
+         
+            // Figure out which bin the event belongs in and increment the bin in each histogram vector appropriately
+            if ( useVariable[ivar] ) {
+               Double_t eventData;
+               if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar); 
+               else { // the fisher variable
+                  eventData = fisherCoeff[fNvars];
+                  for (UInt_t jvar=0; jvar<fNvars; jvar++)
+                     eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+                  
+               }
+               // #### figure out which bin it belongs in ...
+               // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
+               iBin = TMath::Min(Int_t(nBins[ivar]-1),TMath::Max(0,int (invBinWidth[ivar]*(eventData-xmin[ivar]) ) ));
+               if (eventSample[iev]->GetClass() == fSigClass) {
+                  nodeInfo.nSelS[ivar][iBin]+=eventWeight;
+                  nodeInfo.nSelS_unWeighted[ivar][iBin]++;
+               } 
+               else {
+                  nodeInfo.nSelB[ivar][iBin]+=eventWeight;
+                  nodeInfo.nSelB_unWeighted[ivar][iBin]++;
+               }
+               if (DoRegression()) {
+                  nodeInfo.target[ivar][iBin] +=eventWeight*eventSample[iev]->GetTarget(0);
+                  nodeInfo.target2[ivar][iBin]+=eventWeight*eventSample[iev]->GetTarget(0)*eventSample[iev]->GetTarget(0);
+               }
+            }
+         }
+         return 0;
+      };
+
+      fPool.Map(fvarFillNodeInfo, varSeeds);
+   }
 
    // now turn each "histogram" into a cumulative distribution
    // #### loops through the vars and then the bins, if the bins are on the order of the training data this could be worth parallelizing
