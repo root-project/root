@@ -67,9 +67,6 @@ namespace ROOT {
       R__EXTERN const Int_t ERR_UNSUPPORTED_OPERATION;
       R__EXTERN const Int_t ERR_WIN;
       R__EXTERN const Int_t ERR_LASTCODE;
-#if OPEN_MPI
-      R__EXTERN const Int_t ERR_SYSRESOURCE;
-#endif
    }
 }
 

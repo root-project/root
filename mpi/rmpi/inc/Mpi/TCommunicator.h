@@ -126,11 +126,11 @@ namespace ROOT {
          Method to abort  processes
               \param integer with error code
               */
-	 #if OPEN_MPI
+#if OPEN_MPI
          inline void Abort(Int_t err)
-	 #else
+#else
          inline void Abort(Int_t err) const
-         #endif
+#endif
          {
             fComm.Abort(err);
          }

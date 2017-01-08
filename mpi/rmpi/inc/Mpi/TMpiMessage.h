@@ -43,7 +43,7 @@ namespace ROOT {
             fTag = tag;
          }
 
-         inline TString GetDataTypeName() 
+         inline TString GetDataTypeName()
          {
             return fDataTypeName;
          }

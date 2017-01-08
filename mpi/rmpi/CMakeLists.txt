@@ -11,6 +11,7 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
 		 Mpi/TMpiMessage.h
 		 Mpi/TCommunicator.h
 		 Mpi/TStatus.h
+		 Mpi/TRequest.h
 		 Mpi/Types.h
 		 Mpi.h
 		 )

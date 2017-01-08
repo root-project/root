@@ -18,6 +18,8 @@ namespace ROOT {
 
       class TStatus: public TObject {
          friend class TCommunicator;
+         friend class TRequest;
+
       protected:
          MPI::Status fStatus;       //internal MPI::Status object
       public:
