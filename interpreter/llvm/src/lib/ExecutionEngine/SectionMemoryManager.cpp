@@ -98,12 +98,50 @@ uint8_t *SectionMemoryManager::allocateSection(MemoryGroup &MemGroup,
 
   // To be sure that there is no interleaving, enforce the monotonic decrease
   // of the memory adddress.  This is required by libgcc's _Unwind_Find_FDE
-  // which does a linear search (of the top level dwarf objects) and note in the code
+  // which does a linear search (of the top level dwarf objects) and note in
+  // the code:
   // "Note that pc_begin is sorted descending, and we expect objects to be
   // non-overlapping. "
-  if (MemGroup.Near.base() && (size_t)MB.base() > (size_t)MemGroup.Near.base()) {
+  using CheckerType = bool (*)(void *, void *);
+  CheckerType isNotMonotonicLinux = [](void *newAlloc, void *target) {
+    return (size_t)newAlloc > (size_t)target;
+  };
+  CheckerType isNotMonotonicAlternateOrder = [](void *newAlloc, void *target) {
+    return (size_t)newAlloc < (size_t)target;
+  };
+  auto getMonotonicChecker = [=]() {
+    std::error_code ec;
+    sys::MemoryBlock MB2 = sys::Memory::allocateMappedMemory(RequiredSize,
+                                                             &MemGroup.Near,
+                                                             sys::Memory::MF_READ |
+                                                             sys::Memory::MF_WRITE,
+                                                             ec);
+    bool linuxType = false;
+    if ((size_t)MB2.base() < (size_t)MB.base()) {
+      linuxType = true;
+    }
+    sys::Memory::releaseMappedMemory(MB2);
+    if (linuxType) {
+      return isNotMonotonicLinux;
+    } else {
+      return isNotMonotonicAlternateOrder;
+    }
+#if 0
+    std::unique_ptr<long> p1(new long);
+    std::unique_ptr<long> p2(new long);
+    if ( ((size_t)p2.get()) < ((size_t)p1.get()) ) {
+      return isNotMonotonicLinux;
+    } else {
+      return isNotMonotonicAlternateOrder;
+    }
+#endif
+  };
+  static CheckerType isNotMonotonic = getMonotonicChecker();
+
+  if (MemGroup.Near.base() && isNotMonotonic(MB.base(), MemGroup.Near.base())) {
     SmallVector<sys::MemoryBlock, 16> MemToDelete;
-    while ((size_t)MB.base() > (size_t)MemGroup.Near.base()) {
+    while (isNotMonotonic(MB.base(), MemGroup.Near.base())) {
+
       // Hold on to the memory until we get an acceptable one
       // just so that we are not given it back.
       MemToDelete.push_back(MB);
