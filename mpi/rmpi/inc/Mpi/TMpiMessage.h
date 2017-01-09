@@ -1,6 +1,6 @@
 // @(#)root/mpi / Author: Omar.Zapata@cern.ch 2016 http://oproject.org
-#ifndef ROOT_TMpiMessage
-#define ROOT_TMpiMessage
+#ifndef ROOT_Mpi_TMpiMessage
+#define ROOT_Mpi_TMpiMessage
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"

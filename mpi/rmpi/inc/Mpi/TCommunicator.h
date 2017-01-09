@@ -8,8 +8,12 @@
 #include<TObject.h>
 
 
-#ifndef ROOT_TMpiMessage
+#ifndef ROOT_Mpi_TMpiMessage
 #include <Mpi/TMpiMessage.h>
+#endif
+
+#ifndef ROOT_Mpi_TStatus
+#include <Mpi/TStatus.h>
 #endif
 
 #include<memory>
@@ -135,6 +139,44 @@ namespace ROOT {
             fComm.Abort(err);
          }
 
+         /**
+         Method for synchronization between MPI processes in a communicator
+         */
+         virtual void Barrier() const;
+
+         /**
+            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+              \param status TStatus object with extra information.
+              \return boolean true if the probe if ok
+              */
+         virtual Bool_t Iprobe(Int_t source, Int_t tag, TStatus &status) const;
+
+         /**
+            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+              \return boolean true if the probe if ok
+              */
+         virtual Bool_t Iprobe(Int_t source, Int_t tag) const;
+
+         /**
+            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+              \param status TStatus object with extra information.
+              \return boolean true if the probe if ok
+              */
+         virtual void Probe(Int_t source, Int_t tag, TStatus &status) const;
+
+         /**
+            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+              \return boolean true if the probe if ok
+              */
+         virtual void Probe(Int_t source, Int_t tag) const;
 
          /**
          Method to send a message for p2p communication

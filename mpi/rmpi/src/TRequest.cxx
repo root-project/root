@@ -6,7 +6,7 @@
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
-TRequest::TRequest(): fRequest() {}
+TRequest::TRequest(): fRequest(MPI::REQUEST_NULL) {}
 
 //______________________________________________________________________________
 TRequest::TRequest(const TRequest &obj): TObject(obj), fRequest(obj.fRequest) {}
@@ -208,53 +208,3 @@ Bool_t TRequest::GetStatus() const
 {
    return fRequest.Get_status();
 }
-
-/*
-ClassImp(TPrequest)
-
-//______________________________________________________________________________
-void TPrequest::Start()
-{
-   (void)MPI_Start(&mpi_request);
-}
-
-//______________________________________________________________________________
-void TPrequest::Startall(int count, TPrequest array_of_requests[])
-{
-   MPI_Request* mpi_requests = new MPI_Request[count];
-   int i;
-   for (i = 0; i < count; i++) {
-      mpi_requests[i] = array_of_requests[i];
-   }
-   (void)MPI_Startall(count, mpi_requests);
-   for (i = 0; i < count; i++) {
-      array_of_requests[i].mpi_request = mpi_requests[i] ;
-   }
-   delete [] mpi_requests;
-}
-
-ClassImp(TGrequest)
-//______________________________________________________________________________
-TGrequest TGrequest::Start(Query_function *query_fn, Free_function *free_fn, Cancel_function *cancel_fn, void *extra)
-{
-   MPI_Request grequest = 0;
-   Intercept_data_t *new_extra = new TGrequest::Intercept_data_t;
-
-   new_extra->id_extra = extra;
-   new_extra->id_cxx_query_fn = query_fn;
-   new_extra->id_cxx_free_fn = free_fn;
-   new_extra->id_cxx_cancel_fn = cancel_fn;
-   (void) MPI_Grequest_start(ompi_mpi_cxx_grequest_query_fn_intercept,
-                             ompi_mpi_cxx_grequest_free_fn_intercept,
-                             ompi_mpi_cxx_grequest_cancel_fn_intercept,
-                             new_extra, &grequest);
-
-   return(grequest);
-}
-
-//______________________________________________________________________________
-void TGrequest::Complete()
-{
-   (void) MPI_Grequest_complete(mpi_request);
-}
-*/

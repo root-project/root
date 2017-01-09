@@ -1,4 +1,5 @@
 #include<Mpi/TCommunicator.h>
+
 #include<TROOT.h>
 using namespace ROOT::Mpi;
 
@@ -113,4 +114,36 @@ template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) 
    var.Reset();
 
 }
+
+//______________________________________________________________________________
+void  TCommunicator::Barrier() const
+{
+   fComm.Barrier();
+}
+
+
+//______________________________________________________________________________
+Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag, TStatus &status) const
+{
+   return fComm.Iprobe(source, tag, status.fStatus);
+}
+
+//______________________________________________________________________________
+Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag) const
+{
+   return fComm.Iprobe(source, tag);
+}
+
+//______________________________________________________________________________
+void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
+{
+   fComm.Probe(source, tag, status.fStatus);
+}
+
+//______________________________________________________________________________
+void TCommunicator::Probe(Int_t source, Int_t tag) const
+{
+   fComm.Probe(source, tag);
+}
+
 
