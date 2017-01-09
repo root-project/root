@@ -126,15 +126,6 @@ uint8_t *SectionMemoryManager::allocateSection(MemoryGroup &MemGroup,
     } else {
       return isNotMonotonicAlternateOrder;
     }
-#if 0
-    std::unique_ptr<long> p1(new long);
-    std::unique_ptr<long> p2(new long);
-    if ( ((size_t)p2.get()) < ((size_t)p1.get()) ) {
-      return isNotMonotonicLinux;
-    } else {
-      return isNotMonotonicAlternateOrder;
-    }
-#endif
   };
   static CheckerType isNotMonotonic = getMonotonicChecker();
 
