@@ -8,3 +8,7 @@ ROOTCLINGEXE    := bin/rootcling$(EXEEXT)
 ROOTCLINGSTAGE2 := $(ROOTCLINGEXE) -rootbuild
 # Dependencies for all dictionaries
 ROOTCLINGSTAGE2DEP := $(ROOTCLINGEXE)
+
+ROOTCINTEXE     := bin/rootcint$(EXEEXT)
+GENREFLEXEXE    := bin/genreflex$(EXEEXT)
+
