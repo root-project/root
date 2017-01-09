@@ -76,7 +76,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `TTreeReader` now supports `TEntryList`s.
 - `TTreeReader::SetLastEntry()` has been deprecated. Its name is misleading; please use `TTreePlayer::SetEntriesRange()` instead.
 - `TTree::Branch()` now complains for wrong leaf list strings, e.g. "value/F[4]" (which should really be spelled as "value[4]/F").
-
+- Allow reading of older version of TTreePerfStats (ROOT-8520)
 
 ## 2D Graphics Libraries
 - If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
