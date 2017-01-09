@@ -527,6 +527,9 @@ which the parameter's definition needs to be autoloaded.
 - Store an empty StreamerInfo if the file has no data or data that does not need a StreamerInfo.
 - Fixed the I/O of std::vector<T> where T is a class *and* no dictionary was generated for std::vector<T> *and* sizeof(T)%sizeof(T*) is not zero. 
 
+### TTree
+
+- Allow reading of older version of TTreePerfStats (ROOT-8520)
 
 ### Bugs fixed in this release
 
