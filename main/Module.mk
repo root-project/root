@@ -142,7 +142,8 @@ ROOTCLINGDEP    := $(ROOTCLINGO:.o=.d)
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(XPROOFDSH) $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) \
-                $(ROOTSSH) $(ROOTNBEXE) $(ROOTCLINGEXE)
+                $(ROOTSSH) $(ROOTNBEXE) $(ROOTCLINGEXE) $(ROOTCINTEXE) \
+                $(GENREFLEXEXE)
 ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
