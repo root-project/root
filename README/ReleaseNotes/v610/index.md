@@ -166,8 +166,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 ## Montecarlo Libraries
 
 
-## PROOF Libraries
-
+## Parallelism and PROOF
+- Add ROOT::GetImplicitMTPoolSize function to get the size of the pool used to enable implicit multi threading
 
 ## Language Bindings
 

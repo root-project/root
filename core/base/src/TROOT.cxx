@@ -555,6 +555,21 @@ namespace Internal {
 #endif
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns the size of the pool used for implicit multi-threading.
+   UInt_t GetImplicitMTPoolSize()
+   {
+#ifdef R__USE_IMT
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_GetImplicitMTPoolSize");
+      if (sym)
+         return sym();
+      else
+         return 0;
+#else
+      return 0;
+#endif
+   }
+
 }
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
