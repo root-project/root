@@ -139,12 +139,10 @@
 #include "TMatrixTSym.h"
 #include "TObjString.h"
 #include "TGraph.h"
-#include "TSystem.h"
 
 #include <algorithm>
 #include <fstream>
 #include <math.h>
-
 
 using std::vector;
 using std::make_pair;
@@ -1518,8 +1516,10 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 
    // Need to update the predictions for the next tree
    // #### Do this in parallel by partitioning the data into nPartitions
+   #ifdef R__USE_IMT // multithreaded version if ROOT was compiled with multithreading 
    if(!first){
-      UInt_t nPartitions = 8;
+     
+      UInt_t nPartitions = GetNumCPUs();
       auto seeds = ROOT::TSeqU(nPartitions);
 
       // need a lambda function to pass to TThreadExecutor::MapReduce
@@ -1536,6 +1536,13 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 
       fPool.Map(f, seeds);
    }
+   #else // ROOT was not compiled with multithreading, use standard version
+   if(!first){
+      for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
+         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE); 
+      }    
+   }
+   #endif
    // #### Done with prediction timing
    watchPredict.Stop();
    std::cout << "    #### Done UpdateTargetsRegression Update Predictions: " << watchPredict.RealTime() << std::endl;

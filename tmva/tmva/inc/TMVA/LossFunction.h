@@ -35,9 +35,15 @@
 #include <vector>
 #include <map>
 #include "TMVA/Event.h"
-#include <ROOT/TThreadExecutor.hxx>
+
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
+#endif
+
+// multithreading only if the compilation flag is turned on
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#include "TSystem.h"
 #endif
 
 namespace TMVA {
@@ -83,8 +89,21 @@ namespace TMVA {
 
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
+
    protected:
+      // only use multithreading if the compilation flag is turned on
+      #ifdef R__USE_IMT
+      // ROOT multithreading object
       ROOT::TThreadExecutor fPool;
+
+      // number of CPUs available for parallelization
+      UInt_t GetNumCPUs(){
+         SysInfo_t s;
+         gSystem->GetSysInfo(&s);
+         UInt_t ncpu  = s.fCpus;
+         return ncpu;
+      };
+      #endif
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,6 +152,7 @@ namespace TMVA {
       virtual void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) = 0;
       virtual Double_t Target(LossFunctionEventInfo& e) = 0;
       virtual Double_t Fit(std::vector<LossFunctionEventInfo>& evs) = 0;
+
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////

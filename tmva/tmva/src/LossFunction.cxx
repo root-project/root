@@ -35,7 +35,6 @@
 #include "Rtypes.h"
 #include "TMath.h"
 #include "TStopwatch.h"
-#include <ROOT/TSeq.hxx>
       
 #include <iostream>
 
@@ -83,9 +82,11 @@ void TMVA::HuberLossFunction::Init(std::vector<LossFunctionEventInfo>& evs){
 ////////////////////////////////////////////////////////////////////////////////
 /// huber, calculate the sum of weights for the events in the vector
 
+// Multithreaded version of HuberLossFunction::CalculateSumOfWeights
+#ifdef R__USE_IMT
 Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs){
 
-   UInt_t nPartitions = 8;
+   UInt_t nPartitions = GetNumCPUs();
    auto seeds = ROOT::TSeqU(nPartitions);
    auto redfunc = [](std::vector<Double_t> a) -> Double_t { return std::accumulate(a.begin(), a.end(), 0); };
 
@@ -107,6 +108,18 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunction
    auto sumOfWeightsN = fPool.MapReduce(f, seeds, redfunc, nPartitions);
    return sumOfWeightsN;
 }
+// Standard version of HuberLossFunction::CalculateSumOfWeights
+#else 
+Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs){
+
+   // Calculate the sum of the weights
+   Double_t sumOfWeights = 0;
+   for(UInt_t i = 0; i<evs.size(); i++)
+      sumOfWeights+=evs[i].weight;
+
+   return sumOfWeights;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// huber, determine the quantile for a given input
@@ -264,9 +277,11 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, set the targets for a collection of events
 
+// Multithreaded version of HuberLossFunctionBDT::SetTargets
+#ifdef R__USE_IMT
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   UInt_t nPartitions = 8;
+   UInt_t nPartitions = GetNumCPUs();
    std::vector<LossFunctionEventInfo> eventvec(evs.size());
 
    auto seedscopy = ROOT::TSeqU(nPartitions);
@@ -310,6 +325,27 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
 
    fPool.Map(f, seeds);
 }
+
+// Multithreaded version of HuberLossFunctionBDT::SetTargets
+#else
+void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+
+   std::vector<LossFunctionEventInfo> eventvec;
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
+      eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
+   }
+
+   // Recalculate the residual that separates the "core" of the data and the "tails"
+   // This residual is the quantile given by fQuantile, defaulted to 0.7
+   // the quantile corresponding to 0.5 would be the usual median
+   SetSumOfWeights(eventvec); // This was already set in init, but may change if there is subsampling for each tree
+   SetTransitionPoint(eventvec);
+
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
+         const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
+   }
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, set the target for a single event
@@ -424,9 +460,11 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, set the targets for a collection of events
 
+// Multithreaded version of LeastSquaresLossFunctionBDT::SetTargets
+#ifdef R__USE_IMT
 void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   UInt_t nPartitions = 8;
+   UInt_t nPartitions = GetNumCPUs();
    auto seeds = ROOT::TSeqU(nPartitions);
 
    // need a lambda function to pass to TThreadExecutor::MapReduce
@@ -443,6 +481,15 @@ void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event
 
    fPool.Map(f, seeds);
 }
+// Standard version of LeastSquaresLossFunctionBDT::SetTargets
+#else
+void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
+         const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
+   }
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, set the target for a single event
@@ -543,9 +590,11 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, L
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, set the targets for a collection of events
 
+// Multithreaded version of AbsoluteDeviationLossFunctionBDT::SetTargets
+#ifdef R__USE_IMT
 void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   UInt_t nPartitions = 8;
+   UInt_t nPartitions = GetNumCPUs();
    auto seeds = ROOT::TSeqU(nPartitions);
 
    // need a lambda function to pass to TThreadExecutor::MapReduce
@@ -562,6 +611,15 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::
 
    fPool.Map(f, seeds);
 }
+// Standard version of AbsoluteDeviationLossFunctionBDT::SetTargets
+#else
+void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
+         const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
+   }
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, set the target for a single event

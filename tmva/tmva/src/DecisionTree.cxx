@@ -84,8 +84,6 @@
 #include "TMVA/IPruneTool.h"
 #include "TMVA/CostComplexityPruneTool.h"
 #include "TMVA/ExpectedErrorPruneTool.h"
-#include <ROOT/TThreadExecutor.hxx>
-#include <mutex>
 
 const Int_t TMVA::DecisionTree::fgRandomSeed = 0; // set nonzero for debugging and zero for random seeds
 
@@ -288,6 +286,8 @@ TMVA::DecisionTree* TMVA::DecisionTree::CreateFromXML(void* node, UInt_t tmva_Ve
    return dt;
 }
 
+// Multithreaded DecisionTree::BuildTree
+#ifdef R__USE_IMT
 //====================================================================================
 // Had to define this struct to enable parallelization.
 // Using BuildNodeInfo, each thread can return the information needed.
@@ -410,7 +410,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    sumWatch.Start();
 
    // #### Set up prerequisite info for multithreading
-   UInt_t nPartitions = 8;
+   UInt_t nPartitions = GetNumCPUs();
    auto seeds = ROOT::TSeqU(nPartitions);
 
    // #### need a lambda function to pass to TThreadExecutor::MapReduce
@@ -692,6 +692,267 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    //   if (IsRootNode) this->CleanTree();
    return fNNodes;
 }
+
+// Standard DecisionTree::BuildTree
+#else
+
+UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & eventSample,
+                                      TMVA::DecisionTreeNode *node)
+{
+   if (node==NULL) {
+      //start with the root node
+      node = new TMVA::DecisionTreeNode();
+      fNNodes = 1;
+      this->SetRoot(node);
+      // have to use "s" for start as "r" for "root" would be the same as "r" for "right"
+      this->GetRoot()->SetPos('s');
+      this->GetRoot()->SetDepth(0);
+      this->GetRoot()->SetParentTree(this);
+      fMinSize = fMinNodeSize/100. * eventSample.size();
+      if (GetTreeID()==0){
+         Log() << kDEBUG << "\tThe minimal node size MinNodeSize=" << fMinNodeSize << " fMinNodeSize="<<fMinNodeSize<< "% is translated to an actual number of events = "<< fMinSize<< " for the training sample size of " << eventSample.size() << Endl;
+         Log() << kDEBUG << "\tNote: This number will be taken as absolute minimum in the node, " << Endl;
+         Log() << kDEBUG << "      \tin terms of 'weighted events' and unweighted ones !! " << Endl;
+      }
+   }
+
+   UInt_t nevents = eventSample.size();
+
+   if (nevents > 0 ) {
+      if (fNvars==0) fNvars = eventSample[0]->GetNVariables(); // should have been set before, but ... well..
+      fVariableImportance.resize(fNvars);
+   }
+   else Log() << kFATAL << ":<BuildTree> eventsample Size == 0 " << Endl;
+
+   Double_t s=0, b=0;
+   Double_t suw=0, buw=0;
+   Double_t sub=0, bub=0; // unboosted!
+   Double_t target=0, target2=0;
+   Float_t *xmin = new Float_t[fNvars];
+   Float_t *xmax = new Float_t[fNvars];
+
+   // initializing xmin and xmax for each variable
+   for (UInt_t ivar=0; ivar<fNvars; ivar++) {
+      xmin[ivar]=xmax[ivar]=0;
+   }
+   // sum up the totals
+   // sig and bkg for classification
+   // err and err2 for regression
+   for (UInt_t iev=0; iev<eventSample.size(); iev++) {
+      const TMVA::Event* evt = eventSample[iev];
+      const Double_t weight = evt->GetWeight();
+      const Double_t orgWeight = evt->GetOriginalWeight(); // unboosted!
+      if (evt->GetClass() == fSigClass) {
+         s += weight;
+         suw += 1;
+         sub += orgWeight;
+      }
+      else {
+         b += weight;
+         buw += 1;
+         bub += orgWeight;
+      }
+      if ( DoRegression() ) {
+         const Double_t tgt = evt->GetTarget(0);
+         target +=weight*tgt;
+         target2+=weight*tgt*tgt;
+      }
+
+      // save the min and max for each feature
+      for (UInt_t ivar=0; ivar<fNvars; ivar++) {
+         const Double_t val = evt->GetValue(ivar);
+         if (iev==0) xmin[ivar]=xmax[ivar]=val;
+         if (val < xmin[ivar]) xmin[ivar]=val;
+         if (val > xmax[ivar]) xmax[ivar]=val;
+      }
+   }
+
+
+   if (s+b < 0) {
+      Log() << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. "
+            << "(Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle "
+            << "be fine as long as on average you end up with something positive. For this you have to make sure that the "
+            << "minimul number of (unweighted) events demanded for a tree node (currently you use: MinNodeSize="<<fMinNodeSize
+            << "% of training events, you can set this via the BDT option string when booking the classifier) is large enough "
+            << "to allow for reasonable averaging!!!" << Endl
+            << " If this does not help.. maybe you want to try the option: NoNegWeightsInTraining which ignores events "
+            << "with negative weight in the training." << Endl;
+      double nBkg=0.;
+      for (UInt_t i=0; i<eventSample.size(); i++) {
+         if (eventSample[i]->GetClass() != fSigClass) {
+            nBkg += eventSample[i]->GetWeight();
+            Log() << kDEBUG << "Event "<< i<< " has (original) weight: " <<  eventSample[i]->GetWeight()/eventSample[i]->GetBoostWeight()
+                  << " boostWeight: " << eventSample[i]->GetBoostWeight() << Endl;
+         }
+      }
+      Log() << kDEBUG << " that gives in total: " << nBkg<<Endl;
+   }
+
+   node->SetNSigEvents(s);
+   node->SetNBkgEvents(b);
+   node->SetNSigEvents_unweighted(suw);
+   node->SetNBkgEvents_unweighted(buw);
+   node->SetNSigEvents_unboosted(sub);
+   node->SetNBkgEvents_unboosted(bub);
+   node->SetPurity();
+   if (node == this->GetRoot()) {
+      node->SetNEvents(s+b);
+      node->SetNEvents_unweighted(suw+buw);
+      node->SetNEvents_unboosted(sub+bub);
+   }
+   // #### !!!!
+   //std::cout << std::endl;
+   //std::cout << "BuildTree target : " << target << std::endl;
+   //std::cout << "BuildTree target2: " << target2 << std::endl;
+   //std::cout << "BuildTree s      : " << s << std::endl;
+   //std::cout << "BuildTree b      : " << b << std::endl;
+   //std::cout << "BuildTree suw    : " << suw << std::endl;
+   //std::cout << "BuildTree buw    : " << buw << std::endl;
+   //std::cout << "BuildTree sub    : " << sub << std::endl;
+   //std::cout << "BuildTree bub    : " << bub << std::endl;
+
+   // save the min and max for each feature
+   for (UInt_t ivar=0; ivar<fNvars; ivar++) {
+      node->SetSampleMin(ivar,xmin[ivar]);
+      node->SetSampleMax(ivar,xmax[ivar]);
+
+      // #### !!!!
+      //std::cout << "BuildTree xmin[" << ivar << "]: " << xmin[ivar] << std::endl;
+      //std::cout << "BuildTree xmax[" << ivar << "]: " << xmax[ivar] << std::endl;
+   }
+   //std::cout << std::endl;
+   delete[] xmin;
+   delete[] xmax;
+
+   // I now demand the minimum number of events for both daughter nodes. Hence if the number
+   // of events in the parent node is not at least two times as big, I don't even need to try
+   // splitting
+
+   // ask here for actuall "events" independent of their weight.. OR the weighted events
+   // to execeed the min requested number of events per dauther node
+   // (NOTE: make sure that at the eventSample at the ROOT node has sum_of_weights == sample.size() !
+   //   if ((eventSample.size() >= 2*fMinSize ||s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth 
+   // std::cout << "------------------------------------------------------------------"<<std::endl;
+   // std::cout << "------------------------------------------------------------------"<<std::endl;
+   // std::cout << " eveSampleSize = "<< eventSample.size() << " s+b="<<s+b << std::endl;
+   if ((eventSample.size() >= 2*fMinSize  && s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth
+       && ( ( s!=0 && b !=0 && !DoRegression()) || ( (s+b)!=0 && DoRegression()) ) ) {
+      Double_t separationGain;
+      if (fNCuts > 0){
+         separationGain = this->TrainNodeFast(eventSample, node);
+      } else {
+         separationGain = this->TrainNodeFull(eventSample, node);
+      }
+      if (separationGain < std::numeric_limits<double>::epsilon()) { // we could not gain anything, e.g. all events are in one bin,
+         /// if (separationGain < 0.00000001) { // we could not gain anything, e.g. all events are in one bin,
+         // no cut can actually do anything to improve the node
+         // hence, naturally, the current node is a leaf node
+         if (DoRegression()) {
+            node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
+            node->SetResponse(target/(s+b));
+            if( almost_equal_double(target2/(s+b),target/(s+b)*target/(s+b)) ){
+               node->SetRMS(0);
+            }else{
+               node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+            }
+         }
+         else {
+            node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
+
+            if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
+            else node->SetNodeType(-1);
+         }
+         if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
+
+      } else {
+
+         std::vector<const TMVA::Event*> leftSample; leftSample.reserve(nevents);
+         std::vector<const TMVA::Event*> rightSample; rightSample.reserve(nevents);
+
+         Double_t nRight=0, nLeft=0;
+         Double_t nRightUnBoosted=0, nLeftUnBoosted=0;
+
+         for (UInt_t ie=0; ie< nevents ; ie++) {
+            if (node->GoesRight(*eventSample[ie])) {
+               rightSample.push_back(eventSample[ie]);
+               nRight += eventSample[ie]->GetWeight();
+               nRightUnBoosted += eventSample[ie]->GetOriginalWeight();
+            }
+            else {
+               leftSample.push_back(eventSample[ie]);
+               nLeft += eventSample[ie]->GetWeight();
+               nLeftUnBoosted += eventSample[ie]->GetOriginalWeight();
+            }
+         }
+
+         // sanity check
+         if (leftSample.empty() || rightSample.empty()) {
+
+            Log() << kERROR << "<TrainNode> all events went to the same branch" << Endl
+                  << "---                       Hence new node == old node ... check" << Endl
+                  << "---                         left:" << leftSample.size()
+                  << " right:" << rightSample.size() << Endl
+                  << " while the separation is thought to be " << separationGain
+                  << "\n when cutting on variable " << node->GetSelector()
+                  << " at value " << node->GetCutValue()
+                  << kFATAL << "--- this should never happen, please write a bug report to Helge.Voss@cern.ch" << Endl;
+
+
+         }
+
+         // continue building daughter nodes for the left and the right eventsample
+         TMVA::DecisionTreeNode *rightNode = new TMVA::DecisionTreeNode(node,'r');
+         fNNodes++;
+         rightNode->SetNEvents(nRight);
+         rightNode->SetNEvents_unboosted(nRightUnBoosted);
+         rightNode->SetNEvents_unweighted(rightSample.size());
+
+         TMVA::DecisionTreeNode *leftNode = new TMVA::DecisionTreeNode(node,'l');
+
+         fNNodes++;
+         leftNode->SetNEvents(nLeft);
+         leftNode->SetNEvents_unboosted(nLeftUnBoosted);
+         leftNode->SetNEvents_unweighted(leftSample.size());
+
+         node->SetNodeType(0);
+         node->SetLeft(leftNode);
+         node->SetRight(rightNode);
+
+         this->BuildTree(rightSample, rightNode);
+         this->BuildTree(leftSample,  leftNode );
+
+      }
+   }
+   else{ // it is a leaf node
+      if (DoRegression()) {
+         node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
+         node->SetResponse(target/(s+b));
+         if( almost_equal_double(target2/(s+b), target/(s+b)*target/(s+b)) ) {
+            node->SetRMS(0);
+         }else{
+            node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+         }
+      }
+      else {
+         node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
+         if   (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
+         else node->SetNodeType(-1);
+         // loop through the event sample ending up in this node and check for events with negative weight
+         // those "cannot" be boosted normally. Hence, if there is one of those
+         // is misclassified, find randomly as many events with positive weights in this
+         // node as needed to get the same absolute number of weight, and mark them as 
+         // "not to be boosted" in order to make up for not boosting the negative weight event
+      }
+
+
+      if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
+   }
+
+   //   if (IsRootNode) this->CleanTree();
+   return fNNodes;
+}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1098,6 +1359,8 @@ void TMVA::DecisionTree::GetRandomisedVariables(Bool_t *useVariable, UInt_t *map
    if (nSelectedVars != useNvars) { std::cout << "Bug in TrainNode - GetRandisedVariables()... sorry" << std::endl; std::exit(1);}
 }
 
+// Multithreaded version of DecisionTree::TrainNodeFast
+#ifdef R__USE_IMT
 //====================================================================================
 // Had to define this struct to enable parallelization in TrainNodeFast.
 // Using TrainNodeInfo, each thread can return the information needed.
@@ -1201,6 +1464,7 @@ struct TrainNodeInfo{
 Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                                             TMVA::DecisionTreeNode *node )
 {
+   // #### Time TrainNodeFast
    TStopwatch trainWatch;
    trainWatch.Start();
 
@@ -1368,10 +1632,18 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
    }
 
+   // ====================================================================
+   // ====================================================================
+   // Parallelized Version
+   // ====================================================================
+   // ====================================================================
+
    // #### Figure out the cut values, loops through vars then through cuts
    // #### if cuts is on the order of the amount of training data then we can parallelize this and get some gains
    // fill the cut values for the scan:
-   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+   auto varSeeds = ROOT::TSeqU(cNvars);
+   auto fvarInitCuts = [this, &useVariable, &cutValues, &invBinWidth, &binWidth, &nBins, &xmin, &xmax](UInt_t ivar = 0){
+   //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
 
       if ( useVariable[ivar] ) {
          
@@ -1402,7 +1674,9 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             //            std::cout << " cutValues["<<ivar<<"]["<<icut<<"]=" <<  cutValues[ivar][icut] << std::endl;
          }
       }
-   }
+      return 0;
+   };
+   fPool.Map(fvarInitCuts, varSeeds);
   
    // #### Loop through the events to get the total sig and background
    // #### Then loop through the vars to get the counts in each bin in each var
@@ -1412,19 +1686,12 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    //nTotS=0; nTotB=0;
    //nTotS_unWeighted=0; nTotB_unWeighted=0;   
 
-   // ====================================================================
-   // ====================================================================
-   // Parallelized Version
-   // ====================================================================
-   // ====================================================================
-
    TrainNodeInfo nodeInfo(cNvars, nBins);
-   UInt_t nPartitions = 8;
-   auto varSeeds = ROOT::TSeqU(cNvars);
+   UInt_t nPartitions = GetNumCPUs();
 
    // When nbins is low compared to ndata this version of parallelization is faster, so use it 
    // Parallelize by chunking the data into the same number of sections as we have processors
-   if(eventSample.size() <= fNCuts*nPartitions*1.5)
+   if(eventSample.size() >= fNCuts*nPartitions*1.5)
    {
       auto seeds = ROOT::TSeqU(nPartitions);
 
@@ -1911,6 +2178,474 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    return separationGainTotal;
 }
 
+// Standard version of DecisionTree::TrainNodeFast
+#else
+Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
+                                            TMVA::DecisionTreeNode *node )
+{
+// #### OK let's comment this one to see how to parallelize it
+   Double_t  separationGainTotal = -1, sepTmp;
+   Double_t *separationGain    = new Double_t[fNvars+1];
+   Int_t    *cutIndex          = new Int_t[fNvars+1];  //-1;
+
+   // #### initialize the sep gain and cut index values
+   for (UInt_t ivar=0; ivar <= fNvars; ivar++) {
+      separationGain[ivar]=-1;
+      cutIndex[ivar]=-1;
+   }
+   // ### set up some other variables
+   Int_t     mxVar = -1;
+   Bool_t    cutType = kTRUE;
+   Double_t  nTotS, nTotB;
+   Int_t     nTotS_unWeighted, nTotB_unWeighted;
+   UInt_t nevents = eventSample.size();
+
+
+   // the +1 comes from the fact that I treat later on the Fisher output as an 
+   // additional possible variable.
+   Bool_t *useVariable = new Bool_t[fNvars+1];   // for performance reasons instead of std::vector<Bool_t> useVariable(fNvars);
+   UInt_t *mapVariable = new UInt_t[fNvars+1];    // map the subset of variables used in randomised trees to the original variable number (used in the Event() ) 
+
+   std::vector<Double_t> fisherCoeff;
+
+   // #### set up a map to the subset of variables using two arrays
+   if (fRandomisedTree) { // choose for each node splitting a random subset of variables to choose from
+      UInt_t tmp=fUseNvars;
+      GetRandomisedVariables(useVariable,mapVariable,tmp);
+   }
+   else {
+      for (UInt_t ivar=0; ivar < fNvars; ivar++) {
+         useVariable[ivar] = kTRUE;
+         mapVariable[ivar] = ivar;
+      }
+   }
+   // #### last variable entry is the fisher variable
+   useVariable[fNvars] = kFALSE; //by default fisher is not used..
+
+   // #### Begin Fisher calculation
+   Bool_t fisherOK = kFALSE; // flag to show that the fisher discriminant could be calculated correctly or not;
+   if (fUseFisherCuts) {
+      useVariable[fNvars] = kTRUE; // that's were I store the "fisher MVA"
+
+      //use for the Fisher discriminant ONLY those variables that show
+      //some reasonable linear correlation in either Signal or Background
+      Bool_t *useVarInFisher = new Bool_t[fNvars];   // for performance reasons instead of std::vector<Bool_t> useVariable(fNvars);
+      UInt_t *mapVarInFisher = new UInt_t[fNvars];   // map the subset of variables used in randomised trees to the original variable number (used in the Event() ) 
+      for (UInt_t ivar=0; ivar < fNvars; ivar++) {
+         useVarInFisher[ivar] = kFALSE;
+         mapVarInFisher[ivar] = ivar;
+      }
+
+      std::vector<TMatrixDSym*>* covMatrices;
+      covMatrices = gTools().CalcCovarianceMatrices( eventSample, 2 ); // currently for 2 classes only
+      if (!covMatrices){
+         Log() << kWARNING << " in TrainNodeFast, the covariance Matrices needed for the Fisher-Cuts returned error --> revert to just normal cuts for this node" << Endl;
+         fisherOK = kFALSE;
+      }else{
+         TMatrixD *ss = new TMatrixD(*(covMatrices->at(0)));
+         TMatrixD *bb = new TMatrixD(*(covMatrices->at(1)));
+         const TMatrixD *s = gTools().GetCorrelationMatrix(ss);
+         const TMatrixD *b = gTools().GetCorrelationMatrix(bb);
+
+         for (UInt_t ivar=0; ivar < fNvars; ivar++) {
+            for (UInt_t jvar=ivar+1; jvar < fNvars; jvar++) {
+               if (  ( TMath::Abs( (*s)(ivar, jvar)) > fMinLinCorrForFisher) ||
+                     ( TMath::Abs( (*b)(ivar, jvar)) > fMinLinCorrForFisher) ){
+                  useVarInFisher[ivar] = kTRUE;
+                  useVarInFisher[jvar] = kTRUE;
+               }
+            }
+         }
+         // now as you know which variables you want to use, count and map them:
+         // such that you can use an array/matrix filled only with THOSE variables
+         // that you used
+         UInt_t nFisherVars = 0;
+         for (UInt_t ivar=0; ivar < fNvars; ivar++) {
+            //now .. pick those variables that are used in the FIsher and are also
+            //  part of the "allowed" variables in case of Randomized Trees)
+            if (useVarInFisher[ivar] && useVariable[ivar]) {
+               mapVarInFisher[nFisherVars++]=ivar;
+               // now exclud the the variables used in the Fisher cuts, and don't 
+               // use them anymore in the individual variable scan
+               if (fUseExclusiveVars) useVariable[ivar] = kFALSE;
+            }
+         }
+
+
+         fisherCoeff = this->GetFisherCoefficients(eventSample, nFisherVars, mapVarInFisher);
+         fisherOK = kTRUE;
+      }
+      delete [] useVarInFisher;
+      delete [] mapVarInFisher;
+
+   }
+   // #### End Fisher calculation
+
+
+   UInt_t cNvars = fNvars;
+   if (fUseFisherCuts && fisherOK) cNvars++;  // use the Fisher output simple as additional variable
+
+   // #### OK now what's going on...
+   // #### looks like we are setting up histograms
+   UInt_t*   nBins = new UInt_t [cNvars];
+   Double_t* binWidth = new Double_t [cNvars];
+   Double_t* invBinWidth = new Double_t [cNvars];
+
+   Double_t** nSelS = new Double_t* [cNvars];
+   Double_t** nSelB = new Double_t* [cNvars];
+   Double_t** nSelS_unWeighted = new Double_t* [cNvars];
+   Double_t** nSelB_unWeighted = new Double_t* [cNvars];
+   Double_t** target = new Double_t* [cNvars];
+   Double_t** target2 = new Double_t* [cNvars];
+   Double_t** cutValues = new Double_t* [cNvars];
+
+   // #### looping through the variables...
+   for (UInt_t ivar=0; ivar<cNvars; ivar++) {
+      // #### ncuts means that we need n+1 bins for each variable
+      nBins[ivar] = fNCuts+1;
+      if (ivar < fNvars) {
+         if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I') {
+            nBins[ivar] = node->GetSampleMax(ivar) - node->GetSampleMin(ivar) + 1;
+         }
+      }
+
+      // #### make some new arrays for the ith var, size=nbins for each array
+      nSelS[ivar] = new Double_t [nBins[ivar]];
+      nSelB[ivar] = new Double_t [nBins[ivar]];
+      nSelS_unWeighted[ivar] = new Double_t [nBins[ivar]];
+      nSelB_unWeighted[ivar] = new Double_t [nBins[ivar]];
+      target[ivar] = new Double_t [nBins[ivar]];
+      target2[ivar] = new Double_t [nBins[ivar]];
+      cutValues[ivar] = new Double_t [nBins[ivar]];
+
+   }
+
+   // #### xmin and xmax for earch variable
+   Double_t *xmin = new Double_t[cNvars];
+   Double_t *xmax = new Double_t[cNvars];
+
+   // #### ok loop through each variable to initialize all the values
+   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+      if (ivar < fNvars){
+         xmin[ivar]=node->GetSampleMin(ivar);
+         xmax[ivar]=node->GetSampleMax(ivar);
+         if (almost_equal_float(xmax[ivar], xmin[ivar])) {
+            // std::cout << " variable " << ivar << " has no proper range in (xmax[ivar]-xmin[ivar] = " << xmax[ivar]-xmin[ivar] << std::endl;
+            // std::cout << " will set useVariable[ivar]=false"<<std::endl;
+            useVariable[ivar]=kFALSE;
+         }
+
+      } else { // the fisher variable
+         xmin[ivar]=999;
+         xmax[ivar]=-999;
+         // too bad, for the moment I don't know how to do this without looping
+         // once to get the "min max" and then AGAIN to fill the histogram
+         for (UInt_t iev=0; iev<nevents; iev++) {
+            // returns the Fisher value (no fixed range)
+            Double_t result = fisherCoeff[fNvars]; // the fisher constant offset
+            for (UInt_t jvar=0; jvar<fNvars; jvar++)
+               result += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+            if (result > xmax[ivar]) xmax[ivar]=result;
+            if (result < xmin[ivar]) xmin[ivar]=result;
+         }
+      }
+      for (UInt_t ibin=0; ibin<nBins[ivar]; ibin++) {
+         nSelS[ivar][ibin]=0;
+         nSelB[ivar][ibin]=0;
+         nSelS_unWeighted[ivar][ibin]=0;
+         nSelB_unWeighted[ivar][ibin]=0;
+         target[ivar][ibin]=0;
+         target2[ivar][ibin]=0;
+         cutValues[ivar][ibin]=0;
+      }
+   }
+
+   // #### Nothing to parallelize here really, no loop through of events
+   // #### only figures out the cut values in even chunks
+   // fill the cut values for the scan:
+   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+
+      if ( useVariable[ivar] ) {
+
+         //set the grid for the cut scan on the variables like this:
+         // 
+         //  |       |        |         |         |   ...      |        |  
+         // xmin                                                       xmax
+         //
+         // cut      0        1         2         3   ...     fNCuts-1 (counting from zero)
+         // bin  0       1         2         3       .....      nBins-1=fNCuts (counting from zero)
+         // --> nBins = fNCuts+1
+         // (NOTE, the cuts at xmin or xmax would just give the whole sample and
+         //  hence can be safely omitted
+
+         binWidth[ivar] = ( xmax[ivar] - xmin[ivar] ) / Double_t(nBins[ivar]);
+         invBinWidth[ivar] = 1./binWidth[ivar];
+         if (ivar < fNvars) {
+            if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I') { invBinWidth[ivar] = 1; binWidth[ivar] = 1; }
+         }
+
+         // std::cout << "ivar="<<ivar
+         //           <<" min="<<xmin[ivar]  
+         //           << " max="<<xmax[ivar] 
+         //           << " widht=" << istepSize 
+         //           << " nBins["<<ivar<<"]="<<nBins[ivar]<<std::endl;
+         for (UInt_t icut=0; icut<nBins[ivar]-1; icut++) {
+            cutValues[ivar][icut]=xmin[ivar]+(Double_t(icut+1))*binWidth[ivar];
+            //            std::cout << " cutValues["<<ivar<<"]["<<icut<<"]=" <<  cutValues[ivar][icut] << std::endl;
+         }
+      }
+   }
+
+   // #### Loop through the events to get the total sig and background
+   nTotS=0; nTotB=0;
+   nTotS_unWeighted=0; nTotB_unWeighted=0;
+   for (UInt_t iev=0; iev<nevents; iev++) {
+
+      Double_t eventWeight =  eventSample[iev]->GetWeight();
+      if (eventSample[iev]->GetClass() == fSigClass) {
+         nTotS+=eventWeight;
+         nTotS_unWeighted++;    }
+      else {
+         nTotB+=eventWeight;
+         nTotB_unWeighted++;
+      }
+
+      // #### Count the number in each bin
+      Int_t iBin=-1;
+      for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+         // now scan trough the cuts for each varable and find which one gives
+         // the best separationGain at the current stage.
+         if ( useVariable[ivar] ) {
+            Double_t eventData;
+            if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar);
+            else { // the fisher variable
+               eventData = fisherCoeff[fNvars];
+               for (UInt_t jvar=0; jvar<fNvars; jvar++)
+                  eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+
+            }
+            // #### figure out which bin it belongs in ...
+            // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
+            iBin = TMath::Min(Int_t(nBins[ivar]-1),TMath::Max(0,int (invBinWidth[ivar]*(eventData-xmin[ivar]) ) ));
+            if (eventSample[iev]->GetClass() == fSigClass) {
+               nSelS[ivar][iBin]+=eventWeight;
+               nSelS_unWeighted[ivar][iBin]++;
+            }
+            else {
+               nSelB[ivar][iBin]+=eventWeight;
+               nSelB_unWeighted[ivar][iBin]++;
+            }
+            if (DoRegression()) {
+               target[ivar][iBin] +=eventWeight*eventSample[iev]->GetTarget(0);
+               target2[ivar][iBin]+=eventWeight*eventSample[iev]->GetTarget(0)*eventSample[iev]->GetTarget(0);
+            }
+         }
+      }
+   }
+   // #### !!!!
+   //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+   //   for (UInt_t ibin=0; ibin<nBins[ivar]; ibin++) {
+   //      std::cout << "   TrainNodeFast: target[" << ivar << "][" << ibin << "]: " << target[ivar][ibin] << std::endl;
+   //      std::cout << "   TrainNodeFast: target2[" << ivar << "][" << ibin << "]: " << target2[ivar][ibin] << std::endl;
+   //      std::cout << "   TrainNodeFast: nSelS[" << ivar << "][" << ibin << "]: " << nSelS[ivar][ibin] << std::endl;
+   //      std::cout << "   TrainNodeFast: nSelB[" << ivar << "][" << ibin << "]: " << nSelB[ivar][ibin] << std::endl;
+   //      std::cout << "   TrainNodeFast: nSelS_unWeighted[" << ivar << "][" << ibin << "]: " << nSelS_unWeighted[ivar][ibin] << std::endl;
+   //      std::cout << "   TrainNodeFast: nSelB_unWeighted[" << ivar << "][" << ibin << "]: " << nSelB_unWeighted[ivar][ibin] << std::endl;
+   //      std::cout << std::endl;
+   //   }
+   //}
+
+   //std::cout << std::endl;
+   //std::cout << "   TrainNodeFast: nTotS: " << nTotS << std::endl;
+   //std::cout << "   TrainNodeFast: nTotB: " << nTotB << std::endl;
+   //std::cout << "   TrainNodeFast: nTotS_unWeighted: " << nTotS_unWeighted << std::endl;
+   //std::cout << "   TrainNodeFast: nTotB_unWeighted: " << nTotB_unWeighted << std::endl;
+
+   // now turn the "histogram" into a cumulative distribution
+   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+      if (useVariable[ivar]) {
+         for (UInt_t ibin=1; ibin < nBins[ivar]; ibin++) {
+            nSelS[ivar][ibin]+=nSelS[ivar][ibin-1];
+            nSelS_unWeighted[ivar][ibin]+=nSelS_unWeighted[ivar][ibin-1];
+            nSelB[ivar][ibin]+=nSelB[ivar][ibin-1];
+            nSelB_unWeighted[ivar][ibin]+=nSelB_unWeighted[ivar][ibin-1];
+            if (DoRegression()) {
+               target[ivar][ibin] +=target[ivar][ibin-1] ;
+               target2[ivar][ibin]+=target2[ivar][ibin-1];
+            }
+         }
+         if (nSelS_unWeighted[ivar][nBins[ivar]-1] +nSelB_unWeighted[ivar][nBins[ivar]-1] != eventSample.size()) {
+            Log() << kFATAL << "Helge, you have a bug ....nSelS_unw..+nSelB_unw..= "
+                  << nSelS_unWeighted[ivar][nBins[ivar]-1] +nSelB_unWeighted[ivar][nBins[ivar]-1]
+                  << " while eventsample size = " << eventSample.size()
+                  << Endl;
+         }
+         double lastBins=nSelS[ivar][nBins[ivar]-1] +nSelB[ivar][nBins[ivar]-1];
+         double totalSum=nTotS+nTotB;
+         if (TMath::Abs(lastBins-totalSum)/totalSum>0.01) {
+            Log() << kFATAL << "Helge, you have another bug ....nSelS+nSelB= "
+                  << lastBins
+                  << " while total number of events = " << totalSum
+                  << Endl;
+         }
+      }
+   }
+   // #### Loops over vars and bins, but not events ...
+   // now select the optimal cuts for each varable and find which one gives
+   // the best separationGain at the current stage
+   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+      if (useVariable[ivar]) {
+         for (UInt_t iBin=0; iBin<nBins[ivar]-1; iBin++) { // the last bin contains "all events" -->skip
+            // the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
+            // calculated by the "SamplePurities" fom the branches that would go to the
+            // left or the right from this node if "these" cuts were used in the Node:
+            // hereby: nSelS and nSelB would go to the right branch
+            //        (nTotS - nSelS) + (nTotB - nSelB)  would go to the left branch;
+
+            // only allow splits where both daughter nodes match the specified miniumum number
+            // for this use the "unweighted" events, as you are interested in statistically 
+            // significant splits, which is determined by the actual number of entries
+            // for a node, rather than the sum of event weights.
+
+            Double_t sl = nSelS_unWeighted[ivar][iBin];
+            Double_t bl = nSelB_unWeighted[ivar][iBin];
+            Double_t s  = nTotS_unWeighted;
+            Double_t b  = nTotB_unWeighted;
+            Double_t slW = nSelS[ivar][iBin];
+            Double_t blW = nSelB[ivar][iBin];
+            Double_t sW  = nTotS;
+            Double_t bW  = nTotB;
+            Double_t sr = s-sl;
+            Double_t br = b-bl;
+            Double_t srW = sW-slW;
+            Double_t brW = bW-blW;
+            //            std::cout << "sl="<<sl << " bl="<<bl<<" fMinSize="<<fMinSize << "sr="<<sr << " br="<<br  <<std::endl;
+            if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
+                 && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize)
+                 ) {
+
+               if (DoRegression()) {
+                  sepTmp = fRegType->GetSeparationGain(nSelS[ivar][iBin]+nSelB[ivar][iBin],
+                                                       target[ivar][iBin],target2[ivar][iBin],
+                                                       nTotS+nTotB,
+                                                       target[ivar][nBins[ivar]-1],target2[ivar][nBins[ivar]-1]);
+               } else {
+                  sepTmp = fSepType->GetSeparationGain(nSelS[ivar][iBin], nSelB[ivar][iBin], nTotS, nTotB);
+               }
+               if (separationGain[ivar] < sepTmp) {
+                  separationGain[ivar] = sepTmp;
+                  cutIndex[ivar]       = iBin;
+               }
+            }
+         }
+      }
+   }
+
+   //now you have found the best separation cut for each variable, now compare the variables
+   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+      if (useVariable[ivar] ) {
+         if (separationGainTotal < separationGain[ivar]) {
+            separationGainTotal = separationGain[ivar];
+            mxVar = ivar;
+         }
+      }
+      // #### !!!!
+      //std::cout << "   TrainNodeFast: separationGain[" << ivar << "]: " << separationGain[ivar] << std::endl;
+      //std::cout << "   TrainNodeFast: cutValue[" << ivar << "]: " << cutValues[ivar][cutIndex[ivar]] << std::endl;
+      //std::cout << "   TrainNodeFast: cutIndex[" << ivar << "]: " << cutIndex[ivar] << std::endl;
+   }
+   //std::cout << std::endl;
+
+   if (mxVar >= 0) {
+      if (DoRegression()) {
+         node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins[mxVar]-1],target2[0][nBins[mxVar]-1]));
+         node->SetResponse(target[0][nBins[mxVar]-1]/(nTotS+nTotB));
+         if ( almost_equal_double(target2[0][nBins[mxVar]-1]/(nTotS+nTotB),  target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB))) {
+            node->SetRMS(0);
+         }else{
+            node->SetRMS(TMath::Sqrt(target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)));
+         }
+      }
+      else {
+         node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
+         if (mxVar >=0){
+            if (nSelS[mxVar][cutIndex[mxVar]]/nTotS > nSelB[mxVar][cutIndex[mxVar]]/nTotB) cutType=kTRUE;
+            else cutType=kFALSE;
+         }
+      }
+      node->SetSelector((UInt_t)mxVar);
+      node->SetCutValue(cutValues[mxVar][cutIndex[mxVar]]);
+      node->SetCutType(cutType);
+      node->SetSeparationGain(separationGainTotal);
+      if (mxVar < (Int_t) fNvars){ // the fisher cut is actually not used in this node, hence don't need to store fisher components
+         node->SetNFisherCoeff(0);
+         fVariableImportance[mxVar] += separationGainTotal*separationGainTotal * (nTotS+nTotB) * (nTotS+nTotB) ;
+         //for (UInt_t ivar=0; ivar<fNvars; ivar++) fVariableImportance[ivar] += separationGain[ivar]*separationGain[ivar] * (nTotS+nTotB) * (nTotS+nTotB) ;
+      }else{
+         // allocate Fisher coefficients (use fNvars, and set the non-used ones to zero. Might
+         // be even less storage space on average than storing also the mapping used otherwise
+         // can always be changed relatively easy
+         node->SetNFisherCoeff(fNvars+1);
+         for (UInt_t ivar=0; ivar<=fNvars; ivar++) {
+            node->SetFisherCoeff(ivar,fisherCoeff[ivar]);
+            // take 'fisher coeff. weighted estimate as variable importance, "Don't fill the offset coefficient though :) 
+            if (ivar<fNvars){
+               fVariableImportance[ivar] += fisherCoeff[ivar]*fisherCoeff[ivar]*separationGainTotal*separationGainTotal * (nTotS+nTotB) * (nTotS+nTotB) ;
+            }
+         }
+      }
+   }
+   else {
+      separationGainTotal = 0;
+   }
+   // if (mxVar > -1) {
+   //   std::cout << "------------------------------------------------------------------"<<std::endl;
+   //   std::cout << "cutting on Var: " << mxVar << " with cutIndex " << cutIndex[mxVar] << " being: " << cutValues[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " nSelS = " << nSelS_unWeighted[mxVar][cutIndex[mxVar]] << " nSelB = " << nSelB_unWeighted[mxVar][cutIndex[mxVar]] << " (right) sum:= " << nSelS_unWeighted[mxVar][cutIndex[mxVar]] + nSelB_unWeighted[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " nSelS = " << nTotS_unWeighted - nSelS_unWeighted[mxVar][cutIndex[mxVar]] << " nSelB = " << nTotB_unWeighted-nSelB_unWeighted[mxVar][cutIndex[mxVar]] << " (left) sum:= " << nTotS_unWeighted + nTotB_unWeighted - nSelS_unWeighted[mxVar][cutIndex[mxVar]] - nSelB_unWeighted[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " nSelS = " << nSelS[mxVar][cutIndex[mxVar]] << " nSelB = " << nSelB[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " s/s+b " << nSelS_unWeighted[mxVar][cutIndex[mxVar]]/( nSelS_unWeighted[mxVar][cutIndex[mxVar]] + nSelB_unWeighted[mxVar][cutIndex[mxVar]]) 
+   //             << " s/s+b " << (nTotS - nSelS_unWeighted[mxVar][cutIndex[mxVar]])/( nTotS-nSelS_unWeighted[mxVar][cutIndex[mxVar]] + nTotB-nSelB_unWeighted[mxVar][cutIndex[mxVar]]) << std::endl;
+   //   std::cout << " nTotS = " << nTotS << " nTotB = " << nTotB << std::endl;
+   //   std::cout << " separationGainTotal " << separationGainTotal << std::endl;
+   // } else {
+   //   std::cout << "------------------------------------------------------------------"<<std::endl;
+   //   std::cout << " obviously didn't find new mxVar " << mxVar << std::endl;
+   // }
+   for (UInt_t i=0; i<cNvars; i++) {
+      delete [] nSelS[i];
+      delete [] nSelB[i];
+      delete [] nSelS_unWeighted[i];
+      delete [] nSelB_unWeighted[i];
+      delete [] target[i];
+      delete [] target2[i];
+      delete [] cutValues[i];
+   }
+   delete [] nSelS;
+   delete [] nSelB;
+   delete [] nSelS_unWeighted;
+   delete [] nSelB_unWeighted;
+   delete [] target;
+   delete [] target2;
+   delete [] cutValues;
+
+   delete [] xmin;
+   delete [] xmax;
+
+   delete [] useVariable;
+   delete [] mapVariable;
+
+   delete [] separationGain;
+   delete [] cutIndex;
+
+   delete [] nBins;
+   delete [] binWidth;
+   delete [] invBinWidth;
+
+   return separationGainTotal;
+
+}
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

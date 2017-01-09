@@ -63,7 +63,11 @@
 #include "TMVA/RegressionVariance.h"
 #endif
 #include "TMVA/DataSetInfo.h"
+
+#ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
+#include "TSystem.h"
+#endif
 
 class TRandom3;
 
@@ -209,6 +213,20 @@ namespace TMVA {
 
    private:
       // utility functions
+      
+      // Only include parallelizatiion if the multithreading compilation flag is turned on
+      #ifdef R__USE_IMT 
+      // number of CPUs available for parallelization
+      UInt_t GetNumCPUs(){
+         SysInfo_t s;
+         gSystem->GetSysInfo(&s);
+         UInt_t ncpu  = s.fCpus;
+         return ncpu;
+      };
+
+      // root multithreading object
+      ROOT::TThreadExecutor fPool;
+      #endif
      
       // calculate the Purity out of the number of sig and bkg events collected
       // from individual samples.
@@ -253,8 +271,6 @@ namespace TMVA {
       Types::EAnalysisType  fAnalysisType;   // kClassification(=0=false) or kRegression(=1=true)
 
       DataSetInfo*  fDataSetInfo;
-      
-      ROOT::TThreadExecutor fPool;
 
       ClassDef(DecisionTree,0);               // implementation of a Decision Tree
    };
