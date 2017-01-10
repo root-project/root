@@ -217,6 +217,7 @@ namespace TMVA {
       // Only include parallelizatiion if the multithreading compilation flag is turned on
       #ifdef R__USE_IMT 
       // number of CPUs available for parallelization
+      UInt_t fNumCPUs = 1;
       UInt_t GetNumCPUs(){
          SysInfo_t s;
          gSystem->GetSysInfo(&s);

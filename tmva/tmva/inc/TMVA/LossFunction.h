@@ -79,7 +79,11 @@ namespace TMVA {
    public:
 
       // constructors
-      LossFunction(){};
+      LossFunction(){ 
+        #ifdef R__USE_IMT
+        fNumCPUs = GetNumCPUs(); 
+        #endif
+      };
       virtual ~LossFunction(){};
 
       // abstract methods that need to be implemented
@@ -93,6 +97,8 @@ namespace TMVA {
    protected:
       // only use multithreading if the compilation flag is turned on
       #ifdef R__USE_IMT
+      UInt_t fNumCPUs = 1;
+
       // ROOT multithreading object
       ROOT::TThreadExecutor fPool;
 

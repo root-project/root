@@ -208,6 +208,10 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 {
    fMonitorNtuple = NULL;
    fSepType = NULL;
+
+   #ifdef R__USE_IMT
+   fNumCPUs = GetNumCPUs();
+   #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,6 +270,10 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    // the result of the previous training (the decision trees) are read in via the
    // weight file. Make sure the the variables correspond to the ones used in
    // creating the "weight"-file
+   
+   #ifdef R__USE_IMT
+   fNumCPUs = GetNumCPUs();
+   #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1519,7 +1527,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    #ifdef R__USE_IMT // multithreaded version if ROOT was compiled with multithreading 
    if(!first){
      
-      UInt_t nPartitions = GetNumCPUs();
+      UInt_t nPartitions = fNumCPUs;
       auto seeds = ROOT::TSeqU(nPartitions);
 
       // need a lambda function to pass to TThreadExecutor::MapReduce
