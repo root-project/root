@@ -3917,7 +3917,7 @@ int RootClingMain(int argc,
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
 
-#if defined(ROOTINCDIR)
+#if !defined(ROOTINCDIR)
    if (!gBuildingROOT)
       SetRootSys();
 #endif
