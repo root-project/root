@@ -91,6 +91,7 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t 
    IMsg *_imsg = new IMsg;
    _imsg->fMsg = &var;
    _imsg->fComm = &fComm;
+   _imsg->fCommunicator = this;
    _imsg->fSource = source;
    _imsg->fTag = tag;
 
@@ -103,9 +104,13 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t 
       IMsg  *imsg = (IMsg *)extra_state;
 
       Int_t isize = 0;
-      MPI::Status s;
-      imsg->fComm->Probe(imsg->fSource, imsg->fTag, s);
-      isize = s.Get_elements(MPI::CHAR);
+      TStatus s;
+      imsg->fCommunicator->Probe(imsg->fSource, imsg->fTag, s);
+      if (s.IsCancelled())
+      {
+         return MPI_ERR_IN_STATUS;
+      }
+      isize = s.fStatus.Get_elements(MPI::CHAR);
       std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
 
       Char_t *ibuffer = new Char_t[isize];

@@ -108,7 +108,7 @@ namespace ROOT {
             return (*this);
          }
 
-         static TGrequest Start(Query_function *, Free_function *, Cancel_function *, void *);
+         static TGrequest Start(Int_t(*)(void *, TStatus &), Int_t(*)(void *), Int_t(*)(void *, Bool_t), void *);
 
          virtual void Complete();
 

@@ -288,21 +288,50 @@ namespace ROOT {
       {
          TGrequest req;
          if (std::is_class<Type>::value) {
-            IMsg *imsg = new IMsg;
-            imsg->fMsg = &var;
-            imsg->fCommunicator = this;
-            imsg->fComm = &fComm;
-            imsg->fSource = source;
-            imsg->fTag = tag;
-            imsg->fSizeof = sizeof(Type);
+            IMsg *_imsg = new IMsg;
+            _imsg->fVar = &var;
+            _imsg->fCommunicator = this;
+            _imsg->fComm = &fComm;
+            _imsg->fSource = source;
+            _imsg->fTag = tag;
+            _imsg->fSizeof = sizeof(Type);
+            _imsg->fClass = gROOT->GetClass(typeid(var));
 
-            TMpiMessage msg;
-            req = IRecv(msg, source, tag);
+            //query lambda function
+            auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
 
-            auto cl = gROOT->GetClass(typeid(var));
-            auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
-            memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
+               if (status.IsCancelled())
+               {
+                  return MPI_ERR_IN_STATUS;
+               }
+               IMsg  *imsg = (IMsg *)extra_state;
+               TMpiMessage msg;
+               auto ireq = imsg->fCommunicator->IRecv(msg, imsg->fSource, imsg->fTag);
+               TStatus s;
+               ireq.GetStatus(s);
+               if (s.IsCancelled())
+               {
+                  return MPI_ERR_IN_STATUS;
+               }
+               ireq.Complete();
+               ireq.Wait();
+               auto obj_tmp = (Type *)msg.ReadObjectAny(imsg->fClass);
+               memcpy(imsg->fVar, (void *)obj_tmp, imsg->fSizeof);
+               return MPI_SUCCESS;
+            };
 
+            //free function
+            auto free_fn = [](void *extra_state)->Int_t {
+               IMsg *obj = (IMsg *)extra_state;
+               if (obj) delete obj;
+               return MPI_SUCCESS;
+            };
+
+            //cancel lambda function
+            auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
+               return MPI_SUCCESS;
+            };
+            req = TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
          } else {
             req = fComm.Irecv(&var, 1, GetDataType<Type>(), source, tag);
          }

@@ -217,12 +217,12 @@ Bool_t TRequest::GetStatus() const
 }
 
 
-static int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status);
-static int ROOTMpi_Grequest_free_fn_intercept(void *extra_data);
-static int ROOTMpi_Grequest_cancel_fn_intercept(void *, int);
+int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status);
+int ROOTMpi_Grequest_free_fn_intercept(void *extra_data);
+int ROOTMpi_Grequest_cancel_fn_intercept(void *, int);
 
 //______________________________________________________________________________
-TGrequest TGrequest::Start(Query_function *query_fn, Free_function *free_fn, Cancel_function *cancel_fn, void *extra)
+TGrequest TGrequest::Start(Int_t(*query_fn)(void *, TStatus &), Int_t(*free_fn)(void *), Int_t(*cancel_fn)(void *, Bool_t), void *extra)
 {
    MPI_Request grequest = 0;
 
@@ -247,7 +247,7 @@ void TGrequest::Complete()
 }
 
 //______________________________________________________________________________
-static int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status)
+int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status)
 {
    TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
    TStatus stat;
@@ -256,14 +256,14 @@ static int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status)
 }
 
 //______________________________________________________________________________
-static int ROOTMpi_Grequest_free_fn_intercept(void *extra_data)
+int ROOTMpi_Grequest_free_fn_intercept(void *extra_data)
 {
    TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
    return data->id_cxx_free_fn(data->id_extra);
 }
 
 //______________________________________________________________________________
-static int ROOTMpi_Grequest_cancel_fn_intercept(void *extra_data, int completed)
+int ROOTMpi_Grequest_cancel_fn_intercept(void *extra_data, int completed)
 {
    TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
    return data->id_cxx_cancel_fn(data->id_extra, completed);
