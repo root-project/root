@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog classes_rflx.cpp
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog classes_rflx.cpp lib*_dictrflx.rootmap
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -80,3 +80,8 @@ exectypeDefAutoloading.log: libclasses_dictrflx.$(DllSuf)
 
 execTriggerTypedefs.log: libTriggerTypeDefs_dictrflx.$(DllSuf)
 
+assertROOT7114.elog: libROOT7114classes_dictrflx.$(DllSuf)
+assertROOT7114.elog: CALLROOTEXE += -e 'gSystem->AddDynamicPath("/opt/build/root_builds/rootcling.cmake/roottest/root/meta/autoloading")'
+
+
+ROOT7114classes_rflx.cpp: GENREFLEXFLAGS += --rootmap libROOT7114classes_dictrflx.rootmap --library libROOT7114classes_dictrflx.$(DllSuf)
