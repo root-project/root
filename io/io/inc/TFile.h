@@ -22,22 +22,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <atomic>
-#ifndef ROOT_TDirectoryFile
+
 #include "TDirectoryFile.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
+
 #ifdef R__USE_IMT
-#ifndef ROOT_TRWSpinLock
 #include "ROOT/TRWSpinLock.hxx"
-#endif
+#include <mutex>
 #endif
 
-#include <mutex>
 
 class TFree;
 class TArrayC;
