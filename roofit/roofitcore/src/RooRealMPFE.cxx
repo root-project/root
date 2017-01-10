@@ -237,6 +237,14 @@ void RooRealMPFE::initialize()
 void RooRealMPFE::serverLoop()
 {
 #ifndef _WIN32
+  ofstream timing_outfile;
+  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
+
+  if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 8) {
+    timing_outfile.open("timing_RRMPFE_serverloop.json", ios::app);
+    timing_begin = std::chrono::high_resolution_clock::now();
+  }
+
   int msg ;
 
   Int_t idx, index, numErrors ;
@@ -398,6 +406,19 @@ void RooRealMPFE::serverLoop()
 			       << ") IPC fromClient> Unknown message (code = " << msg << ")" << endl ;
       break ;
     }
+  }
+
+  // end timing
+  if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 8) {
+    timing_end = std::chrono::high_resolution_clock::now();
+
+    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+
+    timing_outfile << "{\"RRMPFE_serverloop_wall_s\": \"" << timing_s
+                   << "\", \"pid\": \"" << getpid()
+                   << "\"}," << "\n";
+
+    timing_outfile.close();
   }
 
 #endif // _WIN32
