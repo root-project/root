@@ -11,10 +11,12 @@ TCommunicator::TCommunicator(const TCommunicator &comm): TObject(comm)
 }
 
 //______________________________________________________________________________
-TCommunicator::TCommunicator(const TComm &comm): fComm(comm), fMainProcess(0) {}
+TCommunicator::TCommunicator(const MPI_Comm &comm): fComm(comm), fMainProcess(0) {}
 
 //______________________________________________________________________________
-TCommunicator::~TCommunicator() {}
+TCommunicator::~TCommunicator()
+{
+}
 
 //______________________________________________________________________________
 template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t dest, Int_t tag) const
@@ -31,19 +33,19 @@ template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t d
    msg.WriteObject(msgi);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   fComm.Send(ibuffer, isize, MPI::CHAR, dest, tag);
+   MPI_Send((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm);
 }
 
 //______________________________________________________________________________
 template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const
 {
-   UInt_t isize = 0;
-   MPI::Status s;
-   fComm.Probe(source, tag, s);
-   isize = s.Get_elements(MPI::CHAR);
+   Int_t isize = 0;
+   MPI_Status s;
+   MPI_Probe(source, tag, fComm, &s);
+   MPI_Get_elements(&s, MPI_CHAR, &isize);
 
    Char_t *ibuffer = new Char_t[isize];
-   fComm.Recv(ibuffer, isize, MPI::CHAR, source, tag);
+   MPI_Recv((void *)ibuffer, isize, MPI_CHAR, source, tag, fComm, &s);
 
    TMpiMessageInfo msgi;
 
@@ -80,7 +82,9 @@ template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, I
    msg.WriteObject(msgi);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   return  fComm.Isend(ibuffer, isize, MPI::CHAR, dest, tag);
+   MPI_Request req;
+   MPI_Isend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req);
+   return req;
 }
 
 //______________________________________________________________________________
@@ -98,7 +102,9 @@ template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  &var, 
    msg.WriteObject(msgi);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   return  fComm.Issend(ibuffer, isize, MPI::CHAR, dest, tag);
+   MPI_Request req;
+   MPI_Issend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req);
+   return req;
 }
 
 //______________________________________________________________________________
@@ -116,7 +122,9 @@ template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, 
    msg.WriteObject(msgi);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   return  fComm.Irsend(ibuffer, isize, MPI::CHAR, dest, tag);
+   MPI_Request req;
+   MPI_Irsend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req);
+   return req;
 }
 
 
@@ -132,7 +140,7 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t 
    _imsg->fTag = tag;
 
    //query lambda function
-   auto query_fn = [ = ](void *extra_state, TStatus & status)->Int_t {
+   auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
       if (status.IsCancelled())
       {
          return MPI_ERR_IN_STATUS;
@@ -150,7 +158,10 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t 
 //       std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
 
       Char_t *ibuffer = new Char_t[isize];
-      TRequest req = imsg->fComm->Irecv(ibuffer, isize, MPI::CHAR, imsg->fSource, imsg->fTag);
+      MPI_Request _req;
+      MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &_req);
+//       TRequest req = imsg->fComm->Irecv(ibuffer, isize, MPI::CHAR, imsg->fSource, imsg->fTag);
+      TRequest req = _req;
       req.Wait();
 
       TMpiMessageInfo msgi;
@@ -175,24 +186,26 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t 
    };
 
    //free function
-   auto free_fn = [ = ](void *extra_state)->Int_t {
+   auto free_fn = [](void *extra_state)->Int_t {
       IMsg *obj = (IMsg *)extra_state;
       if (obj) delete obj;
       return MPI_SUCCESS;
    };
 
    //cancel lambda function
-   auto cancel_fn = [ = ](void *extra_state, Bool_t complete)->Int_t {
+   auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
       if (!complete)
       {
          IMsg *imsg = (IMsg *)extra_state;
          Int_t isize = 0;
-         MPI::Status s;
-         imsg->fComm->Probe(imsg->fSource, imsg->fTag, s);
-         isize = s.Get_elements(MPI::CHAR);
+         MPI_Status s;
+         MPI_Probe(imsg->fSource, imsg->fTag, *imsg->fComm, &s);
+         MPI_Get_elements(&s, MPI_CHAR, &isize);
+
          Char_t *ibuffer = new Char_t[isize];
-         TRequest req = imsg->fComm->Irecv(ibuffer, isize, MPI::CHAR, imsg->fSource, imsg->fTag);
-         req.Cancel();
+         MPI_Request req;
+         MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &req);
+         MPI_Cancel(&req);
          delete ibuffer;
          std::cout << "incompleted!\n";
       }
@@ -228,12 +241,12 @@ template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) 
       memcpy(ibuffer, msg.Buffer(), isize);
    }
 
-   fComm.Bcast(&isize, 1, MPI::INT, root);
+   MPI_Bcast((void *)&isize, 1, MPI_INT, root, fComm);
 
    if (GetRank() != root) {
       ibuffer = new Char_t[isize];
    }
-   fComm.Bcast(ibuffer, isize, MPI::CHAR, root);
+   MPI_Bcast((void *)ibuffer, isize, MPI_CHAR, root, fComm);
 
    TMpiMessageInfo msgi;
 
@@ -259,30 +272,40 @@ template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) 
 //______________________________________________________________________________
 void  TCommunicator::Barrier() const
 {
-   fComm.Barrier();
+   MPI_Barrier(fComm);
 }
 
 
 //______________________________________________________________________________
 Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag, TStatus &status) const
 {
-   return fComm.Iprobe(source, tag, status.fStatus);
+   Int_t flag;
+   MPI_Status stat;
+   MPI_Iprobe(source, tag, fComm, &flag, &stat);
+   status = stat;
+   return (Bool_t)flag;
 }
 
 //______________________________________________________________________________
 Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag) const
 {
-   return fComm.Iprobe(source, tag);
+   Int_t flag;
+   MPI_Status status;
+   MPI_Iprobe(source, tag, fComm, &flag, &status);
+   return (Bool_t)flag;
 }
 
 //______________________________________________________________________________
 void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 {
-   fComm.Probe(source, tag, status.fStatus);
+   MPI_Status stat;
+   MPI_Probe(source, tag, fComm, &stat);
+   status = stat;
 }
 
 //______________________________________________________________________________
 void TCommunicator::Probe(Int_t source, Int_t tag) const
 {
-   fComm.Probe(source, tag);
+   MPI_Status stat;
+   MPI_Probe(source, tag, fComm, &stat);
 }

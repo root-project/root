@@ -102,6 +102,12 @@ namespace ROOT {
             return (*this);
          }
 
+         TGrequest &operator=(const MPI_Request &req)
+         {
+            fRequest = req;
+            return (*this);
+         }
+
          TGrequest &operator=(const TGrequest &req)
          {
             fRequest = req.fRequest;

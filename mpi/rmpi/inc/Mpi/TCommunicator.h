@@ -21,7 +21,6 @@
 #endif
 
 #include<memory>
-
 #include<mpi.h>
 
 /**
@@ -36,26 +35,6 @@ namespace ROOT {
    namespace Mpi {
 
       class TMpiMessage;
-      /**
-      \class TComm
-         Base internal class of communicator, with this class you can hanlde MPI::Comm and MPI_Comm from C/C++ mpi libraries.
-         \ingroup Mpi
-       */
-
-      class TComm: public MPI::Comm {
-      public:
-         TComm(): Comm() {}
-         TComm(const MPI_Comm &comm): Comm(comm) {}
-         TComm(const MPI::Comm &comm): Comm(comm) {}
-
-         TComm &Clone() const
-         {
-            MPI_Comm newcomm;
-            MPI_Comm_dup((MPI_Comm)*this, &newcomm);
-            TComm *comm = new TComm(newcomm);
-            return *comm;
-         }
-      };
 
       /**
       \class TCommunicator
@@ -69,21 +48,24 @@ namespace ROOT {
 
       class TCommunicator: public TObject {
       private:
-         TComm fComm;           //! Raw communicator
+         MPI_Comm fComm;           //! Raw communicator
          Int_t fMainProcess;    // Rank used like a main process
-         template<class T> MPI::Datatype GetDataType() const;
+         template<class T> MPI_Datatype GetDataType() const;
       public:
          /**
          Copy constructor for communicator
               \param comm other TCommunicator object
               */
          TCommunicator(const TCommunicator &comm);
-         /**
-         Default constructor for communicator
-              \param comm TComm object with raw mpi communication object like MPI_Comm or MPI::Comm, by default MPI::COMM_WORLD
-              */
-         TCommunicator(const TComm &comm = MPI::COMM_WORLD);
+         TCommunicator(const MPI_Comm &comm = MPI_COMM_WORLD);
          ~TCommunicator();
+
+         TCommunicator &operator=(const MPI_Comm &comm)
+         {
+            fComm = comm;
+            return *this;
+         }
+
 
          /**
          Method to get the current rank or process id
@@ -91,7 +73,9 @@ namespace ROOT {
               */
          inline Int_t GetRank() const
          {
-            return fComm.Get_rank();
+            Int_t rank;
+            MPI_Comm_rank(fComm, &rank);
+            return rank;
          }
 
          /**
@@ -100,7 +84,9 @@ namespace ROOT {
               */
          inline Int_t GetSize() const
          {
-            return fComm.Get_size();
+            Int_t size;
+            MPI_Comm_size(fComm, &size);
+            return size;
          }
 
          /**
@@ -109,7 +95,7 @@ namespace ROOT {
               */
          inline Bool_t IsMainProcess() const
          {
-            return fComm.Get_rank() == fMainProcess;
+            return GetRank() == fMainProcess;
          }
 
          /**
@@ -140,7 +126,7 @@ namespace ROOT {
          inline void Abort(Int_t err) const
 #endif
          {
-            fComm.Abort(err);
+            MPI_Abort(fComm, err);
          }
 
          /**
@@ -236,19 +222,27 @@ namespace ROOT {
 
 
          /**
-         Method to broadcast a message for collective communication
+          Broadcasts a message from the process with rank root to all other processes of the group.
               \param var any selializable object reference to send/receive the message
               \param root id of the main message where message was sent
               */
          template<class Type> void Bcast(Type &var, Int_t root) const;
+
+         /**
+          Broadcasts a message from the process with rank root to all other processes of the group.
+              \param var any selializable object reference to send/receive the message
+              \param root id of the main message where message was sent
+              \return TGrequest obj
+              */
+//     template<class Type> TGrequest IBcast(Type &var, Int_t root) const;
 
          ClassDef(TCommunicator, 1)
       };
       //Nonblocking message for callbacks
       struct IMsg {
          TMpiMessage *fMsg;
+         MPI_Comm *fComm;
          TCommunicator *fCommunicator;
-         TComm *fComm;
          Int_t fSource;
          Int_t fTag;
          void *fVar;
@@ -257,13 +251,13 @@ namespace ROOT {
       };
 
 
-      template<class T> MPI::Datatype TCommunicator::GetDataType() const
+      template<class T> MPI_Datatype TCommunicator::GetDataType() const
       {
-         if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI::INT;
-         if (typeid(T) == typeid(float) || typeid(T) == typeid(Float_t)) return MPI::FLOAT;
-         if (typeid(T) == typeid(double) || typeid(T) == typeid(Double_t)) return MPI::DOUBLE;
-         if (typeid(T) == typeid(bool) || typeid(T) == typeid(Bool_t)) return MPI::BYTE;
-         MPI::Datatype None;
+         if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI_INT;
+         if (typeid(T) == typeid(float) || typeid(T) == typeid(Float_t)) return MPI_FLOAT;
+         if (typeid(T) == typeid(double) || typeid(T) == typeid(Double_t)) return MPI_DOUBLE;
+         if (typeid(T) == typeid(bool) || typeid(T) == typeid(Bool_t)) return MPI_BYTE;
+         MPI_Datatype None;
 
          return None;
          //TODO: error control here if type is not supported
@@ -277,7 +271,7 @@ namespace ROOT {
             msg.WriteObject(var);
             Send(msg, dest, tag);
          } else {
-            fComm.Send(&var, 1, GetDataType<Type>(), dest, tag);
+            MPI_Send((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm);
          }
       }
 
@@ -293,7 +287,9 @@ namespace ROOT {
             auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
             memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
          } else {
-            fComm.Recv(&var, 1, GetDataType<Type>(), source, tag);
+	    //TODO: added status argument to this method
+	    MPI_Status s;
+            MPI_Recv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm,&s);
          }
       }
 
@@ -307,7 +303,9 @@ namespace ROOT {
             msg.WriteObject(var);
             req = ISend(msg, dest, tag);
          } else {
-            req = fComm.Isend(&var, 1, GetDataType<Type>(), dest, tag);
+            MPI_Request _req;
+            MPI_Isend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
+            req = _req;
          }
          return req;
       }
@@ -321,7 +319,9 @@ namespace ROOT {
             msg.WriteObject(var);
             req = ISsend(msg, dest, tag);
          } else {
-            req = fComm.Issend(&var, 1, GetDataType<Type>(), dest, tag);
+            MPI_Request _req;
+            MPI_Issend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
+            req = _req;
          }
          return req;
       }
@@ -335,7 +335,9 @@ namespace ROOT {
             msg.WriteObject(var);
             req = IRsend(msg, dest, tag);
          } else {
-            req = fComm.Irsend(&var, 1, GetDataType<Type>(), dest, tag);
+            MPI_Request _req;
+            MPI_Irsend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
+            req = _req;
          }
          return req;
       }
@@ -349,7 +351,6 @@ namespace ROOT {
             IMsg *_imsg = new IMsg;
             _imsg->fVar = &var;
             _imsg->fCommunicator = this;
-            _imsg->fComm = &fComm;
             _imsg->fSource = source;
             _imsg->fTag = tag;
             _imsg->fSizeof = sizeof(Type);
@@ -391,7 +392,9 @@ namespace ROOT {
             };
             req = TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
          } else {
-            req = fComm.Irecv(&var, 1, GetDataType<Type>(), source, tag);
+            MPI_Request _req;
+            MPI_Irecv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm, &_req);
+            req = _req;
          }
          return req;
       }
@@ -413,7 +416,7 @@ namespace ROOT {
             }
 
          } else {
-            fComm.Bcast(&var, 1, GetDataType<Type>(), root);
+            MPI_Bcast((void *)&var, 1, GetDataType<Type>(), root, fComm);
          }
 
       }
