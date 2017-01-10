@@ -94,7 +94,7 @@ void TMVA::HuberLossFunction::Init(std::vector<LossFunctionEventInfo>& evs){
 #ifdef R__USE_IMT
 Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs){
 
-   UInt_t nPartitions = GetNumCPUs();
+   UInt_t nPartitions = fNumCPUs;
    auto seeds = ROOT::TSeqU(nPartitions);
    auto redfunc = [](std::vector<Double_t> a) -> Double_t { return std::accumulate(a.begin(), a.end(), 0); };
 
@@ -290,7 +290,7 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 #ifdef R__USE_IMT
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   UInt_t nPartitions = GetNumCPUs();
+   UInt_t nPartitions = fNumCPUs;
    std::vector<LossFunctionEventInfo> eventvec(evs.size());
 
    auto seedscopy = ROOT::TSeqU(nPartitions);
@@ -335,7 +335,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
    fPool.Map(f, seeds);
 }
 
-// Multithreaded version of HuberLossFunctionBDT::SetTargets
+// Standard version of HuberLossFunctionBDT::SetTargets
 #else
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
@@ -475,7 +475,7 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 #ifdef R__USE_IMT
 void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   UInt_t nPartitions = GetNumCPUs();
+   UInt_t nPartitions = fNumCPUs;
    auto seeds = ROOT::TSeqU(nPartitions);
 
    // need a lambda function to pass to TThreadExecutor::MapReduce
@@ -607,7 +607,7 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, L
 #ifdef R__USE_IMT
 void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   UInt_t nPartitions = GetNumCPUs();
+   UInt_t nPartitions = fNumCPUs;
    auto seeds = ROOT::TSeqU(nPartitions);
 
    // need a lambda function to pass to TThreadExecutor::MapReduce

@@ -140,7 +140,11 @@ TMVA::DecisionTree::DecisionTree():
    fTreeID         (0),
    fAnalysisType   (Types::kClassification),
    fDataSetInfo    (NULL)
+
 {
+   #ifdef R__USE_IMT
+   fNumCPUs = GetNumCPUs(); 
+   #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,6 +197,10 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    }else{
       fAnalysisType = Types::kClassification;
    }
+
+   #ifdef R__USE_IMT
+   fNumCPUs = GetNumCPUs(); 
+   #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +236,7 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    this->SetRoot( new TMVA::DecisionTreeNode ( *((DecisionTreeNode*)(d.GetRoot())) ) );
    this->SetParentTreeInNodes();
    fNNodes = d.fNNodes;
+
 }
 
 
@@ -411,7 +420,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    sumWatch.Start();
 
    // #### Set up prerequisite info for multithreading
-   UInt_t nPartitions = GetNumCPUs();
+   UInt_t nPartitions = fNumCPUs;
    auto seeds = ROOT::TSeqU(nPartitions);
 
    // #### need a lambda function to pass to TThreadExecutor::MapReduce
@@ -691,7 +700,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    return fNNodes;
 }
 
-// Standard DecisionTree::BuildTree
+// Standard DecisionTree::BuildTree (multithreading is not enabled)
 #else
 
 UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & eventSample,
@@ -1675,7 +1684,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    //nTotS_unWeighted=0; nTotB_unWeighted=0;   
 
    TrainNodeInfo nodeInfo(cNvars, nBins);
-   UInt_t nPartitions = GetNumCPUs();
+   UInt_t nPartitions = fNumCPUs;
 
    // When nbins is low compared to ndata this version of parallelization is faster, so use it 
    // Parallelize by chunking the data into the same number of sections as we have processors
@@ -2167,7 +2176,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    return separationGainTotal;
 }
 
-// Standard version of DecisionTree::TrainNodeFast
+// Standard version of DecisionTree::TrainNodeFast (multithreading is not enabled)
 #else
 Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                                             TMVA::DecisionTreeNode *node )
