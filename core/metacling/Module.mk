@@ -14,10 +14,6 @@ METACLINGDIRI  := $(METACLINGDIR)/inc
 METACLINGDIRR  := $(METACLINGDIR)/res
 
 ##### $(METACLINGO) #####
-METACLINGDS      := $(call stripsrc,$(MODDIRS)/G__Cling.cxx)
-METACLINGDO      := $(CLINGDS:.cxx=.o)
-METACLINGDH      := $(CLINGDS:.cxx=.h)
-
 METACLINGH     := $(METACLINGDIRS)/TCling.h
 METACLINGS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
@@ -30,7 +26,7 @@ METACLINGO     := $(call stripsrc,$(METACLINGS:.cxx=.o))
 
 METACLINGL     := $(MODDIRI)/LinkDef.h
 
-METACLINGDEP   := $(METACLINGO:.o=.d) $(METACLINGDO:.o=.d)
+METACLINGDEP   := $(METACLINGO:.o=.d)
 
 # used in the main Makefile
 # ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METACLINGH))
@@ -46,11 +42,11 @@ CLINGMAP     := $(CLINGLIB:.$(SOEXT)=.rootmap)
 
 IOLIB_EARLY = $(LPATH)/libRIO.$(SOEXT)
 
-$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) $(METACLINGDO) \
+$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
                 $(ORDER_) $(MAINLIBS) $(TCLINGLIBDEPM) $(IOLIB_EARLY)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libCling.$(SOEXT) $@ \
-		   "$(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) $(METACLINGDO) \
+		   "$(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
 		    $(CLINGLIBEXTRA) $(TCLINGLIBEXTRA)" \
 		   ""
 

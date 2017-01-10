@@ -23,7 +23,6 @@ ROOT_GENERATE_DICTIONARY(G__Core
                          ${Winnt_dict_headers}
                          ${ClingUtils_dict_headers}
                          ${Meta_dict_headers}
-                         ${MetaCling_dict_headers}
                          ${TextInput_dict_headers}
                          STAGE1
                          MODULE Core

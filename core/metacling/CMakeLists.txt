@@ -7,8 +7,6 @@
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
-set(MetaCling_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling.h PARENT_SCOPE)
-
 include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res
         ${CMAKE_CURRENT_SOURCE_DIR}/../clingutils/res

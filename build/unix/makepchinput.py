@@ -185,14 +185,14 @@ def getDictNames(theDirName):
    """
    Get a list of all dictionaries in a directory
    """
-   #`find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx  | grep -v core/metautils/src/G__std_`; do
+   #`find $modules -name 'G__*.cxx' 2> /dev/null | grep -v core/metautils/src/G__std_`; do
    wildcards = (os.path.join(theDirName , "*", "*", "G__*.cxx"),
                 os.path.join(theDirName , "*", "G__*.cxx"))
    allDictNames = []
    for wildcard in wildcards:
       allDictNames += glob.glob(wildcard)
    stdDictpattern = os.path.join("core","metautils","src","G__std_")
-   dictNames = filter (lambda dictName: not ('G__Cling.cxx' in dictName or stdDictpattern in dictName),allDictNames )
+   dictNames = filter (lambda dictName: not (stdDictpattern in dictName),allDictNames )
    return dictNames
 
 #-------------------------------------------------------------------------------
