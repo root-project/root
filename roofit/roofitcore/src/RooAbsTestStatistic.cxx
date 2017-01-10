@@ -330,15 +330,15 @@ Double_t RooAbsTestStatistic::evaluate() const
     }
 
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
-      timing_outfile << "{";
 
       for (Int_t i = 0; i < _nCPU; ++i) {
-        timing_outfile << "\"RATS_evaluate_mpmaster_it" << i << "_wall_s\": \"" << timings[i] << "\", ";
+        timing_outfile << "{"
+                       << "\"RATS_evaluate_mpmaster_it_wall_s\": \"" << timings[i]
+                       << "\", \"it_nr\": \"" << i
+                       << "\", \"pid\": \"" << getpid()
+                       << "\", \"ppid\": \"" << getppid()
+                       << "\"}," << "\n";
       }
-
-      timing_outfile << "\"pid\": \"" << getpid()
-          << "\", \"ppid\": \"" << getppid() << "\""
-          << "}," << "\n";
 
       timing_outfile.close();
     }
