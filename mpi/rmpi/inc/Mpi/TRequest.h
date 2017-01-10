@@ -16,13 +16,12 @@ namespace ROOT {
          friend class TCommunicator;
          friend class TGrequest;
       protected:
-         MPI::Request fRequest;
+         MPI_Request fRequest;
       public:
          TRequest();
          TRequest(const TRequest &obj);
          virtual ~TRequest() {}
          TRequest(MPI_Request r);
-         TRequest(const MPI::Request &r);
 
          TRequest &operator=(const TRequest &r);
 
@@ -30,7 +29,6 @@ namespace ROOT {
          Bool_t operator!= (const TRequest &a);
 
          TRequest &operator= (const MPI_Request &i);
-         TRequest &operator= (const MPI::Request &i);
 
          operator MPI_Request() const
          {
@@ -114,7 +112,7 @@ namespace ROOT {
             return (*this);
          }
 
-         static TGrequest Start(Int_t(*)(void *, TStatus &), Int_t(*)(void *), Int_t(*)(void *, Bool_t), void *);
+         static TGrequest Start(Int_t(*Query_fn)(void *, TStatus &), Int_t(*Free_fn)(void *), Int_t(*Cancel_fn)(void *, Bool_t), void *);
 
          virtual void Complete();
 

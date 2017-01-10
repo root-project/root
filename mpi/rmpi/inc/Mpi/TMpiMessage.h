@@ -2,11 +2,10 @@
 #ifndef ROOT_Mpi_TMpiMessage
 #define ROOT_Mpi_TMpiMessage
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
+#ifndef ROOT_Mpi_Globals
+#include<Mpi/Globals.h>
 #endif
 
-#include<TClass.h>
 #include<TMessage.h>
 #include<TROOT.h>
 
@@ -104,6 +103,20 @@ namespace ROOT {
       {
          WriteObject<ClassType>(&obj);
       }
+
+      class TCommunicator;
+      //Nonblocking message for callbacks
+      struct IMsg {
+         TMpiMessage *fMsg;
+         MPI_Comm *fComm;
+         TCommunicator *fCommunicator;
+         Int_t fSource;
+         Int_t fTag;
+         void *fVar;
+         UInt_t fSizeof;
+         TClass *fClass;
+      };
+
    }
 }
 

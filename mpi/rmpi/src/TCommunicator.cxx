@@ -154,7 +154,7 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t 
       {
          return MPI_ERR_IN_STATUS;
       }
-      isize = s.fStatus.Get_elements(MPI::CHAR);
+      MPI_Get_elements(const_cast<MPI_Status *>(&s.fStatus), MPI_CHAR, &isize);
 //       std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
 
       Char_t *ibuffer = new Char_t[isize];

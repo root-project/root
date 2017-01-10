@@ -236,17 +236,6 @@ namespace ROOT {
 
          ClassDef(TCommunicator, 1)
       };
-      //Nonblocking message for callbacks
-      struct IMsg {
-         TMpiMessage *fMsg;
-         MPI_Comm *fComm;
-         TCommunicator *fCommunicator;
-         Int_t fSource;
-         Int_t fTag;
-         void *fVar;
-         UInt_t fSizeof;
-         TClass *fClass;
-      };
 
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Send(const Type &var, Int_t dest, Int_t tag) const

@@ -12,48 +12,50 @@ TStatus::TStatus(const TStatus &data): TObject(data), fStatus(data.fStatus) {}
 //______________________________________________________________________________
 Bool_t TStatus::IsCancelled() const
 {
-   return fStatus.Is_cancelled();
+   Int_t t;
+   MPI_Test_cancelled(const_cast<MPI_Status *>(&fStatus), &t);
+   return (Bool_t)t;
 }
 
 
 //______________________________________________________________________________
 Int_t TStatus::GetSource() const
 {
-   return fStatus.Get_source();
+   return  fStatus.MPI_SOURCE;
 }
 
 //______________________________________________________________________________
 void TStatus::SetSource(Int_t source)
 {
-   fStatus.Set_source(source);
+   fStatus.MPI_SOURCE = source;
 }
 
 //______________________________________________________________________________
 Int_t TStatus::GetTag() const
 {
-   return fStatus.Get_tag();
+   return fStatus.MPI_TAG;
 }
 
 //______________________________________________________________________________
 void TStatus::SetTag(Int_t tag)
 {
-   fStatus.Set_tag(tag);
+   fStatus.MPI_TAG = tag;
 }
 
 //______________________________________________________________________________
 Int_t TStatus::GetError() const
 {
-   return fStatus.Get_error();
+   return fStatus.MPI_ERROR;
 }
 
 //______________________________________________________________________________
 void TStatus::SetError(Int_t error)
 {
-   fStatus.Set_error(error);
+   fStatus.MPI_ERROR = error;
 }
 
 //______________________________________________________________________________
 void TStatus::SetCancelled(Bool_t flag)
 {
-   fStatus.Set_cancelled(flag);
+   MPI_Status_set_cancelled(&fStatus, (Int_t) flag);
 }

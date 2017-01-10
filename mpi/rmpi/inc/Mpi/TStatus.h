@@ -21,7 +21,7 @@ namespace ROOT {
          friend class TRequest;
 
       protected:
-         MPI::Status fStatus;       //internal MPI::Status object
+         MPI_Status fStatus;       //internal MPI::Status object
       public:
          /**
          Default constructor
@@ -41,18 +41,13 @@ namespace ROOT {
             return *this;
          }
 
-         TStatus &operator= (const MPI::Status &obj)
+         TStatus &operator= (const MPI_Status &obj)
          {
             fStatus = obj;
             return *this;
          }
 
          operator MPI_Status() const
-         {
-            return fStatus;
-         }
-
-         operator MPI::Status() const
          {
             return fStatus;
          }

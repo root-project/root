@@ -14,6 +14,10 @@
 #include<TObject.h>
 #endif
 
+#ifndef ROOT_TClass
+#include<TClass.h>
+#endif
+
 #include<mpi.h>
 
 
@@ -76,7 +80,6 @@ namespace ROOT {
       R__EXTERN const Int_t ERR_UNSUPPORTED_OPERATION;
       R__EXTERN const Int_t ERR_WIN;
       R__EXTERN const Int_t ERR_LASTCODE;
-      R__EXTERN const Int_t ERR_SYSRESOURCE;
 
       // topologies
       R__EXTERN const Int_t GRAPH;

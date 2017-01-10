@@ -59,7 +59,6 @@ namespace ROOT {
       const Int_t ERR_UNSUPPORTED_OPERATION = MPI_ERR_UNSUPPORTED_OPERATION;
       const Int_t ERR_WIN = MPI_ERR_WIN;
       const Int_t ERR_LASTCODE = MPI_ERR_LASTCODE;
-      const Int_t ERR_SYSRESOURCE = MPI_ERR_SYSRESOURCE;
 
       // topologies
       const Int_t GRAPH = MPI_GRAPH;
