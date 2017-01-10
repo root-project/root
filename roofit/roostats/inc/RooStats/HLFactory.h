@@ -28,21 +28,11 @@
 
 namespace RooStats {
 
-   /**
-      HLFactory is an High Level model Factory allows you to
-      describe your models in a configuration file
-      (_datacards_) acting as an interface with the RooFactoryWSTool.
-      Moreover it provides tools for the combination of models and datasets.
-
-      \ingroup Roostats
-   */
-
-
   class HLFactory : public TNamed {
 
   public:
 
-    /// Constructor 
+    /// Constructor
     HLFactory(const char *name,
               const char *fileName=0,
               bool isVerbose = false);
@@ -59,7 +49,7 @@ namespace RooStats {
     ~HLFactory();
 
     /// Add channel for the combination
-    int AddChannel(const char* label, 
+    int AddChannel(const char* label,
                    const char* SigBkgPdfName,
                    const char* BkgPdfName=0,
                    const char* datasetName=0);
