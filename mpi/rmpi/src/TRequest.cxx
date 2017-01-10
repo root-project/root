@@ -45,6 +45,13 @@ TRequest &TRequest::operator= (const MPI_Request &i)
 }
 
 //______________________________________________________________________________
+TRequest &TRequest::operator= (const MPI::Request &i)
+{
+   fRequest = i;
+   return *this;
+}
+
+//______________________________________________________________________________
 void TRequest::Wait(TStatus &status)
 {
    fRequest.Wait(status.fStatus);

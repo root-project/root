@@ -16,6 +16,10 @@
 #include <Mpi/TStatus.h>
 #endif
 
+#ifndef ROOT_Mpi_TRequest
+#include<Mpi/TRequest.h>
+#endif
+
 #include<memory>
 
 #include<mpi.h>
@@ -193,6 +197,13 @@ namespace ROOT {
               */
          template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
 
+         
+         template<class Type> TRequest ISend(const Type &obj, Int_t dest, Int_t tag);
+         template<class Type> TRequest ISsendObject(const Type &obj, Int_t dest, Int_t tag);
+         template<class Type> TRequest IRsendObject(const Type &obj, Int_t dest, Int_t tag);
+         template<class Type> TRequest IRecv(Type &obj, Int_t source, Int_t tag);         
+         
+         
          /**
          Method to broadcast a message for collective communication
               \param var any selializable object reference to send/receive the message
@@ -243,6 +254,44 @@ namespace ROOT {
          }
       }
 
+      
+      //______________________________________________________________________________
+     template<class Type> TRequest TCommunicator::ISend(const Type &var, Int_t dest, Int_t tag)
+     {
+         TRequest req;
+         if (std::is_class<Type>::value) {
+            TMpiMessage msg;
+            msg.WriteObject(var);
+            req= ISend(msg, dest, tag);
+         } else {
+            req = fComm.Isend(&var, 1, GetDataType<Type>(), dest, tag);
+         } 
+         return req;
+     }
+      //______________________________________________________________________________
+     template<class Type> TRequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag)
+     {
+         TRequest req;
+         if (std::is_class<Type>::value) {
+            TMpiMessage msg;
+            req = IRecv(msg, source, tag);
+
+            auto cl = gROOT->GetClass(typeid(var));
+            auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
+            memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
+         } else {
+            req = fComm.Irecv(&var, 1, GetDataType<Type>(), source, tag);
+         }
+         return req;
+     }
+
+//       //______________________________________________________________________________
+//      template<class Type> TRequest ISsendObject(const Type &obj, Int_t dest, Int_t tag);
+//       //______________________________________________________________________________
+//      template<class Type> TRequest IRsendObject(const Type &obj, Int_t dest, Int_t tag);
+      
+      
+      
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Bcast(Type &var, Int_t root) const
       {
@@ -273,6 +322,10 @@ namespace ROOT {
       template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const;
       //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
+      //______________________________________________________________________________
+      template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
+      //______________________________________________________________________________
+      template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag);
 
    }
 

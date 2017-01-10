@@ -66,6 +66,58 @@ template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source,
 }
 
 //______________________________________________________________________________
+template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
+{
+   auto buffer = var.Buffer();
+   auto size   = var.BufferSize();
+   TMpiMessageInfo msgi(buffer, size);
+   msgi.SetSource(GetRank());
+   msgi.SetDestination(dest);
+   msgi.SetTag(tag);
+   msgi.SetDataTypeName(var.GetDataTypeName());
+
+   TMpiMessage msg;
+   msg.WriteObject(msgi);
+   auto ibuffer = msg.Buffer();
+   auto isize = msg.BufferSize();
+   TRequest req = fComm.Isend(ibuffer, isize, MPI::CHAR, dest, tag);
+   return req;
+}
+
+//______________________________________________________________________________
+template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag)
+{
+   UInt_t isize = 0;
+   MPI::Status s;
+   fComm.Iprobe(source, tag, s);
+   isize = s.Get_elements(MPI::CHAR);
+
+   Char_t *ibuffer = new Char_t[isize];
+   TRequest req = fComm.Irecv(ibuffer, isize, MPI::CHAR, source, tag);
+   req.Wait();//TODO: we need to improve this using generalized request, and when buffer comes we can to create the object in a thread or external handler call
+   TMpiMessageInfo msgi;
+
+   TMpiMessage msg(ibuffer, isize);
+   auto cl = gROOT->GetClass(typeid(msgi));
+   auto obj_tmp = (TMpiMessageInfo *)msg.ReadObjectAny(cl);
+   memcpy((void *)&msgi, (void *)obj_tmp, sizeof(TMpiMessageInfo));
+
+   //TODO: added error control here
+   //check the tag, if destination is equal etc..
+
+   //passing information from TMpiMessageInfo to TMpiMessage
+   auto size = msgi.GetBufferSize();
+   Char_t *buffer = new Char_t[size];
+   memcpy(buffer, msgi.GetBuffer(), size);
+
+   var.SetBuffer((void *)buffer, size, kFALSE);
+   var.SetReadMode();
+   var.Reset();
+   return req;
+}
+
+
+//______________________________________________________________________________
 template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const
 {
    Char_t *ibuffer = nullptr ;

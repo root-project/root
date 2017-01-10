@@ -28,6 +28,8 @@ namespace ROOT {
          Bool_t operator!= (const TRequest &a);
 
          TRequest &operator= (const MPI_Request &i);
+	 TRequest &operator= (const MPI::Request &i);
+	 
          operator MPI_Request() const
          {
             return fRequest;
