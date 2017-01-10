@@ -29,30 +29,12 @@
 #include "RooArgSet.h"
 #include "TList.h"
 
-class RooAbsData; 
+class RooAbsData;
 
 namespace RooStats {
 
-   class ConfInterval; 
+   class ConfInterval;
 
-/**
-
-   \ingroup Roostats
-
-The FeldmanCousins class (like the Feldman-Cousins technique) is essentially a specific configuration
- of the more general NeymanConstruction.  It is a concrete implementation of the IntervalCalculator interface that, which uses the NeymanConstruction in a particular way.  As the name suggests, it returns a ConfidenceInterval.  In particular, it produces a RooStats::PointSetInterval, which is a concrete implementation of the ConfInterval interface.  
-
-The Neyman Construction is not a uniquely defined statistical technique, it requires that one specify an ordering rule 
-or ordering principle, which is usually incoded by choosing a specific test statistic and limits of integration 
-(corresponding to upper/lower/central limits).  As a result, this class must be configured with the corresponding
-information before it can produce an interval.  
-
-In the case of the Feldman-Cousins approach, the ordering principle is the likelihood ratio -- motivated
-by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile likelihood ratio is the natural generalization.  One may either choose to perform the construction over the full space of the nuisance parameters, or restrict the nusiance parameters to their conditional MLE (eg. profiled values). 
-
-*/
-
-   
    class FeldmanCousins : public IntervalCalculator {
 
    public:
@@ -63,41 +45,41 @@ by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile
      FeldmanCousins(RooAbsData& data, ModelConfig& model);
 
      virtual ~FeldmanCousins();
-    
+
       /// Main interface to get a ConfInterval (will be a PointSetInterval)
       virtual PointSetInterval* GetInterval() const;
 
       /// Get the size of the test (eg. rate of Type I error)
       virtual Double_t Size() const {return fSize;}
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
+      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
       /// Set the DataSet
-      virtual void SetData(RooAbsData& /*data*/) {  
-	std::cout << "DEPRECATED, set data in constructor" << std::endl;
-      }    
+      virtual void SetData(RooAbsData& /*data*/) {
+   std::cout << "DEPRECATED, set data in constructor" << std::endl;
+      }
       /// Set the Pdf
-      virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
-	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
-      }	
+      virtual void SetPdf(RooAbsPdf& /*pdf*/) {
+   std::cout << "DEPRECATED, use ModelConfig" << std::endl;
+      }
 
       /// specify the parameters of interest in the interval
-      virtual void SetParameters(const RooArgSet& /*set*/) { 
-	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
+      virtual void SetParameters(const RooArgSet& /*set*/) {
+   std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
       /// specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
-	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
+   std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
       /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
-	fPointsToTest = &pointsToTest;
+   fPointsToTest = &pointsToTest;
       }
 
       /// User-defined set of points to test
       void SetPOIPointsToTest(RooAbsData& poiToTest) {
-	fPOIToTest = &poiToTest;
+   fPOIToTest = &poiToTest;
       }
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
@@ -105,11 +87,11 @@ by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
 
-      virtual void SetModel(const ModelConfig &); 
+      virtual void SetModel(const ModelConfig &);
 
       RooAbsData* GetPointsToScan() {
-	if(!fPointsToTest) CreateParameterPoints();	  
-	return fPointsToTest;
+   if(!fPointsToTest) CreateParameterPoints();
+   return fPointsToTest;
       }
 
       ConfidenceBelt* GetConfidenceBelt() {return fConfBelt;}
@@ -123,8 +105,8 @@ by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile
       void FluctuateNumDataEntries(bool flag=true){fFluctuateData = flag;}
 
       void SaveBeltToFile(bool flag=true){
-	fSaveBeltToFile = flag;
-	if(flag) fCreateBelt = true;
+   fSaveBeltToFile = flag;
+   if(flag) fCreateBelt = true;
       }
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
 
@@ -132,7 +114,7 @@ by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile
       /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler() const;
 
-      
+
    private:
 
       /// initializes fPointsToTest data member (mutable)
@@ -143,7 +125,7 @@ by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile
 
       Double_t fSize; // size of the test (eg. specified rate of Type I error)
       ModelConfig &fModel;
-      RooAbsData & fData; // data set 
+      RooAbsData & fData; // data set
 
       /*
       RooAbsPdf * fPdf; // common PDF
@@ -160,7 +142,7 @@ by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile
       Double_t fAdditionalNToysFactor; // give user ability to ask for more toys
       Int_t fNbins; // number of samples per variable
       Bool_t fFluctuateData;  // tell ToyMCSampler to fluctuate number of entries in dataset
-      Bool_t fDoProfileConstruction; // instead of full construction over nuisance parametrs, do profile
+      Bool_t fDoProfileConstruction; // instead of full construction over nuisance parameters, do profile
       Bool_t fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
       Bool_t fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
 
