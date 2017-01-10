@@ -24,7 +24,7 @@ endif
 
 METACLINGO     := $(call stripsrc,$(METACLINGS:.cxx=.o))
 
-METACLINGL     := $(MODDIRI)/LinkDef.h
+# METACLINGL     := $(MODDIRI)/LinkDef.h
 
 METACLINGDEP   := $(METACLINGO:.o=.d)
 
