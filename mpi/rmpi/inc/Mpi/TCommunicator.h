@@ -197,13 +197,13 @@ namespace ROOT {
               */
          template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
 
-         
+
          template<class Type> TRequest ISend(const Type &obj, Int_t dest, Int_t tag);
          template<class Type> TRequest ISsendObject(const Type &obj, Int_t dest, Int_t tag);
          template<class Type> TRequest IRsendObject(const Type &obj, Int_t dest, Int_t tag);
-         template<class Type> TRequest IRecv(Type &obj, Int_t source, Int_t tag);         
-         
-         
+         template<class Type> TRequest IRecv(Type &obj, Int_t source, Int_t tag);
+
+
          /**
          Method to broadcast a message for collective communication
               \param var any selializable object reference to send/receive the message
@@ -254,23 +254,23 @@ namespace ROOT {
          }
       }
 
-      
+
       //______________________________________________________________________________
-     template<class Type> TRequest TCommunicator::ISend(const Type &var, Int_t dest, Int_t tag)
-     {
+      template<class Type> TRequest TCommunicator::ISend(const Type &var, Int_t dest, Int_t tag)
+      {
          TRequest req;
          if (std::is_class<Type>::value) {
             TMpiMessage msg;
             msg.WriteObject(var);
-            req= ISend(msg, dest, tag);
+            req = ISend(msg, dest, tag);
          } else {
             req = fComm.Isend(&var, 1, GetDataType<Type>(), dest, tag);
-         } 
+         }
          return req;
-     }
+      }
       //______________________________________________________________________________
-     template<class Type> TRequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag)
-     {
+      template<class Type> TRequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag)
+      {
          TRequest req;
          if (std::is_class<Type>::value) {
             TMpiMessage msg;
@@ -279,19 +279,21 @@ namespace ROOT {
             auto cl = gROOT->GetClass(typeid(var));
             auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
             memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
+//        req.Wait();
+//        fComm.Abort(123);
          } else {
             req = fComm.Irecv(&var, 1, GetDataType<Type>(), source, tag);
          }
          return req;
-     }
+      }
 
 //       //______________________________________________________________________________
 //      template<class Type> TRequest ISsendObject(const Type &obj, Int_t dest, Int_t tag);
 //       //______________________________________________________________________________
 //      template<class Type> TRequest IRsendObject(const Type &obj, Int_t dest, Int_t tag);
-      
-      
-      
+
+
+
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Bcast(Type &var, Int_t root) const
       {

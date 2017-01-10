@@ -13,6 +13,7 @@ namespace ROOT {
    namespace Mpi {
       class TStatus;
       class TRequest: public TObject {
+         friend class TCommunicator;
       protected:
          MPI::Request fRequest;
       public:
@@ -28,8 +29,8 @@ namespace ROOT {
          Bool_t operator!= (const TRequest &a);
 
          TRequest &operator= (const MPI_Request &i);
-	 TRequest &operator= (const MPI::Request &i);
-	 
+         TRequest &operator= (const MPI::Request &i);
+
          operator MPI_Request() const
          {
             return fRequest;
@@ -79,6 +80,7 @@ namespace ROOT {
          {
             return fRequest;
          }
+
          ClassDef(TRequest, 1)
       };
    }//end namespace Mpi
