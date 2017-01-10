@@ -30,7 +30,9 @@ void CopyDir(TDirectory *source) {
    adir->cd();
    //loop on all entries of this directory
    TKey *key;
-   TIter nextkey(source->GetListOfKeys());
+   //Loop in reverse order to make sure that the order of cycles is
+   //preserved.
+   TIter nextkey(source->GetListOfKeys(),kIterBackward);
    while ((key = (TKey*)nextkey())) {
       const char *classname = key->GetClassName();
       TClass *cl = gROOT->GetClass(classname);
