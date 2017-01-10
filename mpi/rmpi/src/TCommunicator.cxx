@@ -66,7 +66,7 @@ template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source,
 }
 
 //______________________________________________________________________________
-template<> TGrequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
+template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
 {
    auto buffer = var.Buffer();
    auto size   = var.BufferSize();
@@ -80,9 +80,45 @@ template<> TGrequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, 
    msg.WriteObject(msgi);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   TRequest req = fComm.Isend(ibuffer, isize, MPI::CHAR, dest, tag);
-   return req;
+   return  fComm.Isend(ibuffer, isize, MPI::CHAR, dest, tag);
 }
+
+//______________________________________________________________________________
+template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
+{
+   auto buffer = var.Buffer();
+   auto size   = var.BufferSize();
+   TMpiMessageInfo msgi(buffer, size);
+   msgi.SetSource(GetRank());
+   msgi.SetDestination(dest);
+   msgi.SetTag(tag);
+   msgi.SetDataTypeName(var.GetDataTypeName());
+
+   TMpiMessage msg;
+   msg.WriteObject(msgi);
+   auto ibuffer = msg.Buffer();
+   auto isize = msg.BufferSize();
+   return  fComm.Issend(ibuffer, isize, MPI::CHAR, dest, tag);
+}
+
+//______________________________________________________________________________
+template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
+{
+   auto buffer = var.Buffer();
+   auto size   = var.BufferSize();
+   TMpiMessageInfo msgi(buffer, size);
+   msgi.SetSource(GetRank());
+   msgi.SetDestination(dest);
+   msgi.SetTag(tag);
+   msgi.SetDataTypeName(var.GetDataTypeName());
+
+   TMpiMessage msg;
+   msg.WriteObject(msgi);
+   auto ibuffer = msg.Buffer();
+   auto isize = msg.BufferSize();
+   return  fComm.Irsend(ibuffer, isize, MPI::CHAR, dest, tag);
+}
+
 
 //______________________________________________________________________________
 template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag)
@@ -111,7 +147,7 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t 
          return MPI_ERR_IN_STATUS;
       }
       isize = s.fStatus.Get_elements(MPI::CHAR);
-      std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
+//       std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
 
       Char_t *ibuffer = new Char_t[isize];
       TRequest req = imsg->fComm->Irecv(ibuffer, isize, MPI::CHAR, imsg->fSource, imsg->fTag);
