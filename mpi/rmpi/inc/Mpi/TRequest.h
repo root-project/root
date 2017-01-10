@@ -15,6 +15,7 @@ namespace ROOT {
       class TRequest: public TObject {
          friend class TCommunicator;
          friend class TGrequest;
+         friend class TPrequest;
       protected:
          MPI_Request fRequest;
       public:
@@ -81,6 +82,31 @@ namespace ROOT {
          }
 
          ClassDef(TRequest, 1)
+      };
+
+
+      class TPrequest: public TRequest {
+      public:
+         TPrequest() { }
+         TPrequest(const TRequest &p) : TRequest(p) { }
+         TPrequest(const MPI_Request &i) : TRequest(i) { }
+         virtual ~TPrequest() { }
+
+         TPrequest &operator=(const TRequest &r)
+         {
+            fRequest = r.fRequest;
+            return *this;
+         }
+         TPrequest &operator=(const TPrequest &r)
+         {
+            fRequest = r.fRequest;
+            return *this;
+         }
+
+         virtual void Start();
+         static void Startall(int count, TPrequest array_of_requests[]);
+
+         ClassDef(TPrequest, 2)
       };
 
       class TGrequest: public TRequest {

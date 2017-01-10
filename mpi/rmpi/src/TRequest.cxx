@@ -320,6 +320,27 @@ Bool_t TRequest::GetStatus() const
 }
 
 //______________________________________________________________________________
+void TPrequest::Start()
+{
+   MPI_Start(&fRequest);
+}
+
+//______________________________________________________________________________
+void TPrequest::Startall(int count, TPrequest array_of_requests[])
+{
+   MPI_Request *mpi_requests = new MPI_Request[count];
+   int i;
+   for (i = 0; i < count; i++) {
+      mpi_requests[i] = array_of_requests[i].fRequest;
+   }
+   MPI_Startall(count, mpi_requests);
+   for (i = 0; i < count; i++) {
+      array_of_requests[i].fRequest = mpi_requests[i] ;
+   }
+   delete [] mpi_requests;
+}
+
+//______________________________________________________________________________
 TGrequest TGrequest::Start(Int_t(*query_fn)(void *, TStatus &), Int_t(*free_fn)(void *), Int_t(*cancel_fn)(void *, Bool_t), void *extra)
 {
    MPI_Request grequest = 0;

@@ -20,9 +20,7 @@
 /*
  * Some raw MPI datatypes
  */
-#pragma link C++ class MPI::Status+;
 #pragma link C++ class MPI_Status+;
-#pragma link C++ class MPI::Request+;
 #pragma link C++ class MPI_Request+;
 
 /*
@@ -32,6 +30,7 @@
 #pragma link C++ class ROOT::Mpi::TMpiMessageInfo+;
 #pragma link C++ class ROOT::Mpi::TStatus+;
 #pragma link C++ class ROOT::Mpi::TRequest+;
+#pragma link C++ class ROOT::Mpi::TPrequest+;
 #pragma link C++ class ROOT::Mpi::TGrequest;
 #pragma link C++ class ROOT::Mpi::TEnvironment;
 #pragma link C++ class ROOT::Mpi::TCommunicator;
