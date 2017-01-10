@@ -416,6 +416,7 @@ void RooRealMPFE::serverLoop()
 
     timing_outfile << "{\"RRMPFE_serverloop_wall_s\": \"" << timing_s
                    << "\", \"pid\": \"" << getpid()
+                   << "\", \"ppid\": \"" << getppid()
                    << "\"}," << "\n";
 
     timing_outfile.close();
