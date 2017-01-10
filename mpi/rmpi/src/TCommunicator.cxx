@@ -66,7 +66,7 @@ template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source,
 }
 
 //______________________________________________________________________________
-template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
+template<> TGrequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
 {
    auto buffer = var.Buffer();
    auto size   = var.BufferSize();
@@ -84,29 +84,83 @@ template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, I
    return req;
 }
 
-struct imsg_data {
-   TMpiMessage *var;
-   TComm *comm;
-   Int_t source;
-   Int_t tag;
-};
-int free_fn(void *extra_state);
-Int_t query_fn(void *extra_state, MPI_Status *status) ;
-int cancel_fn(void *extra_state, int complete);
-
 //______________________________________________________________________________
-template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag)
+template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag)
 {
 
-   imsg_data *imsg = new imsg_data;
-   imsg->var = &var;
-   imsg->comm = &fComm;
-   imsg->source = source;
-   imsg->tag = tag;
+   IMsg *_imsg = new IMsg;
+   _imsg->fMsg = &var;
+   _imsg->fComm = &fComm;
+   _imsg->fSource = source;
+   _imsg->fTag = tag;
 
-   MPI_Request greq;
-   MPI_Grequest_start(query_fn, free_fn, cancel_fn, (void *)imsg, &greq);
-//    MPI_Grequest_complete(greq);//I need to fix it here
+   //query lambda function
+   auto query_fn = [ = ](void *extra_state, TStatus & status)->Int_t {
+      if (status.IsCancelled())
+      {
+         return MPI_ERR_IN_STATUS;
+      }
+      IMsg  *imsg = (IMsg *)extra_state;
+
+      Int_t isize = 0;
+      MPI::Status s;
+      imsg->fComm->Probe(imsg->fSource, imsg->fTag, s);
+      isize = s.Get_elements(MPI::CHAR);
+      std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
+
+      Char_t *ibuffer = new Char_t[isize];
+      TRequest req = imsg->fComm->Irecv(ibuffer, isize, MPI::CHAR, imsg->fSource, imsg->fTag);
+      req.Wait();
+
+      TMpiMessageInfo msgi;
+
+      TMpiMessage msg(ibuffer, isize);
+      auto cl = gROOT->GetClass(typeid(msgi));
+      auto obj_tmp = (TMpiMessageInfo *)msg.ReadObjectAny(cl);
+      memcpy((void *)&msgi, (void *)obj_tmp, sizeof(TMpiMessageInfo));
+
+      //TODO: added error control here
+      //check the tag, if destination is equal etc..
+
+      //passing information from TMpiMessageInfo to TMpiMessage
+      auto size = msgi.GetBufferSize();
+      Char_t *buffer = new Char_t[size];
+      memcpy(buffer, msgi.GetBuffer(), size);
+
+      imsg->fMsg->SetBuffer((void *)buffer, size, kFALSE);
+      imsg->fMsg->SetReadMode();
+      imsg->fMsg->Reset();
+      return MPI_SUCCESS;
+   };
+
+   //free function
+   auto free_fn = [ = ](void *extra_state)->Int_t {
+      IMsg *obj = (IMsg *)extra_state;
+      if (obj) delete obj;
+      return MPI_SUCCESS;
+   };
+
+   //cancel lambda function
+   auto cancel_fn = [ = ](void *extra_state, Bool_t complete)->Int_t {
+      if (!complete)
+      {
+         IMsg *imsg = (IMsg *)extra_state;
+         Int_t isize = 0;
+         MPI::Status s;
+         imsg->fComm->Probe(imsg->fSource, imsg->fTag, s);
+         isize = s.Get_elements(MPI::CHAR);
+         Char_t *ibuffer = new Char_t[isize];
+         TRequest req = imsg->fComm->Irecv(ibuffer, isize, MPI::CHAR, imsg->fSource, imsg->fTag);
+         req.Cancel();
+         delete ibuffer;
+         std::cout << "incompleted!\n";
+      }
+      std::cout << "Cancelled!\n";
+      return MPI_SUCCESS;
+   };
+
+   //creating General Request with lambda function
+   auto greq = TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
    return greq;
 }
 
@@ -190,73 +244,4 @@ void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 void TCommunicator::Probe(Int_t source, Int_t tag) const
 {
    fComm.Probe(source, tag);
-}
-
-Int_t query_fn(void *extra_state, MPI_Status *status)
-{
-   Int_t flag;
-   MPI_Test_cancelled(status, &flag);
-   if (flag) {
-      std::cout << "in query_fn = CANCELLED\n";
-      return MPI_ERR_IN_STATUS;
-   }
-//    MPI_Status_set_cancelled(status, flag);
-
-   imsg_data *imsg = (imsg_data *)extra_state;
-
-   Int_t isize = 0;
-   MPI::Status s;
-   imsg->comm->Probe(imsg->source, imsg->tag, s);
-   isize = s.Get_elements(MPI::CHAR);
-   std::cout << "in query_fn = source = " << imsg->source << " tag = " << imsg->tag << " size = " << isize << std::endl;
-
-   Char_t *ibuffer = new Char_t[isize];
-   TRequest req = imsg->comm->Irecv(ibuffer, isize, MPI::CHAR, imsg->source, imsg->tag);
-   req.Wait();
-
-   TMpiMessageInfo msgi;
-
-   TMpiMessage msg(ibuffer, isize);
-   auto cl = gROOT->GetClass(typeid(msgi));
-   auto obj_tmp = (TMpiMessageInfo *)msg.ReadObjectAny(cl);
-   memcpy((void *)&msgi, (void *)obj_tmp, sizeof(TMpiMessageInfo));
-
-   //TODO: added error control here
-   //check the tag, if destination is equal etc..
-
-   //passing information from TMpiMessageInfo to TMpiMessage
-   auto size = msgi.GetBufferSize();
-   Char_t *buffer = new Char_t[size];
-   memcpy(buffer, msgi.GetBuffer(), size);
-
-   imsg->var->SetBuffer((void *)buffer, size, kFALSE);
-   imsg->var->SetReadMode();
-   imsg->var->Reset();
-   return MPI_SUCCESS;
-}
-
-int free_fn(void *extra_state)
-{
-   imsg_data *obj = (imsg_data *)extra_state;
-   if (obj) delete obj;
-   return MPI_SUCCESS;
-}
-
-
-int cancel_fn(void *extra_state, int complete)
-{
-   if (!complete) {
-      imsg_data *imsg = (imsg_data *)extra_state;
-      Int_t isize = 0;
-      MPI::Status s;
-      imsg->comm->Probe(imsg->source, imsg->tag, s);
-      isize = s.Get_elements(MPI::CHAR);
-      Char_t *ibuffer = new Char_t[isize];
-      TRequest req = imsg->comm->Irecv(ibuffer, isize, MPI::CHAR, imsg->source, imsg->tag);
-      req.Cancel();
-      delete ibuffer;
-      std::cout << "incompleted!\n";
-   }
-   std::cout << "Cancelled!\n";
-   return MPI_SUCCESS;
 }
