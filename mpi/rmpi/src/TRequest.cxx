@@ -216,11 +216,6 @@ Bool_t TRequest::GetStatus() const
    return fRequest.Get_status();
 }
 
-
-int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status);
-int ROOTMpi_Grequest_free_fn_intercept(void *extra_data);
-int ROOTMpi_Grequest_cancel_fn_intercept(void *, int);
-
 //______________________________________________________________________________
 TGrequest TGrequest::Start(Int_t(*query_fn)(void *, TStatus &), Int_t(*free_fn)(void *), Int_t(*cancel_fn)(void *, Bool_t), void *extra)
 {
@@ -233,9 +228,25 @@ TGrequest TGrequest::Start(Int_t(*query_fn)(void *, TStatus &), Int_t(*free_fn)(
    new_extra->id_cxx_cancel_fn = cancel_fn;
    new_extra->id_extra = extra;
 
-   MPI_Grequest_start(ROOTMpi_Grequest_call_query_fn,
-                      ROOTMpi_Grequest_free_fn_intercept,
-                      ROOTMpi_Grequest_cancel_fn_intercept,
+   auto call_query_fn = [](void *extra_data, MPI_Status * status)->int {
+      TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
+      TStatus stat;
+      stat = *status;
+      return data->id_cxx_query_fn(data->id_extra, stat);
+   };
+
+   auto call_free_fn = [](void *extra_data)->int {
+      TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
+      return data->id_cxx_free_fn(data->id_extra);
+   };
+
+   auto call_cancel_fn = [](void *extra_data, int completed)->int {
+      TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
+      return data->id_cxx_cancel_fn(data->id_extra, completed);
+   };
+   MPI_Grequest_start(call_query_fn,
+                      call_free_fn,
+                      call_cancel_fn,
                       new_extra, &grequest);
    return grequest;
 }
@@ -246,25 +257,3 @@ void TGrequest::Complete()
    MPI_Grequest_complete(fRequest);
 }
 
-//______________________________________________________________________________
-int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status)
-{
-   TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
-   TStatus stat;
-   stat = *status;
-   return data->id_cxx_query_fn(data->id_extra, stat);
-}
-
-//______________________________________________________________________________
-int ROOTMpi_Grequest_free_fn_intercept(void *extra_data)
-{
-   TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
-   return data->id_cxx_free_fn(data->id_extra);
-}
-
-//______________________________________________________________________________
-int ROOTMpi_Grequest_cancel_fn_intercept(void *extra_data, int completed)
-{
-   TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
-   return data->id_cxx_cancel_fn(data->id_extra, completed);
-}
