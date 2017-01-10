@@ -2,12 +2,9 @@
 #ifndef ROOT_Mpi_TEnvironment
 #define ROOT_Mpi_TEnvironment
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
+#ifndef ROOT_Mpi_Globals
+#include<Mpi/Globals.h>
 #endif
-#include<TObject.h>
-
-#include<mpi.h>
 
 namespace ROOT {
 
@@ -30,11 +27,15 @@ namespace ROOT {
               */
          TEnvironment(Int_t &argc, Char_t ** &argv);
          ~TEnvironment();
+         /**
+         Method to init the environment.
+              */
+         static void Init();
 
          /**
          Method to finalize the environment.
               */
-         void Finalize();
+         static void Finalize();
 
          // static public functions TODO
          /**
@@ -52,7 +53,6 @@ namespace ROOT {
          ClassDef(TEnvironment, 1)
       };
    }
-
 }
 
 #endif

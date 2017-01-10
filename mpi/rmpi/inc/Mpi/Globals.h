@@ -165,9 +165,8 @@ namespace ROOT {
 
          return None;
       }
-
-
    }
 }
+
 
 #endif

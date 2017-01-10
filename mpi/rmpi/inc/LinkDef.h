@@ -44,6 +44,6 @@
 #pragma link C++ class ROOT::Mpi;
 #endif
 
-
+#pragma link C++ global gComm;
 
 #endif

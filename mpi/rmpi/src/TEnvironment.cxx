@@ -6,13 +6,13 @@ using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TEnvironment::TEnvironment()
 {
-   MPI::Init();
+   MPI_Init(NULL, NULL);
 }
 
 //______________________________________________________________________________
 TEnvironment::TEnvironment(Int_t &argc, Char_t ** &argv)
 {
-   MPI::Init(argc, argv);
+   MPI_Init(&argc, &argv);
 }
 
 //______________________________________________________________________________
@@ -24,16 +24,25 @@ TEnvironment::~TEnvironment()
    }
 }
 
+void TEnvironment::Init()
+{
+   MPI_Init(NULL, NULL);
+}
+
 //______________________________________________________________________________
 Bool_t TEnvironment::IsFinalized()
 {
-   return (Bool_t)MPI::Is_finalized();
+   Int_t t;
+   MPI_Finalized(&t);
+   return Bool_t(t);
 }
 
 //______________________________________________________________________________
 Bool_t TEnvironment::IsInitialized()
 {
-   return (Bool_t)MPI::Is_initialized();
+   Int_t t;
+   MPI_Initialized(&t);
+   return (Bool_t)(t);
 }
 
 
@@ -41,6 +50,5 @@ Bool_t TEnvironment::IsInitialized()
 void TEnvironment::Finalize()
 {
    //Finalize the mpi's environment
-   MPI::Finalize();
+   MPI_Finalize();
 }
-

@@ -54,7 +54,7 @@ namespace ROOT {
               \param comm other TCommunicator object
               */
          TCommunicator(const TCommunicator &comm);
-         TCommunicator(const MPI_Comm &comm = MPI_COMM_WORLD);
+         TCommunicator(const MPI_Comm &comm);
          ~TCommunicator();
 
          TCommunicator &operator=(const MPI_Comm &comm)
@@ -411,9 +411,10 @@ namespace ROOT {
       template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
       template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag);
-
    }
-
 }
+R__EXTERN ROOT::Mpi::TCommunicator *gComm;
+R__EXTERN ROOT::Mpi::TCommunicator COMM_WORLD;
+
 
 #endif

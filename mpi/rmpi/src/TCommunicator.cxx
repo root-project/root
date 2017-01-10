@@ -309,3 +309,7 @@ void TCommunicator::Probe(Int_t source, Int_t tag) const
    MPI_Status stat;
    MPI_Probe(source, tag, fComm, &stat);
 }
+
+ROOT::Mpi::TCommunicator *gComm = new ROOT::Mpi::TCommunicator(MPI_COMM_WORLD);
+
+ROOT::Mpi::TCommunicator COMM_WORLD(MPI_COMM_WORLD);
