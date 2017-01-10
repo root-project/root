@@ -3920,6 +3920,9 @@ int RootClingMain(int argc,
 #if !defined(ROOTINCDIR)
    if (!gBuildingROOT)
       SetRootSys();
+#else
+   if (gBuildingROOT)
+      SetRootSys(); // Ignore install prefix
 #endif
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
