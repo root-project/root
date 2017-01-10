@@ -196,9 +196,9 @@ Int_t query_fn(void *extra_state, MPI_Status *status)
 {
    Int_t flag;
    MPI_Test_cancelled(status, &flag);
-   if(flag){
-     std::cout << "in query_fn = CANCELLED\n";
-     return MPI_ERR_IN_STATUS;
+   if (flag) {
+      std::cout << "in query_fn = CANCELLED\n";
+      return MPI_ERR_IN_STATUS;
    }
 //    MPI_Status_set_cancelled(status, flag);
 
@@ -232,7 +232,7 @@ Int_t query_fn(void *extra_state, MPI_Status *status)
    imsg->var->SetBuffer((void *)buffer, size, kFALSE);
    imsg->var->SetReadMode();
    imsg->var->Reset();
-return MPI_SUCCESS;
+   return MPI_SUCCESS;
 }
 
 int free_fn(void *extra_state)
@@ -255,8 +255,8 @@ int cancel_fn(void *extra_state, int complete)
       TRequest req = imsg->comm->Irecv(ibuffer, isize, MPI::CHAR, imsg->source, imsg->tag);
       req.Cancel();
       delete ibuffer;
-      std::cout<<"incompleted!\n";
+      std::cout << "incompleted!\n";
    }
-   std::cout<<"Cancelled!\n";
+   std::cout << "Cancelled!\n";
    return MPI_SUCCESS;
 }

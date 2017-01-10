@@ -216,3 +216,55 @@ Bool_t TRequest::GetStatus() const
    return fRequest.Get_status();
 }
 
+
+static int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status);
+static int ROOTMpi_Grequest_free_fn_intercept(void *extra_data);
+static int ROOTMpi_Grequest_cancel_fn_intercept(void *, int);
+
+//______________________________________________________________________________
+TGrequest TGrequest::Start(Query_function *query_fn, Free_function *free_fn, Cancel_function *cancel_fn, void *extra)
+{
+   MPI_Request grequest = 0;
+
+   Intercept_data_t *new_extra = new Intercept_data_t;
+
+   new_extra->id_cxx_query_fn = query_fn;
+   new_extra->id_cxx_free_fn = free_fn;
+   new_extra->id_cxx_cancel_fn = cancel_fn;
+   new_extra->id_extra = extra;
+
+   MPI_Grequest_start(ROOTMpi_Grequest_call_query_fn,
+                      ROOTMpi_Grequest_free_fn_intercept,
+                      ROOTMpi_Grequest_cancel_fn_intercept,
+                      new_extra, &grequest);
+   return grequest;
+}
+
+//______________________________________________________________________________
+void TGrequest::Complete()
+{
+   MPI_Grequest_complete(fRequest);
+}
+
+//______________________________________________________________________________
+static int ROOTMpi_Grequest_call_query_fn(void *extra_data, MPI_Status *status)
+{
+   TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
+   TStatus stat;
+   stat = *status;
+   return data->id_cxx_query_fn(data->id_extra, stat);
+}
+
+//______________________________________________________________________________
+static int ROOTMpi_Grequest_free_fn_intercept(void *extra_data)
+{
+   TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
+   return data->id_cxx_free_fn(data->id_extra);
+}
+
+//______________________________________________________________________________
+static int ROOTMpi_Grequest_cancel_fn_intercept(void *extra_data, int completed)
+{
+   TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
+   return data->id_cxx_cancel_fn(data->id_extra, completed);
+}

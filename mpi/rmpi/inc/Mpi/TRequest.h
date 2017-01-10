@@ -14,6 +14,7 @@ namespace ROOT {
       class TStatus;
       class TRequest: public TObject {
          friend class TCommunicator;
+         friend class TGrequest;
       protected:
          MPI::Request fRequest;
       public:
@@ -83,6 +84,50 @@ namespace ROOT {
 
          ClassDef(TRequest, 1)
       };
+
+      class TGrequest: public TRequest {
+      public:
+         typedef Int_t Query_function(void *, TStatus &);
+         typedef Int_t Free_function(void *);
+         typedef Int_t Cancel_function(void *, Bool_t);
+
+         TGrequest() {}
+         TGrequest(const TRequest &req) : TRequest(req) {}
+         TGrequest(const MPI_Request &req) : TRequest(req) {}
+         virtual ~TGrequest() {}
+
+         TGrequest &operator=(const TRequest &req)
+         {
+            fRequest = req.fRequest;
+            return (*this);
+         }
+
+         TGrequest &operator=(const TGrequest &req)
+         {
+            fRequest = req.fRequest;
+            return (*this);
+         }
+
+         static TGrequest Start(Query_function *, Free_function *, Cancel_function *, void *);
+
+         virtual void Complete();
+
+
+         // Type used for intercepting Generalized requests in the C++ layer so
+         // that the type can be converted to C++ types before invoking the
+         // user-specified C++ callbacks.
+         //
+         struct Intercept_data_t {
+            void *id_extra;
+            TGrequest::Query_function *id_cxx_query_fn;
+            TGrequest::Free_function *id_cxx_free_fn;
+            TGrequest::Cancel_function *id_cxx_cancel_fn;
+         };
+         ClassDef(TGrequest, 2)
+      };
+
+
+
    }//end namespace Mpi
 }//end namespace ROOT
 
