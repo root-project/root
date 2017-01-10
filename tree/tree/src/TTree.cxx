@@ -4793,16 +4793,12 @@ Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection
 }
 
 namespace {
-
 struct BoolRAIIToggle {
+   Bool_t &m_val;
 
-Bool_t &m_val;
-
-BoolRAIIToggle(Bool_t &val) : m_val(val) { m_val = true; }
-
-~BoolRAIIToggle() { m_val = false; }
+   BoolRAIIToggle(Bool_t &val) : m_val(val) { m_val = true; }
+   ~BoolRAIIToggle() { m_val = false; }
 };
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
