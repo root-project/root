@@ -1,5 +1,4 @@
-#include<Mpi/Types.h>
-#include<mpi.h>
+#include<Mpi/Globals.h>
 namespace ROOT {
    namespace Mpi {
       /////////////////////////
@@ -60,6 +59,70 @@ namespace ROOT {
       const Int_t ERR_UNSUPPORTED_OPERATION = MPI_ERR_UNSUPPORTED_OPERATION;
       const Int_t ERR_WIN = MPI_ERR_WIN;
       const Int_t ERR_LASTCODE = MPI_ERR_LASTCODE;
+      const Int_t ERR_SYSRESOURCE = MPI_ERR_SYSRESOURCE;
+
+      // topologies
+      const Int_t GRAPH = MPI_GRAPH;
+      const Int_t CART = MPI_CART;
+
+      // environmental inquiry keys
+      const Int_t TAG_UB = MPI_TAG_UB;
+      const Int_t HOST = MPI_HOST;
+      const Int_t IO = MPI_IO;
+      const Int_t WTIME_IS_GLOBAL = MPI_WTIME_IS_GLOBAL;
+      const Int_t APPNUM = MPI_APPNUM;
+      const Int_t LASTUSEDCODE = MPI_LASTUSEDCODE;
+      const Int_t UNIVERSE_SIZE = MPI_UNIVERSE_SIZE;
+      const Int_t WIN_BASE = MPI_WIN_BASE;
+      const Int_t WIN_SIZE = MPI_WIN_SIZE;
+      const Int_t WIN_DISP_UNIT = MPI_WIN_DISP_UNIT;
+
+// assorted constants
+      const void  *BOTTOM = MPI::BOTTOM;
+      const void  *IN_PLACE = MPI::IN_PLACE;
+      const Int_t PROC_NULL = MPI_PROC_NULL;
+      const Int_t ANY_SOURCE = MPI_ANY_SOURCE;
+      const Int_t ROOT_RANK = MPI_ROOT;
+      const Int_t ANY_TAG = MPI_ANY_TAG;
+      const Int_t UNDEFINED = MPI_UNDEFINED;
+      const Int_t BSEND_OVERHEAD = MPI_BSEND_OVERHEAD;
+      const Int_t KEYVAL_INVALID = MPI_KEYVAL_INVALID;
+      const Int_t ORDER_C = MPI_ORDER_C;
+      const Int_t ORDER_FORTRAN = MPI_ORDER_FORTRAN;
+      const Int_t DISTRIBUTE_BLOCK = MPI_DISTRIBUTE_BLOCK;
+      const Int_t DISTRIBUTE_CYCLIC = MPI_DISTRIBUTE_CYCLIC;
+      const Int_t DISTRIBUTE_NONE = MPI_DISTRIBUTE_NONE;
+      const Int_t DISTRIBUTE_DFLT_DARG = MPI_DISTRIBUTE_DFLT_DARG;
+
+// MPI-2 IO
+      const Int_t MODE_CREATE = MPI_MODE_CREATE;
+      const Int_t MODE_RDONLY = MPI_MODE_RDONLY;
+      const Int_t MODE_WRONLY = MPI_MODE_WRONLY;
+      const Int_t MODE_RDWR = MPI_MODE_RDWR;
+      const Int_t MODE_DELETE_ON_CLOSE = MPI_MODE_DELETE_ON_CLOSE;
+      const Int_t MODE_UNIQUE_OPEN = MPI_MODE_UNIQUE_OPEN;
+      const Int_t MODE_EXCL = MPI_MODE_EXCL;
+      const Int_t MODE_APPEND = MPI_MODE_APPEND;
+      const Int_t MODE_SEQUENTIAL = MPI_MODE_SEQUENTIAL;
+      const Int_t DISPLACEMENT_CURRENT = MPI_DISPLACEMENT_CURRENT;
+      const Int_t SEEK_SET = ::SEEK_SET;
+      const Int_t SEEK_CUR = ::SEEK_CUR;
+      const Int_t SEEK_END = ::SEEK_END;
+      const Int_t MAX_DATAREP_STRING = MPI_MAX_DATAREP_STRING;
+
+// thread constants
+      const Int_t THREAD_SINGLE = MPI_THREAD_SINGLE;
+      const Int_t THREAD_FUNNELED = MPI_THREAD_FUNNELED;
+      const Int_t THREAD_SERIALIZED = MPI_THREAD_SERIALIZED;
+      const Int_t THREAD_MULTIPLE = MPI_THREAD_MULTIPLE;
+
+// results of communicator and group comparisons
+      const Int_t IDENT = MPI_IDENT;
+      const Int_t CONGRUENT = MPI_CONGRUENT;
+      const Int_t SIMILAR = MPI_SIMILAR;
+      const Int_t UNEQUAL = MPI_UNEQUAL;
+
+
    }
 
 }

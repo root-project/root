@@ -2,11 +2,9 @@
 #ifndef ROOT_Mpi_TCommunicator
 #define ROOT_Mpi_TCommunicator
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
+#ifndef ROOT_Mpi_Globals
+#include<Mpi/Globals.h>
 #endif
-#include<TObject.h>
-
 
 #ifndef ROOT_Mpi_TMpiMessage
 #include <Mpi/TMpiMessage.h>
@@ -50,7 +48,6 @@ namespace ROOT {
       private:
          MPI_Comm fComm;           //! Raw communicator
          Int_t fMainProcess;    // Rank used like a main process
-         template<class T> MPI_Datatype GetDataType() const;
       public:
          /**
          Copy constructor for communicator
@@ -175,6 +172,7 @@ namespace ROOT {
               \param tag id of the message
               */
          template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
+
          /**
          Method to receive a message for p2p communication
               \param var any selializable object reference to receive the message
@@ -250,19 +248,6 @@ namespace ROOT {
          TClass *fClass;
       };
 
-
-      template<class T> MPI_Datatype TCommunicator::GetDataType() const
-      {
-         if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI_INT;
-         if (typeid(T) == typeid(float) || typeid(T) == typeid(Float_t)) return MPI_FLOAT;
-         if (typeid(T) == typeid(double) || typeid(T) == typeid(Double_t)) return MPI_DOUBLE;
-         if (typeid(T) == typeid(bool) || typeid(T) == typeid(Bool_t)) return MPI_BYTE;
-         MPI_Datatype None;
-
-         return None;
-         //TODO: error control here if type is not supported
-      }
-
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Send(const Type &var, Int_t dest, Int_t tag) const
       {
@@ -287,9 +272,9 @@ namespace ROOT {
             auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
             memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
          } else {
-	    //TODO: added status argument to this method
-	    MPI_Status s;
-            MPI_Recv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm,&s);
+            //TODO: added status argument to this method
+            MPI_Status s;
+            MPI_Recv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm, &s);
          }
       }
 
