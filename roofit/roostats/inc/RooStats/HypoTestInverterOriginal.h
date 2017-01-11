@@ -30,23 +30,6 @@ class RooRealVar;
 
 namespace RooStats {
 
-   /**
-     
-   This class is now depratcated and to be replaced by the HypoTestInverter. 
-   HypoTestInverterOriginal class for performing an hypothesis test inversion by scanning the hypothesis test results of the 
-  HybridCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 
- the result  an upper limit, where it intersects the desired confidence level, can be derived.
- The class implements the RooStats::IntervalCalculator interface and returns an  RooStats::HypoTestInverterResult class.
- The result is a SimpleInterval, which via the method UpperLimit returns to the user the upper limit value.
-
-The  HypoTestInverterOriginal implements various option for performing the scan. HypoTestInverterOriginal::RunFixedScan will scan using a fixed grid the parameter of interest. HypoTestInverterOriginal::RunAutoScan will perform an automatic scan to find optimally the curve and it will stop until the desired precision is obtained.
-The confidence level value at a given point can be done via  HypoTestInverterOriginal::RunOnePoint.
-The class can scan the CLs+b values or alternativly CLs (if the method HypoTestInverterOriginal::UseCLs has been called).
-
-
-   New contributions to this class have been written by Matthias Wolf (advanced AutoRun algorithm)
-**/
-
   class HypoTestInverterOriginal : public IntervalCalculator, public TNamed {
 
   public:
@@ -57,10 +40,10 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 
     // constructor
     HypoTestInverterOriginal( HypoTestCalculator& myhc0,
-		      RooRealVar& scannedVariable, 
+            RooRealVar& scannedVariable,
                       double size = 0.05) ;
 
-     
+
 
     virtual HypoTestInverterResult* GetInterval() const { return fResults; } ;
 
@@ -74,7 +57,7 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 
     virtual void  SetData(RooAbsData &) { } // not needed
 
-    virtual void SetModel(const ModelConfig &) { } // not needed 
+    virtual void SetModel(const ModelConfig &) { } // not needed
 
     // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
      virtual void SetTestSize(Double_t size) {fSize = size; if (fResults) fResults->SetTestSize(size); }
@@ -84,13 +67,13 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
     virtual Double_t Size() const {return fSize;}
     // Get the Confidence level for the test
     virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
- 
+
     // destructor
     virtual ~HypoTestInverterOriginal() ;
 
   private:
 
-    void CreateResults(); 
+    void CreateResults();
 
     HypoTestCalculator* fCalculator0;   // pointer to the calculator passed in the constructor
     RooRealVar* fScannedVariable;     // pointer to the constrained variable
