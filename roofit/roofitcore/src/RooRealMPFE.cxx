@@ -241,11 +241,15 @@ void RooRealMPFE::serverLoop()
   std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
 
   if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
-    timing_outfile.open("timing_RRMPFE_serverloop_while.json", ios::app);
+    stringstream filename_ss;
+    filename_ss << "timing_RRMPFE_serverloop_while_p" << getpid() << ".json";
+    timing_outfile.open(filename_ss.str().c_str(), ios::app);
   }
 
   if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 8) {
-    timing_outfile.open("timing_RRMPFE_serverloop.json", ios::app);
+    stringstream filename_ss;
+    filename_ss << "timing_RRMPFE_serverloop_p" << getpid() << ".json";
+    timing_outfile.open(filename_ss.str().c_str(), ios::app);
     timing_begin = std::chrono::high_resolution_clock::now();
   }
 
