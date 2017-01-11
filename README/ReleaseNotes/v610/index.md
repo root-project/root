@@ -141,6 +141,17 @@ The following interfaces have been removed, after deprecation in v6.08.
   Also the text size in batch mode for png (gif jpeg) files better matches the
   size on screen and pdf.
 - `TMathText` and `TTeXDump` implement the `TLatex` character `\bar`.
+- In the following example, `TPad::WaitPrimitive` was not stoping the macro
+  execution after each plot :
+~~~ {.cpp}
+{
+   TCanvas c1("c1");
+   TFile f("hsimple.root");
+   hpx->Draw();        gPad->WaitPrimitive();
+   hpxpy->Draw();      gPad->WaitPrimitive();
+   hprof->Draw();
+~~~
+  this was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22957).
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
