@@ -9,7 +9,7 @@
  *************************************************************************/
 
 /** \class RooStats::HypoTestCalculatorGeneric
-\ingroup Roostats
+    \ingroup Roostats
 
 Common base class for the Hypothesis Test Calculators.
 It is not designed to use directly but via its derived classes
