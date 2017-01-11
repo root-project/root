@@ -586,6 +586,20 @@ Changes will be part of the future 6.08/06
 
 - Repair support in TTree for the case of a split branch where a class A contains a class B which contains a class C (and possibly more nesting) which contains const data members.
 
+### Graphics
+
+- In the following example, `TPad::WaitPrimitive` was not stoping the macro
+  execution after each plot :
+~~~ {.cpp}
+{
+   TCanvas c1("c1");
+   TFile f("hsimple.root");
+   hpx->Draw();        gPad->WaitPrimitive();
+   hpxpy->Draw();      gPad->WaitPrimitive();
+   hprof->Draw();
+~~~
+  this was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22957).
+
 ### Bugs fixed in this release
 
 *   [[ROOT-8516](https://sft.its.cern.ch/jira/browse/ROOT-8516)] - Possible I/O corruption in writing when using a cache, typically on remote servers, e.g. XRootD
