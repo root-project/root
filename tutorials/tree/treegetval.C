@@ -56,15 +56,10 @@ void treegetval() {
    Int_t n = T->Draw("x:y:z:Run:Event:sin(x):cos(x)","Run==1","goff");
    printf("The arrays' dimension is %d\n",n);
 
-   // Retrieve variables 5 et 6
+   // Retrieve variables 0, 5 et 6
+   Double_t *vx  = T->GetVal(0);
    Double_t *vxs = T->GetVal(5);
    Double_t *vxc = T->GetVal(6);
-
-   // Draw with option goff and generate only one variable
-   T->Draw("x","Run==1","goff");
-
-   // Retrieve variable 0
-   Double_t *vx  = T->GetVal(0);
 
    // Create and draw graphs
    TGraph *gs = new TGraph(n,vx,vxs);
