@@ -687,8 +687,6 @@ bool IsSelectionFile(const char *filename)
 
 void SetRootSys()
 {
-   if (!gBuildingROOT)
-      return; // Do not set ROOTSYS if we are user-invoked: TUnixSystem does it.
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
 #if !defined(_WIN32)
