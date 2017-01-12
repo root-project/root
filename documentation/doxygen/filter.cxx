@@ -14,6 +14,9 @@
 ///  - by a reference to a C++ file
 /// The tag `Begin_Macro` can have the parameter `(source)`. The directive becomes:
 /// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
+/// `Begin_Macro` also accept the image file type as option. "png" or "svg".
+/// "png" is the default value. For example: `Begin_Macro(source, svg)` will show
+/// the code of the macro and the image will be is svg format.
 ///
 /// ## In the ROOT tutorials
 ///
