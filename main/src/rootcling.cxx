@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
    ROOT::Internal::RootCling::DriverConfig config{};
 #ifdef R__HAVE_LLVMRESOURCEDIR
-  config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
+   config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
 #endif
 
    config.fBuildingROOTStage1 = false;
