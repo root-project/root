@@ -13,6 +13,7 @@
 #include "rootcling_impl.h"
 #include "RConfigure.h"
 #include "RConfig.h"
+#include "TSystem.h"
 
 extern "C" {
    R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
