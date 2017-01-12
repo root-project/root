@@ -9,6 +9,12 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(CheckCompiler)
   include(MacroEnsureVersion)
   include(StandaloneBuild)
+  if(testing)  
+    configure_file(${CMAKE_SOURCE_DIR}/../cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
+    enable_testing()
+    include(RootCTest)
+    add_subdirectory(test)
+  endif()
 endif()
 
 
@@ -23,3 +29,7 @@ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual ${MPI_CXX_COMPILE_FLAG
 
 add_subdirectory(rmpi)
 add_subdirectory(rootmpi)
+
+if(testing)  
+ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()

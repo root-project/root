@@ -25,7 +25,7 @@ void ibcast()
 {
    TEnvironment env;
 
-   if (gComm->GetSize() == 1) return; //needed to run ROOT tutorials in tests
+   if (gComm->GetSize() == 1) return; //needed at least 2 process
 
    auto rank = gComm->GetRank();
    auto root = gComm->GetMainProcess();
@@ -57,7 +57,7 @@ void ibcast()
    /////////////////////////
    Particle<Int_t> p;
    if (gComm->IsMainProcess()) {
-      p.Set(1, 2);
+      p.Set(1, 2);//if root process fill the particle
    }
    req = gComm->IBcast(p, root); //testing custom object
    req.Complete();

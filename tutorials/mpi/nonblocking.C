@@ -13,6 +13,9 @@ void nonblocking()
   TEnvironment env;          //environment to start communication system
   TCommunicator comm;   //Communicator to send/recv messages
   
+  if(comm.GetSize()==1) return; //need at least 2 process
+
+  
   //data to send/recv
   std::map<std::string,std::string> mymap; //std oebjct
   TMatrixD mymat(2,2);                     //ROOT object

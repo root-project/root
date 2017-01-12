@@ -5,7 +5,7 @@ void bcast()
 {
   ROOT::Mpi::TEnvironment env;
   
-  if(gComm->GetSize()==1) return; //needed to run ROOT tutorials in tests
+  if(gComm->GetSize()==1) return; //need at least 2 process
 
   //data to send/recv
   TMatrixD mymat(2,2);                     //ROOT object
