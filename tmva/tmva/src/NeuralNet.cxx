@@ -2,6 +2,7 @@
 
 #include "TMVA/NeuralNet.h"
 
+#include "TMVA/MethodDNN.h"
 
 namespace TMVA
 {
