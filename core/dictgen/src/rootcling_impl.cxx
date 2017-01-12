@@ -716,11 +716,22 @@ void SetRootSys()
          // There was no slashes at all let now change ROOTSYS
          return;
       }
-      int ncha = strlen(ep) + 10;
-      char *env = new char[ncha];
-      snprintf(env, ncha, "ROOTSYS=%s", ep);
-      putenv(env);
-      delete [] ep;
+      if (gDriverConfig) {
+         const char** pRootDir = gDriverConfig->fPRootDir;
+         if (gBuildingROOT && pRootDir && !strcmp(*pRootDir, ep)) {
+            *pRootDir = ep; // leaks...
+         } else {
+            delete [] ep;
+         }
+      } else {
+         // stage 1.
+         int ncha = strlen(ep) + 10;
+         char *env = new char[ncha];
+         snprintf(env, ncha, "ROOTSYS=%s", ep);
+         putenv(env);
+         delete [] ep;
+      }
+
    }
 }
 

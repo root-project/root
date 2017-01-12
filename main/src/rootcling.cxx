@@ -33,6 +33,7 @@ int main(int argc, char **argv)
 #endif
 
    config.fBuildingROOTStage1 = false;
+   config.fPRootDir = &gRootDir;
    config.fTROOT__GetExtraInterpreterArgs = &TROOT__GetExtraInterpreterArgs;
    config.fTCling__GetInterpreter = &TCling__GetInterpreter;
    config.fInitializeStreamerInfoROOTFile = &InitializeStreamerInfoROOTFile;
