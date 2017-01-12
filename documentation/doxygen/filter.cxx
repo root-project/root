@@ -227,6 +227,13 @@ void FilterClass()
                spos = gLineString.find_first_not_of(' ', 3);
             }
             if (gLineString.find("source") != string::npos) gImageSource = true;
+            if (gLineString.find("png") != string::npos) {
+               gImageType = "png";
+            } else if (gLineString.find("svg") != string::npos) {
+               gImageType = "svg";
+            } else {
+               gImageType = "png";
+            }
             gImageID++;
             gInMacro++;
             gLineString = "\n";
