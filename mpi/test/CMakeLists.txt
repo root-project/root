@@ -16,4 +16,5 @@ function(ROOT_ADD_TEST_MPI name nprocs)
 endfunction(ROOT_ADD_TEST_MPI)
 
 ROOT_ADD_TEST_MPI(p2p 2)
+ROOT_ADD_TEST_MPI(p2p_nonblocking 2)
 ROOT_ADD_TEST_MPI(ibcast 4)

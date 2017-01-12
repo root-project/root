@@ -1,5 +1,6 @@
 #include<Mpi.h>
 #include<TMatrixD.h>
+#include <cassert>
 
 using namespace ROOT::Mpi;
 
@@ -14,6 +15,15 @@ public:
       x = _x;
       y = _y;
    }
+   T GetX()
+   {
+      return x;
+   }
+   T GetY()
+   {
+      return y;
+   }
+
    void Print()
    {
       std::cout << "x = " << x << " y = " << y << std::endl;
@@ -51,6 +61,13 @@ void ibcast()
    std::cout << "Rank = " << rank << std::endl;
    mat->Print();
    std::cout.flush();
+   TMatrixD req_mat(2, 2);
+   req_mat[0][0] = 0.1;
+   req_mat[0][1] = 0.2;
+   req_mat[1][0] = 0.3;
+   req_mat[1][1] = 0.4;
+
+
 
    /////////////////////////
    //testing custom object//
@@ -63,6 +80,11 @@ void ibcast()
    req.Complete();
    req.Wait();
    p.Print();
+
+   //assertions
+   assert(*mat == req_mat);
+   assert(p.GetX() == 1);
+   assert(p.GetY() == 2);
 }
 
 

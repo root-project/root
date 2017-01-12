@@ -11,7 +11,7 @@ struct particle
 void nonblocking()
 {
   TEnvironment env;          //environment to start communication system
-  TCommunicator comm;   //Communicator to send/recv messages
+  TCommunicator comm;        //Communicator to send/recv messages
   
   if(comm.GetSize()==1) return; //need at least 2 process
 

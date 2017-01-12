@@ -1,4 +1,5 @@
 #include<Mpi.h>
+#include <cassert>
 using namespace ROOT::Mpi;
 void p2p()
 {
@@ -35,5 +36,15 @@ void p2p()
       comm.Recv(mymat, 0, 0);
       std::cout << "Received mat = ";
       mymat.Print();
+      TMatrixD req_mat(2, 2); //required mat
+      req_mat[0][0] = 0.1;
+      req_mat[0][1] = 0.2;
+      req_mat[1][0] = 0.3;
+      req_mat[1][1] = 0.4;
+
+      //assertions
+      assert(a == 123.0);
+      assert(mymap["key"] == "hola");
+      assert(mymat == req_mat);
    }
 }
