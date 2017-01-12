@@ -5,7 +5,7 @@
 
 
 #include<Mpi/TEnvironment.h>
-#include<Mpi/Types.h>
+#include<Mpi/Globals.h>
 #include<Mpi/TMpiMessage.h>
 #include<Mpi/TCommunicator.h>
 

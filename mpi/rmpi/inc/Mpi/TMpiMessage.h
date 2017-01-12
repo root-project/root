@@ -108,10 +108,11 @@ namespace ROOT {
       //Nonblocking message for callbacks
       struct IMsg {
          TMpiMessage *fMsg;
-         MPI_Comm *fComm;
-         TCommunicator *fCommunicator;
+         const MPI_Comm *fComm;
+         const TCommunicator *fCommunicator;
          Int_t fSource;
          Int_t fTag;
+         Int_t fRoot;
          void *fVar;
          UInt_t fSizeof;
          TClass *fClass;

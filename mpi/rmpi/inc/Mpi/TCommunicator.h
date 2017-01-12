@@ -54,7 +54,7 @@ namespace ROOT {
               \param comm other TCommunicator object
               */
          TCommunicator(const TCommunicator &comm);
-         TCommunicator(const MPI_Comm &comm=MPI_COMM_WORLD);
+         TCommunicator(const MPI_Comm &comm = MPI_COMM_WORLD);
          ~TCommunicator();
 
          TCommunicator &operator=(const MPI_Comm &comm)
@@ -216,7 +216,7 @@ namespace ROOT {
               \param tag id of the message
               \return TGrequest object.
               */
-         template<class Type> TGrequest IRecv(Type &var, Int_t source, Int_t tag);
+         template<class Type> TGrequest IRecv(Type &var, Int_t source, Int_t tag) const;
 
 
          /**
@@ -232,7 +232,7 @@ namespace ROOT {
               \param root id of the main message where message was sent
               \return TGrequest obj
               */
-//     template<class Type> TGrequest IBcast(Type &var, Int_t root) const;
+         template<class Type> TGrequest IBcast(Type &var, Int_t root) const;
 
          ClassDef(TCommunicator, 1)
       };
@@ -318,7 +318,7 @@ namespace ROOT {
 
 
       //______________________________________________________________________________
-      template<class Type> TGrequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag)
+      template<class Type> TGrequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag) const
       {
          TGrequest req;
          if (std::is_class<Type>::value) {
@@ -410,7 +410,10 @@ namespace ROOT {
       //______________________________________________________________________________
       template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
-      template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag);
+      template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
+      //______________________________________________________________________________
+      template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
+
    }
 }
 R__EXTERN ROOT::Mpi::TCommunicator *gComm;
