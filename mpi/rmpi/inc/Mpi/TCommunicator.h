@@ -22,9 +22,9 @@
 #include<mpi.h>
 
 /**
- @namespace ROOT::Mpi
- namespace associated RMpi package for ROOT.
- @defgroup Mpi Message Passing Interface
+ * @namespace ROOT::Mpi
+ * namespace associated RMpi package for ROOT.
+ * @defgroup Mpi Message Passing Interface
  */
 
 
@@ -35,13 +35,13 @@ namespace ROOT {
       class TMpiMessage;
 
       /**
-      \class TCommunicator
-         Class for communicator, with this class you can to communicate the processes using messages,
-      the messages can be any serializable object supported by ROOT like object from standart c++ libraries or
-      objects that inherits from TObject.
-
-      You can to create your own classes and communicate it just creating its dictionaries
-         \ingroup Mpi
+       *      \class TCommunicator
+       *         Class for communicator, with this class you can to communicate the processes using messages,
+       *      the messages can be any serializable object supported by ROOT like object from standart c++ libraries or
+       *      objects that inherits from TObject.
+       *
+       *      You can to create your own classes and communicate it just creating its dictionaries
+       *         \ingroup Mpi
        */
 
       class TCommunicator: public TObject {
@@ -50,9 +50,9 @@ namespace ROOT {
          Int_t fMainProcess;    // Rank used like a main process
       public:
          /**
-         Copy constructor for communicator
-              \param comm other TCommunicator object
-              */
+          *         Copy constructor for communicator
+          *              \param comm other TCommunicator object
+          */
          TCommunicator(const TCommunicator &comm);
          TCommunicator(const MPI_Comm &comm = MPI_COMM_WORLD);
          ~TCommunicator();
@@ -65,9 +65,9 @@ namespace ROOT {
 
 
          /**
-         Method to get the current rank or process id
-              \return integer with the rank value
-              */
+          *         Method to get the current rank or process id
+          *              \return integer with the rank value
+          */
          inline Int_t GetRank() const
          {
             Int_t rank;
@@ -76,9 +76,9 @@ namespace ROOT {
          }
 
          /**
-         Method to get the total number of ranks or processes
-              \return integer with the number of processes
-              */
+          *         Method to get the total number of ranks or processes
+          *              \return integer with the number of processes
+          */
          inline Int_t GetSize() const
          {
             Int_t size;
@@ -87,36 +87,36 @@ namespace ROOT {
          }
 
          /**
-         Method to know if the current rank us the main process
-              \return boolean true if it is the main rank
-              */
+          *         Method to know if the current rank us the main process
+          *              \return boolean true if it is the main rank
+          */
          inline Bool_t IsMainProcess() const
          {
             return GetRank() == fMainProcess;
          }
 
          /**
-         Method to set the main process rank
-              \param Int_t main process rank number
-              */
+          *         Method to set the main process rank
+          *              \param Int_t main process rank number
+          */
          inline void SetMainProcess(Int_t p)
          {
             fMainProcess = p;
          }
 
          /**
-         Method to get the main process id
-              \return integer with the main rank
-              */
+          *         Method to get the main process id
+          *              \return integer with the main rank
+          */
          inline Int_t GetMainProcess() const
          {
             return fMainProcess;
          }
 
          /**
-         Method to abort  processes
-              \param integer with error code
-              */
+          *         Method to abort  processes
+          *              \param integer with error code
+          */
 #if OPEN_MPI
          inline void Abort(Int_t err)
 #else
@@ -127,111 +127,111 @@ namespace ROOT {
          }
 
          /**
-         Method for synchronization between MPI processes in a communicator
-         */
+          *         Method for synchronization between MPI processes in a communicator
+          */
          virtual void Barrier() const;
 
          /**
-            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-              \param status TStatus object with extra information.
-              \return boolean true if the probe if ok
-              */
+          *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+          *              \param status TStatus object with extra information.
+          *              \return boolean true if the probe if ok
+          */
          virtual Bool_t Iprobe(Int_t source, Int_t tag, TStatus &status) const;
 
          /**
-            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-              \return boolean true if the probe if ok
-              */
+          *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+          *              \return boolean true if the probe if ok
+          */
          virtual Bool_t Iprobe(Int_t source, Int_t tag) const;
 
          /**
-            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-              \param status TStatus object with extra information.
-              \return boolean true if the probe if ok
-              */
+          *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+          *              \param status TStatus object with extra information.
+          *              \return boolean true if the probe if ok
+          */
          virtual void Probe(Int_t source, Int_t tag, TStatus &status) const;
 
          /**
-            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-              \return boolean true if the probe if ok
-              */
+          *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+          *              \return boolean true if the probe if ok
+          */
          virtual void Probe(Int_t source, Int_t tag) const;
 
          /**
-         Method to send a message for p2p communication
-              \param var any selializable object
-              \param dest id with the destination(Rank/Process) of the message
-              \param tag id of the message
-              */
+          *         Method to send a message for p2p communication
+          *              \param var any selializable object
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
          template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
 
          /**
-         Method to receive a message for p2p communication
-              \param var any selializable object reference to receive the message
-              \param source id with the origin(Rank/Process) of the message
-              \param tag id of the message
-              */
+          *         Method to receive a message for p2p communication
+          *              \param var any selializable object reference to receive the message
+          *              \param source id with the origin(Rank/Process) of the message
+          *              \param tag id of the message
+          */
          template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
 
          /**
-            Starts a standard-mode, nonblocking send.
-              \param var any selializable object
-              \param dest id with the destination(Rank/Process) of the message
-              \param tag id of the message
-              */
+          *            Starts a standard-mode, nonblocking send.
+          *              \param var any selializable object
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
          template<class Type> TRequest ISend(const Type &var, Int_t dest, Int_t tag);
 
          /**
-         Starts a nonblocking synchronous send
-              \param var any selializable object
-              \param dest id with the destination(Rank/Process) of the message
-              \param tag id of the message
-              */
+          *         Starts a nonblocking synchronous send
+          *              \param var any selializable object
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
          template<class Type> TRequest ISsend(const Type &var, Int_t dest, Int_t tag);
          /**
-         Starts a ready-mode nonblocking send.
-              \param var any selializable object
-              \param dest id with the destination(Rank/Process) of the message
-              \param tag id of the message
-              */
+          *         Starts a ready-mode nonblocking send.
+          *              \param var any selializable object
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
          template<class Type> TRequest IRsend(const Type &var, Int_t dest, Int_t tag);
 
          /**
-         Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
-         to receive the object you need to call the methods Complete() and Wait()
-         TGrequest req=comm.IRecv(..);
-         req.Complete();
-         req.Wait();
-
-              \param var any selializable object reference to receive the message
-              \param source id with the origin(Rank/Process) of the message
-              \param tag id of the message
-              \return TGrequest object.
-              */
+          *         Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
+          *         to receive the object you need to call the methods Complete() and Wait()
+          *         TGrequest req=comm.IRecv(..);
+          *         req.Complete();
+          *         req.Wait();
+          *
+          *              \param var any selializable object reference to receive the message
+          *              \param source id with the origin(Rank/Process) of the message
+          *              \param tag id of the message
+          *              \return TGrequest object.
+          */
          template<class Type> TGrequest IRecv(Type &var, Int_t source, Int_t tag) const;
 
 
          /**
-          Broadcasts a message from the process with rank root to all other processes of the group.
-              \param var any selializable object reference to send/receive the message
-              \param root id of the main message where message was sent
-              */
+          *          Broadcasts a message from the process with rank root to all other processes of the group.
+          *              \param var any selializable object reference to send/receive the message
+          *              \param root id of the main message where message was sent
+          */
          template<class Type> void Bcast(Type &var, Int_t root) const;
 
          /**
-          Broadcasts a message from the process with rank root to all other processes of the group.
-              \param var any selializable object reference to send/receive the message
-              \param root id of the main message where message was sent
-              \return TGrequest obj
-              */
+          *          Broadcasts a message from the process with rank root to all other processes of the group.
+          *              \param var any selializable object reference to send/receive the message
+          *              \param root id of the main message where message was sent
+          *              \return TGrequest obj
+          */
          template<class Type> TGrequest IBcast(Type &var, Int_t root) const;
 
          ClassDef(TCommunicator, 1)
@@ -348,8 +348,8 @@ namespace ROOT {
                }
                ireq.Complete();
                ireq.Wait();
-               auto obj_tmp = (Type *)msg.ReadObjectAny(imsg->fClass);
-               memcpy(imsg->fVar, (void *)obj_tmp, imsg->fSizeof);
+               auto obj_tmp = msg.ReadObjectAny(imsg->fClass);
+               memcpy(imsg->fVar, obj_tmp, imsg->fSizeof);
                return MPI_SUCCESS;
             };
 
@@ -392,6 +392,71 @@ namespace ROOT {
          } else {
             MPI_Bcast((void *)&var, 1, GetDataType<Type>(), root, fComm);
          }
+
+      }
+
+      //______________________________________________________________________________
+      template<class Type> TGrequest TCommunicator::IBcast(Type &var, Int_t root) const
+      {
+         TGrequest req;
+         if (std::is_class<Type>::value) {
+
+            IMsg *_imsg = new IMsg;
+            _imsg->fVar = &var;
+            _imsg->fCommunicator = this;
+            _imsg->fRoot = root;
+            _imsg->fSizeof = sizeof(Type);
+            _imsg->fClass = gROOT->GetClass(typeid(var));
+
+            //query lambda function
+            auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
+               if (status.IsCancelled())
+               {
+                  return MPI_ERR_IN_STATUS;
+               }
+               IMsg  *imsg = (IMsg *)extra_state;
+
+               if (imsg->fCommunicator->GetRank() == imsg->fRoot)
+               {
+                  TMpiMessage msg;
+                  msg.WriteObjectAny(imsg->fVar, imsg->fClass);
+                  TGrequest rreq = imsg->fCommunicator->IBcast(msg, imsg->fRoot);
+                  rreq.Complete();
+                  rreq.Wait();
+                  return MPI_SUCCESS;
+               }
+
+               TMpiMessage msg;
+               auto _req = imsg->fCommunicator->IBcast(msg, imsg->fRoot);
+               _req.Complete();
+               _req.Wait();
+               auto obj_tmp = msg.ReadObjectAny(imsg->fClass);
+               memcpy(imsg->fVar, obj_tmp, imsg->fSizeof);
+               return MPI_SUCCESS;
+            };
+            //free function
+            auto free_fn = [](void *extra_state)->Int_t {
+               IMsg *obj = (IMsg *)extra_state;
+               if (obj) delete obj;
+               return MPI_SUCCESS;
+            };
+            //cancel lambda function
+            auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
+               if (!complete)
+               {
+                  IMsg  *imsg = (IMsg *)extra_state;
+                  TMpiMessage msg;
+                  TGrequest _req = imsg->fCommunicator->IBcast<TMpiMessage>(msg, imsg->fRoot);
+                  _req.Cancel();
+               }
+               std::cout << "Cancelled!\n";
+               return MPI_SUCCESS;
+            };
+            return TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
+         } else {
+            MPI_Ibcast((void *)&var, 1, GetDataType<Type>(), root, fComm, &req.fRequest);
+         }
+         return req;
 
       }
 

@@ -105,6 +105,7 @@ namespace ROOT {
       }
 
       class TCommunicator;
+      class TGrequest;
       //Nonblocking message for callbacks
       struct IMsg {
          TMpiMessage *fMsg;
