@@ -211,6 +211,8 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 
    #ifdef R__USE_IMT
    fNumCPUs = GetNumCPUs();
+   #else
+   fNumCPUs = 1;
    #endif
 }
 
@@ -273,6 +275,8 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    
    #ifdef R__USE_IMT
    fNumCPUs = GetNumCPUs();
+   #else
+   fNumCPUs = 1;
    #endif
 }
 
@@ -404,6 +408,13 @@ void TMVA::MethodBDT::DeclareOptions()
       fSepTypeS = "GiniIndex";
    }
 
+   // #### Number of CPUs to use in fPool multithreading
+   #ifndef R__USE_IMT
+   DeclareOptionRef(fNumCPUs = 1, "NumCPUs", "Number of CPUs to use in multithreading.");
+   #else
+   DeclareOptionRef(fNumCPUs = GetNumCPUs(), "NumCPUs", "Number of CPUs to use in multithreading.");
+   #endif
+
    DeclareOptionRef(fRegressionLossFunctionBDTGS = "Huber", "RegressionLossFunctionBDTG", "Loss function for BDTG regression.");
    AddPreDefVal(TString("Huber"));
    AddPreDefVal(TString("AbsoluteDeviation"));
@@ -486,6 +497,7 @@ void TMVA::MethodBDT::ProcessOptions()
       Log() << kFATAL << "<ProcessOptions> Huber Quantile must be in range [0,1]. Value given, " << fHuberQuantile << ", does not match this criteria" << Endl;
    }
 
+
    fRegressionLossFunctionBDTGS.ToLower();
    if      (fRegressionLossFunctionBDTGS == "huber")                  fRegressionLossFunctionBDTG = new HuberLossFunctionBDT(fHuberQuantile);
    else if (fRegressionLossFunctionBDTGS == "leastsquares")           fRegressionLossFunctionBDTG = new LeastSquaresLossFunctionBDT();
@@ -494,6 +506,23 @@ void TMVA::MethodBDT::ProcessOptions()
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> unknown Regression Loss Function BDT option " << fRegressionLossFunctionBDTGS << " called" << Endl;
    }
+
+   #ifndef R__USE_IMT // multithreading is not enabled
+   if(fNumCPUs != 1){
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kWARNING << "ROOT was not compiled with -Dimt=ON (multithreading). NumCPUs will be ignored and the non multithreaded version will be run." << Endl;
+   }
+   #else // multithreading is enabled
+   if(!(fNumCPUs > 0)){
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> NumCPUs must be >=1. Value given, " << fNumCPUs << ", does not match this criteria" << Endl;
+   }
+   
+   // Tell the TThreadExecutor for MethodBDT how many threads we want to use. same for the loss function's TThreadExecutor
+   fPool.reset(new ROOT::TThreadExecutor(fNumCPUs));
+   fRegressionLossFunctionBDTG->InitThreadExecutor(fNumCPUs);
+   #endif
+
 
    fPruneMethodS.ToLower();
    if      (fPruneMethodS == "expectederror")  fPruneMethod = DecisionTree::kExpectedErrorPruning;
@@ -1262,10 +1291,9 @@ void TMVA::MethodBDT::Train()
 
    
    // #### CPU info tells us max threads available for parallelization studies
-   SysInfo_t s;
-   gSystem->GetSysInfo(&s);
-   auto ncpu  = s.fCpus;
-   std::cout << "### NCPUs: " << ncpu << std::endl;
+   std::cout << "### NCPUs Available: " << GetNumCPUs() << std::endl;
+   std::cout << "### NCPUs Used     : " << fNumCPUs << std::endl;
+   std::cout << std::endl;
 
    // #### Init timing info for parallelization studies
    TStopwatch initWatch;
@@ -1331,9 +1359,17 @@ void TMVA::MethodBDT::Train()
          // #### Time how long it takes to train one BDT Tree w/ boosting and the DT (parallelization studies)
          TStopwatch watch;
          watch.Start();
-         fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), fSignalClass,
+
+         DecisionTree* dt = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), fSignalClass,
                                               fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
-                                              itree, fNodePurityLimit, itree));
+                                              itree, fNodePurityLimit, itree);
+
+         // Tell the decision tree how many threads we want to use if we are multithreading
+         #ifdef R__USE_IMT
+         dt->InitThreadExecutor(fNumCPUs);
+         #endif
+
+         fForest.push_back(dt);
          fForest.back()->SetNVars(GetNvar());
          if (fUseFisherCuts) {
             fForest.back()->SetUseFisherCuts();
@@ -1349,6 +1385,11 @@ void TMVA::MethodBDT::Train()
          std::cout << "    ### Done timing sumNode      :" << fForest.back()->sumNodeTime << std::endl;
          std::cout << "    ### Done timing trainNodeFast:" << fForest.back()->trainNodeTime << std::endl;
          std::cout << "    ### Done timing filterNode   : " << fForest.back()->filterNodeTime << std::endl;
+
+         // #### Net timing to be saved, then output later
+         buildTreeSumTime+=fForest.back()->sumNodeTime;
+         buildTreeTrainTime+=fForest.back()->trainNodeTime;
+         buildTreeFilterTime+=fForest.back()->filterNodeTime;
          
          if (fUseYesNoLeaf && !DoRegression() && fBoostType!="Grad") { // remove leaf nodes where both daughter nodes are of same type
             nNodesBeforePruning = fForest.back()->CleanTree();
@@ -1357,6 +1398,9 @@ void TMVA::MethodBDT::Train()
          buildTreeWatch.Stop();
          std::cout << "### Done timing buildTree..." << std::endl;
          std::cout << "    +++ Elapsed Time: " << buildTreeWatch.RealTime() << std::endl;
+
+         // #### Net timing to be saved, then output later
+         buildTreeTime+=buildTreeWatch.RealTime();
 
          nNodesBeforePruningCount += nNodesBeforePruning;
          nodesBeforePruningVsTree->SetBinContent(itree+1,nNodesBeforePruning);
@@ -1382,6 +1426,9 @@ void TMVA::MethodBDT::Train()
          boostWatch.Stop();
          std::cout << "### Done timing boosting..." << std::endl;
          std::cout << "    +++ Elapsed Time: " << boostWatch.RealTime() << std::endl;
+
+         // #### Net timing to be saved, then output later
+         boostTreeTime+=boostWatch.RealTime();
          
          // if fAutomatic == true, pruneStrength will be the optimal pruning strength
          // determined by the pruning algorithm; otherwise, it is simply the strength parameter
@@ -1416,6 +1463,7 @@ void TMVA::MethodBDT::Train()
          watch.Stop();
          std::cout << "### Done timing one Tree..." << std::endl;
          std::cout << "    +++ Elapsed Time: " << watch.RealTime() << std::endl;
+         totalTreeTime+=watch.RealTime();
       }
       itree++;
    }
@@ -1425,14 +1473,18 @@ void TMVA::MethodBDT::Train()
    double time = timer.ElapsedSeconds();
    std::cout << "### Done timing BDT Training..." << std::endl;
    std::cout << "    +++ Elapsed Time: " << timer.GetElapsedTime() << std::endl;
-   TString timing_csv_titles = "ntrees, depth, ncuts, nvars, ntrain, time";
-   TString timing_csv_line = Form("%d,%d,%d,%d,%d,%10.3f,", fNTrees, fMaxDepth, fNCuts, fTrainSample->at(0)->GetNVariables(), fTrainSample->size(), time);
+   TString timing_csv_titles = "num_cpus, ntrees, depth, ncuts, nvars, ntrain, build_tree_time, build_sum_time, build_train_time, build_filter_time, boost_tree_time, boost_leaf_time, boost_fit_time, boost_predictions_time, boost_targets_time, total_tree_time, total_time";
+   TString timing_csv_line = Form("%d,%d,%d,%d,%d,%d,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,", 
+                                  fNumCPUs, fNTrees, fMaxDepth, fNCuts, fTrainSample->at(0)->GetNVariables(), fTrainSample->size(), 
+                                  buildTreeTime, buildTreeSumTime, buildTreeTrainTime, buildTreeFilterTime, 
+                                  boostTreeTime, boostTreeLeafTime, boostTreeFitTime, boostTreeUpdatePredictionsTime, boostTreeUpdateTargetsTime, time);
    std::cout << "    +++ " << timing_csv_titles << std::endl;
    std::cout << "    +++ " << timing_csv_line << std::endl;
    std::cout << std::endl;
 
-   TString savefilename = "/afs/cern.ch/work/a/acarnes/public/iml/root_dev_latest/tmva_evaluation/csv/";
-   savefilename+=Form("ntrees%d_depth%d_ncuts%d_nvars%d_ntrain%d.csv", fNTrees, fMaxDepth, fNCuts, fTrainSample->at(0)->GetNVariables(), fTrainSample->size());
+   //TString savefilename = "/afs/cern.ch/work/a/acarnes/public/iml/root_dev_latest/tmva_evaluation/csv/";
+   TString savefilename = "/data/acarnes/tmva_evaluation/csv/parallel/";
+   savefilename+=Form("ncpus%d_ntrees%d_depth%d_ncuts%d_nvars%d_ntrain%d.csv", fNumCPUs, fNTrees, fMaxDepth, fNCuts, fTrainSample->at(0)->GetNVariables(), fTrainSample->size());
    std::ofstream file(savefilename, std::ofstream::out);
    file << timing_csv_line << std::endl;
    file.close();
@@ -1542,7 +1594,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
          return 0;
       };
 
-      fPool.Map(f, seeds);
+      fPool->Map(f, seeds);
    }
    #else // ROOT was not compiled with multithreading, use standard version
    if(!first){
@@ -1554,6 +1606,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    // #### Done with prediction timing
    watchPredict.Stop();
    std::cout << "    #### Done UpdateTargetsRegression Update Predictions: " << watchPredict.RealTime() << std::endl;
+   boostTreeUpdatePredictionsTime+=watchPredict.RealTime();
    
    // #### Time how long it takes to update the targets for the tree
    TStopwatch watchTargets;
@@ -1565,6 +1618,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    // #### Done with target timing
    watchTargets.Stop();
    std::cout << "    #### Done UpdateTargetsRegression Update Targets: " << watchTargets.RealTime() << std::endl;
+   boostTreeUpdateTargetsTime+=watchTargets.RealTime();
    
 }
 
@@ -1620,6 +1674,7 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
    // #### done timing leaves
    watchLeaves.Stop();
    std::cout << "    #### Done GradBoostRegression leaf events: " << watchLeaves.RealTime() << std::endl;
+   boostTreeLeafTime+=watchLeaves.RealTime();
 
    // #### time fit
    TStopwatch watchFit;
@@ -1637,6 +1692,7 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
    // #### done timing fit
    watchFit.Stop();
    std::cout << "    #### Done GradBoostRegression fit events: " << watchFit.RealTime() << std::endl;
+   boostTreeFitTime+=watchFit.RealTime();
 
    
    // #### time update targets regression

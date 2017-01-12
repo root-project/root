@@ -40,6 +40,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#include <memory>
 #ifndef ROOT_TH2
 #include "TH2.h"
 #endif
@@ -70,6 +71,20 @@ namespace TMVA {
    class MethodBDT : public MethodBase {
 
    public:
+      // #### Some temporary variables to store timing information
+      Double_t buildTreeTime = 0;
+         Double_t buildTreeSumTime = 0;
+         Double_t buildTreeTrainTime = 0;
+         Double_t buildTreeFilterTime = 0;
+
+      Double_t boostTreeTime = 0;
+         Double_t boostTreeLeafTime = 0;
+         Double_t boostTreeFitTime = 0;
+         Double_t boostTreeUpdatePredictionsTime = 0;
+         Double_t boostTreeUpdateTargetsTime = 0;
+
+      Double_t totalTreeTime = 0;
+
       // constructor for training and reading
       MethodBDT( const TString& jobName,
                  const TString& methodTitle,
@@ -119,10 +134,9 @@ namespace TMVA {
    private:
 
       // Multithreading only if the compilation flag is turned on
-      #ifdef R__USE_IMT
-      UInt_t fNumCPUs = 1;
-      ROOT::TThreadExecutor fPool;
 
+      #ifdef R__USE_IMT
+      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
       // number of CPUs available for parallelization
       UInt_t GetNumCPUs(){
          SysInfo_t s;
@@ -131,6 +145,8 @@ namespace TMVA {
          return ncpu;
       };
       #endif
+
+      UInt_t fNumCPUs = 1;
 
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
       Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );

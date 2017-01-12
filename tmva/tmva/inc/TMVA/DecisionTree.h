@@ -210,6 +210,13 @@ namespace TMVA {
       inline void SetUseExclusiveVars(Bool_t t=kTRUE){fUseExclusiveVars = t;}
       inline void SetNVars(Int_t n){fNvars = n;}
 
+      #ifdef R__USE_IMT
+      void InitThreadExecutor(UInt_t nthreads){
+          fPool.reset(new ROOT::TThreadExecutor(nthreads));
+          fNumCPUs = nthreads;
+      };
+      #endif
+
 
    private:
       // utility functions
@@ -226,7 +233,8 @@ namespace TMVA {
       };
 
       // root multithreading object
-      ROOT::TThreadExecutor fPool;
+      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
+
       #endif
      
       // calculate the Purity out of the number of sig and bkg events collected

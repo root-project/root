@@ -43,6 +43,7 @@
 // multithreading only if the compilation flag is turned on
 #ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
+#include <memory>
 #include "TSystem.h"
 #endif
 
@@ -94,13 +95,20 @@ namespace TMVA {
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
 
+      #ifdef R__USE_IMT
+      void InitThreadExecutor(UInt_t nthreads){
+          fPool.reset(new ROOT::TThreadExecutor(nthreads));
+          fNumCPUs = nthreads;
+      };
+      #endif
+
    protected:
       // only use multithreading if the compilation flag is turned on
       #ifdef R__USE_IMT
       UInt_t fNumCPUs = 1;
 
       // ROOT multithreading object
-      ROOT::TThreadExecutor fPool;
+      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
 
       // number of CPUs available for parallelization
       UInt_t GetNumCPUs(){
