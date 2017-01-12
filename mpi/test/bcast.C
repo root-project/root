@@ -2,10 +2,10 @@
 #include<TMatrixD.h>
 #include <cassert>
 #include<particle.h>
-
 using namespace ROOT::Mpi;
 
-void ibcast()
+
+void bcast()
 {
    TEnvironment env;
 
@@ -27,9 +27,7 @@ void ibcast()
       msg.WriteObject(mymat);
    }
 
-   auto req = gComm->IBcast(msg, root); //testing TMpiMessage
-   req.Complete();
-   req.Wait();
+   gComm->Bcast(msg, root); //testing TMpiMessage
    auto mat = (TMatrixD *)msg.ReadObjectAny(TMatrixD::Class());
 
    std::cout << "Rank = " << rank << std::endl;
@@ -41,6 +39,8 @@ void ibcast()
    req_mat[1][0] = 0.3;
    req_mat[1][1] = 0.4;
 
+
+
    /////////////////////////
    //testing custom object//
    /////////////////////////
@@ -48,9 +48,7 @@ void ibcast()
    if (gComm->IsMainProcess()) {
       p.Set(1, 2);//if root process fill the particle
    }
-   req = gComm->IBcast(p, root); //testing custom object
-   req.Complete();
-   req.Wait();
+   gComm->Bcast(p, root); //testing custom object
    p.Print();
 
    //assertions
