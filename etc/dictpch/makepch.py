@@ -108,7 +108,9 @@ def makepch():
       print(command)
 
    my_env = os.environ.copy()
-   my_env["LD_LIBRARY_PATH"] = os.path.join(rootdir, "lib") + ":" + my_env["LD_LIBRARY_PATH"]
+   existing_ldlib = my_env.get("LD_LIBRARY_PATH")
+   if not existing_ldlib: existing_ldlib = ""
+   my_env["LD_LIBRARY_PATH"] = os.path.join(rootdir, "lib") + ":" + existing_ldlib
 
    ret = subprocess.call(command, env=my_env, shell=True)
    if ret == 0:
