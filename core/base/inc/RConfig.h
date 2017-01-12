@@ -455,9 +455,7 @@
 #ifndef __CINT__
 #   define _R__JOIN_(X,Y) _NAME2_(X,Y)
 #   define _R__JOIN3_(F,X,Y) _NAME3_(F,X,Y)
-#   ifdef R__DICTIONARY_FILENAME
-#       define _R__UNIQUE_DICT_(X) _R__JOIN3_(R__DICTIONARY_FILENAME,X,__LINE__)
-#   endif
+#   define _R__UNIQUE_DICT_(X) _R__JOIN3_(R__DICTIONARY_FILENAME,X,__LINE__)
 #   define _R__UNIQUE_(X) _R__JOIN_(X,__LINE__)
 #else
     /* Currently CINT does not really mind to have duplicates and     */
