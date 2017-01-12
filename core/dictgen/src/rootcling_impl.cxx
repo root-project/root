@@ -1507,11 +1507,11 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
               << "         return &instance;" << std::endl
               << "      }" << std::endl
               << "      // Insure that the inline function is _not_ optimized away by the compiler\n"
-              << "      ::ROOT::TGenericClassInfo *(*_R__UNIQUE_DICT_(InitFunctionKeeper))() = &GenerateInitInstance;  " << std::endl
+              << "      ::ROOT::TGenericClassInfo *(*_R__UNIQUE_(InitFunctionKeeper))() = &GenerateInitInstance;  " << std::endl
               << "      // Static variable to force the class initialization" << std::endl
               // must be one long line otherwise R__UseDummy does not work
-              << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstance();"
-              << " R__UseDummy(_R__UNIQUE_DICT_(Init));" << std::endl;
+              << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
+              << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
 
    if (!Namespace__HasMethod(cl, "Dictionary", interp)) {
       dictStream <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
