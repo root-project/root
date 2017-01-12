@@ -164,7 +164,8 @@ namespace ROOT {
          MPI_Datatype None;
 
          return None;
-      }
+      }      
+      
    }
 }
 

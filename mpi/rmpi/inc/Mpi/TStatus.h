@@ -21,7 +21,7 @@ namespace ROOT {
          friend class TRequest;
 
       protected:
-         MPI_Status fStatus;       //internal MPI::Status object
+         MPI_Status fStatus;       //internal MP_Status object
       public:
          /**
          Default constructor

@@ -54,7 +54,7 @@ namespace ROOT {
               \param comm other TCommunicator object
               */
          TCommunicator(const TCommunicator &comm);
-         TCommunicator(const MPI_Comm &comm);
+         TCommunicator(const MPI_Comm &comm=MPI_COMM_WORLD);
          ~TCommunicator();
 
          TCommunicator &operator=(const MPI_Comm &comm)
