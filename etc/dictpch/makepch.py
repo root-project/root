@@ -107,7 +107,10 @@ def makepch():
    if "VERBOSE" in os.environ:
       print(command)
 
-   ret = subprocess.call(command,shell=True)
+   my_env = os.environ.copy()
+   my_env["LD_LIBRARY_PATH"] = os.path.join(rootdir, "lib") + ":" + my_env["LD_LIBRARY_PATH"]
+
+   ret = subprocess.call(command, env=my_env, shell=True)
    if ret == 0:
       shutil.move("allDict_rdict.pch",pchFileName)
       os.unlink("allDict.cxx")
