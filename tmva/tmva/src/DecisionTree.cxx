@@ -471,7 +471,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    // #### Run the threads in parallel then merge the results
    //auto redfunc = [](std::vector<BuildNodeInfo> v, BuildNodeInfo nodeInfoInit) -> BuildNodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
    auto redfunc = [nodeInfoInit](std::vector<BuildNodeInfo> v) -> BuildNodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
-   BuildNodeInfo nodeInfo = fPool.MapReduce(f, seeds, redfunc);
+   BuildNodeInfo nodeInfo = fPool->MapReduce(f, seeds, redfunc);
    //NodeInfo nodeInfo(fNvars);
 
    // #### done timing sum
@@ -616,7 +616,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          //   }
          //   return 0;
          //};
-         //fPool.Map(filter, seeds);
+         //fPool->Map(filter, seeds);
 
          for (UInt_t ie=0; ie< nevents ; ie++) {
             if (node->GoesRight(*eventSample[ie])) {
@@ -1673,7 +1673,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
       return 0;
    };
-   fPool.Map(fvarInitCuts, varSeeds);
+   fPool->Map(fvarInitCuts, varSeeds);
   
    // #### Loop through the events to get the total sig and background
    // #### Then loop through the vars to get the counts in each bin in each var
@@ -1755,7 +1755,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
       // #### Run the threads in parallel then merge the results
       auto redfunc = [nodeInfoInit](std::vector<TrainNodeInfo> v) -> TrainNodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
-      nodeInfo = fPool.MapReduce(f, seeds, redfunc);
+      nodeInfo = fPool->MapReduce(f, seeds, redfunc);
    }
  
 
@@ -1812,7 +1812,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          return 0;
       };
 
-      fPool.Map(fvarFillNodeInfo, varSeeds);
+      fPool->Map(fvarFillNodeInfo, varSeeds);
    }
 
    // now turn each "histogram" into a cumulative distribution
@@ -1848,7 +1848,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
       return 0;
    };
-   fPool.Map(fvarCumulative, varSeeds);
+   fPool->Map(fvarCumulative, varSeeds);
 
    // #### Loops over vars and bins, but not events ...
    // #### if bins is on the order of the training data then this is probably worth parallelizing
@@ -1905,7 +1905,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
       return 0;
    };
-   fPool.Map(fvarMaxSep, varSeeds);
+   fPool->Map(fvarMaxSep, varSeeds);
 
    // #### !!!!
    //for (UInt_t ivar=0; ivar < cNvars; ivar++) {
