@@ -826,7 +826,7 @@ void TLegend::PaintPrimitives()
             entry->TAttLine::Copy(entryline);
             entryline.Paint();
          } else {
-            Double_t sy  =-gPad->PixeltoY(Int_t(symbolsize)) + gPad->PixeltoY(0);
+            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
             TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
             entryline1.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entryline1);
