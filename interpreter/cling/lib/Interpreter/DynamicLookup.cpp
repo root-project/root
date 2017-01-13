@@ -15,6 +15,7 @@
 #include "cling/Interpreter/Value.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Output.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -431,8 +432,7 @@ namespace cling {
         ASTNodeInfo NewNode;
         // 2.1 Get unique name for the LifetimeHandler instance and
         // initialize it
-        std::string UniqueName;
-        createUniqueName(UniqueName);
+        std::string UniqueName = createUniqueName();
         IdentifierInfo& II = m_Context->Idents.get(UniqueName);
 
         // Prepare the initialization Exprs.
@@ -685,9 +685,8 @@ namespace cling {
     Sema::ContextRAII pushedDC(*m_Sema, m_CurDeclContext);
 
     // 1. Get the expression containing @-s and get the variable addresses
-    std::string Template;
     llvm::SmallVector<DeclRefExpr*, 4> Addresses;
-    llvm::raw_string_ostream OS(Template);
+    ostrstream OS;
     const PrintingPolicy& Policy = m_Context->getPrintingPolicy();
 
     StmtPrinterHelper helper(Policy, Addresses, m_Sema);
@@ -701,10 +700,8 @@ namespace cling {
     if (!isa<ParenListExpr>(SubTree))
       OS << ')';
 
-    OS.flush();
-
     // 2. Build the template
-    Expr* ExprTemplate = ConstructConstCharPtrExpr(Template.c_str());
+    Expr* ExprTemplate = ConstructConstCharPtrExpr(OS.str());
 
     // 3. Build the array of addresses
     QualType VarAddrTy = m_Sema->BuildArrayType(m_Context->VoidPtrTy,
@@ -723,12 +720,12 @@ namespace cling {
                                Addresses[i]).get();
       if (!UnOp) {
         // Not good, return what we had.
-        llvm::errs() << "Error while creating dynamic expression for:\n  ";
-        SubTree->printPretty(llvm::errs(), 0 /*PrinterHelper*/,
+        cling::errs() << "Error while creating dynamic expression for:\n  ";
+        SubTree->printPretty(cling::errs(), 0 /*PrinterHelper*/,
                              m_Context->getPrintingPolicy(), 2);
-        llvm::errs() <<
+        cling::errs() <<
           "\nwith internal representation (look for <dependent type>):\n";
-        SubTree->dump(llvm::errs(), m_Sema->getSourceManager());
+        SubTree->dump(cling::errs(), m_Sema->getSourceManager());
         return SubTree;
       }
       m_Sema->ImpCastExprToType(UnOp,
@@ -792,9 +789,8 @@ namespace cling {
     return Result;
   }
 
-  Expr* EvaluateTSynthesizer::ConstructConstCharPtrExpr(const char* Val) {
+  Expr* EvaluateTSynthesizer::ConstructConstCharPtrExpr(llvm::StringRef Value) {
     const QualType CChar = m_Context->CharTy.withConst();
-    llvm::StringRef Value(Val);
 
     unsigned bitSize = m_Context->getTypeSize(m_Context->VoidPtrTy);
     llvm::APInt ArraySize(bitSize, Value.size() + 1);
@@ -922,11 +918,13 @@ namespace cling {
     return true;
   }
 
-  void EvaluateTSynthesizer::createUniqueName(std::string& out) {
-    out = "__dynamic";
-    out += utils::Synthesize::UniquePrefix;
-    llvm::raw_string_ostream(out) << m_UniqueNameCounter++;
+  std::string EvaluateTSynthesizer::createUniqueName() {
+    stdstrstream Strm;
+    Strm << "__dynamic" << utils::Synthesize::UniquePrefix
+         << m_UniqueNameCounter++;
+    return Strm.str();
   }
+  
 
   // end Helpers
 
@@ -948,11 +946,9 @@ namespace cling {
     }
 
     LifetimeHandler::~LifetimeHandler() {
-      std::string str;
-      llvm::raw_string_ostream stream(str);
+      ostrstream stream;
       stream << "delete (" << m_Type << "*) " << m_Memory << ";";
-      stream.flush();
-      m_Interpreter->execute(str);
+      m_Interpreter->execute(stream.str());
     }
   } // end namespace internal
   } // end namespace runtime

@@ -11,17 +11,14 @@
 #ifndef ROOSTATS_DebuggingSampler
 #define ROOSTATS_DebuggingSampler
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
+/** \class DebuggingSampler
+    \ingroup Roostats
+
 DebuggingSampler is a simple implementation of the DistributionCreator interface used for debugging.
 The sampling distribution is uniformly random between [0,1] and is INDEPENDENT of the data.  So it is not useful
 for true statistical tests, but it is useful for debugging.
-</p>
-END_HTML
+
 */
-//
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -48,17 +45,17 @@ namespace RooStats {
        delete fRand;
        delete fTestStatistic;
      }
-    
+
       // Main interface to get a ConfInterval, pure virtual
      virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest)  {
        paramsOfInterest = paramsOfInterest; // avoid warning
        // normally this method would be complex, but here it is simple for debugging
        std::vector<Double_t> testStatVec;
        for(Int_t i=0; i<1000; ++i){
-	 testStatVec.push_back( fRand->Uniform() );
+    testStatVec.push_back( fRand->Uniform() );
        }
        return new SamplingDistribution("UniformSamplingDist", "for debugging", testStatVec );
-     } 
+     }
 
       // Main interface to evaluate the test statistic on a dataset
      virtual Double_t EvaluateTestStatistic(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/)  {
@@ -73,9 +70,9 @@ namespace RooStats {
          std::cout << "GetTestStatistic() IS NOT IMPLEMENTED FOR THIS SAMPLER. Returning NULL." << std::endl;
          return NULL; /*fTestStatistic;*/
       }
-    
+
       // Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
+      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
 
       // Common Initialization
       virtual void Initialize(RooAbsArg& /* testStatistic */, RooArgSet& /* paramsOfInterest */, RooArgSet& /* nuisanceParameters */ ) {
@@ -104,7 +101,7 @@ namespace RooStats {
          // TODO change to Roo... notifications
          std::cout << "SetTestStatistic(...) IS NOT IMPLEMENTED FOR THIS SAMPLER" << std::endl;
       }
-      
+
    private:
       Double_t fSize;
       RooRealVar* fTestStatistic;

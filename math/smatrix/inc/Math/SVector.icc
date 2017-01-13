@@ -30,6 +30,11 @@
 // 14 Jan 2002 (TG) added operator==(), operator!=(), operator>(), operator<()
 //
 // ********************************************************************
+
+#ifndef ROOT_Math_SVector
+#error "Do not use SVector.icc directly. #include \"Math/SVector.h\" instead."
+#endif // ROOT_Math_SVector
+
 #include <iostream>
 #include <assert.h>
 #include <algorithm>

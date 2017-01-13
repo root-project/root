@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,9 +19,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -36,7 +36,7 @@
 // MethodTMlpANN                                                        //
 //                                                                      //
 // Implementation of interface for Root-integrated artificial neural    //
-// network: TMultiLayerPerceptron                                       //  
+// network: TMultiLayerPerceptron                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -49,19 +49,19 @@ class TMultiLayerPerceptron;
 namespace TMVA {
 
    class MethodTMlpANN : public MethodBase {
-  
+
    public:
 
-      MethodTMlpANN( const TString& jobName, 
-                     const TString& methodTitle, 
+      MethodTMlpANN( const TString& jobName,
+                     const TString& methodTitle,
                      DataSetInfo& theData,
                      const TString& theOption = "3000:N-1:N-2");
 
-      MethodTMlpANN( DataSetInfo& theData, 
+      MethodTMlpANN( DataSetInfo& theData,
                      const TString& theWeightFile);
 
       virtual ~MethodTMlpANN( void );
-    
+
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       // training method
@@ -78,7 +78,7 @@ namespace TMVA {
 
       // calculate the MVA value ...
       // - here it is just a dummy, as it is done in the overwritten
-      // - PrepareEvaluationtree... ugly but necessary due to the strucure 
+      // - PrepareEvaluationtree... ugly but necessary due to the structure
       //   of TMultiLayerPercepton in ROOT grr... :-(
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
@@ -111,9 +111,9 @@ namespace TMVA {
 
       TMultiLayerPerceptron* fMLP; // the TMLP
       TTree*                 fLocalTrainingTree; // local copy of training tree
-     
-      TString  fHiddenLayer;        // string containig the hidden layer structure
-      Int_t    fNcycles;            // number of training cylcles
+
+      TString  fHiddenLayer;        // string containing the hidden layer structure
+      Int_t    fNcycles;            // number of training cycles
       Double_t fValidationFraction; // fraction of events in training tree used for cross validation
       TString  fMLPBuildOptions;    // option string to build the mlp
 

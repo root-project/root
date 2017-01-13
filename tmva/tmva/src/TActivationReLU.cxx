@@ -21,6 +21,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::TActivationReLU
+\ingroup TMVA
+Rectified Linear Unit activation function for TNeuron
+*/
+
 #include "TMVA/TActivationReLU.h"
 
 #include "TMVA/TActivation.h"
@@ -62,7 +67,7 @@ TString TMVA::TActivationReLU::GetExpression()
 ////////////////////////////////////////////////////////////////////////////////
 /// writes the sigmoid activation function source code
 
-void TMVA::TActivationReLU::MakeFunction( std::ostream& fout, const TString& fncName ) 
+void TMVA::TActivationReLU::MakeFunction( std::ostream& fout, const TString& fncName )
 {
    fout << "double " << fncName << "(double x) const {" << std::endl;
    fout << "   // rectified linear unit" << std::endl;

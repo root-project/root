@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      Heidelberg U., Germany                                                    * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      Heidelberg U., Germany                                                    *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -49,7 +49,7 @@ namespace TMVA {
 
    public:
 
-      // consturctor for the Misclassification error
+      // constructor for the Misclassification error
       MisClassificationError() { fName = "MisCl"; }
 
       // copy constructor
@@ -64,7 +64,7 @@ namespace TMVA {
 
       ClassDef(MisClassificationError,0); // Implementation of the MisClassificationError as separation criterion
    };
- 
+
 } // namespace TMVA
 
 #endif

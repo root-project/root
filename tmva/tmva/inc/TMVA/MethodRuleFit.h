@@ -8,15 +8,15 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Friedman's RuleFit method                                                 * 
+ *      Friedman's RuleFit method                                                 *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch> - Iowa State U., USA      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -59,7 +59,7 @@ namespace TMVA {
    public:
 
       MethodRuleFit( const TString& jobName,
-                     const TString& methodTitle, 
+                     const TString& methodTitle,
                      DataSetInfo& theData,
                      const TString& theOption = "");
 
@@ -188,28 +188,28 @@ namespace TMVA {
       Int_t                        fRFNendnodes;   // max number of rules (only Friedmans module)
       std::vector<DecisionTree *>  fForest;        // the forest
       Int_t                        fNTrees;        // number of trees in forest
-      Double_t                     fTreeEveFrac;   // fraction of events used for traing each tree
+      Double_t                     fTreeEveFrac;   // fraction of events used for training each tree
       SeparationBase              *fSepType;       // the separation used in node splitting
       Double_t                     fMinFracNEve;   // min fraction of number events
       Double_t                     fMaxFracNEve;   // ditto max
       Int_t                        fNCuts;         // grid used in cut applied in node splitting
       TString                      fSepTypeS;        // forest generation: separation type - see DecisionTree
       TString                      fPruneMethodS;    // forest generation: prune method - see DecisionTree
-      TMVA::DecisionTree::EPruneMethod fPruneMethod; // forest generation: method used for pruning - see DecisionTree 
+      TMVA::DecisionTree::EPruneMethod fPruneMethod; // forest generation: method used for pruning - see DecisionTree
       Double_t                     fPruneStrength;   // forest generation: prune strength - see DecisionTree
       TString                      fForestTypeS;     // forest generation: how the trees are generated
       Bool_t                       fUseBoost;        // use boosted events for forest generation
       //
       Double_t                     fGDPathEveFrac; //  GD path: fraction of subsamples used for the fitting
       Double_t                     fGDValidEveFrac; // GD path: fraction of subsamples used for the fitting
-      Double_t                     fGDTau;          // GD path: def threshhold fraction [0..1]
+      Double_t                     fGDTau;          // GD path: def threshold fraction [0..1]
       Double_t                     fGDTauPrec;      // GD path: precision of estimated tau
-      Double_t                     fGDTauMin;       // GD path: min threshhold fraction [0..1]
-      Double_t                     fGDTauMax;       // GD path: max threshhold fraction [0..1]
+      Double_t                     fGDTauMin;       // GD path: min threshold fraction [0..1]
+      Double_t                     fGDTauMax;       // GD path: max threshold fraction [0..1]
       UInt_t                       fGDTauScan;      // GD path: number of points to scan
       Double_t                     fGDPathStep;     // GD path: step size in path
       Int_t                        fGDNPathSteps;   // GD path: number of steps
-      Double_t                     fGDErrScale;     // GD path: stop 
+      Double_t                     fGDErrScale;     // GD path: stop
       Double_t                     fMinimp;         // rule/linear: minimum importance
       //
       TString                      fModelTypeS;     // rule ensemble: which model (rule,linear or both)

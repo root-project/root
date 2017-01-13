@@ -6,6 +6,7 @@
 #include <string>
 #include <cmath>
 #include <stdlib.h>
+#include <cassert>
 
 //ROOT headers
 #include "Math/DistFuncMathCore.h"
@@ -641,7 +642,7 @@ fWeight(kDefWeight)
 ///Input: passed - contains the events fulfilling some criteria
 ///       total  - contains all investigated events
 ///
-///Notes: - both histograms have to fulfill the conditions of CheckConsistency (with option 'w')
+///Notes: - both histograms have to fulfill the conditions of CheckConsistency
 ///       - dimension of the resulting efficiency object depends
 ///         on the dimension of the given histograms
 ///       - Clones of both histograms are stored internally
@@ -665,7 +666,7 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    //check consistency of histograms
-   if(CheckConsistency(passed,total,"w")) {
+   if(CheckConsistency(passed,total)) {
       Bool_t bStatus = TH1::AddDirectoryStatus();
       TH1::AddDirectory(kFALSE);
       fTotalHistogram = (TH1*)total.Clone();
@@ -677,7 +678,7 @@ fWeight(kDefWeight)
       SetName(newName);
 
       // are the histograms filled with weights?
-      if(!CheckEntries(passed,total))
+      if(CheckWeights(passed,total))
       {
          Info("TEfficiency","given histograms are filled with weights");
          SetUseWeightedEvents();
@@ -1501,10 +1502,8 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
 /// - both have the same binning
 /// - pass.GetBinContent(i) <= total.GetBinContent(i) for each bin i
 ///
-/// Option: - w: The check for unit weights is skipped and therefore histograms
-///             filled with weights are accepted.
 
-Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total,Option_t* opt)
+Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total, Option_t*)
 {
    if(pass.GetDimension() != total.GetDimension()) {
       gROOT->Error("TEfficiency::CheckConsistency","passed TEfficiency objects have different dimensions");
@@ -1516,7 +1515,7 @@ Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total,Option_t* 
       return false;
    }
 
-   if(!CheckEntries(pass,total,opt)) {
+   if(!CheckEntries(pass,total)) {
       gROOT->Error("TEfficiency::CheckConsistency","passed TEfficiency objects do not have consistent bin contents");
       return false;
    }
@@ -1530,36 +1529,14 @@ Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total,Option_t* 
 /// The following inequality has to be valid for each bin i:
 /// total.GetBinContent(i) >= pass.GetBinContent(i)
 ///
-/// and the histogram have to be filled with unit weights.
 ///
-/// Option:
-///
-///   - `w`: Do not check for unit weights -> accept histograms filled with weights
 ///
 /// Note:
 ///
 ///   - It is assumed that both histograms have the same dimension and binning.
 
-Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
+Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total, Option_t*)
 {
-   TString option = opt;
-   option.ToLower();
-
-   //check for unit weights
-   if(!option.Contains("w")) {
-      Double_t statpass[TH1::kNstat];
-      Double_t stattotal[TH1::kNstat];
-
-      pass.GetStats(statpass);
-      total.GetStats(stattotal);
-
-      //require: sum of weights == sum of weights^2
-      if((TMath::Abs(statpass[0]-statpass[1]) > 1e-5) ||
-         (TMath::Abs(stattotal[0]-stattotal[1]) > 1e-5)) {
-         gROOT->Info("TEfficiency::CheckEntries","Histograms are filled with weights");
-         return false;
-      }
-   }
 
    //check: pass <= total
    Int_t nbinsx, nbinsy, nbinsz, nbins;
@@ -1584,6 +1561,34 @@ Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
 
    return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if both histogram are weighted. If they are weighted a true is returned  
+/// 
+Bool_t TEfficiency::CheckWeights(const TH1& pass,const TH1& total)
+{
+   if (pass.GetSumw2N() == 0 && total.GetSumw2N() == 0) return false;
+
+   // check also that the total sum of weight and weight squares are consistent
+   Double_t statpass[TH1::kNstat];
+   Double_t stattotal[TH1::kNstat];
+
+   pass.GetStats(statpass);
+   total.GetStats(stattotal);
+
+   double tolerance = (total.IsA() == TH1F::Class() ) ? 1.E-5 : 1.E-12; 
+   
+   //require: sum of weights == sum of weights^2
+   if(!TMath::AreEqualRel(statpass[0],statpass[1],tolerance) ||
+      !TMath::AreEqualRel(stattotal[0],stattotal[1],tolerance) ) {
+      return true;
+   }
+
+   // histograms are not weighted 
+   return false;
+   
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the graph used be painted (for dim=1 TEfficiency)
@@ -3364,7 +3369,7 @@ Bool_t TEfficiency::SetPassedHistogram(const TH1& rPassed,Option_t* opt)
    Bool_t bReplace = option.Contains("f");
 
    if(!bReplace)
-      bReplace = CheckConsistency(rPassed,*fTotalHistogram,"w");
+      bReplace = CheckConsistency(rPassed,*fTotalHistogram);
 
    if(bReplace) {
       delete fPassedHistogram;
@@ -3377,12 +3382,10 @@ Bool_t TEfficiency::SetPassedHistogram(const TH1& rPassed,Option_t* opt)
       if(fFunctions)
          fFunctions->Delete();
 
-      //check whether histogram is filled with weights
-      Double_t statpass[TH1::kNstat];
-      rPassed.GetStats(statpass);
-      //require: sum of weights == sum of weights^2
-      if(TMath::Abs(statpass[0]-statpass[1]) > 1e-5)
-         SetUseWeightedEvents();
+      //check whether both histograms are filled with weights
+      bool useWeights = CheckWeights(rPassed,*fTotalHistogram);
+
+      SetUseWeightedEvents(useWeights);
 
       return true;
    }
@@ -3559,7 +3562,7 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
    Bool_t bReplace = option.Contains("f");
 
    if(!bReplace)
-      bReplace = CheckConsistency(*fPassedHistogram,rTotal,"w");
+      bReplace = CheckConsistency(*fPassedHistogram,rTotal);
 
    if(bReplace) {
       delete fTotalHistogram;
@@ -3572,12 +3575,9 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
       if(fFunctions)
          fFunctions->Delete();
 
-      //check whether histogram is filled with weights
-      Double_t stattotal[TH1::kNstat];
-      rTotal.GetStats(stattotal);
-      //require: sum of weights == sum of weights^2
-      if(TMath::Abs(stattotal[0]-stattotal[1]) > 1e-5)
-         SetUseWeightedEvents();
+      //check whether both histograms are filled with weights
+      bool useWeights = CheckWeights(*fPassedHistogram,rTotal);
+      SetUseWeightedEvents(useWeights);
 
       return true;
    }
@@ -3587,11 +3587,17 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TEfficiency::SetUseWeightedEvents()
+void TEfficiency::SetUseWeightedEvents(bool on)
 {
-   SetBit(kUseWeights,true);
-   fTotalHistogram->Sumw2();
-   fPassedHistogram->Sumw2();
+   if (on && !TestBit(kUseWeights) )
+       gROOT->Info("TEfficiency::SetUseWeightedEvents","Histograms are filled with weights");
+
+   SetBit(kUseWeights,on);
+
+   // no need to set sumw2 should be already there
+   if (on) assert(fTotalHistogram->GetSumw2N() > 0 && fPassedHistogram->GetSumw2N() > 0 );
+   //fTotalHistogram->Sumw2(on);
+   //fPassedHistogram->Sumw2(on);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

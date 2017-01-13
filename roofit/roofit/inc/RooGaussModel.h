@@ -30,25 +30,25 @@ public:
                                   sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
                                   cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
                                                                     linBasisPlus=33,
-                                                                   quadBasisPlus=43, 
-				  coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
- 	  			  sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63};
+                                                                   quadBasisPlus=43,
+              coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
+                 sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63};
   enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3,
-		   linBasis=4, quadBasis=5, coshBasis=6, sinhBasis=7 } ;
+         linBasis=4, quadBasis=5, coshBasis=6, sinhBasis=7 } ;
   enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
 
   // Constructors, assignment etc
   inline RooGaussModel() : _flatSFInt(kFALSE), _asympInt(kFALSE) { }
-  RooGaussModel(const char *name, const char *title, RooRealVar& x, 
-		RooAbsReal& mean, RooAbsReal& sigma) ; 
-  RooGaussModel(const char *name, const char *title, RooRealVar& x, 
-		RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& msSF) ; 
-  RooGaussModel(const char *name, const char *title, RooRealVar& x, 
-		RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ; 
+  RooGaussModel(const char *name, const char *title, RooRealVar& x,
+      RooAbsReal& mean, RooAbsReal& sigma) ;
+  RooGaussModel(const char *name, const char *title, RooRealVar& x,
+      RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& msSF) ;
+  RooGaussModel(const char *name, const char *title, RooRealVar& x,
+      RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ;
   RooGaussModel(const RooGaussModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooGaussModel(*this,newname) ; }
   virtual ~RooGaussModel();
-  
+
   virtual Int_t basisCode(const char* name) const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t analyticalIntegral(Int_t code, const char* rangeName) const ;
@@ -71,14 +71,14 @@ protected:
     std::complex<Double_t> z(swt*c,u+c);
     return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
   }
-    
-  // Calculate common normalization factors 
+
+  // Calculate common normalization factors
   std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const;
 
   Bool_t _flatSFInt ;
 
   Bool_t _asympInt ;  // added FMV,07/24/03
-  
+
   RooRealProxy mean ;
   RooRealProxy sigma ;
   RooRealProxy msf ;
@@ -88,12 +88,3 @@ protected:
 };
 
 #endif
-
-
-
-
-
-
-
-
-

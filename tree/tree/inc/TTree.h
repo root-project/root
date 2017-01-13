@@ -70,6 +70,8 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
+#include <atomic>
+
 class TBranch;
 class TBrowser;
 class TFile;
@@ -99,6 +101,7 @@ class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker
 
 protected:
    Long64_t       fEntries;               ///<  Number of entries
+// NOTE: cannot use std::atomic for these counters as it cannot be serialized.
    Long64_t       fTotBytes;              ///<  Total number of bytes in all branches before compression
    Long64_t       fZipBytes;              ///<  Total number of bytes in all branches after compression
    Long64_t       fSavedBytes;            ///<  Number of autosaved bytes
@@ -159,6 +162,11 @@ protected:
 private:
    TTree(const TTree& tt);              // not implemented
    TTree& operator=(const TTree& tt);   // not implemented
+
+   // For simplicity, although fIMTFlush is always disabled in non-IMT builds, we don't #ifdef it out.
+   mutable Bool_t fIMTFlush{false};               ///<! True if we are doing a multithreaded flush.
+   mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
+   mutable std::atomic<Long64_t> fIMTZipBytes;    ///<! Zip bytes for the IMT flush baskets.
 
    void             InitializeSortedBranches();
    void             SortBranchesByTime();
@@ -303,8 +311,10 @@ public:
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
-   virtual void            AddTotBytes(Int_t tot) { fTotBytes += tot; }
-   virtual void            AddZipBytes(Int_t zip) { fZipBytes += zip; }
+   // As the TBasket invokes Add{Tot,Zip}Bytes on its parent tree, we must do these updates in a thread-safe
+   // manner only when we are flushing multiple baskets in parallel.
+   virtual void            AddTotBytes(Int_t tot) { if (fIMTFlush) { fIMTTotBytes += tot; } else { fTotBytes += tot; } }
+   virtual void            AddZipBytes(Int_t zip) { if (fIMTFlush) { fIMTZipBytes += zip; } else { fZipBytes += zip; } }
    virtual Long64_t        AutoSave(Option_t* option = "");
    virtual Int_t           Branch(TCollection* list, Int_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
    virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);

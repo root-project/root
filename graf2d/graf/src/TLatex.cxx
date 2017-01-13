@@ -2061,6 +2061,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
             t.ReplaceAll("#void1","R");
             t.ReplaceAll("#3dots","\\ldots");
             t.ReplaceAll("#lbar","\\mid");
+            t.ReplaceAll("#bar","\\wwbar");
             t.ReplaceAll("#void8","\\mid");
             t.ReplaceAll("#divide","\\div");
             t.ReplaceAll("#Jgothic","\\Im");

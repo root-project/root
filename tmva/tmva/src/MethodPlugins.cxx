@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -30,22 +30,22 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::CreateMethodPlugins
+\ingroup TMVA
 
-/* Begin_Html
+Plugins analysis
 
-   Plugins analysis                       
-  
-   <p>
-   The MethodPlugins is actually not a real method, but it is just a wrapper to call the TPluginsManager of ROOT and find 
-   a external method which can be used to extend TMVA by another classifier. The only methods which are actually really implemented are the 
-   constructors which fulfill the plugins handling. The others will produce FATAL warnings and stop TMVA execution.
-   <p>
-   Right after the constructor, the additional method 'getPlugedinMethod()' is called, which returns the method loaded by the plugin manager,
-   and the MethodPlugins object is already deleted.
+The MethodPlugins is actually not a real method, but it is just a wrapper to call
+the TPluginsManager of ROOT and find a external method which can be used to extend
+TMVA by another classifier. The only methods which are actually really implemented
+are the constructors which fulfill the plugins handling. The others will produce
+FATAL warnings and stop TMVA execution.
 
-   End_Html */
-//_______________________________________________________________________
+Right after the constructor, the additional method 'getPlugedinMethod()' is called,
+which returns the method loaded by the plugin manager, and the MethodPlugins object
+is already deleted.
+
+*/
 
 #include "TPluginManager.h"
 #include "TROOT.h"
@@ -58,10 +58,10 @@
 #include <cstdio>
 #include <iostream>
 
-namespace 
-{ 
+namespace
+{
    TMVA::IMethod* CreateMethodPlugins(const TString& jobName, const TString& methodTitle, TMVA::DataSetInfo& theData, const TString& theOption)
-   { 
+   {
       //std::cout << "CreateMethodPlugins is called with options : '" << jobName << "', '" << methodTitle<< "', " << theOption<< "'" << std::endl;
       TPluginManager *pluginManager(0);
       TPluginHandler *pluginHandler(0);
@@ -78,30 +78,30 @@ namespace
       else myMethodTitle = methodTitle;
       pluginHandler = pluginManager->FindHandler("TMVA@@MethodBase", myMethodTitle);
       if(!pluginHandler)
-         { 
+         {
             std::cerr <<  "Couldn't find plugin handler for TMVA@@MethodBase and " << methodTitle << std::endl;
             return 0;
          }
       //std::cout << "pluginHandler found myMethodTitle=" << myMethodTitle<<std::endl;
       if (pluginHandler->LoadPlugin() == 0) {
-         if(jobName=="" && methodTitle=="") { 
+         if(jobName=="" && methodTitle=="") {
             //std::cout << "Calling ExpertPlugin " << std::endl;
             return (TMVA::IMethod*) pluginHandler->ExecPlugin(2, &theData, &theOption);
-         } else {  
+         } else {
             //std::cout << "Calling TeacherPlugin " << std::endl;
             // pluginHandler->Print("a");
             return (TMVA::IMethod*) pluginHandler->ExecPlugin(4, &jobName, &methodTitle, &theData, &theOption);
-         }  
+         }
       }
       //std::cout << "plugin done" << std::endl;
       return 0; // end of function should never be reached. This is here to silence the compiler
    }
 
-   struct registration { 
-      registration() { 
+   struct registration {
+      registration() {
          TMVA::ClassifierFactory::Instance().Register("Plugins", CreateMethodPlugins);
-         TMVA::Types::Instance().AddTypeMapping(TMVA::Types::kPlugins, "Plugins"); 
-      } 
+         TMVA::Types::Instance().AddTypeMapping(TMVA::Types::kPlugins, "Plugins");
+      }
    } instance;
 }
 

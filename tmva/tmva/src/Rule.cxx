@@ -8,9 +8,9 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      A class describung a 'rule'                                               *
+ *      A class describing a 'rule'                                               *
  *      Each internal node of a tree defines a rule from all the parental nodes.  *
- *      A rule consists of atleast 2 nodes.                                       *
+ *      A rule consists of at least 2 nodes.                                      *
  *      Input: a decision tree (in the constructor)                               *
  *                                                                                *
  * Authors (alphabetical):                                                        *
@@ -27,22 +27,24 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//________________________________________________________________________________
-//
-// Implementation of a rule
-//
-// A rule is simply a branch or a part of a branch in a tree.
-// It fullfills the following:
-// * First node is the root node of the originating tree
-// * Consists of a minimum of 2 nodes
-// * A rule returns for a given event:
-//    0 : if the event fails at any node
-//    1 : otherwise
-// * If the rule contains <2 nodes, it returns 0 SHOULD NOT HAPPEN!
-//
-// The coefficient is found by either brute force or some sort of
-// intelligent fitting. See the RuleEnsemble class for more info.
-//________________________________________________________________________________
+/*! \class TMVA::Rule
+\ingroup TMVA
+
+Implementation of a rule.
+
+A rule is simply a branch or a part of a branch in a tree.
+It fulfills the following:
+
+  - First node is the root node of the originating tree
+  - Consists of a minimum of 2 nodes
+  - A rule returns for a given event:
+    - 0 : if the event fails at any node
+    - 1 : otherwise
+  - If the rule contains <2 nodes, it returns 0 SHOULD NOT HAPPEN!
+
+The coefficient is found by either brute force or some sort of
+intelligent fitting. See the RuleEnsemble class for more info.
+*/
 
 #include "TMVA/Rule.h"
 
@@ -123,7 +125,7 @@ TMVA::Rule::Rule()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::Rule::~Rule() 
+TMVA::Rule::~Rule()
 {
    delete fCut;
    delete fLogger;
@@ -149,21 +151,21 @@ Bool_t TMVA::Rule::ContainsVariable(UInt_t iv) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::Rule::SetMsgType( EMsgType t ) 
+void TMVA::Rule::SetMsgType( EMsgType t )
 {
    fLogger->SetMinType(t);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// Compare two rules.
-/// useCutValue: true -> calculate a distance between the two rules based on the cut values
-///                      if the rule cuts are not equal, the distance is < 0 (-1.0)
-///                      return true if d<mindist
-///              false-> ignore mindist, return true if rules are equal, ignoring cut values
-/// mindist:     min distance allowed between rules; if < 0 => set useCutValue=false;
 ///
+///  - useCutValue:
+///    - true -> calculate a distance between the two rules based on the cut values
+///              if the rule cuts are not equal, the distance is < 0 (-1.0)
+///              return true if d<mindist
+///    - false-> ignore mindist, return true if rules are equal, ignoring cut values
+///  - mindist:     min distance allowed between rules; if < 0 => set useCutValue=false;
 
 Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t mindist ) const
 {
@@ -179,10 +181,11 @@ Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t mindis
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns:
-/// -1.0 : rules are NOT equal, i.e, variables and/or cut directions are wrong
-///   >=0: rules are equal apart from the cutvalue, returns d = sqrt(sum(c1-c2)^2)
-/// If not useCutValue, the distance is exactly zero if they are equal
 ///
+///  * -1.0 : rules are NOT equal, i.e, variables and/or cut directions are wrong
+///  * >=0: rules are equal apart from the cutvalue, returns \f$ d = \sqrt{\sum(c1-c2)^2} \f$
+///
+/// If not useCutValue, the distance is exactly zero if they are equal
 
 Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
 {
@@ -306,7 +309,7 @@ void TMVA::Rule::Print( std::ostream& os ) const
    os << "    Importance  = " << Form("%1.4f", fImportance/fImportanceRef) << std::endl;
    os << "    Coefficient = " << Form("%1.4f", fCoefficient) << std::endl;
    os << "    Support     = " << Form("%1.4f", fSupport)  << std::endl;
-   os << "    S/(S+B)     = " << Form("%1.4f", fSSB)  << std::endl;  
+   os << "    S/(S+B)     = " << Form("%1.4f", fSSB)  << std::endl;
 
    for ( UInt_t i=0; i<nvars; i++) {
       os << "    ";
@@ -340,7 +343,7 @@ void TMVA::Rule::PrintLogger(const char *title) const
          << "Importance  = " << Form("%1.4f", fImportance/fImportanceRef) << Endl;
 
    for ( UInt_t i=0; i<nvars; i++) {
-      
+
       Log() << kINFO << "            ";
       sel    = fCut->GetSelector(i);
       valmin = fCut->GetCutMin(i);
@@ -390,7 +393,7 @@ void TMVA::Rule::PrintRaw( std::ostream& os ) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void* TMVA::Rule::AddXMLTo( void* parent ) const 
+void* TMVA::Rule::AddXMLTo( void* parent ) const
 {
    void* rule = gTools().AddChild( parent, "Rule" );
    const UInt_t nvars = fCut->GetNvars();

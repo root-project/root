@@ -25,10 +25,10 @@ class RooAbsReal;
 class RooArgusBG : public RooAbsPdf {
 public:
   RooArgusBG() {} ;
-  RooArgusBG(const char *name, const char *title, 
-	     RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c);
-  RooArgusBG(const char *name, const char *title, 
-	     RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p);
+  RooArgusBG(const char *name, const char *title,
+        RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c);
+  RooArgusBG(const char *name, const char *title,
+        RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p);
   RooArgusBG(const RooArgusBG& other,const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooArgusBG(*this,newname); }
   inline virtual ~RooArgusBG() { }

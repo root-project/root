@@ -55,13 +55,11 @@ endif()
 #---Modify the behaviour for local and non-local builds--------------------------------------------
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-  set(rootcint_cmd rootcling_tmp)
-  set(rlibmap_cmd rlibmap)
+  set(rootcint_cmd rootcling_stage1)
   set(genreflex_cmd genreflex)
-  set(ROOTCINTDEP rootcling_tmp)
+  set(ROOTCINTDEP rootcling_stage1)
 else()
   set(rootcint_cmd rootcling)
-  set(rlibmap_cmd rlibmap)
   set(genreflex_cmd genreflex)
   set(ROOTCINTDEP)
 endif()
@@ -250,7 +248,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  rheaderfiles "${headerfiles}")
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
-    set(core_folders "base|clib|cont|doc|lzma|macosx|meta|metautils|multiproc|newdelete|pcre|rint|textinput|thread|unix|utils|winnt|zip")
+    # FIXME: Glob these folder.
+    set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
     string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  rheaderfiles "${rheaderfiles}")
   endif()
 
@@ -337,19 +336,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    set(command rootcling_tmp)
+    set(command rootcling_stage1)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-      if(gnuinstall)
-        if(WIN32)
-          set(command set ROOTIGNOREPREFIX=1 && $<TARGET_FILE:rootcling> -rootbuild)
-        else()
-          set(command ROOTIGNOREPREFIX=1 $<TARGET_FILE:rootcling> -rootbuild)
-        endif()
-      else()
-        set(command rootcling -rootbuild)
-      endif()
+      set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       set(ROOTCINTDEP rootcling)
     else()
       set(command rootcling)
@@ -430,12 +421,11 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
   endif(APPLE)
 
-  set(excluded_headers "RConversionRuleParser.h TSchemaRuleProcessor.h 
-                        RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
-			Rtypes.h RtypesCore.h TClassEdit.h TMetaUtils.h
-			TSchemaType.h DllImport.h TGenericClassInfo.h
+  set(excluded_headers "RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
+			Rtypes.h RtypesCore.h TClassEdit.h
+			DllImport.h TGenericClassInfo.h
 			TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
-			RootMetaSelection.h
+			RootMetaSelection.h libcpp_string_view.h
 			RWrap_libcpp_string_view.h TAtomicCountGcc.h
 			TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
@@ -677,9 +667,9 @@ function(ROOT_GENERATE_ROOTMAP library)
     set(_library ${libprefix}${library}${CMAKE_SHARED_LIBRARY_SUFFIX})
   endif()
   #---Build the rootmap file--------------------------------------
-  add_custom_command(OUTPUT ${outfile}
-                     COMMAND ${rlibmap_cmd} -o ${outfile} -l ${_library} -d ${_dependencies} -c ${_linkdef}
-                     DEPENDS ${_linkdef} ${rlibmap_cmd} )
+  #add_custom_command(OUTPUT ${outfile}
+  #                   COMMAND ${rlibmap_cmd} -o ${outfile} -l ${_library} -d ${_dependencies} -c ${_linkdef}
+  #                   DEPENDS ${_linkdef} ${rlibmap_cmd} )
   add_custom_target( ${libprefix}${library}.rootmap ALL DEPENDS  ${outfile})
   set_target_properties(${libprefix}${library}.rootmap PROPERTIES FOLDER RootMaps )
   #---Install the rootmap file------------------------------------

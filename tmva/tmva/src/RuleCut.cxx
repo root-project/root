@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -7,20 +7,26 @@
  * Class  : Rule                                                                  *
  *                                                                                *
  * Description:                                                                   *
- *      A class describing a 'rule cut'                                           * 
+ *      A class describing a 'rule cut'                                           *
  *                                                                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch> - Iowa State U., USA      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
+/*! \class TMVA::RuleCut
+\ingroup TMVA
+A class describing a 'rule cut'
+*/
+
 #include <algorithm>
 #include <list>
 
@@ -62,7 +68,7 @@ TMVA::RuleCut::~RuleCut() {
 
 void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
 {
-   // Atleast 2 nodes are required
+   // At least 2 nodes are required
    UInt_t nnodes = nodes.size();
    if (nnodes<2) {
       Log() << kWARNING << "<MakeCuts()> Empty cut created." << Endl;
@@ -101,10 +107,10 @@ void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
       val = dtn_->GetCutValue();
       if (nodes[i]->GetRight() == nextNode) { // val>cut
          dir = 1;
-      } 
+      }
       else if (nodes[i]->GetLeft() == nextNode) { // val<cut
          dir = -1;
-      } 
+      }
       else {
          Log() << kFATAL << "<MakeTheRule> BUG! Should not be here - an end-node before the end!" << Endl;
          dir = 0;

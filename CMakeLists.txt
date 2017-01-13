@@ -160,7 +160,7 @@ get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 
-string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS})
+string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS} ${CORE_OS_DICT_CXX_FLAGS}")
 if(cxxmodules)
   # rootcling uses our internal version of clang. Passing the modules flags here
   # would allow rootcling to find module files built by the external compiler
@@ -175,23 +175,13 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
-if (WIN32)
-  add_custom_command(OUTPUT etc/allDict.cxx.pch
-                     COMMAND set ROOTIGNOREPREFIX=1 && ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
-                     DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                             etc/dictpch/allLinkDefs.h
-                             etc/dictpch/allHeaders.h
-                             etc/dictpch/allCppflags.txt
-                             rootcling)
-else()
-  add_custom_command(OUTPUT etc/allDict.cxx.pch
-                     COMMAND ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
-                     DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                             etc/dictpch/allLinkDefs.h
-                             etc/dictpch/allHeaders.h
-                             etc/dictpch/allCppflags.txt
-                             rootcling)
-endif()
+add_custom_command(OUTPUT etc/allDict.cxx.pch
+                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
+                   DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+                           etc/dictpch/allLinkDefs.h
+                           etc/dictpch/allHeaders.h
+                           etc/dictpch/allCppflags.txt
+                           rootcling)
 add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
 set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
@@ -205,9 +195,12 @@ if(cxxmodules)
                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
                     )
   get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-  string(REPLACE ";" "" __modulemap_extra_content "module ROOT {\\n ${__modulemap_extra_content} \\n }")
+  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+  if (NOT APPLE)
+    set(__echo_args "-e")
+  endif()
   add_custom_command(TARGET copymodulemap POST_BUILD
-                     COMMAND echo ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
+                     COMMAND echo ${__echo_args} ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
                      VERBATIM
                     )
   add_dependencies(move_headers copymodulemap)

@@ -15,24 +15,8 @@
 
 
 // -- CLASS DESCRIPTION [PDF] --
-// RooBukinPdf implements the NovosibirskA function 
+// RooBukinPdf implements the NovosibirskA function
 
-// Original Fortran Header below
-/*****************************************************************************
- * Fitting function for asymmetric peaks with 6 free parameters:	     *
- *     Ap   - peak value						     *
- *     Xp   - peak position						     *
- *     sigp - FWHM divided by 2*sqrt(2*log(2))=2.35			     *
- *     xi   - peak asymmetry parameter					     *
- *     rho1 - parameter of the "left tail"				     *
- *     rho2 - parameter of the "right tail"				     *
- *   ---------------------------------------------			     *
- *       May 26, 2003							     *
- *       A.Bukin, Budker INP, Novosibirsk				     *
- *       Documentation:							     *
- *       http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003/Tues3a/bukin.ps 
- *   -------------------------------------------			     *
- *****************************************************************************/
 #ifndef ROO_BUKINPDF
 #define ROO_BUKINPDF
 
@@ -47,13 +31,13 @@ public:
 
   RooBukinPdf() {} ;
   RooBukinPdf(const char *name, const char *title,
-	      RooAbsReal& _x, RooAbsReal& _Xp,
-	      RooAbsReal& _sigp, RooAbsReal& _xi,
+         RooAbsReal& _x, RooAbsReal& _Xp,
+         RooAbsReal& _sigp, RooAbsReal& _xi,
               RooAbsReal& _rho1, RooAbsReal& _rho2);
 
-  RooBukinPdf(const RooBukinPdf& other,const char* name=0) ;	
+  RooBukinPdf(const RooBukinPdf& other,const char* name=0) ;
 
-  virtual TObject* clone(const char* newname) const { return new RooBukinPdf(*this,newname);	}
+  virtual TObject* clone(const char* newname) const { return new RooBukinPdf(*this,newname);   }
   inline virtual ~RooBukinPdf() { }
 
 protected:

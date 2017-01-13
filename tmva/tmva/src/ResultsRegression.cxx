@@ -25,6 +25,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::ResultsRegression
+\ingroup TMVA
+Class that is the base-class for a vector of result
+*/
 #include "TMVA/ResultsRegression.h"
 
 #include "TMVA/DataSet.h"
@@ -44,7 +48,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::ResultsRegression::ResultsRegression( const DataSetInfo* dsi, TString resultsName  ) 
+TMVA::ResultsRegression::ResultsRegression( const DataSetInfo* dsi, TString resultsName  )
    : Results( dsi, resultsName  ),
      fLogger( new MsgLogger(Form("ResultsRegression%s",resultsName.Data()) , kINFO) )
 {
@@ -53,7 +57,7 @@ TMVA::ResultsRegression::ResultsRegression( const DataSetInfo* dsi, TString resu
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::ResultsRegression::~ResultsRegression() 
+TMVA::ResultsRegression::~ResultsRegression()
 {
    delete fLogger;
 }
@@ -63,7 +67,7 @@ TMVA::ResultsRegression::~ResultsRegression()
 void TMVA::ResultsRegression::SetValue( std::vector<Float_t>& value, Int_t ievt )
 {
    if (ievt >= (Int_t)fRegValues.size()) fRegValues.resize( ievt+1 );
-   fRegValues[ievt] = value; 
+   fRegValues[ievt] = value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +90,7 @@ TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t trunc
          Float_t val = regVal.at( tgtNum ) - ev->GetTarget( tgtNum );
          val *= val;
          xmax = val> xmax? val: xmax;
-      } 
+      }
    }
    xmax *= 1.1;
    Int_t nbins = 500;
@@ -102,7 +106,7 @@ TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t trunc
       val *= val;
       Float_t weight = ev->GetWeight();
       if (!truncate || val<=truncvalue ) h->Fill( val, weight);
-   } 
+   }
    return h;
 }
 
@@ -112,7 +116,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
 {
    DataSet* ds = GetDataSet();
    ds->SetCurrentType( GetTreeType() );
-   
+
    TString name( Form("tgt_%d_var_%d",tgtNum, varNum) );
    const DataSetInfo* dsi = GetDataSetInfo();
    Float_t xmin, xmax;
@@ -173,7 +177,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
    ymax += 1.01*epsilon;
 
 
-   TH2F* h = new TH2F( name, name, nxbins, xmin, xmax, nybins, ymin, ymax ); 
+   TH2F* h = new TH2F( name, name, nxbins, xmin, xmax, nybins, ymin, ymax );
    h->SetDirectory(0);
 
    h->GetXaxis()->SetTitle( (takeTargets ? dsi->GetTargetInfo(varNum).GetTitle() : dsi->GetVariableInfo(varNum).GetTitle() ) );

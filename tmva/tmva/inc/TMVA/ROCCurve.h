@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer
 
 /**********************************************************************************
@@ -45,20 +45,20 @@ namespace TMVA {
 
 
   class ROCCurve {
-    
+
   public:
     ROCCurve( const std::vector<Float_t> & mvaS, const std::vector<Bool_t> & mvat);
-    
+
     ~ROCCurve();
-    
+
 
     Double_t GetROCIntegral();
-    TGraph* GetROCCurve(const UInt_t points=100);//nvidisions = #points -1
-    
+    TGraph* GetROCCurve(const UInt_t points=100);//n divisions = #points -1
+
   private:
     void EpsilonCount();
     mutable MsgLogger* fLogger;   //! message logger
-    MsgLogger& Log() const { return *fLogger; }                       
+    MsgLogger& Log() const { return *fLogger; }
     TGraph *fGraph;
     std::vector<Float_t> fMvaS;
     std::vector<Float_t> fMvaB;

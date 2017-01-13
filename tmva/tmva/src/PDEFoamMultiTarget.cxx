@@ -26,29 +26,26 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// PDEFoamMultiTarget
-//
-// This PDEFoam variant is used to estimate multiple targets by
-// creating an event density foam (PDEFoamEvent), which has dimension:
-//
-//    dimension = number of variables + number targets
-//
-// This PDEFoam variant stores in every cell the sum of event weights
-// and the sum of the squared event weights.  During evaluation for a
-// given event, which has only variables and no targets (number of
-// event variables is smaller than the foam dimension), the targets
-// are estimated by finding all cells, which correspond to this event
-// and calculate the Mean (or Mpv, depending on the ETargetSelection)
-// cell center weighted by the event density in the cell.
-//
-// This PDEFoam variant should be booked together with the
-// PDEFoamEventDensity density estimator, which returns the event
-// weight density at a given phase space point during the foam
-// build-up.
-//
-//_____________________________________________________________________
+/*! \class TMVA::PDEFoamMultiTarget
+\ingroup TMVA
+This PDEFoam variant is used to estimate multiple targets by
+creating an event density foam (PDEFoamEvent), which has dimension:
+
+    dimension = number of variables + number targets
+
+This PDEFoam variant stores in every cell the sum of event weights
+and the sum of the squared event weights.  During evaluation for a
+given event, which has only variables and no targets (number of
+event variables is smaller than the foam dimension), the targets
+are estimated by finding all cells, which correspond to this event
+and calculate the Mean (or Mpv, depending on the ETargetSelection)
+cell center weighted by the event density in the cell.
+
+This PDEFoam variant should be booked together with the
+PDEFoamEventDensity density estimator, which returns the event
+weight density at a given phase space point during the foam
+build-up.
+*/
 
 #include "TMVA/PDEFoamMultiTarget.h"
 
@@ -83,7 +80,7 @@ TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget()
 ///
 /// - ts - target selection method used in
 ///   GetCellValue(const std::map<Int_t, Float_t>& xvec, ECellValue)
-///   Cadidates are: TMVA::kMean, TMVA::kMpv
+///   Candidates are: TMVA::kMean, TMVA::kMpv
 ///
 ///   - TMVA::kMean - The function GetCellValue() finds all cells
 ///     which contain a given event vector 'xvec' and returns the
@@ -187,22 +184,23 @@ std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t
    return result;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This function calculates the most probable target value from a
+/// given number of cells.  The most probable target is defined to
+/// be the coordinates of the cell which has the biggest event
+/// density.
+///
+/// Parameters:
+///
+/// - target - map of targets, where the key is the dimension and
+///   the value is the target value.  It is assumed that this map is
+///   initialized such that there is a map entry for every target.
+///
+/// - cells - vector of PDEFoam cells to pick the most probable
+///   target from
+
 void TMVA::PDEFoamMultiTarget::CalculateMpv(std::map<Int_t, Float_t>& target, const std::vector<PDEFoamCell*>& cells)
 {
-   // This function calculates the most probable target value from a
-   // given number of cells.  The most probable target is defined to
-   // be the coordinates of the cell which has the biggest event
-   // density.
-   //
-   // Parameters:
-   //
-   // - target - map of targets, where the key is the dimension and
-   //   the value is the target value.  It is assumed that this map is
-   //   initialized such that there is a map entry for every target.
-   //
-   // - cells - vector of PDEFoam cells to pick the most probable
-   //   target from
-
    Double_t max_dens = 0.0;            // maximum cell density
 
    // loop over all cells and find cell with maximum event density
@@ -232,22 +230,23 @@ void TMVA::PDEFoamMultiTarget::CalculateMpv(std::map<Int_t, Float_t>& target, co
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This function calculates the mean target value from a given
+/// number of cells.  As weight the event density of the cell is
+/// used.
+///
+/// Parameters:
+///
+/// - target - map of targets, where the key is the dimension and
+///   the value is the target value.  It is assumed that this map is
+///   initialized such that there is a map entry for every target
+///   with all target values set to zero.
+///
+/// - cells - vector of PDEFoam cells to pick the most probable
+///   target from
+
 void TMVA::PDEFoamMultiTarget::CalculateMean(std::map<Int_t, Float_t>& target, const std::vector<PDEFoamCell*>& cells)
 {
-   // This function calculates the mean target value from a given
-   // number of cells.  As weight the event density of the cell is
-   // used.
-   //
-   // Parameters:
-   //
-   // - target - map of targets, where the key is the dimension and
-   //   the value is the target value.  It is assumed that this map is
-   //   initialized such that there is a map entry for every target
-   //   with all target values set to zero.
-   //
-   // - cells - vector of PDEFoam cells to pick the most probable
-   //   target from
-
    // normalization
    std::map<Int_t, Float_t> norm;
 

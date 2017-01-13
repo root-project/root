@@ -36,7 +36,7 @@ ifeq ($(CXXMODULES),yes)
   CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(IOH_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
-  CXXMODULES_MODULEMAP_CONTENTS += "export * \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
   CXXMODULES_MODULEMAP_CONTENTS += link \"$(IOLIB)\" \\n
   CXXMODULES_MODULEMAP_CONTENTS += } \\n
 endif
@@ -50,9 +50,9 @@ INCLUDEFILES += $(IODEP)
 include/%.h:    $(IODIRI)/%.h
 		cp $< $@
 
-$(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
+$(IOLIB):       $(IOO) $(IODO) $(ROOTPCMO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRIO.$(SOEXT) $@ "$(IOO) $(IODO)" \
+		   "$(SOFLAGS)" libRIO.$(SOEXT) $@ "$(IOO) $(IODO) $(ROOTPCMO)" \
 		   "$(IOLIBEXTRA)"
 
 $(call pcmrule,IO)

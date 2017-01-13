@@ -21,10 +21,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// Synapse class used by TMVA artificial neural network methods
-//_______________________________________________________________________
+/*! \class TMVA::TSynapse
+\ingroup TMVA
+Synapse class used by TMVA artificial neural network methods
+*/
 
 #include "TMVA/TSynapse.h"
 
@@ -59,7 +59,6 @@ TMVA::TSynapse::TSynapse()
 {
    fWeight     = fgUNINITIALIZED;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor

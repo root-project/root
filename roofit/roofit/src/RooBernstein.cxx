@@ -3,20 +3,18 @@
  * Package: RooFitModels                                                     *
  * @(#)root/roofit:$Id$
  * Authors:                                                                  *
- *   Kyle Cranmer
+ *   Kyle Cranmer                                                            *
  *                                                                           *
  *****************************************************************************/
 
-/**
-\file RooBernstein.cxx
-\class RooBernstein
-\ingroup Roofit
+/** \class RooBernstein
+    \ingroup Roofit
 
 Bernstein basis polynomials are positive-definite in the range [0,1].
 In this implementation, we extend [0,1] to be the range of the parameter.
 There are n+1 Bernstein basis polynomials of degree n.
-Thus, by providing N coefficients that are positive-definite, there 
-is a natural way to have well bahaved polynomail PDFs.
+Thus, by providing N coefficients that are positive-definite, there
+is a natural way to have well behaved polynomial PDFs.
 For any n, the n+1 basis polynomials 'form a partition of unity', eg.
  they sum to one for all values of x. See
 http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
@@ -38,8 +36,6 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 using namespace std;
 
 ClassImp(RooBernstein)
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,12 +43,11 @@ RooBernstein::RooBernstein()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooBernstein::RooBernstein(const char* name, const char* title, 
-                           RooAbsReal& x, const RooArgList& coefList): 
+RooBernstein::RooBernstein(const char* name, const char* title,
+                           RooAbsReal& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this)
@@ -61,8 +56,8 @@ RooBernstein::RooBernstein(const char* name, const char* title,
   RooAbsArg* coef ;
   while((coef = (RooAbsArg*)coefIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      cout << "RooBernstein::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
-	   << " is not of type RooAbsReal" << endl ;
+      cout << "RooBernstein::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
+      << " is not of type RooAbsReal" << endl ;
       R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
@@ -70,21 +65,18 @@ RooBernstein::RooBernstein(const char* name, const char* title,
   delete coefIter ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
-  RooAbsPdf(other, name), 
-  _x("x", this, other._x), 
+  RooAbsPdf(other, name),
+  _x("x", this, other._x),
   _coefList("coefList",this,other._coefList)
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBernstein::evaluate() const 
+Double_t RooBernstein::evaluate() const
 {
   Double_t xmin = _x.min();
   Double_t x = (_x - xmin) / (_x.max() - xmin); // rescale to [0,1]
@@ -113,12 +105,12 @@ Double_t RooBernstein::evaluate() const
     Double_t t = x;
     Double_t s = 1 - x;
 
-    Double_t result = ((RooAbsReal *)iter.next())->getVal() * s;    
+    Double_t result = ((RooAbsReal *)iter.next())->getVal() * s;
     for(Int_t i = 1; i < degree; i++) {
       result = (result + t * TMath::Binomial(degree, i) * ((RooAbsReal *)iter.next())->getVal()) * s;
       t *= x;
     }
-    result += t * ((RooAbsReal *)iter.next())->getVal(); 
+    result += t * ((RooAbsReal *)iter.next())->getVal();
 
     return result;
   }
@@ -127,11 +119,10 @@ Double_t RooBernstein::evaluate() const
   return TMath::SignalingNaN();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// No analytical calculation available (yet) of integrals over subranges
 
-Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   if (rangeName && strlen(rangeName)) {
     return 0 ;
@@ -141,10 +132,9 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
   return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
   Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);

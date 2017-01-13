@@ -26,7 +26,7 @@ class RooExponential : public RooAbsPdf {
 public:
   RooExponential() {} ;
   RooExponential(const char *name, const char *title,
-		 RooAbsReal& _x, RooAbsReal& _c);
+       RooAbsReal& _x, RooAbsReal& _c);
   RooExponential(const RooExponential& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooExponential(*this,newname); }
   inline virtual ~RooExponential() { }

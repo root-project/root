@@ -31,69 +31,20 @@
 #include "RooStats/ModelConfig.h"
 #endif
 
-class TH1; 
+class TH1;
 
 namespace RooStats {
 
    class HybridResult;
-
-   /**
-
-      
-HybridCalculatorOriginal class. This class is depracated and it is replaced by the HybridCalculator.
-This is a fresh rewrite in RooStats of
-	RooStatsCms/LimitCalculator developped by D. Piparo and G. Schott
-Authors: D. Piparo, G. Schott - Universitaet Karlsruhe
-
-The class is born from the need to have an implementation of the CLs 
-method that could take advantage from the RooFit Package.
-The basic idea is the following: 
-- Instantiate an object specifying a signal+background model, a background model and a dataset.
-- Perform toy MC experiments to know the distributions of -2lnQ 
-- Calculate the CLsb and CLs values as "integrals" of these distributions.
-
-The class allows the user to input models as RooAbsPdf ( TH1 object could be used 
-by using the RooHistPdf class)
-The pdfs must be "extended": for more information please refer to 
-http://roofit.sourceforge.net). The dataset can be entered as a 
-RooAbsData objects.  
-
-Unlike the TLimit Class a complete MC generation is performed at each step 
-and not a simple Poisson fluctuation of the contents of the bins.
-Another innovation is the treatment of the nuisance parameters. The user 
-can input in the constructor nuisance parameters.
-To include the information that we have about the nuisance parameters a prior
-PDF (RooAbsPdf) should be specified
-
-Different test statistic can be used (likelihood ratio, number of events or 
-profile likelihood ratio. The default is the likelihood ratio. 
-See the method SetTestStatistic.
-
-The number of toys to be generated is controlled by SetNumberOfToys(n).
-
-The result of the calculations is returned as a HybridResult object pointer.
-
-see also the following interesting references:
-- Alex Read, "Presentation of search results: the CLs technique",
-  Journal of Physics G: Nucl. Part. Phys. 28 2693-2704 (2002).
-  see http://www.iop.org/EJ/abstract/0954-3899/28/10/313/
-
-- Alex Read, "Modified Frequentist Analysis of Search Results (The CLs Method)" CERN 2000-005 (30 May 2000)
-
-- V. Bartsch, G.Quast, "Expected signal observability at future experiments" CMS NOTE 2005/004
-
-- http://root.cern.ch/root/html/src/TLimit.html
-*/
-
 
    class HybridCalculatorOriginal : public HypoTestCalculator , public TNamed {
 
    public:
 
 
-      /// Dummy Constructor with only name 
+      /// Dummy Constructor with only name
       explicit HybridCalculatorOriginal(const char *name = 0);
-      
+
       /// Constructor for HybridCalculator from pdf instances but without a data-set
       HybridCalculatorOriginal(RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
@@ -113,12 +64,12 @@ see also the following interesting references:
 
       /// Constructor passing a ModelConfig for the SBmodel and a ModelConfig for the B Model
       HybridCalculatorOriginal(RooAbsData& data,
-                       const ModelConfig& sb_model, 
+                       const ModelConfig& sb_model,
                        const ModelConfig& b_model,
                        bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
 
 
-   public: 
+   public:
 
       /// Destructor of HybridCalculator
       virtual ~HybridCalculatorOriginal();
@@ -151,12 +102,12 @@ see also the following interesting references:
       virtual void SetAlternateParameters(const RooArgSet&) {}  // not needed
 
       // additional methods specific for HybridCalculator
-      // set a  prior pdf for the nuisance parameters 
-      void SetNuisancePdf(RooAbsPdf & prior_pdf) {          
-         fPriorPdf = &prior_pdf; 
+      // set a  prior pdf for the nuisance parameters
+      void SetNuisancePdf(RooAbsPdf & prior_pdf) {
+         fPriorPdf = &prior_pdf;
          fUsePriorPdf = true; // if set by default turn it on
-      } 
-      
+      }
+
       // set the nuisance parameters to be marginalized
       void SetNuisanceParameters(const RooArgSet & params) { fNuisanceParameters = &params; }
 
@@ -169,7 +120,7 @@ see also the following interesting references:
       // control use of the pdf for the nuisance parameter and marginalize them
       void UseNuisance(bool on = true) { fUsePriorPdf = on; }
 
-      // control to use bin data generation 
+      // control to use bin data generation
       void SetGenerateBinned(bool on = true) { fGenerateBinned = on; }
 
       /// set the desired test statistics:
@@ -191,7 +142,7 @@ see also the following interesting references:
       void RunToys(std::vector<double>& bVals, std::vector<double>& sbVals, unsigned int nToys, bool usePriors) const;
 
       // check input parameters before performing the calculation
-      bool DoCheckInputs() const; 
+      bool DoCheckInputs() const;
 
       unsigned int fTestStatisticsIdx; // Index of the test statistics to use
       unsigned int fNToys;            // number of Toys MC
@@ -200,9 +151,9 @@ see also the following interesting references:
       mutable RooArgList* fObservables; // Collection of the observables of the model
       const RooArgSet* fNuisanceParameters;   // Collection of the nuisance parameters in the model
       RooAbsPdf* fPriorPdf;   // Prior PDF of the nuisance parameters
-      RooAbsData * fData;     // pointer to the data sets 
+      RooAbsData * fData;     // pointer to the data sets
       bool fGenerateBinned;   //Flag to control binned generation
-      bool  fUsePriorPdf;               // use a prior for nuisance parameters  
+      bool  fUsePriorPdf;               // use a prior for nuisance parameters
       bool fTmpDoExtended;
 
 //       TString fSbModelName;   // name of pdf of the signal+background model

@@ -1,12 +1,12 @@
- /***************************************************************************** 
-  * Project: RooFit                                                           * 
+ /*****************************************************************************
+  * Project: RooFit                                                           *
   * @(#)root/roofit:$Id$   *
-  *                                                                           * 
+  *                                                                           *
   * RooFit NonCentralChisquare PDF                                            *
-  *                                                                           * 
+  *                                                                           *
   * Author: Kyle Cranmer                                                      *
-  *                                                                           * 
-  *****************************************************************************/ 
+  *                                                                           *
+  *****************************************************************************/
 
 #ifndef ROO_NONCENTRALCHISQUARE
 #define ROO_NONCENTRALCHISQUARE
@@ -16,10 +16,10 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
- 
+
 class RooNonCentralChiSquare : public RooAbsPdf {
 public:
-   RooNonCentralChiSquare() {} ; 
+   RooNonCentralChiSquare() {} ;
    RooNonCentralChiSquare(const char *name, const char *title,
                           RooAbsReal& _x,
                           RooAbsReal& _k,
@@ -30,7 +30,7 @@ public:
 
    void SetErrorTolerance(Double_t t) {fErrorTol = t;}
    void SetMaxIters(Int_t mi) {fMaxIters = mi;}
-   void SetForceSum(Bool_t flag); 
+   void SetForceSum(Bool_t flag);
 
 
    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
@@ -52,5 +52,5 @@ private:
 
    ClassDef(RooNonCentralChiSquare,1) // non-central chisquare pdf
 };
- 
+
 #endif

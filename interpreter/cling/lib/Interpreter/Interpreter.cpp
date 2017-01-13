@@ -19,6 +19,7 @@
 #include "MultiplexInterpreterCallbacks.h"
 #include "TransactionUnloader.h"
 
+#include "cling/Interpreter/AutoloadCallback.h"
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/ClingCodeCompleteConsumer.h"
@@ -27,8 +28,8 @@
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
-#include "cling/Interpreter/AutoloadCallback.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Output.h"
 #include "cling/Utils/SourceNormalization.h"
 
 #include "clang/AST/ASTContext.h"
@@ -47,7 +48,6 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/raw_ostream.h"
 
 #include <sstream>
 #include <string>
@@ -151,6 +151,8 @@ namespace cling {
       == clang::frontend::ParseSyntaxOnly;
   }
 
+  namespace internal { void symbol_requester(); }
+
   Interpreter::Interpreter(int argc, const char* const *argv,
                            const char* llvmdir /*= 0*/, bool noRuntime,
                            const Interpreter* parentInterp) :
@@ -207,6 +209,13 @@ namespace cling {
     }
 
     m_IncrParser->SetTransformers(parentInterp);
+
+    if (!m_LLVMContext) {
+      // Never true, but don't tell the compiler.
+      // Force symbols needed by runtime to be included in binaries.
+      // Prevents stripping the symbol due to dead-code optimization.
+      internal::symbol_requester();
+    }
   }
 
   ///\brief Constructor for the child Interpreter.
@@ -260,7 +269,7 @@ namespace cling {
 
   void Interpreter::handleFrontendOptions() {
     if (m_Opts.ShowVersion) {
-      llvm::errs() << getVersion() << '\n';
+      cling::log() << getVersion() << '\n';
     }
     if (m_Opts.Help) {
       m_Opts.PrintHelp();
@@ -332,7 +341,7 @@ namespace cling {
   }
 
   void Interpreter::DumpIncludePath(llvm::raw_ostream* S) {
-    utils::DumpIncludePaths(getCI()->getHeaderSearchOpts(), S ? *S : llvm::outs(),
+    utils::DumpIncludePaths(getCI()->getHeaderSearchOpts(), S ? *S : cling::outs(),
                             true /*withSystem*/, true /*withFlags*/);
   }
 
@@ -357,7 +366,7 @@ namespace cling {
       }
     }
     if (foundAtPos < 0) {
-      llvm::errs() << "The store point name " << name << " does not exist."
+      cling::errs() << "The store point name " << name << " does not exist."
       "Unbalanced store / compare\n";
       return;
     }
@@ -404,7 +413,8 @@ namespace cling {
       CO.ResultEvaluation = 0;
       CO.DynamicScoping = isDynamicLookupEnabled();
       CO.Debug = isPrintingDebug();
-      CO.CheckPointerValidity = 1;
+      CO.IgnorePromptDiags = !isRawInputEnabled();
+      CO.CheckPointerValidity = !isRawInputEnabled();
       return DeclareInternal(input, CO, T);
     }
 
@@ -414,6 +424,7 @@ namespace cling {
     CO.ResultEvaluation = (bool)V;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
+    // CO.IgnorePromptDiags = 1; done by EvaluateInternal().
     CO.CheckPointerValidity = 1;
     if (EvaluateInternal(wrapReadySource, CO, V, T, wrapPoint)
                                                      == Interpreter::kFailure) {
@@ -845,29 +856,24 @@ namespace cling {
     if (addr)
       return addr;
 
-    std::string funcname;
-    {
-      llvm::raw_string_ostream namestr(funcname);
-      namestr << "__cling_Destruct_" << RD;
-    }
+    smallstream funcname;
+    funcname << "__cling_Destruct_" << RD;
 
-    std::string code = "extern \"C\" void ";
-    clang::QualType RDQT(RD->getTypeForDecl(), 0);
-    std::string typeName
-      = utils::TypeName::GetFullyQualifiedName(RDQT, RD->getASTContext());
-    std::string dtorName = RD->getNameAsString();
-    code += funcname + "(void* obj){((" + typeName + "*)obj)->~"
-      + dtorName + "();}";
+    largestream code;
+    code << "extern \"C\" void " << funcname.str() << "(void* obj){(("
+         << utils::TypeName::GetFullyQualifiedName(
+                clang::QualType(RD->getTypeForDecl(), 0), RD->getASTContext())
+         << "*)obj)->~" << RD->getNameAsString() << "();}";
 
     // ifUniq = false: we know it's unique, no need to check.
-    addr = compileFunction(funcname, code, false /*ifUniq*/,
+    addr = compileFunction(funcname.str(), code.str(), false /*ifUniq*/,
                            false /*withAccessControl*/);
     return addr;
   }
 
   void Interpreter::createUniqueName(std::string& out) {
-    out += utils::Synthesize::UniquePrefix;
-    llvm::raw_string_ostream(out) << m_UniqueCounter++;
+    llvm::raw_string_ostream(out)
+      << utils::Synthesize::UniquePrefix << m_UniqueCounter++;
   }
 
   bool Interpreter::isUniqueName(llvm::StringRef name) {
@@ -875,9 +881,9 @@ namespace cling {
   }
 
   llvm::StringRef Interpreter::createUniqueWrapper() const {
-    llvm::SmallString<128> out(utils::Synthesize::UniquePrefix);
-    llvm::raw_svector_ostream(out) << m_UniqueCounter++;
-    return (getCI()->getASTContext().Idents.getOwn(out)).getName();
+    smallstream Stream;
+    Stream << utils::Synthesize::UniquePrefix << m_UniqueCounter++;
+    return (getCI()->getASTContext().Idents.getOwn(Stream.str())).getName();
   }
 
   bool Interpreter::isUniqueWrapper(llvm::StringRef name) {
@@ -1067,7 +1073,7 @@ namespace cling {
     while(true) {
       cling::Transaction* T = m_IncrParser->getLastTransaction();
       if (!T) {
-        llvm::errs() << "cling: invalid last transaction; unload failed!\n";
+        cling::errs() << "cling: invalid last transaction; unload failed!\n";
         return;
       }
       unload(*T);

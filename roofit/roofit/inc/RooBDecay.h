@@ -31,15 +31,15 @@ public:
   //Constructors, assignment etc
   inline RooBDecay() { }
   RooBDecay(const char *name, const char *title, RooRealVar& t,
-			RooAbsReal& tau, RooAbsReal& dgamma,
-			RooAbsReal& f0,
-			RooAbsReal& f1, RooAbsReal& f2, 
-			RooAbsReal& f3, RooAbsReal& dm, 
-			const RooResolutionModel& model,
-			DecayType type);
+         RooAbsReal& tau, RooAbsReal& dgamma,
+         RooAbsReal& f0,
+         RooAbsReal& f1, RooAbsReal& f2,
+         RooAbsReal& f3, RooAbsReal& dm,
+         const RooResolutionModel& model,
+         DecayType type);
   RooBDecay(const RooBDecay& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const 
-  { 
+  virtual TObject* clone(const char* newname) const
+  {
     return new RooBDecay(*this,newname);
   }
   virtual ~RooBDecay();
@@ -62,7 +62,7 @@ protected:
   RooRealProxy _f1;
   RooRealProxy _f2;
   RooRealProxy _f3;
-  RooRealProxy _dm;	
+  RooRealProxy _dm;
   Int_t _basisCosh;
   Int_t _basisSinh;
   Int_t _basisCos;
@@ -74,4 +74,3 @@ protected:
     };
 
 #endif
-

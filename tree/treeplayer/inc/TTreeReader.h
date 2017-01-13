@@ -134,47 +134,90 @@ public:
       kEntryChainSetupError, ///< problem in accessing a chain element, e.g. file without the tree
       kEntryChainFileError, ///< problem in opening a chain's file
       kEntryDictionaryError, ///< problem reading dictionary info from tree
-      kEntryLast, ///< last entry was reached
+      kEntryBeyondEnd ///< last entry loop has reached its end
    };
 
-   TTreeReader():
-      fTree(0),
-      fDirectory(0),
-      fEntryStatus(kEntryNoTree),
-      fMostRecentTreeNumber(-1),
-      fDirector(0),
-      fLastEntry(-1),
-      fProxiesSet(false)
-   {}
+   TTreeReader() = default;
 
-   TTreeReader(TTree* tree);
-   TTreeReader(const char* keyname, TDirectory* dir = NULL );
+   TTreeReader(TTree* tree, TEntryList* entryList = nullptr);
+   TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
+   TTreeReader(const char* keyname, TEntryList* entryList = nullptr):
+   TTreeReader(keyname, nullptr, entryList) {}
 
    ~TTreeReader();
 
-   void SetTree(TTree* tree);
-   void SetTree(const char* /*keyname*/, TDirectory* /*dir = NULL*/ ) { Error("SetTree()", "Not Implemented!");};
-   void SetChain(const char* /*keyname*/, TFileCollection* /*files*/ ) { Error("SetChain()", "Not Implemented!");};
+   void SetTree(TTree* tree, TEntryList* entryList = nullptr);
+   void SetTree(const char* keyname, TEntryList* entryList = nullptr) {
+      SetTree(keyname, nullptr, entryList);
+   }
+   void SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 
-   Bool_t Next() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
+   TTree* GetTree() const { return fTree; }
+   TEntryList* GetEntryList() const { return fEntryList; }
+
+   ///\{ \name Entry setters
+
+   /// Move to the next entry (or index of the TEntryList if that is set).
+   ///
+   /// \return false if the previous entry was already the last entry. This allows
+   ///   the function to be used in `while (reader.Next()) { ... }`
+   Bool_t Next() {
+      return SetEntry(GetCurrentEntry() + 1) == kEntryValid;
+   }
+
+   /// Set the next entry (or index of the TEntryList if that is set).
+   ///
+   /// \param entry If not TEntryList is set, the entry is a global entry (i.e.
+   /// not the entry number local to the chain's current tree).
+   /// \returns the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
+
+   /// Set the next local tree entry. If a TEntryList is set, this function is
+   /// equivalent to `SetEntry()`.
+   ///
+   /// \param entry Entry number of the TChain's current TTree. This is the
+   /// entry number passed for instance by `TSelector::Process(entry)`, i.e.
+   /// within `TSelector::Process()` always use `SetLocalEntry()` and not
+   /// `SetEntry()`!
+   /// \return the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
-   void SetLastEntry(Long64_t entry) { fLastEntry = entry; }
-   EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
+
+   /// \deprecated Please use SetEntriesRange() instead!
+   ///  Sets the entry that `Next()` will stop iteration on. Equivalent to the
+   ///  preferred `SetEntriesRange(0, end)`
+   ///
+   /// \param endEntry The entry that `Next()` will return `kFALSE` on (i.e. not
+   ///   load anymore).
+   void SetLastEntry(Long64_t endEntry) R__DEPRECATED(6, 12, "Misnomer and duplication; please use SetEntriesRange()!")
+   { fEndEntry = endEntry; }
+
+   EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
+
+   /// Restart a Next() loop from entry 0 (of TEntryList index 0 of fEntryList is set).
    void Restart();
+
+   ///\}
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
-   TTree* GetTree() const { return fTree; }
-   Long64_t GetEntries(Bool_t force) const { return fTree ? (force ? fTree->GetEntries() : fTree->GetEntriesFast() ) : -1; }
-   Long64_t GetCurrentEntry() const;
+   Long64_t GetEntries(Bool_t force) const;
+
+   /// Returns the index of the current entry being read.
+   ///
+   /// If `IsChain()`, the returned index corresponds to the global entry number
+   /// (i.e. not the entry number local to the chain's current tree).
+   /// If `fEntryList`, the returned index corresponds to an index in the
+   /// TEntryList; to translate to the TChain's / TTree's entry number pass it
+   /// through `reader.GetEntryList()->GetEntry(reader.GetCurrentEntry())`.
+   Long64_t GetCurrentEntry() const { return fEntry; }
 
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
       return Iterator_t(*this, 0);
    }
+   /// Return an iterator beyond the last TTree entry.
    Iterator_t end() const { return Iterator_t(); }
 
 protected:
@@ -191,22 +234,25 @@ protected:
 private:
 
    enum EPropertyBits {
-      kBitIsChain = BIT(14) ///< our tree is a chain
+      kBitIsChain = BIT(14), ///< our tree is a chain
+      kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15) ///< the tree had a TEntryList and we have warned about that
    };
 
-   TTree* fTree; ///< tree that's read
-   TDirectory* fDirectory; ///< directory (or current file for chains)
-   EEntryStatus fEntryStatus; ///< status of most recent read request
-   Int_t fMostRecentTreeNumber; ///< TTree::GetTreeNumber() of the most recent tree
-   ROOT::Internal::TBranchProxyDirector* fDirector; ///< proxying director, owned
+   TTree* fTree = nullptr; ///< tree that's read
+   TEntryList* fEntryList = nullptr; ///< entry list to be used
+   EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
+   Int_t fMostRecentTreeNumber = -1; ///< TTree::GetTreeNumber() of the most recent tree
+   ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
    THashTable   fProxies; ///< attached ROOT::TNamedBranchProxies; owned
 
-   /// The last entry to be processed. When set (i.e. >= 0), it provides a way
+   Long64_t fEntry = -1; ///< Current (non-local) entry of fTree or of fEntryList if set.
+
+   /// The end of the entry loop. When set (i.e. >= 0), it provides a way
    /// to stop looping over the TTree when we reach a certain entry: Next()
-   /// returns kEntryLast when GetCurrentEntry() reaches fLastEntry
-   Long64_t fLastEntry;
-   Bool_t fProxiesSet; ///< True if the proxies have been set, false otherwise
+   /// returns kFALSE when GetCurrentEntry() reaches fEndEntry.
+   Long64_t fEndEntry = -1;
+   Bool_t fProxiesSet = kFALSE; ///< True if the proxies have been set, false otherwise
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;

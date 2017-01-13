@@ -16,8 +16,6 @@
 class RooTMathReg {
 public:
   RooTMathReg() ;
-} ;
+};
 
-
- 
 #endif

@@ -382,9 +382,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
   if (cache==0) { // revive the (sterilized) cache
      //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
-     std::auto_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-     std::auto_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
-     std::auto_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
+     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
+     std::unique_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
+     std::unique_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
      RooArgSet dummy;
      Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
      R__ASSERT(code==code2); // must have revived the right (sterilized) slot...

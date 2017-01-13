@@ -17,9 +17,9 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -68,7 +68,7 @@ namespace TMVA {
 
       // output operator for a RuleEnsemble
       friend std::ostream& operator<< ( std::ostream& os, const RuleEnsemble& rules );
-      
+
    public:
 
       enum ELearningModel { kFull=0, kRules=1, kLinear=2 };
@@ -148,7 +148,7 @@ namespace TMVA {
 
       // Calculate the number of possible rules from a given tree
       Int_t CalcNRules( const TMVA::DecisionTree* dtree );
-      // Recursivly search for end-nodes; used by CalcNRules()
+      // Recursively search for end-nodes; used by CalcNRules()
       void  FindNEndNodes( const TMVA::Node* node, Int_t& nendnodes );
 
       // set current event to be used
@@ -249,7 +249,7 @@ namespace TMVA {
       // copy operator
       void operator=( const RuleEnsemble& other ) { Copy( other ); }
 
-      // calculate sum of the squared coefficents
+      // calculate sum of the squared coefficients
       Double_t CoefficientRadius();
 
       // fill the vector with the coefficients
@@ -321,10 +321,10 @@ namespace TMVA {
       // print the model in a cryptic way
       void  PrintRaw   ( std::ostream& os  ) const; // obsolete
       void* AddXMLTo   ( void* parent ) const;
-   
+
       // read the model from input stream
       void  ReadRaw    ( std::istream& istr ); // obsolete
-      void  ReadFromXML( void* wghtnode ); 
+      void  ReadFromXML( void* wghtnode );
 
 
    private:
@@ -341,7 +341,7 @@ namespace TMVA {
       // make rules form one decision tree
       void  MakeRulesFromTree( const DecisionTree *dtree );
 
-      // add a rule with tghe given end-node
+      // add a rule with the given end-node
       void  AddRule( const Node *node );
 
       // make a rule
@@ -390,10 +390,10 @@ namespace TMVA {
       UInt_t                        fRuleMapInd1;       // last index
       const std::vector<const TMVA::Event *> *fRuleMapEvents; // pointer to vector of events used
       //
-      const RuleFit*                fRuleFit;           // pointer to rule fit object 
+      const RuleFit*                fRuleFit;           // pointer to rule fit object
 
       mutable MsgLogger*            fLogger;            //! message logger
-      MsgLogger& Log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }
    };
 }
 

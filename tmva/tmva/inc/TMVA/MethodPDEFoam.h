@@ -207,16 +207,16 @@ namespace TMVA {
       // options to be used
       Bool_t        fSigBgSeparated;  // Separate Sig and Bg, or not
       Float_t       fFrac;            // Fraction used for calc of Xmin, Xmax
-      Float_t       fDiscrErrCut;     // cut on discrimant error
+      Float_t       fDiscrErrCut;     // cut on discriminant error
       Float_t       fVolFrac;         // volume fraction (used for density calculation during buildup)
       Int_t         fnCells;          // Number of Cells  (1000)
       Int_t         fnActiveCells;    // Number of active cells
       Int_t         fnSampl;          // Number of MC events per cell in build-up (1000)
       Int_t         fnBin;            // Number of bins in build-up (100)
-      Int_t         fEvPerBin;        // Maximum events (equiv.) per bin in buid-up (1000)
+      Int_t         fEvPerBin;        // Maximum events (equiv.) per bin in build-up (1000)
 
       Bool_t        fCompress;        // compress foam output file
-      Bool_t        fMultiTargetRegression; // do regression on multible targets
+      Bool_t        fMultiTargetRegression; // do regression on multiple targets
       UInt_t        fNmin;            // minimal number of events in cell necessary to split cell"
       Bool_t        fCutNmin;         // Keep for bw compatibility: Grabbing cell with maximal RMS to split next (TFoam default)
       UInt_t        fMaxDepth;        // maximum depth of cell tree

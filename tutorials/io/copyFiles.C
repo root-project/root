@@ -30,7 +30,9 @@ void CopyDir(TDirectory *source) {
    adir->cd();
    //loop on all entries of this directory
    TKey *key;
-   TIter nextkey(source->GetListOfKeys());
+   //Loop in reverse order to make sure that the order of cycles is
+   //preserved.
+   TIter nextkey(source->GetListOfKeys(),kIterBackward);
    while ((key = (TKey*)nextkey())) {
       const char *classname = key->GetClassName();
       TClass *cl = gROOT->GetClass(classname);
@@ -43,9 +45,14 @@ void CopyDir(TDirectory *source) {
          adir->cd();
       } else if (cl->InheritsFrom(TTree::Class())) {
          TTree *T = (TTree*)source->Get(key->GetName());
-         adir->cd();
-         TTree *newT = T->CloneTree(-1,"fast");
-         newT->Write();
+         // Avoid writing the data of a TTree more than once.
+         // Note this assume that older cycles are (as expected) older
+         // snapshots of the TTree meta data.
+         if (!adir->FindObject(key->GetName())) {
+            adir->cd();
+            TTree *newT = T->CloneTree(-1,"fast");
+            newT->Write();
+         }
       } else {
          source->cd();
          TObject *obj = key->ReadObj();

@@ -13,7 +13,7 @@ if(root7)
 endif()
 
 ROOT_OBJECT_LIBRARY(RIOObjs G__IO.cxx  ${root7src} *.cxx)
-ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:RIOObjs>
+ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:RIOObjs> $<TARGET_OBJECTS:RootPcmObjs>
                                LIBRARIES ${CMAKE_DL_LIBS}
                                DEPENDENCIES Core Thread)
 ROOT_INSTALL_HEADERS()

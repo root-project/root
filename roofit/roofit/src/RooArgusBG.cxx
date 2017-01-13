@@ -38,13 +38,12 @@ using namespace std;
 
 ClassImp(RooArgusBG)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
 RooArgusBG::RooArgusBG(const char *name, const char *title,
-		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c) :
-  RooAbsPdf(name, title), 
+             RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c) :
+  RooAbsPdf(name, title),
   m("m","Mass",this,_m),
   m0("m0","Resonance mass",this,_m0),
   c("c","Slope parameter",this,_c),
@@ -52,13 +51,12 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
 RooArgusBG::RooArgusBG(const char *name, const char *title,
-		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
-  RooAbsPdf(name, title), 
+             RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
+  RooAbsPdf(name, title),
   m("m","Mass",this,_m),
   m0("m0","Resonance mass",this,_m0),
   c("c","Slope parameter",this,_c),
@@ -66,20 +64,17 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
 RooArgusBG::RooArgusBG(const RooArgusBG& other, const char* name) :
-  RooAbsPdf(other,name), 
-  m("m",this,other.m), 
-  m0("m0",this,other.m0), 
+  RooAbsPdf(other,name),
+  m("m",this,other.m),
+  m0("m0",this,other.m0),
   c("c",this,other.c),
   p("p",this,other.p)
 {
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -88,11 +83,9 @@ Double_t RooArgusBG::evaluate() const {
   if(t >= 1) return 0;
 
   Double_t u= 1 - t*t;
-  //cout << "c = " << c << " result = " << m*TMath::Power(u,p)*exp(c*u) << endl ; 
+  //cout << "c = " << c << " result = " << m*TMath::Power(u,p)*exp(c*u) << endl ;
   return m*TMath::Power(u,p)*exp(c*u) ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -105,8 +98,6 @@ Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   return 0;
 
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,5 +118,3 @@ Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
   return area;
 
 }
-
-

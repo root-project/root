@@ -25,6 +25,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::VariableTransformBase
+\ingroup TMVA
+Linear interpolation class.
+*/
+
 #include "TMVA/VariableTransformBase.h"
 
 #include "TMVA/Config.h"
@@ -109,7 +114,7 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
    TString inputVariables = _inputVariables;
 
    // unselect all variables first
-   fGet.clear();       
+   fGet.clear();
 
    UInt_t nvars  = GetNVariables();
    UInt_t ntgts  = GetNTargets();
@@ -121,7 +126,7 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
    SelectedIndices tgtIndices;
    SelectedIndices spctIndices;
 
-   if (inputVariables == "") // default is all variables and all targets 
+   if (inputVariables == "") // default is all variables and all targets
       {                         //   (the default can be changed by decorating this member function in the implementations)
          inputVariables = "_V_,_T_";
       }
@@ -249,14 +254,14 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
          fGet.assign( fPut.begin(), fPut.end() );
       }
    }
-  
+
    Log() << kHEADER << "Transformation, Variable selection : " << Endl;
 
    // choose the new dsi for output if present, if not, take the common one
    const DataSetInfo* outputDsiPtr = (fDsiOutput? &(*fDsiOutput) : &fDsi );
 
 
-   
+
    ItVarTypeIdx itGet = fGet.begin(), itGetEnd = fGet.end();
    ItVarTypeIdx itPut = fPut.begin(); // , itPutEnd = fPut.end();
    for( ; itGet != itGetEnd; ++itGet ) {
@@ -459,13 +464,12 @@ void TMVA::VariableTransformBase::CountVariableTypes( UInt_t& nvars, UInt_t& ntg
    fVariableTypesAreCounted = true;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO --> adapt to variable,target,spectator selection
 /// method to calculate minimum, maximum, mean, and RMS for all
 /// variables used in the MVA
 
-void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& events ) 
+void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& events )
 {
    if (!IsCreated()) return;
 
@@ -475,7 +479,7 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
    UInt_t nevts = events.size();
 
    TVectorD x2( nvars+ntgts ); x2 *= 0;
-   TVectorD x0( nvars+ntgts ); x0 *= 0;   
+   TVectorD x0( nvars+ntgts ); x0 *= 0;
    TVectorD v0( nvars+ntgts ); v0 *= 0;
 
    Double_t sumOfWeights = 0;
@@ -489,7 +493,7 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
          if (ievt==0) {
             Variables().at(ivar).SetMin(x);
             Variables().at(ivar).SetMax(x);
-         } 
+         }
          else {
             UpdateNorm( ivar,  x );
          }
@@ -501,7 +505,7 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
          if (ievt==0) {
             Targets().at(itgt).SetMin(x);
             Targets().at(itgt).SetMax(x);
-         } 
+         }
          else {
             UpdateNorm( nvars+itgt,  x );
          }
@@ -511,17 +515,17 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
    }
 
    if (sumOfWeights <= 0) {
-      Log() << kFATAL << " the sum of event weights calcualted for your input is == 0"
+      Log() << kFATAL << " the sum of event weights calculated for your input is == 0"
             << " or exactly: " << sumOfWeights << " there is obviously some problem..."<< Endl;
-   } 
+   }
 
    // set Mean and RMS
    for (UInt_t ivar=0; ivar<nvars; ivar++) {
       Double_t mean = x0(ivar)/sumOfWeights;
-      
-      Variables().at(ivar).SetMean( mean ); 
+
+      Variables().at(ivar).SetMean( mean );
       if (x2(ivar)/sumOfWeights - mean*mean < 0) {
-         Log() << kFATAL << " the RMS of your input variable " << ivar 
+         Log() << kFATAL << " the RMS of your input variable " << ivar
                << " evaluates to an imaginary number: sqrt("<< x2(ivar)/sumOfWeights - mean*mean
                <<") .. sometimes related to a problem with outliers and negative event weights"
                << Endl;
@@ -530,9 +534,9 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
    }
    for (UInt_t itgt=0; itgt<ntgts; itgt++) {
       Double_t mean = x0(nvars+itgt)/sumOfWeights;
-      Targets().at(itgt).SetMean( mean ); 
+      Targets().at(itgt).SetMean( mean );
       if (x2(nvars+itgt)/sumOfWeights - mean*mean < 0) {
-         Log() << kFATAL << " the RMS of your target variable " << itgt 
+         Log() << kFATAL << " the RMS of your target variable " << itgt
                << " evaluates to an imaginary number: sqrt(" << x2(nvars+itgt)/sumOfWeights - mean*mean
                <<") .. sometimes related to a problem with outliers and negative event weights"
                << Endl;
@@ -566,7 +570,7 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
       Double_t variance = v0(nvars+itgt)/sumOfWeights;
       Targets().at(itgt).SetVariance( variance );
       Log() << kINFO << "Target " << Targets().at(itgt).GetExpression() <<" variance = " << variance << Endl;
-   }   
+   }
 
    Log() << kVERBOSE << "Set minNorm/maxNorm for variables to: " << Endl;
    Log() << std::setprecision(3);
@@ -578,7 +582,7 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
    for (UInt_t itgt=0; itgt<GetNTargets(); itgt++)
       Log() << "    " << Targets().at(itgt).GetInternalName()
             << "\t: [" << Targets().at(itgt).GetMin() << "\t, " << Targets().at(itgt).GetMax() << "\t] " << Endl;
-   Log() << std::setprecision(5); // reset to better value       
+   Log() << std::setprecision(5); // reset to better value
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -593,14 +597,14 @@ std::vector<TString>* TMVA::VariableTransformBase::GetTransformationStrings( Int
       strVec->push_back( Variables()[ivar].GetLabel() + "_[transformed]");
    }
 
-   return strVec;   
+   return strVec;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO --> adapt to variable,target,spectator selection
 /// update min and max of a given variable (target) and a given transformation method
 
-void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x ) 
+void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x )
 {
    Int_t nvars = fDsi.GetNVariables();
    if( ivar < nvars ){
@@ -615,7 +619,7 @@ void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x )
 ////////////////////////////////////////////////////////////////////////////////
 /// create XML description the transformation (write out info of selected variables)
 
-void TMVA::VariableTransformBase::AttachXMLTo(void* parent) 
+void TMVA::VariableTransformBase::AttachXMLTo(void* parent)
 {
    void* selxml = gTools().AddChild(parent, "Selection");
 
@@ -628,7 +632,7 @@ void TMVA::VariableTransformBase::AttachXMLTo(void* parent)
    for( ItVarTypeIdx itGet = fGet.begin(), itGetEnd = fGet.end(); itGet != itGetEnd; ++itGet ) {
       UInt_t idx  = (*itGet).second;
       Char_t type = (*itGet).first;
-      
+
       TString label      = "";
       TString expression = "";
       TString typeString = "";
@@ -651,7 +655,7 @@ void TMVA::VariableTransformBase::AttachXMLTo(void* parent)
       default:
          Log() << kFATAL << "VariableTransformBase/AttachXMLTo unknown variable type '" << type << "'." << Endl;
       }
-         
+
       void* idxxml = gTools().AddChild(inpxml, "Input");
       //      gTools().AddAttr(idxxml, "Index", idx);
       gTools().AddAttr(idxxml, "Type",  typeString);
@@ -666,7 +670,7 @@ void TMVA::VariableTransformBase::AttachXMLTo(void* parent)
    for( ItVarTypeIdx itPut = fPut.begin(), itPutEnd = fPut.end(); itPut != itPutEnd; ++itPut ) {
       UInt_t idx  = (*itPut).second;
       Char_t type = (*itPut).first;
-      
+
       TString label = "";
       TString expression = "";
       TString typeString = "";
@@ -689,7 +693,7 @@ void TMVA::VariableTransformBase::AttachXMLTo(void* parent)
       default:
          Log() << kFATAL << "VariableTransformBase/AttachXMLTo unknown variable type '" << type << "'." << Endl;
       }
-         
+
       void* idxxml = gTools().AddChild(outxml, "Output");
       //      gTools().AddAttr(idxxml, "Index", idx);
       gTools().AddAttr(idxxml, "Type",  typeString);
@@ -703,7 +707,7 @@ void TMVA::VariableTransformBase::AttachXMLTo(void* parent)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the input variables from the XML node
 
-void TMVA::VariableTransformBase::ReadFromXML( void* selnode ) 
+void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 {
    void* inpnode = gTools().GetChild( selnode );
    void* outnode = gTools().GetNextChild( inpnode );
@@ -712,10 +716,8 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
    UInt_t ntgts  = GetNTargets();
    UInt_t nspcts = GetNSpectators();
 
-
-
    // read inputs
-   fGet.clear();       
+   fGet.clear();
 
    UInt_t nInputs = 0;
    gTools().ReadAttr(inpnode, "NInputs", nInputs);
@@ -729,7 +731,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
       gTools().ReadAttr(ch, "Type",  typeString);
       gTools().ReadAttr(ch, "Label", label);
       gTools().ReadAttr(ch, "Expression", expression);
-   
+
       if( typeString == "Variable"  ){
          for( UInt_t ivar = 0; ivar < nvars; ++ivar ) { // search all variables
             if( fDsi.GetVariableInfo( ivar ).GetLabel() == label ||
@@ -761,9 +763,9 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
    }
 
    assert( nInputs == fGet.size() );
-   
+
    // read outputs
-   fPut.clear();       
+   fPut.clear();
 
    UInt_t nOutputs = 0;
    gTools().ReadAttr(outnode, "NOutputs", nOutputs);
@@ -777,7 +779,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
       gTools().ReadAttr(chOut, "Type",  typeString);
       gTools().ReadAttr(chOut, "Label", label);
       gTools().ReadAttr(chOut, "Expression", expression);
-   
+
       if( typeString == "Variable"  ){
          for( UInt_t ivar = 0; ivar < nvars; ++ivar ) { // search all variables
             if( fDsi.GetVariableInfo( ivar ).GetLabel() == label ||
@@ -809,10 +811,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
    }
 
    assert( nOutputs == fPut.size() );
-
-
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// getinput and setoutput equivalent
@@ -831,7 +830,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
       for( ItVarTypeIdxConst itEntry = fGet.begin(), itEntryEnd = fGet.end(); itEntry != itEntryEnd; ++itEntry ) {
          Char_t type = (*itEntry).first;
          Int_t  idx  = (*itEntry).second;
-         
+
          switch( type ) {
          case 'v':
             fout << "      indicesGet.push_back( " << idx << ");" << std::endl;
@@ -872,6 +871,6 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
       fout << "   } " <<  std::endl;
       fout << std::endl;
 
-   }else if( part == 1){ 
+   }else if( part == 1){
    }
 }

@@ -261,7 +261,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
    for (Int_t i = nCol_v-1; i >= 0; i--) {
       if (i < nCol_v-1)
          vr_i = TMatrixDRow_const(v,i);
-      TMatrixDRow(v,i) = 0.0;
+      TMatrixDRow(v,i).Assign( 0.0 );
       v(i,i) = 1.;
 
       if (i < nCol_v-2) {

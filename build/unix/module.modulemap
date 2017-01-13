@@ -26,16 +26,9 @@ module ROOT_Types {
 module ROOT_Core_Config_C {
  //requires cplusplus
  
- // needs C++ and in some cases we build with C (ZTrees.h, through ZDeflate.c)
- module "RConversionRuleParser.h" { textual header "RConversionRuleParser.h" export * }
- // FIXME: #included by RConversionRuleParser.h. Do we need the dependency on
- // RConversionRuleParser.h at all?
- module "TSchemaRuleProcessor.h" { header "TSchemaRuleProcessor.h" export * }
  exclude header "RtypesImp.h"
  module "Rtypes.h" { header "Rtypes.h" export * }
  module "TClassEdit.h" { header "TClassEdit.h" export * }
- module "TMetaUtils.h" { header "TMetaUtils.h" export * }
- module "TSchemaType.h" { header "TSchemaType.h" export * }
  module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
  module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * }
  module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
@@ -46,9 +39,6 @@ module ROOT_Core_Config_C {
  module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
  module "strlcpy.h" { header "strlcpy.h" export * } // #included by Rtypes, could go away?
 
- // Those two are involved in some weird cyclic dependency ROOT->ROOT_Core_Config->ROOT
- //module "TString.h" { header "TString.h" export * }
- //module "TMathBase.h" { header "TMathBase.h" export * }
  // Should we marked textual because of inclusion libcpp_string_view.h,
  // using macros to set up the header file.
  module "RWrap_libcpp_string_view.h" {  textual header "RWrap_libcpp_string_view.h" export * }
@@ -60,10 +50,14 @@ module ROOT_Core_Config_C {
 // this module as part of the ROOT. The only way is either by outlining it here
 // or relying on fragile module ordering (eg. order before things such as Cocoa.h
 // including gltypes.h.
-module ROOT_Glew {
-  umbrella "GL"
-  module * { export * }
-  link "lib/libGLEW.so"
-}
+// FIXME: We can switch back to using umbrella folder and submodules once
+// https://llvm.org/bugs/show_bug.cgi?id=30508 gets resolved.
+// module ROOT_Glew {
+  // Depending on the platform we get some of these three installed.
+  module "glew.h" { header "GL/glew.h" export * }
+  module "wglew.h" { header "GL/wglew.h" export * }
+  module "glxew.h" { header "GL/glxew.h" export * }
+//  link "lib/libGLEW.so"
+//}
 
 // From this point on the contents of this file are automatically generated.

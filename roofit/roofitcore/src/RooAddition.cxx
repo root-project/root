@@ -69,7 +69,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
   , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)
   , _cacheMgr(this,10)
 {
-  std::auto_ptr<TIterator> inputIter( sumSet.createIterator() );
+  std::unique_ptr<TIterator> inputIter( sumSet.createIterator() );
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)inputIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
@@ -103,8 +103,8 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     RooErrorHandler::softAbort() ;    
   }
 
-  std::auto_ptr<TIterator> inputIter1( sumSet1.createIterator() );
-  std::auto_ptr<TIterator> inputIter2( sumSet2.createIterator() );
+  std::unique_ptr<TIterator> inputIter1( sumSet1.createIterator() );
+  std::unique_ptr<TIterator> inputIter2( sumSet2.createIterator() );
   RooAbsArg *comp1(0),*comp2(0) ;
   while((comp1 = (RooAbsArg*)inputIter1->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp1)) {
@@ -311,8 +311,8 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
   if (cache==0) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
-    std::auto_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-    std::auto_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
+    std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
+    std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
     RooArgSet dummy;
     Int_t code2 = getAnalyticalIntegral(*iset,dummy,rangeName);
     assert(code==code2); // must have revived the right (sterilized) slot...
@@ -321,7 +321,7 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
   assert(cache!=0);
 
   // loop over cache, and sum...
-  std::auto_ptr<TIterator> iter( cache->_I.createIterator() );
+  std::unique_ptr<TIterator> iter( cache->_I.createIterator() );
   RooAbsReal *I;
   double result(0);
   while ( ( I=(RooAbsReal*)iter->Next() ) != 0 ) result += I->getVal();

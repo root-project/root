@@ -6,7 +6,7 @@
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
  * Copyright (c) 2000-2005, Stanford University. All rights reserved.        *
- *           
+ *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
@@ -26,10 +26,10 @@ class RooArgList ;
 class RooParametricStepFunction : public RooAbsPdf {
 public:
 
-   RooParametricStepFunction() : _nBins(0), _coefIter(0) {} 
+   RooParametricStepFunction() : _nBins(0), _coefIter(0) {}
 
   RooParametricStepFunction(const char *name, const char *title,
-		RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins=1) ;
+      RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins=1) ;
 
   RooParametricStepFunction(const RooParametricStepFunction& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooParametricStepFunction(*this, newname); }

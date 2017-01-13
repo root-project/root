@@ -43,14 +43,6 @@
 
 namespace RooStats {
 
-   /**
-   Common base class for the Hypothesis Test Calculators.
-   It is not designed to use directly but via its derived classes
-
-   \ingroup Roostats
- */
-
-
    class HypoTestCalculatorGeneric : public HypoTestCalculator {
 
    public:
@@ -85,11 +77,11 @@ namespace RooStats {
       // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) const { return fTestStatSampler; }
 
-      // set this for re-using always the same toys for alternate hypothesis in 
-      // case of calls at dofferent null parameter points
+      // set this for re-using always the same toys for alternate hypothesis in
+      // case of calls at different null parameter points
       // This is useful to get more stable bands when running the HypoTest inversion
-      void UseSameAltToys(); 
-      
+      void UseSameAltToys();
+
 
    protected:
       // should return zero (to be used later for conditional flow)
@@ -107,7 +99,7 @@ namespace RooStats {
       TestStatSampler *fDefaultSampler;
       TestStatistic *fDefaultTestStat;
 
-      unsigned int fAltToysSeed;   // to have same toys for alternate 
+      unsigned int fAltToysSeed;   // to have same toys for alternate
 
    private:
       void SetupSampler(const ModelConfig& model) const;

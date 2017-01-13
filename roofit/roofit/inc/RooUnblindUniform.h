@@ -24,10 +24,10 @@ class RooUnblindUniform : public RooAbsHiddenReal {
 public:
   // Constructors, assignment etc
   RooUnblindUniform() ;
-  RooUnblindUniform(const char *name, const char *title, 
-		      const char *blindString, Double_t scale, RooAbsReal& blindValue);
+  RooUnblindUniform(const char *name, const char *title,
+            const char *blindString, Double_t scale, RooAbsReal& blindValue);
   RooUnblindUniform(const RooUnblindUniform& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooUnblindUniform(*this,newname); }  
+  virtual TObject* clone(const char* newname) const { return new RooUnblindUniform(*this,newname); }
   virtual ~RooUnblindUniform();
 
 protected:

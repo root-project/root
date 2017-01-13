@@ -2597,7 +2597,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    fn.Strip();
 
    // This is for backward compatibility...
-   if (fn.Last('/') == 0) fn = fn(1, f.Length() - 1);
+   if (fn.Last('/') == 0) fn = fn(1, fn.Length() - 1);
 
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                        TROOT::GetTTFFontDir());

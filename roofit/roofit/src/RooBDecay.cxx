@@ -16,16 +16,13 @@
  *****************************************************************************/
 
 
-/**
-\file RooBDecay.cxx
-\class RooBDecay
-\ingroup Roofit
+/** \class RooBDecay
+    \ingroup Roofit
 
 Most general description of B decay time distribution with effects
-of CP violation, mixing and life time differences. This function can 
+of CP violation, mixing and life time differences. This function can
 be analytically convolved with any RooResolutionModel implementation
 **/
-
 
 #include "RooFit.h"
 
@@ -39,15 +36,14 @@ be analytically convolved with any RooResolutionModel implementation
 
 using namespace std;
 
-ClassImp(RooBDecay);
-
+ClassImp(RooBDecay)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooBDecay::RooBDecay(const char *name, const char* title, 
-	       RooRealVar& t, RooAbsReal& tau, RooAbsReal& dgamma,
-	       RooAbsReal& f0, RooAbsReal& f1, RooAbsReal& f2, RooAbsReal& f3, 
-	       RooAbsReal& dm, const RooResolutionModel& model, DecayType type) :
+RooBDecay::RooBDecay(const char *name, const char* title,
+          RooRealVar& t, RooAbsReal& tau, RooAbsReal& dgamma,
+          RooAbsReal& f0, RooAbsReal& f1, RooAbsReal& f2, RooAbsReal& f3,
+          RooAbsReal& dm, const RooResolutionModel& model, DecayType type) :
   RooAbsAnaConvPdf(name, title, model, t),
   _t("t", "time", this, t),
   _tau("tau", "Average Decay Time", this, tau),
@@ -105,8 +101,6 @@ RooBDecay::RooBDecay(const RooBDecay& other, const char* name) :
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Destructor
 
@@ -114,13 +108,12 @@ RooBDecay::~RooBDecay()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t RooBDecay::coefficient(Int_t basisIndex) const
 {
   if(basisIndex == _basisCosh)
-    {  
+    {
       return _f0;
     }
   if(basisIndex == _basisSinh)
@@ -139,13 +132,12 @@ Double_t RooBDecay::coefficient(Int_t basisIndex) const
   return 0 ;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const 
+RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const
 {
   if(basisIndex == _basisCosh)
-    {  
+    {
       return _f0.arg().getVariables();
     }
   if(basisIndex == _basisSinh)
@@ -161,17 +153,15 @@ RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const
       return _f3.arg().getVariables();
     }
 
-  return 0 ;  
+  return 0 ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBDecay::getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooBDecay::getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   if(coef == _basisCosh)
-    {  
+    {
       return _f0.arg().getAnalyticalIntegral(allVars,analVars,rangeName) ;
     }
   if(coef == _basisSinh)
@@ -190,14 +180,12 @@ Int_t RooBDecay::getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooAr
   return 0 ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const 
+Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const
 {
   if(coef == _basisCosh)
-    {  
+    {
       return _f0.arg().analyticalIntegral(code,rangeName) ;
     }
   if(coef == _basisSinh)
@@ -216,8 +204,6 @@ Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* r
   return 0 ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
@@ -225,8 +211,6 @@ Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
   if (matchArgs(directVars, generateVars, _t)) return 1;
   return 0;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -261,55 +245,3 @@ void RooBDecay::generateEvent(Int_t code)
     break;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

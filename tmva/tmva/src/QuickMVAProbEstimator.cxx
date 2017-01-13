@@ -1,3 +1,8 @@
+/*! \class TMVA::QuickMVAProbEstimator
+\ingroup TMVA
+
+*/
+
 #include "TMVA/QuickMVAProbEstimator.h"
 
 #include "TMVA/MsgLogger.h"
@@ -10,18 +15,18 @@
 
 void TMVA::QuickMVAProbEstimator::AddEvent(Double_t val, Double_t weight, Int_t type){
    EventInfo ev;
-   ev.eventValue=val; ev.eventWeight=weight; ev.eventType=type; 
-  
+   ev.eventValue=val; ev.eventWeight=weight; ev.eventType=type;
+
    fEvtVector.push_back(ev);
    if (fIsSorted) fIsSorted=false;
-                       
+
 }
 
- 
+
 Double_t TMVA::QuickMVAProbEstimator::GetMVAProbAt(Double_t value){
    // Well.. if it's fast is actually another question all together, merely
    // it's a quick and dirty simple kNN approach to the 1-Dim signal/backgr. MVA
-   // distributions. 
+   // distributions.
 
 
    if (!fIsSorted) {
@@ -40,7 +45,7 @@ Double_t TMVA::QuickMVAProbEstimator::GetMVAProbAt(Double_t value){
 
    EventInfo tmp; tmp.eventValue=value;
    std::vector<EventInfo>::iterator it = std::upper_bound(fEvtVector.begin(),fEvtVector.end(),tmp,TMVA::QuickMVAProbEstimator::compare);
-  
+
    UInt_t iLeft=0, iRight=0;
    Double_t nSignal=0;
    Double_t nBackgr=0;
@@ -55,7 +60,7 @@ Double_t TMVA::QuickMVAProbEstimator::GetMVAProbAt(Double_t value){
          iLeft++;
          if ( ((it-iLeft))->eventType == 0) nSignal+=((it-iLeft))->eventWeight;
          else                               nBackgr+=((it-iLeft))->eventWeight;
-      }    
+      }
    }
 
    Double_t mvaProb = (nSignal+nBackgr) ? nSignal/(nSignal+nBackgr) : -1 ;

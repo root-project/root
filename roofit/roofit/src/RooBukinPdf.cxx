@@ -13,30 +13,28 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooBukinPdf.cxx
-\class RooBukinPdf
-\ingroup Roofit
+/** \class RooBukinPdf
+    \ingroup Roofit
 
-RooBukinPdf implements the NovosibirskA function 
+RooBukinPdf implements the NovosibirskA function
+
+#### Original Fortran Header below
+~~~
+ * Fitting function for asymmetric peaks with 6 free parameters:
+ *     Ap   - peak value
+ *     Xp   - peak position
+ *     sigp - FWHM divided by 2*sqrt(2*log(2))=2.35
+ *     xi   - peak asymmetry parameter
+ *     rho1 - parameter of the "left tail"
+ *     rho2 - parameter of the "right tail"
+ *   ---------------------------------------------
+ *       May 26, 2003
+ *       A.Bukin, Budker INP, Novosibirsk
+ *       Documentation:
+ *       http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003/Tues3a/bukin.ps
+ *   -------------------------------------------
+~~~
 **/
-
-// Original Fortran Header below
-/*****************************************************************************
- * Fitting function for asymmetric peaks with 6 free parameters:	     *
- *     Ap   - peak value						     *
- *     Xp   - peak position						     *
- *     sigp - FWHM divided by 2*sqrt(2*log(2))=2.35			     *
- *     xi   - peak asymmetry parameter					     *
- *     rho1 - parameter of the "left tail"				     *
- *     rho2 - parameter of the "right tail"				     *
- *   ---------------------------------------------			     *
- *       May 26, 2003							     *
- *       A.Bukin, Budker INP, Novosibirsk				     *
- *       Documentation:							     *
- *       http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003/Tues3a/bukin.ps 
- *   -------------------------------------------			     *
- *****************************************************************************/
 
 #include "RooFit.h"
 
@@ -51,14 +49,12 @@ using namespace std;
 
 ClassImp(RooBukinPdf)
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooBukinPdf::RooBukinPdf(const char *name, const char *title,
-			 RooAbsReal& _x,    RooAbsReal& _Xp,
-			 RooAbsReal& _sigp, RooAbsReal& _xi,
-			 RooAbsReal& _rho1, RooAbsReal& _rho2) :
+          RooAbsReal& _x,    RooAbsReal& _Xp,
+          RooAbsReal& _sigp, RooAbsReal& _xi,
+          RooAbsReal& _rho1, RooAbsReal& _rho2) :
   // The two addresses refer to our first dependent variable and
   // parameter, respectively, as declared in the rdl file
   RooAbsPdf(name, title),
@@ -72,8 +68,6 @@ RooBukinPdf::RooBukinPdf(const char *name, const char *title,
   // Constructor
   consts = 2*sqrt(2*log(2.));
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -91,31 +85,29 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
   consts = 2*sqrt(2*log(2.));
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Implementation 
+/// Implementation
 
-Double_t RooBukinPdf::evaluate() const 
+Double_t RooBukinPdf::evaluate() const
 {
   double r1=0,r2=0,r3=0,r4=0,r5=0,hp=0;
   double x1 = 0,x2 = 0;
   double fit_result = 0;
-  
+
   hp=sigp*consts;
   r3=log(2.);
   r4=sqrt(TMath::Power(xi,2)+1);
-  r1=xi/r4;  
+  r1=xi/r4;
 
   if(TMath::Abs(xi) > exp(-6.)){
     r5=xi/log(r4+xi);
   }
   else
     r5=1;
-    
+
   x1 = Xp + (hp / 2) * (r1-1);
   x2 = Xp + (hp / 2) * (r1+1);
-  
+
   //--- Left Side
   if(x < x1){
     r2=rho1*TMath::Power((x-x1)/(Xp-x1),2)-r3 + 4 * r3 * (x-x1)/hp * r5 * r4/TMath::Power((r4-xi),2);
@@ -129,10 +121,10 @@ Double_t RooBukinPdf::evaluate() const
       r2=-r3*(TMath::Power(r2,2));
     }
     else{
-      r2=-4*r3*TMath::Power(((x-Xp)/hp),2);  
+      r2=-4*r3*TMath::Power(((x-Xp)/hp),2);
     }
   }
-  
+
 
   //--- Right Side
   else {
@@ -140,13 +132,13 @@ Double_t RooBukinPdf::evaluate() const
   }
 
   if(TMath::Abs(r2) > 100){
-    fit_result = 0;  
+    fit_result = 0;
   }
   else{
     //---- Normalize the result
     fit_result = exp(r2);
   }
-  
+
   return fit_result;
-  
+
 }

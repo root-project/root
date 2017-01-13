@@ -25,7 +25,7 @@ class RooVoigtian : public RooAbsPdf {
 public:
   RooVoigtian() {} ;
   RooVoigtian(const char *name, const char *title,
-	      RooAbsReal& _x, RooAbsReal& _mean, 
+         RooAbsReal& _x, RooAbsReal& _mean,
               RooAbsReal& _width, RooAbsReal& _sigma,
               Bool_t doFast = kFALSE);
   RooVoigtian(const RooVoigtian& other, const char* name=0) ;

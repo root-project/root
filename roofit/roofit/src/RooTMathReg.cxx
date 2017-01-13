@@ -10,19 +10,17 @@
  *                                                                           *
  *****************************************************************************/
 
-/**
-\file RooTMathReg.cxx
-\class RooTMathReg
-\ingroup Roofit
+/** \class RooTMathReg
+    \ingroup Roofit
 
 **/
 
-#include "Riostream.h" 
+#include "Riostream.h"
 #include "RooTMathReg.h"
-#include "RooCFunction1Binding.h" 
-#include "RooCFunction2Binding.h" 
-#include "RooCFunction3Binding.h" 
-#include "RooCFunction4Binding.h" 
+#include "RooCFunction1Binding.h"
+#include "RooCFunction2Binding.h"
+#include "RooCFunction3Binding.h"
+#include "RooCFunction4Binding.h"
 #include "TMath.h"
 
 static RooTMathReg dummy ;
@@ -31,47 +29,47 @@ RooTMathReg::RooTMathReg()
 {
 
   // Import function from TMath namespace
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Abs",TMath::Abs,"d") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ACos",TMath::ACos) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ACosH",TMath::ACosH,"t") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ASin",TMath::ASin) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ASinH",TMath::ASinH,"t") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ATan",TMath::ATan) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ATanH",TMath::ATanH,"t") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselI0",TMath::BesselI0) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselI1",TMath::BesselI1) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselJ0",TMath::BesselJ0) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselJ1",TMath::BesselJ1) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselK0",TMath::BesselK0) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselK1",TMath::BesselK1) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselY0",TMath::BesselY0) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselY1",TMath::BesselY1) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Cos",TMath::Cos) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::CosH",TMath::CosH) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::DiLog",TMath::DiLog) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Erf",TMath::Erf) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Erfc",TMath::Erfc) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ErfcInverse",TMath::ErfcInverse) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::ErfInverse",TMath::ErfInverse) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Exp",TMath::Exp) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Freq",TMath::Freq) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Gamma",TMath::Gamma,"z") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::KolmogorovProb",TMath::KolmogorovProb,"z") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::LandauI",TMath::LandauI) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::LnGamma",TMath::LnGamma,"z") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Log",TMath::Log) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Log10",TMath::Log10) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Log2",TMath::Log2) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::NormQuantile",TMath::NormQuantile,"p") ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Sin",TMath::Sin) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::SinH",TMath::SinH) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Sqrt",TMath::Sqrt) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveH0",TMath::StruveH0) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveH1",TMath::StruveH1) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveL0",TMath::StruveL0) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveL1",TMath::StruveL1) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::Tan",TMath::Tan) ; 
-  RooCFunction1Ref<double,double>::fmap().add("TMath::TanH",TMath::TanH) ; 
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Abs",TMath::Abs,"d") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ACos",TMath::ACos) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ACosH",TMath::ACosH,"t") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ASin",TMath::ASin) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ASinH",TMath::ASinH,"t") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ATan",TMath::ATan) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ATanH",TMath::ATanH,"t") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselI0",TMath::BesselI0) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselI1",TMath::BesselI1) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselJ0",TMath::BesselJ0) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselJ1",TMath::BesselJ1) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselK0",TMath::BesselK0) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselK1",TMath::BesselK1) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselY0",TMath::BesselY0) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::BesselY1",TMath::BesselY1) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Cos",TMath::Cos) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::CosH",TMath::CosH) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::DiLog",TMath::DiLog) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Erf",TMath::Erf) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Erfc",TMath::Erfc) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ErfcInverse",TMath::ErfcInverse) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::ErfInverse",TMath::ErfInverse) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Exp",TMath::Exp) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Freq",TMath::Freq) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Gamma",TMath::Gamma,"z") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::KolmogorovProb",TMath::KolmogorovProb,"z") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::LandauI",TMath::LandauI) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::LnGamma",TMath::LnGamma,"z") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Log",TMath::Log) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Log10",TMath::Log10) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Log2",TMath::Log2) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::NormQuantile",TMath::NormQuantile,"p") ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Sin",TMath::Sin) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::SinH",TMath::SinH) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Sqrt",TMath::Sqrt) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveH0",TMath::StruveH0) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveH1",TMath::StruveH1) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveL0",TMath::StruveL0) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::StruveL1",TMath::StruveL1) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::Tan",TMath::Tan) ;
+  RooCFunction1Ref<double,double>::fmap().add("TMath::TanH",TMath::TanH) ;
   RooCFunction1Ref<double,int>::fmap().add("TMath::Factorial",TMath::Factorial,"i") ;
 
   RooCFunction2Ref<double,double,double>::fmap().add("TMath::ATan2",TMath::ATan2, "y", "x") ;

@@ -33,6 +33,11 @@
 // 14 Jan 2002 (TG) added more operator==(), operator!=(), operator>(), operator<()
 //
 // ********************************************************************
+
+#ifndef ROOT_Math_SMatrix
+#error "Do not use SMatrix.icc directly. #include \"Math/SMatrix.h\" instead."
+#endif // ROOT_Math_SMatrix
+
 #include <iostream>
 #include <iomanip>
 #include <assert.h>

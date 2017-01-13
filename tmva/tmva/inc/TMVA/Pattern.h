@@ -7,43 +7,40 @@
 class Pattern
 {
  public:
-    
+
    typedef typename std::vector<double>::iterator iterator;
    typedef typename std::vector<double>::const_iterator const_iterator;
-
 
    Pattern ()
       : m_weight (0)
       {
       }
 
-   ~Pattern () 
-      { 
+   ~Pattern ()
+      {
       }
 
-   Pattern (const Pattern& other) 
-      { 
-         m_input.assign (std::begin (other.m_input), std::end (other.m_input)); 
-         m_output.assign (std::begin (other.m_output), std::end (other.m_output)); 
-         m_weight = other.m_weight; 
+   Pattern (const Pattern& other)
+      {
+         m_input.assign (std::begin (other.m_input), std::end (other.m_input));
+         m_output.assign (std::begin (other.m_output), std::end (other.m_output));
+         m_weight = other.m_weight;
       }
 
-   Pattern (Pattern&& other) 
-      { 
+   Pattern (Pattern&& other)
+      {
          m_input = std::move (other.m_input);
          m_output = std::move (other.m_output);
-         m_weight = other.m_weight; 
+         m_weight = other.m_weight;
       }
 
-
-   Pattern& operator= (const Pattern& other) 
-      { 
-         m_input.assign (std::begin (other.input ()), std::end (other.input ())); 
-         m_output.assign (std::begin (other.output ()), std::end (other.output ())); 
-         m_weight = other.m_weight; 
+   Pattern& operator= (const Pattern& other)
+      {
+         m_input.assign (std::begin (other.input ()), std::end (other.input ()));
+         m_output.assign (std::begin (other.output ()), std::end (other.output ()));
+         m_weight = other.m_weight;
          return *this;
       }
-
 
    template <typename ItValue>
       Pattern (ItValue inputBegin, ItValue inputEnd, ItValue outputBegin, ItValue outputEnd, double _weight = 1.0)
@@ -61,8 +58,6 @@ class Pattern
       m_output.push_back (outputValue);
    }
 
-
-
    template <typename InputContainer, typename OutputContainer>
       Pattern (InputContainer& _input, OutputContainer& _output, double _weight = 1.0)
       : m_input (std::begin (_input), std::end (_input))
@@ -70,7 +65,6 @@ class Pattern
       , m_weight (_weight)
    {
    }
-
 
    const_iterator beginInput () const { return m_input.begin (); }
    const_iterator endInput   () const  { return m_input.end (); }
@@ -96,7 +90,3 @@ class Pattern
    std::vector<double> m_output;
    double m_weight;
 };
-
-
-
-

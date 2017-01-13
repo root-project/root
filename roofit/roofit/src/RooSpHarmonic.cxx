@@ -12,10 +12,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooSpHarmonic.cxx
-\class RooSpHarmonic
-\ingroup Roofit
+/** \class RooSpHarmonic
+    \ingroup Roofit
 
   Implementation of the so-called real spherical harmonics, using the orthonormal normalization,
 which are related to spherical harmonics as:
@@ -34,7 +32,7 @@ Y_{lm}(\cos\theta,\phi) = \sqrt{2} N_{l|m|} P_l^{|m|}(\cos\theta) sin(|m|\phi) (
 
 where
 \f[
- N_{lm} = \sqrt{ \frac{2l+1}{4\pi} \frac{ (l-m)! }{ (l+m)! } } 
+ N_{lm} = \sqrt{ \frac{2l+1}{4\pi} \frac{ (l-m)! }{ (l+m)! } }
 \f]
 
 Note that the normalization corresponds to the orthonormal case,
@@ -59,13 +57,11 @@ integrals, using the orthogonality properties of \f$Y_l^m\f$...
 using namespace std;
 
 ClassImp(RooSpHarmonic)
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-    inline double N(int l, int m=0) { 
+    inline double N(int l, int m=0) {
         double n = sqrt( double(2*l+1)/(4*TMath::Pi())*TMath::Factorial(l-m)/TMath::Factorial(l+m) );
         return m==0 ? n : TMath::Sqrt2() * n;
     }
@@ -82,10 +78,10 @@ RooSpHarmonic::RooSpHarmonic() :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l, int m) 
+RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l, int m)
  : RooLegendre(name, title,ctheta,l,m<0?-m:m)
  , _phi("phi", "phi", this, phi)
- , _n( 2*sqrt(TMath::Pi())) 
+ , _n( 2*sqrt(TMath::Pi()))
  , _sgn1( m==0 ? 0 : m<0 ? -1 : +1 )
  , _sgn2( 0 )
 {
@@ -93,7 +89,7 @@ RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ct
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l1, int m1, int l2, int m2) 
+RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l1, int m1, int l2, int m2)
  : RooLegendre(name, title,ctheta,l1, m1<0?-m1:m1,l2,m2<0?-m2:m2)
  , _phi("phi", "phi", this, phi)
  , _n(1)
@@ -104,7 +100,7 @@ RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ct
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooSpHarmonic::RooSpHarmonic(const RooSpHarmonic& other, const char* name) 
+RooSpHarmonic::RooSpHarmonic(const RooSpHarmonic& other, const char* name)
  : RooLegendre(other, name)
  , _phi("phi", this,other._phi)
  , _n(other._n)
@@ -115,7 +111,7 @@ RooSpHarmonic::RooSpHarmonic(const RooSpHarmonic& other, const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooSpHarmonic::evaluate() const 
+Double_t RooSpHarmonic::evaluate() const
 {
     double n = _n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::evaluate();
     if (_sgn1!=0) n *= (_sgn1<0 ? sin(_m1*_phi) : cos(_m1*_phi) );
@@ -123,7 +119,8 @@ Double_t RooSpHarmonic::evaluate() const
     return n;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 namespace {
   Bool_t fullRange(const RooRealProxy& x, const char* range, Bool_t phi)
   {
@@ -143,7 +140,7 @@ namespace {
 /// TODO: check that phi.max - phi.min = 2 pi... ctheta.max = +1, and ctheta.min = -1
 /// we don't support indefinite integrals... maybe one day, when there is a use for it.....
 
-Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   // we don't support indefinite integrals... maybe one day, when there is a use for it.....
   Bool_t cthetaOK = fullRange(_ctheta, rangeName, kFALSE);
@@ -155,10 +152,10 @@ Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const 
+Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
 {
   if (code==3) {
-    return (_l1==_l2 && _sgn1*_m1==_sgn2*_m2 ) ? _n : 0 ;  
+    return (_l1==_l2 && _sgn1*_m1==_sgn2*_m2 ) ? _n : 0 ;
   } else if (code == 2) {
     if ( _sgn1*_m1 != _sgn2*_m2) return 0;
     return ( _m1==0 ? 2 : 1 ) * TMath::Pi()*_n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::evaluate();
@@ -167,7 +164,7 @@ Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
     if (_sgn1!=0) n *= (_sgn1<0 ? sin(_m1*_phi) : cos(_m1*_phi) );
     if (_sgn2!=0) n *= (_sgn2<0 ? sin(_m2*_phi) : cos(_m2*_phi) );
     return n;
-  } 
+  }
 }
 
 Int_t RooSpHarmonic::getMaxVal( const RooArgSet& vars) const {

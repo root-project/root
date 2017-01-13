@@ -16,11 +16,11 @@
 #ifndef ROO_BLIND_TOOLS
 #define ROO_BLIND_TOOLS
 
-//		---------------------
-// 		-- Class Interface --
-//		---------------------
+//      ---------------------
+//       -- Class Interface --
+//      ---------------------
 
-#include "Rtypes.h" 
+#include "Rtypes.h"
 #include "TString.h"
 
 class RooBlindTools {
@@ -32,9 +32,9 @@ class RooBlindTools {
 public:
 
   enum blindMode {
-    full=0,	// blind both parameters and data
-    dataonly	// blind data only
-    
+    full=0,   // blind both parameters and data
+    dataonly   // blind data only
+
   };
 
 public:
@@ -43,8 +43,8 @@ public:
   RooBlindTools() {} ;
 
   RooBlindTools
-  (const char *stSeed,	// blinding seed string
-   blindMode Mode=full,	// blinding mode
+  (const char *stSeed,   // blinding seed string
+   blindMode Mode=full,   // blinding mode
    Double_t centralValue=0.0,     // Central value for Precision measurements
    Double_t sigmaOffset=1.0,      // range for Offset
    Bool_t s2bMode=kFALSE          // Use sin2beta modifications?
@@ -52,7 +52,7 @@ public:
 
   // Copy
   RooBlindTools(const RooBlindTools& );
-  
+
   // Destructor
   virtual ~RooBlindTools( );
 
@@ -69,7 +69,7 @@ public:
   Double_t MakeSignFlip(const char *StringAlphabet) const;
 
   Int_t SignOfTag(Double_t STag) const;
-  
+
   Double_t HideDeltaZ(Double_t DeltaZ, Double_t STag) const;
 
   Double_t HiDelZPdG(Double_t DeltaZ, Double_t STag, Double_t PdG) const;
@@ -99,11 +99,11 @@ public:
   Double_t UnHidePrecision(Double_t PrecisionPrime) const;
 
   Double_t HideOffset( Double_t Precision ) const;
-  
+
   Double_t UnHideOffset( Double_t PrecisionBlind ) const;
 
   Double_t HideUniform( Double_t Precision ) const;
-  
+
   Double_t UnHideUniform( Double_t PrecisionBlind ) const;
 
 
@@ -122,7 +122,7 @@ private:
   // Friends
   // Data members
 
-  TString _stSeed ; 
+  TString _stSeed ;
   Double_t _DeltaZOffset;
   Double_t _DeltaZSignFlip;
   Double_t _DeltaZScale;
@@ -139,8 +139,8 @@ private:
   Double_t _PrecisionCentralValue;
   blindMode _mode;
   Bool_t   _s2bMode ;
-  
-  // setup data members from string seed  
+
+  // setup data members from string seed
   void setup(const char *stSeed);
 
 protected:
@@ -149,6 +149,4 @@ protected:
   ClassDef(RooBlindTools,1) // Root implementation of BlindTools
 };
 
-#endif 
-
-
+#endif

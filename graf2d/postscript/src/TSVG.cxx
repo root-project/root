@@ -1214,7 +1214,7 @@ void TSVG::NewPage()
       PrintStr("\" viewBox=\"0 0");
       WriteReal(CMtoSVG(fXsize));
       WriteReal(fYsizeSVG);
-      PrintStr("\" xmlns=\"http://www.w3.org/2000/svg\">");
+      PrintStr("\" xmlns=\"http://www.w3.org/2000/svg\" shape-rendering=\"crispEdges\">");
       PrintStr("@");
       Initialize();
       fBoundingBox  = kTRUE;
@@ -1457,7 +1457,6 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       PrintStr(fontStyle[ifont]);
    }
    PrintFast(2,"\">");
-   PrintStr("@");
 
    if (font == 12 || font == 15) {
       Int_t ichar = chars[0]+848;
@@ -1591,7 +1590,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
          }
       }
    }
-   PrintStr("@");
+
    PrintFast(7,"</text>");
 
    if (fTextAngle != 0.) {

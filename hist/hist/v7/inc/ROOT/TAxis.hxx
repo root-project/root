@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <initializer_list>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -175,20 +176,20 @@ public:
 
   /// Construct a TAxisBase.
   ///
-  ///\param[in] nbins - number of bins in this axis, excluding under- and
-  /// overflow bins.
-  ///\param[in] canGrow - whether this axis can extend its range.
-  TAxisBase(int nbinsNoOver, bool canGrow) noexcept:
-    fNBins(nbinsNoOver + (canGrow ? 0 : 2)), fCanGrow(canGrow) { }
-
-  /// Construct a TAxisBase.
-  ///
   ///\param[in] title - axis title used for graphics and text representation.
   ///\param[in] nbins - number of bins in this axis, excluding under- and
   /// overflow bins.
   ///\param[in] canGrow - whether this axis can extend its range.
   TAxisBase(std::string_view title, int nbinsNoOver, bool canGrow) noexcept:
     fNBins(nbinsNoOver + (canGrow ? 0 : 2)), fTitle(title), fCanGrow(canGrow) { }
+
+  /// Construct a TAxisBase.
+  ///
+  ///\param[in] nbins - number of bins in this axis, excluding under- and
+  /// overflow bins.
+  ///\param[in] canGrow - whether this axis can extend its range.
+  TAxisBase(int nbinsNoOver, bool canGrow) noexcept:
+    TAxisBase("", nbinsNoOver, canGrow) { }
 
   const std::string& GetTitle() const { return fTitle; }
 
@@ -319,17 +320,6 @@ protected:
   }
 
   /// Initialize a TAxisEquidistant.
-  /// \param nbins - number of bins in the axis, excluding under- and overflow
-  ///   bins.
-  /// \param low - the low axis range. Any coordinate below that is considered
-  ///   as underflow. The first bin's lower edge is at this value.
-  /// \param high - the high axis range. Any coordinate above that is considered
-  ///   as overflow. The last bin's higher edge is at this value.
-  explicit TAxisEquidistant(int nbinsNoOver, double low, double high, bool canGrow) noexcept:
-    TAxisBase(nbinsNoOver, canGrow), fLow(std::min(low, high)),
-    fInvBinWidth(GetInvBinWidth(nbinsNoOver, low, high)) { }
-
-  /// Initialize a TAxisEquidistant.
   /// \param[in] title - axis title used for graphics and text representation.
   /// \param nbins - number of bins in the axis, excluding under- and overflow
   ///   bins.
@@ -341,6 +331,16 @@ protected:
                    double high, bool canGrow) noexcept:
     TAxisBase(title, nbinsNoOver, canGrow), fLow(low),
     fInvBinWidth(GetInvBinWidth(nbinsNoOver, low, high)) { }
+
+  /// Initialize a TAxisEquidistant.
+  /// \param nbins - number of bins in the axis, excluding under- and overflow
+  ///   bins.
+  /// \param low - the low axis range. Any coordinate below that is considered
+  ///   as underflow. The first bin's lower edge is at this value.
+  /// \param high - the high axis range. Any coordinate above that is considered
+  ///   as overflow. The last bin's higher edge is at this value.
+  explicit TAxisEquidistant(int nbinsNoOver, double low, double high, bool canGrow) noexcept:
+    TAxisEquidistant("", nbinsNoOver, low, high, canGrow) {}
 
 public:
   TAxisEquidistant() = default;
@@ -641,20 +641,6 @@ private:
   std::unordered_map<std::string, int /*bin number*/> fLabelsIndex;
 
 public:
-  /// Construct a TAxisLables from a `vector` of `string_view`s
-  explicit TAxisLabels(const std::vector<std::string_view> &labels):
-    TAxisGrow(labels.size(), 0., static_cast<double>(labels.size())) {
-    for (size_t i = 0, n = labels.size(); i < n; ++i)
-      fLabelsIndex[std::string(labels[i])] = i;
-  }
-
-  /// Construct a TAxisLables from a `vector` of `string`s
-  explicit TAxisLabels(const std::vector<std::string> &labels):
-    TAxisGrow(labels.size(), 0., static_cast<double>(labels.size())) {
-    for (size_t i = 0, n = labels.size(); i < n; ++i)
-      fLabelsIndex[labels[i]] = i;
-  }
-
   /// Construct a TAxisLables from a `vector` of `string_view`s, with title.
   explicit TAxisLabels(std::string_view title, const std::vector<std::string_view> &labels):
     TAxisGrow(title, labels.size(), 0., static_cast<double>(labels.size())) {
@@ -668,6 +654,14 @@ public:
     for (size_t i = 0, n = labels.size(); i < n; ++i)
       fLabelsIndex[labels[i]] = i;
   }
+
+  /// Construct a TAxisLables from a `vector` of `string_view`s
+  explicit TAxisLabels(const std::vector<std::string_view> &labels):
+     TAxisLabels("", labels) {}
+
+  /// Construct a TAxisLables from a `vector` of `string`s
+  explicit TAxisLabels(const std::vector<std::string> &labels):
+     TAxisLabels("", labels) {}
 
   /// Get the bin index with label.
   int GetBinIndex(const std::string &label) {
@@ -759,31 +753,31 @@ public:
     TAxisConfig("", nbins, from, to, kGrow) {}
 
 
-  /// Represents a `TAxisIrregular` with `binborders`.
-  TAxisConfig(const std::vector<double> &binborders):
-    TAxisBase(binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
-    fBinBorders(binborders) { }
-
   /// Represents a `TAxisIrregular` with `binborders` and title.
   TAxisConfig(std::string_view title, const std::vector<double> &binborders):
     TAxisBase(title, binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
     fBinBorders(binborders) { }
 
   /// Represents a `TAxisIrregular` with `binborders`.
-  TAxisConfig(std::vector<double> &&binborders) noexcept:
-    TAxisBase(binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
-    fBinBorders(std::move(binborders)) { }
+  TAxisConfig(const std::vector<double> &binborders):
+     TAxisConfig("", binborders) { }
 
-  /// Represents a `TAxisIrregular` with `binborders`.
+  /// Represents a `TAxisIrregular` with `binborders` and title.
   TAxisConfig(std::string_view title, std::vector<double> &&binborders) noexcept:
     TAxisBase(title, binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
     fBinBorders(std::move(binborders)) { }
 
-  /// Represents a `TAxisLabels` with `labels`.
-  TAxisConfig(const std::vector<std::string_view> &labels):
-    TAxisBase(labels.size(), true /*canGrow*/),
-    fKind(kLabels),
-    fLabels(labels.begin(), labels.end()) { }
+  /// Represents a `TAxisIrregular` with `binborders`.
+  TAxisConfig(std::vector<double> &&binborders) noexcept:
+    TAxisConfig("", std::move(binborders)) { }
+
+  /// Represents a `TAxisIrregular` with `binborders` and title.
+  TAxisConfig(std::string_view title, std::initializer_list<double> il):
+    TAxisConfig(title, std::vector<double>{il}) { }
+
+  /// Represents a `TAxisIrregular` with `binborders`.
+  TAxisConfig(std::initializer_list<double> il):
+    TAxisConfig("", il) { }
 
   /// Represents a `TAxisLabels` with `labels` and title.
   TAxisConfig(std::string_view title, const std::vector<std::string_view> &labels):
@@ -792,16 +786,18 @@ public:
     fLabels(labels.begin(), labels.end()) { }
 
   /// Represents a `TAxisLabels` with `labels`.
-  TAxisConfig(std::vector<std::string> &&labels):
-    TAxisBase(labels.size(), true /*canGrow*/),
-    fKind(kLabels),
-    fLabels(labels.begin(), labels.end()) { }
+  TAxisConfig(const std::vector<std::string_view> &labels):
+    TAxisConfig("", labels) { }
 
   /// Represents a `TAxisLabels` with `labels` and title.
   TAxisConfig(std::string_view title, std::vector<std::string> &&labels):
     TAxisBase(title, labels.size(), true /*canGrow*/),
     fKind(kLabels),
-    fLabels(labels.begin(), labels.end()) { }
+    fLabels(std::move(labels)) { }
+
+  /// Represents a `TAxisLabels` with `labels`.
+  TAxisConfig(std::vector<std::string> &&labels):
+    TAxisConfig("", std::move(labels)) { }
 
   /// \name Axis normalization
   ///\{

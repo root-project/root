@@ -3,6 +3,7 @@
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Output.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -14,7 +15,6 @@
 #include "clang/Sema/Sema.h"
 
 #include "llvm/Support/Path.h"
-#include "llvm/Support/raw_ostream.h"
 
 namespace cling {
 
@@ -693,7 +693,7 @@ namespace cling {
     T.removeLocalRestrict();
 //    T.print(Out(), m_Policy, D->getName());
     printDeclType(Out(), T,D->getName());
-    //    llvm::outs()<<D->getName()<<"\n";
+    //    cling::outs()<<D->getName()<<"\n";
     T.addRestrict();
 
     Expr *Init = D->getInit();
@@ -960,8 +960,7 @@ namespace cling {
         D = RD;
     }
 
-    std::string Output;
-    llvm::raw_string_ostream Stream(Output);
+    stdstrstream Stream;
 
     std::string closeBraces;
     if (!isa<TemplateTemplateParmDecl>(D))
@@ -989,8 +988,7 @@ namespace cling {
       }
       Stream << SubStream.take(true);
     }
-    Stream.flush();
-    Out() << Output << closeBraces << '\n';
+    Out() << Stream.str() << closeBraces << '\n';
   }
 
   void ForwardDeclPrinter::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {

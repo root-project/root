@@ -1,7 +1,7 @@
-/***************************************************************************** 
- * Project: RooFit                                                           * 
+/*****************************************************************************
+ * Project: RooFit                                                           *
  * author: Max Baak (mbaak@cern.ch)                                          *
- *****************************************************************************/ 
+ *****************************************************************************/
 
 /** \class Roo2DMomentMorphFunction
     \ingroup Roofit
@@ -57,20 +57,19 @@ Usage example:
 */
 
 
-#include "Riostream.h" 
+#include "Riostream.h"
 
-#include "Roo2DMomentMorphFunction.h" 
-#include "RooAbsReal.h" 
-#include "RooAbsCategory.h" 
-#include <math.h> 
-#include "TMath.h" 
+#include "Roo2DMomentMorphFunction.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
+#include <math.h>
+#include "TMath.h"
 #include "TTree.h"
 
 
 using namespace std;
 
-ClassImp(Roo2DMomentMorphFunction) 
-
+ClassImp(Roo2DMomentMorphFunction)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -83,10 +82,10 @@ ClassImp(Roo2DMomentMorphFunction)
 /// \param[in] setting
 /// \param[in] verbose
 
-Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char *title, 
-                        		       RooAbsReal& _m1, RooAbsReal& _m2,
+Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char *title,
+                                     RooAbsReal& _m1, RooAbsReal& _m2,
                                                const TMatrixD& mrefpoints, const Setting& setting, const Bool_t& verbose ) :
-  RooAbsReal(name,title), 
+  RooAbsReal(name,title),
   m1("m1","m1",this,_m1),
   m2("m2","m2",this,_m2),
   _setting(setting),
@@ -108,8 +107,7 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char 
   _frac.ResizeTo( _npoints );
 
   initialize();
-} 
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -126,9 +124,9 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char 
 /// \param[in] verbose
 
 Roo2DMomentMorphFunction::Roo2DMomentMorphFunction( const char *name, const char *title,
-					       RooAbsReal& _m1, RooAbsReal& _m2,
-					       const Int_t& nrows, const Double_t* dm1arr, const Double_t* dm2arr, const Double_t* dvalarr, 
-					       const Setting& setting, const Bool_t& verbose ) :
+                      RooAbsReal& _m1, RooAbsReal& _m2,
+                      const Int_t& nrows, const Double_t* dm1arr, const Double_t* dm2arr, const Double_t* dvalarr,
+                      const Setting& setting, const Bool_t& verbose ) :
   RooAbsReal(name,title),
   m1("m1","m1",this,_m1),
   m2("m2","m2",this,_m2),
@@ -154,12 +152,11 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction( const char *name, const char
   initialize();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const Roo2DMomentMorphFunction& other, const char* name) :  
-  RooAbsReal(other,name), 
+Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const Roo2DMomentMorphFunction& other, const char* name) :
+  RooAbsReal(other,name),
   m1("m1",this,other.m1),
   m2("m2",this,other.m2),
   _setting(other._setting),
@@ -167,10 +164,9 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const Roo2DMomentMorphFunctio
   _npoints(other._npoints),
   _mref(other._mref),
   _frac(other._frac)
-{ 
+{
   initialize();
-} 
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -179,11 +175,10 @@ Roo2DMomentMorphFunction::~Roo2DMomentMorphFunction()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-void 
-Roo2DMomentMorphFunction::initialize() 
+void
+Roo2DMomentMorphFunction::initialize()
 {
   Double_t xmin(1e300), xmax(-1e300), ymin(1e300), ymax(-1e300);
 
@@ -200,17 +195,16 @@ Roo2DMomentMorphFunction::initialize()
   _squareVec.ResizeTo(4,2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t 
-Roo2DMomentMorphFunction::evaluate() const 
-{ 
+Double_t
+Roo2DMomentMorphFunction::evaluate() const
+{
   if (_verbose) { cout << "Now in evaluate." << endl; }
   if (_verbose)  { cout << "x = " << m1 << " ; y = " << m2 << endl; }
 
   calculateFractions(_verbose); // verbose turned off
-  
+
   Double_t ret = 0.0;
   for (Int_t i=0; i<4; ++i) { ret += ( _mref(_squareIdx[i],2) * _frac[_squareIdx[i]] ) ; }
 
@@ -218,12 +212,11 @@ Roo2DMomentMorphFunction::evaluate() const
 
   //return (ret>0 ? ret : 0) ;
   return ret;
-} 
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void 
+void
 Roo2DMomentMorphFunction::calculateFractions(Bool_t verbose) const
 {
   double sumfrac(0.);
@@ -233,8 +226,8 @@ Roo2DMomentMorphFunction::calculateFractions(Bool_t verbose) const
     for (Int_t i=0; i<_npoints; ++i) { _frac[i]=0.0; }
 
     // this sets _squareVec and _squareIdx quantities and MSqr
-    (void) findSquare(m1,m2); 
-  
+    (void) findSquare(m1,m2);
+
     std::vector<double> deltavec(4,1.0);
     deltavec[1] = m1-_squareVec(0,0) ;
     deltavec[2] = m2-_squareVec(0,1) ;
@@ -244,28 +237,27 @@ Roo2DMomentMorphFunction::calculateFractions(Bool_t verbose) const
       double ffrac=0.;
       for (Int_t j=0; j<4; ++j) { ffrac += _MSqr(j,i) * deltavec[j]; }
 
-      // set fractions 
+      // set fractions
       _frac[_squareIdx[i]] = ffrac;
       if (ffrac>0) sumfrac += ffrac;
 
-      if (verbose) { 
-        cout << _squareIdx[i] << " " << ffrac << " " << _squareVec(i,0) << " " << _squareVec(i,1) << endl; 
+      if (verbose) {
+        cout << _squareIdx[i] << " " << ffrac << " " << _squareVec(i,0) << " " << _squareVec(i,1) << endl;
       }
-    }  
+    }
   }
 
   if (_setting == LinearPosFractions) {
     for (Int_t i=0; i<4; ++i) {
       if (_frac[_squareIdx[i]]<0) { _frac[_squareIdx[i]] = 0; }
       _frac[_squareIdx[i]] *= (1.0/sumfrac) ;
-    } 
+    }
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t 
+Bool_t
 Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
 {
   bool squareFound(false);
@@ -273,7 +265,7 @@ Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
   std::vector< std::pair<int,double> > idvec;
 
   Double_t xspacing = (_mref(_ixmax,0)-_mref(_ixmin,0)) / TMath::Sqrt(_npoints) ;
-  Double_t yspacing = (_mref(_iymax,1)-_mref(_iymin,1)) / TMath::Sqrt(_npoints) ; 
+  Double_t yspacing = (_mref(_iymax,1)-_mref(_iymin,1)) / TMath::Sqrt(_npoints) ;
 
   Double_t dx(0), dy(0), delta(0);
   for (Int_t k=0; k<_npoints; ++k) {
@@ -287,7 +279,7 @@ Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
   sort(idvec.begin(),idvec.end(),SorterL2H());
   std::vector< std::pair<int,double> >::iterator itr = idvec.begin();
   std::vector<int> cidx;
-  for(; itr!=idvec.end(); ++itr) { 
+  for(; itr!=idvec.end(); ++itr) {
     cidx.push_back(itr->first);
   }
 
@@ -312,23 +304,23 @@ Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
        y>_mref(_iymin,1) &&
        y<_mref(_iymax,1) )
   {
-    for (unsigned int i=0; i<cidx.size() && !squareFound; ++i) 
+    for (unsigned int i=0; i<cidx.size() && !squareFound; ++i)
       for (unsigned int j=i+1; j<cidx.size() && !squareFound; ++j)
-        for (unsigned int k=j+1; k<cidx.size() && !squareFound; ++k) 
-          for (unsigned int l=k+1; l<cidx.size() && !squareFound; ++l) { 
+        for (unsigned int k=j+1; k<cidx.size() && !squareFound; ++k)
+          for (unsigned int l=k+1; l<cidx.size() && !squareFound; ++l) {
             if ( isAcceptableSquare(_mref(cidx[i],0),_mref(cidx[i],1),_mref(cidx[j],0),_mref(cidx[j],1),_mref(cidx[k],0),_mref(cidx[k],1),_mref(cidx[l],0),_mref(cidx[l],1)) ) {
               if (  pointInSquare(x,y,_mref(cidx[i],0),_mref(cidx[i],1),_mref(cidx[j],0),_mref(cidx[j],1),_mref(cidx[k],0),_mref(cidx[k],1),_mref(cidx[l],0),_mref(cidx[l],1)) ) {
-                _squareVec(0,0) = _mref(cidx[i],0);  
-                _squareVec(0,1) = _mref(cidx[i],1);  
+                _squareVec(0,0) = _mref(cidx[i],0);
+                _squareVec(0,1) = _mref(cidx[i],1);
                 _squareIdx[0] = cidx[i];
-                _squareVec(1,0) = _mref(cidx[j],0);  
-                _squareVec(1,1) = _mref(cidx[j],1);  
+                _squareVec(1,0) = _mref(cidx[j],0);
+                _squareVec(1,1) = _mref(cidx[j],1);
                 _squareIdx[1] = cidx[j];
-                _squareVec(2,0) = _mref(cidx[k],0);  
-                _squareVec(2,1) = _mref(cidx[k],1);  
+                _squareVec(2,0) = _mref(cidx[k],0);
+                _squareVec(2,1) = _mref(cidx[k],1);
                 _squareIdx[2] = cidx[k];
-                _squareVec(3,0) = _mref(cidx[l],0);  
-                _squareVec(3,1) = _mref(cidx[l],1); 
+                _squareVec(3,0) = _mref(cidx[l],0);
+                _squareVec(3,1) = _mref(cidx[l],1);
                 _squareIdx[3] = cidx[l];
                 squareFound=true;
               }
@@ -352,7 +344,6 @@ Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
   return squareFound;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true if p1 and p2 are on same side of line b-a.
 /// \param[in] p1x
@@ -365,19 +356,18 @@ Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
 /// \param[in] by
 
 Bool_t Roo2DMomentMorphFunction::onSameSide(const double& p1x, const double& p1y, const double& p2x, const double& p2y, const double& ax, const double& ay, const double& bx, const double& by) const
-{   
+{
   Double_t cp1 = myCrossProduct(bx-ax, by-ay, p1x-ax, p1y-ay);
   Double_t cp2 = myCrossProduct(bx-ax, by-ay, p2x-ax, p2y-ay);
   if (cp1*cp2 >= 0) return true;
   else return false;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t 
+Bool_t
 Roo2DMomentMorphFunction::pointInSquare(const double& px, const double& py, const double& ax, const double& ay, const double& bx, const double& by, const double& cx, const double& cy, const double& dx, const double& dy) const
-{   
+{
   bool insquare(false);
 
   int ntri(0);
@@ -392,25 +382,22 @@ Roo2DMomentMorphFunction::pointInSquare(const double& px, const double& py, cons
   return insquare;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t 
+Bool_t
 Roo2DMomentMorphFunction::pointInTriangle(const double& px, const double& py, const double& ax, const double& ay, const double& bx, const double& by, const double& cx, const double& cy) const
 {
   if (onSameSide(px,py,ax,ay,bx,by,cx,cy) && onSameSide(px,py,bx,by,ax,ay,cx,cy) && onSameSide(px,py,cx,cy,ax,ay,bx,by)) return true;
   else return false;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t 
+Double_t
 Roo2DMomentMorphFunction::myCrossProduct(const double& ax, const double& ay, const double& bx, const double& by) const
 {
   return ( ax*by - bx*ay );
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reject kinked shapes.
@@ -423,7 +410,7 @@ Roo2DMomentMorphFunction::myCrossProduct(const double& ax, const double& ay, con
 /// \param[in] dx
 /// \param[in] dy
 
-Bool_t 
+Bool_t
 Roo2DMomentMorphFunction::isAcceptableSquare(const double& ax, const double& ay, const double& bx, const double& by, const double& cx, const double& cy, const double& dx, const double& dy) const
 {
   if ( pointInTriangle(dx,dy,ax,ax,bx,by,cx,cy) ||
@@ -441,4 +428,3 @@ Roo2DMomentMorphFunction::Summary() const
     cout << this << " " << i << " " << _mref(i,0) << " " << _mref(i,1) << " " << _mref(i,2) << endl;
   }
 }
-
