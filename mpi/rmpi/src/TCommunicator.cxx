@@ -4,6 +4,9 @@
 #include<TROOT.h>
 using namespace ROOT::Mpi;
 
+ROOT::Mpi::TCommunicator *gComm = new ROOT::Mpi::TCommunicator(MPI_COMM_WORLD);
+ROOT::Mpi::TCommunicator COMM_WORLD(MPI_COMM_WORLD);
+
 //______________________________________________________________________________
 TCommunicator::TCommunicator(const TCommunicator &comm): TObject(comm)
 {
@@ -17,6 +20,47 @@ TCommunicator::TCommunicator(const MPI_Comm &comm): fComm(comm), fMainProcess(0)
 //______________________________________________________________________________
 TCommunicator::~TCommunicator()
 {
+}
+
+//______________________________________________________________________________
+void  TCommunicator::Barrier() const
+{
+   MPI_Barrier(fComm);
+}
+
+
+//______________________________________________________________________________
+Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag, TStatus &status) const
+{
+   Int_t flag;
+   MPI_Status stat;
+   MPI_Iprobe(source, tag, fComm, &flag, &stat);
+   status = stat;
+   return (Bool_t)flag;
+}
+
+//______________________________________________________________________________
+Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag) const
+{
+   Int_t flag;
+   MPI_Status status;
+   MPI_Iprobe(source, tag, fComm, &flag, &status);
+   return (Bool_t)flag;
+}
+
+//______________________________________________________________________________
+void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
+{
+   MPI_Status stat;
+   MPI_Probe(source, tag, fComm, &stat);
+   status = stat;
+}
+
+//______________________________________________________________________________
+void TCommunicator::Probe(Int_t source, Int_t tag) const
+{
+   MPI_Status stat;
+   MPI_Probe(source, tag, fComm, &stat);
 }
 
 //______________________________________________________________________________
@@ -449,48 +493,3 @@ template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t 
 }
 
 
-
-//______________________________________________________________________________
-void  TCommunicator::Barrier() const
-{
-   MPI_Barrier(fComm);
-}
-
-
-//______________________________________________________________________________
-Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag, TStatus &status) const
-{
-   Int_t flag;
-   MPI_Status stat;
-   MPI_Iprobe(source, tag, fComm, &flag, &stat);
-   status = stat;
-   return (Bool_t)flag;
-}
-
-//______________________________________________________________________________
-Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag) const
-{
-   Int_t flag;
-   MPI_Status status;
-   MPI_Iprobe(source, tag, fComm, &flag, &status);
-   return (Bool_t)flag;
-}
-
-//______________________________________________________________________________
-void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
-{
-   MPI_Status stat;
-   MPI_Probe(source, tag, fComm, &stat);
-   status = stat;
-}
-
-//______________________________________________________________________________
-void TCommunicator::Probe(Int_t source, Int_t tag) const
-{
-   MPI_Status stat;
-   MPI_Probe(source, tag, fComm, &stat);
-}
-
-ROOT::Mpi::TCommunicator *gComm = new ROOT::Mpi::TCommunicator(MPI_COMM_WORLD);
-
-ROOT::Mpi::TCommunicator COMM_WORLD(MPI_COMM_WORLD);

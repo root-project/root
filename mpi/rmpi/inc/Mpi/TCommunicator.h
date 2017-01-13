@@ -117,11 +117,7 @@ namespace ROOT {
           *         Method to abort  processes
           *              \param integer with error code
           */
-#if OPEN_MPI
-         inline void Abort(Int_t err)
-#else
          inline void Abort(Int_t err) const
-#endif
          {
             MPI_Abort(fComm, err);
          }
@@ -261,7 +257,7 @@ namespace ROOT {
           *              \param root id of the main message where message was sent
           *              \return TGrequest obj
           */
-         template<class Type> void Scatter(Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
+         template<class Type> void Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
          ClassDef(TCommunicator, 1)
       };
 
@@ -516,7 +512,26 @@ namespace ROOT {
             MPI_Ibcast((void *)&var, 1, GetDataType<Type>(), root, fComm, &req.fRequest);
          }
          return req;
+      }
 
+      //______________________________________________________________________________
+      template<class Type> void TCommunicator::Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const
+      {
+         if (GetRank() == root) {
+            if (incount % (GetSize()*outcount) != 0) {
+               Fatal("TCommunicator::Scatter", "Number of elements sent and elements in receive are not divisible. Can't no split to scatter message");
+               Abort(ERR_COUNT);
+            }
+            for (auto i = 0 ; i < GetSize(); i++) {
+               if (i == root) continue;
+               auto stride = outcount * i;
+               Send(&in_vars[stride], outcount, i, MPI_TAG_UB);
+            }
+            auto stride = outcount * root;
+            memcpy((void *)out_vars, (void *)&in_vars[stride], sizeof(Type)*outcount);
+         } else {
+            Recv(out_vars, outcount, root, MPI_TAG_UB);
+         }
       }
 
       //////////////////////////////////////////////
@@ -542,7 +557,7 @@ namespace ROOT {
       template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
 
       //////////////////////////////////////////////
-      //specialized template methods p2p collective
+      //specialized template methods collective
       //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
       //______________________________________________________________________________
