@@ -3317,7 +3317,7 @@ std::string ROOT::TMetaUtils::GetInterpreterExtraIncludePath(bool rootbuild)
 #endif
       const char* rootsys = getenv("ROOTSYS");
       if (!rootsys) {
-         Error(0, "Environment variable ROOTSYS not set!");
+         Error(0, "Environment variable ROOTSYS not set!\n");
          return "-Ietc";
       }
       return std::string("-I") + rootsys + "/etc";
@@ -3982,7 +3982,7 @@ std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
          std::string incl_rootsys (rootSysContent);
          return incl_rootsys + "/" + defaultInclude;
       } else {
-         Error(0,"Environment variable ROOTSYS not set");
+         Error(0,"Environment variable ROOTSYS not set\n");
          return defaultInclude;
       }
 #else
