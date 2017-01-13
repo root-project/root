@@ -687,6 +687,9 @@ bool IsSelectionFile(const char *filename)
 
 void SetRootSys()
 {
+   if (!gBuildingROOT)
+      return; // don't mess with user's ROOTSYS.
+
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
 #if !defined(_WIN32)
@@ -716,22 +719,23 @@ void SetRootSys()
          // There was no slashes at all let now change ROOTSYS
          return;
       }
+
+      // stage 1.
+      int ncha = strlen(ep) + 10;
+      char *env = new char[ncha];
+      snprintf(env, ncha, "ROOTSYS=%s", ep);
+
       if (gDriverConfig) {
+         // After the putenv below, gRootDir might point to the old ROOTSYS
+         // entry, i.e. to deleted memory. Update it.
          const char** pRootDir = gDriverConfig->fPRootDir;
-         if (gBuildingROOT && pRootDir && strcmp(*pRootDir, ep)) {
-            *pRootDir = ep; // leaks...
-         } else {
-            delete [] ep;
+         if (pRootDir) {
+            *pRootDir = env + 8;
          }
-      } else {
-         // stage 1.
-         int ncha = strlen(ep) + 10;
-         char *env = new char[ncha];
-         snprintf(env, ncha, "ROOTSYS=%s", ep);
-         putenv(env);
-         delete [] ep;
       }
 
+      putenv(env);
+      delete [] ep;
    }
 }
 
