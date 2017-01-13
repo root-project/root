@@ -433,6 +433,11 @@ void TRatioPlot::SetupPads() {
       fLowerPad = 0;
    }
 
+   if (!gPad) {
+      Error("SetupPads", "There is no active pad");
+      return;
+   }
+
    double pm = fInsetWidth;
    double width = gPad->GetWNDC();
    double height = gPad->GetHNDC();
