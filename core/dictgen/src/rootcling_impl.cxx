@@ -687,9 +687,6 @@ bool IsSelectionFile(const char *filename)
 
 void SetRootSys()
 {
-   if (!gBuildingROOT)
-      return; // don't mess with user's ROOTSYS.
-
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
 #if !defined(_WIN32)
@@ -704,12 +701,15 @@ void SetRootSys()
       strlcpy(ep, exepath, nche);
 #endif
       char *s;
+
       if ((s = strrchr(ep, '/'))) {
          // $ROOTSYS/bin/rootcling
          int removesubdirs = 2;
-         if (!strncmp(s + 1, "rootcling_stage1", 13))
+         if (!strncmp(s + 1, "rootcling_stage1", 13)) {
             // $ROOTSYS/core/rootcling_stage1/src/rootcling_stage1
             removesubdirs = 4;
+            gBuildingROOT = true;
+         }
          for (int i = 1; s && i < removesubdirs; ++i) {
             *s = 0;
             s = strrchr(ep, '/');
@@ -720,7 +720,9 @@ void SetRootSys()
          return;
       }
 
-      // stage 1.
+      if (!gBuildingROOT)
+         return; // don't mess with user's ROOTSYS.
+
       int ncha = strlen(ep) + 10;
       char *env = new char[ncha];
       snprintf(env, ncha, "ROOTSYS=%s", ep);
