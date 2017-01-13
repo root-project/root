@@ -527,9 +527,6 @@ which the parameter's definition needs to be autoloaded.
 - Store an empty StreamerInfo if the file has no data or data that does not need a StreamerInfo.
 - Fixed the I/O of std::vector<T> where T is a class *and* no dictionary was generated for std::vector<T> *and* sizeof(T)%sizeof(T*) is not zero. 
 
-### TTree
-
-- Allow reading of older version of TTreePerfStats (ROOT-8520)
 
 ### Bugs fixed in this release
 
@@ -551,7 +548,27 @@ which the parameter's definition needs to be autoloaded.
 *   [[ROOT-8475](https://sft.its.cern.ch/jira/browse/ROOT-8475)] - PTR macro defined in mmalloc.h is not undefined
 *   [[ROOT-8483](https://sft.its.cern.ch/jira/browse/ROOT-8483)] - misleading error message from TTreeReaderValue
 
+## Release 6.08/04
+Released on January 13, 2016
+
+### TTree
+
+- Allow reading of older version of TTreePerfStats (ROOT-8520)
+
+### Bugs fixed in this release
+
+*   [[ROOT-7315](https://sft.its.cern.ch/jira/browse/ROOT-7315)] - Tests failing with "pure virtual method called
+*   [[ROOT-8092](https://sft.its.cern.ch/jira/browse/ROOT-8092)] - TGraph::SetPoint deletes fHistogram
+*   [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Silent I/O failure when missing STL container dictionary
+*   [[ROOT-8480](https://sft.its.cern.ch/jira/browse/ROOT-8480)] - CMake: root-config does not get updated
+*   [[ROOT-8490](https://sft.its.cern.ch/jira/browse/ROOT-8490)] - TUnixSystem / TFile::Open() does not handle ~invaliduser/file
+*   [[ROOT-8502](https://sft.its.cern.ch/jira/browse/ROOT-8502)] - TBuffer::ReadStdString(std::string &s) suddenly gone / replaced in 6.08.02
+*   [[ROOT-8510](https://sft.its.cern.ch/jira/browse/ROOT-8510)] - CMake: default config on MacOS fails due to fortran
+*   [[ROOT-8520](https://sft.its.cern.ch/jira/browse/ROOT-8520)] - TTreePerfStats cannot be read from the file
+*   [[ROOT-8523](https://sft.its.cern.ch/jira/browse/ROOT-8523)] - Failure to catch exceptions in interactive C++ on linux.
+
+
 ## HEAD of the v6-08-00-patches branch
 
-Changes will be part of the future 6.08/04
+Changes will be part of the future 6.08/06
 
