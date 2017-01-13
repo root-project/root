@@ -174,12 +174,30 @@ namespace ROOT {
          template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
 
          /**
+          *         Method to send a message for p2p communication
+          *              \param vars array of any selializable objects
+          *              \param count number of elements in array \p vars
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
+         template<class Type> void Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const;
+
+         /**
           *         Method to receive a message for p2p communication
           *              \param var any selializable object reference to receive the message
           *              \param source id with the origin(Rank/Process) of the message
           *              \param tag id of the message
           */
          template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
+
+         /**
+          *         Method to receive a message for p2p communication
+          *              \param vars array of any selializable objects
+          *              \param count number of elements in array \p vars
+          *              \param source id with the origin(Rank/Process) of the message
+          *              \param tag id of the message
+          */
+         template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
 
          /**
           *            Starts a standard-mode, nonblocking send.
@@ -234,6 +252,16 @@ namespace ROOT {
           */
          template<class Type> TGrequest IBcast(Type &var, Int_t root) const;
 
+         /**
+          *          Sends data from one task to all tasks in a group.
+          *              \param in_vars any selializable object vector reference to send the message
+          *              \param incount Number of elements in receive in \p in_vars
+          *              \param out_var any selializable object vector reference to receive the message
+          *              \param outcount Number of elements in receive in \p out_vars
+          *              \param root id of the main message where message was sent
+          *              \return TGrequest obj
+          */
+         template<class Type> void Scatter(Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
          ClassDef(TCommunicator, 1)
       };
 
@@ -246,6 +274,18 @@ namespace ROOT {
             Send(msg, dest, tag);
          } else {
             MPI_Send((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm);
+         }
+      }
+
+      //______________________________________________________________________________
+      template<class Type> void TCommunicator::Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const
+      {
+         if (std::is_class<Type>::value) {
+            TMpiMessage msg[count];
+            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
+            Send(msg, count, dest, tag);
+         } else {
+            MPI_Send((void *)vars, count, GetDataType<Type>(), dest, tag, fComm);
          }
       }
 
@@ -267,6 +307,24 @@ namespace ROOT {
          }
       }
 
+      //______________________________________________________________________________
+      template<class Type>  void TCommunicator::Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const
+      {
+         if (std::is_class<Type>::value) {
+            TMpiMessage *msg = new TMpiMessage[count];
+            Recv(msg, count, source, tag);
+
+            auto cl = gROOT->GetClass(typeid(*vars));
+            for (auto i = 0; i < count; i++) {
+               auto obj_tmp = (Type *)msg[i].ReadObjectAny(cl);
+               memcpy((void *)&vars[i], (void *)obj_tmp, sizeof(Type));
+            }
+            delete[] msg;
+         } else {
+            //TODO: added status argument to this method
+            MPI_Recv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE);
+         }
+      }
 
       //______________________________________________________________________________
       template<class Type> TRequest TCommunicator::ISend(const Type &var, Int_t dest, Int_t tag)
@@ -460,14 +518,19 @@ namespace ROOT {
 
       }
 
-      ////////////////////////////////
-      //specialized template methods
+      //////////////////////////////////////////////
+      //specialized template methods p2p blocking
       //______________________________________________________________________________
       template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t dest, Int_t tag) const;
       //______________________________________________________________________________
+      template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag) const;
+      //______________________________________________________________________________
       template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const;
       //______________________________________________________________________________
-      template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
+      template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const;
+
+      //////////////////////////////////////////////
+      //specialized template methods p2p nonblocking
       //______________________________________________________________________________
       template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
@@ -476,6 +539,11 @@ namespace ROOT {
       template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
       template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
+
+      //////////////////////////////////////////////
+      //specialized template methods p2p collective
+      //______________________________________________________________________________
+      template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
       //______________________________________________________________________________
       template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
 

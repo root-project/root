@@ -38,6 +38,12 @@ template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t d
 }
 
 //______________________________________________________________________________
+template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag) const
+{
+   for (auto i = 0; i < count; i++) Send(vars[i], dest, tag);
+}
+
+//______________________________________________________________________________
 template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const
 {
    Int_t isize = 0;
@@ -66,6 +72,12 @@ template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source,
    var.SetBuffer((void *)buffer, size, kFALSE);
    var.SetReadMode();
    var.Reset();
+}
+
+//______________________________________________________________________________
+template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const
+{
+   for (auto i = 0; i < count; i++) Recv(vars[i], source, tag);
 }
 
 //______________________________________________________________________________

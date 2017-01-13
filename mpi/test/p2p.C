@@ -1,11 +1,9 @@
 #include<Mpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
-void p2p()
-{
-   TEnvironment env;          //environment to start communication system
-   TCommunicator comm;   //Communicator to send/recv messages
 
+void p2p_scalar(TCommunicator &comm)
+{
    //data to send/recv
    std::map<std::string, std::string> mymap; //std oebjct
    TMatrixD mymat(2, 2);                    //ROOT object
@@ -48,3 +46,38 @@ void p2p()
       assert(mymat == req_mat);
    }
 }
+
+void p2p_array(TCommunicator &comm)
+{
+   auto count = 5;
+   TVectorD vecs[count];
+   Int_t arr[count];
+   if (comm.IsMainProcess()) {
+      for (auto i = 0; i < count; i++) {
+         vecs[i].ResizeTo(1);
+         vecs[i][0] = 1.0;
+	 arr[i]=i;
+      }
+      comm.Send(vecs, count, 1, 1);
+      comm.Send(arr, count, 1, 1);
+   } else {
+      comm.Recv(vecs, count, 0, 1);
+      comm.Recv(arr, count, 0, 1);
+      for (auto i = 0; i < count; i++) {
+         vecs[i].Print();
+         assert(vecs[i][0] == 1.0);
+	 assert(arr[i] == i);
+	 
+      }
+   }
+
+}
+
+void p2p()
+{
+   TEnvironment env;          //environment to start communication system
+   TCommunicator comm;   //Communicator to send/recv messages
+   p2p_scalar(comm);
+   p2p_array(comm);
+}
+
