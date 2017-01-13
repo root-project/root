@@ -718,7 +718,7 @@ void SetRootSys()
       }
       if (gDriverConfig) {
          const char** pRootDir = gDriverConfig->fPRootDir;
-         if (gBuildingROOT && pRootDir && !strcmp(*pRootDir, ep)) {
+         if (gBuildingROOT && pRootDir && strcmp(*pRootDir, ep)) {
             *pRootDir = ep; // leaks...
          } else {
             delete [] ep;
