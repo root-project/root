@@ -281,9 +281,10 @@ namespace ROOT {
       template<class Type> void TCommunicator::Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
-            TMpiMessage msg[count];
+            TMpiMessage *msg = new TMpiMessage[count];
             for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
             Send(msg, count, dest, tag);
+            delete[] msg;
          } else {
             MPI_Send((void *)vars, count, GetDataType<Type>(), dest, tag, fComm);
          }

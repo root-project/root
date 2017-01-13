@@ -49,14 +49,14 @@ void p2p_scalar(TCommunicator &comm)
 
 void p2p_array(TCommunicator &comm)
 {
-   auto count = 5;
+   auto count = 5000;
    TVectorD vecs[count];
    Int_t arr[count];
    if (comm.IsMainProcess()) {
       for (auto i = 0; i < count; i++) {
          vecs[i].ResizeTo(1);
          vecs[i][0] = 1.0;
-	 arr[i]=i;
+         arr[i] = i;
       }
       comm.Send(vecs, count, 1, 1);
       comm.Send(arr, count, 1, 1);
@@ -66,8 +66,8 @@ void p2p_array(TCommunicator &comm)
       for (auto i = 0; i < count; i++) {
          vecs[i].Print();
          assert(vecs[i][0] == 1.0);
-	 assert(arr[i] == i);
-	 
+         assert(arr[i] == i);
+
       }
    }
 

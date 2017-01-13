@@ -40,7 +40,18 @@ template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t d
 //______________________________________________________________________________
 template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag) const
 {
-   for (auto i = 0; i < count; i++) Send(vars[i], dest, tag);
+   std::vector<TMpiMessageInfo>  msgis(count);
+   for (auto i = 0; i < count; i++) {
+      auto buffer = vars[i].Buffer();
+      auto size   = vars[i].BufferSize();
+      TMpiMessageInfo msgi(buffer, size);
+      msgi.SetSource(GetRank());
+      msgi.SetDestination(dest);
+      msgi.SetTag(tag);
+      msgi.SetDataTypeName(vars[i].GetDataTypeName());
+      msgis[i] = msgi;
+   }
+   Send(msgis, dest, tag);
 }
 
 //______________________________________________________________________________
@@ -77,7 +88,21 @@ template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source,
 //______________________________________________________________________________
 template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const
 {
-   for (auto i = 0; i < count; i++) Recv(vars[i], source, tag);
+   std::vector<TMpiMessageInfo>  msgis(count);
+   Recv(msgis, source, tag);
+   //TODO: added error control here
+   //check the tag, if destination is equal etc..
+
+   for (auto i = 0; i < count; i++) {
+      //passing information from TMpiMessageInfo to TMpiMessage
+      auto size = msgis[i].GetBufferSize();
+      Char_t *buffer = new Char_t[size];
+      memcpy(buffer, msgis[i].GetBuffer(), size);
+
+      vars[i].SetBuffer((void *)buffer, size, kFALSE);
+      vars[i].SetReadMode();
+      vars[i].Reset();
+   }
 }
 
 //______________________________________________________________________________
