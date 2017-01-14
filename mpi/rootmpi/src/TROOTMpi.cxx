@@ -3,6 +3,8 @@
 #include<stdlib.h>
 #include<iostream>
 #include<TStringLong.h>
+// #include <TApplication.h>
+// #include<TROOT.h>
 
 using namespace ROOT::Mpi;
 //______________________________________________________________________________
@@ -26,12 +28,12 @@ Int_t TROOTMpi::Launch()
    }
 
    if (TString(cArgv[iArgc - 1]) == "-process_macro") {
-      Int_t tmp_Argc = iArgc - 1;
-      TRint *rootmpi = new TRint("rootmpi", &tmp_Argc, cArgv);
-      rootmpi->ExitOnException();
-      rootmpi->Run();
-      Int_t status = rootmpi->ReturnFromRun();
-//     rootmpi->Terminate(status);
+      Int_t tmp_Argc = iArgc -1;//less macro name
+      TRint *rootmpi = new TRint("rootmpi",&tmp_Argc, cArgv,0,0,kTRUE);
+      Int_t status;
+      auto macroFile=rootmpi->Argv(iArgc - 2);
+      rootmpi->ProcessFile(macroFile,&status);
+//       rootmpi->Terminate(0);
       delete rootmpi;
       return status;
    } else {
@@ -81,7 +83,8 @@ Bool_t TROOTMpi::ProcessArgs(TString *error)
       }
       return Execute();
    } else {
-      TString sRootParams = " -l -q ";//added -l -q by default
+      TString sRootParams = " ";//added -l -q by default
+      
       for (int i = 1; i < iArgc - 1; i++) {
          TString arg = cArgv[i];
          arg.ReplaceAll(" ", "");
@@ -93,9 +96,9 @@ Bool_t TROOTMpi::ProcessArgs(TString *error)
       }
       sMpirunParams += " ";
       sMpirunParams += cArgv[0];
-      sMpirunParams += " \"";
-      sMpirunParams += cArgv[iArgc - 1];
-      sMpirunParams += " \"";
+      sMpirunParams += " ";
+      sMpirunParams += cArgv[iArgc - 1];//macro file is the last
+      sMpirunParams += " ";
       sMpirunParams += sRootParams;
       sMpirunParams += " -process_macro ";
       return Execute();
@@ -104,15 +107,17 @@ Bool_t TROOTMpi::ProcessArgs(TString *error)
 }
 
 //______________________________________________________________________________
-Bool_t TROOTMpi::Compile()
+Int_t TROOTMpi::Compile()
 {
    return gSystem->Exec(TStringLong(sCompiler + " " + sCompilerParams).Data());
 }
 
 //______________________________________________________________________________
-Bool_t TROOTMpi::Execute()
+Int_t TROOTMpi::Execute()
 {
-   return gSystem->Exec(TStringLong(sMpirun + " " + sMpirunParams).Data());
+//    std::cout<<"RUNNING = "<<TStringLong(sMpirun + " " + sMpirunParams).Data()<<std::endl;
+//    std::cout<<"STATUS = "<<status<<std::endl;
+  return gSystem->Exec(TStringLong(sMpirun + " " + sMpirunParams).Data());
 }
 
 void TROOTMpi::InitHelp()

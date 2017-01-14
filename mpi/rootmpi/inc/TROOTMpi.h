@@ -26,8 +26,8 @@ namespace ROOT {
 
       protected:
          Bool_t ProcessArgs(TString *error = 0);
-         Bool_t Execute();
-         Bool_t Compile();
+         Int_t Execute();
+         Int_t Compile();
          void InitHelp();
       public:
          TROOTMpi(int argc, char **argv, TString mpirun = "mpirun");
