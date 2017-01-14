@@ -4423,7 +4423,7 @@ Int_t TTree::Fill()
    }
    #ifdef R__USE_IMT
    if (imt_helper) {
-      imt_helper->wait();
+      imt_helper->Wait();
       fIMTFlush = false;
       const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
       const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
