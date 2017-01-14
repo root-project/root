@@ -4385,13 +4385,12 @@ Int_t TTree::Fill()
       fBranchRef->Clear();
    }
 
-   std::unique_ptr<TBranchIMTHelper> imt_helper;
+   TBranchIMTHelper imt_helper;
    #ifdef R__USE_IMT
    if (fIMTEnabled) {
       fIMTFlush = true;
       fIMTZipBytes.store(0);
       fIMTTotBytes.store(0);
-      imt_helper.reset(new TBranchIMTHelper());
    }
    #endif
 
@@ -4401,7 +4400,7 @@ Int_t TTree::Fill()
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      Int_t nwrite = branch->FillImpl(imt_helper.get());
+      Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imt_helper : nullptr);
       if (nwrite < 0)  {
          if (nerror < 2) {
             Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
@@ -4422,13 +4421,13 @@ Int_t TTree::Fill()
       }
    }
    #ifdef R__USE_IMT
-   if (imt_helper) {
-      imt_helper->Wait();
+   if (fIMTFlush) {
+      imt_helper.Wait();
       fIMTFlush = false;
       const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
       const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
-      nbytes += imt_helper->GetNbytes();
-      nerror += imt_helper->GetNerrors();
+      nbytes += imt_helper.GetNbytes();
+      nerror += imt_helper.GetNerrors();
    }
    #endif
 
