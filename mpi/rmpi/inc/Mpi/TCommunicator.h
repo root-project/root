@@ -258,6 +258,19 @@ namespace ROOT {
           *              \return TGrequest obj
           */
          template<class Type> void Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
+
+         /**
+          *          Each process (root process included) sends the contents of its send buffer to the root process.
+         *          The root process receives the messages and stores them in rank order.
+         *          The outcome is as if each of the n processes in the group (including the root process)
+          *              \param in_vars any selializable object vector reference to send the message
+          *              \param incount Number of elements in receive in \p in_vars
+          *              \param out_var any selializable object vector reference to receive the message
+          *              \param outcount Number of elements in receive in \p out_vars
+          *              \param root id of the main message where message was sent
+          *              \return TGrequest obj
+          */
+         template<class Type> void Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
          ClassDef(TCommunicator, 1)
       };
 
@@ -533,6 +546,30 @@ namespace ROOT {
             Recv(out_vars, outcount, root, MPI_TAG_UB);
          }
       }
+
+      //______________________________________________________________________________
+      template<class Type> void TCommunicator::Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const
+      {
+         if (GetRank() == root) {
+            //TODO: check special cases to improved this error handling
+            if ((GetSize()*incount) % outcount   != 0) {
+               Fatal("TCommunicator::Gather", "Number of elements sent can't be fitted in gather message");
+               Abort(ERR_COUNT);
+            }
+            for (auto i = 0 ; i < GetSize(); i++) {
+               if (i == root) continue;
+               auto stride = incount * i;
+               Recv(&out_vars[stride], incount, i, MPI_TAG_UB);
+            }
+            //NOTE: copy memory with memmove because memcpy() with overlapping areas produces undefined behavior
+            //In scatter is not same because out_vars have not overlapping, I mean I just need to fill the entire vector not a region
+            auto stride = incount * root;
+            memmove((void *)&out_vars[stride], (void *)in_vars, sizeof(Type)*incount);
+         } else {
+            Send(in_vars, incount, root, MPI_TAG_UB);
+         }
+      }
+
 
       //////////////////////////////////////////////
       //specialized template methods p2p blocking

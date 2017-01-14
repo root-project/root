@@ -4,22 +4,17 @@
 using namespace ROOT::Mpi;
 
 
-void scatter()
+void scatter_test(Int_t root = 0, Int_t count = 2)
 {
-   TEnvironment env;
-
-   if (gComm->GetSize() == 1) return; //needed at least 2 process
-
    auto rank = gComm->GetRank();
    auto size = gComm->GetSize();
-   auto count = 2;
-   auto root = 0;
 
    /////////////////////////
    //testing custom object//
    /////////////////////////
-   TVectorD send_vec[size * count];
+   TVectorD *send_vec;
    if (root == rank) {
+      send_vec = new TVectorD[size * count];
       for (auto i = 0; i < gComm->GetSize() * count; i++) {
          send_vec[i].ResizeTo(1);
          send_vec[i][0] = i;
@@ -39,6 +34,21 @@ void scatter()
    }
    std::cout << "--------- Rank = " << rank << std::endl;
    std::cout.flush();
+
+   if (rank == root) delete[] send_vec;
+}
+
+void scatter(Bool_t stressTest = kTRUE)
+{
+   TEnvironment env;
+   if (gComm->GetSize() == 1) return; //needed at least 2 process
+   if (!stressTest) scatter_test();
+   else {
+      //stressTest
+      for (auto i = 0; i < gComm->GetSize(); i++)
+         for (auto j = 1; j < gComm->GetSize() + 1; j++) //count can not be zero
+            scatter_test(i, j);
+   }
 }
 
 
