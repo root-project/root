@@ -24,7 +24,7 @@ void p2p_scalar(TCommunicator &comm, Int_t size = 10)
       std::cout << "Sending map = " << mymap["key"] << std::endl;
       comm.Send(mymap, 1, 0);
       std::cout << "Sending mat = ";
-      mymat.Print();
+//       mymat.Print();
       comm.Send(mymat, 1, 0);
    } else if (comm.GetRank() == 1) {
       comm.Recv(a, 0, 0);
@@ -33,8 +33,8 @@ void p2p_scalar(TCommunicator &comm, Int_t size = 10)
       std::cout << "Received map = " << mymap["key"] << std::endl;
       comm.Recv(mymat, 0, 0);
       std::cout << "Received mat = ";
-      mymat.Print();
-      TMatrixD req_mat(2, 2); //required mat
+//       mymat.Print();
+      TMatrixD req_mat(size, size); //required mat
       req_mat[0][0] = 0.1;
       req_mat[0][1] = 0.2;
       req_mat[1][0] = 0.3;
@@ -63,7 +63,7 @@ void p2p_array(TCommunicator &comm, Int_t count = 500)
       comm.Recv(vecs, count, 0, 1);
       comm.Recv(arr, count, 0, 1);
       for (auto i = 0; i < count; i++) {
-         vecs[i].Print();
+//          vecs[i].Print();
          assert(vecs[i][0] == 1.0);
          assert(arr[i] == i);
 
