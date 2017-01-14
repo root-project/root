@@ -64,26 +64,30 @@ class TTreeCloner;
 ///
 class TBranchIMTHelper {
 public:
-    template<typename FN> void run(const FN &lambda) {
+   template<typename FN> void run(const FN &lambda) {
 #ifdef R__USE_IMT
-        if (!fGroup) {fGroup.reset(new tbb::task_group());}
-        fGroup->run([=](){auto nbytes = lambda(); if (nbytes >= 0) {fBytes += nbytes;} else {++fNerrors;} });
+      if (!fGroup) {fGroup.reset(new tbb::task_group());}
+      fGroup->run([=](){auto nbytes = lambda(); if (nbytes >= 0) {fBytes += nbytes;} else {++fNerrors;} });
+#else
+      (void)lambda;
 #endif
-    }
+   }
 
-    void wait() {
+   void Wait() {
 #ifdef R__USE_IMT
-        if (fGroup) {fGroup->wait();}
+      if (fGroup) fGroup->wait();
 #endif
-    }
+   }
 
-    Long64_t GetNbytes() {return fBytes;}
-    Long64_t GetNerrors() {return fNerrors;}
+   Long64_t GetNbytes() {return fBytes;}
+   Long64_t GetNerrors() {return fNerrors;}
 
 private:
-    std::atomic<Long64_t> fBytes{0};   // Total number of bytes written by this helper.
-    std::atomic<Int_t>    fNerrors{0}; // Total error count of all tasks done by this helper.
-    std::unique_ptr<tbb::task_group> fGroup;
+   std::atomic<Long64_t> fBytes{0};   // Total number of bytes written by this helper.
+   std::atomic<Int_t>    fNerrors{0}; // Total error count of all tasks done by this helper.
+#ifdef R__USE_IMT
+   std::unique_ptr<tbb::task_group> fGroup;
+#endif
 };
 
 class TBranch : public TNamed , public TAttFill {

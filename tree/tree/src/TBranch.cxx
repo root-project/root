@@ -807,7 +807,7 @@ Int_t TBranch::FillImpl(TBranchIMTHelper *imt_helper)
          return nbytes;
       }
       Int_t nout = WriteBasketImpl(basket,fWriteBasket, imt_helper);
-      if (nout < 0) {Error("TBranch::Fill", "Failed to write out basket.\n");}
+      if (nout < 0) Error("TBranch::Fill", "Failed to write out basket.\n");
       return (nout >= 0) ? nbytes : -1;
    }
    return nbytes;
@@ -2596,9 +2596,12 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *i
       fEntryOffsetLen = 2*nevbuf; // assume some fluctuations.
    }
 
+   // Note: captures `basket`, `where`, and `this` by value; modifies the TBranch and basket,
+   // as we make a copy of the pointer.  We cannot capture `basket` by reference as the pointer
+   // itself might be modified after `WriteBasketImpl` exits.
    auto do_updates = [=]() {
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
-      if (nout < 0) {Error("TBranch::WriteBasketImpl", "basket's WriteBuffer failed.\n");}
+      if (nout < 0) Error("TBranch::WriteBasketImpl", "basket's WriteBuffer failed.\n");
       fBasketBytes[where]  = basket->GetNbytes();
       fBasketSeek[where]   = basket->GetSeekKey();
       Int_t addbytes = basket->GetObjlen() + basket->GetKeylen();
