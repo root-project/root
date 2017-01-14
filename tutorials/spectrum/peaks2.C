@@ -107,8 +107,10 @@ void findPeak2() {
 
    s->Print();
    printf("Gener=%d, Found=%d, Good=%d, Ghost=%d\n",npeaks,nfound,ngood,nghost);
-   printf("\nDouble click in the bottom right corner of the pad to continue\n");
-   c1->WaitPrimitive();
+   if (!gROOT->IsBatch()) {
+      printf("\nDouble click in the bottom right corner of the pad to continue\n");
+      c1->WaitPrimitive();
+   }
 }
 void peaks2(Int_t maxpeaks=50) {
    s = new TSpectrum2(2*maxpeaks);
