@@ -2,11 +2,11 @@
 #include <cassert>
 using namespace ROOT::Mpi;
 
-void p2p_scalar(TCommunicator &comm)
+void p2p_scalar(TCommunicator &comm, Int_t size = 10)
 {
    //data to send/recv
    std::map<std::string, std::string> mymap; //std oebjct
-   TMatrixD mymat(2, 2);                    //ROOT object
+   TMatrixD mymat(size, size);                    //ROOT object
    Double_t a;                              //default datatype
 
    if (comm.IsMainProcess()) {
@@ -26,7 +26,7 @@ void p2p_scalar(TCommunicator &comm)
       std::cout << "Sending mat = ";
       mymat.Print();
       comm.Send(mymat, 1, 0);
-   } else {
+   } else if (comm.GetRank() == 1) {
       comm.Recv(a, 0, 0);
       std::cout << "Recieved scalar = " << a << std::endl;
       comm.Recv(mymap, 0, 0);
@@ -47,20 +47,19 @@ void p2p_scalar(TCommunicator &comm)
    }
 }
 
-void p2p_array(TCommunicator &comm)
+void p2p_array(TCommunicator &comm, Int_t count = 500)
 {
-   auto count = 5000;
    TVectorD vecs[count];
    Int_t arr[count];
    if (comm.IsMainProcess()) {
       for (auto i = 0; i < count; i++) {
-         vecs[i].ResizeTo(1);
+         vecs[i].ResizeTo(count);
          vecs[i][0] = 1.0;
          arr[i] = i;
       }
       comm.Send(vecs, count, 1, 1);
       comm.Send(arr, count, 1, 1);
-   } else {
+   } else if (comm.GetRank() == 1) {
       comm.Recv(vecs, count, 0, 1);
       comm.Recv(arr, count, 0, 1);
       for (auto i = 0; i < count; i++) {
@@ -70,14 +69,20 @@ void p2p_array(TCommunicator &comm)
 
       }
    }
-
 }
 
-void p2p()
+void p2p(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;          //environment to start communication system
    TCommunicator comm;   //Communicator to send/recv messages
-   p2p_scalar(comm);
-   p2p_array(comm);
+   if (!stressTest) {
+      p2p_scalar(comm);
+      p2p_array(comm);
+   } else {
+      for (auto i = 0; i < comm.GetSize() * 2; i++) {
+         p2p_scalar(comm, (i + 1) * 100);
+         p2p_array(comm, (i + 1) * 100);
+      }
+   }
 }
 

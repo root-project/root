@@ -5,21 +5,17 @@
 using namespace ROOT::Mpi;
 
 
-void bcast()
+void bcast_test(Int_t root = 0, Int_t size = 2)
 {
-   TEnvironment env;
-
-   if (gComm->GetSize() == 1) return; //needed at least 2 process
 
    auto rank = gComm->GetRank();
-   auto root = gComm->GetMainProcess();
 
    //////////////////////////
    //testing TMpiMessage  //
    /////////////////////////
    TMpiMessage msg;
-   if (gComm->IsMainProcess()) {
-      TMatrixD mymat(2, 2);                    //ROOT object
+   if (rank == root) {
+      TMatrixD mymat(size, size);                    //ROOT object
       mymat[0][0] = 0.1;
       mymat[0][1] = 0.2;
       mymat[1][0] = 0.3;
@@ -33,7 +29,7 @@ void bcast()
    std::cout << "Rank = " << rank << std::endl;
    mat->Print();
    std::cout.flush();
-   TMatrixD req_mat(2, 2);
+   TMatrixD req_mat(size, size);
    req_mat[0][0] = 0.1;
    req_mat[0][1] = 0.2;
    req_mat[1][0] = 0.3;
@@ -45,16 +41,32 @@ void bcast()
    //testing custom object//
    /////////////////////////
    Particle<Int_t> p;
-   if (gComm->IsMainProcess()) {
+   if (rank == root) {
       p.Set(1, 2);//if root process fill the particle
    }
    gComm->Bcast(p, root); //testing custom object
    p.Print();
 
    //assertions
-   assert(*mat == req_mat);
+   assert((*mat)[0][0] == req_mat[0][0]);
+   assert((*mat)[0][1] == req_mat[0][1]);
+   assert((*mat)[1][0] == req_mat[1][0]);
+   assert((*mat)[1][1] == req_mat[1][1]);
    assert(p.GetX() == 1);
    assert(p.GetY() == 2);
 }
 
+void bcast(Bool_t stressTest = kTRUE)
+{
+   TEnvironment env;
+   if (gComm->GetSize() == 1) return; //needed at least 2 process
+   bcast_test();
+   if (!stressTest) bcast_test();
+   else {
+      //stressTest
+      for (auto i = 0; i < gComm->GetSize(); i++)
+         for (auto j = 1; j < gComm->GetSize() + 1; j++) //count can not be zero
+            bcast_test(i, j * 100);
+   }
+}
 
