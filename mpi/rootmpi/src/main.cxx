@@ -1,8 +1,9 @@
-#include<TROOTMpi.h>
+#include<TRootMpi.h>
+#include<iostream>
 
-int main(int argc, char *argv[])
+Int_t main(Int_t argc, Char_t *argv[])
 {
-   ROOT::Mpi::TROOTMpi rootmpi(argc, argv);
+   ROOT::Mpi::TRootMpi rootmpi(argc, argv);
    return rootmpi.Launch();
 }
 
