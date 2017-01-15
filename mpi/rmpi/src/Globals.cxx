@@ -77,8 +77,8 @@ namespace ROOT {
       const Int_t WIN_DISP_UNIT = MPI_WIN_DISP_UNIT;
 
 // assorted constants
-      const void  *BOTTOM = MPI::BOTTOM;
-      const void  *IN_PLACE = MPI::IN_PLACE;
+      const void  *BOTTOM = MPI_BOTTOM;
+      const void  *IN_PLACE = MPI_IN_PLACE;
       const Int_t PROC_NULL = MPI_PROC_NULL;
       const Int_t ANY_SOURCE = MPI_ANY_SOURCE;
       const Int_t ROOT_RANK = MPI_ROOT;
@@ -104,9 +104,9 @@ namespace ROOT {
       const Int_t MODE_APPEND = MPI_MODE_APPEND;
       const Int_t MODE_SEQUENTIAL = MPI_MODE_SEQUENTIAL;
       const Int_t DISPLACEMENT_CURRENT = MPI_DISPLACEMENT_CURRENT;
-      const Int_t SEEK_SET = ::SEEK_SET;
-      const Int_t SEEK_CUR = ::SEEK_CUR;
-      const Int_t SEEK_END = ::SEEK_END;
+      const Int_t SEEK_SET = MPI_SEEK_SET;
+      const Int_t SEEK_CUR = MPI_SEEK_CUR;
+      const Int_t SEEK_END = MPI_SEEK_END;
       const Int_t MAX_DATAREP_STRING = MPI_MAX_DATAREP_STRING;
 
 // thread constants

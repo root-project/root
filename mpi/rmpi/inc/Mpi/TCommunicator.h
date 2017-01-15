@@ -517,7 +517,6 @@ namespace ROOT {
                   TGrequest _req = imsg->fCommunicator->IBcast<TMpiMessage>(msg, imsg->fRoot);
                   _req.Cancel();
                }
-               std::cout << "Cancelled!\n";
                return MPI_SUCCESS;
             };
             return TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);

@@ -20,6 +20,22 @@
 
 #include<mpi.h>
 
+#if defined(SEEK_SET) || defined(SEEK_CUR) || defined(SEEK_END)
+static const int rmpi_stdio_seek_set = SEEK_SET;
+static const int rmpi_stdio_seek_cur = SEEK_CUR;
+static const int rmpi_stdio_seek_end = SEEK_END;
+#undef SEEK_SET
+#undef SEEK_CUR
+#undef SEEK_END
+#define RMPI_SEEK
+#endif
+
+#if defined(RMPI_SEEK)
+static const int SEEK_SET = rmpi_stdio_seek_set;
+static const int SEEK_CUR = rmpi_stdio_seek_cur;
+static const int SEEK_END = rmpi_stdio_seek_end;
+#undef RMPI_SEEK
+#endif
 
 namespace ROOT {
    namespace Mpi {
@@ -168,6 +184,5 @@ namespace ROOT {
 
    }
 }
-
 
 #endif

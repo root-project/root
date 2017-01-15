@@ -76,11 +76,6 @@ namespace ROOT {
 
          virtual Bool_t GetStatus() const;
 
-         operator MPI::Request() const
-         {
-            return fRequest;
-         }
-
          ClassDef(TRequest, 1)
       };
 
