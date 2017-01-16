@@ -71,6 +71,7 @@ const char* s3_seckey_opt = "s3seckey=";
 const char* s3_acckey_opt = "s3acckey=";
 const char* s3_region_opt = "s3region=";
 const char* s3_token_opt = "s3token=";
+const char* s3_alternate_opt = "s3alternate=";
 const char* open_mode_read = "READ";
 const char* open_mode_create = "CREATE";
 const char* open_mode_new = "NEW";
@@ -90,6 +91,15 @@ bool isno(const char *str)
 
    return false;
 
+}
+
+bool strToBool(const char *str, bool defvalue) {
+    if(!str) return defvalue;
+
+    if(strcmp(str, "n") == 0 || strcmp(str, "no") == 0  || strcmp(str, "0") == 0 || strcmp(str, "false") == 0) return false;
+    if(strcmp(str, "y") == 0 || strcmp(str, "yes") == 0 || strcmp(str, "1") == 0 || strcmp(str, "true") == 0)  return true;
+
+    return defvalue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,6 +331,20 @@ static void awsToken(...) {
    Warning("awsToken", "Unable to set AWS token, not supported by this version of davix");
 }
 
+// Identical SFINAE trick as above for setAwsAlternate
+template<typename TRequestParams = Davix::RequestParams>
+static auto awsAlternate(TRequestParams *parameters, bool option)
+  -> decltype(parameters->setAwsAlternate(option), void())
+{
+   if (gDebug > 1) Info("awsAlternate", "Setting S3 path-based bucket option (s3alternate)");
+   parameters->setAwsAlternate(option);
+}
+
+template<typename TRequestParams = Davix::RequestParams>
+static void awsAlternate(...) {
+   Warning("awsAlternate", "Unable to set AWS path-based bucket option (s3alternate), not supported by this version of davix");
+}
+
 void TDavixFileInternal::setAwsRegion(const std::string & region) {
    if(!region.empty()) {
       awsRegion(davixParam, region.c_str());
@@ -332,6 +356,11 @@ void TDavixFileInternal::setAwsToken(const std::string & token) {
       awsToken(davixParam, token.c_str());
    }
 }
+
+void TDavixFileInternal::setAwsAlternate(const bool & option) {
+   awsAlternate(davixParam, option);
+}
+
 
 void TDavixFileInternal::setS3Auth(const std::string &secret, const std::string &access,
                                    const std::string &region, const std::string &token)
@@ -382,6 +411,10 @@ void TDavixFileInternal::parseConfig()
       if( (env_var = gEnv->GetValue("Davix.S3.Token", getenv("S3_TOKEN"))) != NULL) {
          setAwsToken(env_var);
       }
+      // need to set aws alternate?
+      if( (env_var = gEnv->GetValue("Davix.S3.Alternate", getenv("S3_ALTERNATE"))) != NULL) {
+         setAwsAlternate(strToBool(env_var, false));
+      }
    }
 
    env_var = gEnv->GetValue("Davix.GSI.GridMode", (const char *)"y");
@@ -428,6 +461,10 @@ void TDavixFileInternal::parseParams(Option_t *option)
       // s3 sts token
       if (strncasecmp(it->c_str(), s3_token_opt, strlen(s3_token_opt)) == 0) {
          s3token = std::string(it->c_str() + strlen(s3_token_opt));
+      }
+      // s3 alternate option
+      if (strncasecmp(it->c_str(), s3_alternate_opt, strlen(s3_alternate_opt)) == 0) {
+         setAwsAlternate(strToBool(it->c_str() + strlen(s3_alternate_opt), false));
       }
       // open mods
       oflags = configure_open_flag(*it, oflags);
