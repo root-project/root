@@ -434,7 +434,7 @@ void TRatioPlot::SetupPads() {
    }
 
    if (!gPad) {
-      Error("SetupPads", "There is no active pad");
+      Error("SetupPads", "need to create a canvas first");
       return;
    }
 
@@ -619,6 +619,11 @@ void TRatioPlot::Draw(Option_t *option)
       fHideLabelMode = TRatioPlot::HideLabelMode::kNoHide;
    } else {
       fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; // <- default
+   }
+
+   if (!gPad) {
+      Error("Draw", "need to create a canvas first");
+      return;
    }
 
    TVirtualPad *padsav = gPad;
