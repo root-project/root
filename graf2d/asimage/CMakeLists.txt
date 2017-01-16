@@ -15,12 +15,6 @@ ROOT_GENERATE_DICTIONARY(G__ASImage TASImage.h TASImagePlugin.h TASPluginGS.h MO
 ROOT_LINKER_LIBRARY(ASImage TASImage.cxx TASPluginGS.cxx  G__ASImage.cxx
                     LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES}
                     ${ZLIB_LIBRARIES} DEPENDENCIES Graf)
-if(builtin_afterimage)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(ASImage AFTERIMAGE)
-endif()
-if(builtin_freetype)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(ASImage FREETYPE)
-endif()
 
 ROOT_GENERATE_DICTIONARY(G__ASImageGui TASPaletteEditor.h MODULE ASImageGui LINKDEF LinkDefGui.h OPTIONS "-writeEmptyRootPCM")
 

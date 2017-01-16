@@ -8,7 +8,3 @@ if(ssl)
 endif()
 
 ROOT_LINKER_LIBRARY(GlobusAuth *.cxx  LIBRARIES Core ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES}  ${CMAKE_DL_LIBS} DEPENDENCIES RootAuth Net)
-
-if(builtin_openssl)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(GlobusAuth OPENSSL)
-endif()

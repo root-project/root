@@ -30,21 +30,4 @@ else()
                          LIBRARIES ${SYSLIBS})
 endif()
 
-if(builtin_xrootd)
-  if(NOT TARGET XROOTDLIBS)
-    add_custom_command(OUTPUT ${XROOTD_LIBRARIES} DEPENDS XROOTD)
-    add_custom_target(XROOTDLIBS DEPENDS ${XROOTD_LIBRARIES})
-  endif()
-  add_dependencies(XrdProofd XROOTDLIBS)
-  if (NOT XROOTD_NOMAIN)
-     add_dependencies(xproofd XROOTDLIBS)
-  endif ()
-  add_dependencies(proofd XROOTDLIBS)
-endif()
-
-if(builtin_openssl)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(proofd OPENSSL)
-endif()
-
-
 ROOT_INSTALL_HEADERS(OPTIONS REGEX inc/X EXCLUDE)
