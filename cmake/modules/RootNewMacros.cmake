@@ -1014,17 +1014,6 @@ function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
 endfunction()
 
 #----------------------------------------------------------------------------
-# ROOT_ADD_BUILTIN_DEPENDENCIES(target EXTERNAL)
-#----------------------------------------------------------------------------
-macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
-  add_custom_command(OUTPUT ${${EXTERNAL}_LIBRARIES} DEPENDS ${EXTERNAL})
-  if(NOT TARGET ${EXTERNAL}LIBS)
-    add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
-  endif()
-  add_dependencies(${target} ${EXTERNAL}LIBS)
-endmacro()
-
-#----------------------------------------------------------------------------
 # ROOT_ADD_CXX_FLAG(var flag)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_CXX_FLAG var flag)

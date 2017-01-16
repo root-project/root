@@ -32,10 +32,6 @@ ROOT_GENERATE_DICTIONARY(G__Core
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
 
-if(builtin_pcre)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(Base PCRE)
-endif()
-
 ROOT_INSTALL_HEADERS()
 
 #---Extra options-----------------------------------------------------------------------

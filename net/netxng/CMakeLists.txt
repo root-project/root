@@ -12,7 +12,3 @@ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-shadow)
 ROOT_LINKER_LIBRARY(NetxNG *.cxx G__NetxNG.cxx LIBRARIES ${XROOTD_LIBRARIES} DEPENDENCIES Net RIO Thread)
 
 ROOT_INSTALL_HEADERS()
-
-if(builtin_xrootd)
-  add_dependencies(NetxNG XROOTD)
-endif()

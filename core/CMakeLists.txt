@@ -115,11 +115,5 @@ ROOT_LINKER_LIBRARY(Core
 if(cling)
   add_dependencies(Core CLING)
 endif()
-if(builtin_pcre)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(Core PCRE)
-endif()
-if(builtin_lzma)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)
-endif()
 
 #----------------------------------------------------------------------------------------
