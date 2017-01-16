@@ -46,7 +46,6 @@ namespace ROOT {
        clang::Sema::ContextAndScopeRAII fPushedDCAndS;
 
        SemaParsingInitForAutoVarsRAII fSemaParsingInitForAutoVarsRAII;
-       clang::EnterExpressionEvaluationContext fExprEvalCtx;
 
        ParsingStateRAII(clang::Parser& parser, clang::Sema& sema):
           fCleanupRAII(sema.getPreprocessor()),
@@ -55,8 +54,7 @@ namespace ROOT {
           fSemaInfoRAII(sema),
           fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
                         sema.TUScope),
-          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars),
-          fExprEvalCtx(sema, clang::Sema::Unevaluated)
+          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
        {
           // After we have saved the token reset the current one to something which
           // is safe (semi colon usually means empty decl)
