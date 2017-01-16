@@ -164,15 +164,18 @@ get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 
 
-string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS} ${CORE_OS_DICT_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
 if(cxxmodules)
   # rootcling uses our internal version of clang. Passing the modules flags here
   # would allow rootcling to find module files built by the external compiler
   # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
   # different clang version (even different commit revision) as the modules files
   # are not guaranteed to be compatible among clang revisions.
-  string(REPLACE "${ROOT_CXXMODULES_FLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
+  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
 endif(cxxmodules)
+string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
+set(CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE} ${CORE_OS_DICT_CXX_FLAGS}")
+
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt
