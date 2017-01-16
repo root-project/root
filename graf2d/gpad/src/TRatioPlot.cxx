@@ -573,7 +573,10 @@ Float_t TRatioPlot::GetSeparationMargin() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draws the ratio plot to the currently active pad. Takes the following options
+/// Draws the ratio plot to the currently active pad. Therefore it requires that
+/// a TCanvas has been created first.
+///
+/// It takes the following options
 ///
 /// | Option     | Description                                                  |
 /// | ---------- | ------------------------------------------------------------ |
