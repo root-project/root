@@ -66,6 +66,9 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 
 #include "TSystem.h"
 
+// for cpu affinity
+#include <sched.h>
+
 #include <chrono>
 #include <fstream>
 #include <ctime>
@@ -228,7 +231,23 @@ void RooRealMPFE::initialize()
 #endif // _WIN32
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the cpu affinity of the server process to a specific cpu.
 
+void setCpuAffinity(int cpu) {
+  if (_state == Server) {
+    cpu_set_t mask;
+    // zero all bits in mask
+    CPU_ZERO(&mask);
+    // set correct bit
+    CPU_SET(cpu, &mask);
+    /* sched_setaffinity returns 0 in success */
+
+    if( sched_setaffinity(0, sizeof(mask), &mask) == -1 ) {
+      std::cout << "WARNING: Could not set CPU Affinity, continuing...\n" << std::endl;
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Server loop of remote processes. This function will return

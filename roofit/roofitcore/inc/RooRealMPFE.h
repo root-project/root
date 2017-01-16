@@ -88,6 +88,8 @@ public:
 
   static RooMPSentinel _sentinel ;
 
+  void setCpuAffinity(int cpu);
+
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function 
 };
 

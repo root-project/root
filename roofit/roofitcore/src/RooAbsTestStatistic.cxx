@@ -542,7 +542,7 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 /// Initialize multi-processor calculation mode. Create component test statistics in separate
 /// processed that are connected to this process through a RooAbsRealMPFE front-end class.
 
-void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
+void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName, bool cpu_affinity)
 {
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
@@ -561,6 +561,10 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     _mpfeArray[i]->initialize();
     if (i > 0) {
       _mpfeArray[i]->followAsSlave(*_mpfeArray[0]);
+    }
+
+    if (cpu_affinity) {
+      _mpfeArray[i]->setCpuAffinity(i);
     }
   }
   _mpfeArray[_nCPU - 1]->addOwnedComponents(*gof);

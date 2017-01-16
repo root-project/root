@@ -122,7 +122,7 @@ protected:
 
   Bool_t initialize() ;
   void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
-  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;
+  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName, bool cpu_affinity = true) ;
 
   mutable Bool_t _init ;          //! Is object initialized  
   GOFOpMode   _gofOpMode ;        // Operation mode of test statistic instance 
