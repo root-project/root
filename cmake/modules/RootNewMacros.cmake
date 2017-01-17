@@ -457,10 +457,11 @@ endfunction()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
-#                        [NOINSTALL] LIBRARIES library1 library2 ...)
+#                        [NOINSTALL] LIBRARIES library1 library2 ...
+#                        BUILTINS dep1 dep2)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES;BUILTINS"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   if(NOT ARG_TYPE)
     set(ARG_TYPE SHARED)
@@ -538,6 +539,13 @@ function(ROOT_LINKER_LIBRARY library)
   # creates extra module variants, and not useful because we don't use these
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+  if(ARG_BUILTINS)
+    foreach(arg1 ${ARG_BUILTINS})
+      if(${arg1}_TARGET)
+        add_dependencies(${library} ${${arg1}_TARGET})
+      endif()
+    endforeach()
+  endif()
 
   #----Installation details-------------------------------------------------------
   if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
@@ -561,10 +569,11 @@ function(ROOT_LINKER_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ...)
+#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ... BUILTINS dep1 dep2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_OBJECT_LIBRARY library)
-  ROOT_GET_SOURCES(lib_srcs src ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
+  ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   include_directories(AFTER ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} OBJECT ${lib_srcs})
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
@@ -578,6 +587,14 @@ function(ROOT_OBJECT_LIBRARY library)
   # creates extra module variants, and not useful because we don't use these
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+
+  if(ARG_BUILTINS)
+    foreach(arg1 ${ARG_BUILTINS})
+      if(${arg1}_TARGET)
+        add_dependencies(${library} ${${arg1}_TARGET})
+      endif()
+    endforeach()
+  endif()
 
   #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
@@ -724,10 +741,10 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_EXECUTABLE( <name> source1 source2 ... LIBRARIES library1 library2 ...)
+#---ROOT_EXECUTABLE( <name> source1 source2 ... LIBRARIES library1 library2 ... BUILTINS dep1 dep2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_EXECUTABLE executable)
-  CMAKE_PARSE_ARGUMENTS(ARG "CMAKENOEXPORT;NOINSTALL;TEST" "" "LIBRARIES;ADDITIONAL_COMPILE_FLAGS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "CMAKENOEXPORT;NOINSTALL;TEST" "" "LIBRARIES;BUILTINS;ADDITIONAL_COMPILE_FLAGS"  ${ARGN})
   ROOT_GET_SOURCES(exe_srcs src ${ARG_UNPARSED_ARGUMENTS})
   set(executable_name ${executable})
   if(TARGET ${executable})
@@ -747,6 +764,13 @@ function(ROOT_EXECUTABLE executable)
   set_target_properties(${executable} PROPERTIES OUTPUT_NAME ${executable_name})
   if (ARG_ADDITIONAL_COMPILE_FLAGS)
     set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_ADDITIONAL_COMPILE_FLAGS})
+  endif()
+  if(ARG_BUILTINS)
+    foreach(arg1 ${ARG_BUILTINS})
+      if(${arg1}_TARGET)
+        add_dependencies(${executable} ${${arg1}_TARGET})
+      endif()
+    endforeach()
   endif()
 
   #----Installation details------------------------------------------------------
@@ -1010,17 +1034,6 @@ function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
   file(RELATIVE_PATH subdir ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
 endfunction()
-
-#----------------------------------------------------------------------------
-# ROOT_ADD_BUILTIN_DEPENDENCIES(target EXTERNAL)
-#----------------------------------------------------------------------------
-macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
-  add_custom_command(OUTPUT ${${EXTERNAL}_LIBRARIES} DEPENDS ${EXTERNAL})
-  if(NOT TARGET ${EXTERNAL}LIBS)
-    add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
-  endif()
-  add_dependencies(${target} ${EXTERNAL}LIBS)
-endmacro()
 
 #----------------------------------------------------------------------------
 # ROOT_ADD_CXX_FLAG(var flag)

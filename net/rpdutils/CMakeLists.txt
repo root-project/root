@@ -36,8 +36,5 @@ endif()
 #---static library needed for rootd and proofd --------------------------------------------
 add_library(rpdutil STATIC ${rpdutilsrcs})
 
-ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa ${CRYPTLIBS} ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} DEPENDENCIES Net)
+ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa ${CRYPTLIBS} ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} DEPENDENCIES Net BUILTINS OPENSSL)
 
-if(builtin_openssl)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(SrvAuth OPENSSL)
-endif()

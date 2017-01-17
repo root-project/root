@@ -434,7 +434,7 @@ void TRatioPlot::SetupPads() {
    }
 
    if (!gPad) {
-      Error("SetupPads", "There is no active pad");
+      Error("SetupPads", "need to create a canvas first");
       return;
    }
 
@@ -573,7 +573,10 @@ Float_t TRatioPlot::GetSeparationMargin() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draws the ratio plot to the currently active pad. Takes the following options
+/// Draws the ratio plot to the currently active pad. Therefore it requires that
+/// a TCanvas has been created first.
+///
+/// It takes the following options
 ///
 /// | Option     | Description                                                  |
 /// | ---------- | ------------------------------------------------------------ |
@@ -619,6 +622,11 @@ void TRatioPlot::Draw(Option_t *option)
       fHideLabelMode = TRatioPlot::HideLabelMode::kNoHide;
    } else {
       fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; // <- default
+   }
+
+   if (!gPad) {
+      Error("Draw", "need to create a canvas first");
+      return;
    }
 
    TVirtualPad *padsav = gPad;

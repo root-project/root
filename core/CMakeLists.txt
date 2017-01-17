@@ -110,16 +110,11 @@ ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
                     LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
-                              ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
+                              ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
+                    BUILTINS PCRE LZMA)
 
 if(cling)
   add_dependencies(Core CLING)
-endif()
-if(builtin_pcre)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(Core PCRE)
-endif()
-if(builtin_lzma)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)
 endif()
 
 #----------------------------------------------------------------------------------------

@@ -763,6 +763,21 @@ void TLegend::PaintPrimitives()
          gPad->PaintFillArea(4,xf,yf);
       }
 
+      // Draw Polymarker
+
+      Double_t symbolsize = 0.;
+      if ( opt.Contains("p")) {
+
+         if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
+            dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
+         }
+         TMarker entrymarker( xsym, ysym, 0 );
+         entrymarker.SetNDC();
+         entry->TAttMarker::Copy(entrymarker);
+         entrymarker.Paint();
+         symbolsize = entrymarker.GetMarkerSize();
+      }
+
       // Draw line
 
       if ( opt.Contains("l") || opt.Contains("f")) {
@@ -782,35 +797,40 @@ void TLegend::PaintPrimitives()
             if ( boxwidth > margin ) boxwidth = margin;
 
             entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
-                                 xsym + boxw, ysym + yspace*0.35);
+                                    xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                 xsym + boxw, ysym - yspace*0.35);
+                                    xsym + boxw, ysym - yspace*0.35);
             entryline.PaintLineNDC( xsym + boxw, ysym - yspace*0.35,
-                                 xsym + boxw, ysym + yspace*0.35);
+                                    xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                 xsym - boxw, ysym + yspace*0.35);
+                                    xsym - boxw, ysym + yspace*0.35);
          } else {
             entryline.Paint();
             if (opt.Contains("e")) {
-               entryline.PaintLineNDC( xsym, ysym - yspace*0.30,
-                                       xsym, ysym + yspace*0.30);
+               if ( !opt.Contains("p")) {
+                  entryline.PaintLineNDC( xsym, ysym - yspace*0.30,
+                                          xsym, ysym + yspace*0.30);
+               } else {
+                  Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+                  TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
+                  entryline1.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entryline1);
+                  entryline1.Paint();
+                  TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*0.30);
+                  entryline2.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entryline2);
+                  entryline2.Paint();
+               }
+            TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+            entrytop1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entrytop1);
+            entrytop1.Paint();
+            TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+            entrytop2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entrytop2);
+            entrytop2.Paint();
             }
          }
-      }
-
-      // Draw Polymarker
-
-      Double_t symbolsize = 0.;
-      if ( opt.Contains("p")) {
-
-         if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
-            dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
-         }
-         TMarker entrymarker( xsym, ysym, 0 );
-         entrymarker.SetNDC();
-         entry->TAttMarker::Copy(entrymarker);
-         entrymarker.Paint();
-         symbolsize = entrymarker.GetMarkerSize();
       }
 
       // Draw error only
@@ -826,7 +846,7 @@ void TLegend::PaintPrimitives()
             entry->TAttLine::Copy(entryline);
             entryline.Paint();
          } else {
-            Double_t sy  =-gPad->PixeltoY(Int_t(symbolsize)) + gPad->PixeltoY(0);
+            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
             TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
             entryline1.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entryline1);

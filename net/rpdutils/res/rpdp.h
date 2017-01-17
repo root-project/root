@@ -126,10 +126,6 @@ int  RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck = 0);
 /////////////////////////////////////////////////////////////////////
 
 //
-// type of authentication method
-enum ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio };
-
-//
 // Prototypes
 //
 namespace ROOT {
