@@ -37,10 +37,5 @@ include_directories(${TBB_INCLUDE_DIRS})
 ROOT_GENERATE_DICTIONARY(G__Thread ${headers} ${headers_imt} STAGE1 MODULE Thread LINKDEF LinkDef.h)
 
 ROOT_OBJECT_LIBRARY(ThreadObjs ${sources} G__Thread.cxx)
-ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> ${sources_imt} LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES} DEPENDENCIES Core)
+ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> ${sources_imt} LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES} DEPENDENCIES Core BUILTINS TBB)
 ROOT_INSTALL_HEADERS(${installoptions})
-
-if(builtin_tbb)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(Thread TBB)
-endif()
-
