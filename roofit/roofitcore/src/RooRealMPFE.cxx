@@ -234,7 +234,7 @@ void RooRealMPFE::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the cpu affinity of the server process to a specific cpu.
 
-void setCpuAffinity(int cpu) {
+void RooRealMPFE::setCpuAffinity(int cpu) {
   if (_state == Server) {
     cpu_set_t mask;
     // zero all bits in mask
