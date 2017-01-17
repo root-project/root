@@ -18,13 +18,14 @@ if(WIN32)
   ROOT_LINKER_LIBRARY(XrdProofd XProofProtUtils.cxx LIBRARIES ${XROOTD_LIBRARIES})
 else()
   ROOT_EXECUTABLE(proofd proofd.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcat.c
-                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CRYPTLIBS})
+                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CRYPTLIBS}
+                         BUILTINS XROOTD OPENSSL)
   if (NOT XROOTD_NOMAIN)
      ROOT_EXECUTABLE(xproofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
-                         LIBRARIES ${XROOTD_LIBRARIES} ${SYSLIBS})
+                         LIBRARIES ${XROOTD_LIBRARIES} ${SYSLIBS} BUILTINS XROOTD)
   endif ()
   ROOT_LINKER_LIBRARY(XrdProofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
-                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS} BUILTINS XROOTD)
   set_target_properties(XrdProofd PROPERTIES LINK_INTERFACE_LIBRARIES "")
   ROOT_EXECUTABLE(proofexecv proofexecv.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
                          LIBRARIES ${SYSLIBS})

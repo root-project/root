@@ -21,7 +21,8 @@ set(linkdefs Math/LinkDef.h Math/LinkDef_Func.h Math/LinkDef_RootFinding.h)
 
 ROOT_GENERATE_DICTIONARY(G__MathMore ${headers} MODULE MathMore LINKDEF Math/LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-ROOT_LINKER_LIBRARY(MathMore *.cxx G__MathMore.cxx LIBRARIES ${GSL_LIBRARIES} DEPENDENCIES MathCore)
+ROOT_LINKER_LIBRARY(MathMore *.cxx G__MathMore.cxx LIBRARIES ${GSL_LIBRARIES} DEPENDENCIES MathCore BUILTINS GSL)
+
 ROOT_INSTALL_HEADERS()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
