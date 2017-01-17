@@ -3,7 +3,7 @@
 ############################################################################
 
 set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
-            ROOT/TExecutor.hxx TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
+            TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
             TThreadImp.h ROOT/TThreadedObject.hxx TThreadPool.h
             ThreadLocalStorage.h ROOT/TSpinMutex.hxx)
 if(NOT WIN32)
