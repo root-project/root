@@ -1,0 +1,21 @@
+#!/bin/bash
+#Autor: Omar.Zapata@cern.ch  http://oproject.org/ROOTMpi
+
+#PBS -V
+#PBS -N rootmpi
+#PBS -l walltime=00:10:00
+#PBS -l nodes=2:ppn=16
+
+STRESS=0
+cd $PBS_O_WORKDIR
+PROCS=32
+#collective communication
+rootmpi -np $PROCS -machinefile $PBS_NODEFILE bcast.C\($STRESS\)
+rootmpi -np $PROCS -machinefile $PBS_NODEFILE gather.C\($STRESS\)
+rootmpi -np $PROCS -machinefile $PBS_NODEFILE ibcast.C
+rootmpi -np $PROCS -machinefile $PBS_NODEFILE scatter.C\($STRESS\)
+
+#p2p communication
+PROCS=2
+rootmpi -np $PROCS -machinefile $PBS_NODEFILE p2p.C\($STRESS\)
+rootmpi -np $PROCS -machinefile $PBS_NODEFILE p2p_nonblocking.C

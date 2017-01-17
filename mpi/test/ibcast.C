@@ -33,7 +33,7 @@ void ibcast()
    auto mat = (TMatrixD *)msg.ReadObjectAny(TMatrixD::Class());
 
    std::cout << "Rank = " << rank << std::endl;
-   mat->Print();
+   //mat->Print();
    std::cout.flush();
    TMatrixD req_mat(2, 2);
    req_mat[0][0] = 0.1;
@@ -51,7 +51,7 @@ void ibcast()
    req = gComm->IBcast(p, root); //testing custom object
    req.Complete();
    req.Wait();
-   p.Print();
+   //p.Print();
 
    //assertions
    assert(*mat == req_mat);

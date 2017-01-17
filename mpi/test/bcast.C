@@ -27,7 +27,7 @@ void bcast_test(Int_t root = 0, Int_t size = 2)
    auto mat = (TMatrixD *)msg.ReadObjectAny(TMatrixD::Class());
 
    std::cout << "Rank = " << rank << std::endl;
-   mat->Print();
+   //mat->Print();
    std::cout.flush();
    TMatrixD req_mat(size, size);
    req_mat[0][0] = 0.1;
@@ -45,7 +45,7 @@ void bcast_test(Int_t root = 0, Int_t size = 2)
       p.Set(1, 2);//if root process fill the particle
    }
    gComm->Bcast(p, root); //testing custom object
-   p.Print();
+   //p.Print();
 
    //assertions
    assert((*mat)[0][0] == req_mat[0][0]);
