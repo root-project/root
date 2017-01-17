@@ -153,6 +153,8 @@ The following interfaces have been removed, after deprecation in v6.08.
    hprof->Draw();
 ~~~
   this was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22957).
+- New flag `Cocoa.EnableFillAreaAntiAliasing` in `system.rootrc` to enable the
+  anti-aliasing for filled area for the Cocoa backend. Default is `no`.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.

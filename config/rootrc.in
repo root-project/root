@@ -93,7 +93,10 @@ X11.XInitThread:         yes
 # The EnableAntiAliasing flag defines if you want to have anti-aliased
 # lines/polygon in a canvas/pad. Possible values:
 # yes (enable AA), no (disable AA) and auto (use AA only on Retina displays)
+# There is a special flag EnableFillAreaAntiAliasing for fill area which is "no"
+# by default because antialiasing for fill area may create artificial meshes on on plots
 Cocoa.EnableAntiAliasing: yes
+Cocoa.EnableFillAreaAntiAliasing: no
 
 # Settings for Win32 behavior.
 Win32.UseSysPointers:    no
