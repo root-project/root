@@ -19,7 +19,6 @@
 #endif
 
 #include<memory>
-#include<mpi.h>
 
 /**
  * @namespace ROOT::Mpi
@@ -271,6 +270,16 @@ namespace ROOT {
           *              \return TGrequest obj
           */
          template<class Type> void Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
+
+         /**
+          *         Method to apply reduce operation
+                        \param in_var variable to eval in the reduce operation
+                        \param out_var variable to receive the variable operation
+                        \param op function the perform operation
+                        \param root id of the main process where the result was received
+                        */
+         template<class Type, class Top> void Reduce(const Type &in_var, Type &out_var, Top &op, Int_t root) const;
+
          ClassDef(TCommunicator, 1)
       };
 
@@ -568,6 +577,39 @@ namespace ROOT {
             Send(in_vars, incount, root, MPI_TAG_UB);
          }
       }
+
+
+      template<class Type, class Top> void TCommunicator::Reduce(const Type &in_var, Type &out_var, Top &op, Int_t root) const
+      {
+         Type recvbuffer;
+         memmove((void *)&out_var, (void *)&in_var, sizeof(Type));
+         auto size = GetSize();
+         auto rank = GetRank();
+         auto lastpower = 1 << (Int_t)log2(size);
+
+         for (Int_t i = lastpower; i < size; i++)
+            if (rank == i)
+               Send(in_var, i - lastpower, MPI_TAG_UB);
+         for (Int_t i = 0; i < size - lastpower; i++)
+            if (rank == i) {
+               Recv(recvbuffer, i + lastpower, MPI_TAG_UB);
+               out_var  = op(in_var , recvbuffer); // your operation
+            }
+
+         for (Int_t d = 0; d < (Int_t)log2(lastpower); d++)
+            for (Int_t k = 0; k < lastpower; k += 1 << (d + 1)) {
+               auto receiver = k;
+               auto sender = k + (1 << d);
+               if (rank == receiver) {
+                  Recv(recvbuffer, sender, MPI_TAG_UB);
+                  out_var  = op(out_var, recvbuffer); // your operation
+               } else if (rank == sender)
+                  Send(out_var, receiver, MPI_TAG_UB);
+            }
+         if (root != 0 && rank == 0) Send(out_var, root, MPI_TAG_UB);
+         if (root == rank && rank != 0) Recv(out_var, 0, MPI_TAG_UB);
+      }
+
 
 
       //////////////////////////////////////////////
