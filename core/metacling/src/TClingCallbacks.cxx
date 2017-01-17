@@ -636,9 +636,6 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
 }
 
 bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
-   // Make sure that the failed lookup comes the prompt. Currently, we support
-   // only the prompt.
-
    // Should be disabled with the dynamic scopes.
    if (m_IsRuntime)
       return false;
@@ -651,6 +648,17 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
 
    if (!isa<FunctionDecl>(R.getSema().CurContext))
       return false;
+
+   {
+      // Make sure that the failed lookup comes the prompt. Currently, we
+      // support only the prompt.
+      Scope* FnScope = S->getFnParent();
+      if (!FnScope)
+         return false;
+      auto FD = dyn_cast_or_null<FunctionDecl>(FnScope->getEntity());
+      if (!FD || !utils::Analyze::IsWrapper(FD))
+         return false;
+   }
 
    Sema& SemaRef = R.getSema();
    ASTContext& C = SemaRef.getASTContext();
