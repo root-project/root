@@ -13,6 +13,7 @@ For more information, see:
 The following people have contributed to this new version:
 
  Bertrand Bellenot, CERN/SFT,\
+ Georgios Bitzes, CERN/IT,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
@@ -166,7 +167,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 - Allow inclusion of headers in linkdef files [ROOT-7765](https://sft.its.cern.ch/jira/browse/ROOT-7765)
 
 ## I/O Libraries
-- [[https://sft.its.cern.ch/jira/browse/ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+- [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+- TDavixFile: Added support for bucket name in path
 
 ## Database Libraries
 
