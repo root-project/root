@@ -82,6 +82,7 @@ endif()
 if(builtin_freetype)
   set(freetype_version 2.6.1)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
+  set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
       set(freetypeliba objs/freetype261MT_D.lib)
@@ -99,7 +100,7 @@ if(builtin_freetype)
                     nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS=-D_CRT_SECURE_NO_DEPRECATE 
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ./libs/freetype.lib     
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   else()
     set(_freetype_cflags -O)
     if(ROOT_ARCHITECTURE MATCHES aix)
@@ -114,12 +115,10 @@ if(builtin_freetype)
                           CC=${CMAKE_C_COMPILER} CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""                    
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   endif()
-  ExternalProject_Get_Property(FREETYPE SOURCE_DIR)
-  set(FREETYPE_INCLUDE_DIR ${SOURCE_DIR}/include)
+  set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
-  set(FREETYPE_LIBRARY ${SOURCE_DIR}/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY})
   set(FREETYPE_TARGET FREETYPE)
 endif()
@@ -315,6 +314,7 @@ if(NOT builtin_afterimage)
   endif()
 endif()
 if(builtin_afterimage)
+  set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
       set(astepbld "libAfterImage - Win32 Debug")
@@ -329,7 +329,7 @@ if(builtin_afterimage)
                     CFG=${astepbld} NMAKECXXFLAGS="${CMAKE_CXX_FLAGS} /wd4244"
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
   else()
     message(STATUS "Building AfterImage library included in ROOT itself")
     if(JPEG_FOUND)
@@ -368,15 +368,12 @@ if(builtin_afterimage)
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
   endif()
   if(builtin_freetype)
     add_dependencies(AFTERIMAGE FREETYPE)
   endif()
-    
-  ExternalProject_Get_Property(AFTERIMAGE INSTALL_DIR)
-  set(AFTERIMAGE_INCLUDE_DIR ${INSTALL_DIR}/include/libAfterImage)
-  set(AFTERIMAGE_LIBRARIES ${INSTALL_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libAfterImage)
   set(AFTERIMAGE_TARGET AFTERIMAGE)
 endif()
 
@@ -411,7 +408,6 @@ if(mathmore OR builtin_gsl)
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
     )
-    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
     set(GSL_TARGET GSL)
     set(mathmore ON CACHE BOOL "" FORCE)
   endif()
@@ -593,6 +589,7 @@ if(ssl OR builtin_openssl)
     else()
       set(openssl_config_cmd ./config)
     endif()
+    set(OPENSSL_LIBRARIES ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libssl.a ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libcrypto.a)
     ExternalProject_Add(
       OPENSSL
       URL ${repository_tarfiles}/openssl-${openssl_version}.tar.gz
@@ -601,12 +598,10 @@ if(ssl OR builtin_openssl)
       INSTALL_COMMAND make install_sw
       BUILD_IN_SOURCE 1
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
-      BUILD_BYPRODUCTS OPENSSL-prefix/lib/libssl.a OPENSSL-prefix/lib/libcrypto.a
+      BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES}
     )
-    ExternalProject_Get_Property(OPENSSL INSTALL_DIR)
-    set(OPENSSL_INCLUDE_DIR ${INSTALL_DIR}/include)
-    set(OPENSSL_LIBRARIES ${INSTALL_DIR}/lib/libssl.a ${INSTALL_DIR}/lib/libcrypto.a)
-    set(OPENSSL_PREFIX ${INSTALL_DIR})
+    set(OPENSSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/OPENSSL-prefix/include)
+    set(OPENSSL_PREFIX ${CMAKE_BINARY_DIR}/OPENSSL-prefix)
     set(OPENSSL_TARGET OPENSSL)
     set(ssl ON CACHE BOOL "" FORCE)
   else()
@@ -1084,6 +1079,9 @@ if(davix OR builtin_davix)
     ROOT_ADD_CXX_FLAG(__cxxflags -Wno-unused-const-variable)
     ROOT_ADD_C_FLAG(__cflags -Wno-format)
     ROOT_ADD_C_FLAG(__cflags -Wno-implicit-function-declaration)
+    foreach(l davix neon boost_static_internal)
+      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
     ExternalProject_Add(
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
@@ -1104,23 +1102,15 @@ if(davix OR builtin_davix)
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                  -DLIB_SUFFIX=
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
-      BUILD_BYPRODUCTS DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX}
-                       DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}neon${CMAKE_STATIC_LIBRARY_SUFFIX}
-                       DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}boost_static_internal${CMAKE_STATIC_LIBRARY_SUFFIX}
-                       DAVIX-prefix/include/davix/davix.hpp
+      BUILD_BYPRODUCTS ${DAVIX_LIBRARIES}
     )
-    ExternalProject_Get_Property(DAVIX INSTALL_DIR)
-    set(DAVIX_INCLUDE_DIR ${INSTALL_DIR}/include/davix)
-    set(DAVIX_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-prefix/include/davix)
+    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     set(DAVIX_TARGET DAVIX)
-    foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endforeach()
     if(builtin_openssl)
       add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL
     endif()
-    set(DAVIX_TARGET DAVIX)
   else()
     message(STATUS "Looking for DAVIX")
     find_package(Davix)
@@ -1219,7 +1209,6 @@ if(builtin_tbb)
     BUILD_BYPRODUCTS ${TBB_LIBRARIES}
   )
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   set(TBB_TARGET TBB)
 endif()
