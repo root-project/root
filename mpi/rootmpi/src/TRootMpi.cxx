@@ -91,9 +91,9 @@ Int_t TRootMpi::ProcessArgs()
       }
       fMpirunParams += " ";
       fMpirunParams += fArgv[0];
-      fMpirunParams += " ";
+      fMpirunParams += " \"";
       fMpirunParams += fArgv[fArgc - 1];//macro file is the last
-      fMpirunParams += " ";
+      fMpirunParams += " \"";
       fMpirunParams += sRootParams;
       fMpirunParams += " -process_macro ";
       return Execute();
