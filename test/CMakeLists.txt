@@ -292,7 +292,7 @@ ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error i
 #--TBB basic test----------------------------------------------------------------------------------
 if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
-  ROOT_EXECUTABLE(testTBB testTBB.cxx LIBRARIES ${TBB_LIBRARIES})
+  ROOT_EXECUTABLE(testTBB testTBB.cxx LIBRARIES ${TBB_LIBRARIES} BUILTINS TBB)
   ROOT_ADD_TEST(test-TBB COMMAND testTBB FAILREGEX "FAILED|Error in")
 endif()
 
@@ -306,7 +306,7 @@ if(ROOT_vc_FOUND)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
   set_source_files_properties(testVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
-  ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${VC_LIBRARIES})
+  ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${VC_LIBRARIES} BUILTINS VC)
   ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
 endif()
 
