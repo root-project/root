@@ -1,0 +1,7 @@
+language: cpp
+compiler: gcc
+script:
+  - mkdir build
+  - cd build
+  - cmake .. -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON
+  - make -j4
