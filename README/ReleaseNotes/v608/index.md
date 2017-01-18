@@ -623,3 +623,8 @@ Released on March 2, 2017
 ## HEAD of the v6-08-00-patches branch
 
 Changes will be part of the future 6.08/08
+=======
+### Core
+
+- Re-enabled support for TMapFile (and libNew). (ROOT-8454)
+
