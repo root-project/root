@@ -705,7 +705,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    for (i = 0; i < fNpoints-1; i++) out << "   " << fEY[i] << "," << std::endl;
    out << "   " << fEY[fNpoints-1] << "};" << std::endl;
 
-   if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
+   if (gROOT->ClassSaved(TGraphErrors::Class())) out << "   ";
    else out << "   TGraphErrors *";
    out << "gre = new TGraphErrors(" << fNpoints << ","
                                     << fXName   << ","  << fYName  << ","
