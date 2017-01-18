@@ -2186,17 +2186,21 @@ extern "C" {
   typedef CSTypeRef CSSymbolRef;
 
   CSSymbolicatorRef CSSymbolicatorCreateWithPid(pid_t pid);
+  CSSymbolRef CSSymbolicatorGetSymbolWithAddressAtTime(CSSymbolicatorRef cs, vm_address_t addr, uint64_t time);
   CSSourceInfoRef CSSymbolicatorGetSourceInfoWithAddressAtTime(CSSymbolicatorRef cs, vm_address_t addr, uint64_t time);
-  CSSymbolRef CSSourceInfoGetSymbol(CSSourceInfoRef info);
   const char* CSSymbolGetName(CSSymbolRef sym);
-  CSSymbolOwnerRef CSSourceInfoGetSymbolOwner(CSSourceInfoRef info);
+  CSSymbolOwnerRef CSSymbolGetSymbolOwner(CSSymbolRef sym);
   const char* CSSymbolOwnerGetPath(CSSymbolOwnerRef symbol);
   const char* CSSourceInfoGetPath(CSSourceInfoRef info);
   int CSSourceInfoGetLineNumber(CSSourceInfoRef info);
 }
 
+bool CSTypeRefIdValid(CSTypeRef ref) {
+   return ref.csCppData || ref.csCppObj;
+}
+
 void macosx_backtrace() {
-  void* addrlist[kMAX_BACKTRACE_DEPTH];
+void* addrlist[kMAX_BACKTRACE_DEPTH];
   // retrieve current stack addresses
   int numstacks = backtrace( addrlist, sizeof( addrlist ) / sizeof( void* ));
 
@@ -2205,22 +2209,30 @@ void macosx_backtrace() {
   // skip TUnixSystem::Backtrace(), macosx_backtrace()
   static const int skipFrames = 2;
   for (int i = skipFrames; i < numstacks; ++i) {
-    CSSourceInfoRef sourceInfo
-    = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator,
-                                                   (vm_address_t)addrlist[i],
-                                                   0x80000000u /*"now"*/);
+    // No debug info, try to get at least the symbol name.
+    CSSymbolRef sym = CSSymbolicatorGetSymbolWithAddressAtTime(symbolicator,
+                                                               (vm_address_t)addrlist[i],
+                                                               0x80000000u);
+    CSSymbolOwnerRef symOwner = CSSymbolGetSymbolOwner(sym);
 
-    CSSymbolOwnerRef symOwner = CSSourceInfoGetSymbolOwner(sourceInfo);
     if (const char* libPath = CSSymbolOwnerGetPath(symOwner)) {
       printf("[%s]", libPath);
     } else {
       printf("[<unknown binary>]");
     }
 
-    CSSymbolRef sym = CSSourceInfoGetSymbol(sourceInfo);
     if (const char* symname = CSSymbolGetName(sym)) {
-      printf(" %s %s:%d", symname, CSSourceInfoGetPath(sourceInfo),
-             (int)CSSourceInfoGetLineNumber(sourceInfo));
+      printf(" %s", symname);
+    }
+
+    CSSourceInfoRef sourceInfo
+      = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator,
+                                                     (vm_address_t)addrlist[i],
+                                                     0x80000000u /*"now"*/);
+    if (const char* sourcePath = CSSourceInfoGetPath(sourceInfo)) {
+      printf(" %s:%d", sourcePath, (int)CSSourceInfoGetLineNumber(sourceInfo));
+    } else {
+      printf(" (no debug info)");
     }
     printf("\n");
   }
