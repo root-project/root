@@ -73,8 +73,8 @@ TMVA_REL     := $(patsubst $(MODDIRI)/TMVA/%,include/TMVA/%,$(TMVAH) $(TMVADNN))
 ALLHDRS      += $(TMVA_REL)
 ALLLIBS      += $(TMVALIB)
 ALLMAPS      += $(TMVAMAP)
+TMVA_NOICC_REL := $(filter-out include/TMVA/NeuralNet.icc, $(TMVA_REL))
 ifeq ($(CXXMODULES),yes)
-  TMVA_NOICC_REL := $(filter-out include/TMVA/NeuralNet.icc, $(TMVA_REL))
   CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TMVA_NOICC_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Tmva_$(MODNAME) { \\n
   CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
@@ -119,12 +119,12 @@ $(call pcmrule,TMVA)
 $(TMVADS):      $(TMVA_REL) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -writeEmptyRootPCM $(patsubst include/%,%,$(TMVA_REL)) -I$(ROOT_SRCDIR) $(TMVAL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -writeEmptyRootPCM $(patsubst include/%,%,$(TMVA_NOICC_REL)) -I$(ROOT_SRCDIR) $(TMVAL0)
 
 $(TMVAMAP):     $(TMVA_REL) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(TMVADS) $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVA_REL) $(TMVAL0)
+		$(ROOTCLINGSTAGE2) -r $(TMVADS) $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVA_NOICC_REL) $(TMVAL0)
 
 all-$(MODNAME): $(TMVALIB)
 
