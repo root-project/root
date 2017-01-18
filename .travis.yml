@@ -1,7 +1,7 @@
 language: cpp
 compiler: gcc
 script:
-  - mkdir build
-  - cd build
-  - cmake .. -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON
+  - mkdir ../root_build
+  - cd ../root_build
+  - cmake ../root -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON
   - make -j4
