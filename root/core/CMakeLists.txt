@@ -6,3 +6,7 @@ ROOTTEST_ADD_TEST(assertHumanReadable
                   MACRO assertHumanReadable.cxx+
                   OUTREF assertHumanReadable.ref
                   )
+ROOTTEST_ADD_TEST(assertROOT7244
+                  MACRO assertROOT7244
+                  COPY_TO_BUILDDIR subdir_ROOT7244/TheFile.h 
+                  )
