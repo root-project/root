@@ -977,6 +977,10 @@ Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
    while ( incPath.Index(" :") != -1 ) {
       incPath.ReplaceAll(" :",":");
    }
+   // Remove double quotes around path expressions.
+   incPath.ReplaceAll("\":", ":");
+   incPath.ReplaceAll(":\"", ":");
+
    incPath.Prepend(fileLocation+":.:");
 
    char *actual = Which(incPath,realname);
