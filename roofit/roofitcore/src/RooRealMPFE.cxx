@@ -235,20 +235,8 @@ void RooRealMPFE::initialize()
 /// Set the cpu affinity of the server process to a specific cpu.
 
 void RooRealMPFE::setCpuAffinity(int cpu) {
-  if (_pipe->isChild()) {
-    cpu_set_t mask;
-    // zero all bits in mask
-    CPU_ZERO(&mask);
-    // set correct bit
-    CPU_SET(cpu, &mask);
-    /* sched_setaffinity returns 0 in success */
-
-    if( sched_setaffinity(0, sizeof(mask), &mask) == -1 ) {
-      std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
-    } else {
-      std::cout << "CPU affinity set to cpu " << cpu << " in process " << getpid() << std::endl;
-    }
-  }
+  Message msg = SetCpuAffinity;
+  *_pipe << msg << cpu;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -431,6 +419,26 @@ void RooRealMPFE::serverLoop()
 				 << ") IPC fromClient> LogEvalError flag = " << flag2 << endl ;
       }
       break ;
+
+
+    case SetCpuAffinity:
+      {
+        int cpu;
+        *_pipe >> cpu;
+
+        cpu_set_t mask;
+        // zero all bits in mask
+        CPU_ZERO(&mask);
+        // set correct bit
+        CPU_SET(cpu, &mask);
+        /* sched_setaffinity returns 0 in success */
+
+        if( sched_setaffinity(0, sizeof(mask), &mask) == -1 ) {
+          std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
+        } else {
+          std::cout << "CPU affinity set to cpu " << cpu << " in server process " << getpid() << std::endl;
+        }
+      }
 
 
     default:

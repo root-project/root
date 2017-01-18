@@ -60,7 +60,8 @@ public:
   State _state ;
 
   enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate, 
-		 ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset } ;
+		 ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset,
+     SetCpuAffinity} ;
   
   void initialize() ; 
   void initVars() ;
