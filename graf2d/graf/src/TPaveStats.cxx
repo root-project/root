@@ -503,7 +503,8 @@ void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPaveStats::Class())) {
+   Bool_t saved = gROOT->ClassSaved(TPaveStats::Class());
+   if (saved) {
       out<<"   ";
    } else {
       out<<"   "<<ClassName()<<" *";
@@ -524,7 +525,7 @@ void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"ptstats",19,1001);
    SaveLineAttributes(out,"ptstats",1,1,1);
    SaveTextAttributes(out,"ptstats",22,0,1,62,0);
-   SaveLines(out,"ptstats");
+   SaveLines(out,"ptstats",saved);
    out<<"   ptstats->SetOptStat("<<GetOptStat()<<");"<<std::endl;
    out<<"   ptstats->SetOptFit("<<GetOptFit()<<");"<<std::endl;
    out<<"   ptstats->Draw();"<<std::endl;

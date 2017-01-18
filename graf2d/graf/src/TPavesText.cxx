@@ -119,9 +119,10 @@ void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    if (!strcmp(GetName(),"stats")) return;
    if (!strcmp(GetName(),"title")) return;
+   Bool_t saved = gROOT->ClassSaved(TPavesText::Class());
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPavesText::Class())) {
+   if (saved) {
       out<<"   ";
    } else {
       out<<"   TPavesText *";
@@ -141,6 +142,6 @@ void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"pst",0,1001);
    SaveLineAttributes(out,"pst",1,1,1);
    SaveTextAttributes(out,"pst",22,0,1,62,0);
-   TPaveText::SaveLines(out,"pst");
+   TPaveText::SaveLines(out,"pst",saved);
    out<<"   pst->Draw();"<<std::endl;
 }
