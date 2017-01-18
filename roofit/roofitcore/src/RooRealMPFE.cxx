@@ -244,7 +244,9 @@ void RooRealMPFE::setCpuAffinity(int cpu) {
     /* sched_setaffinity returns 0 in success */
 
     if( sched_setaffinity(0, sizeof(mask), &mask) == -1 ) {
-      std::cout << "WARNING: Could not set CPU Affinity, continuing...\n" << std::endl;
+      std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
+    } else {
+      std::cout << "CPU affinity set to cpu " << cpu << " in process " << getpid() << std::endl;
     }
   }
 }
