@@ -1,7 +1,16 @@
 language: cpp
 compiler: gcc
+# following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-5
+env: COMPILER=g++-5
+
 script:
   - mkdir ../root_build
   - cd ../root_build
-  - cmake ../root -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON
+  - cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON
   - make -j4
