@@ -441,24 +441,12 @@ void TQSlotPool::Free(TQSlot *slot)
 static TQSlotPool gSlotPool;  // global pool of slots
 
 ////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
-
-TQConnection::TQConnection() : TList(), TQObject()
-{
-   fReceiver = 0;
-   fSlot     = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// TQConnection ctor.
 ///    cl != 0  - connection to object == receiver of class == cl
 ///               and method == method_name
 ///    cl == 0  - connection to function with name == method_name
 
 TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
-   : TList(), TQObject()
 {
    const char *funcname = 0;
    fReceiver = receiver;      // fReceiver is pointer to receiver
@@ -482,7 +470,7 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
 ///    it could be interpreted class and with method == funcname.
 
 TQConnection::TQConnection(const char *class_name, void *receiver,
-                           const char *funcname) : TList(), TQObject()
+                           const char *funcname)
 {
    fClassName = class_name;
    fSlot = gSlotPool.New(class_name, funcname);  // new slot-method
@@ -492,7 +480,7 @@ TQConnection::TQConnection(const char *class_name, void *receiver,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Ignore connections to this TQConnections
 
-TQConnection::TQConnection(const TQConnection &con): TList(), TQObject()
+TQConnection::TQConnection(const TQConnection &con)
 {
    fClassName = con.fClassName;
    fSlot = con.fSlot;
@@ -527,15 +515,6 @@ TQConnection::~TQConnection()
 const char *TQConnection::GetName() const
 {
    return fSlot->GetName();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Signal Destroyed tells that connection is destroyed.
-
-void TQConnection::Destroyed()
-{
-   MakeZombie();
-   Emit("Destroyed()");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
