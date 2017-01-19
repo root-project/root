@@ -554,44 +554,35 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 1st variant for "MOVING SCREEN" algorithm (draw face with level lines)
 ///
-/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] icodes   set of codes for the line
 /// \param[in] xyz   coordinates of nodes
 /// \param[in] np   number of nodes
 /// \param[in] iface   face
-/// \param[in] t   additional function defined on this face (not used in this method)
+/// \param[in] tt   additional function defined on this face
 
 void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
                                          Int_t *iface, Double_t *tt)
 {
-   Double_t xdel, ydel;
-   Int_t i, k, i1, i2, il, it;
-   Double_t x[2], y[2];
-   Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
    TView *view = 0;
-
    if (gPad) view = gPad->GetView();
    if (!view) return;
 
-   //          C O P Y   P O I N T S   T O   A R R A Y
-   /* Parameter adjustments */
-   --tt;
-   --iface;
-   xyz -= 4;
-   --icodes;
-
-   for (i = 1; i <= np; ++i) {
-      k = iface[i];
-      p3[i*3 - 3] = xyz[k*3 + 1];
-      p3[i*3 - 2] = xyz[k*3 + 2];
-      p3[i*3 - 1] = xyz[k*3 + 3];
+   //          Copy points to array
+   Double_t p3[3*12];
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t k = iface[i];
+      p3[i*3 + 0] = xyz[(k-1)*3 + 0];
+      p3[i*3 + 1] = xyz[(k-1)*3 + 1];
+      p3[i*3 + 2] = xyz[(k-1)*3 + 2];
    }
 
-   //          F I N D   L E V E L   L I N E S
-   FindLevelLines(np, p3, &tt[1]);
+   //          Find level lines
+   FindLevelLines(np, p3, tt);
 
-   //          D R A W   L E V E L   L I N E S
+   //          Draw level lines
+   Double_t p1[3], p2[3], x[2], y[2];
    SetLineStyle(3);
-   if (icodes[3]==0) {  // front & back boxes
+   if (icodes[2] == 0) {  // front & back boxes
       SetLineColor(1);
       SetLineWidth(1);
    } else {
@@ -599,23 +590,23 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
       SetLineWidth(fEdgeWidth[fEdgeIdx]);
    }
    TAttLine::Modify();
-   for (il = 1; il <= fNlines; ++il) {
-      FindVisibleDraw(&fPlines[(2*il + 1)*3 - 9], &fPlines[(2*il + 2)*3 - 9]);
-      view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
-      view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
-      xdel = p2[0] - p1[0];
-      ydel = p2[1] - p1[1];
-      for (it = 1; it <= fNT; ++it) {
-         x[0] = p1[0] + xdel*fT[2*it - 2];
-         y[0] = p1[1] + ydel*fT[2*it - 2];
-         x[1] = p1[0] + xdel*fT[2*it - 1];
-         y[1] = p1[1] + ydel*fT[2*it - 1];
+   for (Int_t il = 0; il < fNlines; ++il) {
+      FindVisibleDraw(&fPlines[6*il + 0], &fPlines[6*il + 3]);
+      view->WCtoNDC(&fPlines[6*il + 0], p1);
+      view->WCtoNDC(&fPlines[6*il + 3], p2);
+      Double_t xdel = p2[0] - p1[0];
+      Double_t ydel = p2[1] - p1[1];
+      for (Int_t it = 0; it < fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it + 0];
+         y[0] = p1[1] + ydel*fT[2*it + 0];
+         x[1] = p1[0] + xdel*fT[2*it + 1];
+         y[1] = p1[1] + ydel*fT[2*it + 1];
          gPad->PaintPolyLine(2, x, y);
       }
    }
 
-   //          D R A W   F A C E
-   if (icodes[3]==0) {  // front & back boxes
+   //          Draw face
+   if (icodes[2] == 0) {  // front & back boxes
       SetLineColor(1);
       SetLineStyle(1);
       SetLineWidth(1);
@@ -625,30 +616,28 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
       SetLineWidth(fEdgeWidth[fEdgeIdx]);
    }
    TAttLine::Modify();
-   for (i = 1; i <= np; ++i) {
-      i1 = i;
-      i2 = i + 1;
-      if (i == np) i2 = 1;
-      FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-      view->WCtoNDC(&p3[i1*3 - 3], p1);
-      view->WCtoNDC(&p3[i2*3 - 3], p2);
-      xdel = p2[0] - p1[0];
-      ydel = p2[1] - p1[1];
-      for (it = 1; it <= fNT; ++it) {
-         x[0] = p1[0] + xdel*fT[2*it - 2];
-         y[0] = p1[1] + ydel*fT[2*it - 2];
-         x[1] = p1[0] + xdel*fT[2*it - 1];
-         y[1] = p1[1] + ydel*fT[2*it - 1];
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t i1 = i;
+      Int_t i2 = (i == np-1) ? 0 : i + 1;
+      FindVisibleDraw(&p3[i1*3], &p3[i2*3]);
+      view->WCtoNDC(&p3[i1*3], p1);
+      view->WCtoNDC(&p3[i2*3], p2);
+      Double_t xdel = p2[0] - p1[0];
+      Double_t ydel = p2[1] - p1[1];
+      for (Int_t it = 0; it < fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it + 0];
+         y[0] = p1[1] + ydel*fT[2*it + 0];
+         x[1] = p1[0] + xdel*fT[2*it + 1];
+         y[1] = p1[1] + ydel*fT[2*it + 1];
          gPad->PaintPolyLine(2, x, y);
       }
    }
 
-   //          M O D I F Y    S C R E E N
-   for (i = 1; i <= np; ++i) {
-      i1 = i;
-      i2 = i + 1;
-      if (i == np) i2 = 1;
-      ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+   //          Modify screen
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t i1 = i;
+      Int_t i2 = (i == np-1) ? 0 : i + 1;
+      ModifyScreen(&p3[i1*3], &p3[i2*3]);
    }
 }
 
@@ -656,43 +645,34 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 3rd variant for "MOVING SCREEN" algorithm (draw level lines only)
 ///
-/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] icodes   set of codes for the line
 /// \param[in] xyz   coordinates of nodes
 /// \param[in] np   number of nodes
 /// \param[in] iface   face
-/// \param[in] tt   additional function defined on this face (not used in this method)
+/// \param[in] tt   additional function defined on this face
 
 void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
                                          Int_t *iface, Double_t *tt)
 {
-   Double_t xdel, ydel;
-   Int_t i, k, i1, i2, il, it;
-   Double_t x[2], y[2];
-   Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
    TView *view = 0;
-
    if (gPad) view = gPad->GetView();
    if (!view) return;
 
-   // Parameter adjustments (ftoc)
-   --tt;
-   --iface;
-   xyz -= 4;
-   --icodes;
-
-   // Copy points to array
-   for (i = 1; i <= np; ++i) {
-      k = iface[i];
-      p3[i*3 - 3] = xyz[k*3 + 1];
-      p3[i*3 - 2] = xyz[k*3 + 2];
-      p3[i*3 - 1] = xyz[k*3 + 3];
+   //          Copy points to array
+   Double_t p3[3*12];
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t k = iface[i];
+      p3[i*3 + 0] = xyz[(k-1)*3 + 0];
+      p3[i*3 + 1] = xyz[(k-1)*3 + 1];
+      p3[i*3 + 2] = xyz[(k-1)*3 + 2];
    }
 
-   // Find level lines
-   FindLevelLines(np, p3, &tt[1]);
+   //          Find level lines
+   FindLevelLines(np, p3, tt);
 
-   // Draw level lines
-   if (icodes[3]==0) {  // front and back boxes
+   //          Draw level lines
+   Double_t p1[3], p2[3], x[2], y[2];
+   if (icodes[2] == 0) {  // front and back boxes
       SetLineColor(1);
       SetLineStyle(1);
       SetLineWidth(1);
@@ -702,27 +682,26 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
       SetLineWidth(fEdgeWidth[fEdgeIdx]);
    }
    TAttLine::Modify();
-   for (il = 1; il <= fNlines; ++il) {
-      FindVisibleDraw(&fPlines[(2*il + 1)*3 - 9], &fPlines[(2*il + 2)*3 - 9]);
-      view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
-      view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
-      xdel = p2[0] - p1[0];
-      ydel = p2[1] - p1[1];
-      for (it = 1; it <= fNT; ++it) {
-         x[0] = p1[0] + xdel*fT[2*it - 2];
-         y[0] = p1[1] + ydel*fT[2*it - 2];
-         x[1] = p1[0] + xdel*fT[2*it - 1];
-         y[1] = p1[1] + ydel*fT[2*it - 1];
+   for (Int_t il = 0; il < fNlines; ++il) {
+      FindVisibleDraw(&fPlines[6*il + 0], &fPlines[6*il + 3]);
+      view->WCtoNDC(&fPlines[6*il + 0], p1);
+      view->WCtoNDC(&fPlines[6*il + 3], p2);
+      Double_t xdel = p2[0] - p1[0];
+      Double_t ydel = p2[1] - p1[1];
+      for (Int_t it = 0; it < fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it + 0];
+         y[0] = p1[1] + ydel*fT[2*it + 0];
+         x[1] = p1[0] + xdel*fT[2*it + 1];
+         y[1] = p1[1] + ydel*fT[2*it + 1];
          gPad->PaintPolyLine(2, x, y);
       }
    }
 
-   // Modify screen
-   for (i = 1; i <= np; ++i) {
-      i1 = i;
-      i2 = i + 1;
-      if (i == np) i2 = 1;
-      ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+   //          Modify screen
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t i1 = i;
+      Int_t i2 = (i == np-1) ? 0 : i + 1;
+      ModifyScreen(&p3[i1*3], &p3[i2*3]);
    }
 }
 
@@ -730,39 +709,30 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 2nd variant for "MOVING SCREEN" algorithm (draw face for stacked lego plot)
 ///
-/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] icodes   set of codes for the line
 /// \param[in] xyz   coordinates of nodes
 /// \param[in] np   number of nodes
 /// \param[in] iface   face
 /// \param[in] tt   additional function defined on this face (not used in this method)
 
-void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
+void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *)
 {
-   Double_t xdel, ydel;
-   Int_t i, k, i1, i2, it;
-   Double_t x[2], y[2];
-   Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
    TView *view = 0;
-
    if (gPad) view = gPad->GetView();
    if (!view) return;
 
-   //          C O P Y   P O I N T S   T O   A R R A Y
-   /* Parameter adjustments */
-   --tt;
-   --iface;
-   xyz -= 4;
-   --icodes;
-
-   for (i = 1; i <= np; ++i) {
-      k = iface[i];
-      p3[i*3 - 3] = xyz[k*3 + 1];
-      p3[i*3 - 2] = xyz[k*3 + 2];
-      p3[i*3 - 1] = xyz[k*3 + 3];
+   //          Copy points to array
+   Double_t p3[3*12];
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t k = iface[i];
+      p3[i*3 + 0] = xyz[(k-1)*3 + 0];
+      p3[i*3 + 1] = xyz[(k-1)*3 + 1];
+      p3[i*3 + 2] = xyz[(k-1)*3 + 2];
    }
 
-   //          D R A W   F A C E
-   if (icodes[3]==0) {  // front & back boxes
+   //          Draw face
+   Double_t p1[3], p2[3], x[2], y[2];
+   if (icodes[2] == 0) {  // front & back boxes
       SetLineColor(1);
       SetLineStyle(1);
       SetLineWidth(1);
@@ -772,30 +742,28 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
       SetLineWidth(fEdgeWidth[fEdgeIdx]);
    }
    TAttLine::Modify();
-   for (i = 1; i <= np; ++i) {
-      i1 = i;
-      i2 = i + 1;
-      if (i == np) i2 = 1;
-      FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-      view->WCtoNDC(&p3[i1*3 - 3], p1);
-      view->WCtoNDC(&p3[i2*3 - 3], p2);
-      xdel = p2[0] - p1[0];
-      ydel = p2[1] - p1[1];
-      for (it = 1; it <= fNT; ++it) {
-         x[0] = p1[0] + xdel*fT[2*it - 2];
-         y[0] = p1[1] + ydel*fT[2*it - 2];
-         x[1] = p1[0] + xdel*fT[2*it - 1];
-         y[1] = p1[1] + ydel*fT[2*it - 1];
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t i1 = i;
+      Int_t i2 = (i == np-1) ? 0 : i + 1;
+      FindVisibleDraw(&p3[i1*3], &p3[i2*3]);
+      view->WCtoNDC(&p3[i1*3], p1);
+      view->WCtoNDC(&p3[i2*3], p2);
+      Double_t xdel = p2[0] - p1[0];
+      Double_t ydel = p2[1] - p1[1];
+      for (Int_t it = 0; it < fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it + 0];
+         y[0] = p1[1] + ydel*fT[2*it + 0];
+         x[1] = p1[0] + xdel*fT[2*it + 1];
+         y[1] = p1[1] + ydel*fT[2*it + 1];
          gPad->PaintPolyLine(2, x, y);
       }
    }
 
-   //          M O D I F Y    S C R E E N
-   for (i = 1; i <= np; ++i) {
-      i1 = i;
-      i2 = i + 1;
-      if (i == np) i2 = 1;
-      ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+   //          Modify screen
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t i1 = i;
+      Int_t i2 = (i == np-1) ? 0 : i + 1;
+      ModifyScreen(&p3[i1*3], &p3[i2*3]);
    }
 }
 
