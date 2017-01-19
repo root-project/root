@@ -1,12 +1,15 @@
 language: cpp
 compiler: gcc
 
+# turn on caching, making sure that root uses ccache below! -Dccache=ON
+cache: ccache
+
 # following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.9
+#      - llvm-toolchain-precise-3.9
     packages:
       - g++-5
       - libxpm-dev
@@ -17,7 +20,7 @@ addons:
       - libgl2ps-dev
       - libglew-dev
       - liblzma-dev
-      - llvm-3.9-dev
+#      - llvm-3.9-dev
 env: COMPILER=g++-5
 
 # following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
@@ -34,10 +37,9 @@ install:
     fi
     export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
   - cd "${TRAVIS_BUILD_DIR}"/.. && git clone http://root.cern.ch/git/roottest.git
+  - mkdir "${TRAVIS_BUILD_DIR}"/../root_build
 
 script:
-  - cd "${TRAVIS_BUILD_DIR}"
-  - mkdir ../root_build
-  - cd ../root_build
-  - cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dbuiltin_llvm=OFF
+  - cd "${TRAVIS_BUILD_DIR}"/../root_build
+  - cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
   - make -j4
