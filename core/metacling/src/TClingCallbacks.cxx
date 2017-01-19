@@ -650,6 +650,11 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
       return false;
 
    {
+      // ROOT-8538: only top-most (function-level) scope is supported.
+      DeclContext* ScopeDC = S->getEntity();
+      if (!ScopeDC || !llvm::isa<FunctionDecl>(ScopeDC))
+         return false;
+
       // Make sure that the failed lookup comes the prompt. Currently, we
       // support only the prompt.
       Scope* FnScope = S->getFnParent();
