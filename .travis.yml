@@ -1,5 +1,6 @@
 language: cpp
 compiler: gcc
+
 # following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 addons:
   apt:
@@ -8,6 +9,11 @@ addons:
     packages:
       - g++-5
 env: COMPILER=g++-5
+
+# 
+before-install:
+  - wget https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.sh
+  - ./cmake-3.7.2-Linux-x86_64.sh
 
 script:
   - mkdir ../root_build
