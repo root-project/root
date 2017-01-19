@@ -1,8 +1,11 @@
 language: cpp
 compiler: gcc
 
-# turn on caching, making sure that root uses ccache below! -Dccache=ON
-cache: ccache
+# caching of the build dir (which is large, so large timeout (3 minute default))
+cache:
+  timeout: 1000
+  directories:
+  - ../root_build
 
 # following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
 addons:
