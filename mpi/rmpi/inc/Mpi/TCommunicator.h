@@ -18,6 +18,7 @@
 #include<Mpi/TRequest.h>
 #endif
 
+
 #include<memory>
 
 /**
@@ -272,13 +273,24 @@ namespace ROOT {
          template<class Type> void Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
 
          /**
-          *         Method to apply reduce operation
-                        \param in_var variable to eval in the reduce operation
-                        \param out_var variable to receive the variable operation
+          *         Method to apply reduce operation over and array of elements using binary tree reduction.
+                        \param in_vars variable to eval in the reduce operation
+                        \param out_vars variable to receive the variable operation
+                        \param count Number of elements to reduce in \p in_vars and \p out_vars
                         \param op function the perform operation
                         \param root id of the main process where the result was received
                         */
-         template<class Type, class Top> void Reduce(const Type &in_var, Type &out_var, Top &op, Int_t root) const;
+         template<class Type> void Reduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)(), Int_t root) const;
+
+         /**
+          *         Method to apply reduce operation using binary tree reduction.
+          *                        \param in_var variable to eval in the reduce operation
+          *                        \param out_var variable to receive the variable operation
+          *                        \param op function the perform operation
+          *                        \param root id of the main process where the result was received
+          */
+         template<class Type> void Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const;
+
 
          ClassDef(TCommunicator, 1)
       };
@@ -291,6 +303,7 @@ namespace ROOT {
             msg.WriteObject(var);
             Send(msg, dest, tag);
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Send((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm);
          }
       }
@@ -304,6 +317,7 @@ namespace ROOT {
             Send(msg, count, dest, tag);
             delete[] msg;
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Send((void *)vars, count, GetDataType<Type>(), dest, tag, fComm);
          }
       }
@@ -320,9 +334,9 @@ namespace ROOT {
             auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
             memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             //TODO: added status argument to this method
-            MPI_Status s;
-            MPI_Recv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm, &s);
+            MPI_Recv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE);
          }
       }
 
@@ -340,6 +354,7 @@ namespace ROOT {
             }
             delete[] msg;
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             //TODO: added status argument to this method
             MPI_Recv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE);
          }
@@ -579,21 +594,27 @@ namespace ROOT {
       }
 
 
-      template<class Type, class Top> void TCommunicator::Reduce(const Type &in_var, Type &out_var, Top &op, Int_t root) const
+      template<class Type> void TCommunicator::Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const
       {
-         Type recvbuffer;
-         memmove((void *)&out_var, (void *)&in_var, sizeof(Type));
+         Reduce(&in_var, &out_var, 1, opf, root);
+      }
+
+      template<class Type> void TCommunicator::Reduce(const Type *in_var, Type *out_var, Int_t count, Op<Type> (*opf)(), Int_t root) const
+      {
+         auto op = opf();
+         Type recvbuffer[count];
+         memmove((void *)out_var, (void *)in_var, sizeof(Type)*count);
          auto size = GetSize();
          auto rank = GetRank();
          auto lastpower = 1 << (Int_t)log2(size);
 
          for (Int_t i = lastpower; i < size; i++)
             if (rank == i)
-               Send(in_var, i - lastpower, MPI_TAG_UB);
+               Send(in_var, count, i - lastpower, MPI_TAG_UB);
          for (Int_t i = 0; i < size - lastpower; i++)
             if (rank == i) {
-               Recv(recvbuffer, i + lastpower, MPI_TAG_UB);
-               out_var  = op(in_var , recvbuffer); // your operation
+               Recv(recvbuffer, count, i + lastpower, MPI_TAG_UB);
+               for (Int_t j = 0; j < count; j++) out_var[j] = op(in_var[j], recvbuffer[j]);
             }
 
          for (Int_t d = 0; d < (Int_t)log2(lastpower); d++)
@@ -601,15 +622,15 @@ namespace ROOT {
                auto receiver = k;
                auto sender = k + (1 << d);
                if (rank == receiver) {
-                  Recv(recvbuffer, sender, MPI_TAG_UB);
-                  out_var  = op(out_var, recvbuffer); // your operation
+                  Recv(recvbuffer, count, sender, MPI_TAG_UB);
+                  for (Int_t j = 0; j < count; j++) out_var[j]  = op(out_var[j], recvbuffer[j]);
                } else if (rank == sender)
-                  Send(out_var, receiver, MPI_TAG_UB);
+                  Send(out_var, count, receiver, MPI_TAG_UB);
             }
-         if (root != 0 && rank == 0) Send(out_var, root, MPI_TAG_UB);
-         if (root == rank && rank != 0) Recv(out_var, 0, MPI_TAG_UB);
-      }
+         if (root != 0 && rank == 0) Send(out_var, count, root, MPI_TAG_UB);
+         if (root == rank && rank != 0) Recv(out_var, count, 0, MPI_TAG_UB);
 
+      }
 
 
       //////////////////////////////////////////////

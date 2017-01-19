@@ -1,0 +1,65 @@
+#ifndef ROOT_Mpi_TInfo
+#define ROOT_Mpi_TInfo
+
+#ifndef ROOT_Mpi_Globals
+#include<Mpi/Globals.h>
+#endif
+
+namespace ROOT {
+
+   namespace Mpi {
+      class TInfo : public TObject {
+         friend class TComm;
+         friend class TIntracomm;
+         friend class TIntercomm;
+         friend class TWin;
+         friend class TFile;
+      protected:
+         MPI::Info fInfo;
+      public:
+         TInfo() {};
+         TInfo(const TInfo& info): TObject(info) {
+            fInfo = info.fInfo;
+         }
+         TInfo(const MPI::Info& info) {
+            fInfo = info;
+         }
+         TInfo(const MPI_Info& info) {
+            fInfo = info;
+         }
+
+         virtual ~TInfo() {}
+
+         TInfo& operator=(const TInfo& data) {
+            fInfo = data.fInfo;
+            return *this;
+         }
+
+
+
+         static TInfo Create();
+
+         virtual void Delete(const TString key);
+
+         TInfo Dup() const;
+
+         virtual void Free();
+
+         virtual TString Get(const TString &key) const;
+
+         virtual Int_t GetNkeys() const;
+
+         virtual TString GetNthkey(Int_t n) const;
+
+         virtual bool GetValueLen(const Char_t* key, Int_t& valuelen) const;
+
+         virtual void Set(const TString key, const TString value);
+         operator MPI_Info() {
+            return (MPI_Info)fInfo;
+         }
+         ClassDef(TInfo, 1)
+
+      };
+   }
+}
+#endif

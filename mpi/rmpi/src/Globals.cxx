@@ -1,6 +1,9 @@
 #include<Mpi/Globals.h>
+#include<TROOT.h>
+
 namespace ROOT {
    namespace Mpi {
+
       /////////////////////////
       // Return&Error codes. //
       /////////////////////////
@@ -121,6 +124,8 @@ namespace ROOT {
       const Int_t SIMILAR = MPI_SIMILAR;
       const Int_t UNEQUAL = MPI_UNEQUAL;
 
+//Custom none datatype
+      const MPI_Datatype DATATYPE_NONE = MPI_Datatype();
 
    }
 

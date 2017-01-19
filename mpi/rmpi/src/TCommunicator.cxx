@@ -410,7 +410,7 @@ template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t 
       };
 
       //cancel lambda function
-      auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
+      auto cancel_fn = [](void */*extra_state*/, Bool_t complete)->Int_t {
          if (!complete)
          {
             std::cout << "incompleted!\n";
