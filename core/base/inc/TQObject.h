@@ -52,8 +52,6 @@ R__EXTERN void *gTQSender;   // the latest sender object
 
 class TQObject {
 
-friend class TQConnection;
-
 protected:
    TList   *fListOfSignals;        //! list of signals from this object
    TList   *fListOfConnections;    //! list of connections to this object
