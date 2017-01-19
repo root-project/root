@@ -216,20 +216,20 @@ void *operator new(size_t size) R__THROW_BAD
    return ExtStart(vp);
 }
 
-void *operator new(size_t size, const std::nothrow_t&) R__THROW_BAD
+void *operator new(size_t size, const std::nothrow_t&) noexcept
 {
    return ::operator new(size);
 }
 
 #if __cplusplus >= 201700L
 
-void *operator new(size_t size, std::align_val_t al) R__THROW_BAD
+void *operator new(size_t size, std::align_val_t al)
 {
    Fatal("operator new","with std::align_val_t is not implemented yet");
    return nullptr;
 }
 
-void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) R__THROW_BAD
+void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
 {
    Fatal("operator new","with std::align_val_t is not implemented yet");
    return nullptr;
@@ -303,7 +303,7 @@ void operator delete(void *ptr) R__THROW_NULL
    }
 }
 
-void operator delete(void *ptr, const std::nothrow_t&) R__THROW_NULL
+void operator delete(void *ptr, const std::nothrow_t&) noexcept
 {
    operator delete(ptr);
 }
@@ -313,7 +313,7 @@ void operator delete(void *ptr, std::align_val_t al) R__THROW_NULL
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
-void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) R__THROW_NULL
+void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noescept
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
@@ -343,7 +343,7 @@ void *operator new[](size_t size) R__THROW_BAD
    return ::operator new(size);
 }
 
-void *operator new[](size_t size, const std::nothrow_t&) R__THROW_BAD
+void *operator new[](size_t size, const std::nothrow_t&) noexcept
 {
    return ::operator new(size);
 }
@@ -356,7 +356,7 @@ void *operator new[](size_t size, std::align_val_t al) R__THROW_BAD
    return nullptr;
 }
 
-void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t&) R__THROW_BAD
+void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
 {
    Fatal("operator new[]","with std::align_val_t is not implemented yet");
    return nullptr;
