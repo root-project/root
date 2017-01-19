@@ -22,6 +22,7 @@ install:
     export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
 
 script:
+  - cd "${TRAVIS_BUILD_DIR}"
   - mkdir ../root_build
   - cd ../root_build
   - cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON
