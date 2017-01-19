@@ -1473,11 +1473,12 @@ void TMVA::MethodBDT::Train()
    double time = timer.ElapsedSeconds();
    std::cout << "### Done timing BDT Training..." << std::endl;
    std::cout << "    +++ Elapsed Time: " << timer.GetElapsedTime() << std::endl;
-   TString timing_csv_titles = "num_cpus, ntrees, depth, ncuts, nvars, ntrain, build_tree_time, build_sum_time, build_train_time, build_filter_time, boost_tree_time, boost_leaf_time, boost_fit_time, boost_predictions_time, boost_targets_time, total_tree_time, total_time";
+   TString timing_csv_titles = "num_cpus,ntrees,depth,ncuts,nvars,ntrain,build_tree_time,build_sum_time,build_train_time,build_filter_time,boost_tree_time,boost_leaf_time,boost_fit_time,boost_predictions_time,boost_targets_time,total_tree_time,total_time";
    TString timing_csv_line = Form("%d,%d,%d,%d,%d,%d,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,", 
                                   fNumCPUs, fNTrees, fMaxDepth, fNCuts, fTrainSample->at(0)->GetNVariables(), fTrainSample->size(), 
                                   buildTreeTime, buildTreeSumTime, buildTreeTrainTime, buildTreeFilterTime, 
-                                  boostTreeTime, boostTreeLeafTime, boostTreeFitTime, boostTreeUpdatePredictionsTime, boostTreeUpdateTargetsTime, time);
+                                  boostTreeTime, boostTreeLeafTime, boostTreeFitTime, boostTreeUpdatePredictionsTime, boostTreeUpdateTargetsTime, 
+                                  totalTreeTime, time);
    std::cout << "    +++ " << timing_csv_titles << std::endl;
    std::cout << "    +++ " << timing_csv_line << std::endl;
    std::cout << std::endl;
