@@ -8,6 +8,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-5
+      - libxpm-dev
 env: COMPILER=g++-5
 
 # following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
