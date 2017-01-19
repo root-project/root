@@ -9,6 +9,8 @@ addons:
     packages:
       - g++-5
       - libxpm-dev
+      - libgsl0-dev
+      - libfftw3-dev
 env: COMPILER=g++-5
 
 # following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
@@ -21,6 +23,8 @@ install:
       mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C cmake
     fi
     export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
+  - cd "${TRAVIS_BUILD_DIR}" && cd ..
+  - git clone http://root.cern.ch/git/roottest.git
 
 script:
   - cd "${TRAVIS_BUILD_DIR}"
