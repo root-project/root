@@ -20,17 +20,19 @@ addons:
 env: COMPILER=g++-5
 
 # following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
-install:
-  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - mkdir -p "${DEPS_DIR}" && cd "${DEPS_DIR}"
+before_install:
   - |
+    DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+    mkdir -p "${DEPS_DIR}"
+install:
+  - |
+    cd "${DEPS_DIR}"
     if [[ -z "$(ls -A ${DEPS_DIR}/cmake/bin)" ]]; then
       CMAKE_URL="https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz"
       mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C cmake
     fi
     export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
-  - cd "${TRAVIS_BUILD_DIR}" && cd ..
-  - git clone http://root.cern.ch/git/roottest.git
+  - cd "${TRAVIS_BUILD_DIR}"/.. && git clone http://root.cern.ch/git/roottest.git
 
 script:
   - cd "${TRAVIS_BUILD_DIR}"
