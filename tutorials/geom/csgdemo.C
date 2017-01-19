@@ -13,7 +13,7 @@ Bool_t raytracing = kTRUE;
 void csgdemo ()
 {
    gSystem->Load("libGeom");
-   bar = new TControlBar("vertical", "TGeo composite shapes",20,20);
+   TControlBar* bar = new TControlBar("vertical", "TGeo composite shapes",20,20);
    bar->AddButton("How to run  ","help()","Instructions ");
    bar->AddButton("Union ", "s_union()", "A + B ");
    bar->AddButton("Intersection ", "s_intersection()","A * B ");
@@ -344,14 +344,14 @@ void help() {
 
    new TCanvas("chelp","Help to run demos",200,10,700,600);
 
-   welcome = new TPaveText(.1,.8,.9,.97);
+   TPaveText* welcome = new TPaveText(.1,.8,.9,.97);
    welcome->AddText("Welcome to the new geometry package");
    welcome->SetTextFont(32);
    welcome->SetTextColor(4);
    welcome->SetFillColor(24);
    welcome->Draw();
 
-   hdemo = new TPaveText(.05,.05,.95,.7);
+   TPaveText* hdemo = new TPaveText(.05,.05,.95,.7);
    hdemo->SetTextAlign(12);
    hdemo->SetTextFont(52);
    hdemo->AddText("- Demo for building TGeo composite shapes");

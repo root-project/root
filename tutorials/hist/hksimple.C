@@ -26,7 +26,7 @@ void padRefresh(TPad *pad,int flag=0)
 void hksimple()
 {
 // Create a new canvas.
-   c1 = new TCanvas("c1","Dynamic Filling Example",200,10,600,900);
+   TCanvas* c1 = new TCanvas("c1","Dynamic Filling Example",200,10,600,900);
 
 // Create a normal histogram and two TH1K histograms
    TH1 *hpx[3];
