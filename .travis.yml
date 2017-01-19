@@ -11,6 +11,12 @@ addons:
       - libxpm-dev
       - libgsl0-dev
       - libfftw3-dev
+      - libafterimage-dev
+      - libftgl-dev
+      - libgl2ps-dev
+      - libglew-dev
+      - liblzma-dev
+      - llvm-3.4-dev
 env: COMPILER=g++-5
 
 # following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
