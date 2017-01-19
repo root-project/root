@@ -11,6 +11,7 @@ addons:
       - ubuntu-toolchain-r-test
 #      - llvm-toolchain-precise-3.9
     packages:
+      - ninja-build
       - g++-5
       - libxpm-dev
       - libgsl0-dev
@@ -41,5 +42,5 @@ install:
 
 script:
   - cd "${TRAVIS_BUILD_DIR}"/../root_build
-  - cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
-  - make -j4
+  - cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
+  - ninja -j4
