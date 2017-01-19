@@ -38,5 +38,5 @@ script:
   - cd "${TRAVIS_BUILD_DIR}"
   - mkdir ../root_build
   - cd ../root_build
-  - cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON
+  - cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dbuiltin_llvm=OFF
   - make -j4
