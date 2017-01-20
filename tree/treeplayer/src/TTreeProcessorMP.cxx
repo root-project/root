@@ -12,30 +12,41 @@
 
 #include "TEnv.h"
 #include "ROOT/TTreeProcessorMP.hxx"
-#include "TPoolPlayer.h"
+#include "TMPWorkerTree.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class TTreeProcessorMP
-/// \brief This class provides a simple interface to process a TTree dataset
+/// \brief This class provides an interface to process a TTree dataset
 ///        in parallel with multi-process technology 
 ///
-/// ###TTreeProcessorMP::ProcTree 
-/// (To be written/updated)
-/// The two possible usages of the Map method are:\n
-/// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
-/// * Map(F func, T& args): func is executed on each element of the collection of arguments args
+/// ###TTreeProcessorMP::Process 
+/// The possible usages of the Process method are the following:\n
+/// * Process(<dataset>, F func, const std::string& treeName, ULong64_t nToProcess):
+///     func is executed nToProcess times with argument a TTreeReader&, initialized for
+///     the TTree with name treeName, from the dataset <dataset>. The dataset can be
+///     expressed as:
+///                     const std::string& fileName  -> single file name
+///                     const std::vector<std::string>& fileNames -> vector of file names
+///                     TFileCollection& files       -> collection of TFileInfo objects
+///                     TChain& files                -> TChain with the file paths
+///                     TTree& tree                  -> Reference to an existing TTree object
 ///
-/// For either signature, func is executed as many times as needed by a pool of
-/// fNWorkers workers; the number of workers can be passed to the constructor
+/// For legacy, the following signature is also supported:
+/// * Process(<dataset>, TSelector& selector, const std::string& treeName, ULong64_t nToProcess):
+///   where seelctor is a TSelector derived class describing the analysis and the other arguments
+///   have the same meaning as above.
+///
+/// For either set of signatures, the processing function is executed as many times as
+/// needed by a pool of fNWorkers workers; the number of workers can be passed to the constructor
 /// or set via SetNWorkers. It defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
 /// be created upon execution of func, returned objects included: TTreeProcessorMP never
 /// deletes what it returns, it simply forgets it.\n
-/// **Note:** that the usage of TTreeProcessorMP::Map is indicated only when the task to be
+/// **Note:** that the usage of TTreeProcessorMP::Process is indicated only when the task to be
 /// executed takes more than a few seconds, otherwise the overhead introduced
-/// by Map will outrun the benefits of parallel execution on most machines.
+/// by Process will outrun the benefits of parallel execution on most machines.
 ///
 /// \param func
 /// \parblock
@@ -48,7 +59,7 @@
 /// a standard container (vector, list, deque), an initializer list
 /// or a pointer to a TCollection (TList*, TObjArray*, ...).
 /// \endparblock
-/// **Note:** the version of TTreeProcessorMP::Map that takes a TCollection* as argument incurs
+/// **Note:** the version of TTreeProcessorMP::Process that takes a TFileCollection* as argument incurs
 /// in the overhead of copying data from the TCollection to an STL container. Only
 /// use it when absolutely necessary.\n
 /// **Note:** in cases where the function to be executed takes more than
@@ -59,29 +70,13 @@
 /// might generate the same sequence of pseudo-random numbers.
 ///
 /// #### Return value:
-/// If T derives from TCollection Map returns a TObjArray, otherwise it
-/// returns an std::vector. In both cases, the elements in the container
-/// will be the objects returned by func.
-///
+/// Methods taking 'F func' return the return type of F.
+/// Methods taking a TSelector return a 'TList *' with the selector output list; the output list
+/// content is owned by the caller.
 ///
 /// #### Examples:
 ///
-/// ~~~{.cpp}
-/// root[] TTreeProcessorMP pool; auto hists = pool.Map(CreateHisto, 10);
-/// root[] TTreeProcessorMP pool(2); auto squares = pool.Map([](int a) { return a*a; }, {1,2,3});
-/// ~~~
-///
-/// ###TTreeProcessorMP::MapReduce
-/// This set of methods behaves exactly like Map, but takes an additional
-/// function as a third argument. This function is applied to the set of
-/// objects returned by the corresponding Map execution to "squash" them
-/// to a single object.
-///
-/// ####Examples:
-/// ~~~{.cpp}
-/// root[] TTreeProcessorMP pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
-/// root[] TTreeProcessorMP pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
-/// ~~~
+/// See tutorials/multicore/mp102_readNtuplesFillHistosAndFit.C and tutorials/multicore/mp103__processSelector.C .
 ///
 //////////////////////////////////////////////////////////////////////////
 
@@ -97,7 +92,7 @@ TTreeProcessorMP::TTreeProcessorMP(unsigned nWorkers) : TMPClient(nWorkers)
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: memory resident tree
-TList* TTreeProcessorMP::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess)
+TList* TTreeProcessorMP::Process(TTree& tree, TSelector& selector, ULong64_t nToProcess)
 {
    //prepare environment
    Reset();
@@ -105,10 +100,10 @@ TList* TTreeProcessorMP::ProcTree(TTree& tree, TSelector& selector, ULong64_t nT
    selector.Begin(nullptr);
 
    //fork
-   TPoolPlayer worker(selector, &tree, nWorkers, nToProcess/nWorkers);
+   TMPWorkerTreeSel worker(selector, &tree, nWorkers, nToProcess/nWorkers);
    bool ok = Fork(worker);
    if(!ok) {
-      Error("TTreeProcessorMP::ProcTree", "[E][C] Could not fork. Aborting operation");
+      Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation");
       return nullptr;
    }
 
@@ -119,9 +114,9 @@ TList* TTreeProcessorMP::ProcTree(TTree& tree, TSelector& selector, ULong64_t nT
    fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
    std::vector<unsigned> args(nWorkers);
    std::iota(args.begin(), args.end(), 0);
-   fNProcessed = Broadcast(PoolCode::kProcTree, args);
+   fNProcessed = Broadcast(MPCode::kProcTree, args);
    if (fNProcessed < nWorkers)
-      Error("TTreeProcessorMP::ProcTree", "[E][C] There was an error while sending tasks to workers."
+      Error("TTreeProcessorMP::Process", "[E][C] There was an error while sending tasks to workers."
                                    " Some entries might not be processed.");
 
    //collect results, distribute new tasks
@@ -151,7 +146,7 @@ TList* TTreeProcessorMP::ProcTree(TTree& tree, TSelector& selector, ULong64_t nT
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a vector of files
-TList* TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
 
    //prepare environment
@@ -160,10 +155,10 @@ TList* TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, TSe
    selector.Begin(nullptr);
 
    //fork
-   TPoolPlayer worker(selector, fileNames, treeName, nWorkers, nToProcess);
+   TMPWorkerTreeSel worker(selector, fileNames, treeName, nWorkers, nToProcess);
    bool ok = Fork(worker);
    if (!ok) {
-      Error("TTreeProcessorMP::ProcTree", "[E][C] Could not fork. Aborting operation");
+      Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation");
       return nullptr;
    }
 
@@ -177,9 +172,9 @@ TList* TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, TSe
          fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
          std::vector<unsigned> args(nWorkers);
          std::iota(args.begin(), args.end(), 0);
-         fNProcessed = Broadcast(PoolCode::kProcRange, args);
+         fNProcessed = Broadcast(MPCode::kProcRange, args);
          if (fNProcessed < nWorkers)
-            Error("TTreeProcessorMP::ProcTree", "[E][C] There was an error while sending tasks to workers."
+            Error("TTreeProcessorMP::Process", "[E][C] There was an error while sending tasks to workers."
                                          " Some entries might not be processed");
       } else {
          // File granularity: each worker processes one whole file as a single task
@@ -187,9 +182,9 @@ TList* TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, TSe
          fNToProcess = fileNames.size();
          std::vector<unsigned> args(nWorkers);
          std::iota(args.begin(), args.end(), 0);
-         fNProcessed = Broadcast(PoolCode::kProcFile, args);
+         fNProcessed = Broadcast(MPCode::kProcFile, args);
          if (fNProcessed < nWorkers)
-            Error("TTreeProcessorMP::ProcTree", "[E][C] There was an error while sending tasks to workers."
+            Error("TTreeProcessorMP::Process", "[E][C] There was an error while sending tasks to workers."
                                          " Some entries might not be processed.");
       }
    } else {
@@ -199,9 +194,9 @@ TList* TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, TSe
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
-      fNProcessed = Broadcast(PoolCode::kProcRange, args);
+      fNProcessed = Broadcast(MPCode::kProcRange, args);
       if (fNProcessed < nWorkers)
-         Error("TTreeProcessorMP::ProcTree", "[E][C] There was an error while sending tasks to workers."
+         Error("TTreeProcessorMP::Process", "[E][C] There was an error while sending tasks to workers."
                                       " Some entries might not be processed.");
    }
 
@@ -233,20 +228,20 @@ TList* TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, TSe
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a TFileCollection
-TList* TTreeProcessorMP::ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TTreeProcessorMP::Process(TFileCollection& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
    for(auto f : *static_cast<THashList*>(files.GetList()))
       fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
 
-   TList *rl = ProcTree(fileNames, selector, treeName, nToProcess);
+   TList *rl = Process(fileNames, selector, treeName, nToProcess);
    return rl;
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a TChain
-TList* TTreeProcessorMP::ProcTree(TChain& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TTreeProcessorMP::Process(TChain& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
    TObjArray* filelist = files.GetListOfFiles();
    std::vector<std::string> fileNames(filelist->GetEntries());
@@ -254,15 +249,15 @@ TList* TTreeProcessorMP::ProcTree(TChain& files, TSelector& selector, const std:
    for(auto f : *filelist)
       fileNames[count++] = f->GetTitle();
 
-   return ProcTree(fileNames, selector, treeName, nToProcess);
+   return Process(fileNames, selector, treeName, nToProcess);
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a single file
-TList* TTreeProcessorMP::ProcTree(const std::string& fileName, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+TList* TTreeProcessorMP::Process(const std::string& fileName, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
 {
    std::vector<std::string> singleFileName(1, fileName);
-   return ProcTree(singleFileName, selector, treeName, nToProcess);
+   return Process(singleFileName, selector, treeName, nToProcess);
 }
 
 /// Fix list of lists before merging (to avoid errors about duplicated objects)
@@ -299,9 +294,9 @@ void TTreeProcessorMP::ReplyToFuncResult(TSocket *s)
    if (fNProcessed < fNToProcess) {
       //this cannot be a "greedy worker" task
       if (fTaskType == ETask::kMap)
-         MPSend(s, PoolCode::kExecFunc);
+         MPSend(s, MPCode::kExecFunc);
       else if (fTaskType == ETask::kMapWithArg)
-         MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
+         MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
       ++fNProcessed;
    } else //whatever the task is, we are done
       MPSend(s, MPCode::kShutdownOrder);
@@ -317,16 +312,16 @@ void TTreeProcessorMP::ReplyToIdle(TSocket *s)
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
       if (fTaskType == ETask::kMapWithArg)
-         MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
+         MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
       else if (fTaskType == ETask::kMap)
-         MPSend(s, PoolCode::kExecFunc);
+         MPSend(s, MPCode::kExecFunc);
       else if (fTaskType == ETask::kProcByRange)
-         MPSend(s, PoolCode::kProcRange, fNProcessed);
+         MPSend(s, MPCode::kProcRange, fNProcessed);
       else if (fTaskType == ETask::kProcByFile)
-         MPSend(s, PoolCode::kProcFile, fNProcessed);
+         MPSend(s, MPCode::kProcFile, fNProcessed);
       ++fNProcessed;
    } else
-      MPSend(s, PoolCode::kSendResult);
+      MPSend(s, MPCode::kSendResult);
 }
 
 } // namespace ROOT

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TTreeProcessor
-#define ROOT_TTreeProcessor
+#ifndef ROOT_TTreeProcessorMT
+#define ROOT_TTreeProcessorMT
 
 #ifndef ROOT_TKey
 #include "TKey.h"
@@ -135,7 +135,7 @@ namespace ROOT {
    } // End of namespace Internal
 
 
-   class TTreeProcessor {
+   class TTreeProcessorMT {
    private:
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Threaded object with <file,tree> per thread
 
@@ -146,7 +146,7 @@ namespace ROOT {
       /// \param[in] treename Name of the tree to process. If not provided,
       ///                     the implementation will automatically search for a
       ///                     tree in the file.
-      TTreeProcessor(std::string_view filename, std::string_view treename = "") : treeView(filename, treename) {}
+      TTreeProcessorMT(std::string_view filename, std::string_view treename = "") : treeView(filename, treename) {}
  
       void Process(std::function<void(TTreeReader&)> func);
  
@@ -154,4 +154,4 @@ namespace ROOT {
       
 } // End of namespace ROOT
 
-#endif // defined TTreeProcessor
+#endif // defined TTreeProcessorMT

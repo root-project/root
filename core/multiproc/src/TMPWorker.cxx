@@ -1,5 +1,6 @@
 /* @(#)root/multiproc:$Id$ */
 // Author: Enrico Guiraud July 2015
+// Modified: G Ganis Jan 2017
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,63 +43,6 @@
 /// a HandleInput method that overrides TMPWorker's.\n
 ///
 //////////////////////////////////////////////////////////////////////////
-
-
-
-//////////////////////////////////////////////////////////////////////////
-/// Class constructors.
-/// Note that this does not set variables like fPid or fS (worker's socket).\n
-/// These operations are handled by the Init method, which is called after
-/// forking.\n
-/// This separation is in place because the instantiation of a worker
-/// must be done once _before_ forking, while the initialization of the
-/// members must be done _after_ forking by each of the children processes.
-TMPWorker::TMPWorker()
-          : fFileNames(), fTreeName(), fTree(nullptr), fFile(nullptr),
-            fNWorkers(0), fMaxNEntries(0),
-            fProcessedEntries(0), fS(), fPid(0), fNWorker(0),
-            fTreeCache(0), fTreeCacheIsLearning(kFALSE),
-            fUseTreeCache(kTRUE), fCacheSize(-1)
-{
-   Setup();
-}
-
-TMPWorker::TMPWorker(const std::vector<std::string>& fileNames,
-                     const std::string& treeName,
-                     unsigned nWorkers, ULong64_t maxEntries)
-          : fFileNames(fileNames), fTreeName(treeName), fTree(nullptr), fFile(nullptr),
-            fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-            fProcessedEntries(0), fS(), fPid(0), fNWorker(0),
-            fTreeCache(0), fTreeCacheIsLearning(kFALSE),
-            fUseTreeCache(kTRUE), fCacheSize(-1)
-{
-   Setup();
-}
-
-TMPWorker::TMPWorker(TTree *tree, unsigned nWorkers, ULong64_t maxEntries)
-          : fFileNames(), fTreeName(), fTree(tree), fFile(nullptr),
-            fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-            fProcessedEntries(0), fS(), fPid(0), fNWorker(0),
-            fTreeCache(0), fTreeCacheIsLearning(kFALSE),
-            fUseTreeCache(kTRUE), fCacheSize(-1)
-{
-   Setup();
-}
-
-TMPWorker::~TMPWorker()
-{
-   // Properly close the open file, if any
-   CloseFile();
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// Auxilliary method for common initializations
-void TMPWorker::Setup()
-{
-  Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
-  if (uc != 1) fUseTreeCache = kFALSE;
-  fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
-}
 
 //////////////////////////////////////////////////////////////////////////
 /// This method is called by children processes right after forking.
@@ -164,103 +108,6 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
       MPSend(fS.get(), MPCode::kError, reply.data());
    }
 }
-
-
-//////////////////////////////////////////////////////////////////////////
-/// Handle file closing.
-
-void TMPWorker::CloseFile()
-{
-   // Avoid destroying the cache; must be placed before deleting the trees
-   if (fFile) {
-      if (fTree) fFile->SetCacheRead(0, fTree);
-      delete fFile ;
-      fFile = 0;
-   }
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// Handle file opening.
-
-TFile *TMPWorker::OpenFile(const std::string& fileName)
-{
-
-   TFile *fp = TFile::Open(fileName.c_str());
-   if (fp == nullptr || fp->IsZombie()) {
-      std::stringstream ss;
-      ss << "could not open file " << fileName;
-      std::string errmsg = ss.str();
-      SendError(errmsg, PoolCode::kProcError);
-      return nullptr;
-   }
-
-   return fp;
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-/// Retrieve a tree from an open file.
-
-TTree *TMPWorker::RetrieveTree(TFile *fp)
-{
-   //retrieve the TTree with the specified name from file
-   //we are not the owner of the TTree object, the file is!
-   TTree *tree = nullptr;
-   if(fTreeName == "") {
-      // retrieve the first TTree
-      // (re-adapted from TEventIter.cxx)
-      if (fp->GetListOfKeys()) {
-         for(auto k : *fp->GetListOfKeys()) {
-            TKey *key = static_cast<TKey*>(k);
-            if (!strcmp(key->GetClassName(), "TTree") || !strcmp(key->GetClassName(), "TNtuple"))
-               tree = static_cast<TTree*>(fp->Get(key->GetName()));
-         }
-      }    
-   } else {
-      tree = static_cast<TTree*>(fp->Get(fTreeName.c_str()));
-   }
-   if (tree == nullptr) {
-      std::stringstream ss;
-      ss << "cannot find tree with name " << fTreeName << " in file " << fp->GetName();
-      std::string errmsg = ss.str();
-      SendError(errmsg, PoolCode::kProcError);
-      return nullptr;
-   }
-
-   return tree;
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// Tree cache handling
-
-void TMPWorker::SetupTreeCache(TTree *tree)
-{
-   if (fUseTreeCache) {
-      TFile *curfile = tree->GetCurrentFile();
-      if (curfile) {
-         if (!fTreeCache) {
-            tree->SetCacheSize(fCacheSize);
-            fTreeCache = (TTreeCache *)curfile->GetCacheRead(tree);
-            if (fCacheSize < 0) fCacheSize = tree->GetCacheSize();
-         } else {
-            fTreeCache->ResetCache();
-            curfile->SetCacheRead(fTreeCache, tree);
-            fTreeCache->UpdateBranches(tree);
-         }
-         if (fTreeCache) {
-            fTreeCacheIsLearning = fTreeCache->IsLearning();
-            if (fTreeCacheIsLearning)
-               Info("SetupTreeCache","the tree cache is in learning phase");
-         }
-      } else {
-         Warning("SetupTreeCache", "default tree does not have a file attached: corruption? Tree cache untouched");
-      }
-   } else {
-      // Disable the cache
-      tree->SetCacheSize(0);
-   }
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 /// Error sender

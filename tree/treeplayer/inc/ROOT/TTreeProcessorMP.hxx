@@ -23,7 +23,7 @@
 #include "TFileInfo.h"
 #include "THashList.h"
 #include "TMPClient.h"
-#include "TPoolProcessor.h"
+#include "TMPWorkerTree.h"
 #include "TPoolWorker.h"
 #include "TSelector.h"
 #include "TTreeReader.h"
@@ -44,24 +44,22 @@ public:
    TTreeProcessorMP(const TTreeProcessorMP &) = delete;
    TTreeProcessorMP &operator=(const TTreeProcessorMP &) = delete;
 
-   // ProcTree
+   // Process
    // these versions requires that procFunc returns a ptr to TObject or inheriting classes and takes a TTreeReader& (both enforced at compile-time)
-   template<class F> auto ProcTree(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(TTree& tree, F procFunc, ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    // these versions require a TSelector
-   TList* ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(const std::string &fileName, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(TChain& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess = 0);
+   TList* Process(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* Process(const std::string &fileName, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* Process(TFileCollection& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* Process(TChain& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   TList* Process(TTree& tree, TSelector& selector, ULong64_t nToProcess = 0);
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
-
-   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
@@ -82,27 +80,15 @@ private:
       kNoTask,   ///< no task is being executed
       kMap,          ///< a Map method with no arguments is being executed
       kMapWithArg,   ///< a Map method with arguments is being executed
-      kProcByRange,   ///< a ProcTree method is being executed and each worker will process a certain range of each file
-      kProcByFile,    ///< a ProcTree method is being executed and each worker will process a different file
+      kProcByRange,   ///< a Process method is being executed and each worker will process a certain range of each file
+      kProcByFile,    ///< a Process method is being executed and each worker will process a different file
    };
 
    ETask fTaskType = ETask::kNoTask; ///< the kind of task that is being executed, if any
 };
 
-
-/************ TEMPLATE METHODS IMPLEMENTATION ******************/
-
-
-template<class T, class R>
-T TTreeProcessorMP::Reduce(const std::vector<T> &objs, R redfunc)
-{
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-   return redfunc(objs);
-}
-
 template<class F>
-auto TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
@@ -112,10 +98,10 @@ auto TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, F pro
    unsigned nWorkers = GetNWorkers();
 
    //fork
-   TPoolProcessor<F> worker(procFunc, fileNames, treeName, nWorkers, nToProcess);
+   TMPWorkerTreeFunc<F> worker(procFunc, fileNames, treeName, nWorkers, nToProcess);
    bool ok = Fork(worker);
    if(!ok) {
-      Error("TTreeProcessorMP::ProcTree", "[E][C] Could not fork. Aborting operation.");
+      Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation.");
       return nullptr;
    }
 
@@ -126,18 +112,18 @@ auto TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, F pro
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
-      fNProcessed = Broadcast(PoolCode::kProcRange, args);
+      fNProcessed = Broadcast(MPCode::kProcRange, args);
       if(fNProcessed < nWorkers)
-         Error("TTreeProcessorMP::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
+         Error("TTreeProcessorMP::Process", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
    } else {
       //file granularity. each worker processes one whole file as a single task
       fTaskType = ETask::kProcByFile;
       fNToProcess = fileNames.size();
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
-      fNProcessed = Broadcast(PoolCode::kProcFile, args);
+      fNProcessed = Broadcast(MPCode::kProcFile, args);
       if(fNProcessed < nWorkers)
-         Error("TTreeProcessorMP::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
+         Error("TTreeProcessorMP::Process", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
    }
 
    //collect results, distribute new tasks
@@ -156,27 +142,27 @@ auto TTreeProcessorMP::ProcTree(const std::vector<std::string>& fileNames, F pro
 
 
 template<class F>
-auto TTreeProcessorMP::ProcTree(const std::string& fileName, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    std::vector<std::string> singleFileName(1, fileName);
-   return ProcTree(singleFileName, procFunc, treeName, nToProcess);
+   return Process(singleFileName, procFunc, treeName, nToProcess);
 }
 
 
 template<class F>
-auto TTreeProcessorMP::ProcTree(TFileCollection& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
    for(auto f : *static_cast<THashList*>(files.GetList()))
       fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
 
-   return ProcTree(fileNames, procFunc, treeName, nToProcess);
+   return Process(fileNames, procFunc, treeName, nToProcess);
 }
 
 
 template<class F>
-auto TTreeProcessorMP::ProcTree(TChain& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+auto TTreeProcessorMP::Process(TChain& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    TObjArray* filelist = files.GetListOfFiles();
    std::vector<std::string> fileNames(filelist->GetEntries());
@@ -184,12 +170,12 @@ auto TTreeProcessorMP::ProcTree(TChain& files, F procFunc, const std::string& tr
    for(auto f : *filelist)
       fileNames[count++] = f->GetTitle();
 
-   return ProcTree(fileNames, procFunc, treeName, nToProcess);
+   return Process(fileNames, procFunc, treeName, nToProcess);
 }
 
 
 template<class F>
-auto TTreeProcessorMP::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
+auto TTreeProcessorMP::Process(TTree& tree, F procFunc, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
@@ -199,10 +185,10 @@ auto TTreeProcessorMP::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -
    unsigned nWorkers = GetNWorkers();
 
    //fork
-   TPoolProcessor<F> worker(procFunc, &tree, nWorkers, nToProcess);
+   TMPWorkerTreeFunc<F> worker(procFunc, &tree, nWorkers, nToProcess);
    bool ok = Fork(worker);
    if(!ok) {
-      Error("TTreeProcessorMP::ProcTree", "[E][C] Could not fork. Aborting operation.");
+      Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation.");
       return nullptr;
    }
 
@@ -213,9 +199,9 @@ auto TTreeProcessorMP::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -
    fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
    std::vector<unsigned> args(nWorkers);
    std::iota(args.begin(), args.end(), 0);
-   fNProcessed = Broadcast(PoolCode::kProcTree, args);
+   fNProcessed = Broadcast(MPCode::kProcTree, args);
    if(fNProcessed < nWorkers)
-      Error("TTreeProcessorMP::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
+      Error("TTreeProcessorMP::Process", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
 
    //collect results, distribute new tasks
    std::vector<TObject*> reslist;
@@ -237,16 +223,16 @@ template<class T>
 void TTreeProcessorMP::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &reslist)
 {
    unsigned code = msg.first;
-   if (code == PoolCode::kFuncResult) {
+   if (code == MPCode::kFuncResult) {
       reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
       ReplyToFuncResult(s);
-   } else if (code == PoolCode::kIdling) {
+   } else if (code == MPCode::kIdling) {
       ReplyToIdle(s);
-   } else if(code == PoolCode::kProcResult) {
+   } else if(code == MPCode::kProcResult) {
       if(msg.second != nullptr)
          reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
       MPSend(s, MPCode::kShutdownOrder);
-   } else if(code == PoolCode::kProcError) {
+   } else if(code == MPCode::kProcError) {
       const char *str = ReadBuffer<const char*>(msg.second.get());
       Error("TTreeProcessorMP::HandlePoolCode", "[E][C] a worker encountered an error: %s\n"
                                          "Continuing execution ignoring these entries.", str);
