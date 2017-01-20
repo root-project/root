@@ -316,7 +316,7 @@ void operator delete(void *ptr, std::align_val_t al) R__THROW_NULL
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
-void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noescept
+void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noexcept
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
