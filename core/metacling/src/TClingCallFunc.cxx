@@ -1769,6 +1769,19 @@ void TClingCallFunc::execWithULL(void *address, clang::QualType QT,
    val->getULL() = ret;
 }
 
+
+#define R__CF_InitRetAndExec(T, address, QT, ret)                 \
+   *ret = cling::Value::Create<T>(QT.getAsOpaquePtr(), *fInterp); \
+   /* Release lock during user function execution*/               \
+   R__LOCKGUARD_UNLOCK(global);                                   \
+                                                                  \
+   static_assert(std::is_integral<T>::value, "Must be called with integral T"); \
+   if (std::is_signed<T>::value)                                  \
+      execWithLL<T>(address, QT, ret);                            \
+   else                                                           \
+      execWithULL<T>(address, QT, ret)
+
+
 void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) const
 {
    if (!ret) {
@@ -1817,7 +1830,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       return;
    } else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
-      *ret = cling::Value(QT, *fInterp);
+      *ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
       R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
@@ -1835,9 +1848,9 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       execWithLL<int>(address, QT, ret);
       return;
    } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
-      *ret = cling::Value(QT, *fInterp);
       switch (BT->getKind()) {
          case BuiltinType::Void:
+            *ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, 0);
             return;
@@ -1847,22 +1860,16 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             //  Unsigned Types
             //
          case BuiltinType::Bool:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<bool>(address, QT, ret);
+            R__CF_InitRetAndExec(bool, address, QT, ret);
             return;
             break;
          case BuiltinType::Char_U: // char on targets where it is unsigned
          case BuiltinType::UChar:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<char>(address, QT, ret);
+            R__CF_InitRetAndExec(char, address, QT, ret);
             return;
             break;
          case BuiltinType::WChar_U:
-            // wchar_t on targets where it is unsigned.
-            // The standard doesn't allow to specify signednedd of wchar_t
-            // thus this maps simply to wchar_t.
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<wchar_t>(address, QT, ret);
+            R__CF_InitRetAndExec(wchar_t, address, QT, ret);
             return;
             break;
          case BuiltinType::Char16:
@@ -1876,23 +1883,19 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::UShort:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned short>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned short, address, QT, ret);
             return;
             break;
          case BuiltinType::UInt:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned int>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned int, address, QT, ret);
             return;
             break;
          case BuiltinType::ULong:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned long>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned long, address, QT, ret);
             return;
             break;
          case BuiltinType::ULongLong:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned long long>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned long long, address, QT, ret);
             return;
             break;
          case BuiltinType::UInt128: {
@@ -1907,36 +1910,30 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             //
          case BuiltinType::Char_S: // char on targets where it is signed
          case BuiltinType::SChar:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<signed char>(address, QT, ret);
+            R__CF_InitRetAndExec(signed char, address, QT, ret);
             return;
             break;
          case BuiltinType::WChar_S:
             // wchar_t on targets where it is signed.
             // The standard doesn't allow to specify signednedd of wchar_t
             // thus this maps simply to wchar_t.
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<wchar_t>(address, QT, ret);
+            R__CF_InitRetAndExec(wchar_t, address, QT, ret);
             return;
             break;
          case BuiltinType::Short:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<short>(address, QT, ret);
+            R__CF_InitRetAndExec(short, address, QT, ret);
             return;
             break;
          case BuiltinType::Int:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<int>(address, QT, ret);
+            R__CF_InitRetAndExec(int, address, QT, ret);
             return;
             break;
          case BuiltinType::Long:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<long>(address, QT, ret);
+            R__CF_InitRetAndExec(long, address, QT, ret);
             return;
             break;
          case BuiltinType::LongLong:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<long long>(address, QT, ret);
+            R__CF_InitRetAndExec(long long, address, QT, ret);
             return;
             break;
          case BuiltinType::Int128:
@@ -1951,16 +1948,19 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::Float:
+            *ret = cling::Value::Create<float>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, &ret->getFloat());
             return;
             break;
          case BuiltinType::Double:
+            *ret = cling::Value::Create<double>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, &ret->getDouble());
             return;
             break;
          case BuiltinType::LongDouble:
+            *ret = cling::Value::Create<long double>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, &ret->getLongDouble());
             return;
