@@ -217,10 +217,9 @@ void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt 
    return cf.InterfaceMethod();
 }
 
-bool TClingMethodInfo::IsValid() const
+bool TClingMethodInfo::IsValidSlow() const
 {
-   if (fSingleDecl) return fSingleDecl;
-   else if (fTemplateSpecIter) {
+   if (fTemplateSpecIter) {
       // Could trigger deserialization of decls.
       R__LOCKGUARD(gInterpreterMutex);
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
