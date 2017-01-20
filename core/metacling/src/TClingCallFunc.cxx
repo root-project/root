@@ -259,6 +259,12 @@ namespace {
 
 } // unnamed namespace.
 
+size_t TClingCallFunc::CalculateMinRequiredArguments()
+{
+   // This function is non-const to use caching overload of GetDecl()!
+   return GetDecl()->getMinRequiredArguments();
+}
+
 void *TClingCallFunc::compile_wrapper(const string &wrapper_name, const string &wrapper,
                                       bool withAccessControl/*=true*/)
 {
@@ -1010,7 +1016,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
             break;
       }
    }
-   unsigned min_args = FD->getMinRequiredArguments();
+   unsigned min_args = GetMinRequiredArguments();
    unsigned num_params = FD->getNumParams();
    //
    //  Make the wrapper name.
@@ -1437,7 +1443,7 @@ public:
    } u;
 };
 
-void TClingCallFunc::exec(void *address, void *ret) const
+void TClingCallFunc::exec(void *address, void *ret)
 {
    SmallVector<ValHolder, 8> vh_ary;
    SmallVector<void *, 8> vp_ary;
@@ -1455,11 +1461,11 @@ void TClingCallFunc::exec(void *address, void *ret) const
       //
       unsigned num_params = FD->getNumParams();
 
-      if (num_args < FD->getMinRequiredArguments()) {
+      if (num_args < GetMinRequiredArguments()) {
          ::Error("TClingCallFunc::exec",
                "Not enough arguments provided for %s (%d instead of the minimum %d)",
                fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
-               num_args, FD->getMinRequiredArguments());
+               num_args, (int)GetMinRequiredArguments());
          return;
       }
       if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
@@ -1752,8 +1758,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
 }
 
 template <typename T>
-void TClingCallFunc::execWithLL(void *address, clang::QualType QT,
-                                cling::Value *val) const
+void TClingCallFunc::execWithLL(void *address, cling::Value *val)
 {
    T ret; // leave uninit for valgrind's sake!
    exec(address, &ret);
@@ -1761,8 +1766,7 @@ void TClingCallFunc::execWithLL(void *address, clang::QualType QT,
 }
 
 template <typename T>
-void TClingCallFunc::execWithULL(void *address, clang::QualType QT,
-                                 cling::Value *val) const
+void TClingCallFunc::execWithULL(void *address, cling::Value *val)
 {
    T ret; // leave uninit for valgrind's sake!
    exec(address, &ret);
@@ -1777,12 +1781,12 @@ void TClingCallFunc::execWithULL(void *address, clang::QualType QT,
                                                                   \
    static_assert(std::is_integral<T>::value, "Must be called with integral T"); \
    if (std::is_signed<T>::value)                                  \
-      execWithLL<T>(address, QT, ret);                            \
+      execWithLL<T>(address, ret);                            \
    else                                                           \
-      execWithULL<T>(address, QT, ret)
+      execWithULL<T>(address, ret)
 
 
-void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) const
+void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
 {
    if (!ret) {
       exec(address, 0);
@@ -1845,7 +1849,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       (void) ET;
       *ret = cling::Value(QT, *fInterp);
       R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-      execWithLL<int>(address, QT, ret);
+      execWithLL<int>(address, ret);
       return;
    } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
       switch (BT->getKind()) {
