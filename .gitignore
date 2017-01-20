@@ -219,6 +219,7 @@ core/base/src/RGitCommit.h
 # /main/src/
 /main/src/roots.sh
 /main/src/proofserv.sh
+/main/src/xproofd.sh
 
 # /math/genetic/test/
 /math/genetic/test/testGAMinimizer
