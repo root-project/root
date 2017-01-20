@@ -7,6 +7,8 @@
 #include <TSystem.h>
 using namespace ROOT::Mpi;
 
+// TODO:added test for other operators PROD MIN MAX etc..
+
 void reduce_test_scalar(Int_t root = 0)
 {
    auto rank = gComm->GetRank();
@@ -31,7 +33,7 @@ void reduce_test_scalar(Int_t root = 0)
    gComm->Reduce(send_mat, recv_mat, SUM, root); //testing custom object
    gComm->Barrier();
 
-   TVectorD recv_vec(size);
+   TVectorD recv_vec;
    gComm->Reduce(send_vec, recv_vec, SUM, root); //testing custom object
    gComm->Barrier();
 
@@ -42,21 +44,97 @@ void reduce_test_scalar(Int_t root = 0)
          sum = SUM<Int_t>()(sum, i);
       }
       std::cout << std::endl;
-      printf("MPI Result     = %d\n", value);
-      printf("Correct Result = %d\n", sum);
-      recv_mat.Print();
-      recv_vec.Print();
+//       printf("MPI Result     = %d\n", value);
+//       printf("Correct Result = %d\n", sum);
+
+      //require values to compare if everything is ok
+      TMatrixD req_mat(size, size);
+      TVectorD req_vec(size);
+
+      for (auto i = 0; i < size; i++) {
+         req_vec[i] = 1 * size;
+         for (auto j = 0; j < size; j++) req_mat[i][j] = 1.0 * size;
+      }
+
+      //assertions
+      assert(value == sum);
+      assert(recv_vec == req_vec);
+      assert(recv_mat == req_mat);
    }
 }
 
-void reduce(Bool_t stressTest = kFALSE)
+void reduce_test_array(Int_t root = 0, Int_t count = 2)
+{
+   auto rank = gComm->GetRank();
+   auto size = gComm->GetSize();
+
+   Int_t vars[count];
+   /////////////////////////
+   //testing custom object//
+   /////////////////////////
+   TMatrixD send_mat[count];
+   TVectorD send_vec[count];
+   for (auto k = 0; k < count; k++) {
+      vars[k] = rank;
+      for (auto i = 0; i < size; i++) {
+         send_mat[k].ResizeTo(size, size);
+         send_vec[k].ResizeTo(size);
+         send_vec[k][i] = 1;
+         for (auto j = 0; j < size; j++) send_mat[k][i][j] = 1.0;
+      }
+   }
+   Int_t values[count];
+
+   gComm->Reduce(vars, values, count, SUM, root); //testing custom object
+   gComm->Barrier();
+
+   TMatrixD recv_mat[count];
+   gComm->Reduce(send_mat, recv_mat, count, SUM, root); //testing custom object
+   gComm->Barrier();
+
+   TVectorD recv_vec[count];
+   gComm->Reduce(send_vec, recv_vec, count, SUM, root); //testing custom object
+   gComm->Barrier();
+
+
+   if (rank == root) {
+      Int_t sum = 0;
+      for (int i = 0; i < size ; i++) {
+         sum = SUM<Int_t>()(sum, i);
+      }
+      
+      //require values to compare if everything is ok
+      TMatrixD req_mat(size, size);
+      TVectorD req_vec(size);
+      for (auto i = 0; i < size; i++) {
+         req_vec[i] = 1 * size;
+         for (auto j = 0; j < size; j++) req_mat[i][j] = 1.0 * size;
+      }
+
+      std::cout << std::endl;
+      for (auto i = 0; i < count; i++) {
+         //assertions
+         assert(values[i] == sum);
+         assert(recv_mat[i] == req_mat);
+         assert(recv_vec[i] == req_vec);
+      }
+   }
+}
+
+
+void reduce(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;
    if (gComm->GetSize() == 1) return; //needed at least 2 process
-   if (!stressTest)   reduce_test_scalar(1);
-   else {
+   if (!stressTest) {
+      reduce_test_scalar(0);
+      reduce_test_array(0);
+   } else {
       //stressTest
-      for (auto i = 0; i < gComm->GetSize(); i++) reduce_test_scalar(i);
+      for (auto i = 0; i < gComm->GetSize(); i++) {
+         reduce_test_scalar(i);
+         reduce_test_array(i, gComm->GetSize() * 2);
+      }
    }
 }
 

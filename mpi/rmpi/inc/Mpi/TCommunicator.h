@@ -616,6 +616,7 @@ namespace ROOT {
                memmove((void *)&out_var[i], obj_tmp, sizeof(Type));
             }
          }
+
          auto size = GetSize();
          auto lastpower = 1 << (Int_t)log2(size);
 
