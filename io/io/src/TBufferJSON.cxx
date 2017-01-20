@@ -342,7 +342,19 @@ TBufferJSON::~TBufferJSON()
 //______________________________________________________________________________
 TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char *member_name)
 {
-   // converts object, inherited from TObject class, to JSON string
+   // Converts object, inherited from TObject class, to JSON string
+   //
+   // Lower digit of compact parameter define formatting rules
+   //   0 - no any compression, human-readable form
+   //   1 - exclude spaces in the begin
+   //   2 - remove newlines
+   //   3 - exclude spaces as much as possible
+   // Second digit of compact parameter defines algorithm for arrays compression
+   //   0 - no compression, standard JSON array
+   //   1 - exclude leading, trailing zeros, required JSROOT v5
+   //   2 - check values repetition and empty gaps, required JSROOT v5
+   // Maximal compression achieved when compact parameter equal to 23
+   // When member_name specified, converts only this data member
 
    TClass *clActual = 0;
    void *ptr = (void *) obj;
@@ -360,11 +372,17 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 //______________________________________________________________________________
 void TBufferJSON::SetCompact(int level)
 {
-   // Set level of space/newline compression
-   //   0 - no any compression
+   // Set level of space/newline/array compression
+   //
+   // Lower digit of compact parameter define formatting rules
+   //   0 - no any compression, human-readable form
    //   1 - exclude spaces in the begin
    //   2 - remove newlines
    //   3 - exclude spaces as much as possible
+   // Second digit of compact parameter defines algorithm for arrays compression
+   //   0 - no compression, standard JSON array
+   //   1 - exclude leading, trailing zeros, required JSROOT v5
+   //   2 - check values repetition and empty gaps, required JSROOT v5
 
    fCompact = level;
    fSemicolon = (fCompact % 10 > 2) ? ":" : " : ";
@@ -379,11 +397,16 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl,
    // Converts any type of object to JSON string
    //
    // One should provide pointer on object and its class name
-   // Following values of compact parameter can be used
-   //   0 - no any compression
+   // Lower digit of compact parameter define formatting rules
+   //   0 - no any compression, human-readable form
    //   1 - exclude spaces in the begin
    //   2 - remove newlines
    //   3 - exclude spaces as much as possible
+   // Second digit of compact parameter defines algorithm for arrays compression
+   //   0 - no compression, standard JSON array
+   //   1 - exclude leading, trailing zeros, required JSROOT v5
+   //   2 - check values repetition and empty gaps, required JSROOT v5
+   // Maximal compression achieved when compact parameter equal to 23
    // When member_name specified, converts only this data member
 
    if ((member_name!=0) && (obj!=0)) {
@@ -2242,44 +2265,56 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
 
 }
 
-
-#define TJSONWriteArrayContent(vname, arrsize)        \
-   {                                                     \
-      fValue.Append("["); /* fJsonrCnt++; */             \
-      for (Int_t indx=0;indx<arrsize;indx++) {           \
-         if (indx>0) fValue.Append(fArraySepar.Data());  \
-         JsonWriteBasic(vname[indx]);                    \
-      }                                                  \
-      fValue.Append("]");                                \
+#define TJSONWriteArrayCompress(vname, arrsize, typname)             \
+   {                                                                 \
+      if (fCompact < 10) {                                           \
+         fValue.Append("[");                                         \
+         for (Int_t indx=0;indx<arrsize;indx++) {                    \
+            if (indx>0) fValue.Append(fArraySepar.Data());           \
+            JsonWriteBasic(vname[indx]);                             \
+         }                                                           \
+         fValue.Append("]");                                         \
+      } else {                                                       \
+         fValue.Append("{");                                         \
+         fValue.Append(TString::Format("\"$arr\":\"%s\"%s\"len\":%d",typname,fArraySepar.Data(),arrsize)); \
+         Int_t aindx(0), bindx(arrsize);                             \
+         while ((aindx<arrsize) && (vname[aindx]==0)) aindx++;       \
+         while ((aindx<bindx) && (vname[bindx-1]==0)) bindx--;       \
+         if (aindx<bindx) {                                          \
+            TString suffix("");                                      \
+            Int_t p(aindx), suffixcnt(-1);                           \
+            while (p<bindx) {                                        \
+               Int_t p0(p++), pp(0), nsame(1);                       \
+               if (++suffixcnt > 0) suffix.Form("%d",suffixcnt);     \
+               if (fCompact < 20) { pp = p = bindx; nsame = 0; }     \
+               for(;p<bindx;++p) {                                   \
+                  if (nsame>0) {                                     \
+                     if (vname[p]==vname[p0]) { nsame++; continue; } \
+                     if (nsame>7) break;                             \
+                     nsame=-1;                                       \
+                  }                                                  \
+                  if (vname[p]==0) { if (pp==0) pp = p; } else       \
+                  if ((pp>0) && (p-pp>7)) break; else pp=0;          \
+               }                                                     \
+               if (p0>0) fValue.Append(TString::Format("%s\"p%s\":%d", fArraySepar.Data(), suffix.Data(), p0)); \
+               fValue.Append(TString::Format("%s\"v%s\":", fArraySepar.Data(), suffix.Data())); \
+               if ((nsame > 0) || (pp-p0 == 1)) {                    \
+                  JsonWriteBasic(vname[p0]);                         \
+                  if (nsame>1) fValue.Append(TString::Format("%s\"n%s\":%d", fArraySepar.Data(), suffix.Data(), nsame)); \
+               } else {                                              \
+                  fValue.Append("[");                                \
+                  for (Int_t indx=p0;indx<pp;indx++) {               \
+                     if (indx>p0) fValue.Append(fArraySepar.Data()); \
+                     JsonWriteBasic(vname[indx]);                    \
+                  }                                                  \
+                  fValue.Append("]");                                \
+               }                                                     \
+            }                                                        \
+         }                                                           \
+         fValue.Append("}");                                         \
+      }                                                              \
    }
 
-#define TJSONWriteArrayCompress(vname, arrsize, typname)      \
-   {                                                           \
-      if (fCompact < 10) {                                     \
-          TJSONWriteArrayContent(vname, arrsize)               \
-      } else {                                                 \
-         fValue.Append("{");                                   \
-         fValue.Append(TString::Format("\"$arr\"%s\"%s\"%s\"len\"%s%d", fSemicolon.Data(),typname,fArraySepar.Data(),fSemicolon.Data(),arrsize)); \
-         Int_t aindx(0), bindx(arrsize);                       \
-         while ((aindx<arrsize) && (vname[aindx]==0)) aindx++; \
-         while ((aindx<bindx) && (vname[bindx-1]==0)) bindx--; \
-         if (aindx<bindx) {                                    \
-            if (aindx>0) fValue.Append(TString::Format("%s\"p\"%s%d", fArraySepar.Data(), fSemicolon.Data(), aindx)); \
-            fValue.Append(TString::Format("%s\"v\"%s", fArraySepar.Data(), fSemicolon.Data())); \
-            if (aindx == bindx-1) {                            \
-               JsonWriteBasic(vname[aindx]);                   \
-            } else {                                           \
-               fValue.Append("[");                             \
-               for (Int_t indx=aindx;indx<bindx;indx++) {      \
-                  if (indx>aindx) fValue.Append(fArraySepar.Data()); \
-                  JsonWriteBasic(vname[indx]);                 \
-               }                                               \
-               fValue.Append("]");                             \
-            }                                                  \
-         }                                                     \
-         fValue.Append("}");                                   \
-      }                                                        \
-   }
 
 // macro call TBufferJSON method without typname
 #define TJSONWriteConstChar(vname,arrsize,typname)     \
