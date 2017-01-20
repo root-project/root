@@ -24,7 +24,6 @@
 #include "THashList.h"
 #include "TMPClient.h"
 #include "TMPWorkerTree.h"
-#include "TPoolWorker.h"
 #include "TSelector.h"
 #include "TTreeReader.h"
 #include <algorithm> //std::generate
