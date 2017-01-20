@@ -40,6 +40,7 @@
 #include "TGClient.h"
 #include "TSystem.h"
 #include "TGCocoa.h"
+#include "TROOT.h"
 
 
 namespace ROOT {
