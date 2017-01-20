@@ -831,7 +831,7 @@ Makefile: $(addprefix $(ROOT_SRCDIR)/,configure config/rootrc.in \
   config/RConfigure.in config/Makefile.in config/Makefile.$(ARCH) \
   config/Makefile-comp.in config/root-config.in config/rootauthrc.in \
   config/rootdaemonrc.in config/mimes.unix.in config/mimes.win32.in \
-  config/proofserv.in config/roots.in) config.status
+  config/proofserv.in config/xproofd.in config/roots.in) config.status
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 	cp $(ROOT_SRCDIR)/Makefile $@
 endif
@@ -1095,7 +1095,7 @@ maintainer-clean:: distclean
 	   etc/system.rootdaemonrc etc/root.mimes etc/daemons/rootd.rc.d \
 	   etc/daemons/rootd.xinetd etc/daemons/proofd.rc.d \
 	   etc/daemons/proofd.xinetd main/src/proofserv.sh main/src/roots.sh \
-	   macros/html.C \
+	   main/src/xproofd.sh macros/html.C \
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
