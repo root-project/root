@@ -337,7 +337,7 @@ TBufferJSON::~TBufferJSON()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// converts object, inherited from TObject class, to JSON string
+/// Converts object, inherited from TObject class, to JSON string
 /// Lower digit of compact parameter define formatting rules
 ///   0 - no any compression, human-readable form
 ///   1 - exclude spaces in the begin
@@ -366,11 +366,16 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set level of space/newline compression
-///   0 - no any compression
-///   1 - exclude spaces in the begin
-///   2 - remove newlines
-///   3 - exclude spaces as much as possible
+// Set level of space/newline/array compression
+// Lower digit of compact parameter define formatting rules
+//   0 - no any compression, human-readable form
+//   1 - exclude spaces in the begin
+//   2 - remove newlines
+//   3 - exclude spaces as much as possible
+// Second digit of compact parameter defines algorithm for arrays compression
+//   0 - no compression, standard JSON array
+//   1 - exclude leading, trailing zeros, required JSROOT v5
+//   2 - check values repetition and empty gaps, required JSROOT v5
 
 void TBufferJSON::SetCompact(int level)
 {
@@ -2278,21 +2283,15 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
 {
 }
 
-
-#define TJSONWriteArrayContent(vname, arrsize)        \
-   {                                                     \
-      fValue.Append("["); /* fJsonrCnt++; */             \
-      for (Int_t indx=0;indx<arrsize;indx++) {           \
-         if (indx>0) fValue.Append(fArraySepar.Data());  \
-         JsonWriteBasic(vname[indx]);                    \
-      }                                                  \
-      fValue.Append("]");                                \
-   }
-
 #define TJSONWriteArrayCompress(vname, arrsize, typname)             \
    {                                                                 \
       if (fCompact < 10) {                                           \
-          TJSONWriteArrayContent(vname, arrsize)                     \
+         fValue.Append("["); /* fJsonrCnt++; */                      \
+         for (Int_t indx=0;indx<arrsize;indx++) {                    \
+            if (indx>0) fValue.Append(fArraySepar.Data());           \
+            JsonWriteBasic(vname[indx]);                             \
+         }                                                           \
+         fValue.Append("]");                                         \
       } else {                                                       \
          fValue.Append("{");                                         \
          fValue.Append(TString::Format("\"$arr\":\"%s\"%s\"len\":%d",typname,fArraySepar.Data(),arrsize)); \
