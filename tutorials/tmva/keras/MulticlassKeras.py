@@ -19,7 +19,7 @@ factory = TMVA.Factory('TMVAClassification', output,
 
 # Load data
 if not isfile('tmva_example_multiple_background.root'):
-    createDataMacro = gROOT.GetTutorialsDir() + '/tmva/createData.C'
+    createDataMacro = str(gROOT.GetTutorialDir()) + '/tmva/createData.C'
     print(createDataMacro)
     gROOT.ProcessLine('.L {}'.format(createDataMacro))
     gROOT.ProcessLine('create_MultipleBackground(4000)')

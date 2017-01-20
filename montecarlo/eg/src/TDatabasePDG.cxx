@@ -564,11 +564,8 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    const char *fn;
 
    if (!FileName[0]) {
-#ifdef ROOTETCDIR
-      default_name.Form("%s/pdg_table.txt", ROOTETCDIR);
-#else
-      default_name.Form("%s/etc/pdg_table.txt", gSystem->Getenv("ROOTSYS"));
-#endif
+      default_name = "pdg_table.txt";
+      gSystem->PrependPathName(TROOT::GetEtcDir(), default_name);
       fn = gEnv->GetValue("Root.DatabasePDG", default_name.Data());
    } else {
       fn = FileName;

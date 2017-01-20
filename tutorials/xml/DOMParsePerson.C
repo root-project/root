@@ -234,7 +234,7 @@ void DOMParsePerson()
 {
    PersonList personlist;
    gROOT->ProcessLine(".O 0");
-   TString dir = gROOT->GetTutorialsDir();
+   TString dir = gROOT->GetTutorialDir();
    if (personlist.ParseFile(dir+"/xml/person.xml") == 0)
       cout << personlist << endl;
 }

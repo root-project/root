@@ -5,7 +5,7 @@
 
 ##### rootcling #####
 ROOTCLINGEXE    := bin/rootcling$(EXEEXT)
-ROOTCLINGSTAGE2 := $(ROOTCLINGEXE) -rootbuild
+ROOTCLINGSTAGE2 := ROOTIGNOREPREFIX=1 $(ROOTCLINGEXE) -rootbuild
 # Dependencies for all dictionaries
 ROOTCLINGSTAGE2DEP := $(ROOTCLINGEXE)
 

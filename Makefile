@@ -758,11 +758,9 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
-ifeq ($(USECONFIG),FALSE)
 all: tutorials/hsimple.root
 tutorials/hsimple.root: rootexecs postbin
-	@(cd tutorials; ! ../bin/root -l -q -b -n -x hsimple.C)
-endif
+	@(cd tutorials; ! ROOTIGNOREPREFIX=1 ../bin/root -l -q -b -n -x hsimple.C)
 
 all:            rootexecs postbin
 	@echo " "
@@ -1236,7 +1234,7 @@ endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
 	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS) $(SYSTEMDEF)
-	@$(MAKEPCH) $@
+	@ROOTIGNOREPREFIX=1 $(MAKEPCH) $@
 
 $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
 	@mkdir -p $(dir $@)
@@ -1341,8 +1339,6 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
-	   (cd $(DESTDIR)$(TUTDIR); \
-	      ! LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
 	fi
 
 uninstall:
@@ -1469,7 +1465,6 @@ runtimedirs:
 		--exclude proofd.xinetd \
 		--exclude rootd.rc.d \
 		--exclude rootd.xinetd \
-		--exclude gitinfo.txt \
 		$(ROOT_SRCDIR)/etc . ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
 	$(RSYNC) \

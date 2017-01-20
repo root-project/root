@@ -29,13 +29,12 @@ int main(int argc, char **argv)
    }
 
    ROOT::Internal::RootCling::DriverConfig config{};
-#ifdef R__HAVE_LLVMRESOURCEDIR
-   config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
-#endif
 
    config.fBuildingROOTStage1 = false;
    config.fPRootDir = &gRootDir;
    config.fTROOT__GetExtraInterpreterArgs = &TROOT__GetExtraInterpreterArgs;
+   config.fTROOT__GetIncludeDir = &TROOT__GetIncludeDir;
+   config.fTROOT__GetEtcDir = &TROOT__GetEtcDir;
    config.fTCling__GetInterpreter = &TCling__GetInterpreter;
    config.fInitializeStreamerInfoROOTFile = &InitializeStreamerInfoROOTFile;
    config.fAddStreamerInfoToROOTFile = &AddStreamerInfoToROOTFile;

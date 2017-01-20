@@ -91,7 +91,7 @@ foreach(var ${variables})
   endif()
 endforeach()
 
-#---Move (copy) the headers and other directories to binary tree---------------------------------
+#---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
@@ -119,11 +119,7 @@ foreach(tutorial_file ${tutorial_files})
   endif()
 endforeach()
 
-add_custom_target(move_headers DEPENDS ${stamp_file} ${tutorial_files_builddir}
-                               COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
-                                                        -DCOMPONENTS="headers"
-                                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
-include_directories(${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
 
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
@@ -182,7 +178,7 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}
+                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
                            etc/dictpch/allLinkDefs.h
                            etc/dictpch/allHeaders.h
@@ -209,26 +205,28 @@ if(cxxmodules)
                      COMMAND echo ${__echo_args} ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
                      VERBATIM
                     )
-  add_dependencies(move_headers copymodulemap)
+  add_dependencies(move_artifacts copymodulemap)
 endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
-  add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
-  add_dependencies(hsimple onepcm)
-  if(WIN32)
-    add_custom_command(OUTPUT tutorials/hsimple.root
-                       COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && 
-                               $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
-                       WORKING_DIRECTORY tutorials DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter)
-  else()
-    add_custom_command(OUTPUT tutorials/hsimple.root
-                       COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}} 
-                               $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
-                       WORKING_DIRECTORY tutorials DEPENDS  $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter)
-  endif()
-  install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
+add_dependencies(hsimple onepcm)
+if(WIN32)
+  add_custom_command(OUTPUT tutorials/hsimple.root
+                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} &&
+                             set ROOTIGNOREPREFIX=1 &&
+                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
+                     WORKING_DIRECTORY tutorials
+                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
+else()
+  add_custom_command(OUTPUT tutorials/hsimple.root
+                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                             ROOTIGNOREPREFIX=1
+                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
+                     WORKING_DIRECTORY tutorials
+                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
+install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
 #---version--------------------------------------------------------------------------------------
 add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
@@ -274,9 +272,6 @@ endif()
 #---Configure Testing using CTest----------------------------------------------------------------
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
-  if(gnuinstall)
-    message(FATAL_ERROR "You cannot enable to run the tests in the build directory (testing=ON) and at the same time select a GNU style installation (gnuinstall=ON). This is because the code is built with the final installation location (CMAKE_INSTALL_PREFIX) for many ancillary files (tutorials, etc, icons, macros, etc.) and these are not available before installation. Tests can be run against the installation once is completed. See the instructions in the web")
-  endif()
   include(RootCTest)
   if(roottest)
     find_package(Git REQUIRED)

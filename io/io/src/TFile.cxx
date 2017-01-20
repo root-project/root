@@ -3102,11 +3102,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          return;
       }
       // Get Makefile.arch
-#ifdef ROOTETCDIR
-      TString mkarchsrc = TString::Format("%s/Makefile.arch", ROOTETCDIR);
-#else
-      TString mkarchsrc("$(ROOTSYS)/etc/Makefile.arch");
-#endif
+      TString mkarchsrc = TString::Format("%s/Makefile.arch", TROOT::GetEtcDir().Data());
       if (gSystem->ExpandPathName(mkarchsrc))
          Warning("MakeProject", "problems expanding '%s'", mkarchsrc.Data());
       TString mkarchdst = TString::Format("%s/Makefile.arch", clean_dirname.Data());

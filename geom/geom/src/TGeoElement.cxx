@@ -39,6 +39,7 @@ Table of elements
 #include "Riostream.h"
 
 #include "TSystem.h"
+#include "TROOT.h"
 #include "TObjArray.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoManager.h"
@@ -1128,12 +1129,8 @@ void TGeoElementTable::ImportElementsRN()
 {
    if (HasRNElements()) return;
    TGeoElementRN *elem;
-   TString rnf;
-#ifdef ROOTETCDIR
-   rnf.Form("%s/RadioNuclides.txt", ROOTETCDIR);
-#else
-   rnf.Form("%s/etc/RadioNuclides.txt", gSystem->Getenv("ROOTSYS"));
-#endif
+   TString rnf = "RadioNuclides.txt";
+   gSystem->PrependPathName(TROOT::GetEtcDir(), rnf);
    FILE *fp = fopen(rnf, "r");
    if (!fp) {
       Error("ImportElementsRN","File RadioNuclides.txt not found");

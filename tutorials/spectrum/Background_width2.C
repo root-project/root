@@ -22,7 +22,7 @@ void Background_width2() {
    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
 
-   TString dir  = gROOT->GetTutorialsDir();
+   TString dir  = gROOT->GetTutorialDir();
    TString file = dir+"/spectrum/TSpectrum.root";
    TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back2");
