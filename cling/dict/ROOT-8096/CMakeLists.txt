@@ -17,6 +17,9 @@ add_test(NAME roottest-cling-dict-ROOT-8096-build
          COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                   --target  ROOT-8096${fast} )
 #                                  --target  ${targetname_libgen}${fast})
+if (gnuinstall)
+  set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
+endif()
 
 
 ROOTTEST_ADD_TEST(load
