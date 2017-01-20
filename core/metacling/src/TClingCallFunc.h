@@ -190,7 +190,11 @@ public:
       return fDecl;
    }
 
-   const clang::FunctionDecl* GetDecl() const { return fMethod->GetMethodDecl(); }
+   const clang::FunctionDecl* GetDecl() const {
+      if (fDecl)
+         return fDecl;
+      return fMethod->GetMethodDecl();
+   }
    void ResetArg();
    void SetArg(long arg);
    void SetArg(unsigned long arg);
