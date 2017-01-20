@@ -414,8 +414,9 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
 
       if (splitlevel > 0) {
          // -- Create sub branches if requested by splitlevel.
-         const char* elem_type = element->GetTypeName();
-         fSTLtype = TClassEdit::UnderlyingIsSTLCont(elem_type);
+         const char* elemType = element->GetTypeName();
+         TClass *elementClass = element->GetClassPointer();
+         fSTLtype = elementClass ? elementClass->GetCollectionType() : ROOT::kNotSTL;
          if (element->CannotSplit()) {
             fSplitLevel = 0;
          } else if (element->IsA() == TStreamerBase::Class()) {
@@ -425,7 +426,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             //        in that case is not the base streamer element it is the
             //        STL streamer element.
             fType = 1;
-            TClass* clOfElement = TClass::GetClass(element->GetName());
+            TClass* clOfElement = element->GetClassPointer();
             Int_t nbranches = fBranches.GetEntriesFast();
             // Note: The following code results in base class branches
             //       having two different cases for what their parent
@@ -541,7 +542,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             return;
          } else if (((fSTLtype >= ROOT::kSTLvector) && (fSTLtype < ROOT::kSTLend)) || ((fSTLtype > -ROOT::kSTLend) && (fSTLtype <= -ROOT::kSTLvector))) {
             // -- We are an STL container element.
-            TClass* contCl = TClass::GetClass(elem_type);
+            TClass* contCl = elementClass;
             fCollProxy = contCl->GetCollectionProxy()->Generate();
             TClass* valueClass = GetCollectionProxy()->GetValueClass();
             // Check to see if we can split the container.
@@ -592,14 +593,14 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                SetFillLeavesPtr();
                return;
             }
-         } else if (!strchr(elem_type, '*') && ((fStreamerType == TVirtualStreamerInfo::kObject) || (fStreamerType == TVirtualStreamerInfo::kAny))) {
+         } else if (!strchr(elemType, '*') && ((fStreamerType == TVirtualStreamerInfo::kObject) || (fStreamerType == TVirtualStreamerInfo::kAny))) {
             // -- Create sub-branches for members that are classes.
             //
             // Note: This can only happen if we were called directly
             //       (usually by TClass::Bronch) because Unroll never
             //       calls us for an element of this type.
             fType = 2;
-            TClass* clm = TClass::GetClass(elem_type);
+            TClass* clm = elementClass;
             Int_t err = Unroll(name, clm, clm, pointer, basketsize, splitlevel+splitSTLP, 0);
             if (err >= 0) {
                // Return on success.
@@ -2120,18 +2121,18 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
    if (fType == 4) {
       // STL container top-level branch.
       const char* className = 0;
+      TClass* cl = nullptr;
       if (fID < 0) {
          // We are a top-level branch.
          if (fBranchClass.GetClass()) {
-            className = fBranchClass.GetClass()->GetName();
+            cl = fBranchClass.GetClass();
          }
       } else {
          // We are not a top-level branch.
          TVirtualStreamerInfo* si = thiscast->GetInfoImp();
          TStreamerElement* se = si->GetElement(fID);
-         className = se->GetTypeName();
+         cl = se->GetClassPointer();
       }
-      TClass* cl = className ? TClass::GetClass(className) : 0;
       if (!cl) {
          // The TClass was not created but we do know (since it
          // is used as a collection) that it 'className' was a
@@ -5518,8 +5519,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
       // See InitializeOffsets() for the proper test.
       if (elem->IsA() == TStreamerBase::Class()) {
          // -- This is a base class of cl.
-         TClass* clOfBase = TClass::GetClass(elem->GetName());
-         if ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom(TCollection::Class())) {
+         TClass* clOfBase = elem->GetClassPointer();
+         if (!clOfBase || ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom(TCollection::Class()))) {
             // -- Do nothing if we are one of the abstract collection (we know they have no data).
             return -1;
          }
@@ -5583,8 +5584,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
             // Ignore an abstract class.
             // FIXME: How could an abstract class get here?
             //        Partial answer: It is a base class.  But this is a data member!
-            TClass* elemClass = TClass::GetClass(elem->GetTypeName());
-            if (elemClass->Property() & kIsAbstract) {
+            TClass* elemClass = elem->GetClassPointer();
+            if (!elemClass || elemClass->Property() & kIsAbstract) {
                return -1;
             }
             if (elem->CannotSplit()) {
