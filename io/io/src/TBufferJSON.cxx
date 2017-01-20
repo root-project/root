@@ -2286,20 +2286,22 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
             while (p<bindx) {                                        \
                Int_t p0(p++), pp(0), nsame(1);                       \
                if (++suffixcnt > 0) suffix.Form("%d",suffixcnt);     \
-               if (fCompact < 20) { pp = p = bindx; nsame = 0; }     \
-               for(;p<bindx;++p) {                                   \
-                  if (nsame>0) {                                     \
-                     if (vname[p]==vname[p0]) { nsame++; continue; } \
-                     if (nsame>5) { pp = p; break; }                 \
-                     nsame=-1;                                       \
+               if (fCompact < 20) { pp = bindx; p = bindx+1; nsame = 0; }  \
+               for(;p<=bindx;++p) {                                   \
+                  if ((p<bindx) && (vname[p]==vname[p-1])) { nsame++; continue; } \
+                  if (vname[p-1]==0) {                               \
+                     if (nsame>9) { nsame = 0; break; }              \
+                  } else                                             \
+                  if (nsame>5) {                                     \
+                     if (pp) { p = pp; nsame = 0; } else pp = p;     \
+                     break;                                          \
                   }                                                  \
-                  if (vname[p]==0) { if (pp==0) pp = p; } else       \
-                  if ((pp>0) && (p-pp>9)) break; else pp=0;          \
+                  pp = p; nsame = 1;                                 \
                }                                                     \
                if (p0!=lastp) fValue.Append(TString::Format("%s\"p%s\":%d", fArraySepar.Data(), suffix.Data(), p0)); \
                lastp = pp; /* remember cursor, it may be the same */ \
                fValue.Append(TString::Format("%s\"v%s\":", fArraySepar.Data(), suffix.Data())); \
-               if ((nsame > 0) || (pp-p0 == 1)) {                    \
+               if ((nsame > 1) || (pp-p0 == 1)) {                    \
                   JsonWriteBasic(vname[p0]);                         \
                   if (nsame>1) fValue.Append(TString::Format("%s\"n%s\":%d", fArraySepar.Data(), suffix.Data(), nsame)); \
                } else {                                              \
