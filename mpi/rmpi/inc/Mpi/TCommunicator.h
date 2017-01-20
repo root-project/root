@@ -602,17 +602,29 @@ namespace ROOT {
       template<class Type> void TCommunicator::Reduce(const Type *in_var, Type *out_var, Int_t count, Op<Type> (*opf)(), Int_t root) const
       {
          auto op = opf();
-         Type recvbuffer[count];
-         memmove((void *)out_var, (void *)in_var, sizeof(Type)*count);
+
+         if (!std::is_class<Type>::value) memmove((void *)out_var, (void *)in_var, sizeof(Type)*count);
+         else {
+            for (auto i = 0; i < count; i++) {
+               TMpiMessage msgi;
+               msgi.WriteObject(in_var[i]);
+               Char_t *buffer = new Char_t[msgi.BufferSize()]; //this pointer can't be freed, it will be free when the object dies
+               memcpy((void *)buffer, (void *)msgi.Buffer(), sizeof(Char_t)*msgi.BufferSize());
+               TMpiMessage msgo(buffer, msgi.BufferSize()); //using serialization to copy memory without copy constructor
+               auto cl = gROOT->GetClass(typeid(Type));
+               auto obj_tmp = msgo.ReadObjectAny(cl);
+               memmove((void *)&out_var[i], obj_tmp, sizeof(Type));
+            }
+         }
          auto size = GetSize();
-         auto rank = GetRank();
          auto lastpower = 1 << (Int_t)log2(size);
 
          for (Int_t i = lastpower; i < size; i++)
-            if (rank == i)
+            if (GetRank() == i)
                Send(in_var, count, i - lastpower, MPI_TAG_UB);
          for (Int_t i = 0; i < size - lastpower; i++)
-            if (rank == i) {
+            if (GetRank() == i) {
+               Type recvbuffer[count];
                Recv(recvbuffer, count, i + lastpower, MPI_TAG_UB);
                for (Int_t j = 0; j < count; j++) out_var[j] = op(in_var[j], recvbuffer[j]);
             }
@@ -621,15 +633,15 @@ namespace ROOT {
             for (Int_t k = 0; k < lastpower; k += 1 << (d + 1)) {
                auto receiver = k;
                auto sender = k + (1 << d);
-               if (rank == receiver) {
+               if (GetRank() == receiver) {
+                  Type recvbuffer[count];
                   Recv(recvbuffer, count, sender, MPI_TAG_UB);
                   for (Int_t j = 0; j < count; j++) out_var[j]  = op(out_var[j], recvbuffer[j]);
-               } else if (rank == sender)
+               } else if (GetRank() == sender)
                   Send(out_var, count, receiver, MPI_TAG_UB);
             }
-         if (root != 0 && rank == 0) Send(out_var, count, root, MPI_TAG_UB);
-         if (root == rank && rank != 0) Recv(out_var, count, 0, MPI_TAG_UB);
-
+         if (root != 0 && GetRank() == 0) Send(out_var, count, root, MPI_TAG_UB);
+         if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, MPI_TAG_UB);
       }
 
 
