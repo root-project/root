@@ -178,7 +178,6 @@ if(WIN32)
 elseif(APPLE)
   set(x11_defvalue OFF)
   set(cocoa_defvalue ON)
-  set(davix_defvalue OFF)
 endif()
 
 #--- The 'all' option swithes ON major options---------------------------------------------------
