@@ -63,6 +63,8 @@ private:
    const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    /// Current method, we own.
    TClingMethodInfo* fMethod;
+   /// Decl for the method
+   const clang::FunctionDecl *fDecl = nullptr;
    /// Pointer to compiled wrapper, we do *not* own.
    tcling_callfunc_Wrapper_t fWrapper;
    /// Stored function arguments, we own.
@@ -174,6 +176,12 @@ public:
    void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
+   const clang::FunctionDecl *GetDecl() {
+      if (!fDecl)
+         fDecl = fMethod->GetMethodDecl();
+      return fDecl;
+   }
+
    const clang::FunctionDecl* GetDecl() const { return fMethod->GetMethodDecl(); }
    void ResetArg();
    void SetArg(long arg);

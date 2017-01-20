@@ -275,7 +275,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
    //  Collect information about type type of a function parameter
    //  needed for building the wrapper function.
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
    if (QT->isRecordType() && forArgument) {
@@ -347,7 +347,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
    //
    // new ClassName(args...)
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
 
    callbuf << "new " << class_name << "(";
    for (unsigned i = 0U; i < N; ++i) {
@@ -392,7 +392,7 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
    //
    // ((<class>*)obj)-><method>(*(<arg-i-type>*)args[i], ...)
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(FD)) {
       // This is a class, struct, or union member.
       if (MD->isConst())
@@ -536,7 +536,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
    //    ((class_name*)obj)->func(args...);
    // }
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
       (void) CD;
       make_narg_ctor_with_return(N, class_name, buf, indent_level);
@@ -641,7 +641,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
    R__LOCKGUARD(gInterpreterMutex);
 
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    ASTContext &Context = FD->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
    //
@@ -1446,7 +1446,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
    {
       R__LOCKGUARD(gInterpreterMutex);
 
-      const FunctionDecl *FD = fMethod->GetMethodDecl();
+      const FunctionDecl *FD = GetDecl();
 
       //
       //  Convert the arguments from cling::Value to their
@@ -1778,7 +1778,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
 
    R__LOCKGUARD_NAMED(global,gInterpreterMutex);
 
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
 
    if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
       ASTContext &Context = FD->getASTContext();
@@ -2172,7 +2172,7 @@ void *TClingCallFunc::InterfaceMethod()
       return 0;
    }
    if (!fWrapper) {
-      const FunctionDecl *decl = fMethod->GetMethodDecl();
+      const FunctionDecl *decl = GetDecl();
 
       R__LOCKGUARD(gInterpreterMutex);
       map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
@@ -2201,7 +2201,7 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       return TInterpreter::CallFuncIFacePtr_t();
    }
    if (!fWrapper) {
-      const FunctionDecl *decl = fMethod->GetMethodDecl();
+      const FunctionDecl *decl = GetDecl();
 
       R__LOCKGUARD(gInterpreterMutex);
       map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
