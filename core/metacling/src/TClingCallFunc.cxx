@@ -2159,15 +2159,15 @@ void TClingCallFunc::Init()
    delete fMethod;
    fMethod = 0;
    fWrapper = 0;
+   fDecl = nullptr;
+   fMinRequiredArguments = -1;
    ResetArg();
 }
 
 void TClingCallFunc::Init(TClingMethodInfo *minfo)
 {
-   delete fMethod;
+   Init();
    fMethod = new TClingMethodInfo(*minfo);
-   fWrapper = 0;
-   ResetArg();
 }
 
 void *TClingCallFunc::InterfaceMethod()
@@ -2291,9 +2291,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
 void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *arglist,
                              bool objectIsConst, long *poffset)
 {
-   fWrapper = 0;
-   delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   Init(new TClingMethodInfo(fInterp));
    if (poffset) {
       *poffset = 0L;
    }
@@ -2320,9 +2318,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
 
 void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 {
-   fWrapper = 0;
-   delete fMethod;
-   fMethod = new TClingMethodInfo(*info);
+   Init(new TClingMethodInfo(*info));
    ResetArg();
    if (!fMethod->IsValid()) {
       return;
@@ -2340,9 +2336,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
                                   const char *proto, bool objectIsConst, long *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
-   fWrapper = 0;
-   delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   Init(new TClingMethodInfo(fInterp));
    if (poffset) {
       *poffset = 0L;
    }
@@ -2371,8 +2365,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
                                   bool objectIsConst, long *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
-   delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   Init(new TClingMethodInfo(fInterp));
    if (poffset) {
       *poffset = 0L;
    }
