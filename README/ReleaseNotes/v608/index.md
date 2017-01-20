@@ -573,3 +573,6 @@ Released on January 13, 2016
 
 Changes will be part of the future 6.08/06
 
+### TTree
+
+- Repair support in TTree for the case of a split branch where a class A contains a class B which contains a class C (and possibly more nesting) which contains const data members.
