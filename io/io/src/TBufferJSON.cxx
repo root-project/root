@@ -2268,7 +2268,7 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
 #define TJSONWriteArrayCompress(vname, arrsize, typname)             \
    {                                                                 \
       if (fCompact < 10) {                                           \
-         fValue.Append("[");                                         \
+         fValue.Append("["); /* fJsonrCnt++; */                      \
          for (Int_t indx=0;indx<arrsize;indx++) {                    \
             if (indx>0) fValue.Append(fArraySepar.Data());           \
             JsonWriteBasic(vname[indx]);                             \
@@ -2282,7 +2282,7 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
          while ((aindx<bindx) && (vname[bindx-1]==0)) bindx--;       \
          if (aindx<bindx) {                                          \
             TString suffix("");                                      \
-            Int_t p(aindx), suffixcnt(-1);                           \
+            Int_t p(aindx), suffixcnt(-1), lastp(0);                 \
             while (p<bindx) {                                        \
                Int_t p0(p++), pp(0), nsame(1);                       \
                if (++suffixcnt > 0) suffix.Form("%d",suffixcnt);     \
@@ -2290,13 +2290,14 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
                for(;p<bindx;++p) {                                   \
                   if (nsame>0) {                                     \
                      if (vname[p]==vname[p0]) { nsame++; continue; } \
-                     if (nsame>7) break;                             \
+                     if (nsame>5) { pp = p; break; }                 \
                      nsame=-1;                                       \
                   }                                                  \
                   if (vname[p]==0) { if (pp==0) pp = p; } else       \
-                  if ((pp>0) && (p-pp>7)) break; else pp=0;          \
+                  if ((pp>0) && (p-pp>9)) break; else pp=0;          \
                }                                                     \
-               if (p0>0) fValue.Append(TString::Format("%s\"p%s\":%d", fArraySepar.Data(), suffix.Data(), p0)); \
+               if (p0!=lastp) fValue.Append(TString::Format("%s\"p%s\":%d", fArraySepar.Data(), suffix.Data(), p0)); \
+               lastp = pp; /* remember cursor, it may be the same */ \
                fValue.Append(TString::Format("%s\"v%s\":", fArraySepar.Data(), suffix.Data())); \
                if ((nsame > 0) || (pp-p0 == 1)) {                    \
                   JsonWriteBasic(vname[p0]);                         \
