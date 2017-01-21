@@ -14,6 +14,7 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
 		 Mpi/TRequest.h
                  Mpi/Globals.h
                  Mpi/TOp.h
+                 Mpi/TGroup.h
 		 Mpi.h
 		 )
 

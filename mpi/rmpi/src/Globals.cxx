@@ -1,6 +1,6 @@
 #include<Mpi/Globals.h>
 #include<TROOT.h>
-
+#include<Mpi/TGroup.h>
 namespace ROOT {
    namespace Mpi {
 
@@ -123,6 +123,13 @@ namespace ROOT {
       const Int_t CONGRUENT = MPI_CONGRUENT;
       const Int_t SIMILAR = MPI_SIMILAR;
       const Int_t UNEQUAL = MPI_UNEQUAL;
+
+// null handles
+      const TGroup GROUP_NULL = MPI_GROUP_NULL;
+// empty group
+      const TGroup GROUP_EMPTY = MPI_GROUP_NULL;
+
+
 
 //Custom none datatype
       const MPI_Datatype DATATYPE_NONE = MPI_Datatype();

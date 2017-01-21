@@ -166,6 +166,12 @@ namespace ROOT {
       R__EXTERN const Int_t SIMILAR;
       R__EXTERN const Int_t UNEQUAL;
 
+      class TGroup;
+      // null handles
+      R__EXTERN const TGroup         GROUP_NULL;
+      // empty group
+      R__EXTERN const TGroup         GROUP_EMPTY;
+
       //Custom none datatype
       R__EXTERN const MPI_Datatype DATATYPE_NONE;
 

@@ -34,6 +34,7 @@
 #pragma link C++ class ROOT::Mpi::TGrequest;
 #pragma link C++ class ROOT::Mpi::TEnvironment;
 #pragma link C++ class ROOT::Mpi::TCommunicator;
+#pragma link C++ class ROOT::Mpi::TGroup;
 
 /*
  * Global communicator

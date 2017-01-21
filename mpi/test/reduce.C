@@ -20,7 +20,7 @@ void reduce_test_scalar(Int_t root = 0)
    /////////////////////////
    TMatrixD send_mat(size, size);
    TVectorD send_vec(size);
-   TComplex send_c(1,1);
+   TComplex send_c(1, 1);
    for (auto i = 0; i < size; i++) {
       send_vec[i] = 1;
       for (auto j = 0; j < size; j++) send_mat[i][j] = 1.0;
@@ -40,34 +40,34 @@ void reduce_test_scalar(Int_t root = 0)
    gComm->Barrier();
 
    TComplex c_value;
-   gComm->Reduce(send_c, c_value, PROD, root); 
+   gComm->Reduce(send_c, c_value, PROD, root);
    gComm->Barrier();
-   
+
    Int_t prod_value = 0;
-   Int_t prod_send = rank+1;//if rank==0 Then it does not make sense 
+   Int_t prod_send = rank + 1; //if rank==0 Then it does not make sense
    gComm->Reduce(prod_send, prod_value, PROD, root); //testing custom object
    gComm->Barrier();
-   
+
    Int_t min_value;
    gComm->Reduce(rank, min_value, MIN, root); //testing custom object
    gComm->Barrier();
-   
+
    Int_t max_value;
    gComm->Reduce(rank, max_value, MAX, root); //testing custom object
    gComm->Barrier();
-   
-   
+
+
    if (rank == root) {
       int sum = 0;
       int prod = 1;
-      TComplex cplx_r(1,1);
-      for (int i = 0; i < size -1; i++) {
-        TComplex c_tmp(1,1);
-        cplx_r= PROD<TComplex>()(cplx_r,c_tmp);
+      TComplex cplx_r(1, 1);
+      for (int i = 0; i < size - 1; i++) {
+         TComplex c_tmp(1, 1);
+         cplx_r = PROD<TComplex>()(cplx_r, c_tmp);
       }
       for (int i = 0; i < size ; i++) {
-        sum = SUM<Int_t>()(sum, i);
-         prod = PROD<Int_t>()(prod,i+1);
+         sum = SUM<Int_t>()(sum, i);
+         prod = PROD<Int_t>()(prod, i + 1);
       }
       std::cout << std::endl;
 //       printf("MPI Result     = %d\n", value);
@@ -88,7 +88,7 @@ void reduce_test_scalar(Int_t root = 0)
       assert(recv_mat == req_mat);
       assert(prod_value == prod);
       assert(min_value == 0);
-      assert(max_value == (size-1));
+      assert(max_value == (size - 1));
       assert(c_value.Im() == cplx_r.Im());
       assert(c_value.Re() == cplx_r.Re());
    }
