@@ -39,6 +39,21 @@ namespace ROOT {
             return a * b;
          });
       }
+
+      template<class T> Op<T> MIN()
+      {
+         return Op<T>([](auto a, auto b) {
+            return a < b ? a : b ;
+         });
+      }
+
+      template<class T> Op<T> MAX()
+      {
+         return Op<T>([](auto a, auto b) {
+            return a > b ? a : b ;
+         });
+      }
+
 #else
       template<class T> T SUM_OP(const T &a, const T &b)
       {
@@ -57,6 +72,27 @@ namespace ROOT {
       {
          return Op<T>(PROD_OP<T>);
       }
+
+      template<class T> T MIN_OP(const T &a, const T &b)
+      {
+         return a < b ? a : b;
+      }
+
+      template<class T> Op<T> MIN()
+      {
+         return Op<T>(MIN_OP<T>);
+      }
+
+      template<class T> T MAX_OP(const T &a, const T &b)
+      {
+         return a > b ? a : b;
+      }
+
+      template<class T> Op<T> MAX()
+      {
+         return Op<T>(MAX_OP<T>);
+      }
+
 #endif
 
    }//end namespace Mpi
