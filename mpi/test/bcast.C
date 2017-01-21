@@ -5,7 +5,7 @@
 using namespace ROOT::Mpi;
 
 
-void bcast_test(Int_t root = 0, Int_t size = 2)
+void bcast_test_scalar(Int_t root = 0, Int_t size = 2)
 {
 
    auto rank = gComm->GetRank();
@@ -56,17 +56,44 @@ void bcast_test(Int_t root = 0, Int_t size = 2)
    assert(p.GetY() == 2);
 }
 
-void bcast(Bool_t stressTest = kTRUE)
+void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
+{
+
+   auto rank = gComm->GetRank();
+   TVectorD vecs[count];
+   Int_t arr[count];
+   if (root == rank) {
+      for (auto i = 0; i < count; i++) {
+         vecs[i].ResizeTo(count);
+         vecs[i][0] = 1.0;
+         arr[i] = i;
+      }
+   }
+   gComm->Bcast(vecs, count, root);
+   gComm->Bcast(arr, count, root);
+   for (auto i = 0; i < count; i++) {
+      vecs[i].Print();
+      assert(vecs[i][0] == 1.0);
+      assert(arr[i] == i);
+
+   }
+}
+
+
+// void bcast(Bool_t stressTest = kTRUE)
+void bcast(Bool_t stressTest = kFALSE)
 {
    TEnvironment env;
    if (gComm->GetSize() == 1) return; //needed at least 2 process
-   bcast_test();
-   if (!stressTest) bcast_test();
-   else {
+   bcast_test_scalar();
+   if (!stressTest) {
+      bcast_test_scalar();
+      bcast_test_array();
+   } else {
       //stressTest
       for (auto i = 0; i < gComm->GetSize(); i++)
          for (auto j = 1; j < gComm->GetSize() + 1; j++) //count can not be zero
-            bcast_test(i, j * 100);
+            bcast_test_scalar(i, j * 100);
    }
 }
 

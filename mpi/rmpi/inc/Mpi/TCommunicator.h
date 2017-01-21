@@ -170,30 +170,12 @@ namespace ROOT {
          template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
 
          /**
-          *         Method to send a message for p2p communication
-          *              \param vars array of any selializable objects
-          *              \param count number of elements in array \p vars
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
-         template<class Type> void Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const;
-
-         /**
           *         Method to receive a message for p2p communication
           *              \param var any selializable object reference to receive the message
           *              \param source id with the origin(Rank/Process) of the message
           *              \param tag id of the message
           */
          template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
-
-         /**
-          *         Method to receive a message for p2p communication
-          *              \param vars array of any selializable objects
-          *              \param count number of elements in array \p vars
-          *              \param source id with the origin(Rank/Process) of the message
-          *              \param tag id of the message
-          */
-         template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
 
          /**
           *            Starts a standard-mode, nonblocking send.
@@ -273,16 +255,6 @@ namespace ROOT {
          template<class Type> void Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
 
          /**
-          *         Method to apply reduce operation over and array of elements using binary tree reduction.
-                        \param in_vars variable to eval in the reduce operation
-                        \param out_vars variable to receive the variable operation
-                        \param count Number of elements to reduce in \p in_vars and \p out_vars
-                        \param op function the perform operation
-                        \param root id of the main process where the result was received
-                        */
-         template<class Type> void Reduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)(), Int_t root) const;
-
-         /**
           *         Method to apply reduce operation using binary tree reduction.
           *                        \param in_var variable to eval in the reduce operation
           *                        \param out_var variable to receive the variable operation
@@ -291,6 +263,46 @@ namespace ROOT {
           */
          template<class Type> void Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const;
 
+
+         /////////////////////////////////
+         //methods with arrary arguments//
+         /////////////////////////////////
+
+         /**
+          *         Method to send a message for p2p communication
+          *              \param vars array of any selializable objects
+          *              \param count number of elements in array \p vars
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
+         template<class Type> void Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const;
+
+         /**
+          *         Method to receive a message for p2p communication
+          *              \param vars array of any selializable objects
+          *              \param count number of elements in array \p vars
+          *              \param source id with the origin(Rank/Process) of the message
+          *              \param tag id of the message
+          */
+         template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
+
+         /**
+          *          Broadcasts a message from the process with rank root to all other processes of the group.
+          *              \param vars any selializable objects pointer to send/receive the message
+          *              \param count Number of elements to broadcast in \p in_vars
+          *              \param root id of the main message where message was sent
+          */
+         template<class Type> void Bcast(Type *vars, Int_t count, Int_t root) const;
+
+         /**
+          *         Method to apply reduce operation over and array of elements using binary tree reduction.
+          *                        \param in_vars variable to eval in the reduce operation
+          *                        \param out_vars variable to receive the variable operation
+          *                        \param count Number of elements to reduce in \p in_vars and \p out_vars
+          *                        \param op function the perform operation
+          *                        \param root id of the main process where the result was received
+          */
+         template<class Type> void Reduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)(), Int_t root) const;
 
          ClassDef(TCommunicator, 1)
       };
@@ -347,7 +359,7 @@ namespace ROOT {
             TMpiMessage *msg = new TMpiMessage[count];
             Recv(msg, count, source, tag);
 
-            auto cl = gROOT->GetClass(typeid(*vars));
+            auto cl = gROOT->GetClass(typeid(Type));
             for (auto i = 0; i < count; i++) {
                auto obj_tmp = (Type *)msg[i].ReadObjectAny(cl);
                memcpy((void *)&vars[i], (void *)obj_tmp, sizeof(Type));
@@ -369,6 +381,7 @@ namespace ROOT {
             msg.WriteObject(var);
             req = ISend(msg, dest, tag);
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Request _req;
             MPI_Isend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
             req = _req;
@@ -385,6 +398,7 @@ namespace ROOT {
             msg.WriteObject(var);
             req = ISsend(msg, dest, tag);
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Request _req;
             MPI_Issend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
             req = _req;
@@ -401,6 +415,7 @@ namespace ROOT {
             msg.WriteObject(var);
             req = IRsend(msg, dest, tag);
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Request _req;
             MPI_Irsend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
             req = _req;
@@ -458,6 +473,7 @@ namespace ROOT {
             };
             req = TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Request _req;
             MPI_Irecv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm, &_req);
             req = _req;
@@ -482,7 +498,31 @@ namespace ROOT {
             }
 
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Bcast((void *)&var, 1, GetDataType<Type>(), root, fComm);
+         }
+      }
+
+      //______________________________________________________________________________
+      template<class Type> void TCommunicator::Bcast(Type *vars, Int_t count, Int_t root) const
+      {
+         if (std::is_class<Type>::value) {
+            TMpiMessage *msgs = new TMpiMessage[count];
+            if (GetRank() == root) {
+               for (auto i = 0; i < count; i++) {
+                  msgs[i].WriteObject(vars[i]);
+               }
+            }
+            Bcast<TMpiMessage>(msgs, count, root);
+            auto cl = gROOT->GetClass(typeid(Type));
+            for (auto i = 0; i < count; i++) {
+               auto obj_tmp = (Type *)msgs[i].ReadObjectAny(cl);
+               memcpy((void *)&vars[i], (void *)obj_tmp, sizeof(Type));
+            }
+            delete[] msgs;
+         } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
+            MPI_Bcast((void *)vars, count, GetDataType<Type>(), root, fComm);
          }
 
       }
@@ -545,6 +585,7 @@ namespace ROOT {
             };
             return TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
          } else {
+            ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Ibcast((void *)&var, 1, GetDataType<Type>(), root, fComm, &req.fRequest);
          }
          return req;
@@ -672,6 +713,8 @@ namespace ROOT {
       //specialized template methods collective
       //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
+      //______________________________________________________________________________
+      template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t root) const;
       //______________________________________________________________________________
       template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
 

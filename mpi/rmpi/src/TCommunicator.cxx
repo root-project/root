@@ -351,6 +351,35 @@ template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) 
 
 }
 
+template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t root) const
+{
+   std::vector<TMpiMessageInfo>  msgis(count);
+   if (GetRank() == root) {
+      for (auto i = 0; i < count; i++) {
+         auto buffer = vars[i].Buffer();
+         auto size   = vars[i].BufferSize();
+         TMpiMessageInfo msgi(buffer, size);
+         msgi.SetSource(GetRank());
+         msgi.SetDestination(ANY_TAG);
+         msgi.SetDataTypeName(vars[i].GetDataTypeName());
+         msgis[i] = msgi;
+      }
+   }
+
+   Bcast(msgis, root);
+
+   for (auto i = 0; i < count; i++) {
+      //passing information from TMpiMessageInfo to TMpiMessage
+      auto size = msgis[i].GetBufferSize();
+      Char_t *buffer = new Char_t[size];
+      memcpy(buffer, msgis[i].GetBuffer(), size);
+
+      vars[i].SetBuffer((void *)buffer, size, kFALSE);
+      vars[i].SetReadMode();
+      vars[i].Reset();
+   }
+}
+
 //______________________________________________________________________________
 template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const
 {
