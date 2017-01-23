@@ -186,6 +186,7 @@ Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 #include "TKeySQL.h"
 #include "TSQLClassInfo.h"
 #include "TSQLObjectData.h"
+#include "TVirtualMutex.h"
 
 #include "Riostream.h"
 
