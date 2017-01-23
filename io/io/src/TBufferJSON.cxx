@@ -2267,8 +2267,8 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
 
 #define TJSONWriteArrayCompress(vname, arrsize, typname)             \
    {                                                                 \
-      if (fCompact < 10) {                                           \
-         fValue.Append("["); /* fJsonrCnt++; */                      \
+      if ((fCompact < 10) || (arrsize < 6)) {                        \
+         fValue.Append("[");                                         \
          for (Int_t indx=0;indx<arrsize;indx++) {                    \
             if (indx>0) fValue.Append(fArraySepar.Data());           \
             JsonWriteBasic(vname[indx]);                             \
@@ -2284,9 +2284,9 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
             TString suffix("");                                      \
             Int_t p(aindx), suffixcnt(-1), lastp(0);                 \
             while (p<bindx) {                                        \
+               if (vname[p]==0) { p++; continue; }                   \
                Int_t p0(p++), pp(0), nsame(1);                       \
-               if (++suffixcnt > 0) suffix.Form("%d",suffixcnt);     \
-               if (fCompact < 20) { pp = bindx; p = bindx+1; nsame = 0; }  \
+               if (fCompact < 20) { pp = bindx; p = bindx+1; nsame = 0; } \
                for(;p<=bindx;++p) {                                   \
                   if ((p<bindx) && (vname[p]==vname[p-1])) { nsame++; continue; } \
                   if (vname[p-1]==0) {                               \
@@ -2298,6 +2298,8 @@ void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/,
                   }                                                  \
                   pp = p; nsame = 1;                                 \
                }                                                     \
+               if (pp<=p0) continue;                                 \
+               if (++suffixcnt > 0) suffix.Form("%d",suffixcnt);     \
                if (p0!=lastp) fValue.Append(TString::Format("%s\"p%s\":%d", fArraySepar.Data(), suffix.Data(), p0)); \
                lastp = pp; /* remember cursor, it may be the same */ \
                fValue.Append(TString::Format("%s\"v%s\":", fArraySepar.Data(), suffix.Data())); \
