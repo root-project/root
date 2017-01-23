@@ -104,6 +104,7 @@ public:
    const char *GetName() const override;
    void *GetReceiver() const { return fReceiver; }
    const char *GetClassName() const { return fClassName; }
+   void Destroyed() override;         // *SIGNAL*
 
    void ExecuteMethod(Int_t nargs, va_list va) = delete;
    template <typename... T> inline void ExecuteMethod(const T&... params)

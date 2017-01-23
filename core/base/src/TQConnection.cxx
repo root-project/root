@@ -518,6 +518,15 @@ const char *TQConnection::GetName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Signal Destroyed tells that connection is destroyed.
+
+void TQConnection::Destroyed()
+{
+   MakeZombie();
+   Emit("Destroyed()");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// List TQConnection full method name and list all signals
 /// connected to this connection.
 
