@@ -49,7 +49,7 @@ script:
     if [[ ! -f CMakeCache.txt ]]; then
       cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
     fi
-  - make -j4 # VERBOSE=1 # don't do verbose right away, will slow it down too much, won't reach caching phase!
+  - make VERBOSE=1 # don't do verbose right away, will slow it down too much, won't reach caching phase!
 #  - |
 #    if [[ -f build_cache.tar ]]; then
 #      tar xf build_cache.tar
