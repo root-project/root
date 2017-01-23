@@ -28,6 +28,11 @@ void  TCommunicator::Barrier() const
    MPI_Barrier(fComm);
 }
 
+//______________________________________________________________________________
+void  TCommunicator::IBarrier(TRequest &req) const
+{
+   MPI_Ibarrier(fComm, &req.fRequest);
+}
 
 //______________________________________________________________________________
 Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag, TStatus &status) const
@@ -152,22 +157,32 @@ template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage *vars, Int_t count,
 //______________________________________________________________________________
 template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
 {
-   auto buffer = var.Buffer();
-   auto size   = var.BufferSize();
-   TMpiMessageInfo msgi(buffer, size);
-   msgi.SetSource(GetRank());
-   msgi.SetDestination(dest);
-   msgi.SetTag(tag);
-   msgi.SetDataTypeName(var.GetDataTypeName());
+   return ISend(&var, 1, dest, tag);
+}
 
+//______________________________________________________________________________
+template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag)
+{
+   std::vector<TMpiMessageInfo>  msgis(count);
+   for (auto i = 0; i < count; i++) {
+      auto buffer = vars[i].Buffer();
+      auto size   = vars[i].BufferSize();
+      TMpiMessageInfo msgi(buffer, size);
+      msgi.SetSource(GetRank());
+      msgi.SetDestination(dest);
+      msgi.SetTag(tag);
+      msgi.SetDataTypeName(vars[i].GetDataTypeName());
+      msgis[i] = msgi;
+   }
    TMpiMessage msg;
-   msg.WriteObject(msgi);
+   msg.WriteObject(msgis);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   MPI_Request req;
-   MPI_Isend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req);
+   TRequest req;
+   MPI_Isend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req.fRequest);
    return req;
 }
+
 
 //______________________________________________________________________________
 template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
@@ -213,91 +228,7 @@ template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, 
 //______________________________________________________________________________
 template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const
 {
-
-   IMsg *_imsg = new IMsg;
-   _imsg->fMsg = &var;
-   _imsg->fComm = &fComm;
-   _imsg->fCommunicator = this;
-   _imsg->fSource = source;
-   _imsg->fTag = tag;
-
-   //query lambda function
-   auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
-      if (status.IsCancelled())
-      {
-         return MPI_ERR_IN_STATUS;
-      }
-      IMsg  *imsg = (IMsg *)extra_state;
-
-      Int_t isize = 0;
-      TStatus s;
-      imsg->fCommunicator->Probe(imsg->fSource, imsg->fTag, s);
-      if (s.IsCancelled())
-      {
-         return MPI_ERR_IN_STATUS;
-      }
-      MPI_Get_elements(const_cast<MPI_Status *>(&s.fStatus), MPI_CHAR, &isize);
-//       std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
-
-      Char_t *ibuffer = new Char_t[isize];
-      MPI_Request _req;
-      MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &_req);
-//       TRequest req = imsg->fComm->Irecv(ibuffer, isize, MPI::CHAR, imsg->fSource, imsg->fTag);
-      TRequest req = _req;
-      req.Wait();
-
-      TMpiMessageInfo msgi;
-
-      TMpiMessage msg(ibuffer, isize);
-      auto cl = gROOT->GetClass(typeid(msgi));
-      auto obj_tmp = (TMpiMessageInfo *)msg.ReadObjectAny(cl);
-      memcpy((void *)&msgi, (void *)obj_tmp, sizeof(TMpiMessageInfo));
-
-      //TODO: added error control here
-      //check the tag, if destination is equal etc..
-
-      //passing information from TMpiMessageInfo to TMpiMessage
-      auto size = msgi.GetBufferSize();
-      Char_t *buffer = new Char_t[size];
-      memcpy(buffer, msgi.GetBuffer(), size);
-
-      imsg->fMsg->SetBuffer((void *)buffer, size, kFALSE);
-      imsg->fMsg->SetReadMode();
-      imsg->fMsg->Reset();
-      return MPI_SUCCESS;
-   };
-
-   //free function
-   auto free_fn = [](void *extra_state)->Int_t {
-      IMsg *obj = (IMsg *)extra_state;
-      if (obj) delete obj;
-      return MPI_SUCCESS;
-   };
-
-   //cancel lambda function
-   auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
-      if (!complete)
-      {
-         IMsg *imsg = (IMsg *)extra_state;
-         Int_t isize = 0;
-         MPI_Status s;
-         MPI_Probe(imsg->fSource, imsg->fTag, *imsg->fComm, &s);
-         MPI_Get_elements(&s, MPI_CHAR, &isize);
-
-         Char_t *ibuffer = new Char_t[isize];
-         MPI_Request req;
-         MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &req);
-         MPI_Cancel(&req);
-         delete ibuffer;
-         std::cout << "incompleted!\n";
-      }
-      std::cout << "Cancelled!\n";
-      return MPI_SUCCESS;
-   };
-
-   //creating General Request with lambda function
-   auto greq = TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
-   return greq;
+   return IRecv(&var, 1, source, tag);
 }
 
 
@@ -520,5 +451,94 @@ template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t 
    //creating General Request with lambda function
    return  TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
 }
+
+template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const
+{
+   IMsg *_imsg = new IMsg;
+   _imsg->fMsg = vars;
+   _imsg->fComm = &fComm;
+   _imsg->fCommunicator = this;
+   _imsg->fSource = source;
+   _imsg->fTag = tag;
+   _imsg->fCount = count;
+
+   //query lambda function
+   auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
+      if (status.IsCancelled())
+      {
+         return MPI_ERR_IN_STATUS;
+      }
+      IMsg  *imsg = (IMsg *)extra_state;
+
+      Int_t isize = 0;
+      TStatus s;
+      imsg->fCommunicator->Probe(imsg->fSource, imsg->fTag, s);
+      if (s.IsCancelled())
+      {
+         return MPI_ERR_IN_STATUS;
+      }
+      MPI_Get_elements(const_cast<MPI_Status *>(&s.fStatus), MPI_CHAR, &isize);
+      //       std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
+
+      Char_t *ibuffer = new Char_t[isize];
+      TRequest req;
+      MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &req.fRequest);
+
+      if (!req.Test())req.Wait();
+
+      std::vector<TMpiMessageInfo>  msgis;
+
+      TMpiMessage msg(ibuffer, isize);
+      auto cl = gROOT->GetClass(typeid(std::vector<TMpiMessageInfo>));
+      auto obj_tmp = msg.ReadObjectAny(cl);
+      memcpy((void *)&msgis, (void *)obj_tmp, sizeof(std::vector<TMpiMessageInfo>));
+
+
+      for (auto i = 0; i < imsg->fCount; i++)
+      {
+         //passing information from TMpiMessageInfo to TMpiMessage
+         auto size = msgis[i].GetBufferSize();
+         Char_t *buffer = new Char_t[size];
+         memcpy(buffer, msgis[i].GetBuffer(), size);
+
+         imsg->fMsg[i].SetBuffer((void *)buffer, size, kFALSE);
+         imsg->fMsg[i].SetReadMode();
+         imsg->fMsg[i].Reset();
+      }
+      return MPI_SUCCESS;
+   };
+
+   //free function
+   auto free_fn = [](void *extra_state)->Int_t {
+      IMsg *obj = (IMsg *)extra_state;
+      if (obj) delete obj;
+      return MPI_SUCCESS;
+   };
+
+   //cancel lambda function
+   auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
+      if (!complete)
+      {
+         IMsg *imsg = (IMsg *)extra_state;
+         Int_t isize = 0;
+         MPI_Status s;
+         MPI_Probe(imsg->fSource, imsg->fTag, *imsg->fComm, &s);
+         MPI_Get_elements(&s, MPI_CHAR, &isize);
+
+         Char_t *ibuffer = new Char_t[isize];
+         MPI_Request req;
+         MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &req);
+         MPI_Cancel(&req);
+         delete ibuffer;
+         std::cout << "incompleted!\n";
+      }
+      //      std::cout << "Cancelled!\n";
+      return MPI_SUCCESS;
+   };
+
+   //creating General Request with lambda function
+   return TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
+}
+
 
 

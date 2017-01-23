@@ -114,6 +114,7 @@ namespace ROOT {
          Int_t fSource;
          Int_t fTag;
          Int_t fRoot;
+         Int_t fCount;
          void *fVar;
          UInt_t fSizeof;
          TClass *fClass;

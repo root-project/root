@@ -128,6 +128,12 @@ namespace ROOT {
          virtual void Barrier() const;
 
          /**
+          *         Method for synchronization between MPI nonblocking processes in a communicator
+          *         \param req request object
+          */
+         virtual void IBarrier(TRequest &req) const;
+
+         /**
           *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
           *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
           *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
@@ -285,6 +291,30 @@ namespace ROOT {
           *              \param tag id of the message
           */
          template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
+
+         /**
+          *            Starts a standard-mode, nonblocking send.
+          *              \param vars any selializable object
+          *              \param count number of elements in array \p vars
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
+         template<class Type> TRequest ISend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
+
+         /**
+          *         Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
+          *         to receive the object you need to call the methods Complete() and Wait()
+          *         TGrequest req=comm.IRecv(..);
+          *         req.Complete();
+          *         req.Wait();
+          *
+          *              \param vars any selializable object reference to receive the message
+          *              \param count number of elements in array \p vars
+          *              \param source id with the origin(Rank/Process) of the message
+          *              \param tag id of the message
+          *              \return TGrequest object.
+          */
+         template<class Type> TGrequest IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
 
          /**
           *          Broadcasts a message from the process with rank root to all other processes of the group.
@@ -703,11 +733,15 @@ namespace ROOT {
       //______________________________________________________________________________
       template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
+      template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag);
+      //______________________________________________________________________________
       template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
       template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
       template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
+      //______________________________________________________________________________
+      template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const;
 
       //////////////////////////////////////////////
       //specialized template methods collective
