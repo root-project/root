@@ -187,40 +187,58 @@ template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage *vars, I
 //______________________________________________________________________________
 template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
 {
-   auto buffer = var.Buffer();
-   auto size   = var.BufferSize();
-   TMpiMessageInfo msgi(buffer, size);
-   msgi.SetSource(GetRank());
-   msgi.SetDestination(dest);
-   msgi.SetTag(tag);
-   msgi.SetDataTypeName(var.GetDataTypeName());
+   return ISsend(&var, 1, dest, tag);
+}
 
+//______________________________________________________________________________
+template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  *vars, Int_t count, Int_t dest, Int_t tag)
+{
+   std::vector<TMpiMessageInfo>  msgis(count);
+   for (auto i = 0; i < count; i++) {
+      auto buffer = vars[i].Buffer();
+      auto size   = vars[i].BufferSize();
+      TMpiMessageInfo msgi(buffer, size);
+      msgi.SetSource(GetRank());
+      msgi.SetDestination(dest);
+      msgi.SetTag(tag);
+      msgi.SetDataTypeName(vars[i].GetDataTypeName());
+      msgis[i] = msgi;
+   }
    TMpiMessage msg;
-   msg.WriteObject(msgi);
+   msg.WriteObject(msgis);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   MPI_Request req;
-   MPI_Issend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req);
+   TRequest req;
+   MPI_Issend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req.fRequest);
    return req;
 }
 
 //______________________________________________________________________________
 template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag)
 {
-   auto buffer = var.Buffer();
-   auto size   = var.BufferSize();
-   TMpiMessageInfo msgi(buffer, size);
-   msgi.SetSource(GetRank());
-   msgi.SetDestination(dest);
-   msgi.SetTag(tag);
-   msgi.SetDataTypeName(var.GetDataTypeName());
+   return IRsend(&var, 1, dest, tag);
+}
 
+//______________________________________________________________________________
+template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  *vars, Int_t count, Int_t dest, Int_t tag)
+{
+   std::vector<TMpiMessageInfo>  msgis(count);
+   for (auto i = 0; i < count; i++) {
+      auto buffer = vars[i].Buffer();
+      auto size   = vars[i].BufferSize();
+      TMpiMessageInfo msgi(buffer, size);
+      msgi.SetSource(GetRank());
+      msgi.SetDestination(dest);
+      msgi.SetTag(tag);
+      msgi.SetDataTypeName(vars[i].GetDataTypeName());
+      msgis[i] = msgi;
+   }
    TMpiMessage msg;
-   msg.WriteObject(msgi);
+   msg.WriteObject(msgis);
    auto ibuffer = msg.Buffer();
    auto isize = msg.BufferSize();
-   MPI_Request req;
-   MPI_Irsend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req);
+   TRequest req;
+   MPI_Irsend((void *)ibuffer, isize, MPI_CHAR, dest, tag, fComm, &req.fRequest);
    return req;
 }
 

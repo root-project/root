@@ -302,6 +302,24 @@ namespace ROOT {
          template<class Type> TRequest ISend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
 
          /**
+          *         Starts a nonblocking synchronous send
+          *              \param vars any selializable object
+          *              \param count number of elements in array \p vars
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
+         template<class Type> TRequest ISsend(const Type *var, Int_t count, Int_t dest, Int_t tag);
+
+         /**
+          *         Starts a ready-mode nonblocking send.
+          *              \param vars any selializable object
+          *              \param count number of elements in array \p vars
+          *              \param dest id with the destination(Rank/Process) of the message
+          *              \param tag id of the message
+          */
+         template<class Type> TRequest IRsend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
+
+         /**
           *         Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
           *         to receive the object you need to call the methods Complete() and Wait()
           *         TGrequest req=comm.IRecv(..);
@@ -737,7 +755,11 @@ namespace ROOT {
       //______________________________________________________________________________
       template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
       //______________________________________________________________________________
+      template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag);
+      //______________________________________________________________________________
       template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
+      //______________________________________________________________________________
+      template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  *vars, Int_t count, Int_t dest, Int_t tag);
       //______________________________________________________________________________
       template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
       //______________________________________________________________________________
