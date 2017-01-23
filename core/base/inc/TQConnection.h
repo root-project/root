@@ -110,7 +110,8 @@ public:
    template <typename... T> inline void ExecuteMethod(const T&... params)
    {
       if (!CheckSlot(sizeof...(params))) return;
-      EmitVA(sizeof...(params), params...);
+      SetArgs(params...);
+      SendSignal();
    }
 
    template <typename... T> inline void ExecuteMethod(Int_t /* nargs */, const T&... params)
