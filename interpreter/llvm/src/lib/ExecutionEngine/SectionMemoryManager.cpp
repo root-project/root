@@ -129,9 +129,20 @@ uint8_t *SectionMemoryManager::allocateSection(MemoryGroup &MemGroup,
   };
   static CheckerType isNotMonotonic = getMonotonicChecker();
 
+  int count = 0;
+
   if (MemGroup.Near.base() && isNotMonotonic(MB.base(), MemGroup.Near.base())) {
     SmallVector<sys::MemoryBlock, 16> MemToDelete;
     while (isNotMonotonic(MB.base(), MemGroup.Near.base())) {
+
+      if (count > 1000) {
+         // We make 1000 allocations without getting in good shape, let's
+         // give up and return the first one we allocated.
+         MemToDelete.push_back(MB);
+         MB = MemToDelete.front();
+         MemToDelete.erase(MemToDelete.begin());
+         break;
+      }
 
       // Hold on to the memory until we get an acceptable one
       // just so that we are not given it back.
@@ -148,6 +159,7 @@ uint8_t *SectionMemoryManager::allocateSection(MemoryGroup &MemGroup,
         // FIXME: Add error propagation to the interface.
         return nullptr;
       }
+      ++count;
     }
     for (sys::MemoryBlock &Block : MemToDelete) {
       sys::Memory::releaseMappedMemory(Block);
