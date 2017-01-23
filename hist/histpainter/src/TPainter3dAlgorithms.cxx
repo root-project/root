@@ -19,7 +19,7 @@
 This package was originally written by Evgueni Tcherniaev from IHEP/Protvino.
 
 The original Fortran implementation was adapted to HIGZ/PAW by Olivier Couet
-and  Evgueni Tcherniaev.
+and Evgueni Tcherniaev.
 
 This class is a subset of the original system. It has been converted to a C++
 class by Rene Brun.
@@ -517,15 +517,30 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *, Double_t *xyz, Int_t np, Int_t
    x[np] = x[0]; y[np] = y[0];
 
    //          Draw face
-   FillPolygon(np, p3, t);
-
-   //          Draw border
-   if (fMesh == 1) {
-      SetLineColor(fEdgeColor[fEdgeIdx]);
-      SetLineStyle(fEdgeStyle[fEdgeIdx]);
-      SetLineWidth(fEdgeWidth[fEdgeIdx]);
-      TAttLine::Modify();
-      gPad->PaintPolyLine(np+1, x, y);
+   SetLineColor(fEdgeColor[fEdgeIdx]);
+   SetLineStyle(fEdgeStyle[fEdgeIdx]);
+   SetLineWidth(fEdgeWidth[fEdgeIdx]);
+   TAttLine::Modify();
+   if (np == 4) {
+      Double_t ttt[5] = { t[0], t[1], t[2], t[3], t[0] };
+      for (Int_t i = 0; i<3; ++i) { p3[3*4+i] = p3[i]; }
+      Int_t k1 = 0, k2 = 2;
+      Double_t z1 = (x[k1+1] - x[k1+0])*(y[k1+2] - y[k1+1]) - (y[k1+1] - y[k1+0])*(x[k1+2] - x[k1+1]);
+      Double_t z2 = (x[k2+1] - x[k2+0])*(y[k2+2] - y[k2+1]) - (y[k2+1] - y[k2+0])*(x[k2+2] - x[k2+1]);
+      if (z1 > z2) { k1 = 2; k2 = 0; }
+      FillPolygon(3, &p3[3*k1], &ttt[k1]);
+      if (fMesh == 1) {   // Draw border
+         gPad->PaintPolyLine(3, &x[k1], &y[k1]);
+      }
+      FillPolygon(3, &p3[3*k2], &ttt[k2]);
+      if (fMesh == 1) {   // Draw border
+         gPad->PaintPolyLine(3, &x[k2], &y[k2]);
+      }
+   } else {
+      FillPolygon(np, p3, t);
+      if (fMesh == 1) {   // Draw border
+         gPad->PaintPolyLine(np+1, x, y);
+      }
    }
 }
 
@@ -1274,7 +1289,7 @@ void TPainter3dAlgorithms::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
    nl = fNlevel;
    if (nl < 0) nl = -nl;
 
-   //         F I N D   Tmin   A N D   Tmax
+   // Find Tmin and Tmax
    tmin = t[1];
    tmax = t[1];
    for (i = 2; i <= np; ++i) {
