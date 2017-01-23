@@ -72,11 +72,11 @@ private:
    Int_t        fLevelLine[200];   ///
    Int_t        fLoff;             ///
    Int_t        fNqs;              ///
-   Int_t        fNStack;           ///Number of histograms in the stack to be painted
+   Int_t        fNStack;           /// Number of histograms in the stack to be painted
    Int_t        fNxrast;           ///
    Int_t        fNyrast;           ///
    Int_t        fIfrast;           ///
-   Int_t        *fRaster;          ///pointer to raster buffer
+   Int_t        *fRaster;          /// pointer to raster buffer
    Int_t        fJmask[30];        ///
    Int_t        fMask[465];        ///
    Double_t     fP8[8][3];         ///
@@ -90,9 +90,9 @@ private:
    Int_t        fIc3;              /// Base colour for the 3rd Iso Surface
 
    static Int_t    fgF3Clipping;   /// Clipping box is off (0) or on (1)
-   static Double_t fgF3XClip;      /// Clipping plne along X
-   static Double_t fgF3YClip;      /// Clipping plne along Y
-   static Double_t fgF3ZClip;      /// Clipping plne along Y
+   static Double_t fgF3XClip;      /// Clipping plane along X
+   static Double_t fgF3YClip;      /// Clipping plane along Y
+   static Double_t fgF3ZClip;      /// Clipping plane along Y
    static TF3      *fgCurrentF3;   /// Pointer to the 3D function to be paint.
 
 
