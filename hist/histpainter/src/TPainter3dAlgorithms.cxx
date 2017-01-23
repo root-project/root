@@ -16,6 +16,8 @@
 \ingroup Histpainter
 \brief The Legos and Surfaces painter class.
 
+3D graphics representations package.
+
 This package was originally written by Evgueni Tcherniaev from IHEP/Protvino.
 
 The original Fortran implementation was adapted to HIGZ/PAW by Olivier Couet
