@@ -423,16 +423,21 @@ namespace ROOT {
       //______________________________________________________________________________
       template<class Type> TRequest TCommunicator::ISend(const Type &var, Int_t dest, Int_t tag)
       {
+         return ISend(&var, 1, dest, tag);
+      }
+
+      //______________________________________________________________________________
+      template<class Type> TRequest TCommunicator::ISend(const Type *vars, Int_t count, Int_t dest, Int_t tag)
+      {
          TRequest req;
          if (std::is_class<Type>::value) {
-            TMpiMessage msg;
-            msg.WriteObject(var);
-            req = ISend(msg, dest, tag);
+            TMpiMessage *msg = new TMpiMessage[count];
+            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
+            req = ISend(msg, count, dest, tag);
+            delete[] msg;
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Request _req;
-            MPI_Isend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
-            req = _req;
+            MPI_Isend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
          }
          return req;
       }
@@ -440,16 +445,21 @@ namespace ROOT {
       //______________________________________________________________________________
       template<class Type> TRequest TCommunicator::ISsend(const Type &var, Int_t dest, Int_t tag)
       {
+         return ISsend(&var, 1, dest, tag);
+      }
+
+      //______________________________________________________________________________
+      template<class Type> TRequest TCommunicator::ISsend(const Type *vars, Int_t count, Int_t dest, Int_t tag)
+      {
          TRequest req;
          if (std::is_class<Type>::value) {
-            TMpiMessage msg;
-            msg.WriteObject(var);
-            req = ISsend(msg, dest, tag);
+            TMpiMessage *msg = new TMpiMessage[count];
+            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
+            req = ISsend(msg, count, dest, tag);
+            delete[] msg;
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Request _req;
-            MPI_Issend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
-            req = _req;
+            MPI_Issend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
          }
          return req;
       }
@@ -457,33 +467,43 @@ namespace ROOT {
       //______________________________________________________________________________
       template<class Type> TRequest TCommunicator::IRsend(const Type &var, Int_t dest, Int_t tag)
       {
+         return IRsend(&var, 1, dest, tag);
+      }
+
+      //______________________________________________________________________________
+      template<class Type> TRequest TCommunicator::IRsend(const Type *vars, Int_t count, Int_t dest, Int_t tag)
+      {
          TRequest req;
          if (std::is_class<Type>::value) {
-            TMpiMessage msg;
-            msg.WriteObject(var);
-            req = IRsend(msg, dest, tag);
+            TMpiMessage *msg = new TMpiMessage[count];
+            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
+            req = IRsend(msg, count, dest, tag);
+            delete[] msg;
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Request _req;
-            MPI_Irsend((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm, &_req);
-            req = _req;
+            MPI_Irsend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
          }
          return req;
       }
 
-
       //______________________________________________________________________________
       template<class Type> TGrequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag) const
+      {
+         return IRecv(&var, 1, source, tag);
+      }
+      //______________________________________________________________________________
+      template<class Type> TGrequest TCommunicator::IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const
       {
          TGrequest req;
          if (std::is_class<Type>::value) {
             IMsg *_imsg = new IMsg;
-            _imsg->fVar = &var;
+            _imsg->fVar = vars;
             _imsg->fCommunicator = this;
+            _imsg->fCount = count;
             _imsg->fSource = source;
             _imsg->fTag = tag;
             _imsg->fSizeof = sizeof(Type);
-            _imsg->fClass = gROOT->GetClass(typeid(var));
+            _imsg->fClass = gROOT->GetClass(typeid(Type));
 
             //query lambda function
             auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
@@ -493,18 +513,23 @@ namespace ROOT {
                   return MPI_ERR_IN_STATUS;
                }
                IMsg  *imsg = (IMsg *)extra_state;
-               TMpiMessage msg;
-               auto ireq = imsg->fCommunicator->IRecv(msg, imsg->fSource, imsg->fTag);
+               TMpiMessage *msgs = new TMpiMessage[imsg->fCount];
+               auto ireq = imsg->fCommunicator->IRecv(msgs, imsg->fCount, imsg->fSource, imsg->fTag);
                TStatus s;
                ireq.GetStatus(s);
                if (s.IsCancelled())
                {
+                  delete[] msgs;
                   return MPI_ERR_IN_STATUS;
                }
                ireq.Complete();
                ireq.Wait();
-               auto obj_tmp = msg.ReadObjectAny(imsg->fClass);
-               memcpy(imsg->fVar, obj_tmp, imsg->fSizeof);
+               for (auto i = 0; i < imsg->fCount; i++)
+               {
+                  auto obj_tmp = msgs[i].ReadObjectAny(imsg->fClass);
+                  Type *_vars = (Type *)imsg->fVar;
+                  memmove((void *)&_vars[i], obj_tmp, imsg->fSizeof);
+               }
                return MPI_SUCCESS;
             };
 
@@ -522,9 +547,7 @@ namespace ROOT {
             req = TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Request _req;
-            MPI_Irecv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm, &_req);
-            req = _req;
+            MPI_Irecv((void *)vars, 1, GetDataType<Type>(), source, tag, fComm, &req.fRequest);
          }
          return req;
       }
