@@ -45,5 +45,8 @@ install:
 
 script:
   - cd "${TRAVIS_BUILD_DIR}"/../root_build
-  - cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
+  - |
+    if [[ ! -f CMakeCache.txt ]]; then
+      cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
+    fi
   - ninja -j4
