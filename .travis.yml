@@ -46,7 +46,18 @@ install:
 script:
   - cd "${TRAVIS_BUILD_DIR}"/../root_build
   - |
-    if [[ ! -f CMakeCache.txt ]]; then
+    if [[ -f build_cache.tar ]]; then
+      tar xf build_cache.tar
+      rm build_cache.tar
+    else
       cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
     fi
   - ninja -j4
+
+# tarring the build directory myself to preserve timestamps, which apparently doesn't work with travis cacher itself
+before_cache:
+  - |
+    cd "${TRAVIS_BUILD_DIR}"/../root_build
+    tar -cf ../build_cache.tar --atime-preserve *
+    rm *
+    mv ../build_cache.tar .
