@@ -65,6 +65,8 @@ public:
       return fName.Data();
    }
 
+   Int_t GetMethodNargs() { return fMethod->GetNargs(); }
+
    void ExecuteMethod(void *object, Int_t nargs, va_list ap) = delete;
    void ExecuteMethod(void *object);
    void ExecuteMethod(void *object, Long_t param);
@@ -439,6 +441,22 @@ void TQSlotPool::Free(TQSlot *slot)
 }
 
 static TQSlotPool gSlotPool;  // global pool of slots
+
+void TQConnection::SetArg(const Long_t *params, Int_t nparam/* = -1*/) {
+   CallFunc_t *func = LockSlot();
+
+   TQSlot *s = fSlot;
+
+   if (nparam == -1)
+      nparam = s->GetMethodNargs();
+
+   // FIXME: Why TInterpreter needs non-const SetArgArray. TClingCallFunc
+   // doesn't modify the value.
+   gInterpreter->CallFunc_SetArgArray(func, const_cast<Long_t*>(params), nparam);
+
+   UnLockSlot(s);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TQConnection ctor.

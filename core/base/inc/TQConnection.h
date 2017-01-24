@@ -58,17 +58,7 @@ protected:
    virtual void SetArg(ULong64_t param) override { SetArgImpl(param); }
    virtual void SetArg(const char * param) override { SetArgImpl(param); }
 
-   virtual void SetArg(const Long_t *params, Int_t nparam = -1) override {
-      CallFunc_t *func = LockSlot();
-
-      TQSlot *s = fSlot;
-
-      // FIXME: Why TInterpreter needs non-const SetArgArray. TClingCallFunc
-      // doesn't modify the value.
-      gInterpreter->CallFunc_SetArgArray(func, const_cast<Long_t*>(params), nparam);
-
-      UnLockSlot(s);
-   }
+   virtual void SetArg(const Long_t *params, Int_t nparam = -1) override;
 
    template <typename T> void SetArgImpl(T arg)
    {

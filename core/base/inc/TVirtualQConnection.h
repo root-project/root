@@ -59,6 +59,11 @@ public:
    {
       SetArgsImpl(args...);
    }
+   // We need a separate overload to allow users to set the argument size of the array.
+   void SetArgs(const Long_t* argArray, Int_t nargs = -1)
+   {
+      SetArg(argArray, nargs);
+   }
 };
 
 #endif
