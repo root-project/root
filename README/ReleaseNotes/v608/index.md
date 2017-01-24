@@ -576,3 +576,8 @@ Changes will be part of the future 6.08/06
 ### TTree
 
 - Repair support in TTree for the case of a split branch where a class A contains a class B which contains a class C (and possibly more nesting) which contains const data members.
+
+### Bugs fixed in this release
+
+*   [[ROOT-8516](https://sft.its.cern.ch/jira/browse/ROOT-8516)] - Possible I/O corruption in writing when using a cache, typically on remote servers, e.g. XRootD
+
