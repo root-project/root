@@ -50,20 +50,33 @@ script:
 #      cmake ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
 #    fi
 #  - make VERBOSE=1 # don't do verbose right away, will slow it down too much, won't reach caching phase!
+#  - |
+#    if [[ -f build_cache.tar ]]; then
+#      tar xf build_cache.tar
+#      rm build_cache.tar
+#    else
+#      cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF #-Dccache=ON # -Dbuiltin_llvm=OFF
+#    fi
   - |
-    if [[ -f build_cache.tar ]]; then
-      echo $PWD
-      tar xf build_cache.tar
-      rm build_cache.tar
+    if [[ -f touch_order.txt ]]; then
+      while read fn; do
+        touch $fn
+      done < touch_order.txt
     else
       cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF #-Dccache=ON # -Dbuiltin_llvm=OFF
     fi
   - ninja -j4
 
 # tarring the build directory myself to preserve timestamps, which apparently doesn't work with travis cacher itself
+#before_cache:
+#  - |
+#    cd "${TRAVIS_BUILD_DIR}"/../root_build
+#    tar -cf ../build_cache.tar --atime-preserve .
+#    rm -r * .*
+#    mv ../build_cache.tar .
+
+# Save the order of timestamps of the files so we can recreate it with touch in the next build.
+# N.B.: just tarring the build files doesn't work, since the git clone will still be newer.
+# The build tools (make at least) only care about order, not about absolute timestamps.
 before_cache:
-  - |
-    cd "${TRAVIS_BUILD_DIR}"/../root_build
-    tar -cf ../build_cache.tar --atime-preserve .
-    rm -r * .*
-    mv ../build_cache.tar .
+  - find . -type f -printf "%T+\t%p\n" | sort | cut -f 2 > touch_order.txt
