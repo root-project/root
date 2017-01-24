@@ -55,7 +55,7 @@ script:
       tar xf build_cache.tar
       rm build_cache.tar
     else
-      cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF -Dccache=ON # -Dbuiltin_llvm=OFF
+      cmake -G Ninja ../root -DCMAKE_CXX_COMPILER=$COMPILER -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF #-Dccache=ON # -Dbuiltin_llvm=OFF
     fi
   - ninja -j4
 
