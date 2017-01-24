@@ -444,18 +444,12 @@ void TQSlotPool::Free(TQSlot *slot)
 static TQSlotPool gSlotPool;  // global pool of slots
 
 void TQConnection::SetArg(const Long_t *params, Int_t nparam/* = -1*/) {
-   CallFunc_t *func = LockSlot();
-
-   TQSlot *s = fSlot;
-
    if (nparam == -1)
-      nparam = s->GetMethodNargs();
+      nparam = fSlot->GetMethodNargs();
 
    // FIXME: Why TInterpreter needs non-const SetArgArray. TClingCallFunc
    // doesn't modify the value.
-   gInterpreter->CallFunc_SetArgArray(func, const_cast<Long_t*>(params), nparam);
-
-   UnLockSlot(s);
+   gInterpreter->CallFunc_SetArgArray(fSlot->GetFunc(), const_cast<Long_t*>(params), nparam);
 }
 
 
