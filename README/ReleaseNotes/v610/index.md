@@ -98,8 +98,10 @@ The following interfaces have been removed, after deprecation in v6.08.
   `BOX SAME` and if the log scale along Z was on, the plot showed only the
   first histogram. This can be reproduce by using the documentation example
   illustrating `BOX SAME`and turning the canvas into log scale along Z.
-- In TLatex: Do not paint the text when the text size is <= 0. This fixes
-  the problem mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8305)
+- In TLatex:
+    - Do not paint the text when the text size is <= 0. This fixes
+      the problem mentioned [here](https://sft.its.cern.ch/jira/browse/ROOT-8305)
+    - Do not paint text if the text string is empty.
 - From: Sergey Linev: In `TPad::SaveAs` method json file extension is now handled
 - Because of some precision issue some data points exactly on the plot limits of
   a `TGraph2D` were not drawn (option `P`).
