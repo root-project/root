@@ -52,6 +52,7 @@ script:
 #  - make VERBOSE=1 # don't do verbose right away, will slow it down too much, won't reach caching phase!
   - |
     if [[ -f build_cache.tar ]]; then
+      echo $PWD
       tar xf build_cache.tar
       rm build_cache.tar
     else
