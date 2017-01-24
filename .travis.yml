@@ -63,6 +63,6 @@ script:
 before_cache:
   - |
     cd "${TRAVIS_BUILD_DIR}"/../root_build
-    tar -cf ../build_cache.tar --atime-preserve *
-    rm -r *
+    tar -cf ../build_cache.tar --atime-preserve .
+    rm -r * .*
     mv ../build_cache.tar .
