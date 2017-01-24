@@ -447,6 +447,7 @@ static TQSlotPool gSlotPool;  // global pool of slots
 ///    cl == 0  - connection to function with name == method_name
 
 TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
+   : TQObject()
 {
    const char *funcname = 0;
    fReceiver = receiver;      // fReceiver is pointer to receiver
@@ -470,7 +471,7 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
 ///    it could be interpreted class and with method == funcname.
 
 TQConnection::TQConnection(const char *class_name, void *receiver,
-                           const char *funcname)
+                           const char *funcname) : TQObject()
 {
    fClassName = class_name;
    fSlot = gSlotPool.New(class_name, funcname);  // new slot-method
@@ -480,7 +481,7 @@ TQConnection::TQConnection(const char *class_name, void *receiver,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Ignore connections to this TQConnections
 
-TQConnection::TQConnection(const TQConnection &con)
+TQConnection::TQConnection(const TQConnection &con) : TQObject()
 {
    fClassName = con.fClassName;
    fSlot = con.fSlot;
