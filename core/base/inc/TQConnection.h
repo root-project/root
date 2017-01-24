@@ -34,7 +34,6 @@
 class TQSlot;
 
 class TQConnection : public TVirtualQConnection, public TQObject {
-
 protected:
    TQSlot  *fSlot = 0;       // slot-method calling interface
    void    *fReceiver = 0;   // ptr to object to which slot is applied
@@ -46,6 +45,7 @@ protected:
    void       *GetSlotAddress() const;
    CallFunc_t *LockSlot() const;
    void        UnLockSlot(TQSlot *) const;
+   CallFunc_t *GetSlotCallFunc() const;
 
    TQConnection &operator=(const TQConnection &) = delete;
 
@@ -61,13 +61,8 @@ protected:
 
    template <typename T> void SetArgImpl(T arg)
    {
-      CallFunc_t *func = LockSlot();
-
-      TQSlot *s = fSlot;
-
+      CallFunc_t *func = GetSlotCallFunc();
       gInterpreter->CallFunc_SetArg(func, arg);
-
-      UnLockSlot(s);
    }
 
    virtual void SendSignal() override

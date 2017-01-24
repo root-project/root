@@ -59,6 +59,7 @@ public:
    Bool_t      CheckSlot(Int_t nargs) const;
    Long_t      GetOffset() const { return fOffset; }
    CallFunc_t *StartExecuting();
+   CallFunc_t *GetFunc() const { return fFunc; }
    void        EndExecuting();
 
    const char *GetName() const {
@@ -679,4 +680,8 @@ void TQConnection::UnLockSlot(TQSlot *s) const {
    s->EndExecuting();
    if (s->References() <= 0) delete s;
    if (gInterpreterMutex) gInterpreterMutex->UnLock();
+}
+
+CallFunc_t* TQConnection::GetSlotCallFunc() const {
+   return fSlot->GetFunc();
 }
