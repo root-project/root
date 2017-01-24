@@ -3,7 +3,7 @@
 #include "TTree.h"
 #include "TH1F.h"
 #include "TTreeReader.h"
-#include "ROOT/TProcessExecutor.hxx"
+#include "ROOT/TTreeProcessorMP.hxx"
 
 TH1F* myMacro(TTreeReader& reader) {
 
@@ -27,8 +27,8 @@ int main() {
    TTree* tree;
    fp->GetObject("ntuple",tree);
 
-   ROOT::TProcessExecutor pool(2);
-   auto res = pool.ProcTree(*tree, myMacro);
+   ROOT::TTreeProcessorMP pool(2);
+   auto res = pool.Process(*tree, myMacro);
 
    std::cout << res->GetEntries() << std::endl;
 

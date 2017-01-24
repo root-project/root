@@ -1,5 +1,5 @@
 #include "TROOT.h"
-#include "ROOT/TTreeProcessor.hxx"
+#include "ROOT/TTreeProcessorMT.hxx"
 #include "TLorentzVector.h"
 #include "Math/Vector4D.h"
 
@@ -64,13 +64,13 @@ int main(int argc, char** argv) {
   std::mutex mutex;
   double globalMaxPt = -1.;
 
-  std::cout << "[IMT] TTreeProcessor::Process with " << kNThreads << " threads" << std::endl;
+  std::cout << "[IMT] TTreeProcessorMT::Process with " << kNThreads << " threads" << std::endl;
 
   // Tell ROOT we want to use implicit multi-threading
   ROOT::EnableImplicitMT(kNThreads);
 
-  // Create TTreeProcessor
-  ROOT::TTreeProcessor tp(kFileName, kTreeName);
+  // Create TTreeProcessorMT
+  ROOT::TTreeProcessorMT tp(kFileName, kTreeName);
 
   // Request the processing of the tree
   tp.Process([&](TTreeReader &myReader) {
