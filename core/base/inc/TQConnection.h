@@ -33,7 +33,6 @@
 
 class TQSlot;
 
-
 class TQConnection : public TVirtualQConnection, public TQObject {
 
 protected:
@@ -66,7 +65,7 @@ protected:
 
       TQSlot *s = fSlot;
 
-      gInterpreter->CallFunc_SetArguments(func, arg);
+      gInterpreter->CallFunc_SetArg(func, arg);
 
       UnLockSlot(s);
    }
