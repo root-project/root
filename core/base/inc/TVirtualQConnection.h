@@ -26,9 +26,10 @@ protected:
    // Note: sets argument list (for potentially more than one arg).
    virtual void SetArg(const Long_t *, Int_t = -1) = 0;
    virtual void SetArg(const char *) = 0;
+   void SetArg(const void *ptr) { SetArg((Long_t)ptr); };
 
    // We should 'widen' all types to one of the SetArg overloads.
-   template <class T, class = typename std::enable_if<std::is_scalar<T>::value>::type>
+   template <class T, class = typename std::enable_if<std::is_integral<T>::value>::type>
    void SetArg(const T& val)
    {
       if (std::is_signed<T>::value)
