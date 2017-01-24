@@ -94,7 +94,7 @@ private:
     auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
     std::unique_ptr<tbb::task_scheduler_init> fInitTBB;
-    static unsigned fPoolSize;
+    static unsigned fgPoolSize;
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/

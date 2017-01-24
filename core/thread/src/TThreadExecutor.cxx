@@ -1,26 +1,23 @@
 #include "ROOT/TThreadExecutor.hxx"
-#include "tbb/tbb.h"
+#include "TError.h"
 #include "TROOT.h"
+#include "tbb/tbb.h"
 #include <iostream>
 
 namespace ROOT{
 
-  unsigned TThreadExecutor::fPoolSize = 0;
+  unsigned TThreadExecutor::fgPoolSize = 0;
 
-  TThreadExecutor::TThreadExecutor():fInitTBB(new tbb::task_scheduler_init()){
-  }
+  TThreadExecutor::TThreadExecutor():TThreadExecutor::TThreadExecutor(tbb::task_scheduler_init::default_num_threads()){}
 
   TThreadExecutor::TThreadExecutor(size_t nThreads):fInitTBB(new tbb::task_scheduler_init(nThreads)){
-    if (fPoolSize != 0){
-      auto cause = "TThreadExecutor";
-      if(ROOT::IsImplicitMTEnabled()){
-        fPoolSize = ROOT::GetImplicitMTPoolSize();
-        fPoolSize = 3;
-        cause = "ROOT::EnableImplicitMT";
-      }
-      std::cout<<"Can't change the number of threads specified by a previous "<<cause<<" instantiation. Proceding with "<<fPoolSize<<" threads"<<std::endl;
+
+    fgPoolSize += fgPoolSize == 0? ROOT::GetImplicitMTPoolSize(): 0;
+
+    if(fgPoolSize != 0){
+      Warning("TThreadExecutor::TThreadExecutor", "Can't change the number of threads specified by a previous instantiation of TThreadExecutor or EnableImplicitMT. Proceeding with %d threads", fgPoolSize);
     } else {
-      fPoolSize = nThreads;
+      fgPoolSize = nThreads;
     }
   }
 
