@@ -143,6 +143,12 @@ namespace ROOT {
          return objPointer;
       }
 
+      /// Set the value of a particular slot.
+      void SetAtSlot(unsigned i, std::shared_ptr<T> v)
+      {
+         fObjPointers[i] = v;
+      }
+
       /// Access a particular slot which corresponds to a single thread.
       /// This is in general faster than the GetAtSlot method but it is
       /// responsibility of the caller to make sure that an object is
