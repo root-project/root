@@ -573,6 +573,10 @@ Released on January 13, 2016
 
 Changes will be part of the future 6.08/06
 
+### Interpreter
+
+- When mitigating the memory allocation pattern used for the JIT code, avoid making more than 1000 tries.  The avoid extremely long loop (possibly past the available memory size) in some cases (see ROOT-8544) but could lead to the stack frame information to be technically 'corrupted'.
+
 ### TTree
 
 - Repair support in TTree for the case of a split branch where a class A contains a class B which contains a class C (and possibly more nesting) which contains const data members.
