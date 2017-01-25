@@ -30,7 +30,7 @@ MINUIT2LIBDEPM         = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB)
 FUMILILIBDEPM          = $(GRAFLIB) $(HISTLIB) $(MATHCORELIB)
 TREELIBDEPM            = $(NETLIB) $(IOLIB) $(THREADLIB)
 TREEPLAYERLIBDEPM      = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
-                         $(IOLIB) $(MATHCORELIB)
+                         $(IOLIB) $(MATHCORELIB) $(MULTIPROCLIB)
 TREEVIEWERLIBDEPM      = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB) \
                          $(TREEPLAYERLIB) $(GEDLIB) $(IOLIB) $(MATHCORELIB)
 PROOFLIBDEPM           = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB) \
@@ -290,7 +290,7 @@ FUMILILIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMathCore.lib
 TREELIBEXTRA            = lib/libNet.lib lib/libRIO.lib lib/libThread.lib
 TREEPLAYERLIBEXTRA      = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libRIO.lib \
-                          lib/libMathCore.lib
+                          lib/libMathCore.lib lib/libMultiProc.lib
 TREEVIEWERLIBEXTRA      = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libHist.lib lib/libGui.lib lib/libTreePlayer.lib \
                           lib/libGed.lib lib/libRIO.lib lib/libMathCore.lib
@@ -465,7 +465,7 @@ FUMILILIBEXTRA          = -Llib -lGraf -lHist -lMathCore
 MATHMORELIBEXTRA        = -Llib -lMathCore
 TREELIBEXTRA            = -Llib -lNet -lRIO -lThread
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO \
-                          -lMathCore
+                          -lMathCore -lMultiProc
 TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui -lTreePlayer \
                           -lGed -lRIO -lMathCore
 PROOFLIBEXTRA           = -Llib -lNet -lTree -lThread -lRIO -lMathCore
