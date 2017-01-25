@@ -54,3 +54,5 @@ execState.log: libState_cxx.$(DllSuf)
 execSimpleVector.log: libsimpleVector_dictrflx.$(DllSuf)
 
 execBrowseNonAccessibleType.log: execBrowseNonAccessibleType.C
+
+execDuplicate.log: libDuplicate_cxx.$(DllSuf)

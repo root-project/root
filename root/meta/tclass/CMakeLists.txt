@@ -62,4 +62,10 @@ ROOTTEST_ADD_TEST(execSimpleVector
                   OUTREF execSimpleVector.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
+ROOTTEST_ADD_TEST(execDuplicate
+                  MACRO execDuplicate.C
+                  OUTREF execDuplicate.ref
+                  DEPENDS libDuplicate.cxx)
+
+
 ROOTTEST_ADD_TESTDIRS()
