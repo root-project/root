@@ -6,6 +6,7 @@
 #include "Rtypes.h"
 #endif
 
+#include<functional>
 #include<TObject.h>
 #include<mpi.h>
 
@@ -17,6 +18,7 @@ namespace ROOT {
          friend class TGrequest;
          friend class TPrequest;
       protected:
+         std::function<void(void)> fUnserialize; //function to unserialize object at wait or test
          MPI_Request fRequest;
       public:
          TRequest();

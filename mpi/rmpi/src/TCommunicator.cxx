@@ -1,6 +1,7 @@
 #include<Mpi/TCommunicator.h>
 #include <Mpi/TMpiMessage.h>
 #include<iostream>
+#include<TSystem.h>
 #include<TROOT.h>
 using namespace ROOT::Mpi;
 
@@ -35,7 +36,7 @@ void  TCommunicator::IBarrier(TRequest &req) const
 }
 
 //______________________________________________________________________________
-Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag, TStatus &status) const
+Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 {
    Int_t flag;
    MPI_Status stat;
@@ -45,7 +46,7 @@ Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag, TStatus &status) const
 }
 
 //______________________________________________________________________________
-Bool_t TCommunicator::Iprobe(Int_t source, Int_t tag) const
+Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
 {
    Int_t flag;
    MPI_Status status;
@@ -244,7 +245,7 @@ template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  *vars,
 
 
 //______________________________________________________________________________
-template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const
+template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const
 {
    return IRecv(&var, 1, source, tag);
 }
@@ -470,40 +471,21 @@ template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t 
    return  TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
 }
 
-template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const
+template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const
 {
-   IMsg *_imsg = new IMsg;
-   _imsg->fMsg = vars;
-   _imsg->fComm = &fComm;
-   _imsg->fCommunicator = this;
-   _imsg->fSource = source;
-   _imsg->fTag = tag;
-   _imsg->fCount = count;
+   TRequest req;
+   Int_t isize = 0;
+   TStatus s;
+   while (!IProbe(source, tag, s)) {
+      gSystem->Sleep(100);
+   }
 
-   //query lambda function
-   auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
-      if (status.IsCancelled())
-      {
-         return MPI_ERR_IN_STATUS;
-      }
-      IMsg  *imsg = (IMsg *)extra_state;
+   MPI_Get_elements(const_cast<MPI_Status *>(&s.fStatus), MPI_CHAR, &isize);
 
-      Int_t isize = 0;
-      TStatus s;
-      imsg->fCommunicator->Probe(imsg->fSource, imsg->fTag, s);
-      if (s.IsCancelled())
-      {
-         return MPI_ERR_IN_STATUS;
-      }
-      MPI_Get_elements(const_cast<MPI_Status *>(&s.fStatus), MPI_CHAR, &isize);
-      //       std::cout << "in query_fn = source = " << imsg->fSource << " tag = " << imsg->fTag << " size = " << isize << std::endl;
+   Char_t *ibuffer = new Char_t[isize];
+   MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, source, tag, fComm, &req.fRequest);
 
-      Char_t *ibuffer = new Char_t[isize];
-      TRequest req;
-      MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &req.fRequest);
-
-      if (!req.Test())req.Wait();
-
+   req.fUnserialize = [ = ]() {
       std::vector<TMpiMessageInfo>  msgis;
 
       TMpiMessage msg(ibuffer, isize);
@@ -512,50 +494,20 @@ template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t 
       memcpy((void *)&msgis, (void *)obj_tmp, sizeof(std::vector<TMpiMessageInfo>));
 
 
-      for (auto i = 0; i < imsg->fCount; i++)
-      {
+      for (auto i = 0; i < count; i++) {
          //passing information from TMpiMessageInfo to TMpiMessage
          auto size = msgis[i].GetBufferSize();
          Char_t *buffer = new Char_t[size];
          memcpy(buffer, msgis[i].GetBuffer(), size);
 
-         imsg->fMsg[i].SetBuffer((void *)buffer, size, kFALSE);
-         imsg->fMsg[i].SetReadMode();
-         imsg->fMsg[i].Reset();
+         vars[i].SetBuffer((void *)buffer, size, kFALSE);
+         vars[i].SetReadMode();
+         vars[i].Reset();
       }
-      return MPI_SUCCESS;
+
    };
 
-   //free function
-   auto free_fn = [](void *extra_state)->Int_t {
-      IMsg *obj = (IMsg *)extra_state;
-      if (obj) delete obj;
-      return MPI_SUCCESS;
-   };
-
-   //cancel lambda function
-   auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
-      if (!complete)
-      {
-         IMsg *imsg = (IMsg *)extra_state;
-         Int_t isize = 0;
-         MPI_Status s;
-         MPI_Probe(imsg->fSource, imsg->fTag, *imsg->fComm, &s);
-         MPI_Get_elements(&s, MPI_CHAR, &isize);
-
-         Char_t *ibuffer = new Char_t[isize];
-         MPI_Request req;
-         MPI_Irecv((void *)ibuffer, isize, MPI_CHAR, imsg->fSource, imsg->fTag, *imsg->fComm, &req);
-         MPI_Cancel(&req);
-         delete ibuffer;
-         std::cout << "incompleted!\n";
-      }
-      //      std::cout << "Cancelled!\n";
-      return MPI_SUCCESS;
-   };
-
-   //creating General Request with lambda function
-   return TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
+   return req;
 }
 
 

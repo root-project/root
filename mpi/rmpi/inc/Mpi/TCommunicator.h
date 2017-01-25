@@ -140,7 +140,7 @@ namespace ROOT {
           *              \param status TStatus object with extra information.
           *              \return boolean true if the probe if ok
           */
-         virtual Bool_t Iprobe(Int_t source, Int_t tag, TStatus &status) const;
+         virtual Bool_t IProbe(Int_t source, Int_t tag, TStatus &status) const;
 
          /**
           *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
@@ -148,7 +148,7 @@ namespace ROOT {
           *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
           *              \return boolean true if the probe if ok
           */
-         virtual Bool_t Iprobe(Int_t source, Int_t tag) const;
+         virtual Bool_t IProbe(Int_t source, Int_t tag) const;
 
          /**
           *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
@@ -218,7 +218,7 @@ namespace ROOT {
           *              \param tag id of the message
           *              \return TGrequest object.
           */
-         template<class Type> TGrequest IRecv(Type &var, Int_t source, Int_t tag) const;
+         template<class Type> TRequest IRecv(Type &var, Int_t source, Int_t tag) const;
 
 
          /**
@@ -332,7 +332,7 @@ namespace ROOT {
           *              \param tag id of the message
           *              \return TGrequest object.
           */
-         template<class Type> TGrequest IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
+         template<class Type> TRequest IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
 
          /**
           *          Broadcasts a message from the process with rank root to all other processes of the group.
@@ -487,67 +487,30 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
-      template<class Type> TGrequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag) const
+      template<class Type> TRequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag) const
       {
          return IRecv(&var, 1, source, tag);
       }
       //______________________________________________________________________________
-      template<class Type> TGrequest TCommunicator::IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const
+      template<class Type> TRequest TCommunicator::IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const
       {
-         TGrequest req;
+         TRequest req;
          if (std::is_class<Type>::value) {
-            IMsg *_imsg = new IMsg;
-            _imsg->fVar = vars;
-            _imsg->fCommunicator = this;
-            _imsg->fCount = count;
-            _imsg->fSource = source;
-            _imsg->fTag = tag;
-            _imsg->fSizeof = sizeof(Type);
-            _imsg->fClass = gROOT->GetClass(typeid(Type));
 
-            //query lambda function
-            auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
-
-               if (status.IsCancelled())
-               {
-                  return MPI_ERR_IN_STATUS;
-               }
-               IMsg  *imsg = (IMsg *)extra_state;
-               TMpiMessage *msgs = new TMpiMessage[imsg->fCount];
-               auto ireq = imsg->fCommunicator->IRecv(msgs, imsg->fCount, imsg->fSource, imsg->fTag);
-               TStatus s;
-               ireq.GetStatus(s);
-               if (s.IsCancelled())
-               {
-                  delete[] msgs;
-                  return MPI_ERR_IN_STATUS;
-               }
-               ireq.Complete();
-               ireq.Wait();
-               for (auto i = 0; i < imsg->fCount; i++)
-               {
-                  auto obj_tmp = msgs[i].ReadObjectAny(imsg->fClass);
-                  Type *_vars = (Type *)imsg->fVar;
-                  memmove((void *)&_vars[i], obj_tmp, imsg->fSizeof);
-               }
-               return MPI_SUCCESS;
-            };
-
-            //free function
-            auto free_fn = [](void *extra_state)->Int_t {
-               IMsg *obj = (IMsg *)extra_state;
-               if (obj) delete obj;
-               return MPI_SUCCESS;
-            };
-
-            //cancel lambda function
-            auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
-               return MPI_SUCCESS;
-            };
-            req = TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
+            TMpiMessage *msgs = new TMpiMessage[count];
+            auto ireq = IRecv(msgs, count, source, tag);
+            req.fRequest = ireq.fRequest;
+//                req.fUnserialize = []{
+//                     ireq.fUnserialize();
+//                     for (auto i = 0; i < count; i++)
+//                     {
+//                         auto obj_tmp = msgs[i].ReadObjectAny(gROOT->GetClass(typeid(Type)));
+//                         memmove((void *)&vars[i], obj_tmp, sizeof(Type));
+//                     }
+//                };
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Irecv((void *)vars, 1, GetDataType<Type>(), source, tag, fComm, &req.fRequest);
+            MPI_Irecv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, &req.fRequest);
          }
          return req;
       }
@@ -784,9 +747,9 @@ namespace ROOT {
       //______________________________________________________________________________
       template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  *vars, Int_t count, Int_t dest, Int_t tag);
       //______________________________________________________________________________
-      template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
+      template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
       //______________________________________________________________________________
-      template<> TGrequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const;
+      template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const;
 
       //////////////////////////////////////////////
       //specialized template methods collective

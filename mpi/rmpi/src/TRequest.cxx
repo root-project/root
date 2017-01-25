@@ -6,20 +6,30 @@
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
-TRequest::TRequest(): fRequest(MPI_REQUEST_NULL) {}
+TRequest::TRequest(): fRequest(MPI_REQUEST_NULL)
+{
+   fUnserialize = []() {};
+}
 
 //______________________________________________________________________________
-TRequest::TRequest(const TRequest &obj): TObject(obj), fRequest(obj.fRequest) {}
+TRequest::TRequest(const TRequest &obj): TObject(obj), fRequest(obj.fRequest)
+{
+   fUnserialize = []() {};
+}
 
 
 //______________________________________________________________________________
-TRequest::TRequest(MPI_Request i) : fRequest(i) { }
+TRequest::TRequest(MPI_Request i) : fRequest(i)
+{
+   fUnserialize = []() {};
+}
 
 
 //______________________________________________________________________________
 TRequest &TRequest::operator=(const TRequest &r)
 {
    fRequest = r.fRequest;
+   fUnserialize = r.fUnserialize;
    return *this;
 }
 
@@ -46,12 +56,24 @@ TRequest &TRequest::operator= (const MPI_Request &i)
 void TRequest::Wait(TStatus &status)
 {
    MPI_Wait(&fRequest, &status.fStatus);
+   //TODO:error control here if status is wrong
+   try {
+      fUnserialize();
+   } catch (const std::exception &e) {
+      std::cerr << "Error = " << e.what() << std::endl;
+   }
 }
 
 //______________________________________________________________________________
 void TRequest::Wait()
 {
    MPI_Wait(&fRequest, MPI_STATUS_IGNORE);
+   //TODO:error control here if status is wrong
+   try {
+      fUnserialize();
+   } catch (const std::exception &e) {
+      std::cerr << "Error = " << e.what() << std::endl;
+   }
 }
 
 //______________________________________________________________________________
