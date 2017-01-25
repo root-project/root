@@ -577,6 +577,11 @@ Changes will be part of the future 6.08/06
 
 - When mitigating the memory allocation pattern used for the JIT code, avoid making more than 1000 tries.  The avoid extremely long loop (possibly past the available memory size) in some cases (see ROOT-8544) but could lead to the stack frame information to be technically 'corrupted'.
 
+### Core
+
+- Resolved an issue that lead to missing information the TClass of an STL collections that had more than one dictionary (including one with a rootpcm).
+
+
 ### TTree
 
 - Repair support in TTree for the case of a split branch where a class A contains a class B which contains a class C (and possibly more nesting) which contains const data members.
