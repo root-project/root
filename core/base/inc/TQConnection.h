@@ -33,6 +33,7 @@
 
 class TQSlot;
 
+
 class TQConnection : public TVirtualQConnection, public TQObject {
 protected:
    TQSlot  *fSlot = 0;       // slot-method calling interface
@@ -62,7 +63,7 @@ protected:
    template <typename T> void SetArgImpl(T arg)
    {
       CallFunc_t *func = GetSlotCallFunc();
-      gInterpreter->CallFunc_SetArg(func, arg);
+      gInterpreter->CallFunc_SetArguments(func, arg);
    }
 
    virtual void SendSignal() override
