@@ -202,6 +202,9 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move data from this TProtoClass into cl.
+/// Returns 'false' if nothing was done.  This can happen in the case where
+/// there is more than one dictionary for the same entity.  Note having
+/// duplicate dictionary is acceptable for namespace or STL collections.
 
 Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums.load()
@@ -217,12 +220,12 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          // which is part of libCore proper.
          if (gDebug > 0)
             Info("FillTClass", "Returning w/o doing anything. %s is a STL collection.",cl->GetName());
-         return kTRUE;
+         return kFALSE;
       }
       if (cl->Property() & kIsNamespace) {
          if (gDebug > 0)
             Info("FillTClass", "Returning w/o doing anything. %s is a namespace.",cl->GetName());
-         return kTRUE;
+         return kFALSE;
       }
       Error("FillTClass", "TClass %s already initialized!", cl->GetName());
       return kFALSE;
