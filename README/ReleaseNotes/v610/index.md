@@ -158,6 +158,11 @@ The following interfaces have been removed, after deprecation in v6.08.
   this was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22957).
 - New flag `Cocoa.EnableFillAreaAntiAliasing` in `system.rootrc` to enable the
   anti-aliasing for filled area for the Cocoa backend. Default is `no`.
+- The "BOX" option, to draw 3D histograms, has been reimplemented by Evgueni Tcherniaev
+  The following picture show the old and new version
+
+![New box option for 3D histograms](NewBoxOption.png)
+
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
