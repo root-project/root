@@ -2423,7 +2423,7 @@ void TPostScript::SetLineColor( Color_t cindex )
 ///
 /// To change the line join behaviour just do:
 /// ~~~ {.cpp}
-/// gStyle->SetLineJoinPS(2); // Set the PS line join to bevel.
+/// gStyle->SetJoinLinePS(2); // Set the PS line join to bevel.
 /// ~~~
 
 void TPostScript::SetLineJoin( Int_t linejoin )

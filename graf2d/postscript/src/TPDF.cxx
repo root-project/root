@@ -2115,7 +2115,7 @@ void TPDF::SetLineColor( Color_t cindex )
 ///
 /// To change the line join behaviour just do:
 /// ~~~ {.cpp}
-/// gStyle->SetLineJoinPS(2); // Set the PDF line join to bevel.
+/// gStyle->SetJoinLinePS(2); // Set the PDF line join to bevel.
 /// ~~~
 
 void TPDF::SetLineJoin( Int_t linejoin )
