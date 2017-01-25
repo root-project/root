@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TApplication.h"
+#include "TROOT.h"
 #include "TSystem.h"
 #include "TGMenu.h"
 #include "TGComboBox.h"
