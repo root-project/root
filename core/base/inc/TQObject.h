@@ -98,9 +98,6 @@ public:
    ///////////////////////////////////////////////////////////////////////////////
    /// Emit a signal with a varying number of arguments.
    ///
-   /// Note: EmitVA(signal_name, const char*) is very different from
-   /// Emit(signal_name, const char*). EmitVA does not support argument lists.
-   ///
    template <typename... T> void EmitVA(const char *signal_name, Int_t /* nargs */, const T&... params)
    {
       // Activate signal with variable argument list.
