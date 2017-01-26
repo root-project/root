@@ -91,7 +91,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 /// Set relevant environment variables
 
-static Int_t SrvSetVars(string /*confdir*/)
+static Int_t SrvSetVars(string confdir)
 {
    // Executables and conf dirs
 
