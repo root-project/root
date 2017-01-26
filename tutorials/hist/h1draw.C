@@ -25,7 +25,7 @@
 
 void h1draw()
 {
-   TString dir = gROOT->GetTutorialDir();
+   TString dir = gROOT->GetTutorialsDir();
    dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());

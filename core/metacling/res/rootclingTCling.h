@@ -27,7 +27,5 @@ namespace cling {
 
 extern "C" {
    R__DLLEXPORT const char ** *TROOT__GetExtraInterpreterArgs();
-   R__DLLEXPORT const char *TROOT__GetIncludeDir();
-   R__DLLEXPORT const char *TROOT__GetEtcDir();
    R__DLLEXPORT cling::Interpreter *TCling__GetInterpreter();
 }

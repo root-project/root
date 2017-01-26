@@ -173,9 +173,15 @@ static bool CreateStamp(string dest)
 
 int main()
 {
-   string rootbin(TROOT::GetBinDir());
-   string rootlib(TROOT::GetLibDir());
-   string rootetc(TROOT::GetEtcDir());
+#ifdef ROOTPREFIX
+   string rootbin(ROOTBINDIR);
+   string rootlib(ROOTLIBDIR);
+   string rootetc(ROOTETCDIR);
+#else
+   string rootbin(getenv("ROOTSYS") + pathsep + "bin");
+   string rootlib(getenv("ROOTSYS") + pathsep + "lib");
+   string rootetc(getenv("ROOTSYS") + pathsep + "etc");
+#endif
 
    // If needed, install ROOT notebook files in the user's home directory
 #ifdef WIN32

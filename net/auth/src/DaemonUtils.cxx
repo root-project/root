@@ -95,8 +95,18 @@ static Int_t SrvSetVars(string /*confdir*/)
 {
    // Executables and conf dirs
 
-   // Make rootbindir available to all the session via env
-   string execdir = TROOT::GetBinDir().Data();
+   string execdir, etcdir;
+#ifdef ROOTBINDIR
+   execdir = string(ROOTBINDIR);
+#endif
+#ifdef ROOTETCDIR
+   etcdir = string(ROOTETCDIR);
+#endif
+
+   // Define rootbindir if not done already
+   if (!execdir.length())
+      execdir = string(confdir).append("/bin");
+   // Make it available to all the session via env
    if (execdir.length()) {
       int len = 15 + execdir.length();
       char *tmp = new char[len+1];
@@ -107,8 +117,10 @@ static Int_t SrvSetVars(string /*confdir*/)
          return -1;
    }
 
-   // Make rootetcdir available to all the session via env
-   string etcdir = TROOT::GetEtcDir().Data();
+   // Define rootetcdir if not done already
+   if (!etcdir.length())
+      etcdir = string(confdir).append("/etc");
+   // Make it available to all the session via env
    if (etcdir.length()) {
       int len = 15 + etcdir.length();
       char *tmp = new char[len+1];

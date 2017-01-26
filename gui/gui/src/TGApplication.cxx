@@ -84,7 +84,12 @@ TGApplication::TGApplication(const char *appClassName,
 
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                          TROOT::GetTTFFontDir());
+#ifdef TTFFONTDIR
+                                          TTFFONTDIR);
+#else
+                                          "$(ROOTSYS)/fonts");
+#endif
+
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
       // Added by cholm for use of DFSG - fonts - based on fix by Kevin
       if (!ttfont)

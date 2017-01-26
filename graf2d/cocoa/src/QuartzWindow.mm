@@ -40,7 +40,6 @@
 #include "TGClient.h"
 #include "TSystem.h"
 #include "TGCocoa.h"
-#include "TROOT.h"
 
 
 namespace ROOT {
@@ -808,7 +807,11 @@ NSCursor *CreateCustomCursor(ECursor currentCursor)
    }
 
    if (pngFileName) {
-      const char * const path = gSystem->Which(TROOT::GetIconPath(), pngFileName, kReadPermission);
+#ifdef ROOTICONPATH
+      const char * const path = gSystem->Which(ROOTICONPATH, pngFileName, kReadPermission);
+#else
+      const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);
+#endif
       const Util::ScopedArray<const char> arrayGuard(path);
 
       if (!path || path[0] == 0) {
@@ -3058,7 +3061,11 @@ void print_mask_info(ULong_t mask)
    }
 
    if (pngFileName) {
-      const char * const path = gSystem->Which(TROOT::GetIconPath(), pngFileName, kReadPermission);
+#ifdef ROOTICONPATH
+      const char * const path = gSystem->Which(ROOTICONPATH, pngFileName, kReadPermission);
+#else
+      const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);
+#endif
       const Util::ScopedArray<const char> arrayGuard(path);
 
       if (!path || path[0] == 0) {

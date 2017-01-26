@@ -26,7 +26,7 @@ TCanvas *earth(){
    TH2F *hs = new TH2F("hs","Sinusoidal",180, -180, 180, 181, -90.5, 90.5);
    TH2F *hp = new TH2F("hp","Parabolic", 180, -180, 180, 181, -90.5, 90.5);
 
-   TString dat = gROOT->GetTutorialDir();
+   TString dat = gROOT->GetTutorialsDir();
    dat.Append("/graphics/earth.dat");
    dat.ReplaceAll("/./","/");
 

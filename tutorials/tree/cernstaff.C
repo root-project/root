@@ -9,7 +9,7 @@
 /// \author Rene Brun
 
 void cernstaff () {
-   TString dir = gROOT->GetTutorialDir();
+   TString dir = gROOT->GetTutorialsDir();
    dir.Append("/tree/cernstaff.C");
    if (gSystem->AccessPathName("cernstaff.root")) {
       gROOT->SetMacroPath(dir);

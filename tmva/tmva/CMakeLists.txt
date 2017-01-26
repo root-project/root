@@ -59,6 +59,7 @@ if(CUDA_FOUND)
   CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
   set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+  add_dependencies(dnn_cuda move_headers)
 else()
   set(DNN_CUDA_LIBRARIES)
   set(installoptions ${installoptions} OPTIONS REGEX "Cuda" EXCLUDE)
@@ -82,6 +83,8 @@ ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 ROOT_INSTALL_HEADERS(${installoptions})
+
+set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 if(NOT gnuinstall)
   install(DIRECTORY test DESTINATION tmva 

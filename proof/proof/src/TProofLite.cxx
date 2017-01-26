@@ -409,7 +409,17 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
    if (fgWrksMax == -2) {
       // Find the max number of workers, if any
       TString sysname = "system.rootrc";
-      char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sysname);
+#ifdef ROOTETCDIR
+      char *s = gSystem->ConcatFileName(ROOTETCDIR, sysname);
+#else
+      TString etc = gRootDir;
+#ifdef WIN32
+      etc += "\\etc";
+#else
+      etc += "/etc";
+#endif
+      char *s = gSystem->ConcatFileName(etc, sysname);
+#endif
       TEnv sysenv(0);
       sysenv.ReadFile(s, kEnvGlobal);
       fgWrksMax = sysenv.GetValue("ProofLite.MaxWorkers", -1);
@@ -755,9 +765,17 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
       return -1;
    }
    // ROOTSYS
-   fprintf(fenv, "export ROOTSYS=%s\n", TROOT::GetRootSys().Data());
+#ifdef R__HAVE_CONFIG
+   fprintf(fenv, "export ROOTSYS=%s\n", ROOTPREFIX);
+#else
+   fprintf(fenv, "export ROOTSYS=%s\n", gSystem->Getenv("ROOTSYS"));
+#endif
    // Conf dir
-   fprintf(fenv, "export ROOTCONFDIR=%s\n", TROOT::GetRootSys().Data());
+#ifdef R__HAVE_CONFIG
+   fprintf(fenv, "export ROOTCONFDIR=%s\n", ROOTETCDIR);
+#else
+   fprintf(fenv, "export ROOTCONFDIR=%s\n", gSystem->Getenv("ROOTSYS"));
+#endif
    // TMPDIR
    fprintf(fenv, "export TMPDIR=%s\n", gSystem->TempDirectory());
    // Log file in the log dir

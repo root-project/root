@@ -22,7 +22,6 @@ set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${
 # Define all the header files which should be installed when
 # doing a "make install"
 install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-file(COPY ${ZLIB_HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})

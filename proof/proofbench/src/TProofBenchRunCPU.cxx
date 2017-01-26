@@ -274,7 +274,11 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
       // Is it the default selector?
       if (fSelName == kPROOF_BenchSelCPUDef) {
          // Load the parfile
-         TString par = TString::Format("%s/%s%s.par", TROOT::GetEtcDir().Data(), kPROOF_BenchParDir, kPROOF_BenchCPUSelPar);
+#ifdef R__HAVE_CONFIG
+         TString par = TString::Format("%s/%s%s.par", ROOTETCDIR, kPROOF_BenchParDir, kPROOF_BenchCPUSelPar);
+#else
+         TString par = TString::Format("$ROOTSYS/etc/%s%s.par", kPROOF_BenchParDir, kPROOF_BenchCPUSelPar);
+#endif
          Info("Run", "Uploading '%s' ...", par.Data());
          if (fProof->UploadPackage(par) != 0) {
             Error("Run", "problems uploading '%s' - cannot continue", par.Data());

@@ -1275,7 +1275,17 @@ void TApplicationServer::ExecLogon()
    TString name = ".rootlogon.C";
    TString sname = "system";
    sname += name;
-   char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
+#ifdef ROOTETCDIR
+   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+#else
+   TString etc = gRootDir;
+#ifdef WIN32
+   etc += "\\etc";
+#else
+   etc += "/etc";
+#endif
+   char *s = gSystem->ConcatFileName(etc, sname);
+#endif
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
    }

@@ -34,7 +34,7 @@
 TFile *hsimple(Int_t getFile=0)
 {
    TString filename = "hsimple.root";
-   TString dir = gROOT->GetTutorialDir();
+   TString dir = gROOT->GetTutorialsDir();
    dir.ReplaceAll("/./","/");
    TFile *hfile = 0;
    if (getFile) {

@@ -13,7 +13,7 @@
 
 void FirstContour()
 {
-   TString dir = gROOT->GetTutorialDir();
+   TString dir = gROOT->GetTutorialsDir();
    dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());

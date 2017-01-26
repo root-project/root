@@ -842,7 +842,14 @@ void TGTextEditor::InterruptMacro()
 void TGTextEditor::About()
 {
 #ifdef R__UNIX
-   TString rootx = TROOT::GetBinDir() + "/root -a &";
+   TString rootx;
+# ifdef ROOTBINDIR
+   rootx = ROOTBINDIR;
+# else
+   rootx = gSystem->Getenv("ROOTSYS");
+   if (!rootx.IsNull()) rootx += "/bin";
+# endif
+   rootx += "/root -a &";
    gSystem->Exec(rootx);
 #else
 #ifdef WIN32

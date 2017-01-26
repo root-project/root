@@ -197,7 +197,13 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                       TROOT::GetTTFFontDir());
+# ifdef TTFFONTDIR
+                                        TTFFONTDIR
+# else
+                                        "$(ROOTSYS)/fonts"
+# endif
+                                        );
+
    char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 
    if (fGLTextFont) delete fGLTextFont;

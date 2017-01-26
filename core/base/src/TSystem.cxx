@@ -1911,10 +1911,22 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       if (!system) {
          // Mark the library in $ROOTSYS/lib as system.
          const char *dirname = DirName(path);
-         system = R__MatchFilename(TROOT::GetLibDir(), dirname);
+#ifdef ROOTLIBDIR
+         TString rootlibdir = ROOTLIBDIR;
+#else
+         TString rootlibdir = "lib";
+         PrependPathName(gRootDir, rootlibdir);
+#endif
+         system = R__MatchFilename(rootlibdir,dirname);
 
          if (!system) {
-            system = R__MatchFilename(TROOT::GetBinDir(), dirname);
+#ifdef ROOTBINDIR
+            TString rootbindir = ROOTBINDIR;
+#else
+            TString rootbindir = "bin";
+            PrependPathName(gRootDir, rootbindir);
+#endif
+            system = R__MatchFilename(rootbindir,dirname);
          }
       }
 
@@ -2566,9 +2578,12 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 #else
    TString touch = "echo > "; touch += "\"" + depfilename + "\"";
 #endif
-   TString builddep = "rmkdepend";
-   gSystem->PrependPathName(TROOT::GetBinDir(), builddep);
-   builddep += " \"-f";
+#ifdef ROOTBINDIR
+   TString builddep = ROOTBINDIR;
+#else
+   TString builddep = TString(gRootDir) + "/bin";
+#endif
+   builddep += "/rmkdepend \"-f";
    builddep += depfilename;
    builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
    if (build_loc.BeginsWith(gSystem->WorkingDirectory())) {
@@ -2590,7 +2605,12 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
       builddep += "/\" ";
    }
    builddep += " -Y -- ";
-   TString rootsysInclude = TROOT::GetIncludeDir();
+#ifndef ROOTINCDIR
+   TString rootsysInclude = gSystem->Getenv("ROOTSYS");
+   rootsysInclude += "/include";
+#else
+   TString rootsysInclude = ROOTINCDIR;
+#endif
    builddep += " \"-I"+rootsysInclude+"\" "; // cflags
    builddep += includes;
    builddep += defines;
@@ -3421,17 +3441,27 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       TString name = ".rootmap";
       TString sname = "system.rootmap";
       TString file;
-      AssignAndDelete(file, ConcatFileName(TROOT::GetEtcDir(), sname) );
+#ifdef ROOTETCDIR
+      AssignAndDelete(file, ConcatFileName(ROOTETCDIR, sname) );
+#else
+      TString etc = gRootDir;
+#ifdef WIN32
+      etc += "\\etc";
+#else
+      etc += "/etc";
+#endif
+      AssignAndDelete(file, ConcatFileName(etc, sname));
       if (gSystem->AccessPathName(file)) {
          // for backward compatibility check also $ROOTSYS/system<name> if
          // $ROOTSYS/etc/system<name> does not exist
-         AssignAndDelete(file, ConcatFileName(TROOT::GetRootSys(), sname));
+         AssignAndDelete(file, ConcatFileName(gRootDir, sname));
          if (gSystem->AccessPathName(file)) {
             // for backward compatibility check also $ROOTSYS/<name> if
             // $ROOTSYS/system<name> does not exist
-            AssignAndDelete(file, ConcatFileName(TROOT::GetRootSys(), name));
+            AssignAndDelete(file, ConcatFileName(gRootDir, name));
          }
       }
+#endif
       mapfileStream << file << std::endl;
       AssignAndDelete(file, ConcatFileName(gSystem->HomeDirectory(), name) );
       mapfileStream << file << std::endl;
@@ -3445,9 +3475,23 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    mapfileStream.close();
 
    // ======= Generate the rootcling command line
-   TString rcling = "rootcling";
-   PrependPathName(TROOT::GetBinDir(), rcling);
-   rcling += " -v0 \"--lib-list-prefix=";
+   TString rcling;
+#ifndef ROOTBINDIR
+   rcling = gSystem->Getenv("ROOTSYS");
+#ifndef R__WIN32
+   rcling += "/bin/";
+#else
+   rcling += "\\bin\\";
+#endif
+#else
+   rcling = ROOTBINDIR;
+#ifndef R__WIN32
+   rcling += "/";
+#else
+   rcling += "\\";
+#endif
+#endif
+   rcling += "rootcling -v0 \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" -c -p ");

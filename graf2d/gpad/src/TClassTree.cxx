@@ -195,7 +195,11 @@ TClassTree::TClassTree()
    fNdata    = 0;
    SetLabelDx();
    SetYoffset(0);
-   SetSourceDir(".:src:" + TROOT::GetSourceDir());
+#ifdef ROOTSRCDIR
+   SetSourceDir(".:src:" ROOTSRCDIR);
+#else
+   SetSourceDir(".:src:$ROOTSYS/src");
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +225,11 @@ TClassTree::TClassTree(const char *name, const char *classes)
    fNdata    = 0;
    SetLabelDx();
    SetYoffset(0);
-   SetSourceDir(".:src:" + TROOT::GetSourceDir());
+#ifdef ROOTSRCDIR
+   SetSourceDir(".:src:" ROOTSRCDIR);
+#else
+   SetSourceDir(".:src:$ROOTSYS/src");
+#endif
 
    // draw list of classes (if specified)
    if (classes && strlen(classes)) {

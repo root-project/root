@@ -104,6 +104,6 @@ void SAXHandler()
    SaxHandler *saxHandler = new SaxHandler();
 
    saxParser->ConnectToHandler("SaxHandler", saxHandler);
-   TString dir = gROOT->GetTutorialDir();
+   TString dir = gROOT->GetTutorialsDir();
    saxParser->ParseFile(dir+"/xml/saxexample.xml");
 }

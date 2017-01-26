@@ -14,7 +14,7 @@ ROOT_INSTALL_HEADERS(OPTIONS REGEX "TSel" EXCLUDE)
 # Generation and installation of the PAR files required by the benchmark 
 add_custom_target(ProofBenchPARFiles ALL DEPENDS ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
                                                  ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par)
-add_dependencies(ProofBenchPARFiles move_artifacts)
+add_dependencies(ProofBenchPARFiles move_headers) # The /etc directory from sources is copied when moving the headers
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
                           ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par
     COMMAND etc/proof/utils/makepbenchpars.sh ARGS ProofBenchCPUSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} 

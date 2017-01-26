@@ -1349,7 +1349,18 @@ const char* THtml::GetEtcDir() const
    R__LOCKGUARD(GetMakeClassMutex());
 
    fPathInfo.fEtcDir = "html";
-   gSystem->PrependPathName(TROOT::GetEtcDir(), fPathInfo.fEtcDir);
+
+#ifdef ROOTETCDIR
+   gSystem->PrependPathName(ROOTETCDIR, fPathInfo.fEtcDir);
+#else
+   gSystem->PrependPathName("etc", fPathInfo.fEtcDir);
+# ifdef ROOTPREFIX
+   gSystem->PrependPathName(ROOTPREFIX, fPathInfo.fEtcDir);
+# else
+   if (getenv("ROOTSYS"))
+      gSystem->PrependPathName(getenv("ROOTSYS"), fPathInfo.fEtcDir);
+# endif
+#endif
 
    return fPathInfo.fEtcDir;
 }
@@ -1660,7 +1671,12 @@ void THtml::CreateListOfClasses(const char* filter)
                   if (posSpace != std::string::npos)
                      lib.erase(posSpace);
                   if (rootLibs.find(lib) == rootLibs.end()) {
-                     TString rootlibdir = TROOT::GetLibDir();
+#ifdef ROOTLIBDIR
+                     TString rootlibdir = ROOTLIBDIR;
+#else
+                     TString rootlibdir = "lib";
+                     gSystem->PrependPathName(gRootDir, rootlibdir);
+#endif
                      TString sLib(lib);
                      if (sLib.Index('.') == -1) {
                         sLib += ".";

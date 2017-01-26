@@ -1962,7 +1962,14 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kHelpAbout:
                      {
 #ifdef R__UNIX
-                        TString rootx = TROOT::GetBinDir() + "/root -a &";
+                        TString rootx;
+# ifdef ROOTBINDIR
+                        rootx = ROOTBINDIR;
+# else
+                        rootx = gSystem->Getenv("ROOTSYS");
+                        if (!rootx.IsNull()) rootx += "/bin";
+# endif
+                        rootx += "/root -a &";
                         gSystem->Exec(rootx);
 #else
 #ifdef WIN32

@@ -88,8 +88,13 @@ void TSlaveLite::Init()
 {
    // Command to be executed
    TString cmd;
+#ifdef R__HAVE_CONFIG
    cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s\"; %s/proofserv proofslave lite %d %d 0&",
-            fWorkDir.Data(), fOrdinal.Data(), TROOT::GetBinDir().Data(), TROOT::GetBinDir().Data(),
+            fWorkDir.Data(), fOrdinal.Data(), ROOTBINDIR, ROOTBINDIR,
+#else
+   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s/bin\"; %s/bin/proofserv proofslave lite %d %d 0&",
+            fWorkDir.Data(), fOrdinal.Data(), gSystem->Getenv("ROOTSYS"), gSystem->Getenv("ROOTSYS"),
+#endif
             gSystem->GetPid(), gDebug);
    // Execute
    if (gSystem->Exec(cmd) != 0) {

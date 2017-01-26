@@ -18,7 +18,7 @@ void Background_decr() {
 
    TH1F *d    = new TH1F("d","",nbins,xmin,xmax);
 
-   TString dir  = gROOT->GetTutorialDir();
+   TString dir  = gROOT->GetTutorialsDir();
    TString file = dir+"/spectrum/TSpectrum.root";
    TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back1");

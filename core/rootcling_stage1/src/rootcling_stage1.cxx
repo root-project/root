@@ -11,7 +11,6 @@
 #include "rootcling_impl.h"
 #include "RConfigure.h"
 #include "RConfig.h"
-#include <stdlib.h>
 
 extern "C" {
    R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
@@ -19,16 +18,6 @@ extern "C" {
 
 
 ROOT::Internal::RootCling::TROOTSYSSetter gROOTSYSSetter;
-
-static const char *GetIncludeDir() {
-   static std::string incdir = std::string(getenv("ROOTSYS")) + "/include";
-   return incdir.c_str();
-}
-
-static const char *GetEtcDir() {
-   static std::string etcdir = std::string(getenv("ROOTSYS")) + "/etc";
-   return etcdir.c_str();
-}
 
 int main(int argc, char **argv)
 {
@@ -40,10 +29,15 @@ int main(int argc, char **argv)
    }
 
    ROOT::Internal::RootCling::DriverConfig config{};
+#ifdef R__HAVE_LLVMRESOURCEDIR
+   // This is ignored (in rootcling_impl.cxx) if R__EXTERN_LLVMDIR is defined.
+   // This is not configured (i.e. R__HAVE_LLVMRESOURCEDIR is undefined) for
+   // configure / make; the resource directory is instead determined by
+   // TMetaUtils::GetLLVMResourceDir() in rootcling_impl.cxx.
+   config.fLLVMResourceDir= "@R__LLVMRESOURCEDIR@";
+#endif
 
    config.fBuildingROOTStage1 = true;
-   config.fTROOT__GetIncludeDir = &GetIncludeDir;
-   config.fTROOT__GetEtcDir = &GetEtcDir;
 
    return ROOT_rootcling_Driver(argc, argv, config);
 }

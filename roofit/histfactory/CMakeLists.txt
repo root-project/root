@@ -22,4 +22,10 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
                             WORLD_EXECUTE WORLD_READ
                 DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-ROOT_INSTALL_HEADERS()
+
+#ROOT_INSTALL_HEADERS()
+install(DIRECTORY inc/RooStats/HistFactory/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/RooStats/HistFactory 
+                       COMPONENT headers
+                       PATTERN ".svn" EXCLUDE
+                       REGEX "LinkDef" EXCLUDE )
+set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)

@@ -119,7 +119,8 @@ void TGSpeedo::Build()
 {
    TString sc;
    Float_t step, mark[5];
-   TString ar = "arialbd.ttf";
+   TString fp = gEnv->GetValue("Root.TTFontPath", "");
+   TString ar = fp + "/arialbd.ttf";
    Int_t i, nexe, offset;
 
    const TGFont *counterFont = fClient->GetFont("-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*");
@@ -527,7 +528,8 @@ void TGSpeedo::DrawText()
          delete fImage2;
       fImage2 = (TImage*)fImage->Clone("fImage2");
       if (!fImage2 || !fImage2->IsValid()) return;
-      TString ar = "arialbd.ttf";
+      TString fp = gEnv->GetValue("Root.TTFontPath", "");
+      TString ar = fp + "/arialbd.ttf";
       // format counter value
       Int_t nexe = 0;
       Int_t ww = fCounter;
@@ -607,7 +609,8 @@ void TGSpeedo::DoRedraw()
          delete fImage2;
       fImage2 = (TImage*)fImage->Clone("fImage2");
       if (!fImage2 || !fImage2->IsValid()) return;
-      TString ar = "arialbd.ttf";
+      TString fp = gEnv->GetValue("Root.TTFontPath", "");
+      TString ar = fp + "/arialbd.ttf";
       // format counter value
       Int_t nexe = 0;
       Int_t ww = fCounter;

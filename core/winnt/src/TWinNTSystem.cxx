@@ -362,7 +362,11 @@ namespace {
          TString rdynpath = gEnv ? gEnv->GetValue("Root.DynamicPath", (char*)0) : "";
          rdynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
          if (rdynpath == "") {
-            rdynpath = ".;"; rdynpath += TROOT::GetBinDir();
+#ifdef ROOTBINDIR
+            rdynpath = ".;"; rdynpath += ROOTBINDIR;
+#else
+            rdynpath = ".;"; rdynpath += gRootDir; rdynpath += "/bin";
+#endif
          }
          TString path = gSystem->Getenv("PATH");
          if (path == "")
@@ -372,10 +376,15 @@ namespace {
          }
 
       }
-
-      if (!dynpath.Contains(TROOT::GetLibDir())) {
-         dynpath += ";"; dynpath += TROOT::GetLibDir();
+#ifdef ROOTLIBDIR
+      if (!dynpath.Contains(ROOTLIBDIR)) {
+         dynpath += ";"; dynpath += ROOTLIBDIR;
       }
+#else
+      if (!dynpath.Contains(TString::Format("%s/lib", gRootDir))) {
+         dynpath += ";"; dynpath += gRootDir; dynpath += "/lib";
+      }
+#endif
 
       return dynpath;
    }
@@ -814,8 +823,16 @@ namespace {
       }
 
       // determine the fileopen.C file path:
-      TString fileopen = "fileopen.C";
-      gSystem->PrependPathName(TROOT::GetMacroDir(), fileopen);
+      TString fileopen;
+#ifndef ROOT_PREFIX
+      fileopen += sys->TWinNTSystem::DriveName(buf);
+      fileopen += ":";
+      fileopen += sys->TWinNTSystem::DirName(sys->TWinNTSystem::DirName(buf));
+      fileopen += "\\macros";
+#else
+      fileopen += ROOTMACRODIR;
+#endif
+      fileopen += "\\fileopen.C";
 
       if (regROOTwrite) {
          // only write to registry if fileopen.C is readable
@@ -990,9 +1007,7 @@ fGUIThreadHandle(0), fGUIThreadId(0)
 
    char *buf = new char[MAX_MODULE_NAME32 + 1];
 
-#ifdef ROOTPREFIX
-   if (gSystem->Getenv("ROOTIGNOREPREFIX") {
-#endif
+#ifndef ROOTPREFIX
    // set ROOTSYS
    HMODULE hModCore = ::GetModuleHandle("libCore.dll");
    if (hModCore) {
@@ -1019,8 +1034,6 @@ fGUIThreadHandle(0), fGUIThreadId(0)
             Setenv("PATH", path.Data());
          }
       }
-   }
-#ifdef ROOTPREFIX
    }
 #endif
 
@@ -1099,17 +1112,23 @@ Bool_t TWinNTSystem::Init()
 
    fSigcnt = 0;
 
-   // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   static char lpFilename[MAX_PATH];
-   if (::GetModuleFileName(
-          NULL,                   // handle to module to find filename for
-          lpFilename,             // pointer to buffer to receive module path
-          sizeof(lpFilename))) {  // size of buffer, in characters
-      const char *dirName = DirName(DirName(lpFilename));
-      gRootDir = StrDup(dirName);
-   } else {
-      gRootDir = 0;
+#ifndef ROOTPREFIX
+   gRootDir = Getenv("ROOTSYS");
+   if (gRootDir == 0) {
+      static char lpFilename[MAX_PATH];
+      if (::GetModuleFileName(NULL,               // handle to module to find filename for
+                            lpFilename,           // pointer to buffer to receive module path
+                            sizeof(lpFilename)))  // size of buffer, in characters
+      {
+         const char *dirName = DirName(DirName(lpFilename));
+         gRootDir = StrDup(dirName);
+      } else {
+         gRootDir = 0;
+      }
    }
+#else
+   gRootDir= ROOTPREFIX;
+#endif
 
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );

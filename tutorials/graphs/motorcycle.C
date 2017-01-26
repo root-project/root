@@ -43,7 +43,7 @@ void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
 void motorcycle()
 {
 // data taken from R library MASS: mcycle.txt
-   TString dir = gROOT->GetTutorialDir();
+   TString dir = gROOT->GetTutorialsDir();
    dir.Append("/graphs/");
    dir.ReplaceAll("/./","/");
 

@@ -1722,7 +1722,17 @@ Int_t TClass::ReadRules()
 {
    static const char *suffix = "class.rules";
    TString sname = suffix;
-   gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
+#ifdef ROOTETCDIR
+   gSystem->PrependPathName(ROOTETCDIR, sname);
+#else
+   TString etc = gRootDir;
+#ifdef WIN32
+   etc += "\\etc";
+#else
+   etc += "/etc";
+#endif
+   gSystem->PrependPathName(etc, sname);
+#endif
 
    Int_t res = -1;
 

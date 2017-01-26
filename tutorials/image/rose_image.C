@@ -20,7 +20,7 @@ TCanvas *c1;
 
 void rose_image()
 {
-   TString dir = TROOT::GetTutorialDir();
+   TString dir = TROOT::GetTutorialsDir();
 
    TImage *img = TImage::Open(dir + "/image/rose512.jpg");
 
@@ -32,8 +32,9 @@ void rose_image()
    img->SetConstRatio(0);
    img->SetImageQuality(TAttImage::kImgBest);
 
-   TString bc = "BlackChancery.ttf";
-   TString ar = "arial.ttf";
+   TString fp = gEnv->GetValue("Root.TTFontPath", "");
+   TString bc = fp + "/BlackChancery.ttf";
+   TString ar = fp + "/arial.ttf";
 
    // draw text over image with funny font
    img->DrawText(120, 160, "Hello World!", 32,

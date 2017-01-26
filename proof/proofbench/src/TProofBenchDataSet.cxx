@@ -25,7 +25,6 @@ Handle operations on datasets used by ProofBench
 #include "TMap.h"
 #include "TProof.h"
 #include "TProofBenchTypes.h"
-#include "TROOT.h"
 
 
 ClassImp(TProofBenchDataSet)
@@ -145,7 +144,11 @@ Int_t TProofBenchDataSet::Handle(const char *dset, TObject *type)
    TString selName("TSelHandleDataSet");
    if (!TClass::GetClass(selName)) {
       // Load the parfile
-      TString par = TString::Format("%s/%s%s.par", TROOT::GetEtcDir().Data(), kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#ifdef R__HAVE_CONFIG
+      TString par = TString::Format("%s/%s%s.par", ROOTETCDIR, kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#else
+      TString par = TString::Format("$ROOTSYS/etc/%s%s.par", kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#endif
       Info("Handle", "Uploading '%s' ...", par.Data());
       if (fProof->UploadPackage(par) != 0) {
          Error("Handle", "problems uploading '%s' - cannot continue", par.Data());

@@ -162,7 +162,11 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       // Is it the default selector?
       if (fSelName == kPROOF_BenchSelDataDef) {
          // Load the parfile
-         TString par = TString::Format("%s/%s%s.par", TROOT::GetEtcDir().Data(), kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#ifdef R__HAVE_CONFIG
+         TString par = TString::Format("%s/%s%s.par", ROOTETCDIR, kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#else
+         TString par = TString::Format("$ROOTSYS/etc/%s%s.par", kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#endif
          Info("Run", "Uploading '%s' ...", par.Data());
          if (fProof->UploadPackage(par) != 0) {
             Error("Run", "problems uploading '%s' - cannot continue", par.Data());

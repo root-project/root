@@ -54,7 +54,7 @@ void importdir(const char *dirname) {
 }
 void importCode() {
    TFile *f = new TFile("code.root","recreate");
-   TString dir = gROOT->GetTutorialDir();
+   TString dir = gROOT->GetTutorialsDir();
    importdir(dir); //change the directory as you like
    delete f;
 }

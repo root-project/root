@@ -148,7 +148,11 @@ THttpServer::THttpServer(const char *engine) :
    if (jsrootsys != 0) fJSROOTSYS = jsrootsys;
 
    if (fJSROOTSYS.Length() == 0) {
-      TString jsdir = TString::Format("%s/http", TROOT::GetEtcDir().Data());
+#ifdef ROOTETCDIR
+      TString jsdir = TString::Format("%s/http", ROOTETCDIR);
+#else
+      TString jsdir("$(ROOTSYS)/etc/http");
+#endif
       if (gSystem->ExpandPathName(jsdir)) {
          Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location", jsdir.Data());
          fJSROOTSYS = ".";
@@ -159,7 +163,18 @@ THttpServer::THttpServer(const char *engine) :
 
    AddLocation("currentdir/", ".");
    AddLocation("jsrootsys/", fJSROOTSYS);
-   AddLocation("rootsys/", TROOT::GetRootSys());
+
+   const char *rootsys = gSystem->Getenv("ROOTSYS");
+   if (rootsys != 0) {
+      AddLocation("rootsys/", rootsys);
+   } else {
+#ifdef ROOTPREFIX
+      TString sysdir = ROOTPREFIX;
+#else
+      TString sysdir = "$(ROOTSYS)";
+#endif
+      if (!gSystem->ExpandPathName(sysdir)) AddLocation("rootsys/", sysdir);
+   }
 
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
    fDrawPage = fJSROOTSYS + "/files/draw.htm";

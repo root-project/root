@@ -19,7 +19,7 @@ void Background_compton() {
 
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
 
-   TString dir  = gROOT->GetTutorialDir();
+   TString dir  = gROOT->GetTutorialsDir();
    TString file = dir+"/spectrum/TSpectrum.root";
    TFile *f     = new TFile(file.Data());
    TH1F *back = (TH1F*) f->Get("back3");

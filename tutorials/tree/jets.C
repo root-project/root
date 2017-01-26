@@ -99,7 +99,7 @@ void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun = true) {
 //void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun);
 void jets(Int_t nev=100, Int_t npileup=200) {
    gSystem->Load("libPhysics");
-   TString tutdir = gROOT->GetTutorialDir();
+   TString tutdir = gROOT->GetTutorialsDir();
    gROOT->ProcessLine(".L " + tutdir + "/tree/JetEvent.cxx+");
    gROOT->ProcessLine("#define JETS_SECOND_RUN yes");
    gROOT->ProcessLine("#include \"" __FILE__ "\"");

@@ -5812,7 +5812,14 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kHelpAbout:
                      {
 #ifdef R__UNIX
-		         TString rootx = TROOT::GetBinDir() + "/root -a &";
+                        TString rootx;
+# ifdef ROOTBINDIR
+                        rootx = ROOTBINDIR;
+# else
+                        rootx = gSystem->Getenv("ROOTSYS");
+                        if (!rootx.IsNull()) rootx += "/bin";
+# endif
+                        rootx += "/root -a &";
                         gSystem->Exec(rootx);
 #else
 #ifdef WIN32

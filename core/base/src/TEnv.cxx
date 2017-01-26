@@ -401,7 +401,21 @@ TEnv::TEnv(const char *name)
 
       TString sname = "system";
       sname += name;
-      char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
+#ifdef ROOTETCDIR
+      char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+#else
+      TString etc = gRootDir;
+#ifdef WIN32
+      etc += "\\etc";
+#else
+      etc += "/etc";
+#endif
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+      // on iOS etc does not exist and system<name> resides in $ROOTSYS
+      etc = gRootDir;
+#endif
+      char *s = gSystem->ConcatFileName(etc, sname);
+#endif
       ReadFile(s, kEnvGlobal);
       delete [] s;
       if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
@@ -671,7 +685,17 @@ void TEnv::SaveLevel(EEnvLevel level)
 
       TString sname = "system";
       sname += fRcName;
-      char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
+#ifdef ROOTETCDIR
+      char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+#else
+      TString etc = gRootDir;
+#ifdef WIN32
+      etc += "\\etc";
+#else
+      etc += "/etc";
+#endif
+      char *s = gSystem->ConcatFileName(etc, sname);
+#endif
       rootrcdir = s;
       delete [] s;
    } else if (level == kEnvUser) {
