@@ -65,7 +65,6 @@
 #include "TImage.h"
 #include "TCandle.h"
 
-////////////////////////////////////////////////////////////////////////////////
 /*! \class THistPainter
 \ingroup Histpainter
 \brief The histogram painter class. Implements all histograms' drawing's options.
@@ -10853,9 +10852,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
          }
          break;
-
    }
    c->Update();
    padsav->cd();
 }
-

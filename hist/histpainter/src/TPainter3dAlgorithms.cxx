@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-////////////////////////////////////////////////////////////////////////////////
-
 /*! \class TPainter3dAlgorithms
 \ingroup Histpainter
 \brief The Legos and Surfaces painter class.
@@ -77,7 +74,6 @@ extern Hoption_t Hoption;
 extern Hparam_t  Hparam;
 
 ClassImp(TPainter3dAlgorithms)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Lego default constructor
@@ -154,7 +150,6 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    fDYrast = 0.;
    fDX     = 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal default constructor
@@ -247,7 +242,6 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Lego default destructor
 
@@ -262,7 +256,6 @@ TPainter3dAlgorithms::~TPainter3dAlgorithms()
       delete [] fEdgeWidth;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw back surfaces of surrounding box
@@ -308,7 +301,6 @@ void TPainter3dAlgorithms::BackBox(Double_t ang)
    (this->*fDrawFace)(icodes, r, 4, iface2, tt);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw front surfaces of surrounding box & axes
 ///
@@ -345,7 +337,6 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
    (this->*fDrawFace)(icodes, r, 4, iface2, fdummy);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear screen
 
@@ -355,7 +346,6 @@ void TPainter3dAlgorithms::ClearRaster()
    for (Int_t i = 0; i < nw; ++i) fRaster[i] = 0;
    fIfrast = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set correspondance between function and color levels
@@ -405,7 +395,6 @@ void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int
    for (Int_t i = 0; i < fNlevel+1; ++i) fColorLevel[i] = icl[i];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define the grid levels drawn in the background of surface and lego plots.
 /// The grid levels are aligned on the  Z axis' main tick marks.
@@ -441,7 +430,6 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
       fFunLevel[i] = binLow + i*binWidth;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 1st variant (2 colors: 1st for external surface, 2nd for internal)
@@ -492,7 +480,6 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *, Double_t *xyz, Int_t np, Int_t
       gPad->PaintPolyLine(np+1, x, y); // all edges are visible
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 2nd option (fill in correspondance with function levels)
@@ -550,7 +537,6 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *, Double_t *xyz, Int_t np, Int_t
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 3rd option (draw face for stacked lego plot)
 ///
@@ -597,7 +583,6 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
       gPad->PaintPolyLine(np+1, x, y);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 1st variant for "MOVING SCREEN" algorithm (draw face with level lines)
@@ -689,7 +674,6 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 2nd variant for "MOVING SCREEN" algorithm (draw face for stacked lego plot)
 ///
@@ -750,7 +734,6 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
       ModifyScreen(&p3[i1*3], &p3[i2*3]);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 3rd variant for "MOVING SCREEN" algorithm (draw level lines only)
@@ -814,7 +797,6 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
       ModifyScreen(&p3[i1*3], &p3[i2*3]);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 1st variant for "RASTER SCREEN" algorithm (draw face with level lines)
@@ -905,7 +887,6 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
    FillPolygonBorder(np, pp);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw face - 2nd variant for "RASTER SCREEN" algorithm (draw face for stacked lego plot)
 ///
@@ -956,7 +937,6 @@ void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *, Double_t *xyz, Int_t np, Int
    //          Modify raster screen
    FillPolygonBorder(np, pp);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill polygon with function values at vertexes
@@ -1039,7 +1019,6 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
       gPad->PaintFillArea(k, x, y);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a polygon including border ("RASTER SCREEN")
@@ -1270,7 +1249,6 @@ L500:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find level lines for face
 ///
@@ -1346,7 +1324,6 @@ L340:
       if (il < 0) return;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find part of edge where function defined on this edge has value from
@@ -1503,7 +1480,6 @@ L700:
    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find visible parts of line (draw line)
@@ -1670,7 +1646,6 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find visible part of a line ("RASTER SCREEN")
 ///
@@ -1822,7 +1797,6 @@ L300:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find part of surface with luminosity in the corners. This method is used for
 /// Gouraud shading
@@ -1957,7 +1931,6 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
    Luminosity(&bn[6], t[4]);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize "MOVING SCREEN" method
 ///
@@ -1975,7 +1948,6 @@ void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
       fD[2*i - 1] = (float)999;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize hidden lines removal algorithm (RASTER SCREEN)
@@ -2024,7 +1996,6 @@ void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xma
    //          C L E A R   R A S T E R   S C R E E N
    ClearRaster();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Service function for Legos
@@ -2191,51 +2162,32 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots in cartesian coordinates
 ///
-/// \param[in] ang   angle between X ang Y
+/// \param[in] ang   angle between X ang Y (not used in this method)
 /// \param[in] nx   number of cells along X
 /// \param[in] ny   number of cells along Y
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
 
-void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
+void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const char *chopt)
 {
-
-
-   // Local variables
-   Double_t cosa, sina;
-   Int_t ivis[4], iface[4];
-   Double_t tface[4];
-   Int_t incrx, incry, i1, k1, k2, ix1, iy1, ix2, iy2, i, iv, ix, iy, nv;
-   Int_t icodes[4];
-   Double_t zn, xy[8]; // was [2][4]
-   Double_t xyz[24];   // was [3][8]
-   Double_t *tn = 0;
-   TView *view = 0;
+   Int_t icodes[4], iface[4];
+   Double_t xy[4*2], xyz[8*3], tface[4];
    Int_t firstStackNumberDrawn=-1 ;  // necessary to compute fColorBottom when the 0 option is set and when the stack is seen from below (bottomview, theta<0.)
 
-   sina = TMath::Sin(ang*kRad);
-   cosa = TMath::Cos(ang*kRad);
-
-   //          F I N D   T H E   M O S T   L E F T   P O I N T
+   TView *view = 0;
    if (gPad) view = gPad->GetView();
    if (!view) {
       Error("LegoCartesian", "no TView in current pad");
       return;
    }
-   tn = view->GetTN();
+   Double_t *tnorm = view->GetTnorm();
+   if (!tnorm) return;
 
-   i1 = 1;
-   if (tn) {
-      if (tn[0] < 0) i1 = 2;
-      if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
-   }
-
-   // Allocate v and tt arrays
+   //          Allocate v and tt arrays
    Double_t *v, *tt;
    Int_t vSize = fNStack+2;
    if (vSize > kVSizeMax) {
@@ -2247,69 +2199,64 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
       tt = &gTT[0];
    }
 
-   //          D E F I N E   O R D E R   O F   D R A W I N G
-   if (*chopt == 'B' || *chopt == 'b') {
-      incrx = -1;
-      incry = -1;
-   } else {
-      incrx = 1;
-      incry = 1;
+   //          Define order of drawing
+   Int_t incrx = (tnorm[8] < 0.) ? -1 : +1;
+   Int_t incry = (tnorm[9] < 0.) ? -1 : +1;
+   if (*chopt != 'B' && *chopt != 'b') { // front to back
+     incrx = -incrx; incry = -incry;
    }
-   if (i1 == 1 || i1 == 2) incrx = -incrx;
-   if (i1 == 2 || i1 == 3) incry = -incry;
-   ix1 = 1;
-   iy1 = 1;
-   if (incrx < 0) ix1 = nx;
-   if (incry < 0) iy1 = ny;
-   ix2 = nx - ix1 + 1;
-   iy2 = ny - iy1 + 1;
+   Int_t ix1 = (incrx == +1) ? 1 : nx;
+   Int_t iy1 = (incry == +1) ? 1 : ny;
+   Int_t ix2 = (incrx == +1) ? nx : 1;
+   Int_t iy2 = (incry == +1) ? ny : 1;
 
-   //          F I N D   V I S I B I L I T Y   O F   S I D E S
-   ivis[0] = 0;
-   ivis[1] = 0;
-   ivis[2] = 0;
-   ivis[3] = 0;
-   nv      = 0;
+   //          Find visibility of sides
+   Double_t zn;
+   Int_t ivis[6] = { 0,0,0,0,0,0 };
    view->FindNormal(0, 1, 0, zn);
    if (zn < 0) ivis[0] = 1;
    if (zn > 0) ivis[2] = 1;
-   view->FindNormal(sina, cosa, 0, zn);
+   view->FindNormal(1, 0, 0, zn);
    if (zn > 0) ivis[1] = 1;
    if (zn < 0) ivis[3] = 1;
+   view->FindNormal(0, 0, 1, zn);
+   if (zn > 0) ivis[5] = 1;
+   if (zn < 0) ivis[4] = 1;
 
-   //          D R A W   S T A C K   O F   L E G O - P L O T S
+   //          Draw stack of lego-plots
+   Int_t nv = 0;
    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
-   for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
-      for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+   for (Int_t iy = iy1; iy != iy2+incry; iy += incry) {
+      for (Int_t ix = ix1; ix != ix2+incrx; ix += incrx) {
          if (!painter->IsInside(ix,iy)) continue;
          (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
          if (nv < 2 || nv > vSize) continue;
          if (Hoption.Zero) {
-            Double_t total_content=0;
-            for (iv = 1; iv < nv; ++iv) total_content += v[iv];
-            if (total_content==0) continue;
+            Double_t total_content = 0;
+            for (Int_t iv = 1; iv < nv; ++iv) { total_content += v[iv]; }
+            if (total_content == 0) continue;
          }
          icodes[0] = ix;
          icodes[1] = iy;
-         for (i = 1; i <= 4; ++i) {
-            xyz[i*3 - 3] = xy[2*i - 2] + xy[2*i - 1]*cosa;
-            xyz[i*3 - 2] = xy[2*i - 1]*sina;
+         for (Int_t i = 1; i <= 4; ++i) {
+            xyz[i*3 - 3] = xy[2*i - 2];
+            xyz[i*3 - 2] = xy[2*i - 1];
             xyz[(i + 4)*3 - 3] = xyz[i*3 - 3];
             xyz[(i + 4)*3 - 2] = xyz[i*3 - 2];
          }
-   //         D R A W   S T A C K
+         // Draw stack
          firstStackNumberDrawn = -1;
-         for (iv = 1; iv < nv; ++iv) {
-            for (i = 1; i <= 4; ++i) {
+         for (Int_t iv = 1; iv < nv; ++iv) {
+            for (Int_t i = 1; i <= 4; ++i) {
                xyz[i*3 - 1] = v[iv - 1];
                xyz[(i + 4)*3 - 1] = v[iv];
             }
             if (v[iv - 1] == v[iv]) continue;
             icodes[2] = iv;
-            for (i = 1; i <= 4; ++i) {
+            for (Int_t i = 1; i <= 4; ++i) {
                if (ivis[i - 1] == 0) continue;
-               k1 = i;
-               k2 = i + 1;
+               Int_t k1 = i;
+               Int_t k2 = i + 1;
                if (i == 4) k2 = 1;
                icodes[3] = k1;
                iface[0] = k1;
@@ -2325,12 +2272,11 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
             }
             if ( firstStackNumberDrawn==-1 ) firstStackNumberDrawn = fEdgeIdx;
          }
-   //         D R A W   B O T T O M   F A C E
-         view->FindNormal(0, 0, 1, zn);
-         if (zn < 0) {
+         // Draw bottom face
+         if (ivis[4] > 0) {
             icodes[2] = 1;
             icodes[3] = 5;
-            for (i = 1; i <= 4; ++i) {
+            for (Int_t i = 1; i <= 4; ++i) {
                xyz[i*3 - 1] = v[0];
                iface[i - 1] = 5 - i;
                tface[i - 1] = tt[5 - i - 1];
@@ -2342,11 +2288,11 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
             }
             (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
          }
-   //         D R A W   T O P   F A C E
-         if (zn > 0) {
+         // Draw top face
+         if (ivis[5] > 0) {
             icodes[2] = nv - 1;
             icodes[3] = 6;
-            for (i = 1; i <= 4; ++i) {
+            for (Int_t i = 1; i <= 4; ++i) {
                iface[i - 1] = i + 4;
                tface[i - 1] = tt[i + (nv << 2) - 5];
             }
@@ -2354,10 +2300,10 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
             if ( nv <= 3 ) fEdgeIdx = 0 ;  // no stack or stack with only one histo
             else {
                if ( nv > 2 && (v[nv-1] == v[nv-2])) {
-                  for (iv = nv-1; iv>2; iv--) {
+                  for (Int_t iv = nv-1; iv > 2; --iv) {
                      if (v[nv-1] == v[iv-1]) {
                         fColorTop = fColorMain[iv-2];
-                        fEdgeIdx  = iv-2;
+                        fEdgeIdx  = iv - 2;
                      }
                   }
                }
@@ -2372,7 +2318,6 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
       delete [] tt;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots in polar coordinates
@@ -2582,7 +2527,6 @@ L300:
    iphi = iphi1;
    goto L300;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots in cylindrical coordinates
@@ -2797,7 +2741,6 @@ L400:
    iphi = iphi1;
    goto L400;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots spheric coordinates
@@ -3079,7 +3022,6 @@ L500:
    goto L500;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set light source
 ///
@@ -3146,7 +3088,6 @@ L400:
    fLoff = 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find surface luminosity at given point
 ///
@@ -3194,7 +3135,6 @@ void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
       flum += fYls[i - 1]*(fQD*cosn + fQS*TMath::Power(cosr, fNqs));
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Modify SCREEN
@@ -3255,7 +3195,6 @@ void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Store pointer to current algorithm to draw faces
 
@@ -3263,7 +3202,6 @@ void TPainter3dAlgorithms::SetDrawFace(DrawFaceFunc_t drface)
 {
    fDrawFace = drface;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store pointer to current lego function
@@ -3273,7 +3211,6 @@ void TPainter3dAlgorithms::SetLegoFunction(LegoFunc_t fun)
    fLegoFunction = fun;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Store pointer to current surface function
 
@@ -3281,7 +3218,6 @@ void TPainter3dAlgorithms::SetSurfaceFunction(SurfaceFunc_t fun)
 {
    fSurfaceFunction = fun;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function
@@ -3292,7 +3228,6 @@ void TPainter3dAlgorithms::SetF3(TF3 *f3)
    fgCurrentF3 = f3;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function
 /// Set the implicit function clipping box "off".
@@ -3301,7 +3236,6 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOff()
 {
    fgF3Clipping = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function
@@ -3318,7 +3252,6 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
    fgF3ZClip = zclip;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Store dark color for stack number n
 
@@ -3328,7 +3261,6 @@ void TPainter3dAlgorithms::SetColorDark(Color_t color, Int_t n)
    if (n > fNStack ) {fColorTop  = color; return;}
    fColorDark[n] = color;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store color for stack number n
@@ -3340,7 +3272,6 @@ void TPainter3dAlgorithms::SetColorMain(Color_t color, Int_t n)
    fColorMain[n] = color;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void TPainter3dAlgorithms::SetEdgeAtt(Color_t color, Style_t style, Width_t width, Int_t n)
@@ -3351,7 +3282,6 @@ void TPainter3dAlgorithms::SetEdgeAtt(Color_t color, Style_t style, Width_t widt
    fEdgeStyle[n] = style;
    fEdgeWidth[n] = width;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Decode side visibilities and order along R for sector
@@ -3383,7 +3313,6 @@ void TPainter3dAlgorithms::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t 
    iv5 = ivis[1];
    iv6 = ivis[0];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode side visibilities and order along R for sector
@@ -3421,7 +3350,6 @@ void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Doubl
    if ((zn <= 0 && iopt == 1) || (zn > 0 && iopt == 2)) ++k;
    val = Double_t(k);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Spectrum
@@ -3479,7 +3407,6 @@ void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_
    fColorLevel[nl + 1] = fColorLevel[nl];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in cartesian coordinate system
 ///
@@ -3502,12 +3429,12 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t, Int_t nx, Int_t ny, const 
      Error("SurfaceCartesian", "no TView in current pad");
      return;
    }
-
-   //       Define order of drawing 
    Double_t *tnorm = view->GetTnorm();
    if (!tnorm) return;
-   Int_t incrx = (tnorm[ 8] < 0.) ? -1 : +1;
-   Int_t incry = (tnorm[ 9] < 0.) ? -1 : +1;
+
+   //          Define order of drawing
+   Int_t incrx = (tnorm[8] < 0.) ? -1 : +1;
+   Int_t incry = (tnorm[9] < 0.) ? -1 : +1;
    if (*chopt != 'B' && *chopt != 'b') { // front to back
       incrx = -incrx; incry = -incry;
    }
@@ -3523,7 +3450,7 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t, Int_t nx, Int_t ny, const 
          if (!painter->IsInside(ix,iy)) continue;
          (this->*fSurfaceFunction)(ix, iy, f, tt);
          for (Int_t i = 0; i < 4; ++i) {
-	    xyz[i*3 + 0] = f[i*3 + 0];
+            xyz[i*3 + 0] = f[i*3 + 0];
             xyz[i*3 + 1] = f[i*3 + 1];
             xyz[i*3 + 2] = f[i*3 + 2];
             // added EJB -->
@@ -3554,7 +3481,6 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t, Int_t nx, Int_t ny, const 
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Service function for Surfaces
@@ -3669,7 +3595,6 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in polar coordinates
@@ -3792,7 +3717,6 @@ L300:
    goto L300;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in cylindrical coordinates
 ///
@@ -3908,7 +3832,6 @@ L400:
    iphi = iphi1;
    goto L400;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in spheric coordinates
@@ -4073,7 +3996,6 @@ L500:
    goto L500;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set surface property coefficients
 ///
@@ -4099,7 +4021,6 @@ void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t 
    fQS  = qqs;
    fNqs = nnqs;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw implicit function FUN(X,Y,Z) = 0 in cartesian coordinates using
@@ -4382,7 +4303,6 @@ L510:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Topological decider for "Marching Cubes" algorithm Find set of triangles
 /// approximating the iso-surface F(x,y,z)=Fiso inside the cube
@@ -4582,7 +4502,6 @@ L560:
    goto L510;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Consideration of trivial cases: 1,2,5,8,9,11,14
 ///
@@ -4628,7 +4547,6 @@ void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3,
    MarchingCubeSetTriangles(ntria, it2, itria);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 3
 
@@ -4658,7 +4576,6 @@ L100:
    MarchingCubeSetTriangles(ntria, it2, itria);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 4
 
@@ -4686,7 +4603,6 @@ void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
       MarchingCubeSetTriangles(ntria, it2, itria);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 6
@@ -4729,7 +4645,6 @@ L100:
    ntria = 5;
    MarchingCubeSetTriangles(ntria, it1, itria);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 7
@@ -4820,7 +4735,6 @@ L400:
    MarchingCubeSetTriangles(ntria, it2, itria);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 10
 
@@ -4886,7 +4800,6 @@ L200:
    MarchingCubeSetTriangles(ntria, it2, itria);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 12
 
@@ -4951,7 +4864,6 @@ L200:
    }
    MarchingCubeSetTriangles(ntria, it2, itria);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 13
@@ -5099,7 +5011,6 @@ L300:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set triangles (if parameter IALL=1, all edges will be visible)
 ///
@@ -5120,7 +5031,6 @@ void TPainter3dAlgorithms::MarchingCubeSetTriangles(Int_t ntria, Int_t it[][3],
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find middle point of a polygon
@@ -5158,7 +5068,6 @@ void TPainter3dAlgorithms::MarchingCubeMiddlePoint(Int_t nnod, Double_t xyz[52][
       pgrad[i-1] = g[i-1] / nnod;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check for surface penetration ("bottle neck")
@@ -5231,7 +5140,6 @@ L200:
    irep = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find nodes and normales
 ///
@@ -5262,7 +5170,6 @@ void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod,
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Z-depth algorithm for set of triangles
@@ -5457,7 +5364,6 @@ L900:
    if (kface > 0) goto L300;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Test edge against face (triangle)
 ///
@@ -5530,7 +5436,6 @@ L997:
 L998:
    irep =-1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw set of iso-surfaces for a scalar function defined on a grid.
