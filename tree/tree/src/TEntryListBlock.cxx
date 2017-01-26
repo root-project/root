@@ -29,7 +29,7 @@ function is called by TEntryList when it starts filling the next block. If
 Enter() or Remove() is called after OptimizeStorage(), representation is
 again changed to 1).
 
-Begin_Macro(source)
+Begin_Macro
 entrylistblock_figure1.C
 End_Macro
 
@@ -499,7 +499,7 @@ void TEntryListBlock::Print(const Option_t *option) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the indices of this block + shift (used from TEntryList::Print()) to
-/// print the corrent values
+/// print the current values
 
 void TEntryListBlock::PrintWithShift(Int_t shift) const
 {
