@@ -30,7 +30,7 @@ addons:
 # following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
 before_install:
   - |
-    DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+    DEPS_DIR="${TRAVIS_BUILD_DIR}/../deps"
     mkdir -p "${DEPS_DIR}"
 
 install:
