@@ -14,6 +14,11 @@
 
 #include "TList.h"
 
+/// Mediates the link between the signal and the slot. It decouples the setting of
+/// arguments and sending a signal.
+///
+/// There are three different modes in argument setting required by TQObject's Emit/EmitVA:
+/// setting integral types, setting array types and setting const char*.
 class TVirtualQConnection : public TList {
 protected:
    virtual void SetArg(Long_t) = 0;
@@ -56,11 +61,17 @@ protected:
    }
 public:
    virtual void SendSignal() = 0;
+
+   /// Unpacks the template parameter type and sets arguments of integral and array (scalar) type.
+   ///
    template <typename... T> void SetArgs(const T&... args)
    {
       SetArgsImpl(args...);
    }
-   // We need a separate overload to allow users to set the argument size of the array.
+
+   /// Sets an array of arguments passed as a pointer type and size. If nargs is not specified
+   /// the number of arguments expected by the slot is used.
+   ///
    void SetArgs(const Long_t* argArray, Int_t nargs = -1)
    {
       SetArg(argArray, nargs);
