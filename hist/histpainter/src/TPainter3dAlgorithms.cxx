@@ -537,6 +537,10 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *, Double_t *xyz, Int_t np, Int_t
       FillPolygon(3, &p3[3*k2], &ttt[k2]);
       if (fMesh == 1) {   // Draw border
          gPad->PaintPolyLine(3, &x[k2], &y[k2]);
+         if (z1*z2 <= 0) { // Draw middle line
+            x[1] = x[2]; y[1] = y[2];
+            gPad->PaintPolyLine(2, &x[0], &y[0]);
+         }
       }
    } else {
       FillPolygon(np, p3, t);
@@ -3479,92 +3483,73 @@ void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in cartesian coordinate system
 ///
-/// \param[in] ang   angle between X ang Y
+/// \param[in] ang   angle between X ang Y (not used in this method)
 /// \param[in] nx   number of steps along X
 /// \param[in] ny   number of steps along Y
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
 
-void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
+void TPainter3dAlgorithms::SurfaceCartesian(Double_t, Int_t nx, Int_t ny, const char *chopt)
 {
-   /* Initialized data */
-
    Int_t iface[4] = { 1,2,3,4 };
+   Int_t icodes[3];
+   Double_t f[4*3], tt[4], xyz[4*3];
 
-   /* Local variables */
-   Double_t cosa, sina, f[12]        /* was [3][4] */;
-   Int_t i, incrx, incry, i1, ix, iy;
-   Double_t tt[4];
-   Int_t icodes[3], ix1, iy1, ix2, iy2;  // was icode[2]. One element more to differentiate front & back boxes from data
-   Double_t xyz[12]        /* was [3][4] */;
-   Double_t *tn;
-
-   sina = TMath::Sin(ang*kRad);
-   cosa = TMath::Cos(ang*kRad);
-
-   //          F I N D   T H E   M O S T   L E F T   P O I N T
    TView *view = 0;
-
    if (gPad) view = gPad->GetView();
    if (!view) {
-      Error("SurfaceCartesian", "no TView in current pad");
-      return;
-   }
-   tn = view->GetTN();
-
-   i1 = 1;
-   if (tn) {
-      if (tn[0] < 0) i1 = 2;
-      if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+     Error("SurfaceCartesian", "no TView in current pad");
+     return;
    }
 
-   //          D E F I N E   O R D E R   O F   D R A W I N G
-   if (*chopt == 'B' || *chopt == 'b') {incrx = -1; incry = -1;}
-   else                                {incrx = 1;  incry = 1;}
-   if (i1 == 1 || i1 == 2) incrx = -incrx;
-   if (i1 == 2 || i1 == 3) incry = -incry;
-   ix1 = 1;
-   iy1 = 1;
-   if (incrx < 0) ix1 = nx;
-   if (incry < 0) iy1 = ny;
-   ix2 = nx - ix1 + 1;
-   iy2 = ny - iy1 + 1;
+   //       Define order of drawing 
+   Double_t *tnorm = view->GetTnorm();
+   if (!tnorm) return;
+   Int_t incrx = (tnorm[ 8] < 0.) ? -1 : +1;
+   Int_t incry = (tnorm[ 9] < 0.) ? -1 : +1;
+   if (*chopt != 'B' && *chopt != 'b') { // front to back
+      incrx = -incrx; incry = -incry;
+   }
+   Int_t ix1 = (incrx == +1) ? 1 : nx;
+   Int_t iy1 = (incry == +1) ? 1 : ny;
+   Int_t ix2 = (incrx == +1) ? nx : 1;
+   Int_t iy2 = (incry == +1) ? ny : 1;
 
-   //          D R A W   S U R F A C E
-   icodes[2] = -1;   // -1 for data, 0 for front a back boxes
-   fEdgeIdx = 0;   // constant since stacks are not (yet?) handled for surfaces
+   //          Draw surface
    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
-   for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
-      for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+   for (Int_t iy = iy1; iy != iy2+incry; iy += incry) {
+      for (Int_t ix = ix1; ix != ix2+incrx; ix += incrx) {
          if (!painter->IsInside(ix,iy)) continue;
          (this->*fSurfaceFunction)(ix, iy, f, tt);
-         for (i = 1; i <= 4; ++i) {
-            xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;
-            xyz[i*3 - 2] = f[i*3 - 2]*sina;
-            xyz[i*3 - 1] = f[i*3 - 1];
+         for (Int_t i = 0; i < 4; ++i) {
+	    xyz[i*3 + 0] = f[i*3 + 0];
+            xyz[i*3 + 1] = f[i*3 + 1];
+            xyz[i*3 + 2] = f[i*3 + 2];
             // added EJB -->
             Double_t al, ab;
             if (Hoption.Proj == 1 ) {
-               THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-               xyz[i*3 - 3] = al;
-               xyz[i*3 - 2] = ab;
+               THistPainter::ProjectAitoff2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
+               xyz[i*3 + 0] = al;
+               xyz[i*3 + 1] = ab;
             } else if (Hoption.Proj == 2 ) {
-               THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-               xyz[i*3 - 3] = al;
-               xyz[i*3 - 2] = ab;
+               THistPainter::ProjectMercator2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
+               xyz[i*3 + 0] = al;
+               xyz[i*3 + 1] = ab;
             } else if (Hoption.Proj == 3) {
-               THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-               xyz[i*3 - 3] = al;
-               xyz[i*3 - 2] = ab;
+               THistPainter::ProjectSinusoidal2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
+               xyz[i*3 + 0] = al;
+               xyz[i*3 + 1] = ab;
             } else if (Hoption.Proj == 4) {
-               THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-               xyz[i*3 - 3] = al;
-               xyz[i*3 - 2] = ab;
+               THistPainter::ProjectParabolic2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
+               xyz[i*3 + 0] = al;
+               xyz[i*3 + 1] = ab;
             }
          }
          icodes[0] = ix;
          icodes[1] = iy;
+         icodes[2] = -1;   // -1 for data, 0 for front a back boxes
+         fEdgeIdx = 0;   // constant since stacks are not (yet?) handled for surfaces
          (this->*fDrawFace)(icodes, xyz, 4, iface, tt);
       }
    }
