@@ -6956,11 +6956,7 @@ void THistPainter::PaintH3Box()
                }
             }
             for (Int_t k=0; k<8; ++k) { // transform to normalized space
-               Double_t p[3];
-               view->WCtoNDC(&sxyz[k][0],p);
-               sxyz[k][0] = p[0];
-               sxyz[k][1] = p[1];
-               sxyz[k][2] = p[2];
+               view->WCtoNDC(&sxyz[k][0],&sxyz[k][0]);
             }
             Double_t x[5], y[5]; // draw bin box faces
             for (Int_t k=0; k<6; ++k) {

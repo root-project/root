@@ -564,7 +564,7 @@ void TView3D::DefinePerspectiveView()
 ///  - C(3)    - centre of scope
 ///  - COSPHI  - longitude COS
 ///  - SINPHI  - longitude SIN
-///  - COSTHE  - latitude COS (angle between +Z and view direc.)
+///  - COSTHE  - latitude COS (angle between +Z and view direction.)
 ///  - SINTHE  - latitude SIN
 ///  - COSPSI  - screen plane rotation angle COS
 ///  - SINPSI  - screen plane rotation angle SIN
@@ -1127,9 +1127,10 @@ Bool_t TView3D::IsClippedNDC(Double_t *p) const
 
 void TView3D::NDCtoWC(const Float_t* pn, Float_t* pw)
 {
-   pw[0] = fTback[0]*pn[0] + fTback[1]*pn[1] + fTback[2]*pn[2]  + fTback[3];
-   pw[1] = fTback[4]*pn[0] + fTback[5]*pn[1] + fTback[6]*pn[2]  + fTback[7];
-   pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
+   Float_t x = pn[0], y = pn[1], z = pn[2];
+   pw[0] = fTback[0]*x + fTback[1]*y + fTback[2]*z  + fTback[3];
+   pw[1] = fTback[4]*x + fTback[5]*y + fTback[6]*z  + fTback[7];
+   pw[2] = fTback[8]*x + fTback[9]*y + fTback[10]*z + fTback[11];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1141,9 +1142,10 @@ void TView3D::NDCtoWC(const Float_t* pn, Float_t* pw)
 
 void TView3D::NDCtoWC(const Double_t* pn, Double_t* pw)
 {
-   pw[0] = fTback[0]*pn[0] + fTback[1]*pn[1] + fTback[2]*pn[2]  + fTback[3];
-   pw[1] = fTback[4]*pn[0] + fTback[5]*pn[1] + fTback[6]*pn[2]  + fTback[7];
-   pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
+   Double_t x = pn[0], y = pn[1], z = pn[2];
+   pw[0] = fTback[0]*x + fTback[1]*y + fTback[2]*z  + fTback[3];
+   pw[1] = fTback[4]*x + fTback[5]*y + fTback[6]*z  + fTback[7];
+   pw[2] = fTback[8]*x + fTback[9]*y + fTback[10]*z + fTback[11];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1534,10 +1536,13 @@ void TView3D::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int
 
 void TView3D::WCtoNDC(const Float_t *pw, Float_t *pn)
 {
+   Float_t x = pw[0], y = pw[1], z = pw[2];
+
    // perspective view
    if (IsPerspective()) {
-      for (Int_t i=0; i<3; i++)
-         pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
+      for (Int_t i=0; i<3; i++) {
+         pn[i] = fTnorm[i]*x + fTnorm[i+4]*y + fTnorm[i+8]*z + fTnorm[i+12];
+      }
       if (pn[2]>0) {
          pn[0] /= pn[2];
          pn[1] /= pn[2];
@@ -1547,10 +1552,11 @@ void TView3D::WCtoNDC(const Float_t *pw, Float_t *pn)
       }
       return;
    }
+
    // parallel view
-   pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
-   pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
-   pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
+   pn[0] = fTnorm[0]*x + fTnorm[1]*y + fTnorm[2]*z  + fTnorm[3];
+   pn[1] = fTnorm[4]*x + fTnorm[5]*y + fTnorm[6]*z  + fTnorm[7];
+   pn[2] = fTnorm[8]*x + fTnorm[9]*y + fTnorm[10]*z + fTnorm[11];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1562,10 +1568,13 @@ void TView3D::WCtoNDC(const Float_t *pw, Float_t *pn)
 
 void TView3D::WCtoNDC(const Double_t *pw, Double_t *pn)
 {
+   Double_t x = pw[0], y = pw[1], z = pw[2];
+
    // perspective view
    if (IsPerspective()) {
-      for (Int_t i=0; i<3; i++)
-         pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
+      for (Int_t i=0; i<3; i++) {
+         pn[i] = fTnorm[i]*x + fTnorm[i+4]*y + fTnorm[i+8]*z + fTnorm[i+12];
+      }
       if (pn[2]>0) {
          pn[0] /= pn[2];
          pn[1] /= pn[2];
@@ -1577,9 +1586,9 @@ void TView3D::WCtoNDC(const Double_t *pw, Double_t *pn)
    }
 
    // parallel view
-   pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
-   pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
-   pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
+   pn[0] = fTnorm[0]*x + fTnorm[1]*y + fTnorm[2]*z  + fTnorm[3];
+   pn[1] = fTnorm[4]*x + fTnorm[5]*y + fTnorm[6]*z  + fTnorm[7];
+   pn[2] = fTnorm[8]*x + fTnorm[9]*y + fTnorm[10]*z + fTnorm[11];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
