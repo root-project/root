@@ -30,5 +30,3 @@ else()
   ROOT_EXECUTABLE(proofexecv proofexecv.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
                          LIBRARIES ${SYSLIBS})
 endif()
-
-ROOT_INSTALL_HEADERS(OPTIONS REGEX inc/X EXCLUDE)

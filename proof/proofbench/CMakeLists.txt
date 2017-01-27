@@ -9,7 +9,7 @@ ROOT_GLOB_SOURCES(sources src/TProof*.cxx)
 ROOT_GENERATE_DICTIONARY(G__ProofBench ${headers} MODULE ProofBench LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(ProofBench ${sources} G__ProofBench.cxx LIBRARIES Core  DEPENDENCIES Hist Gpad ProofPlayer)
-ROOT_INSTALL_HEADERS(OPTIONS REGEX "TSel" EXCLUDE)
+ROOT_INSTALL_HEADERS(FILTER "TSel")
 
 # Generation and installation of the PAR files required by the benchmark 
 add_custom_target(ProofBenchPARFiles ALL DEPENDS ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
