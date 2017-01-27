@@ -228,15 +228,16 @@ void TTreeReader::Initialize()
 ///
 /// If end <= begin, `end` is ignored (set to `-1`) and only `begin` is used.
 /// Example:
-/// ```
+///
+///  ~~~ {.cpp}
 /// reader.SetEntriesRange(3, 5);
 /// while (reader.Next()) {
 ///   // Will load entries 3 and 4.
 /// }
-/// ```
+/// ~~~
 ///
-/// \param begin The first entry to be loaded by `Next()`.
-/// \param end  The entry where `Next()` will return kFALSE, not loading it.
+/// \param beginEntry The first entry to be loaded by `Next()`.
+/// \param endEntry   The entry where `Next()` will return kFALSE, not loading it.
 
 TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long64_t endEntry)
 {
