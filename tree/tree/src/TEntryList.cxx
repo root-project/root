@@ -551,7 +551,7 @@ void TEntryList::DirectoryAutoAdd(TDirectory* dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Add entry #entry to the list
+/// Add entry \#entry to the list
 /// - When tree = 0, adds to the current list
 /// - When tree != 0, finds the list, corresponding to this tree
 /// - When tree is a chain, the entry is assumed to be global index and the local
@@ -606,7 +606,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove entry #entry from the list
+/// Remove entry \#entry from the list
 /// - When tree = 0, removes from the current list
 /// - When tree != 0, finds the list, corresponding to this tree
 /// - When tree is a chain, the entry is assumed to be global index and the local
