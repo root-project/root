@@ -17,12 +17,6 @@ ROOTTEST_ADD_TEST(functiontraits
                   OUTREF test_functiontraits.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(foreach test_foreach.cxx LIBRARIES Core TreePlayer Hist)
-ROOTTEST_ADD_TEST(foreach
-                  EXEC foreach
-                  OUTREF test_foreach.ref
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
 ROOTTEST_ADD_TEST(ctors
                   MACRO test_ctors.C
                   OUTREF test_ctors.ref)
@@ -54,11 +48,11 @@ if(ROOT_imt_FOUND)
                      OUTREF regression_zeroentries.ref
                      DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-#
-# ROOTTEST_GENERATE_EXECUTABLE(regression_invalidref regression_invalidref.cxx LIBRARIES Core TreePlayer Hist)
-# ROOTTEST_ADD_TEST(regression_invalidref
-#                   EXEC regression_invalidref
-#                   OUTREF regression_invalidref.ref
-#                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+ROOTTEST_GENERATE_EXECUTABLE(foreach test_foreach.cxx LIBRARIES Core TreePlayer Hist)
+ROOTTEST_ADD_TEST(foreach
+                  EXEC foreach
+                  OUTREF test_foreach.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 endif()
