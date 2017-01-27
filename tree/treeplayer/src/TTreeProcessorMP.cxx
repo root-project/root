@@ -284,38 +284,15 @@ void TTreeProcessorMP::Reset()
    fTaskType = ETask::kNoTask;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-/// Reply to a worker who just sent a result.
-/// If another argument to process exists, tell the worker. Otherwise
-/// send a shutdown order.
-void TTreeProcessorMP::ReplyToFuncResult(TSocket *s)
-{
-   if (fNProcessed < fNToProcess) {
-      //this cannot be a "greedy worker" task
-      if (fTaskType == ETask::kMap)
-         MPSend(s, MPCode::kExecFunc);
-      else if (fTaskType == ETask::kMapWithArg)
-         MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
-      ++fNProcessed;
-   } else //whatever the task is, we are done
-      MPSend(s, MPCode::kShutdownOrder);
-}
-
-
 //////////////////////////////////////////////////////////////////////////
 /// Reply to a worker who is idle.
-/// If another argument to process exists, tell the worker. Otherwise
+/// If still events to process, tell the worker. Otherwise
 /// ask for a result
 void TTreeProcessorMP::ReplyToIdle(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
-      if (fTaskType == ETask::kMapWithArg)
-         MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
-      else if (fTaskType == ETask::kMap)
-         MPSend(s, MPCode::kExecFunc);
-      else if (fTaskType == ETask::kProcByRange)
+      if (fTaskType == ETask::kProcByRange)
          MPSend(s, MPCode::kProcRange, fNProcessed);
       else if (fTaskType == ETask::kProcByFile)
          MPSend(s, MPCode::kProcFile, fNProcessed);

@@ -74,11 +74,9 @@ private:
    /// It is used to interpret in the right way and properly reply to the
    /// messages received (see, for example, TProcessExecutor::HandleInput)
    enum class ETask : unsigned char {
-      kNoTask,   ///< no task is being executed
+      kNoTask,       ///< no task is being executed
       kMap,          ///< a Map method with no arguments is being executed
-      kMapWithArg,   ///< a Map method with arguments is being executed
-      kProcByRange,   ///< a ProcTree method is being executed and each worker will process a certain range of each file
-      kProcByFile,    ///< a ProcTree method is being executed and each worker will process a different file
+      kMapWithArg    ///< a Map method with arguments is being executed
    };
 
    ETask fTaskType = ETask::kNoTask; ///< the kind of task that is being executed, if any

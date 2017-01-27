@@ -133,10 +133,6 @@ void TProcessExecutor::ReplyToIdle(TSocket *s)
          MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
       else if (fTaskType == ETask::kMap)
          MPSend(s, MPCode::kExecFunc);
-      else if (fTaskType == ETask::kProcByRange)
-         MPSend(s, MPCode::kProcRange, fNProcessed);
-      else if (fTaskType == ETask::kProcByFile)
-         MPSend(s, MPCode::kProcFile, fNProcessed);
       ++fNProcessed;
    } else
       MPSend(s, MPCode::kSendResult);

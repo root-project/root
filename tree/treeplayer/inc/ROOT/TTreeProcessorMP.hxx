@@ -66,7 +66,6 @@ private:
 
    void FixLists(std::vector<TObject*> &lists);
    void Reset();
-   void ReplyToFuncResult(TSocket *s);
    void ReplyToIdle(TSocket *s);
 
    unsigned fNProcessed; ///< number of arguments already passed to the workers
@@ -76,11 +75,9 @@ private:
    /// It is used to interpret in the right way and properly reply to the
    /// messages received (see, for example, TTreeProcessorMP::HandleInput)
    enum class ETask : unsigned char {
-      kNoTask,   ///< no task is being executed
-      kMap,          ///< a Map method with no arguments is being executed
-      kMapWithArg,   ///< a Map method with arguments is being executed
+      kNoTask,        ///< no task is being executed
       kProcByRange,   ///< a Process method is being executed and each worker will process a certain range of each file
-      kProcByFile,    ///< a Process method is being executed and each worker will process a different file
+      kProcByFile     ///< a Process method is being executed and each worker will process a different file
    };
 
    ETask fTaskType = ETask::kNoTask; ///< the kind of task that is being executed, if any
@@ -222,10 +219,7 @@ template<class T>
 void TTreeProcessorMP::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &reslist)
 {
    unsigned code = msg.first;
-   if (code == MPCode::kFuncResult) {
-      reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
-      ReplyToFuncResult(s);
-   } else if (code == MPCode::kIdling) {
+   if (code == MPCode::kIdling) {
       ReplyToIdle(s);
    } else if(code == MPCode::kProcResult) {
       if(msg.second != nullptr)
