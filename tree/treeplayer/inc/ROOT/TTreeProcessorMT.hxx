@@ -64,7 +64,7 @@ namespace ROOT {
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Initialize the file and the tree for this view, first looking for a tree in
-         /// the file if necessary. 
+         /// the file if necessary.
          void Init()
          {
             fFile.reset(TFile::Open(fFileName.data()));
@@ -93,10 +93,10 @@ namespace ROOT {
       public:
          //////////////////////////////////////////////////////////////////////////
          /// Regular constructor.
-         /// \param[in] filename Name of the file containing the tree to process.
-         /// \param[in] treename Name of the tree to process. If not provided,
-         ///                     the implementation will automatically search for a
-         ///                     tree in the file.
+         /// \param[in] fn Name of the file containing the tree to process.
+         /// \param[in] tn Name of the tree to process. If not provided,
+         ///               the implementation will automatically search for a
+         ///                tree in the file.
          TTreeView(std::string_view fn, std::string_view tn) : fFileName(fn), fTreeName(tn)
          {
             Init();
@@ -104,7 +104,7 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Copy constructor.
-         /// \param[in] Object to copy.
+         /// \param[in] view Object to copy.
          TTreeView(const TTreeView& view) : fFileName(view.fFileName), fTreeName(view.fTreeName)
          {
             Init();
@@ -147,11 +147,11 @@ namespace ROOT {
       ///                     the implementation will automatically search for a
       ///                     tree in the file.
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "") : treeView(filename, treename) {}
- 
+
       void Process(std::function<void(TTreeReader&)> func);
- 
+
    };
-      
+
 } // End of namespace ROOT
 
 #endif // defined TTreeProcessorMT
