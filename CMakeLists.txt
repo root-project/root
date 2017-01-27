@@ -154,6 +154,9 @@ endif()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
+get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
+
 #---Global PCH-----------------------------------------------------------------------------------
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
 get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)

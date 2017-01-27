@@ -9,11 +9,11 @@ set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)
-  set(installoptions OPTIONS REGEX "Win32" EXCLUDE)
+  set(installoptions FILTER "Win32")
 else()
   set(headers ${headers} TWin32Condition.h TWin32Mutex.h
                          TWin32Thread.h TWin32ThreadFactory.h)
-  set(installoptions OPTIONS REGEX "Posix" EXCLUDE)
+  set(installoptions FILTER "Posix")
 endif()
 
 set(sources TCondition.cxx TConditionImp.cxx TMutex.cxx TMutexImp.cxx
