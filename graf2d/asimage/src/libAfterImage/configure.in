@@ -60,12 +60,9 @@ dnl# AC_ARG_WITH(builtin_xpm,    [  --with-builtin-xpm       use builtin XPM par
 dnl# AC_ARG_WITH(xpm_includes,   [  --with-xpm-includes=DIR  use libXpm includes in DIR( when builtin XPM handling is disabled )], xpm_includes="$withval", xpm_includes=no)
 
 dnl# standard libgif/ungif should not be used and considered obsolete!
-dnl# AC_ARG_WITH(ungif,		    [  --with-ungif             support Uncompressed GIF image format using libungif [no]],with_ungif="$withval",with_ungif=no)
-dnl# AC_ARG_WITH(gif,		    [  --with-gif               support GIF image format using libgif   [no]],with_gif="$withval",with_gif=no)
-dnl# AC_ARG_WITH(gif_includes,   [  --with-gif-includes=DIR  use GIF includes in DIR], gif_includes="$withval", gif_includes=no)
-with_ungif=no
-with_gif=no
-with_gif_includes=no
+AC_ARG_WITH(ungif,		    [  --with-ungif             support Uncompressed GIF image format using libungif [no]],with_ungif="$withval",with_ungif=no)
+AC_ARG_WITH(gif,		    [  --with-gif               support GIF image format using libgif   [no]],with_gif="$withval",with_gif=no)
+AC_ARG_WITH(gif_includes,   [  --with-gif-includes=DIR  use GIF includes in DIR], gif_includes="$withval", gif_includes=no)
 AC_ARG_WITH(builtin_gif,    [  --with-builtin-gif               support Uncompressed GIF image format using builtin libgif [yes]],with_builtin_gif="$withval",with_builtin_gif=yes)
 
 

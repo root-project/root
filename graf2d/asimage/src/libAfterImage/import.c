@@ -1250,7 +1250,7 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 			 * the normal method of doing things with libpng).  REQUIRED unless you
 			 * set up your own error handlers in the png_create_read_struct() earlier.
 			 */
-			if ( !setjmp(png_jmpbuf(png_ptr)) )
+			if ( !setjmp (png_jmpbuf(png_ptr)))
 			{
 				ASFlagType rgb_flags = ASStorage_RLEDiffCompress|ASStorage_32Bit ;
 
@@ -1917,6 +1917,9 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 	int  		transparent = -1 ;
 	unsigned int  		y;
 	unsigned int		width = 0, height = 0;
+#if (GIFLIB_MAJOR>=5)
+	int errcode;
+#endif
 	ColorMapObject     *cmap = NULL ;
 
 	START_TIME(started);
@@ -1925,7 +1928,11 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 	
 	if ((fp = open_image_file(path)) == NULL)
 		return NULL;
+#if (GIFLIB_MAJOR>=5)
+	if( (gif = open_gif_read(fp, &errcode)) != NULL )
+#else
 	if( (gif = open_gif_read(fp)) != NULL )
+#endif
 	{
 		SavedImage	*sp = NULL ;
 		int count = 0 ;
@@ -1956,7 +1963,7 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 												   		((((unsigned int) sp->ExtensionBlocks[y].Bytes[GIF_GCE_DELAY_BYTE_HIGH])<<8)&0x00FF00);
 					}else if(  sp->ExtensionBlocks[y].Function == APPLICATION_EXT_FUNC_CODE && sp->ExtensionBlocks[y].ByteCount == 11 ) /* application extension */
 					{
-						if( strncmp(&(sp->ExtensionBlocks[y].Bytes[0]), "NETSCAPE2.0", 11 ) == 0 ) 
+						if( strncmp((const char*)(&sp->ExtensionBlocks[y].Bytes[0]), "NETSCAPE2.0", 11 ) == 0 ) 
 						{
 							++y ;
 							if( y < (unsigned int)sp->ExtensionBlockCount && sp->ExtensionBlocks[y].ByteCount == 3 )
@@ -2028,13 +2035,21 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 			}
 			free_gif_saved_images( sp, count );
 		}else if( status != GIF_OK ) 
+#if (GIFLIB_MAJOR>=5)
+			ASIM_PrintGifError(status);
+#else
 			ASIM_PrintGifError();
+#endif
 		else if( params->subimage == -1 )
 			show_error( "Image file \"%s\" does not have any valid image information.", path );
 		else
 			show_error( "Image file \"%s\" does not have subimage %d.", path, params->subimage );
 
+#if (GIFLIB_MAJOR>=5)
+		DGifCloseFile(gif, &errcode);
+#else
 		DGifCloseFile(gif);
+#endif
 		fclose( fp );
 	}
 	SHOW_TIME("image loading",started);
