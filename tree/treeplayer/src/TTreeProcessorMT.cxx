@@ -31,6 +31,14 @@ objects.
 
 using namespace ROOT;
 
+////////////////////////////////////////////////////////////////////////
+/// Regular constructor.
+/// \param[in] filename Name of the file containing the tree to process.
+/// \param[in] treename Name of the tree to process. If not provided,
+///                     the implementation will automatically search for a
+///                     tree in the file.
+TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view treename) : treeView(filename, treename) {}
+
 //////////////////////////////////////////////////////////////////////////////
 /// Process the entries of a TTree in parallel. The user-provided function
 /// receives a TTreeReader which can be used to iterate on a subrange of

@@ -140,14 +140,8 @@ namespace ROOT {
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Threaded object with <file,tree> per thread
 
    public:
-      ////////////////////////////////////////////////////////////////////////
-      /// Regular constructor.
-      /// \param[in] filename Name of the file containing the tree to process.
-      /// \param[in] treename Name of the tree to process. If not provided,
-      ///                     the implementation will automatically search for a
-      ///                     tree in the file.
-      TTreeProcessorMT(std::string_view filename, std::string_view treename = "") : treeView(filename, treename) {}
-
+      TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
+ 
       void Process(std::function<void(TTreeReader&)> func);
 
    };
