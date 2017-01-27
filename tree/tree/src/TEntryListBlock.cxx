@@ -158,7 +158,7 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove entry #entry
+/// Remove entry \#entry
 /// If the block has already been optimized and the entries
 /// are stored as a list and not as bits, trying to remove a new entry
 /// will make the block switch to bits representation
@@ -189,7 +189,7 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// True if the block contains entry #entry
+/// True if the block contains entry \#entry
 
 Int_t TEntryListBlock::Contains(Int_t entry)
 {
@@ -376,7 +376,7 @@ Int_t TEntryListBlock::GetNPassed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return entry #entry.
+/// Return entry \#entry.
 /// See also Next()
 
 Int_t TEntryListBlock::GetEntry(Int_t entry)

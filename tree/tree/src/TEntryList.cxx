@@ -649,7 +649,7 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the number of the entry #index of this TEntryList in the TTree or TChain
+/// Return the number of the entry \#index of this TEntryList in the TTree or TChain
 /// See also Next().
 
 Long64_t TEntryList::GetEntry(Int_t index)
