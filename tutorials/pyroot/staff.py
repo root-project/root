@@ -47,7 +47,7 @@ def staff():
     tree.Branch( 'Nation', AddressOf( staff, 'Nation' ), 'Nation/C' )
 
     # note that the branches Division and Nation cannot be on the first branch
-    fname = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'tree', 'cernstaff.dat')
+    fname = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'tree', 'cernstaff.dat')
     for line in open(fname).readlines():
         t = list(filter( lambda x: x, re.split( '\s+', line ) ) )
         staff.Category = int(t[0])             # assign as integers

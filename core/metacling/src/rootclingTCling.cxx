@@ -30,6 +30,18 @@ const char ** *TROOT__GetExtraInterpreterArgs()
 }
 
 extern "C"
+const char *TROOT__GetIncludeDir()
+{
+   return TROOT::GetIncludeDir();
+}
+
+extern "C"
+const char *TROOT__GetEtcDir()
+{
+   return TROOT::GetEtcDir();
+}
+
+extern "C"
 cling::Interpreter *TCling__GetInterpreter()
 {
   static bool isInitialized = false;

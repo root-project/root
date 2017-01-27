@@ -25,7 +25,7 @@ Double_t fitf(Double_t *x, Double_t *par)
 }
 void myfit()
 {
-   TString dir = gROOT->GetTutorialsDir();
+   TString dir = gROOT->GetTutorialDir();
    dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());

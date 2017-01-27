@@ -658,6 +658,22 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // Initialize Operating System interface
    InitSystem();
 
+   // Initialize static directory functions
+   GetRootSys();
+   GetBinDir();
+   GetLibDir();
+   GetIncludeDir();
+   GetEtcDir();
+   GetDataDir();
+   GetDocDir();
+   GetMacroDir();
+   GetTutorialDir();
+   GetSourceDir();
+   GetIconPath();
+   GetTTFFontDir();
+
+   gRootDir = GetRootSys().Data();
+
    TDirectory::Build();
 
    // Initialize interface to CINT C++ interpreter
@@ -1893,21 +1909,9 @@ void TROOT::InitInterpreter()
                "after the call to TROOT::InitInterpreter()!");
       }
 
-      const char *libcling = 0;
-      char *libclingStorage = 0;
-#ifdef ROOTLIBDIR
-      libcling = ROOTLIBDIR "/libCling."
-# ifdef R__WIN32
-      "dll";
-# else
-      "so";
-# endif
-#else
-      libclingStorage = gSystem->DynamicPathName("libCling");
-      libcling = libclingStorage;
-#endif
+      char *libcling = gSystem->DynamicPathName("libCling");
       gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
-      delete [] libclingStorage;
+      delete [] libcling;
 
       if (!gInterpreterLib) {
          TString err = dlerror();
@@ -2254,22 +2258,7 @@ void TROOT::ReadGitInfo()
 #endif
 
    TString gitinfo = "gitinfo.txt";
-   char *filename = 0;
-#ifdef ROOTETCDIR
-   filename = gSystem->ConcatFileName(ROOTETCDIR, gitinfo);
-#else
-   TString etc = gRootDir;
-#ifdef WIN32
-   etc += "\\etc";
-#else
-   etc += "/etc";
-#endif
-#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   // on iOS etc does not exist and gitinfo resides in $ROOTSYS
-   etc = gRootDir;
-#endif
-   filename = gSystem->ConcatFileName(etc, gitinfo);
-#endif
+   char *filename = gSystem->ConcatFileName(TROOT::GetEtcDir(), gitinfo);
 
    FILE *fp = fopen(filename, "r");
    if (fp) {
@@ -2587,17 +2576,9 @@ const char *TROOT::GetMacroPath()
 #endif
       if (macroPath.Length() == 0)
 #if !defined(R__WIN32)
-   #ifdef ROOTMACRODIR
-         macroPath = ".:" ROOTMACRODIR;
-   #else
-         macroPath = TString(".:") + gRootDir + "/macros";
-   #endif
+         macroPath = ".:" + TROOT::GetMacroDir();
 #else
-   #ifdef ROOTMACRODIR
-         macroPath = ".;" ROOTMACRODIR;
-   #else
-         macroPath = TString(".;") + gRootDir + "/macros";
-   #endif
+         macroPath = ".;" + TROOT::GetMacroDir();
 #endif
    }
 
@@ -2693,14 +2674,260 @@ const char**& TROOT::GetExtraInterpreterArgs() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef ROOTPREFIX
+static Bool_t IgnorePrefix() {
+   static Bool_t ignorePrefix = gSystem->Getenv("ROOTIGNOREPREFIX");
+   return ignorePrefix;
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the rootsys directory in the installation. Static utility function.
+
+const TString& TROOT::GetRootSys() {
+#ifdef ROOTPREFIX
+   if (IgnorePrefix()) {
+#endif
+      static TString rootsys;
+      if (rootsys.IsNull())
+         rootsys = gSystem->Getenv("ROOTSYS");
+      if (rootsys.IsNull())
+         rootsys = gRootDir;
+      return rootsys;
+#ifdef ROOTPREFIX
+   } else {
+      const static TString rootsys = ROOTPREFIX;
+      return rootsys;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the binary directory in the installation. Static utility function.
+
+const TString& TROOT::GetBinDir() {
+#ifdef ROOTBINDIR
+   if (IgnorePrefix()) {
+#endif
+      static TString rootbindir;
+      if (rootbindir.IsNull()) {
+         rootbindir = "bin";
+         gSystem->PrependPathName(GetRootSys(), rootbindir);
+      }
+      return rootbindir;
+#ifdef ROOTBINDIR
+   } else {
+      const static TString rootbindir = ROOTBINDIR;
+      return rootbindir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the library directory in the installation. Static utility function.
+
+const TString& TROOT::GetLibDir() {
+#ifdef ROOTLIBDIR
+   if (IgnorePrefix()) {
+#endif
+      static TString rootlibdir;
+      if (rootlibdir.IsNull()) {
+         rootlibdir = "lib";
+         gSystem->PrependPathName(GetRootSys(), rootlibdir);
+      }
+      return rootlibdir;
+#ifdef ROOTLIBDIR
+   } else {
+      const static TString rootlibdir = ROOTLIBDIR;
+      return rootlibdir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the include directory in the installation. Static utility function.
+
+const TString& TROOT::GetIncludeDir() {
+#ifdef ROOTINCDIR
+   if (IgnorePrefix()) {
+#endif
+      static TString rootincdir;
+      if (rootincdir.IsNull()) {
+         rootincdir = "include";
+         gSystem->PrependPathName(GetRootSys(), rootincdir);
+      }
+      return rootincdir;
+#ifdef ROOTINCDIR
+   } else {
+      const static TString rootincdir = ROOTINCDIR;
+      return rootincdir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the sysconfig directory in the installation. Static utility function.
+
+const TString& TROOT::GetEtcDir() {
+#ifdef ROOTETCDIR
+   if (IgnorePrefix()) {
+#endif
+      static TString rootetcdir;
+      if (rootetcdir.IsNull()) {
+         rootetcdir = "etc";
+         gSystem->PrependPathName(GetRootSys(), rootetcdir);
+      }
+      return rootetcdir;
+#ifdef ROOTETCDIR
+   } else {
+      const static TString rootetcdir = ROOTETCDIR;
+      return rootetcdir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the data directory in the installation. Static utility function.
+
+const TString& TROOT::GetDataDir() {
+#ifdef ROOTDATADIR
+   if (IgnorePrefix()) {
+#endif
+      return GetRootSys();
+#ifdef ROOTDATADIR
+   } else {
+      const static TString rootdatadir = ROOTDATADIR;
+      return rootdatadir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the documentation directory in the installation. Static utility function.
+
+const TString& TROOT::GetDocDir() {
+#ifdef ROOTDOCDIR
+   if (IgnorePrefix()) {
+#endif
+      return GetRootSys();
+#ifdef ROOTDOCDIR
+   } else {
+      const static TString rootdocdir = ROOTDOCDIR;
+      return rootdocdir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the macro directory in the installation. Static utility function.
+
+const TString& TROOT::GetMacroDir() {
+#ifdef ROOTMACRODIR
+   if (IgnorePrefix()) {
+#endif
+      static TString rootmacrodir;
+      if (rootmacrodir.IsNull()) {
+         rootmacrodir = "macros";
+         gSystem->PrependPathName(GetRootSys(), rootmacrodir);
+      }
+      return rootmacrodir;
+#ifdef ROOTMACRODIR
+   } else {
+      const static TString rootmacrodir = ROOTMACRODIR;
+      return rootmacrodir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get the tutorials directory in the installation. Static utility function.
 
-const char *TROOT::GetTutorialsDir()
-{
+const TString& TROOT::GetTutorialDir() {
 #ifdef ROOTTUTDIR
-   return ROOTTUTDIR;
-#else
-   static TString tutdir = TString(gRootDir) + "/tutorials";
-   return tutdir;
+   if (IgnorePrefix()) {
 #endif
+      static TString roottutdir;
+      if (roottutdir.IsNull()) {
+         roottutdir = "tutorials";
+         gSystem->PrependPathName(GetRootSys(), roottutdir);
+      }
+      return roottutdir;
+#ifdef ROOTTUTDIR
+   } else {
+      const static TString roottutdir = ROOTTUTDIR;
+      return roottutdir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the source directory in the installation. Static utility function.
+
+const TString& TROOT::GetSourceDir() {
+#ifdef ROOTSRCDIR
+   if (IgnorePrefix()) {
+#endif
+      static TString rootsrcdir;
+      if (rootsrcdir.IsNull()) {
+         rootsrcdir = "src";
+         gSystem->PrependPathName(GetRootSys(), rootsrcdir);
+      }
+      return rootsrcdir;
+#ifdef ROOTSRCDIR
+   } else {
+      const static TString rootsrcdir = ROOTSRCDIR;
+      return rootsrcdir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the icon path in the installation. Static utility function.
+
+const TString& TROOT::GetIconPath() {
+#ifdef ROOTICONPATH
+   if (IgnorePrefix()) {
+#endif
+      static TString rooticonpath;
+      if (rooticonpath.IsNull()) {
+         rooticonpath = "icons";
+         gSystem->PrependPathName(GetRootSys(), rooticonpath);
+      }
+      return rooticonpath;
+#ifdef ROOTICONPATH
+   } else {
+      const static TString rooticonpath = ROOTICONPATH;
+      return rooticonpath;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the fonts directory in the installation. Static utility function.
+
+const TString& TROOT::GetTTFFontDir() {
+#ifdef TTFFONTDIR
+   if (IgnorePrefix()) {
+#endif
+      static TString ttffontdir;
+      if (ttffontdir.IsNull()) {
+         ttffontdir = "fonts";
+         gSystem->PrependPathName(GetRootSys(), ttffontdir);
+      }
+      return ttffontdir;
+#ifdef TTFFONTDIR
+   } else {
+      const static TString ttffontdir = TTFFONTDIR;
+      return ttffontdir;
+   }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the tutorials directory in the installation. Static utility function.
+/// Backward compatibility function - do not use for new code
+
+const char *TROOT::GetTutorialsDir() {
+   return GetTutorialDir();
 }

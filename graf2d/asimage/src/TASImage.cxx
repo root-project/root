@@ -360,33 +360,33 @@ TASImage::~TASImage()
 
 static void init_icon_paths()
 {
-   const char *icons = "/icons";
-#ifdef R__WIN32
-      icons = "\\icons";
+   TString icon_path = gEnv->GetValue("Gui.IconPath", "");
+   if (icon_path.IsNull()) {
+      icon_path = "icons";
+      gSystem->PrependPathName(gSystem->HomeDirectory(), icon_path);
+#ifndef R__WIN32
+      icon_path = ".:" + icon_path + ":" + TROOT::GetIconPath() + ":" + EXTRAICONPATH;
+#else
+      icon_path = ".;" + icon_path + ";" + TROOT::GetIconPath() + ";" + EXTRAICONPATH;
 #endif
+   }
 
-   TString homeIcons = gSystem->HomeDirectory();
-   homeIcons += icons;
-
-   TString rootIcons = gSystem->Getenv("ROOTSYS");
-   rootIcons += icons;
-
-   TString guiIcons = gEnv->GetValue("Gui.IconPath", "");
-
-   gIconPaths[0] = StrDup(".");
-   gIconPaths[1] = StrDup(homeIcons.Data());
-   gIconPaths[2] = StrDup(rootIcons.Data());
-   gIconPaths[3] = StrDup(guiIcons.Data());
-
-#ifdef ROOTICONPATH
-   gIconPaths[4] = StrDup(ROOTICONPATH);
+   Int_t cnt = 0;
+   Ssiz_t from = 0;
+   TString token;
+#ifndef R__WIN32
+   const char *delim = "/";
+#else
+   const char *delim = "\\";
 #endif
-
-#ifdef EXTRAICONPATH
-   gIconPaths[5] = StrDup(EXTRAICONPATH);
-#endif
-
-   gIconPaths[6] = 0;
+   while (icon_path.Tokenize(token, from, delim) && cnt < 6) {
+      char *path = gSystem->ExpandPathName(token.Data());
+      if (path) {
+         gIconPaths[cnt] = path;
+         cnt++;
+      }
+   }
+   gIconPaths[cnt] = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2595,14 +2595,19 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    TString fn = font_name;
    fn.Strip();
-   char *tmpstr = 0;
+
+   // This is for backward compatibility...
+   if (fn.Last('/') == 0) fn = fn(1, fn.Length() - 1);
+
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+                                       TROOT::GetTTFFontDir());
+   char *tmpstr = gSystem->Which(ttpath, fn, kReadPermission);
+   fn = tmpstr;
+   delete [] tmpstr;
 
    if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF")) {
-      tmpstr = gSystem->ExpandPathName(fn.Data());
-      fn = tmpstr;
       ttfont = kTRUE;
    }
-   delete [] tmpstr;
 
    if (color) {
       parse_argb_color(color, &text_color);

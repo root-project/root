@@ -32,7 +32,7 @@ void psview()
    gROOT->SetBatch(1);
 
    // create a PostScript file
-   TString dir = gROOT->GetTutorialsDir();
+   TString dir = gROOT->GetTutorialDir();
    dir.Append("/graphics/feynman.C");
    gROOT->Macro(dir);
    gPad->Print("feynman.eps");

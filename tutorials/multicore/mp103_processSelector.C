@@ -26,7 +26,7 @@ int mp103_processSelector(){
   // MacOSX may generate connection to WindowServer errors
   gROOT->SetBatch(kTRUE);
 
-  TString selectorPath = gROOT->GetTutorialsDir();
+  TString selectorPath = gROOT->GetTutorialDir();
   selectorPath += "/tree/h1analysis.C+";
   std::cout << "selector used is: "<< selectorPath<<"\n";
   TSelector *sel = TSelector::GetSelector(selectorPath);

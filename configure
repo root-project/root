@@ -8235,6 +8235,7 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
+    -e "s|@extraiconpath@|$extraiconpath|" \
     -e "s|@iconpath@|$iconpath|"           \
     -e "s|@hasxrd@|$hasxrd|"               \
     -e "s|@hasnotxrd@|$hasnotxrd|"         \

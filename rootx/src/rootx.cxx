@@ -218,7 +218,6 @@ static STRUCT_UTMP *SearchEntry(int n, const char *tty)
    return 0;
 }
 
-#ifndef ROOTPREFIX
 static const char *GetExePath()
 {
    static std::string exepath;
@@ -265,7 +264,6 @@ static void SetRootSys()
       delete [] ep;
    }
 }
-#endif
 
 static void SetDisplay()
 {
@@ -314,7 +312,9 @@ static void SetDisplay()
 
 static void SetLibraryPath()
 {
-#ifndef ROOTLIBDIR
+#ifdef ROOTPREFIX
+   if (getenv("ROOTIGNOREPREFIX")) {
+#endif
    // Set library path for the different platforms.
 
    char *msg;
@@ -361,6 +361,8 @@ static void SetLibraryPath()
    }
 #  endif
    putenv(msg);
+#ifdef ROOTPREFIX
+   }
 #endif
 }
 
@@ -458,7 +460,9 @@ int main(int argc, char **argv)
    char **argvv;
    char  arg0[kMAXPATHLEN];
 
-#ifndef ROOTPREFIX
+#ifdef ROOTPREFIX
+   if (getenv("ROOTIGNOREPREFIX")) {
+#endif
    // Try to set ROOTSYS depending on pathname of the executable
    SetRootSys();
 
@@ -466,6 +470,8 @@ int main(int argc, char **argv)
       fprintf(stderr, "%s: ROOTSYS not set. Set it before trying to run %s.\n",
               argv[0], argv[0]);
       return 1;
+   }
+#ifdef ROOTPREFIX
    }
 #endif
 
@@ -491,23 +497,20 @@ int main(int argc, char **argv)
    if (notebook) {
       // Build command
 #ifdef ROOTBINDIR
-      snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
-#else
-      snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTNBBINARY);
+      if (getenv("ROOTIGNOREPREFIX"))
+#endif
+         snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTNBBINARY);
+#ifdef ROOTBINDIR
+      else
+         snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
 #endif
 
       // Execute ROOT notebook binary
       execl(arg0, arg0, NULL);
-  
+
       // Exec failed
-#ifndef ROOTBINDIR
-      fprintf(stderr,
-              "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/bin/%s exists\n",
-              argv[0], getenv("ROOTSYS"), ROOTNBBINARY);
-#else
-      fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/%s exists\n",
-              argv[0], ROOTBINDIR, ROOTNBBINARY);
-#endif
+      fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s exists\n",
+              argv[0], arg0);
 
       return 1;
    }
@@ -604,9 +607,12 @@ int main(int argc, char **argv)
    // Build argv vector
    argvv = new char* [argc+2];
 #ifdef ROOTBINDIR
-   snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTBINARY);
-#else
-   snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTBINARY);
+   if (getenv("ROOTIGNOREPREFIX"))
+#endif
+      snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTBINARY);
+#ifdef ROOTBINDIR
+   else
+      snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTBINARY);
 #endif
    argvv[0] = arg0;
    argvv[1] = (char *) "-splash";
@@ -622,14 +628,8 @@ int main(int argc, char **argv)
    execv(arg0, argvv);
 
    // Exec failed
-#ifndef ROOTBINDIR
-   fprintf(stderr,
-           "%s: can't start ROOT -- check that %s/bin/%s exists!\n",
-           argv[0], getenv("ROOTSYS"), ROOTBINARY);
-#else
-   fprintf(stderr, "%s: can't start ROOT -- check that %s/%s exists!\n",
-           argv[0], ROOTBINDIR, ROOTBINARY);
-#endif
+   fprintf(stderr, "%s: can't start ROOT -- check that %s exists!\n",
+           argv[0], arg0);
 
    return 1;
 }

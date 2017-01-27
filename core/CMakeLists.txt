@@ -71,14 +71,14 @@ if(WIN32)
                      COMMAND ${CMAKE_SOURCE_DIR}/build/win/gitinfo.bat ${CMAKE_SOURCE_DIR}
                      COMMAND ${CMAKE_SOURCE_DIR}/build/win/githeader.bat RGitCommit.h.tmp
                      COMMENT "Recording the git revision now"
-                     DEPENDS ${dep_objects}
+                     DEPENDS ${dep_objects} move_artifacts
                      WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 else()
   add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
                      COMMAND ${CMAKE_SOURCE_DIR}/build/unix/gitinfo.sh ${CMAKE_SOURCE_DIR}
                      COMMAND ${CMAKE_SOURCE_DIR}/build/unix/githeader.sh RGitCommit.h.tmp
                      COMMENT "Recording the git revision now"
-                     DEPENDS ${dep_objects}
+                     DEPENDS ${dep_objects} move_artifacts
                      WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)

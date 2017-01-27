@@ -19,11 +19,12 @@ namespace Internal {
 namespace RootCling {
    struct DriverConfig {
       bool fBuildingROOTStage1 = false;
-      std::string fLLVMResourceDir;
       const char** fPRootDir = nullptr;
 
       // Function that might (rootcling) or might not (rootcling_stage1) be there.
       const char ** * (*fTROOT__GetExtraInterpreterArgs)() = nullptr;
+      const char *(*fTROOT__GetIncludeDir)() = nullptr;
+      const char *(*fTROOT__GetEtcDir)() = nullptr;
       cling::Interpreter *(*fTCling__GetInterpreter)() = nullptr;
       void (*fInitializeStreamerInfoROOTFile)(const char *filename) = nullptr;
       void (*fAddStreamerInfoToROOTFile)(const char *normName) = nullptr;

@@ -15,12 +15,10 @@
 Interface to the freetype 2 library.
 */
 
-// RConfigure.h is needed for TTFFONTDIR
-#include "RConfigure.h"
-
 #  include <ft2build.h>
 #  include FT_FREETYPE_H
 #  include FT_GLYPH_H
+#include "TROOT.h"
 #include "TTF.h"
 #include "TSystem.h"
 #include "TEnv.h"
@@ -415,13 +413,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-# ifdef TTFFONTDIR
-                                       TTFFONTDIR
-# else
-                                       "$(ROOTSYS)/fonts"
-# endif
-                                      );
-
+                                       TROOT::GetTTFFontDir());
    char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 
    if (!ttfont) {
@@ -543,12 +535,7 @@ void TTF::SetTextFont(Font_t fontnumber)
       // try to load font (font must be in Root.TTFontPath resource)
       // to see which fontset we have available
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-#ifdef TTFFONTDIR
-                                          TTFFONTDIR
-#else
-                                          "$(ROOTSYS)/fonts"
-#endif
-                                         );
+                                          TROOT::GetTTFFontDir());
       char *ttfont = gSystem->Which(ttpath, gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]), kReadPermission);
       if (ttfont) {
          delete [] ttfont;

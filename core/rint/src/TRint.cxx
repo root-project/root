@@ -304,17 +304,7 @@ void TRint::ExecLogon()
    TString name = ".rootlogon.C";
    TString sname = "system";
    sname += name;
-#ifdef ROOTETCDIR
-   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
-#else
-   TString etc = gRootDir;
-#ifdef WIN32
-   etc += "\\etc";
-#else
-   etc += "/etc";
-#endif
-   char *s = gSystem->ConcatFileName(etc, sname);
-#endif
+   char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
    }
