@@ -12,7 +12,7 @@
 /** \class TChain
 \ingroup tree
 
-A chain is a collection of files containg TTree objects.
+A chain is a collection of files containing TTree objects.
 When the chain is created, the first parameter is the default name
 for the Tree to be processed later on.
 
@@ -273,7 +273,7 @@ Int_t TChain::Add(TChain* chain)
 /// supported in urls, depending on the protocol plugin and the remote server.
 /// http or https urls can contain a query identifier without tree_name, but
 /// generally urls can not be written with them because of ambiguity with the
-/// wildcard character. (Also see the documentaiton for TChain::AddFile,
+/// wildcard character. (Also see the documentation for TChain::AddFile,
 /// which does not support wildcards but allows the url to contain query)
 ///
 /// NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
@@ -954,7 +954,7 @@ Int_t TChain::GetEntry(Long64_t entry, Int_t getall)
 /// Return entry number corresponding to entry.
 ///
 /// if no TEntryList set returns entry
-/// else returns entry #entry from this entry list and
+/// else returns entry \#entry from this entry list and
 /// also computes the global entry number (loads all tree headers)
 
 Long64_t TChain::GetEntryNumber(Long64_t entry) const
@@ -1244,7 +1244,7 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 ///   * -3: The file corresponding to the entry could not be correctly open
 ///   * -4: The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
-///   * -5: Internal error, please report the circunstance when this happen
+///   * -5: Internal error, please report the circumstance when this happen
 ///       as a ROOT issue.
 ///
 /// Note: This is the only routine which sets the value of fTree to
@@ -2373,6 +2373,7 @@ void TChain::ResetBranchAddresses()
 ///
 /// \param[in] bname    is the name of a branch.
 /// \param[in] add      is the address of the branch.
+/// \param[in] ptr
 ///
 /// Note: See the comments in TBranchElement::SetAddress() for a more
 /// detailed discussion of the meaning of the add parameter.
@@ -2471,6 +2472,7 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TCla
 /// \param[in] bname     is the name of a branch. if bname="*", apply to all branches.
 /// \param[in] status    = 1  branch will be processed,
 ///                      = 0  branch will not be processed
+/// \param[out] found
 ///
 ///  See IMPORTANT REMARKS in TTree::SetBranchStatus and TChain::SetBranchAddress
 ///
@@ -2757,7 +2759,7 @@ void TChain::SetPacketSize(Int_t size)
 /// Enable/Disable PROOF processing on the current default Proof (gProof).
 ///
 /// "Draw" and "Processed" commands will be handled by PROOF.
-/// The refresh and gettreeheader are meaningfull only if on == kTRUE.
+/// The refresh and gettreeheader are meaningful only if on == kTRUE.
 /// If refresh is kTRUE the underlying fProofChain (chain proxy) is always
 /// rebuilt (even if already existing).
 /// If gettreeheader is kTRUE the header of the tree will be read from the
