@@ -45,13 +45,13 @@ The learning period is started or restarted when:
    - TTree::SetCacheSize is called with a non-zero size and a cache
      did not previously exist
    - TTreeCache::StartLearningPhase is called.
-   - TTree[Cache]::SetEntryRange is called
+   - TTreeCache::SetEntryRange is called
         * and the learning is not yet finished
         * and has not been set to manual
         * and the new minimun entry is different.
 
 The learning period is stopped (and prefetching is actually started) when:
-   - TTree[Cache]::StopLearningPhase is called.
+   - TTreeCache::StopLearningPhase is called.
    - An entry outside the 'learning' range is requested
      The 'learning range is from fEntryMin (default to 0) to
      fEntryMin + fgLearnEntries (default to 100).
@@ -75,7 +75,7 @@ with no cache will imply 10s penalty where a local read of the 10 MBytes would
 take about 1 second.
 
 The TreeCache will try to prefetch all the buffers for the selected branches
-such that instead of transfering 1000 buffers of 10 Kbytes, it will be able
+such that instead of transferring 1000 buffers of 10 Kbytes, it will be able
 to transfer one single large buffer of 10 Mbytes in one single transaction.
 Not only the TreeCache minimizes the number of transfers, but in addition
 it can sort the blocks to be read in increasing order such that the file
@@ -377,7 +377,7 @@ Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 /// Add a branch to the list of branches to be stored in the cache
 /// this is to be used by user (thats why we pass the name of the branch).
 /// It works in exactly the same way as TTree::SetBranchStatus so you
-/// probably want to look over ther for details about the use of bname
+/// probably want to look over there for details about the use of bname
 /// with regular expressions.
 /// The branches are taken with respect to the Owner of this TTreeCache
 /// (i.e. the original Tree)
@@ -517,8 +517,8 @@ Int_t TTreeCache::DropBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 /// Remove a branch to the list of branches to be stored in the cache
 /// this is to be used by user (thats why we pass the name of the branch).
 /// It works in exactly the same way as TTree::SetBranchStatus so you
-/// probably want to look over ther for details about the use of bname
-/// with regular expresions.
+/// probably want to look over there for details about the use of bname
+/// with regular expressions.
 /// The branches are taken with respect to the Owner of this TTreeCache
 /// (i.e. the original Tree)
 /// NB: if bname="*" all branches are put in the cache and the learning phase stopped
@@ -885,7 +885,7 @@ Bool_t TTreeCache::FillBuffer()
       // fNtotCurrentBuf / clusterIterations is the average size we are accumulated so far at each loop.
       // and thus (fNtotCurrentBuf / clusterIterations) * (clusterIterations+1) is a good guess at what the next total size
       // would be if we run the loop one more time.   fNtotCurrentBuf and clusterIterations are Int_t but can sometimes
-      // be 'large' (i.e. 30Mb * 300 intervals) and can overflow the numercial limit of Int_t (i.e. become
+      // be 'large' (i.e. 30Mb * 300 intervals) and can overflow the numerical limit of Int_t (i.e. become
       // artificially negative).   To avoid this issue we promote fNtotCurrentBuf to a long long (64 bits rather than 32 bits)
       if (!((fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(clusterIterations+1))/clusterIterations) && (prevNtot < fNtotCurrentBuf) && (minEntry < fEntryMax)))
          break;
@@ -942,7 +942,7 @@ TTreeCache::EPrefillType TTreeCache::GetConfiguredPrefillType() const
 ///   than once )
 ///
 /// Note: This should eb used at the end of the processing or we will
-/// get uncomplete stats
+/// get incomplete stats
 
 Double_t TTreeCache::GetEfficiency() const
 {
