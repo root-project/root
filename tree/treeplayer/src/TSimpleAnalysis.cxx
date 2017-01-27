@@ -35,7 +35,8 @@ are stored to an output file. The histogrammed (TTreeFormula) expressions,
 their cuts, the input and output files are configured through a simple config
 file that allows comments starting with '#'.
 Here an example of configuration file:
-```
+
+~~~ {.cpp}
 # This is an example of configuration file
 file_output.root   #the output file in which histograms are stored
 
@@ -59,7 +60,8 @@ hpx=px if px<-3   #first histogram
 hpxpy=px:py    #second histogram
 
 # End of the configuration file
-```
+~~~
+
 It is possible to use the script rootdrawtree that allows to use the class
 just in command line through the bash shell.
 */
@@ -179,9 +181,9 @@ static std::string ExtractTreeName(std::string& firstInputFile)
       TClass* clObj = TClass::GetClass(key->GetClassName());
       if (!clObj)
          continue;
-      // If the key is releted to and object that inherits from TTree::Class we
+      // If the key is related to and object that inherits from TTree::Class we
       // set treeName with the name of this key if treeName is empty, otherwise
-      // error occours
+      // error occurs
       if (clObj->InheritsFrom(TTree::Class())) {
          if (treeName.empty())
             treeName = key->GetName();
@@ -191,7 +193,7 @@ static std::string ExtractTreeName(std::string& firstInputFile)
          }
       }
    }
-   // If treeName is yet empty, error occours
+   // If treeName is yet empty, error occurs
    if (treeName.empty()) {
       ::Error("TSimpleAnalysis::Analyze", "No tree inside %s", firstInputFile.c_str());
       return "";
@@ -459,7 +461,7 @@ bool TSimpleAnalysis::Configure()
          break;
       }
 
-      // Report any errors if occour during the configuration proceedings
+      // Report any errors if occur during the configuration proceedings
       if (!errMessage.empty()) {
          ::Error("TSimpleAnalysis::Configure", "%s in %s:%d", errMessage.c_str(),
                  fConfigFile.c_str(), numbLine);
