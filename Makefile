@@ -626,7 +626,7 @@ CXXMODULES_MODULEMAP_CONTENTS :=
 ALLHDRS  := include/module.modulemap
 # FIXME: Remove -fno-autolink once the clang's modules autolinking is done on a
 #use of a header not unconditionally.
-ROOT_CXXMODULES_COMMONFLAGS := -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack
+ROOT_CXXMODULES_COMMONFLAGS := -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Rmodule-build
 ifeq ($(PLATFORM),macosx)
 # FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
 # Frameworks' modulemaps predate the flag. Here we exclude the system module maps
