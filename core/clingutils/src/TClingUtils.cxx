@@ -3307,40 +3307,6 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the -I needed to find RuntimeUniverse.h
-
-std::string ROOT::TMetaUtils::GetInterpreterExtraIncludePath(bool rootbuild)
-{
-#ifdef ROOTETCDIR
-   if (rootbuild) {
-      // Building ROOT, ignore ROOTETCDIR!
-#endif
-      const char* rootsys = getenv("ROOTSYS");
-      if (!rootsys) {
-         Error(0, "Environment variable ROOTSYS not set!\n");
-         return "-Ietc";
-      }
-      return std::string("-I") + rootsys + "/etc";
-#ifdef ROOTETCDIR
-   }
-   return std::string("-I") + ROOTETCDIR;
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the LLVM / clang resource directory
-
-std::string ROOT::TMetaUtils::GetLLVMResourceDir(bool rootbuild)
-{
-#ifdef R__EXTERN_LLVMDIR
-   return R__EXTERN_LLVMDIR;
-#else
-   return GetInterpreterExtraIncludePath(rootbuild)
-      .substr(2, std::string::npos) + "/cling";
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Get the template specialisation decl and template decl behind the qualtype
 /// Returns true if successfully found, false otherwise
 
@@ -3968,29 +3934,6 @@ clang::QualType ROOT::TMetaUtils::GetTypeForIO(const clang::QualType& thisType,
                                                TClassEdit::EModType mode)
 {
    return GetNameTypeForIO(thisType, interpreter, normCtxt, mode).second;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
-{
-   const std::string defaultInclude ("include");
-   if (!rootbuild) {
-#ifndef ROOTINCDIR
-      const char* rootSysContent = getenv("ROOTSYS");
-      if (rootSysContent) {
-         std::string incl_rootsys (rootSysContent);
-         return incl_rootsys + "/" + defaultInclude;
-      } else {
-         Error(0,"Environment variable ROOTSYS not set\n");
-         return defaultInclude;
-      }
-#else
-      return ROOTINCDIR;
-#endif
-   }
-
-   return defaultInclude;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1192,14 +1192,7 @@ again:
                   case kHelpAbout:
                      {
 #ifdef R__UNIX
-                        TString rootx;
-# ifdef ROOTBINDIR
-                        rootx = ROOTBINDIR;
-# else
-                        rootx = gSystem->Getenv("ROOTSYS");
-                        if (!rootx.IsNull()) rootx += "/bin";
-# endif
-                        rootx += "/root -a &";
+                        TString rootx = TROOT::GetBinDir() + "/root -a &";
                         gSystem->Exec(rootx);
 #else
 #ifdef WIN32

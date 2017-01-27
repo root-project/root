@@ -89,7 +89,7 @@ void TMVAClassificationCategory()
    TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
    if (gSystem->AccessPathName( fname + "toy_sigbkg_categ_offset.root")) {
       // if directory data not found try using tutorials dir
-      fname = TString(gROOT->GetTutorialsDir()) + "/tmva/data/";
+      fname = gROOT->GetTutorialDir() + "/tmva/data/";
    }
    if (UseOffsetMethod) fname += "toy_sigbkg_categ_offset.root";
    else                 fname += "toy_sigbkg_categ_varoff.root";

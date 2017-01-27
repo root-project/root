@@ -14,6 +14,7 @@
 #include "TGLFontManager.h"
 
 
+#include "TROOT.h"
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TSystem.h"
@@ -451,11 +452,7 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
    if (it == fFontMap.end())
    {
       TString ttpath, file;
-# ifdef TTFFONTDIR
-      ttpath = gEnv->GetValue("Root.TTGLFontPath", TTFFONTDIR );
-# else
-      ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
-# endif
+      ttpath = gEnv->GetValue("Root.TTGLFontPath", TROOT::GetTTFFontDir());
       {
          //For extenede we have both ttf and otf.
          char *fp = gSystem->Which(ttpath, fileID < fgExtendedFontStart ?

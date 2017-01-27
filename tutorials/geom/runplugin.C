@@ -27,7 +27,7 @@ void runplugin()
 {
 
 
-   TString tutdir = gROOT->GetTutorialsDir();
+   TString tutdir = gROOT->GetTutorialDir();
    gROOT->ProcessLine(".x " + tutdir + "/geom/rootgeom.C");
    plugin = new iterplugin();
    gGeoManager->GetGeomPainter()->SetIteratorPlugin(plugin);

@@ -8,8 +8,8 @@ ifneq ($(HOST),)
 ROOTCLING1DIRS  := $(BUILDTOOLSDIR)/core/rootcling_stage1/src
 
 ROOTCLING1S     := $(ROOTCLING1DIRS)/rootcling_stage1.cxx
-ROOTCLING1O     := $(call stripsrc,$(ROOTCLING1S:.cxx=.o))
-ROOTCLING1EXE   := $(call stripsrc,$(UTILSDIRS)/rootcling_stage1$(EXEEXT))
+ROOTCLING1O     := $(ROOTCLING1S:.cxx=.o)
+ROOTCLING1EXE   := $(UTILSDIRS)/rootcling_stage1$(EXEEXT)
 ROOTCLINGSTAGE1 := $(ROOTCLING1EXE)
 
 ##### Dependencies for all dictionaries

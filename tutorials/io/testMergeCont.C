@@ -39,7 +39,7 @@ TSeqCollection *GetCollection()
 
 void testMergeCont()
 {
-   TString tutdir = gROOT->GetTutorialsDir();
+   TString tutdir = gROOT->GetTutorialDir();
    gROOT->LoadMacro(tutdir+"/hsimple.C");
    TList *list1 = (TList *)GetCollection();
    TList *inputs = new TList();

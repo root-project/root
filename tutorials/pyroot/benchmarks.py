@@ -45,7 +45,7 @@ def bexec( dir, macro, bench ):
 ## --------------------------------------------------------------------------
 if __name__ == '__main__':
 
-   macrodir = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'pyroot')
+   macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'pyroot')
 
  # window for keeping track of bench marks that are run
    bench = ROOT.TCanvas( 'bench','Benchmarks Summary', -1000, 50, 200, 500 )

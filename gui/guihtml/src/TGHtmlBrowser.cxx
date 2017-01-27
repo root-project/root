@@ -629,14 +629,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kM_HELP_ABOUT:
                      {
 #ifdef R__UNIX
-                        TString rootx;
-# ifdef ROOTBINDIR
-                        rootx = ROOTBINDIR;
-# else
-                        rootx = gSystem->Getenv("ROOTSYS");
-                        if (!rootx.IsNull()) rootx += "/bin";
-# endif
-                        rootx += "/root -a &";
+                        TString rootx = TROOT::GetBinDir() + "/root -a &";
                         gSystem->Exec(rootx);
 #else
 #ifdef WIN32

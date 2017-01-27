@@ -4114,19 +4114,9 @@ Int_t TAuthenticate::ReadRootAuthrc()
          ::Info("TAuthenticate::ReadRootAuthrc",
                 "file %s cannot be read (errno: %d)", authrc, errno);
       delete [] authrc;
-#ifdef ROOTETCDIR
-      authrc = gSystem->ConcatFileName(ROOTETCDIR,"system.rootauthrc");
-#else
-      char etc[1024];
-#ifdef WIN32
-      snprintf(etc, 1024, "%s\\etc", gRootDir);
-#else
-      snprintf(etc, 1024, "%s/etc", gRootDir);
-#endif
-      authrc = gSystem->ConcatFileName(etc,"system.rootauthrc");
-#endif
+      authrc = gSystem->ConcatFileName(TROOT::GetEtcDir(), "system.rootauthrc");
       if (gDebug > 2)
-         ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file:%s",authrc);
+         ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file: %s", authrc);
       if (gSystem->AccessPathName(authrc, kReadPermission)) {
          if (gDebug > 1)
             ::Info("TAuthenticate::ReadRootAuthrc",
