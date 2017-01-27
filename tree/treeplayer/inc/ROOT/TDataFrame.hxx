@@ -58,7 +58,7 @@ namespace Experimental {
 template <typename T>
 class TActionResultProxy {
 
-   template<typename V, bool isCont = Internal::TDFTraitsUtils::TIsContainer<V>::fgValue>
+   template<typename V, bool isCont = ROOT::Internal::TDFTraitsUtils::TIsContainer<V>::fgValue>
    struct TIterationHelper{
       using Iterator_t = void;
       void GetBegin(const V& ){static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class.");}
@@ -339,8 +339,8 @@ public:
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
       const BranchNames &defBl = df->GetDefaultBranches();
-      auto nArgs = Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
-      const BranchNames &actualBl = Internal::PickBranchNames(nArgs, bl, defBl);
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
+      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFF_t = Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (f, actualBl, fProxiedPtr);
       TDataFrameInterface<DFF_t> tdf_f(FilterPtr);
@@ -375,8 +375,8 @@ public:
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
       const BranchNames &defBl = df->GetDefaultBranches();
-      auto nArgs = Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
-      const BranchNames &actualBl = Internal::PickBranchNames(nArgs, bl, defBl);
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
+      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = Detail::TDataFrameBranch<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, expression, actualBl, fProxiedPtr);
       TDataFrameInterface<DFB_t> tdf_b(BranchPtr);
@@ -397,7 +397,7 @@ public:
    template <typename F>
    void Foreach(F f, const BranchNames &bl = {})
    {
-      namespace IU = Internal::TDFTraitsUtils;
+      namespace IU = ROOT::Internal::TDFTraitsUtils;
       using ArgTypes_t = typename IU::TFunctionTraits<decltype(f)>::ArgTypesNoDecay_t;
       using RetType_t = typename IU::TFunctionTraits<decltype(f)>::RetType_t;
       auto fWithSlot = IU::AddSlotParameter<RetType_t>(f, ArgTypes_t());
@@ -423,9 +423,9 @@ public:
    void ForeachSlot(F f, const BranchNames &bl = {}) {
       auto df = GetDataFrameChecked();
       const BranchNames &defBl= df->GetDefaultBranches();
-      auto nArgs = Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
-      const BranchNames &actualBl = Internal::PickBranchNames(nArgs-1, bl, defBl);
-      using DFA_t  = Internal::TDataFrameAction<decltype(f), Proxied>;
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
+      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs-1, bl, defBl);
+      using DFA_t  = ROOT::Internal::TDataFrameAction<decltype(f), Proxied>;
       df->Book(std::make_shared<DFA_t>(f, actualBl, fProxiedPtr));
       df->Run();
    }
@@ -442,10 +442,10 @@ public:
       auto cShared = std::make_shared<unsigned int>(0);
       auto c = df->MakeActionResultPtr(cShared);
       auto cPtr = cShared.get();
-      auto cOp = std::make_shared<Internal::Operations::CountOperation>(cPtr, nSlots);
+      auto cOp = std::make_shared<ROOT::Internal::Operations::CountOperation>(cPtr, nSlots);
       auto countAction = [cOp](unsigned int slot) mutable { cOp->Exec(slot); };
       BranchNames bl = {};
-      using DFA_t = Internal::TDataFrameAction<decltype(countAction), Proxied>;
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(countAction), Proxied>;
       df->Book(std::shared_ptr<DFA_t>(new DFA_t(countAction, bl, fProxiedPtr)));
       return c;
    }
@@ -467,10 +467,10 @@ public:
       GetDefaultBranchName(theBranchName, "get the values of the branch");
       auto valuesPtr = std::make_shared<COLL>();
       auto values = df->MakeActionResultPtr(valuesPtr);
-      auto getOp = std::make_shared<Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
+      auto getOp = std::make_shared<ROOT::Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
       auto getAction = [getOp] (unsigned int slot , const T &v) mutable { getOp->Exec(v, slot); };
       BranchNames bl = {theBranchName};
-      using DFA_t = Internal::TDataFrameAction<decltype(getAction), Proxied>;
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(getAction), Proxied>;
       df->Book(std::shared_ptr<DFA_t>(new DFA_t(getAction, bl, fProxiedPtr)));
       return values;
    }
@@ -492,7 +492,7 @@ public:
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "fill the histogram");
       auto h = std::make_shared<TH1F>(model);
-      return CreateAction<T, Internal::EActionType::kHisto1D>(theBranchName, h);
+      return CreateAction<T, ROOT::Internal::EActionType::kHisto1D>(theBranchName, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -522,7 +522,7 @@ public:
       if (minVal == maxVal) {
          h->SetCanExtend(TH1::kAllAxes);
       }
-      return CreateAction<T, Internal::EActionType::kHisto1D>(theBranchName, h);
+      return CreateAction<T, ROOT::Internal::EActionType::kHisto1D>(theBranchName, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -540,7 +540,7 @@ public:
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "calculate the minumum");
       auto minV = std::make_shared<T>(std::numeric_limits<T>::max());
-      return CreateAction<T, Internal::EActionType::kMin>(theBranchName, minV);
+      return CreateAction<T, ROOT::Internal::EActionType::kMin>(theBranchName, minV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -558,7 +558,7 @@ public:
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "calculate the maximum");
       auto maxV = std::make_shared<T>(std::numeric_limits<T>::min());
-      return CreateAction<T, Internal::EActionType::kMax>(theBranchName, maxV);
+      return CreateAction<T, ROOT::Internal::EActionType::kMax>(theBranchName, maxV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -576,7 +576,7 @@ public:
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "calculate the mean");
       auto meanV = std::make_shared<T>(0);
-      return CreateAction<T, Internal::EActionType::kMean>(theBranchName, meanV);
+      return CreateAction<T, ROOT::Internal::EActionType::kMean>(theBranchName, meanV);
    }
 
 private:
@@ -611,11 +611,11 @@ private:
       }
    }
 
-   template <typename BranchType, typename ActionResultType, enum Internal::EActionType, typename ThisType>
+   template <typename BranchType, typename ActionResultType, enum ROOT::Internal::EActionType, typename ThisType>
    struct SimpleAction {};
 
    template <typename BranchType, typename ThisType>
-   struct SimpleAction<BranchType, TH1F, Internal::EActionType::kHisto1D, ThisType> {
+   struct SimpleAction<BranchType, TH1F, ROOT::Internal::EActionType::kHisto1D, ThisType> {
       static TActionResultProxy<TH1F> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                  std::shared_ptr<TH1F> h, unsigned int nSlots)
       {
@@ -629,14 +629,14 @@ private:
          auto hasAxisLimits = !(xaxis->GetXmin() == 0. && xaxis->GetXmax() == 0.);
 
          if (hasAxisLimits) {
-            auto fillTOOp = std::make_shared<Internal::Operations::FillTOOperation<TH1F>>(h, nSlots);
+            auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<TH1F>>(h, nSlots);
             auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(v, slot); };
-            using DFA_t = Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+            using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
             df->Book(std::make_shared<DFA_t>(fillLambda, bl, thisFrame->fProxiedPtr));
          } else {
-            auto fillOp = std::make_shared<Internal::Operations::FillOperation<TH1F>>(h, nSlots);
+            auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation<TH1F>>(h, nSlots);
             auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(v, slot); };
-            using DFA_t = Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+            using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
             df->Book(std::make_shared<DFA_t>(fillLambda, bl, thisFrame->fProxiedPtr));
          }
          return df->MakeActionResultPtr(h);
@@ -644,15 +644,15 @@ private:
    };
 
    template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, Internal::EActionType::kMin, ThisType> {
+   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMin, ThisType> {
       static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                              std::shared_ptr<ActionResultType> minV, unsigned int nSlots)
       {
          // see "TActionResultProxy<TH1F> BuildAndBook" for why this is a shared_ptr
-         auto minOp = std::make_shared<Internal::Operations::MinOperation>(minV.get(), nSlots);
+         auto minOp = std::make_shared<ROOT::Internal::Operations::MinOperation>(minV.get(), nSlots);
          auto minOpLambda = [minOp](unsigned int slot, const BranchType &v) mutable { minOp->Exec(v, slot); };
          BranchNames bl = {theBranchName};
-         using DFA_t = Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
+         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
          auto df = thisFrame->GetDataFrameChecked();
          df->Book(std::make_shared<DFA_t>(minOpLambda, bl, thisFrame->fProxiedPtr));
          return df->MakeActionResultPtr(minV);
@@ -660,15 +660,15 @@ private:
    };
 
    template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, Internal::EActionType::kMax, ThisType> {
+   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMax, ThisType> {
       static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                              std::shared_ptr<ActionResultType> maxV, unsigned int nSlots)
       {
          // see "TActionResultProxy<TH1F> BuildAndBook" for why this is a shared_ptr
-         auto maxOp = std::make_shared<Internal::Operations::MaxOperation>(maxV.get(), nSlots);
+         auto maxOp = std::make_shared<ROOT::Internal::Operations::MaxOperation>(maxV.get(), nSlots);
          auto maxOpLambda = [maxOp](unsigned int slot, const BranchType &v) mutable { maxOp->Exec(v, slot); };
          BranchNames bl = {theBranchName};
-         using DFA_t = Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
+         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
          auto df = thisFrame->GetDataFrameChecked();
          df->Book(std::make_shared<DFA_t>(maxOpLambda, bl, thisFrame->fProxiedPtr));
          return df->MakeActionResultPtr(maxV);
@@ -676,22 +676,22 @@ private:
    };
 
    template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, Internal::EActionType::kMean, ThisType> {
+   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMean, ThisType> {
       static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                              std::shared_ptr<ActionResultType> meanV, unsigned int nSlots)
       {
          // see "TActionResultProxy<TH1F> BuildAndBook" for why this is a shared_ptr
-         auto meanOp = std::make_shared<Internal::Operations::MeanOperation>(meanV.get(), nSlots);
+         auto meanOp = std::make_shared<ROOT::Internal::Operations::MeanOperation>(meanV.get(), nSlots);
          auto meanOpLambda = [meanOp](unsigned int slot, const BranchType &v) mutable { meanOp->Exec(v, slot); };
          BranchNames bl = {theBranchName};
-         using DFA_t = Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
+         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
          auto df = thisFrame->GetDataFrameChecked();
          df->Book(std::make_shared<DFA_t>(meanOpLambda, bl, thisFrame->fProxiedPtr));
          return df->MakeActionResultPtr(meanV);
       }
    };
 
-   template <typename BranchType, Internal::EActionType ActionType, typename ActionResultType>
+   template <typename BranchType, ROOT::Internal::EActionType ActionType, typename ActionResultType>
    TActionResultProxy<ActionResultType> CreateAction(const std::string & theBranchName,
                                                    std::shared_ptr<ActionResultType> r)
    {
@@ -779,8 +779,8 @@ template <typename F, typename PrevData>
 class TDataFrameBranch final : public TDataFrameBranchBase {
    using BranchTypes_t = typename Internal
    ::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t;
-   using TypeInd_t = typename Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
-   using RetType_t = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::RetType_t;
+   using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using RetType_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::RetType_t;
 
    const std::string fName;
    F fExpression;
@@ -808,7 +808,7 @@ public:
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot)
    {
-      fReaderValues[slot] = Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
+      fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
    void *GetValue(unsigned int slot, int entry)
@@ -841,11 +841,11 @@ public:
 
    template <int... S, typename... BranchTypes>
    std::shared_ptr<RetType_t> GetValueHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
-                                             Internal::TDFTraitsUtils::TStaticSeq<S...>,
+                                             ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
                                              unsigned int slot, int entry)
    {
       auto valuePtr = std::make_shared<RetType_t>(fExpression(
-         Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...));
+         ROOT::Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...));
       return valuePtr;
    }
 };
@@ -861,15 +861,15 @@ using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
 
 template <typename FilterF, typename PrevDataFrame>
 class TDataFrameFilter final : public TDataFrameFilterBase {
-   using BranchTypes_t = typename Internal::TDFTraitsUtils::TFunctionTraits<FilterF>::ArgTypes_t;
-   using TypeInd_t = typename Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using BranchTypes_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<FilterF>::ArgTypes_t;
+   using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    FilterF fFilter;
    const BranchNames fBranches;
    const BranchNames fTmpBranches;
    PrevDataFrame *fPrevData;
    std::weak_ptr<TDataFrameImpl> fFirstData;
-   std::vector<Internal::TVBVec_t> fReaderValues = {};
+   std::vector<ROOT::Internal::TVBVec_t> fReaderValues = {};
    std::vector<int> fLastCheckedEntry = {-1};
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
 
@@ -901,7 +901,7 @@ public:
 
    template <int... S, typename... BranchTypes>
    bool CheckFilterHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
-                          Internal::TDFTraitsUtils::TStaticSeq<S...>,
+                          ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
                           unsigned int slot, int entry)
    {
       // Take each pointer in tvb, cast it to a pointer to the
@@ -911,12 +911,12 @@ public:
       (void) slot; // avoid bogus unused-but-set-parameter warning by gcc
       (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
       return fFilter(
-         Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...);
+         ROOT::Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...);
    }
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot)
    {
-      fReaderValues[slot] = Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
+      fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
    void CreateSlots(unsigned int nSlots)
@@ -929,7 +929,7 @@ public:
 
 class TDataFrameImpl {
 
-   Internal::ActionBaseVec_t fBookedActions;
+   ROOT::Internal::ActionBaseVec_t fBookedActions;
    Detail::FilterBaseVec_t fBookedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    std::vector<std::shared_ptr<bool>> fResPtrsReadiness;
