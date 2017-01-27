@@ -1,0 +1,19 @@
+
+Processing ../tests/test_ctors.cxx...
+filling tree...
+ctor called
+dtor called
+done
+building dataframe...
+done
+building chain...
+done
+running chain...
+ctor called
+filter
+foreach: 1
+filter
+foreach: 2
+done
+count: 2
+dtor called
