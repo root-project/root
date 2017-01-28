@@ -430,24 +430,18 @@ namespace ROOT {
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Send(const Type &var, Int_t dest, Int_t tag) const
       {
-         if (std::is_class<Type>::value) {
-            TMpiMessage msg;
-            msg.WriteObject(var);
-            Send(msg, dest, tag);
-         } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Send((void *)&var, 1, GetDataType<Type>(), dest, tag, fComm);
-         }
+         Send(&var, 1, dest, tag);
       }
 
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
-            TMpiMessage *msg = new TMpiMessage[count];
-            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
-            Send(msg, count, dest, tag);
-            delete[] msg;
+            Char_t *buffer;
+            Int_t size;
+            Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
+            MPI_Send(buffer, size, MPI_CHAR, dest, tag, fComm);
+            delete buffer;
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Send((void *)vars, count, GetDataType<Type>(), dest, tag, fComm);
@@ -458,33 +452,23 @@ namespace ROOT {
       //______________________________________________________________________________
       template<class Type>  void TCommunicator::Recv(Type &var, Int_t source, Int_t tag) const
       {
-         if (std::is_class<Type>::value) {
-            TMpiMessage msg;
-            Recv(msg, source, tag);
-
-            auto cl = gROOT->GetClass(typeid(var));
-            auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
-            memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
-         } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
-            //TODO: added status argument to this method
-            MPI_Recv((void *)&var, 1, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE);
-         }
+         Recv(&var, 1, source, tag);
       }
 
       //______________________________________________________________________________
       template<class Type>  void TCommunicator::Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
-            TMpiMessage *msg = new TMpiMessage[count];
-            Recv(msg, count, source, tag);
+            Int_t size;
+            TStatus s;
+            Probe(source, tag, s);
 
-            auto cl = gROOT->GetClass(typeid(Type));
-            for (auto i = 0; i < count; i++) {
-               auto obj_tmp = (Type *)msg[i].ReadObjectAny(cl);
-               memcpy((void *)&vars[i], (void *)obj_tmp, sizeof(Type));
-            }
-            delete[] msg;
+            MPI_Get_elements(&s.fStatus, MPI_CHAR, &size);
+
+            Char_t *buffer = new Char_t[size];
+            MPI_Recv(buffer, size, MPI_CHAR, source, tag, fComm, MPI_STATUS_IGNORE);
+            Unserialize<Type>(buffer, size, vars, count, this, GetRank(), source, tag, 0);
+
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             //TODO: added status argument to this method
@@ -803,19 +787,6 @@ namespace ROOT {
          if (root != 0 && GetRank() == 0) Send(out_var, count, root, MPI_TAG_UB);
          if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, MPI_TAG_UB);
       }
-
-
-      //////////////////////////////////////////////
-      //specialized template methods p2p blocking
-      //______________________________________________________________________________
-      template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage &var, Int_t dest, Int_t tag) const;
-      //______________________________________________________________________________
-      template<> void TCommunicator::Send<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag) const;
-      //______________________________________________________________________________
-      template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage &var, Int_t source, Int_t tag) const;
-      //______________________________________________________________________________
-      template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const;
-
 
       //////////////////////////////////////////////
       //specialized template methods collective
