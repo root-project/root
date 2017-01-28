@@ -46,7 +46,7 @@ protected:
    void       *GetSlotAddress() const;
    CallFunc_t *LockSlot() const;
    void        UnLockSlot(TQSlot *) const;
-   CallFunc_t *GetSlotCallFunc() const;
+   virtual CallFunc_t *GetSlotCallFunc() const override;
 
    TQConnection &operator=(const TQConnection &) = delete;
 
@@ -63,7 +63,7 @@ protected:
    template <typename T> void SetArgImpl(T arg)
    {
       CallFunc_t *func = GetSlotCallFunc();
-      gInterpreter->CallFunc_SetArguments(func, arg);
+      gInterpreter->CallFunc_SetArg(func, arg);
    }
 
    virtual void SendSignal() override

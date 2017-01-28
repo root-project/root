@@ -13,6 +13,7 @@
 #define ROOT_TVirtualQConnection
 
 #include "TList.h"
+#include "TInterpreter.h"
 
 /// Mediates the link between the signal and the slot. It decouples the setting of
 /// arguments and sending a signal.
@@ -21,6 +22,7 @@
 /// setting integral types, setting array types and setting const char*.
 class TVirtualQConnection : public TList {
 protected:
+   virtual CallFunc_t *GetSlotCallFunc() const = 0;
    virtual void SetArg(Long_t) = 0;
    virtual void SetArg(ULong_t) = 0;
    virtual void SetArg(Float_t) = 0;
@@ -66,6 +68,7 @@ public:
    ///
    template <typename... T> void SetArgs(const T&... args)
    {
+      gInterpreter->CallFunc_ResetArg(GetSlotCallFunc());
       SetArgsImpl(args...);
    }
 

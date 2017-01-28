@@ -75,8 +75,8 @@ void HighPriority(const char *signal_name,const char *slot_name=0){fQObject.High
 void LowPriority(const char *signal_name,const char *slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
 template <typename... T> void EmitVA(const char *signal_name, Int_t nargs, const T&... params) \
 { fQObject.EmitVA(signal_name,nargs,params...); } \
-void Emit(const char *signal){EmitVA(signal, (Int_t)0);} \
-template <typename T> void Emit(const char *signal, const T& arg) { EmitVA(signal, 0, arg); } \
+void Emit(const char *signal){EmitVA(signal, /*nargs*/0);} \
+template <typename T> void Emit(const char *signal, const T& arg) { EmitVA(signal, /*nargs*/ 1, arg); } \
 
 #define RQ_OBJECT2(sender_class)\
 void Destroyed(){Emit("Destroyed()");}\
