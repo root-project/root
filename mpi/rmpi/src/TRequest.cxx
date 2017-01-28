@@ -8,20 +8,20 @@ using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TRequest::TRequest(): fRequest(MPI_REQUEST_NULL)
 {
-   fUnserialize = []() {};
+   fCallback = []() {};
 }
 
 //______________________________________________________________________________
 TRequest::TRequest(const TRequest &obj): TObject(obj), fRequest(obj.fRequest)
 {
-   fUnserialize = []() {};
+   fCallback = []() {};
 }
 
 
 //______________________________________________________________________________
 TRequest::TRequest(MPI_Request i) : fRequest(i)
 {
-   fUnserialize = []() {};
+   fCallback = []() {};
 }
 
 
@@ -29,7 +29,7 @@ TRequest::TRequest(MPI_Request i) : fRequest(i)
 TRequest &TRequest::operator=(const TRequest &r)
 {
    fRequest = r.fRequest;
-   fUnserialize = r.fUnserialize;
+   fCallback = r.fCallback;
    return *this;
 }
 
@@ -49,6 +49,7 @@ Bool_t TRequest::operator!= (const TRequest &a)
 TRequest &TRequest::operator= (const MPI_Request &i)
 {
    fRequest = i;
+   fCallback = [] {};
    return *this;
 }
 
@@ -57,11 +58,8 @@ void TRequest::Wait(TStatus &status)
 {
    MPI_Wait(&fRequest, &status.fStatus);
    //TODO:error control here if status is wrong
-   try {
-      fUnserialize();
-   } catch (const std::exception &e) {
-      Error(__FUNCTION__, "Exception %s", e.what());
-   }
+   if (fRequest == MPI_REQUEST_NULL) fCallback();
+   else Warning(__FUNCTION__, "Resquest still lingers");
 }
 
 //______________________________________________________________________________
@@ -69,11 +67,8 @@ void TRequest::Wait()
 {
    MPI_Wait(&fRequest, MPI_STATUS_IGNORE);
    //TODO:error control here if status is wrong
-   try {
-      fUnserialize();
-   } catch (const std::exception &e) {
-      Error(__FUNCTION__, "Exception %s", e.what());
-   }
+   if (fRequest == MPI_REQUEST_NULL) fCallback();
+   else Warning(__FUNCTION__, "Resquest still lingers");
 }
 
 //______________________________________________________________________________
@@ -183,19 +178,9 @@ void TRequest::WaitAll(Int_t count, TRequest req_array[], TStatus stat_array[])
 //______________________________________________________________________________
 void TRequest::WaitAll(Int_t count, TRequest req_array[])
 {
-   Int_t i;
-   MPI_Request *array_of_requests = new MPI_Request[count];
-
-   for (i = 0; i < count; i++) {
-      array_of_requests[i] = req_array[i].fRequest;
+   for (auto i = 0; i < count; i++) {
+      req_array[i].Wait();
    }
-   (void)MPI_Waitall(count, array_of_requests, MPI_STATUSES_IGNORE);
-
-   for (i = 0; i < count; i++) {
-      req_array[i] = array_of_requests[i];
-   }
-
-   delete [] array_of_requests;
 }
 
 //______________________________________________________________________________

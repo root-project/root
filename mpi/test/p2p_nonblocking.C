@@ -52,23 +52,19 @@ void p2p_nonblocking_scalar()
    } else {
       //you can Received the messages in other order(is nonblocking)
       auto req = comm.IRecv(mymap, 0, 1);
-//       req.Complete();
       req.Wait();
       std::cout << "Received map = " << mymap["key"] << std::endl;
 
       req = comm.IRecv(mymat, 0, 2);
-//       req.Complete();
       req.Wait();
       std::cout << "Received mat = ";
       mymat.Print();
       Int_t scalar;
       req = comm.IRecv(scalar, 0, 3);
-//       req.Complete();//disabled for raw types
       req.Wait();
       std::cout << "Received scalar = " << scalar << std::endl;
 
       req = comm.IRecv(p, 0, 0);
-//       req.Complete();
       req.Wait();
       std::cout << "Received particle = " << Form("p.x = %d p.y = %d p.x = %d", p.x, p.y, p.z) << std::endl;
 
@@ -102,116 +98,71 @@ void p2p_nonblocking_array(Int_t count = 2)
    particle  p[count];                             //custom object
 
    TMpiMessage msgs[count];
+   TRequest req[4];
+
 
    //Testing TMpiMessage
    if (rank == 0) {
-      p[0].x = 1;
-      p[0].y = 2;
-      p[0].z = 3;
-      mymap[0]["key"] = "hola";
+      for (auto i = 0; i < count; i++) {
+         mymap[i]["key"] = "hola";
+         mymat[i].ResizeTo(count, count);
+         mymat[i][0][0] = 0.1;
+         mymat[i][0][1] = 0.2;
+         mymat[i][1][0] = 0.3;
+         mymat[i][1][1] = 0.4;
+         p[i].x = 1;
+         p[i].y = 2;
+         p[i].z = 3;
+         msgs[i].WriteObject(p);
+      }
+      std::cout << "Sending particle = " << Form("p.x = %d p.y = %d p.x = %d", p[0].x, p[0].y, p[0].z) << std::endl;
+      req[0] = gComm->ISend(p, count, 1, 4);
 
-      TMpiMessage msgp;
-      TMpiMessage msgm;
-      msgp.WriteObject(p[0]);
-      msgm.WriteObject(mymap[0]);
+      std::cout << "Sending msgs  \n";
+      req[1] = gComm->ISend(msgs, count, 1, 3);
 
-      auto req = gComm->ISend(&msgp, 1, 1, 0);
-      req.Wait();
-      req = gComm->ISend(&msgm, 1, 1, 1);
-      req.Wait();
+      std::cout << "Sending maps[\"key\"] = " << mymap[0]["key"] << std::endl;
+      req[2] = gComm->ISsend(mymap, count, 1, 2);
 
-      std::cout << "SEND!\n";
-      std::cout.flush();
+      std::cout << "Sending mats = ";
+      mymat[0].Print();
+      req[3] = gComm->IRsend(mymat, count, 1, 1);
+
+      TRequest::WaitAll(4, req);
    } else {
-      TMpiMessage msgp;
-      TMpiMessage msgm;
-      auto req = gComm->IRecv(&msgm, 1, 0, 1);
-      req.Wait();
-      req = gComm->IRecv(&msgp, 1, 0, 0);
-      req.Wait();
-      std::cout << "RECV!\n";
-      std::cout.flush();
+      //you can Received the messages in other order(is nonblocking)
+      req[0] = gComm->IRecv(mymap, count, 0, 2);
+      req[1] = gComm->IRecv(msgs, count, 0, 3);
+      req[2] = gComm->IRecv(mymat, count, 0, 1);
+      req[3] = gComm->IRecv(p, count, 0, 4);
 
-      particle pp = *(particle *)msgp.ReadObjectAny(gROOT->GetClass(typeid(particle)));
-      std::map<std::string, std::string> m = *(std::map<std::string, std::string> *)msgm.ReadObjectAny(gROOT->GetClass(typeid(std::map<std::string, std::string>)));
-      std::cout << m["key"] << std::endl;
-      assert(pp.x == 1);
-      assert(pp.y == 2);
-      assert(pp.z == 3);
-//
+      TRequest::WaitAll(4, req);
+      std::cout << "Received mat = ";
+      mymat[0].Print();
+
+      std::cout << "Received particle = " << Form("p.x = %d p.y = %d p.x = %d", p[0].x, p[0].y, p[0].z) << std::endl;
+
+      std::cout << "Received map = " << mymap[0]["key"] << std::endl;
+
+
+      TMatrixD req_mat(count, count);
+      req_mat[0][0] = 0.1;
+      req_mat[0][1] = 0.2;
+      req_mat[1][0] = 0.3;
+      req_mat[1][1] = 0.4;
+
+      for (auto i = 0; i < count; i++) {
+         //assertions
+         assert(mymat[i][0][0] == req_mat[0][0]);
+         assert(mymat[i][0][1] == req_mat[0][1]);
+         assert(mymat[i][1][0] == req_mat[1][0]);
+         assert(mymat[i][1][1] == req_mat[1][1]);
+         assert(mymap[i]["key"] == "hola");
+         assert(p[i].x == 1);
+         assert(p[i].y == 2);
+         assert(p[i].z == 3);
+      }
    }
-   /*
-      //Testing TMpiMessage
-      if (rank == 0) {
-         for (auto i = 0; i < count; i++) {
-            mymap[i]["key"] = "hola";
-            mymat[i].ResizeTo(count, count);
-            mymat[i][0][0] = 0.1;
-            mymat[i][0][1] = 0.2;
-            mymat[i][1][0] = 0.3;
-            mymat[i][1][1] = 0.4;
-            p[i].x = 1;
-            p[i].y = 2;
-            p[i].z = 3;
-            msgs[i].WriteObject(p);
-         }
-         std::cout << "Sending particle = " << Form("p.x = %d p.y = %d p.x = %d", p[0].x, p[0].y, p[0].z) << std::endl;
-         auto  req = gComm->ISend(p, count, 1, 4);
-         req.Wait();
-
-   //       req = gComm->ISend(msgs, count, 1, 3);
-   //       req.Wait();
-
-         std::cout << "Sending maps[\"key\"] = " << mymap[0]["key"] << std::endl;
-         req = gComm->ISsend(mymap, count, 1, 2);
-         req.Wait();
-
-         std::cout << "Sending mats = ";
-         mymat[0].Print();
-         req = gComm->IRsend(mymat, count, 1, 1);
-         req.Wait();
-
-      } else {
-         //you can Received the messages in other order(is nonblocking)
-         auto req = gComm->IRecv(mymap, count, 0, 3);
-         req.Complete();
-         req.Wait();
-         std::cout << "Received map = " << mymap[0]["key"] << std::endl;
-
-         req = gComm->IRecv(p, count, 0, 1);
-         req.Complete();
-         req.Wait();
-         std::cout << "Received particle = " << Form("p.x = %d p.y = %d p.x = %d", p[0].x, p[0].y, p[0].z) << std::endl;
-
-         req = gComm->IRecv(mymat, count, 0, 4);
-         req.Complete();
-         req.Wait();
-         std::cout << "Received mat = ";
-         mymat[0].Print();
-
-
-   //      req = gComm->IRecv(msgs, count, 0, 2);
-   //      req.Complete();
-   //      req.Wait();
-
-         TMatrixD req_mat(count, count);
-         req_mat[0][0] = 0.1;
-         req_mat[0][1] = 0.2;
-         req_mat[1][0] = 0.3;
-         req_mat[1][1] = 0.4;
-
-         for (auto i = 0; i < count; i++) {
-            //assertions
-   //          assert(mymat[i][0][0] == req_mat[0][0]);
-   //          assert(mymat[i][0][1] == req_mat[0][1]);
-   //          assert(mymat[i][1][0] == req_mat[1][0]);
-   //          assert(mymat[i][1][1] == req_mat[1][1]);
-   //          assert(mymap[i]["key"] == "hola");
-            assert(p[i].x == 1);
-            assert(p[i].y == 2);
-            assert(p[i].z == 3);
-         }
-      }*/
 }
 
 
@@ -219,6 +170,6 @@ void p2p_nonblocking()
 {
    TEnvironment env;          //environment to start communication system
 
-//    p2p_nonblocking_scalar();
+   p2p_nonblocking_scalar();
    p2p_nonblocking_array();
 }

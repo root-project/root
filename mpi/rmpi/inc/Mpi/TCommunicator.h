@@ -503,10 +503,14 @@ namespace ROOT {
       {
          TRequest req;
          if (std::is_class<Type>::value) {
-            TMpiMessage *msg = new TMpiMessage[count];
-            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
-            req = ISend(msg, count, dest, tag);
-            delete[] msg;
+            Char_t *buffer;
+            Int_t size;
+            Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
+            MPI_Isend(buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest);
+            req.fCallback = [buffer]()mutable { //use to clean memory after wait
+               if (buffer) delete buffer;
+               buffer = NULL;
+            };
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Isend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
@@ -525,10 +529,14 @@ namespace ROOT {
       {
          TRequest req;
          if (std::is_class<Type>::value) {
-            TMpiMessage *msg = new TMpiMessage[count];
-            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
-            req = ISsend(msg, count, dest, tag);
-            delete[] msg;
+            Char_t *buffer;
+            Int_t size;
+            Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
+            MPI_Issend(buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest);
+            req.fCallback = [buffer]()mutable { //use to clean memory after wait
+               if (buffer) delete buffer;
+               buffer = NULL;
+            };
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Issend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
@@ -547,10 +555,14 @@ namespace ROOT {
       {
          TRequest req;
          if (std::is_class<Type>::value) {
-            TMpiMessage *msg = new TMpiMessage[count];
-            for (auto i = 0; i < count; i++) msg[i].WriteObject(vars[i]);
-            req = IRsend(msg, count, dest, tag);
-            delete[] msg;
+            Char_t *buffer;
+            Int_t size;
+            Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
+            MPI_Irsend(buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest);
+            req.fCallback = [buffer]()mutable { //use to clean memory after wait
+               if (buffer) delete buffer;
+               buffer = NULL;
+            };
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Irsend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
@@ -568,18 +580,18 @@ namespace ROOT {
       {
          TRequest req;
          if (std::is_class<Type>::value) {
+            Int_t size;
+            TStatus s;
+            while (!IProbe(source, tag, s)) {
+               gSystem->Sleep(100);
+            }
+            MPI_Get_elements(&s.fStatus, MPI_CHAR, &size);
 
-            TMpiMessage *msgs = new TMpiMessage[count];
-            auto ireq = IRecv(msgs, count, source, tag);
-            req.fRequest = ireq.fRequest;
-//                req.fUnserialize = []{
-//                     ireq.fUnserialize();
-//                     for (auto i = 0; i < count; i++)
-//                     {
-//                         auto obj_tmp = msgs[i].ReadObjectAny(gROOT->GetClass(typeid(Type)));
-//                         memmove((void *)&vars[i], obj_tmp, sizeof(Type));
-//                     }
-//                };
+            Char_t *buffer = new Char_t[size];
+            MPI_Irecv(buffer, size, MPI_CHAR, source, tag, fComm, &req.fRequest);
+
+            req.fCallback = std::bind(Unserialize<Type>, buffer, size, vars, count, this, GetRank(), source, tag, 0);
+
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Irecv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, &req.fRequest);
@@ -804,24 +816,6 @@ namespace ROOT {
       //______________________________________________________________________________
       template<> void TCommunicator::Recv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const;
 
-      //////////////////////////////////////////////
-      //specialized template methods p2p nonblocking
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::ISend<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag);
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::ISsend<TMpiMessage>(const TMpiMessage *vars, Int_t count, Int_t dest, Int_t tag);
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  &var, Int_t dest, Int_t tag);
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::IRsend<TMpiMessage>(const TMpiMessage  *vars, Int_t count, Int_t dest, Int_t tag);
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage  &var, Int_t source, Int_t tag) const;
-      //______________________________________________________________________________
-      template<> TRequest TCommunicator::IRecv<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t source, Int_t tag) const;
 
       //////////////////////////////////////////////
       //specialized template methods collective

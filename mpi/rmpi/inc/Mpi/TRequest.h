@@ -18,7 +18,7 @@ namespace ROOT {
          friend class TGrequest;
          friend class TPrequest;
       protected:
-         std::function<void(void)> fUnserialize; //function to unserialize object at wait or test
+         std::function<void(void)> fCallback; //function use to unserialize objects at wait or test of clear memory
          MPI_Request fRequest;
       public:
          TRequest();
