@@ -199,6 +199,28 @@ void CheckFilter(Filter&)
 
 void CheckTmpBranch(const std::string& branchName, TTree *treePtr);
 
+///////////////////////////////////////////////////////////////////////////////
+/// Check that the callable passed to TDataFrameInterface::Reduce:
+/// - takes exactly two arguments of the same type
+/// - has a return value of the same type as the arguments
+template<typename F, typename T>
+void CheckReduce(F&, Internal::TDFTraitsUtils::TTypeList<T,T>)
+{
+   using Ret_t = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
+   static_assert(std::is_same<Ret_t, T>::value,
+      "reduce function must have return type equal to argument type");
+   return;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overload of CheckReduce is called if T is not a TTypeList<T,T>
+template<typename F, typename T>
+void CheckReduce(F&, T)
+{
+   static_assert(sizeof(F) == 0,
+      "reduce function must take exactly two arguments of the same type");
+}
+
 /// Returns local BranchNames or default BranchNames according to which one should be used
 const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, const BranchNames &defBl);
 
@@ -457,6 +479,58 @@ public:
       using DFA_t  = ROOT::Internal::TDataFrameAction<decltype(f), Proxied>;
       df->Book(std::make_shared<DFA_t>(std::move(f), actualBl, fProxiedPtr));
       df->Run();
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined reduce operation on the values of a branch
+   /// \tparam F The type of the reduce callable. Automatically deduced.
+   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \param[in] f A callable with signature `T(T,T)`
+   /// \param[in] branchName The branch to be reduced. If omitted, the default branch is used instead.
+   ///
+   /// A reduction takes two values of a branch and merges them into one (e.g.
+   /// by summing them, taking the maximum, etc). This action performs the
+   /// specified reduction operation on all branch values, returning
+   /// a single value of the same type. The callable f must satisfy the general
+   /// requirements of a *processing function* besides having signature `T(T,T)`
+   /// where `T` is the type of branch.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TActionResultPtr documentation.
+   template<typename F, typename T = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
+   TActionResultProxy<T>
+   Reduce(F f, const std::string& branchName = {})
+   {
+      static_assert(std::is_default_constructible<T>::value,
+         "reduce object cannot be default-constructed. Please provide an initialisation value (initValue)");
+      return Reduce(std::move(f), branchName, T());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined reduce operation on the values of a branch
+   /// \tparam F The type of the reduce callable. Automatically deduced.
+   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \param[in] f A callable with signature `T(T,T)`
+   /// \param[in] branchName The branch to be reduced. If omitted, the default branch is used instead.
+   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
+   ///
+   /// See the description of the other Reduce overload for more information.
+   template<typename F, typename T = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
+   TActionResultProxy<T>
+   Reduce(F f, const std::string& branchName, const T& initValue)
+   {
+      using Args_t = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
+      Internal::CheckReduce(f, Args_t());
+      auto df = GetDataFrameChecked();
+      unsigned int nSlots = df->GetNSlots();
+      auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
+      auto redObjPtr = std::make_shared<T>(initValue);
+      auto redObj = df->MakeActionResultProxy(redObjPtr);
+      auto redOp = std::make_shared<ROOT::Internal::Operations::ReduceOperation<F,T>>(std::move(f), redObjPtr.get(), nSlots);
+      auto redAction = [redOp] (unsigned int slot, const T& v) mutable { redOp->Exec(v, slot); };
+      using DFA_t = typename Internal::TDataFrameAction<decltype(redAction), Proxied>;
+      df->Book(std::make_shared<DFA_t>(std::move(redAction), bl, fProxiedPtr));
+      return redObj;
    }
 
    ////////////////////////////////////////////////////////////////////////////

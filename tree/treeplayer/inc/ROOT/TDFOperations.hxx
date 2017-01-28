@@ -292,6 +292,33 @@ public:
    }
 };
 
+template<typename F, typename T>
+class ReduceOperation {
+   F fReduceFun;
+   T* fReduceRes;
+   std::vector<T> fReduceObjs;
+public:
+   ReduceOperation(F&& f, T* reduceRes, unsigned int nSlots) : fReduceFun(f),
+      fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
+   { }
+
+   void Exec(const T& value, unsigned int slot)
+   {
+      fReduceObjs[slot] = fReduceFun(fReduceObjs[slot], value);
+   }
+
+   void Finalize()
+   {
+      for (auto& t : fReduceObjs)
+         *fReduceRes = fReduceFun(*fReduceRes, t);
+   }
+
+   ~ReduceOperation()
+   {
+      Finalize();
+   }
+};
+
 class MinOperation {
    double *fResultMin;
    std::vector<double> fMins;
