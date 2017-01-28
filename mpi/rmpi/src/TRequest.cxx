@@ -60,7 +60,7 @@ void TRequest::Wait(TStatus &status)
    try {
       fUnserialize();
    } catch (const std::exception &e) {
-      std::cerr << "Error = " << e.what() << std::endl;
+      Error(__FUNCTION__, "Exception %s", e.what());
    }
 }
 
@@ -72,7 +72,7 @@ void TRequest::Wait()
    try {
       fUnserialize();
    } catch (const std::exception &e) {
-      std::cerr << "Error = " << e.what() << std::endl;
+      Error(__FUNCTION__, "Exception %s", e.what());
    }
 }
 

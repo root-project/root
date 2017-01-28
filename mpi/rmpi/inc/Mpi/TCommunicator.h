@@ -356,6 +356,78 @@ namespace ROOT {
       };
 
       //______________________________________________________________________________
+      template<class T> void Serialize(Char_t **buffer, Int_t &size, const T *vars, Int_t count, const TCommunicator *comm, Int_t dest = 0, Int_t source = 0, Int_t tag = 0, Int_t root = 0)
+      {
+         std::vector<TMpiMessageInfo> msgis(count);
+         for (auto i = 0; i < count; i++) {
+            TMpiMessage msg;
+            msg.WriteObject(vars[i]);
+            auto mbuffer = msg.Buffer();
+            auto msize   = msg.BufferSize();
+            if (mbuffer == NULL) {
+               comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(T));
+               comm->Abort(ERR_BUFFER);
+            }
+            TMpiMessageInfo msgi(mbuffer, msize);
+            msgi.SetSource(comm->GetRank());
+            msgi.SetDestination(dest);
+            msgi.SetSource(source);
+            msgi.SetRoot(root);
+            msgi.SetTag(tag);
+            msgi.SetDataTypeName(ROOT_MPI_TYPE_NAME(T));
+            msgis[i] = msgi;
+         }
+         TMpiMessage msg;
+         msg.WriteObject(msgis);
+         auto ibuffer = msg.Buffer();
+         size = msg.BufferSize();
+         *buffer = new Char_t[size];
+         if (ibuffer == NULL) {
+            comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(msgis));
+            comm->Abort(ERR_BUFFER);
+         }
+         memcpy(*buffer, ibuffer, size);
+      }
+
+      //______________________________________________________________________________
+      template<class T> void Unserialize(Char_t *ibuffer, Int_t isize, T *vars, Int_t count, const TCommunicator *comm, Int_t dest = 0, Int_t source = 0, Int_t tag = 0, Int_t root = 0)
+      {
+         TMpiMessage msg(ibuffer, isize);
+         auto cl = gROOT->GetClass(typeid(std::vector<TMpiMessageInfo>));
+         auto msgis = (std::vector<TMpiMessageInfo> *)msg.ReadObjectAny(cl);
+         if (msgis == NULL) {
+            comm->Error(__FUNCTION__, "Error unserializing object type %s \n", cl->GetName());
+            comm->Abort(ERR_BUFFER);
+         }
+
+         if (msgis->data()->GetDataTypeName() != ROOT_MPI_TYPE_NAME(T)) {
+            comm->Error(__FUNCTION__, "Error unserializing objects type %s where objects are %s \n", ROOT_MPI_TYPE_NAME(T), msgis->data()->GetDataTypeName().Data());
+            comm->Abort(ERR_TYPE);
+         }
+
+         ROOT_MPI_ASSERT(msgis->data()->GetDestination() == dest, comm)
+         ROOT_MPI_ASSERT(msgis->data()->GetSource() == source, comm)
+         ROOT_MPI_ASSERT(msgis->data()->GetRoot() == root, comm)
+         ROOT_MPI_ASSERT(msgis->data()->GetTag() == tag, comm)
+
+         for (auto i = 0; i < count; i++) {
+            //passing information from TMpiMessageInfo to TMpiMessage
+            auto size = msgis->data()[i].GetBufferSize();
+            Char_t *buffer = new Char_t[size];//this memory dies when the unserialized object dies
+            memcpy(buffer, msgis->data()[i].GetBuffer(), size);
+            TMpiMessage vmsg(buffer, size);
+            auto vcl = gROOT->GetClass(typeid(T));
+            auto vobj_tmp = vmsg.ReadObjectAny(vcl);
+            if (vobj_tmp == NULL) {
+               comm->Error(__FUNCTION__, "Error unserializing objects type %s \n", vcl->GetName());
+               comm->Abort(ERR_BUFFER);
+            }
+            memmove((void *)&vars[i], vobj_tmp, sizeof(T));
+         }
+      }
+
+
+      //______________________________________________________________________________
       template<class Type> void TCommunicator::Send(const Type &var, Int_t dest, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
@@ -759,6 +831,8 @@ namespace ROOT {
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t root) const;
       //______________________________________________________________________________
       template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
+
+
 
    }
 }

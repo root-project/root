@@ -15,6 +15,7 @@ function(ROOT_ADD_TEST_MPI name nprocs)
   ROOT_ADD_TEST("test-rootmpi-${name}" COMMAND ${ROOTMPIEXEC} ${test_parameters})
 endfunction(ROOT_ADD_TEST_MPI)
 
+ROOT_ADD_TEST_MPI(serialization 2)
 ROOT_ADD_TEST_MPI(p2p 2)
 ROOT_ADD_TEST_MPI(p2p_nonblocking 2)
 ROOT_ADD_TEST_MPI(bcast 4)

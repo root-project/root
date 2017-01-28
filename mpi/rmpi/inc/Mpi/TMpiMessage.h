@@ -19,6 +19,7 @@ namespace ROOT {
          Int_t  fSource;                //Rank(Process ID) of origin of this message
          Int_t  fDestination;           //Rank(Process ID) of destination of this message
          Int_t  fTag;                   //Id of the message
+         Int_t  fRoot;                  //Id for collective message
       public:
          TMpiMessageInfo(const TMpiMessageInfo &msgi);
 
@@ -33,13 +34,20 @@ namespace ROOT {
          {
             fSource = src;
          }
+
          inline void SetDestination(Int_t dest)
          {
             fDestination = dest;
          }
+
          inline void SetTag(Int_t tag)
          {
             fTag = tag;
+         }
+
+         inline void SetRoot(Int_t root)
+         {
+            fRoot = root;
          }
 
          inline TString GetDataTypeName()
@@ -52,24 +60,31 @@ namespace ROOT {
             return  fBuffer.Data();
          }
 
-         inline UInt_t GetBufferSize()
+         inline Int_t GetBufferSize()
          {
             return  fBuffer.Length();
          }
 
 
-         inline UInt_t GetSource()
+         inline Int_t GetSource()
          {
             return fSource;
          }
-         inline UInt_t GetDestination()
+         inline Int_t GetDestination()
          {
             return fDestination;
          }
-         inline UInt_t GetTag()
+
+         inline Int_t GetTag()
          {
             return fTag;
          }
+
+         inline Int_t GetRoot()
+         {
+            return fRoot;
+         }
+
          ClassDef(TMpiMessageInfo, 1)
       };
 
@@ -119,7 +134,6 @@ namespace ROOT {
          UInt_t fSizeof;
          TClass *fClass;
       };
-
    }
 }
 

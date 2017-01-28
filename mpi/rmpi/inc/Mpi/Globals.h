@@ -22,6 +22,14 @@
 #include<TClassEdit.h>
 #endif
 
+#ifndef ROOT_TROOT
+#include<TROOT.h>
+#endif
+
+#ifndef ROOT_TSystem
+#include<TSystem.h>
+#endif
+
 #ifndef ROOT_Mpi_TOp
 #include<Mpi/TOp.h>
 #endif
@@ -45,6 +53,23 @@ static const int SEEK_CUR = rmpi_stdio_seek_cur;
 static const int SEEK_END = rmpi_stdio_seek_end;
 #undef RMPI_SEEK
 #endif
+
+#define ROOT_MPI_TYPE_NAME(T) gROOT->GetClass(typeid(T))->GetName()
+
+#define ROOT_MPI_ASSERT(EXPRESSION,comm)\
+   if(!(EXPRESSION)){\
+      comm->Error(__FUNCTION__,"Assertion %s ",#EXPRESSION);\
+      comm->Abort(ERR_UNKNOWN);\
+   }
+
+#define ROOT_MPI_CHECK_DATATYPE(T)\
+   if (GetDataType<T>() == DATATYPE_NONE) {\
+      int err;\
+      Error(__FUNCTION__,"Unknown datatype, returned null datatype   GetDataType<%s>()",TClassEdit::DemangleName(typeid(T).name(),err));\
+      Abort(ERR_TYPE);\
+   }
+
+
 namespace ROOT {
    namespace Mpi {
 
@@ -193,15 +218,9 @@ namespace ROOT {
          if (typeid(T) == typeid(wchar_t)) return MPI_WCHAR;
 
          //TODO: better error control here if type is not supported
-         Warning("GetDataType", "Unknown datatype, returning null datatype");
+         Warning("GetDataType", "Unknown raw datatype <%s>, returning null datatype", ROOT_MPI_TYPE_NAME(T));
          return DATATYPE_NONE;
       }
-#define ROOT_MPI_CHECK_DATATYPE(T)\
-   if (GetDataType<T>() == DATATYPE_NONE) {\
-      int err;\
-      Error(__FUNCTION__,"Unknown datatype, returned null datatype   GetDataType<%s>()",TClassEdit::DemangleName(typeid(T).name(),err));\
-      Abort(ERR_TYPE);\
-   }
 
 
    }
