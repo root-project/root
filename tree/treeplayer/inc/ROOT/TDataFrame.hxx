@@ -73,10 +73,10 @@ class TActionResultProxy {
    };
 
    using SPT_t = std::shared_ptr<T> ;
-   using SPTDFI_t = std::shared_ptr<Detail::TDataFrameImpl>;
-   using WPTDFI_t = std::weak_ptr<Detail::TDataFrameImpl>;
+   using SPTDFI_t = std::shared_ptr<ROOT::Detail::TDataFrameImpl>;
+   using WPTDFI_t = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
-   friend class Detail::TDataFrameImpl;
+   friend class ROOT::Detail::TDataFrameImpl;
 
    ShrdPtrBool_t fReadiness = std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
    WPTDFI_t fFirstData;                                      ///< Original TDataFrame
@@ -334,7 +334,7 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F>
-   TDataFrameInterface<Detail::TDataFrameFilter<F, Proxied>> Filter(F f, const BranchNames &bl = {})
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilter<F, Proxied>> Filter(F f, const BranchNames &bl = {})
    {
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
