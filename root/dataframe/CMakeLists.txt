@@ -63,4 +63,10 @@ ROOTTEST_ADD_TEST(foreach
                   OUTREF test_foreach.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
+ROOTTEST_GENERATE_EXECUTABLE(reports test_reports.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(reports
+                  EXEC reports
+                  OUTREF test_reports.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 endif()

@@ -1,0 +1,10 @@
+Info in <TDataFrame::Report>: Warning: the event-loop has not been run yet, all reports are empty
+stnoop    : pass=100000     all=100000     --  100.000 %
+stf       : pass=94999      all=100000     --   94.999 %
+Info in <TDataFrame::Report>: Warning: the event-loop has not been run yet, all reports are empty
+mtf       : pass=100        all=100000     --    0.100 %
+mtnoop    : pass=100        all=100        --  100.000 %
+mtf       : pass=0          all=0          --    0.000 %
+mtnoop    : pass=0          all=0          --    0.000 %
+mtf2      : pass=94999      all=100000     --   94.999 %
+mtf2      : pass=94999      all=100000     --   94.999 %
