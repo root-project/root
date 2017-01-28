@@ -586,42 +586,28 @@ namespace ROOT {
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Bcast(Type &var, Int_t root) const
       {
-         if (std::is_class<Type>::value) {
-            TMpiMessage msg;
-            if (GetRank() == root) {
-               msg.WriteObject(var);
-            }
-            Bcast(msg, root);
-
-            if (GetRank() != root) {
-               auto cl = gROOT->GetClass(typeid(var));
-               auto obj_tmp = (Type *)msg.ReadObjectAny(cl);
-               memcpy((void *)&var, (void *)obj_tmp, sizeof(Type));
-            }
-
-         } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Bcast((void *)&var, 1, GetDataType<Type>(), root, fComm);
-         }
+         Bcast(&var, 1, root);
       }
 
       //______________________________________________________________________________
       template<class Type> void TCommunicator::Bcast(Type *vars, Int_t count, Int_t root) const
       {
          if (std::is_class<Type>::value) {
-            TMpiMessage *msgs = new TMpiMessage[count];
-            if (GetRank() == root) {
-               for (auto i = 0; i < count; i++) {
-                  msgs[i].WriteObject(vars[i]);
-               }
+            Int_t size;
+            Char_t *buffer;
+
+            if (GetRank() == root) Serialize(&buffer, size, vars, count, this, 0, 0, 0, root);
+
+            Bcast(size, root);
+
+            if (GetRank() != root) {
+               buffer = new Char_t[size];
             }
-            Bcast<TMpiMessage>(msgs, count, root);
-            auto cl = gROOT->GetClass(typeid(Type));
-            for (auto i = 0; i < count; i++) {
-               auto obj_tmp = (Type *)msgs[i].ReadObjectAny(cl);
-               memcpy((void *)&vars[i], (void *)obj_tmp, sizeof(Type));
-            }
-            delete[] msgs;
+
+            Bcast(buffer, size, root);
+
+            Unserialize(buffer, size, vars, count, this, 0, 0, 0, root);
+
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Bcast((void *)vars, count, GetDataType<Type>(), root, fComm);
@@ -788,8 +774,6 @@ namespace ROOT {
          if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, MPI_TAG_UB);
       }
 
-      //////////////////////////////////////////////
-      //specialized template methods collective
       //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
       //______________________________________________________________________________

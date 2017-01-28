@@ -68,84 +68,6 @@ void TCommunicator::Probe(Int_t source, Int_t tag) const
    MPI_Status stat;
    MPI_Probe(source, tag, fComm, &stat);
 }
-//______________________________________________________________________________
-template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const
-{
-   Char_t *ibuffer = nullptr ;
-   UInt_t isize = 0;
-
-   if (GetRank() == root) {
-      auto buffer = var.Buffer();
-      auto size   = var.BufferSize();
-      TMpiMessageInfo msgi(buffer, size);
-      msgi.SetSource(GetRank());
-      msgi.SetDestination(-1);
-      msgi.SetTag(root);
-      msgi.SetDataTypeName(var.GetDataTypeName());
-
-      TMpiMessage msg;
-      msg.WriteObject(msgi);
-      isize = msg.BufferSize();
-      ibuffer = new Char_t[isize];
-      memcpy(ibuffer, msg.Buffer(), isize);
-   }
-
-   MPI_Bcast((void *)&isize, 1, MPI_INT, root, fComm);
-
-   if (GetRank() != root) {
-      ibuffer = new Char_t[isize];
-   }
-   MPI_Bcast((void *)ibuffer, isize, MPI_CHAR, root, fComm);
-
-   TMpiMessageInfo msgi;
-
-   TMpiMessage msgr(ibuffer, isize);
-   auto cl = gROOT->GetClass(typeid(msgi));
-   auto obj_tmp = (TMpiMessageInfo *)msgr.ReadObjectAny(cl);
-   memcpy((void *)&msgi, (void *)obj_tmp, sizeof(TMpiMessageInfo));
-
-   //TODO: added error control here
-   //check the tag, if destination is equal etc..
-
-   //passing information from TMpiMessageInfo to TMpiMessage
-   auto size = msgi.GetBufferSize();
-   Char_t *buffer = new Char_t[size];
-   memcpy(buffer, msgi.GetBuffer(), size);
-
-   var.SetBuffer((void *)buffer, size, kFALSE);
-   var.SetReadMode();
-   var.Reset();
-
-}
-
-template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t root) const
-{
-   std::vector<TMpiMessageInfo>  msgis(count);
-   if (GetRank() == root) {
-      for (auto i = 0; i < count; i++) {
-         auto buffer = vars[i].Buffer();
-         auto size   = vars[i].BufferSize();
-         TMpiMessageInfo msgi(buffer, size);
-         msgi.SetSource(GetRank());
-         msgi.SetDestination(ANY_TAG);
-         msgi.SetDataTypeName(vars[i].GetDataTypeName());
-         msgis[i] = msgi;
-      }
-   }
-
-   Bcast(msgis, root);
-
-   for (auto i = 0; i < count; i++) {
-      //passing information from TMpiMessageInfo to TMpiMessage
-      auto size = msgis[i].GetBufferSize();
-      Char_t *buffer = new Char_t[size];
-      memcpy(buffer, msgis[i].GetBuffer(), size);
-
-      vars[i].SetBuffer((void *)buffer, size, kFALSE);
-      vars[i].SetReadMode();
-      vars[i].Reset();
-   }
-}
 
 //______________________________________________________________________________
 template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const
@@ -288,3 +210,86 @@ template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t 
    return  TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
 }
 
+//______________________________________________________________________________
+template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const
+{
+   Char_t *ibuffer = nullptr ;
+   UInt_t isize = 0;
+
+   if (GetRank() == root) {
+      auto buffer = var.Buffer();
+      auto size   = var.BufferSize();
+      TMpiMessageInfo msgi(buffer, size);
+      msgi.SetRoot(root);
+      msgi.SetDataTypeName(ROOT_MPI_TYPE_NAME(var));
+
+      TMpiMessage msg;
+      msg.WriteObject(msgi);
+      isize = msg.BufferSize();
+      ibuffer = new Char_t[isize];
+      memcpy(ibuffer, msg.Buffer(), isize);
+   }
+
+   MPI_Bcast((void *)&isize, 1, MPI_INT, root, fComm);
+
+   if (GetRank() != root) {
+      ibuffer = new Char_t[isize];
+   }
+   MPI_Bcast((void *)ibuffer, isize, MPI_CHAR, root, fComm);
+
+   TMpiMessageInfo msgi;
+
+   TMpiMessage msgr(ibuffer, isize);
+   auto cl = gROOT->GetClass(typeid(msgi));
+   auto obj_tmp = (TMpiMessageInfo *)msgr.ReadObjectAny(cl);
+   if (obj_tmp == NULL) {
+      Error(__FUNCTION__, "Error unserializing object type %s \n", cl->GetName());
+      Abort(ERR_BUFFER);
+   }
+   memcpy((void *)&msgi, (void *)obj_tmp, sizeof(TMpiMessageInfo));
+   if (msgi.GetDataTypeName() != ROOT_MPI_TYPE_NAME(TMpiMessage)) {
+      Error(__FUNCTION__, "Error unserializing objects type %s where objects are %s \n", ROOT_MPI_TYPE_NAME(TMpiMessage), msgi.GetDataTypeName().Data());
+      Abort(ERR_TYPE);
+   }
+
+   ROOT_MPI_ASSERT(msgi.GetRoot() == root, this)
+
+   //passing information from TMpiMessageInfo to TMpiMessage
+   auto size = msgi.GetBufferSize();
+   Char_t *buffer = new Char_t[size];
+   memcpy(buffer, msgi.GetBuffer(), size);
+
+   var.SetBuffer((void *)buffer, size, kFALSE);
+   var.SetReadMode();
+   var.Reset();
+}
+
+//______________________________________________________________________________
+template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t root) const
+{
+   std::vector<TMpiMessageInfo>  msgis(count);
+   if (GetRank() == root) {
+      for (auto i = 0; i < count; i++) {
+         auto buffer = vars[i].Buffer();
+         auto size   = vars[i].BufferSize();
+         TMpiMessageInfo msgi(buffer, size);
+         msgi.SetSource(GetRank());
+         msgi.SetDestination(ANY_TAG);
+         msgi.SetDataTypeName(vars[i].GetDataTypeName());
+         msgis[i] = msgi;
+      }
+   }
+
+   Bcast(msgis, root);
+
+   for (auto i = 0; i < count; i++) {
+      //passing information from TMpiMessageInfo to TMpiMessage
+      auto size = msgis[i].GetBufferSize();
+      Char_t *buffer = new Char_t[size];
+      memcpy(buffer, msgis[i].GetBuffer(), size);
+
+      vars[i].SetBuffer((void *)buffer, size, kFALSE);
+      vars[i].SetReadMode();
+      vars[i].Reset();
+   }
+}
