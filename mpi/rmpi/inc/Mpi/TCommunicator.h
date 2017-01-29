@@ -755,6 +755,12 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      template<> void Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root);
+
+      //______________________________________________________________________________
+      template<> void Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest , Int_t source , Int_t tag , Int_t root);
+
+      //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
       //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t root) const;

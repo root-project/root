@@ -16,6 +16,7 @@ void serialization(Bool_t stressTest = kTRUE)
 
    std::map<std::string, std::string> smap[count]; //std oebjct
    TMatrixD smat[count];                           //ROOT object
+   TMpiMessage msgs[count];
 
    for (auto i = 0; i < count; i++) {
       smap[i]["key"] = "hola";
@@ -24,6 +25,7 @@ void serialization(Bool_t stressTest = kTRUE)
       smat[i][0][1] = 0.2;
       smat[i][1][0] = 0.3;
       smat[i][1][1] = 0.4;
+      msgs[i].WriteObject(smat[0]);
    }
    Char_t *buffer;
    Int_t size;
@@ -39,11 +41,25 @@ void serialization(Bool_t stressTest = kTRUE)
       assert(umat[i][1][1] == smat[i][1][1]);
    }
 
+   ///
    Serialize(&buffer, size, smap, count, &comm, dest, source, tag, root);
    std::map<std::string, std::string> umap[count]; //std oebjct
    Unserialize(buffer, size, umap, count, &comm, dest, source, tag, root);//
    for (auto i = 0; i < count; i++) {
       assert(umap[i]["key"] == smap[i]["key"]);
+   }
+
+   ///
+   Serialize(&buffer, size, msgs, count, &comm, dest, source, tag, root);
+   TMpiMessage umsgs[count]; //std oebjct
+   Unserialize(buffer, size, umsgs, count, &comm, dest, source, tag, root);//
+   for (auto i = 0; i < count; i++) {
+      auto mat = (TMatrixD *)umsgs[i].ReadObjectAny(gROOT->GetClass(typeid(TMatrixD)));
+      if (mat == NULL) comm.Abort(ERR_BUFFER);
+      assert((*mat)[0][0] == smat[i][0][0]);
+      assert((*mat)[0][1] == smat[i][0][1]);
+      assert((*mat)[1][0] == smat[i][1][0]);
+      assert((*mat)[1][1] == smat[i][1][1]);
    }
 
 }
