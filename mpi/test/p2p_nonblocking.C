@@ -152,6 +152,8 @@ void p2p_nonblocking_array(Int_t count = 2)
       req_mat[1][1] = 0.4;
 
       for (auto i = 0; i < count; i++) {
+//          particle &pp= *(particle*)msgs[i].ReadObjectAny(gROOT->GetClass(typeid(particle)));
+
          //assertions
          assert(mymat[i][0][0] == req_mat[0][0]);
          assert(mymat[i][0][1] == req_mat[0][1]);

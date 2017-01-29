@@ -1,25 +1,20 @@
 #include<Mpi.h>
 #include<TMatrixD.h>
-#include <cassert>
+#include<cassert>
 #include"particle.h"
-
 using namespace ROOT::Mpi;
 
-void ibcast()
+void bcast_test_scalar(Int_t root = 0, Int_t size = 2)
 {
-   TEnvironment env;
-
-   if (gComm->GetSize() == 1) return; //needed at least 2 process
 
    auto rank = gComm->GetRank();
-   auto root = gComm->GetMainProcess();
-
+   TRequest req[2];
    //////////////////////////
    //testing TMpiMessage  //
    /////////////////////////
    TMpiMessage msg;
-   if (gComm->IsMainProcess()) {
-      TMatrixD mymat(2, 2);                    //ROOT object
+   if (rank == root) {
+      TMatrixD mymat(size, size);                    //ROOT object
       mymat[0][0] = 0.1;
       mymat[0][1] = 0.2;
       mymat[1][0] = 0.3;
@@ -27,36 +22,80 @@ void ibcast()
       msg.WriteObject(mymat);
    }
 
-   auto req = gComm->IBcast(msg, root); //testing TMpiMessage
-   req.Complete();
-   req.Wait();
-   auto mat = (TMatrixD *)msg.ReadObjectAny(TMatrixD::Class());
+   req[0] = gComm->IBcast(msg, root); //testing TMpiMessage
+   req[0].Wait();
+//    auto mat = (TMatrixD *)msg.ReadObjectAny(TMatrixD::Class());
 
    std::cout << "Rank = " << rank << std::endl;
    //mat->Print();
    std::cout.flush();
-   TMatrixD req_mat(2, 2);
+   TMatrixD req_mat(size, size);
    req_mat[0][0] = 0.1;
    req_mat[0][1] = 0.2;
    req_mat[1][0] = 0.3;
    req_mat[1][1] = 0.4;
 
+
+
    /////////////////////////
    //testing custom object//
    /////////////////////////
    Particle<Int_t> p;
-   if (gComm->IsMainProcess()) {
+   if (rank == root) {
       p.Set(1, 2);//if root process fill the particle
    }
-   req = gComm->IBcast(p, root); //testing custom object
-   req.Complete();
-   req.Wait();
+   req[1] = gComm->IBcast(p, root); //testing custom object
+   req[1].Wait();
    //p.Print();
 
    //assertions
-   assert(*mat == req_mat);
+//    assert((*mat)[0][0] == req_mat[0][0]);
+//    assert((*mat)[0][1] == req_mat[0][1]);
+//    assert((*mat)[1][0] == req_mat[1][0]);
+//    assert((*mat)[1][1] == req_mat[1][1]);
    assert(p.GetX() == 1);
    assert(p.GetY() == 2);
 }
 
+void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
+{
+   TRequest req[2];
+   auto rank = gComm->GetRank();
+   TVectorD vecs[count];
+   Int_t arr[count];
+   if (root == rank) {
+      for (auto i = 0; i < count; i++) {
+         vecs[i].ResizeTo(count);
+         vecs[i][0] = 1.0;
+         arr[i] = i;
+      }
+   }
+   req[0] = gComm->IBcast(vecs, count, root);
+   req[1] = gComm->IBcast(arr, count, root);
+   TRequest::WaitAll(2, req);
+   for (auto i = 0; i < count; i++) {
+      vecs[i].Print();
+      assert(vecs[i][0] == 1.0);
+      assert(arr[i] == i);
+
+   }
+}
+
+
+// void bcast(Bool_t stressTest = kTRUE)
+void ibcast(Bool_t stressTest = kFALSE)
+{
+   TEnvironment env;
+   if (gComm->GetSize() == 1) return; //needed at least 2 process
+   bcast_test_scalar();
+   if (!stressTest) {
+      bcast_test_scalar();
+      bcast_test_array();
+   } else {
+      //stressTest
+      for (auto i = 0; i < gComm->GetSize(); i++)
+         for (auto j = 1; j < gComm->GetSize() + 1; j++) //count can not be zero
+            bcast_test_scalar(i, j * 100);
+   }
+}
 

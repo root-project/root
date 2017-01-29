@@ -19,7 +19,7 @@ namespace ROOT {
          friend class TPrequest;
       protected:
          std::function<void(void)> fCallback; //function use to unserialize objects at wait or test of clear memory
-         MPI_Request fRequest;
+         MPI_Request fRequest;                //
       public:
          TRequest();
          TRequest(const TRequest &obj);

@@ -234,7 +234,7 @@ namespace ROOT {
           *              \param root id of the main message where message was sent
           *              \return TGrequest obj
           */
-         template<class Type> TGrequest IBcast(Type &var, Int_t root) const;
+         template<class Type> TRequest IBcast(Type &var, Int_t root) const;
 
          /**
           *          Sends data from one task to all tasks in a group.
@@ -333,6 +333,15 @@ namespace ROOT {
           *              \return TGrequest object.
           */
          template<class Type> TRequest IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
+
+         /**
+          *          Broadcasts a message from the process with rank root to all other processes of the group.
+          *              \param vars any selializable object reference to send/receive the message
+          *              \param count number of elements in array \p vars
+          *              \param root id of the main message where message was sent
+          *              \return TGrequest obj
+          */
+         template<class Type> TRequest IBcast(Type *vars, Int_t count, Int_t root) const;
 
          /**
           *          Broadcasts a message from the process with rank root to all other processes of the group.
@@ -616,67 +625,38 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
-      template<class Type> TGrequest TCommunicator::IBcast(Type &var, Int_t root) const
+      template<class Type> TRequest TCommunicator::IBcast(Type *vars, Int_t count, Int_t root) const
       {
-         TGrequest req;
+         //NOTE: may is good idea to consider to implement tree broadcast algorithm,
+         //because I am sending just one integer with the size firts
+         TRequest req;
          if (std::is_class<Type>::value) {
+            TRequest prereq;
+            Int_t size;
+            Char_t *buffer;
 
-            IMsg *_imsg = new IMsg;
-            _imsg->fVar = &var;
-            _imsg->fCommunicator = this;
-            _imsg->fRoot = root;
-            _imsg->fSizeof = sizeof(Type);
-            _imsg->fClass = gROOT->GetClass(typeid(var));
+            if (GetRank() == root) {
+               Serialize(&buffer, size, vars, count, this, 0, 0, 0, root);
+            }
 
-            //query lambda function
-            auto query_fn = [](void *extra_state, TStatus & status)->Int_t {
-               if (status.IsCancelled())
-               {
-                  return MPI_ERR_IN_STATUS;
-               }
-               IMsg  *imsg = (IMsg *)extra_state;
+            prereq = IBcast(size, root);
+            prereq.Wait();
 
-               if (imsg->fCommunicator->GetRank() == imsg->fRoot)
-               {
-                  TMpiMessage msg;
-                  msg.WriteObjectAny(imsg->fVar, imsg->fClass);
-                  TGrequest rreq = imsg->fCommunicator->IBcast(msg, imsg->fRoot);
-                  rreq.Complete();
-                  rreq.Wait();
-                  return MPI_SUCCESS;
-               }
+            if (GetRank() != root) buffer = new Char_t[size];
+            req = IBcast(buffer, size, root);
+            req.fCallback = std::bind(Unserialize<Type>, buffer, size, vars, count, this, 0, 0, 0, root);
 
-               TMpiMessage msg;
-               auto _req = imsg->fCommunicator->IBcast(msg, imsg->fRoot);
-               _req.Complete();
-               _req.Wait();
-               auto obj_tmp = msg.ReadObjectAny(imsg->fClass);
-               memcpy(imsg->fVar, obj_tmp, imsg->fSizeof);
-               return MPI_SUCCESS;
-            };
-            //free function
-            auto free_fn = [](void *extra_state)->Int_t {
-               IMsg *obj = (IMsg *)extra_state;
-               if (obj) delete obj;
-               return MPI_SUCCESS;
-            };
-            //cancel lambda function
-            auto cancel_fn = [](void *extra_state, Bool_t complete)->Int_t {
-               if (!complete)
-               {
-                  IMsg  *imsg = (IMsg *)extra_state;
-                  TMpiMessage msg;
-                  TGrequest _req = imsg->fCommunicator->IBcast<TMpiMessage>(msg, imsg->fRoot);
-                  _req.Cancel();
-               }
-               return MPI_SUCCESS;
-            };
-            return TGrequest::Start(query_fn, free_fn, cancel_fn, (void *)_imsg);
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
-            MPI_Ibcast((void *)&var, 1, GetDataType<Type>(), root, fComm, &req.fRequest);
+            MPI_Ibcast((void *)vars, count, GetDataType<Type>(), root, fComm, &req.fRequest);
          }
          return req;
+      }
+
+      //______________________________________________________________________________
+      template<class Type> TRequest TCommunicator::IBcast(Type &var, Int_t root) const
+      {
+         return IBcast(&var, 1, root);
       }
 
       //______________________________________________________________________________
@@ -778,8 +758,8 @@ namespace ROOT {
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
       //______________________________________________________________________________
       template<> void TCommunicator::Bcast<TMpiMessage>(TMpiMessage *vars, Int_t count, Int_t root) const;
-      //______________________________________________________________________________
-      template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
+//       //______________________________________________________________________________
+//       template<> TGrequest TCommunicator::IBcast<TMpiMessage>(TMpiMessage &var, Int_t root) const;
 
 
 
