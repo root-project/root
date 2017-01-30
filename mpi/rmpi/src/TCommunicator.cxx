@@ -77,6 +77,10 @@ template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t i
 
 
 //______________________________________________________________________________
+/**
+ * Copy constructor for communicator
+ * \param comm other TCommunicator object
+ */
 TCommunicator::TCommunicator(const TCommunicator &comm): TObject(comm)
 {
    fComm = comm.fComm;
@@ -92,12 +96,19 @@ TCommunicator::~TCommunicator()
 }
 
 //______________________________________________________________________________
+/**
+ *         Method for synchronization between MPI processes in a communicator
+ */
 void  TCommunicator::Barrier() const
 {
    MPI_Barrier(fComm);
 }
 
 //______________________________________________________________________________
+/**
+ *         Method for synchronization between MPI nonblocking processes in a communicator
+ *         \param req request object
+ */
 void  TCommunicator::IBarrier(TRequest &req) const
 {
    MPI_Ibarrier(fComm, &req.fRequest);
@@ -105,6 +116,13 @@ void  TCommunicator::IBarrier(TRequest &req) const
 }
 
 //______________________________________________________________________________
+/**
+ *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ *              \param status TStatus object with extra information.
+ *              \return boolean true if the probe if ok
+ */
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 {
    Int_t flag;
@@ -115,6 +133,12 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 }
 
 //______________________________________________________________________________
+/**
+ *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ *              \return boolean true if the probe if ok
+ */
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
 {
    Int_t flag;
@@ -124,6 +148,13 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
 }
 
 //______________________________________________________________________________
+/**
+ *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ *              \param status TStatus object with extra information.
+ *              \return boolean true if the probe if ok
+ */
 void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 {
    MPI_Status stat;
@@ -132,6 +163,12 @@ void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 }
 
 //______________________________________________________________________________
+/**
+ *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ *              \return boolean true if the probe if ok
+ */
 void TCommunicator::Probe(Int_t source, Int_t tag) const
 {
    MPI_Status stat;

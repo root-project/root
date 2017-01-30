@@ -35,13 +35,13 @@ namespace ROOT {
       class TMpiMessage;
 
       /**
-       *      \class TCommunicator
-       *         Class for communicator, with this class you can to communicate the processes using messages,
-       *      the messages can be any serializable object supported by ROOT like object from standart c++ libraries or
-       *      objects that inherits from TObject.
+       * \class TCommunicator
+       * Class for communicator, with this class you can to communicate the processes using messages,
+       * the messages can be any serializable object supported by ROOT like object from standart c++ libraries or
+       * objects that inherits from TObject.
        *
-       *      You can to create your own classes and communicate it just creating its dictionaries
-       *         \ingroup Mpi
+       * You can to create your own classes and communicate it just creating its dictionaries
+       * \ingroup Mpi
        */
 
       class TCommunicator: public TObject {
@@ -49,10 +49,6 @@ namespace ROOT {
          MPI_Comm fComm;           //! Raw communicator
          Int_t fMainProcess;    // Rank used like a main process
       public:
-         /**
-          *         Copy constructor for communicator
-          *              \param comm other TCommunicator object
-          */
          TCommunicator(const TCommunicator &comm);
          TCommunicator(const MPI_Comm &comm = MPI_COMM_WORLD);
          ~TCommunicator();
@@ -65,8 +61,8 @@ namespace ROOT {
 
 
          /**
-          *         Method to get the current rank or process id
-          *              \return integer with the rank value
+          * Method to get the current rank or process id
+          * \return integer with the rank value
           */
          inline Int_t GetRank() const
          {
@@ -76,8 +72,8 @@ namespace ROOT {
          }
 
          /**
-          *         Method to get the total number of ranks or processes
-          *              \return integer with the number of processes
+          * Method to get the total number of ranks or processes
+          * \return integer with the number of processes
           */
          inline Int_t GetSize() const
          {
@@ -87,8 +83,8 @@ namespace ROOT {
          }
 
          /**
-          *         Method to know if the current rank us the main process
-          *              \return boolean true if it is the main rank
+          * Method to know if the current rank us the main process
+          * \return boolean true if it is the main rank
           */
          inline Bool_t IsMainProcess() const
          {
@@ -96,8 +92,8 @@ namespace ROOT {
          }
 
          /**
-          *         Method to set the main process rank
-          *              \param Int_t main process rank number
+          * Method to set the main process rank
+          * \param p Int_t main process rank number
           */
          inline void SetMainProcess(Int_t p)
          {
@@ -105,8 +101,8 @@ namespace ROOT {
          }
 
          /**
-          *         Method to get the main process id
-          *              \return integer with the main rank
+          * Method to get the main process id
+          * \return integer with the main rank
           */
          inline Int_t GetMainProcess() const
          {
@@ -114,159 +110,47 @@ namespace ROOT {
          }
 
          /**
-          *         Method to abort  processes
-          *              \param integer with error code
+          * Method to abort  processes
+          * \param error integer with error code
           */
-         inline void Abort(Int_t err) const
+         inline void Abort(Int_t error) const
          {
-            MPI_Abort(fComm, err);
+            MPI_Abort(fComm, error);
          }
 
-         /**
-          *         Method for synchronization between MPI processes in a communicator
-          */
          virtual void Barrier() const;
 
-         /**
-          *         Method for synchronization between MPI nonblocking processes in a communicator
-          *         \param req request object
-          */
          virtual void IBarrier(TRequest &req) const;
 
-         /**
-          *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-          *              \param status TStatus object with extra information.
-          *              \return boolean true if the probe if ok
-          */
          virtual Bool_t IProbe(Int_t source, Int_t tag, TStatus &status) const;
 
-         /**
-          *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-          *              \return boolean true if the probe if ok
-          */
          virtual Bool_t IProbe(Int_t source, Int_t tag) const;
 
-         /**
-          *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-          *              \param status TStatus object with extra information.
-          *              \return boolean true if the probe if ok
-          */
          virtual void Probe(Int_t source, Int_t tag, TStatus &status) const;
 
-         /**
-          *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
-          *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
-          *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
-          *              \return boolean true if the probe if ok
-          */
          virtual void Probe(Int_t source, Int_t tag) const;
 
-         /**
-          *         Method to send a message for p2p communication
-          *              \param var any selializable object
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
 
-         /**
-          *         Method to receive a message for p2p communication
-          *              \param var any selializable object reference to receive the message
-          *              \param source id with the origin(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
 
-         /**
-          *            Starts a standard-mode, nonblocking send.
-          *              \param var any selializable object
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type> TRequest ISend(const Type &var, Int_t dest, Int_t tag);
 
-         /**
-          *         Starts a nonblocking synchronous send
-          *              \param var any selializable object
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type> TRequest ISsend(const Type &var, Int_t dest, Int_t tag);
-         /**
-          *         Starts a ready-mode nonblocking send.
-          *              \param var any selializable object
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
+
          template<class Type> TRequest IRsend(const Type &var, Int_t dest, Int_t tag);
 
-         /**
-          *         Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
-          *         to receive the object you need to call the methods Complete() and Wait()
-          *         TGrequest req=comm.IRecv(..);
-          *         req.Complete();
-          *         req.Wait();
-          *
-          *              \param var any selializable object reference to receive the message
-          *              \param source id with the origin(Rank/Process) of the message
-          *              \param tag id of the message
-          *              \return TGrequest object.
-          */
          template<class Type> TRequest IRecv(Type &var, Int_t source, Int_t tag) const;
 
 
-         /**
-          *          Broadcasts a message from the process with rank root to all other processes of the group.
-          *              \param var any selializable object reference to send/receive the message
-          *              \param root id of the main message where message was sent
-          */
          template<class Type> void Bcast(Type &var, Int_t root) const;
 
-         /**
-          *          Broadcasts a message from the process with rank root to all other processes of the group.
-          *              \param var any selializable object reference to send/receive the message
-          *              \param root id of the main message where message was sent
-          *              \return TGrequest obj
-          */
          template<class Type> TRequest IBcast(Type &var, Int_t root) const;
 
-         /**
-          *          Sends data from one task to all tasks in a group.
-          *              \param in_vars any selializable object vector reference to send the message
-          *              \param incount Number of elements in receive in \p in_vars
-          *              \param out_var any selializable object vector reference to receive the message
-          *              \param outcount Number of elements in receive in \p out_vars
-          *              \param root id of the main message where message was sent
-          *              \return TGrequest obj
-          */
          template<class Type> void Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
 
-         /**
-          *          Each process (root process included) sends the contents of its send buffer to the root process.
-         *          The root process receives the messages and stores them in rank order.
-         *          The outcome is as if each of the n processes in the group (including the root process)
-          *              \param in_vars any selializable object vector reference to send the message
-          *              \param incount Number of elements in receive in \p in_vars
-          *              \param out_var any selializable object vector reference to receive the message
-          *              \param outcount Number of elements in receive in \p out_vars
-          *              \param root id of the main message where message was sent
-          *              \return TGrequest obj
-          */
          template<class Type> void Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
 
-         /**
-          *         Method to apply reduce operation using binary tree reduction.
-          *                        \param in_var variable to eval in the reduce operation
-          *                        \param out_var variable to receive the variable operation
-          *                        \param op function the perform operation
-          *                        \param root id of the main process where the result was received
-          */
          template<class Type> void Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const;
 
 
@@ -274,103 +158,35 @@ namespace ROOT {
          //methods with arrary arguments//
          /////////////////////////////////
 
-         /**
-          *         Method to send a message for p2p communication
-          *              \param vars array of any selializable objects
-          *              \param count number of elements in array \p vars
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type> void Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const;
 
-         /**
-          *         Method to receive a message for p2p communication
-          *              \param vars array of any selializable objects
-          *              \param count number of elements in array \p vars
-          *              \param source id with the origin(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
 
-         /**
-          *            Starts a standard-mode, nonblocking send.
-          *              \param vars any selializable object
-          *              \param count number of elements in array \p vars
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type> TRequest ISend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
 
-         /**
-          *         Starts a nonblocking synchronous send
-          *              \param vars any selializable object
-          *              \param count number of elements in array \p vars
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
-         template<class Type> TRequest ISsend(const Type *var, Int_t count, Int_t dest, Int_t tag);
+         template<class Type> TRequest ISsend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
 
-         /**
-          *         Starts a ready-mode nonblocking send.
-          *              \param vars any selializable object
-          *              \param count number of elements in array \p vars
-          *              \param dest id with the destination(Rank/Process) of the message
-          *              \param tag id of the message
-          */
          template<class Type> TRequest IRsend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
 
-         /**
-          *         Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
-          *         to receive the object you need to call the methods Complete() and Wait()
-          *         TGrequest req=comm.IRecv(..);
-          *         req.Complete();
-          *         req.Wait();
-          *
-          *              \param vars any selializable object reference to receive the message
-          *              \param count number of elements in array \p vars
-          *              \param source id with the origin(Rank/Process) of the message
-          *              \param tag id of the message
-          *              \return TGrequest object.
-          */
          template<class Type> TRequest IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
 
-         /**
-          *          Broadcasts a message from the process with rank root to all other processes of the group.
-          *              \param vars any selializable object reference to send/receive the message
-          *              \param count number of elements in array \p vars
-          *              \param root id of the main message where message was sent
-          *              \return TGrequest obj
-          */
          template<class Type> TRequest IBcast(Type *vars, Int_t count, Int_t root) const;
 
-         /**
-          *          Broadcasts a message from the process with rank root to all other processes of the group.
-          *              \param vars any selializable objects pointer to send/receive the message
-          *              \param count Number of elements to broadcast in \p in_vars
-          *              \param root id of the main message where message was sent
-          */
          template<class Type> void Bcast(Type *vars, Int_t count, Int_t root) const;
 
-         /**
-          *         Method to apply reduce operation over and array of elements using binary tree reduction.
-          *                        \param in_vars variable to eval in the reduce operation
-          *                        \param out_vars variable to receive the variable operation
-          *                        \param count Number of elements to reduce in \p in_vars and \p out_vars
-          *                        \param op function the perform operation
-          *                        \param root id of the main process where the result was received
-          */
          template<class Type> void Reduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)(), Int_t root) const;
 
          /**
-          *         static method to serialize objects. used in the multiple communication schemas.
-          *         \param buffer double pointer to Char_t to save the serialized data
-          *         \param size   reference to Int_t with the size of the buffer with serialized data
-          *         \param vars   any selializable object
-          *         \param count  number of elements to serialize in \p in_vars
-          *         \param comm   communicator object
-          *         \param dest   (optional) destination of the serialized information, must be the same unserializing
-          *         \param source (optional) source of the serialized information, must be the same unserializing
-          *         \param root   (optional) root of collective operation, must be the same unserializing
+          * static method to serialize objects. used in the multiple communication schemas.
+          * \param buffer double pointer to Char_t to save the serialized data
+          * \param size   reference to Int_t with the size of the buffer with serialized data
+          * \param vars   any selializable object
+          * \param count  number of elements to serialize in \p in_vars
+          * \param comm   communicator object
+          * \param dest   (optional) destination of the serialized information, must be the same unserializing
+          * \param source (optional) source of the serialized information, must be the same unserializing
+          * \param tag    (optional) tag of the serialized information, must be the same unserializing
+          * \param root   (optional) root of collective operation, must be the same unserializing
           */
          template<class T> static void Serialize(Char_t **buffer, Int_t &size, const T *vars, Int_t count, const TCommunicator *comm, Int_t dest = 0, Int_t source = 0, Int_t tag = 0, Int_t root = 0)
          {
@@ -406,15 +222,16 @@ namespace ROOT {
          }
 
          /**
-          *         static method to unserialize objects. used in the multiple communication schemas.
-          *         \param buffer pointer to Char_t to read the serialized data
-          *         \param size   size of the buffer with serialized data
-          *         \param vars   any selializable object
-          *         \param count  number of elements to serialize in \p in_vars
-          *         \param comm   communicator object
-          *         \param dest   (optional) destination of the serialized information, must be the same serializing
-          *         \param source (optional) source of the serialized information, must be the same serializing
-          *         \param root   (optional) root of collective operation, must be the same serializing
+          * static method to unserialize objects. used in the multiple communication schemas.
+          * \param buffer pointer to Char_t to read the serialized data
+          * \param size   size of the buffer with serialized data
+          * \param vars   any selializable object
+          * \param count  number of elements to serialize in \p in_vars
+          * \param comm   communicator object
+          * \param dest   (optional) destination of the serialized information, must be the same serializing
+          * \param source (optional) source of the serialized information, must be the same serializing
+          * \param tag    (optional) tag of the serialized information, must be the same serializing
+          * \param root   (optional) root of collective operation, must be the same serializing
           */
          template<class T> static  void Unserialize(Char_t *buffer, Int_t size, T *vars, Int_t count, const TCommunicator *comm, Int_t dest = 0, Int_t source = 0, Int_t tag = 0, Int_t root = 0)
          {
@@ -456,12 +273,25 @@ namespace ROOT {
       };
 
       //______________________________________________________________________________
+      /**
+          * Method to send a message for p2p communication
+          * \param var any selializable object
+          * \param dest id with the destination(Rank/Process) of the message
+          * \param tag id of the message
+          */
       template<class Type> void TCommunicator::Send(const Type &var, Int_t dest, Int_t tag) const
       {
          Send(&var, 1, dest, tag);
       }
 
       //______________________________________________________________________________
+      /**
+          * Method to send a message for p2p communication
+          * \param vars any selializable object
+          * \param count number of elements in array \p vars
+          * \param dest id with the destination(Rank/Process) of the message
+          * \param tag id of the message
+          */
       template<class Type> void TCommunicator::Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
@@ -478,12 +308,26 @@ namespace ROOT {
 
 
       //______________________________________________________________________________
+      /**
+      * Method to receive a message for p2p communication
+      * \param var any selializable object reference to receive the message
+      * \param source id with the origin(Rank/Process) of the message
+      * \param tag id of the message
+      */
       template<class Type>  void TCommunicator::Recv(Type &var, Int_t source, Int_t tag) const
       {
          Recv(&var, 1, source, tag);
       }
 
       //______________________________________________________________________________
+      /**
+       * Method to receive a message for p2p communication
+       * \param vars array of any selializable objects
+       * \param count number of elements in array \p vars
+       * \param source id with the origin(Rank/Process) of the message
+       * \param tag id of the message
+       */
+
       template<class Type>  void TCommunicator::Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const
       {
          if (std::is_class<Type>::value) {
@@ -505,12 +349,25 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      /**
+       *    Starts a standard-mode, nonblocking send.
+       * \param var any selializable object
+       * \param dest id with the destination(Rank/Process) of the message
+       * \param tag id of the message
+       */
       template<class Type> TRequest TCommunicator::ISend(const Type &var, Int_t dest, Int_t tag)
       {
          return ISend(&var, 1, dest, tag);
       }
 
       //______________________________________________________________________________
+      /**
+       *    Starts a standard-mode, nonblocking send.
+       * \param vars any selializable object
+       * \param count number of elements in array \p vars
+       * \param dest id with the destination(Rank/Process) of the message
+       * \param tag id of the message
+       */
       template<class Type> TRequest TCommunicator::ISend(const Type *vars, Int_t count, Int_t dest, Int_t tag)
       {
          TRequest req;
@@ -531,12 +388,26 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      /**
+       * Starts a nonblocking synchronous send
+       * \param var any selializable object
+       * \param dest id with the destination(Rank/Process) of the message
+       * \param tag id of the message
+       */
+
       template<class Type> TRequest TCommunicator::ISsend(const Type &var, Int_t dest, Int_t tag)
       {
          return ISsend(&var, 1, dest, tag);
       }
 
       //______________________________________________________________________________
+      /**
+       * Starts a nonblocking synchronous send
+       * \param vars any selializable object
+       * \param count number of elements in array \p vars
+       * \param dest id with the destination(Rank/Process) of the message
+       * \param tag id of the message
+       */
       template<class Type> TRequest TCommunicator::ISsend(const Type *vars, Int_t count, Int_t dest, Int_t tag)
       {
          TRequest req;
@@ -557,12 +428,26 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      /**
+       * Starts a ready-mode nonblocking send.
+       * \param var any selializable object
+       * \param dest id with the destination(Rank/Process) of the message
+       * \param tag id of the message
+       */
+
       template<class Type> TRequest TCommunicator::IRsend(const Type &var, Int_t dest, Int_t tag)
       {
          return IRsend(&var, 1, dest, tag);
       }
 
       //______________________________________________________________________________
+      /**
+       * Starts a ready-mode nonblocking send.
+       * \param vars any selializable object
+       * \param count number of elements in array \p vars
+       * \param dest id with the destination(Rank/Process) of the message
+       * \param tag id of the message
+       */
       template<class Type> TRequest TCommunicator::IRsend(const Type *vars, Int_t count, Int_t dest, Int_t tag)
       {
          TRequest req;
@@ -583,11 +468,35 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      /**
+       * Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
+       * to receive the object you need to call the methods Test() or Wait()
+       * TRequest req=comm.IRecv(..);
+       * req.Wait();
+       *
+       * \param var any selializable object reference to receive the message
+       * \param source id with the origin(Rank/Process) of the message
+       * \param tag id of the message
+       * \return TRequest object.
+       */
       template<class Type> TRequest TCommunicator::IRecv(Type &var, Int_t source, Int_t tag) const
       {
          return IRecv(&var, 1, source, tag);
       }
+
       //______________________________________________________________________________
+      /**
+       * Method to receive a message from nonblocking send (ISend, ISsend, IRsend)
+       * to receive the object you need to call the methods Test() or Wait()
+       * TRequest req=comm.IRecv(..);
+       * req.Wait();
+       *
+       * \param vars any selializable object reference to receive the message
+       * \param count number of elements in array \p vars
+       * \param source id with the origin(Rank/Process) of the message
+       * \param tag id of the message
+       * \return TRequest object.
+       */
       template<class Type> TRequest TCommunicator::IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const
       {
          TRequest req;
@@ -612,12 +521,23 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      /**
+      *  Broadcasts a message from the process with rank root to all other processes of the group.
+      * \param var any selializable object reference to send/receive the message
+      * \param root id of the main message where message was sent
+      */
       template<class Type> void TCommunicator::Bcast(Type &var, Int_t root) const
       {
          Bcast(&var, 1, root);
       }
 
       //______________________________________________________________________________
+      /**
+       *  Broadcasts a message from the process with rank root to all other processes of the group.
+       * \param vars any selializable objects pointer to send/receive the message
+       * \param count Number of elements to broadcast in \p in_vars
+       * \param root id of the main message where message was sent
+       */
       template<class Type> void TCommunicator::Bcast(Type *vars, Int_t count, Int_t root) const
       {
          if (std::is_class<Type>::value) {
@@ -644,6 +564,25 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      /**
+       *  Broadcasts a message from the process with rank root to all other processes of the group.
+       * \param var any selializable object reference to send/receive the message
+       * \param root id of the main message where message was sent
+       * \return TGrequest obj
+       */
+      template<class Type> TRequest TCommunicator::IBcast(Type &var, Int_t root) const
+      {
+         return IBcast(&var, 1, root);
+      }
+
+      //______________________________________________________________________________
+      /**
+       *  Broadcasts a message from the process with rank root to all other processes of the group.
+       * \param vars any selializable object reference to send/receive the message
+       * \param count number of elements in array \p vars
+       * \param root id of the main message where message was sent
+       * \return TGrequest obj
+       */
       template<class Type> TRequest TCommunicator::IBcast(Type *vars, Int_t count, Int_t root) const
       {
          //NOTE: may is good idea to consider to implement tree broadcast algorithm,
@@ -672,13 +611,18 @@ namespace ROOT {
          return req;
       }
 
-      //______________________________________________________________________________
-      template<class Type> TRequest TCommunicator::IBcast(Type &var, Int_t root) const
-      {
-         return IBcast(&var, 1, root);
-      }
 
       //______________________________________________________________________________
+      /**
+       *  Sends data from one task to all tasks in a group.
+       * \param in_vars any selializable object vector reference to send the message
+       * \param incount Number of elements in receive in \p in_vars
+       * \param out_vars any selializable object vector reference to receive the message
+       * \param outcount Number of elements in receive in \p out_vars
+       * \param root id of the main message where message was sent
+       * \return TGrequest obj
+       */
+
       template<class Type> void TCommunicator::Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const
       {
          if (GetRank() == root) {
@@ -699,6 +643,17 @@ namespace ROOT {
       }
 
       //______________________________________________________________________________
+      /**
+       *  Each process (root process included) sends the contents of its send buffer to the root process.
+      *  The root process receives the messages and stores them in rank order.
+      *  The outcome is as if each of the n processes in the group (including the root process)
+       * \param in_vars any selializable object vector reference to send the message
+       * \param incount Number of elements in receive in \p in_vars
+       * \param out_vars any selializable object vector reference to receive the message
+       * \param outcount Number of elements in receive in \p out_vars
+       * \param root id of the main message where message was sent
+       * \return TGrequest obj
+       */
       template<class Type> void TCommunicator::Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const
       {
          if (GetRank() == root) {
@@ -721,12 +676,28 @@ namespace ROOT {
          }
       }
 
-
+      //______________________________________________________________________________
+      /**
+        *Method to apply reduce operation using binary tree reduction.
+        * \param in_var variable to eval in the reduce operation
+        * \param out_var variable to receive the variable operation
+        * \param opf function the perform operation
+        * \param root id of the main process where the result was received
+        */
       template<class Type> void TCommunicator::Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const
       {
          Reduce(&in_var, &out_var, 1, opf, root);
       }
 
+      //______________________________________________________________________________
+      /**
+       * Method to apply reduce operation over and array of elements using binary tree reduction.
+       * \param in_var variable to eval in the reduce operation
+       * \param out_var variable to receive the variable operation
+       * \param count Number of elements to reduce in \p in_var and \p out_var
+       * \param opf function the perform operation
+       * \param root id of the main process where the result was received
+       */
       template<class Type> void TCommunicator::Reduce(const Type *in_var, Type *out_var, Int_t count, Op<Type> (*opf)(), Int_t root) const
       {
          auto op = opf();
