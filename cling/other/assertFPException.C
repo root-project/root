@@ -1,3 +1,5 @@
+#pragma clang diagnostic ignored "-Wdivision-by-zero"
+
 // ROOT-8080: do not crash.
 {
 int i = 8/0;
