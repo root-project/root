@@ -712,8 +712,6 @@ private:
             return SimpleAction<int, ART_t, at, TT_t>::BuildAndBook(this, theBranchName, r, nSlots);
          } else if (type_id == typeid(double)) {
             return SimpleAction<double, ART_t, at, TT_t>::BuildAndBook(this, theBranchName, r, nSlots);
-         } else if (type_id == typeid(double)) {
-            return SimpleAction<double, ART_t, at, TT_t>::BuildAndBook(this, theBranchName, r, nSlots);
          } else if (type_id == typeid(std::vector<double>)) {
             return SimpleAction<std::vector<double>, ART_t, at, TT_t>::BuildAndBook(this, theBranchName, r, nSlots);
          } else if (type_id == typeid(std::vector<float>)) {
