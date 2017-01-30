@@ -4,7 +4,7 @@
 #include"particle.h"
 using namespace ROOT::Mpi;
 
-void bcast_test_scalar(Int_t root = 0, Int_t size = 2)
+void bcast_test_scalar(Int_t root = 0, Int_t size = 2, Bool_t req_test = kFALSE)
 {
 
    auto rank = gComm->GetRank();
@@ -23,7 +23,12 @@ void bcast_test_scalar(Int_t root = 0, Int_t size = 2)
    }
 
    req[0] = gComm->IBcast(msg, root); //testing TMpiMessage
-   req[0].Wait();
+   if (req_test) {
+      while (!req[0].Test()) {
+         gSystem->Sleep(100);
+      }
+   } else req[0].Wait();
+
    auto mat = (TMatrixD *)msg.ReadObjectAny(TMatrixD::Class());
 
    std::cout << "Rank = " << rank << std::endl;
@@ -45,7 +50,13 @@ void bcast_test_scalar(Int_t root = 0, Int_t size = 2)
       p.Set(1, 2);//if root process fill the particle
    }
    req[1] = gComm->IBcast(p, root); //testing custom object
-   req[1].Wait();
+
+   if (req_test) {
+      while (!req[1].Test()) {
+         gSystem->Sleep(100);
+      }
+   } else req[1].Wait();
+
 
    //assertions
    assert((*mat)[0][0] == req_mat[0][0]);
@@ -82,13 +93,14 @@ void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
 
 
 // void bcast(Bool_t stressTest = kTRUE)
-void ibcast(Bool_t stressTest = kTRUE)
+void ibcast(Bool_t stressTest = kFALSE)
 {
    TEnvironment env;
    if (gComm->GetSize() == 1) return; //needed at least 2 process
    bcast_test_scalar();
    if (!stressTest) {
-      bcast_test_scalar();
+      bcast_test_scalar(0, 2, kFALSE);
+      bcast_test_scalar(0, 2, kTRUE);
       bcast_test_array();
    } else {
       //stressTest

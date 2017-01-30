@@ -74,16 +74,28 @@ void TRequest::Wait()
 //______________________________________________________________________________
 Bool_t TRequest::Test(TStatus &status)
 {
+   if (fRequest == MPI_REQUEST_NULL) Error(__FUNCTION__, "Calling Test on NULL resquest.");
    Int_t flag;
    MPI_Test(&fRequest, &flag, &status.fStatus);
+
+   //TODO:error control here if status is wrong
+   if (flag) fCallback();
+   else Warning(__FUNCTION__, "Resquest test is not ready.");
+
    return (Bool_t)flag;
 }
 
 //______________________________________________________________________________
 Bool_t TRequest::Test()
 {
+   if (fRequest == MPI_REQUEST_NULL) Error(__FUNCTION__, "Calling Test on NULL resquest.");
    Int_t flag;
    MPI_Test(&fRequest, &flag, MPI_STATUS_IGNORE);
+
+   //TODO:error control here if status is wrong
+   if (flag) fCallback();
+   else Warning(__FUNCTION__, "Resquest test is not ready.");
+
    return (Bool_t)flag;
 }
 
@@ -160,19 +172,9 @@ Bool_t TRequest::TestAny(Int_t count, TRequest array[], Int_t &index)
 //______________________________________________________________________________
 void TRequest::WaitAll(Int_t count, TRequest req_array[], TStatus stat_array[])
 {
-   int i;
-   MPI_Request *array_of_requests = new MPI_Request[count];
-   MPI_Status *array_of_statuses = new MPI_Status[count];
-   for (i = 0; i < count; i++) {
-      array_of_requests[i] = req_array[i].fRequest;
+   for (auto i = 0; i < count; i++) {
+      req_array[i].Wait(stat_array[i]);
    }
-   (void)MPI_Waitall(count, array_of_requests, array_of_statuses);
-   for (i = 0; i < count; i++) {
-      req_array[i] = array_of_requests[i];
-      stat_array[i] = array_of_statuses[i];
-   }
-   delete [] array_of_requests;
-   delete [] array_of_statuses;
 }
 
 //______________________________________________________________________________
@@ -196,6 +198,8 @@ Bool_t TRequest::TestAll(Int_t count, TRequest req_array[], TStatus stat_array[]
    for (i = 0; i < count; i++) {
       req_array[i] = array_of_requests[i];
       stat_array[i] = array_of_statuses[i];
+      //TODO: added error hanling with status object here
+      if (flag) req_array[i].fCallback();
    }
    delete [] array_of_requests;
    delete [] array_of_statuses;
@@ -215,6 +219,9 @@ Bool_t TRequest::TestAll(Int_t count, TRequest req_array[])
 
    for (i = 0; i < count; i++) {
       req_array[i] = array_of_requests[i];
+
+      //TODO: added error hanling with status object here
+      if (flag) req_array[i].fCallback();
    }
    delete [] array_of_requests;
 
