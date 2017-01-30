@@ -99,46 +99,42 @@ public:
    @ingroup  ParamFunc
 */
 
-class IParametricFunctionMultiDim :
-         virtual public IBaseFunctionMultiDim ,
-         public IBaseParam {
-
+template<class BackendType>
+class IParametricFunctionMultiDimTempl: virtual public IBaseFunctionMultiDimTempl<BackendType>,
+         virtual public IBaseParam {
 public:
 
-   typedef IBaseFunctionMultiDim  BaseFunc;
+  typedef IBaseFunctionMultiDimTempl<BackendType>  BaseFunc;
 
-
-
-   /**
+      /**
       Evaluate function at a point x and for given parameters p.
       This method does not change the internal status of the function (internal parameter values).
       If for some reason one prefers caching the parameter values, SetParameters(p) and then operator()(x) should be
       called.
       Use the pure virtual function DoEvalPar to implement it
    */
-   double operator() (const double * x, const double *  p ) const {
+
+     BackendType operator() (const BackendType * x, const double *  p ) const {
       return DoEvalPar(x, p);
    }
 
    using BaseFunc::operator();
 
-
 private:
-
    /**
       Implementation of the evaluation function using the x values and the parameters.
       Must be implemented by derived classes
    */
-   virtual double DoEvalPar(const double * x, const double * p) const = 0;
+   virtual BackendType DoEvalPar(const BackendType * x, const double * p) const = 0;
 
    /**
       Implement the ROOT::Math::IBaseFunctionMultiDim interface DoEval(x) using the cached parameter values
    */
-   virtual double DoEval(const double *x) const {
+   virtual BackendType DoEval(const BackendType *x) const {
       return DoEvalPar( x, Parameters() );
    }
-
 };
+
 
 //___________________________________________________________________
 /**
@@ -214,22 +210,19 @@ private:
    @ingroup  ParamFunc
 */
 
-class IParametricGradFunctionMultiDim :
-         public IParametricFunctionMultiDim
-//         ,public IGradientFunctionMultiDim
-{
+template<class T>
+class IParametricGradFunctionMultiDimTempl: virtual public IParametricFunctionMultiDimTempl<T>, virtual public IBaseParam {
+  public:
 
-public:
-
-   typedef IParametricFunctionMultiDim                BaseParamFunc;
-   typedef IGradientFunctionMultiDim                  BaseGradFunc;
-   typedef IParametricFunctionMultiDim::BaseFunc  BaseFunc;
+   using  BaseParamFunc = IParametricFunctionMultiDimTempl<T>;
+   using  BaseGradFunc =IGradientFunctionMultiDim;
+   using BaseFunc = typename IParametricFunctionMultiDimTempl<T>::BaseFunc;
 
 
    /**
       Virtual Destructor (no operations)
    */
-   virtual ~IParametricGradFunctionMultiDim ()  {}
+   virtual ~IParametricGradFunctionMultiDimTempl ()  {}
 
 
 
@@ -265,15 +258,12 @@ public:
       return DoParameterDerivative(x, Parameters() , ipar);
    }
 
-private:
-
-
+   private:
 
    /**
       Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
     */
    virtual double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const = 0;
-
 
 };
 
