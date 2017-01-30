@@ -40,7 +40,7 @@ namespace Math {
    @ingroup  ParamFunc
 
 */
-class MultiDimParamFunctionAdapter : public IParamMultiFunction  {
+class MultiDimParamFunctionAdapter : public IParametricFunctionMultiDimTempl<double>  {
 
 public:
 

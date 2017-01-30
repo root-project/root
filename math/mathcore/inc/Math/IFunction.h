@@ -40,7 +40,7 @@ namespace Math {
 
 /**
    @defgroup GenFunc Generic Function Evaluation Interfaces
-   Interface classes for evaluation of function object classes in one or multi-dimensions. 
+   Interface classes for evaluation of function object classes in one or multi-dimensions.
    @ingroup CppFunctions
 */
 
@@ -58,25 +58,26 @@ namespace Math {
        @ingroup  GenFunc
    */
 
-   class IBaseFunctionMultiDim {
+   template<class T>
+   class IBaseFunctionMultiDimTempl {
 
    public:
 
-      typedef  IBaseFunctionMultiDim BaseFunc;
+      typedef  IBaseFunctionMultiDimTempl<T> BaseFunc;
 
 
-      IBaseFunctionMultiDim() {}
+      IBaseFunctionMultiDimTempl() {}
 
       /**
          virtual destructor
        */
-      virtual ~IBaseFunctionMultiDim() {}
+      virtual ~IBaseFunctionMultiDimTempl() {}
 
       /**
           Clone a function.
           Each derived class must implement their version of the Clone method
       */
-      virtual IBaseFunctionMultiDim * Clone() const = 0;
+      virtual IBaseFunctionMultiDimTempl<T> * Clone() const = 0;
 
       /**
          Retrieve the dimension of the function
@@ -87,7 +88,7 @@ namespace Math {
           Evaluate the function at a point x[].
           Use the pure virtual private method DoEval which must be implemented by the sub-classes
       */
-      double operator() (const double* x) const {
+      T operator() (const T* x) const {
          return DoEval(x);
       }
 
@@ -97,7 +98,7 @@ namespace Math {
          User is responsible to provide correct size for the iterator
       */
       template <class Iterator>
-      double operator() (const Iterator it ) const {
+      T operator() (const Iterator it ) const {
          return DoEval( &(*it) );
       }
 #endif
@@ -109,7 +110,7 @@ namespace Math {
       /**
          Implementation of the evaluation function. Must be implemented by derived classes
       */
-      virtual double DoEval(const double * x) const = 0;
+      virtual T DoEval(const T* x) const = 0;
 
 
   };
