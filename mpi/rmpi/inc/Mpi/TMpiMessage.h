@@ -118,22 +118,6 @@ namespace ROOT {
       {
          WriteObject<ClassType>(&obj);
       }
-
-      class TCommunicator;
-      class TGrequest;
-      //Nonblocking message for callbacks
-      struct IMsg {
-         TMpiMessage *fMsg;
-         const MPI_Comm *fComm;
-         const TCommunicator *fCommunicator;
-         Int_t fSource;
-         Int_t fTag;
-         Int_t fRoot;
-         Int_t fCount;
-         void *fVar;
-         UInt_t fSizeof;
-         TClass *fClass;
-      };
    }
 }
 

@@ -101,6 +101,7 @@ void  TCommunicator::Barrier() const
 void  TCommunicator::IBarrier(TRequest &req) const
 {
    MPI_Ibarrier(fComm, &req.fRequest);
+   if(req.fRequest==MPI_REQUEST_NULL) req.fCallback();
 }
 
 //______________________________________________________________________________
