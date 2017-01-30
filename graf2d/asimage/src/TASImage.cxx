@@ -5766,10 +5766,16 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    yy = y0;
    ARGB32 acolor;
 
-   Int_t clipx1 = gPad->XtoAbsPixel(gPad->GetX1());
-   Int_t clipx2 = gPad->XtoAbsPixel(gPad->GetX2());
-   Int_t clipy1 = gPad->YtoAbsPixel(gPad->GetY1());
-   Int_t clipy2 = gPad->YtoAbsPixel(gPad->GetY2());
+   Int_t clipx1=0, clipx2=0, clipy1=0, clipy2=0;
+   Bool_t noClip = kTRUE;
+
+   if (gPad) {
+      clipx1 = gPad->XtoAbsPixel(gPad->GetX1());
+      clipx2 = gPad->XtoAbsPixel(gPad->GetX2());
+      clipy1 = gPad->YtoAbsPixel(gPad->GetY1());
+      clipy2 = gPad->YtoAbsPixel(gPad->GetY2());
+      noClip = kFALSE;
+   }
 
    for (y = 0; y < (int) source->rows; y++) {
       byy = by + y;
@@ -5782,9 +5788,9 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
          if (d > 4) d = 4;
 
          if (d) {
-            if ( (x < (int) source->width) &&
+            if ( noClip || ((x < (int) source->width) &&
                  (bxx <  (int)clipx2) && (bxx >= (int)clipx1) &&
-                 (byy >= (int)clipy2) && (byy <  (int)clipy1) ) {
+                 (byy >= (int)clipy2) && (byy <  (int)clipy1) )) {
                idx    = Idx(bxx + yy);
                acolor = (ARGB32)col[d];
                if (has_alpha) {
