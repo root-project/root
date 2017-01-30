@@ -67,8 +67,7 @@ PyMethodBase::PyMethodBase(const TString &jobName,
    // Set up private local namespace for each method instance
    fLocalNS = PyDict_New();
    if (!fLocalNS) {
-      TMVA::MsgLogger Log;
-      Log << kFATAL << "Can't init local namespace" << Endl;
+      Log() << kFATAL << "Can't init local namespace" << Endl;
    }
 }
 
@@ -85,8 +84,7 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
    // Set up private local namespace for each method instance
    fLocalNS = PyDict_New();
    if (!fLocalNS) {
-      TMVA::MsgLogger Log;
-      Log << kFATAL << "Can't init local namespace" << Endl;
+      Log() << kFATAL << "Can't init local namespace" << Endl;
    }
 }
 
