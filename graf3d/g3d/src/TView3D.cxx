@@ -283,136 +283,77 @@ TView3D::~TView3D()
 /// Define axis vertices.
 ///
 /// Input:
-///  - ANG     - angle between X and Y axis
+///  - ANG     - angle between X and Y axis (not used anymore)
 ///
 ///    Output:
 ///  - AV(3,8) - axis vertices
-///  - IX1     - 1st point of X-axis
-///  - IX2     - 2nd point of X-axis
-///  - IY1     - 1st point of Y-axis
-///  - IY2     - 2nd point of Y-axis
-///  - IZ1     - 1st point of Z-axis
-///  - IZ2     - 2nd point of Z-axis
-/*
-    ~~~ {.cpp}
-                        8                        6
-                       / \                      /|\
-                    5 /   \ 7                5 / | \ 7
-                     |\   /|                  |  |  |
-         THETA < 90  | \6/ |     THETA > 90   | /2\ |
-         (Top view)  |  |  |   (Bottom view)  |/   \|
-                    1 \ | /3                 1 \   /3
-                       \|/                      \ /
-                        2                        4
-    ~~~
-*/
+///  - IX1     - 1st point of X-axis (x-min)
+///  - IX2     - 2nd point of X-axis (x-max)
+///  - IY1     - 1st point of Y-axis (y-min)
+///  - IY2     - 2nd point of Y-axis (y-max)
+///  - IZ1     - 1st point of Z-axis (z-min)
+///  - IZ2     - 2nd point of Z-axis (z-max)
 
-void TView3D::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2)
+void TView3D::AxisVertex(Double_t, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2)
 {
-   // Local variables
-   Double_t cosa, sina;
-   Int_t i, k;
-   Double_t p[8]        /* was [2][4] */;
-   Int_t i1, i2, i3, i4, ix, iy;
-   ix = 0;
+   Double_t  p[8][3] = {
+      { fRmin[0], fRmin[1], fRmin[2] },
+      { fRmax[0], fRmin[1], fRmin[2] },
+      { fRmax[0], fRmax[1], fRmin[2] },
+      { fRmin[0], fRmax[1], fRmin[2] },
+      { fRmin[0], fRmin[1], fRmax[2] },
+      { fRmax[0], fRmin[1], fRmax[2] },
+      { fRmax[0], fRmax[1], fRmax[2] },
+      { fRmin[0], fRmax[1], fRmax[2] }
+   };
+   Int_t inodes[4][8] = {
+      { 2,3,4,1, 6,7,8,5 }, // x+, y+
+      { 3,4,1,2, 7,8,5,6 }, // x-, y+
+      { 1,2,3,4, 5,6,7,8 }, // x+, y-
+      { 4,1,2,3, 8,5,6,7 }  // x-, y-
+   };
+   Int_t ixyminmax[16][4] = { //               8
+      { 3,2, 1,2 }, // x+, y+, z+, z-up     5 / \ 7
+      { 2,1, 3,2 }, // x-, y+, z+, z-up      |\6/|
+      { 1,2, 2,3 }, // x+, y-, z+, z-up      | | |   Top view
+      { 2,3, 2,1 }, // x-, y-, z+, z-up     1 \|/ 3
+                    //                         2         6
+      { 4,1, 4,3 }, // x+, y+, z-, z-up               5 /|\ 7
+      { 3,4, 4,1 }, // x-, y+, z-, z-up                | | |
+      { 4,3, 1,4 }, // x+, y-, z-, z-up   Bottom view  |/2\|
+      { 1,4, 3,4 }, // x-, y-, z-, z-up               1 \ / 3
+                    //                         2         4
+      { 8,5, 8,7 }, // x+, y+, z+, z-down   3 /|\ 1
+      { 7,8, 8,5 }, // x-, y+, z+, z-down    | | |
+      { 8,7, 5,8 }, // x+, y-, z+, z-down    |/6\|   Bottom view
+      { 5,8, 7,8 }, // x-, y-, z+, z-down   7 \ / 5
+                    //                         8         4
+      { 7,6, 5,6 }, // x+, y+, z-, z-down             3 / \ 1
+      { 6,5, 7,6 }, // x-, y+, z-, z-down              |\2/|
+      { 5,6, 6,7 }, // x+, y-, z-, z-down   Top view   | | |
+      { 6,7, 6,5 }  // x-, y-, z-, z-down             7 \|/ 5
+   };               //                                   6
 
-   // Parameter adjustments
-   av -= 4;
-
-   sina = TMath::Sin(ang*kRad);
-   cosa = TMath::Cos(ang*kRad);
-   p[0] = fRmin[0];
-   p[1] = fRmin[1];
-   p[2] = fRmax[0];
-   p[3] = fRmin[1];
-   p[4] = fRmax[0];
-   p[5] = fRmax[1];
-   p[6] = fRmin[0];
-   p[7] = fRmax[1];
-   //*-*-           F I N D   T H E   M O S T   L E F T   P O I N T */
-   i1 = 1;
-   if (fTN[0] < 0) i1 = 2;
-   if (fTN[0]*cosa + fTN[1]*sina < 0) i1 = 5 - i1;
-
-   //*-*-          S E T   O T H E R   P O I N T S */
-   i2 = i1 % 4 + 1;
-   i3 = i2 % 4 + 1;
-   i4 = i3 % 4 + 1;
-
-   //*-*-          S E T   A X I S   V E R T I X E S */
-   av[4] = p[(i1 << 1) - 2];
-   av[5] = p[(i1 << 1) - 1];
-   av[7] = p[(i2 << 1) - 2];
-   av[8] = p[(i2 << 1) - 1];
-   av[10] = p[(i3 << 1) - 2];
-   av[11] = p[(i3 << 1) - 1];
-   av[13] = p[(i4 << 1) - 2];
-   av[14] = p[(i4 << 1) - 1];
-   for (i = 1; i <= 4; ++i) {
-      av[i*3 +  3] = fRmin[2];
-      av[i*3 + 13] = av[i*3 + 1];
-      av[i*3 + 14] = av[i*3 + 2];
-      av[i*3 + 15] = fRmax[2];
-   }
-
-   //*-*-          S E T   A X I S
-
-   if (av[4] == av[7]) ix = 2;
-   if (av[5] == av[8]) ix = 1;
-   iy = 3 - ix;
-   //*-*-          X - A X I S
-   ix1 = ix;
-   if (av[ix*3 + 1] > av[(ix + 1)*3 + 1])      ix1 = ix + 1;
-   ix2 = (ix << 1) - ix1 + 1;
-   //*-*-          Y - A X I S
-   iy1 = iy;
-   if (av[iy*3 + 2] > av[(iy + 1)*3 + 2])      iy1 = iy + 1;
-   iy2 = (iy << 1) - iy1 + 1;
-   //*-*-          Z - A X I S
-   iz1 = 1;
-   iz2 = 5;
-
-   if (fTN[10] >= 0)   return;
-   k = (ix1 - 1)*3 + ix2;
-   if (k%2) return;
-   if (k == 2) {
-      ix1 = 4;
-      ix2 = 3;
-   }
-   if (k == 4) {
-      ix1 = 3;
-      ix2 = 4;
-   }
-   if (k == 6) {
-      ix1 = 1;
-      ix2 = 4;
-   }
-   if (k == 8) {
-      ix1 = 4;
-      ix2 = 1;
+   //        Set vertices
+   Int_t icase = 0;
+   if (fTnorm[ 8] < 0) icase += 1; // z projection of (1,0,0)
+   if (fTnorm[ 9] < 0) icase += 2; // z projection of (0,1,0)
+   for (Int_t i=0; i<8; ++i) {
+      Int_t k = inodes[icase][i] - 1;
+      av[i*3+0] = p[k][0];
+      av[i*3+1] = p[k][1];
+      av[i*3+2] = p[k][2];
    }
 
-   k = (iy1 - 1)*3 + iy2;
-   if (k%2) return;
-   if (k == 2) {
-      iy1 = 4;
-      iy2 = 3;
-      return;
-   }
-   if (k == 4) {
-      iy1 = 3;
-      iy2 = 4;
-      return;
-   }
-   if (k == 6) {
-      iy1 = 1;
-      iy2 = 4;
-      return;
-   }
-   if (k == 8) {
-      iy1 = 4;
-      iy2 = 1;
-   }
+   //        Set indices for min and max
+   if (fTnorm[10] < 0) icase += 4; // z projection of (0,0,1)
+   if (fTnorm[ 6] < 0) icase += 8; // y projection of (0,0,1)
+   ix1 = ixyminmax[icase][0];
+   ix2 = ixyminmax[icase][1];
+   iy1 = ixyminmax[icase][2];
+   iy2 = ixyminmax[icase][3];
+   iz1 = (icase < 8) ? 1 : 3;
+   iz2 = (icase < 8) ? 5 : 7;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
