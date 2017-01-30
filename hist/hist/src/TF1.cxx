@@ -285,7 +285,7 @@ Consider the macro myfunc.C below:
    {
       TH1F *h1=new TH1F("h1","test",100,0,10);
       h1->FillRandom("myfunc",20000);
-      TF1 *f1=gROOT->GetFunction("myfunc");
+      TF1 *f1 = (TF1 *)gROOT->GetFunction("myfunc");
       f1->SetParameters(800,1);
       h1->Fit("myfunc");
    }
