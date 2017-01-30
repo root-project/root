@@ -375,9 +375,9 @@ static void init_icon_paths()
    Ssiz_t from = 0;
    TString token;
 #ifndef R__WIN32
-   const char *delim = "/";
+   const char *delim = ":";
 #else
-   const char *delim = "\\";
+   const char *delim = ";";
 #endif
    while (icon_path.Tokenize(token, from, delim) && cnt < 6) {
       char *path = gSystem->ExpandPathName(token.Data());
