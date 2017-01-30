@@ -275,6 +275,35 @@ public:
 
 enum class EActionType : short { kHisto1D, kMin, kMax, kMean };
 
+// Utilities to accommodate v7
+namespace TDFV7Utils {
+
+template<typename T, bool ISV7HISTO = !std::is_base_of<TH1, T>::value>
+struct TIsV7Histo {
+   const static bool fgValue = ISV7HISTO;
+};
+
+template<typename T, bool ISV7HISTO = TIsV7Histo<T>::fgValue>
+struct Histo {
+   static void SetCanExtendAllAxes(T& h)
+   {
+      h.SetCanExtend(TH1::kAllAxes);
+   }
+   static bool HasAxisLimits(T& h)
+   {
+      auto xaxis = h.GetXaxis();
+      return !(xaxis->GetXmin() == 0. && xaxis->GetXmax() == 0.);
+   }
+};
+
+template<typename T>
+struct Histo<T, true> {
+   static void SetCanExtendAllAxes(T&) { }
+   static bool HasAxisLimits(T&) {return true;}
+};
+
+} // end NS TDFV7Utils
+
 } // end NS Internal
 
 namespace Detail {
@@ -520,7 +549,7 @@ public:
       GetDefaultBranchName(theBranchName, "fill the histogram");
       auto h = std::make_shared<TH1F>("", "", nBins, minVal, maxVal);
       if (minVal == maxVal) {
-         h->SetCanExtend(TH1::kAllAxes);
+         ROOT::Internal::TDFV7Utils::Histo<TH1F>::SetCanExtendAllAxes(*h);
       }
       return CreateAction<T, ROOT::Internal::EActionType::kHisto1D>(theBranchName, h);
    }
@@ -625,8 +654,7 @@ private:
          // moment when the TDataFrameAction is deleted by TDataFrameImpl
          BranchNames bl = {theBranchName};
          auto df = thisFrame->GetDataFrameChecked();
-         auto xaxis = h->GetXaxis();
-         auto hasAxisLimits = !(xaxis->GetXmin() == 0. && xaxis->GetXmax() == 0.);
+         auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<TH1F>::HasAxisLimits(*h);
 
          if (hasAxisLimits) {
             auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<TH1F>>(h, nSlots);
