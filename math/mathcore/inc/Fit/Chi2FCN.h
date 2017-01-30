@@ -40,13 +40,10 @@ Classes describing Fit Method functions
 @ingroup Fit
 */
 
-
 namespace ROOT {
 
 
    namespace Fit {
-
-
 
 //___________________________________________________________________________________
 /**
@@ -54,18 +51,19 @@ namespace ROOT {
 
    @ingroup  FitMethodFunc
 */
-template<class FunType>
-class Chi2FCN : public BasicFCN<FunType,BinData> {
+template<class DerivFunType, class ModelFunType = ROOT::Math::IParamMultiFunction>
+class Chi2FCN : public BasicFCN<DerivFunType, ModelFunType, BinData> {
 
 public:
 
-   typedef  BasicFCN<FunType,BinData> BaseFCN; 
+   typedef typename ModelFunType::BackendType T;
+   typedef  BasicFCN<DerivFunType, ModelFunType, BinData> BaseFCN;
 
-   typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction;
+   typedef  ::ROOT::Math::BasicFitMethodFunction<DerivFunType> BaseObjFunction;
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
 
    //typedef  typename ::ROOT::Math::ParamFunctionTrait<FunType>::PFType IModelFunction;
-   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
+   typedef  ::ROOT::Math::IParamMultiFunctionTempl<T> IModelFunction;
    typedef typename BaseObjFunction::Type_t Type_t;
 
    /**
@@ -107,14 +105,14 @@ public:
       SetData(rhs.DataPtr() );
       SetModelFunction(rhs.ModelFunctionPtr() );
       fNEffPoints = rhs.fNEffPoints;
-      fGrad = rhs.fGrad; 
+      fGrad = rhs.fGrad;
    }
 
-   /* 
+   /*
       clone the function
     */
    virtual BaseFunction * Clone() const {
-      return new Chi2FCN(*this); 
+      return new Chi2FCN(*this);
    }
 
 
@@ -123,42 +121,41 @@ public:
 
 
    /// i-th chi-square residual
-   virtual double DataElement(const double * x, unsigned int i, double * g) const {
+   virtual double DataElement(const double *, unsigned int i, double *) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::EvaluateChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return 0.0;//FitUtil::EvaluateChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    // need to be virtual to be instantiated
-   virtual void Gradient(const double *x, double *g) const {
+   virtual void Gradient(const double *, double *) const {
       // evaluate the chi2 gradient
-      FitUtil::EvaluateChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
+      // FitUtil::EvaluateChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
    }
 
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLeastSquare; }
 
 
-
 protected:
 
-   /// set number of fit points (need to be called in const methods, make it const)                                                                                                      
+   /// set number of fit points (need to be called in const methods, make it const)
    virtual void SetNFitPoints(unsigned int n) const { fNEffPoints = n; }
-   
+
 private:
 
    /**
       Evaluation of the  function (required by interface)
     */
    virtual double DoEval (const double * x) const {
-      this->UpdateNCalls();
-#ifdef ROOT_FIT_PARALLEL
-      return FitUtilParallel::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
-#else
-      if (BaseFCN::Data().HaveCoordErrors() || BaseFCN::Data().HaveAsymErrors())
-         return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);      
-      else
-         return FitUtil::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
-#endif
+//       this->UpdateNCalls();
+// #ifdef ROOT_FIT_PARALLEL
+      // return FitUtilParallel::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+// #else
+//       if (!BaseFCN::Data().HaveCoordErrors() )
+         return FitUtil::EvalChi2<T>::DoEval(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+//       else
+//          return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+// #endif
    }
 
    // for derivatives
@@ -172,12 +169,11 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
-
 };
 
       // define useful typedef's
-      typedef Chi2FCN<ROOT::Math::IMultiGenFunction> Chi2Function;
-      typedef Chi2FCN<ROOT::Math::IMultiGradFunction> Chi2GradFunction;
+      typedef Chi2FCN<ROOT::Math::IMultiGenFunction,ROOT::Math::IParamMultiFunction> Chi2Function;
+      typedef Chi2FCN<ROOT::Math::IMultiGradFunction, ROOT::Math::IParamMultiFunction> Chi2GradFunction;
 
 
    } // end namespace Fit

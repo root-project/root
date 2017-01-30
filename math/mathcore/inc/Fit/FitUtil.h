@@ -17,11 +17,14 @@
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 
+#include "Math/Integrator.h"
+#include "Math/IntegratorMultiDim.h"
+
+#include "TError.h"
+
 namespace ROOT {
 
    namespace Fit {
-
-
 
 
 /**
@@ -32,8 +35,11 @@ namespace ROOT {
 */
 namespace FitUtil {
 
-   typedef  ROOT::Math::IParamMultiFunction IModelFunction;
-   typedef  ROOT::Math::IParamMultiGradFunction IGradModelFunction;
+  typedef  ROOT::Math::IParamMultiFunction IModelFunction;
+  typedef  ROOT::Math::IParamMultiGradFunction IGradModelFunction;
+
+  template<class T>
+  using IModelFunctionTempl = ROOT::Math::IParamMultiFunctionTempl<T>;
 
    /** Chi2 Functions */
 
@@ -113,10 +119,92 @@ namespace FitUtil {
    */
    double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0);
 
+  template<class T>
+  struct EvalChi2{
+    static double DoEval(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints){
+      // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
+      // the actual number of used points
+      // normal chi2 using only error on values (from fitting histogram)
+      // optionally the integral of function in the bin is used
+
+      unsigned int n = data.Size();
+
+      T chi2{};
+      nPoints = 0; // count the effective non-zero points
+      // set parameters of the function to cache integral value
+      #ifdef USE_PARAMCACHE
+        (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
+      #endif
+      // do not cache parameter values (it is not thread safe)
+      //func.SetParameters(p);
 
 
+      // get fit option and check case if using integral of bins
+      const DataOptions & fitOpt = data.Opt();
+      if (fitOpt.fExpErrors || fitOpt.fIntegral || fitOpt.fExpErrors)
+        Error("FitUtil::EvaluateChi2","The vectorized implementation doesn't support Integrals, BinVolume or ExpErrors\n. Aborting operation.");
 
+      (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 
+      double maxResValue = std::numeric_limits<double>::max() /n;
+      double wrefVolume = 1.0;
+      std::vector<double> xc;
+      std::vector<double> ones{1,1,1,1};
+      for (unsigned int i=0; i<data.Size(); i+=vecCore::VectorSize<T>()) {
+
+          // double invError = 1.;
+
+          // in case of no error in y invError=1 is returned
+          const auto x = vecCore::FromPtr<T>(data.GetCoordComponent(i,0));
+          const auto y = vecCore::FromPtr<T>(data.ValuePtr(i));
+          const auto invError = data.ErrorPtr(i);
+          auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
+          const auto invErrorVec = vecCore::FromPtr<T>(invErrorptr);
+
+          T fval = {};
+
+          double binVolume = 1.0;
+
+    #ifdef USE_PARAMCACHE
+          fval = func ( &x );
+    #else
+          fval = func ( &x, p );
+    #endif
+          nPoints++;
+
+          T tmp = ( y - fval ) * invErrorVec;
+          T resval = tmp * tmp;
+
+          // avoid inifinity or nan in chi2 values due to wrong function values
+          auto m = vecCore::Mask_v<T>( resval < maxResValue);
+
+          if(m.isFull()){
+            chi2 += resval;
+          } else {
+            for(unsigned it=0; it<vecCore::VectorSize<T>(); it++)
+              chi2[it] += m[it]==1? resval[it] : maxResValue;
+          }
+      }
+      nPoints=n;
+
+    #ifdef DEBUG
+      std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
+    #endif
+
+      return chi2.sum();
+    }
+  };
+
+  template<>
+  struct EvalChi2<double>{
+    static double DoEval(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {
+      // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
+      // the actual number of used points
+      // normal chi2 using only error on values (from fitting histogram)
+      // optionally the integral of function in the bin is used
+      return FitUtil::EvaluateChi2(func, data, p, nPoints);
+    }
+  };
 
 
 } // end namespace FitUtil
