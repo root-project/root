@@ -898,7 +898,6 @@ void THStack::Paint(Option_t *choptin)
             indivOpt.ToLower();
             if (nostackb) snprintf(loption,31,"%ssame%s b",noption,lnk->GetOption());
             else if (candle && (indivOpt.Contains("candle") || indivOpt.Contains("violin"))) snprintf(loption,31,"%ssame",lnk->GetOption());
-            
             else          snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
          }
          hAti = (TH1F*)(fHists->At(i));
@@ -1014,8 +1013,12 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TH1 *h;
    if (fHists) {
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      Int_t hcount = 0;
       while (lnk) {
          h = (TH1*)lnk->GetObject();
+         TString hname = h->GetName();
+         hname += Form("_stack_%d",++hcount);
+         h->SetName(hname);
          h->SavePrimitive(out,"nodraw");
          out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
          lnk = (TObjOptLink*)lnk->Next();
