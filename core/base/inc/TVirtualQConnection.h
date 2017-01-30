@@ -68,6 +68,12 @@ public:
    ///
    template <typename... T> void SetArgs(const T&... args)
    {
+      // Do not reset the arguments if we have no arguments to reset with.
+      // This is essential in order to support cases like:
+      // void f(int) {}; TQObject::Connect (... "f(int=12");
+      // The implementation will see we create a slot which has a 'default'
+      // argument and create a CallFunc with preset argument values to later call.
+      if (!sizeof...(args)) return;
       gInterpreter->CallFunc_ResetArg(GetSlotCallFunc());
       SetArgsImpl(args...);
    }
