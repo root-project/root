@@ -75,6 +75,9 @@ public:
   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
   using TExecutor<TThreadExecutor>::Reduce;
 
+  //Returns the number of threads set in the scheduler at call time.
+  static int GetPoolSize(){return fgPoolSize;}
+
 protected:
 
    template<class F, class R, class Cond = noReferenceCond<F>>
