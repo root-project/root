@@ -9,7 +9,7 @@ ROOT::Mpi::TCommunicator *gComm = new ROOT::Mpi::TCommunicator(MPI_COMM_WORLD);
 ROOT::Mpi::TCommunicator COMM_WORLD(MPI_COMM_WORLD);
 
 //______________________________________________________________________________
-template<> void Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
+template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
 {
    std::vector<TMpiMessageInfo> msgis(count);
    for (auto i = 0; i < count; i++) {
@@ -43,7 +43,7 @@ template<> void Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiM
 
 
 //______________________________________________________________________________
-template<> void Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
+template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
 {
    TMpiMessage msg(ibuffer, isize);
    auto cl = gROOT->GetClass(typeid(std::vector<TMpiMessageInfo>));
@@ -101,7 +101,7 @@ void  TCommunicator::Barrier() const
 void  TCommunicator::IBarrier(TRequest &req) const
 {
    MPI_Ibarrier(fComm, &req.fRequest);
-   if(req.fRequest==MPI_REQUEST_NULL) req.fCallback();
+   if (req.fRequest == MPI_REQUEST_NULL) req.fCallback();
 }
 
 //______________________________________________________________________________

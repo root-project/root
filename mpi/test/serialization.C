@@ -29,11 +29,11 @@ void serialization(Bool_t stressTest = kTRUE)
    }
    Char_t *buffer;
    Int_t size;
-   Serialize(&buffer, size, smat, count, &comm, dest, source, tag, root);
+   TCommunicator::Serialize(&buffer, size, smat, count, &comm, dest, source, tag, root);
 
    TMatrixD umat[count];                           //ROOT object
 
-   Unserialize(buffer, size, umat, count, &comm, dest, source, tag, root);//
+   TCommunicator::Unserialize(buffer, size, umat, count, &comm, dest, source, tag, root);//
    for (auto i = 0; i < count; i++) {
       assert(umat[i][0][0] == smat[i][0][0]);
       assert(umat[i][0][1] == smat[i][0][1]);
@@ -42,17 +42,17 @@ void serialization(Bool_t stressTest = kTRUE)
    }
 
    ///
-   Serialize(&buffer, size, smap, count, &comm, dest, source, tag, root);
+   TCommunicator::Serialize(&buffer, size, smap, count, &comm, dest, source, tag, root);
    std::map<std::string, std::string> umap[count]; //std oebjct
-   Unserialize(buffer, size, umap, count, &comm, dest, source, tag, root);//
+   TCommunicator::Unserialize(buffer, size, umap, count, &comm, dest, source, tag, root);//
    for (auto i = 0; i < count; i++) {
       assert(umap[i]["key"] == smap[i]["key"]);
    }
 
    ///
-   Serialize(&buffer, size, msgs, count, &comm, dest, source, tag, root);
+   TCommunicator::Serialize(&buffer, size, msgs, count, &comm, dest, source, tag, root);
    TMpiMessage umsgs[count]; //std oebjct
-   Unserialize(buffer, size, umsgs, count, &comm, dest, source, tag, root);//
+   TCommunicator::Unserialize(buffer, size, umsgs, count, &comm, dest, source, tag, root);//
    for (auto i = 0; i < count; i++) {
       auto mat = (TMatrixD *)umsgs[i].ReadObjectAny(gROOT->GetClass(typeid(TMatrixD)));
       if (mat == NULL) comm.Abort(ERR_BUFFER);
