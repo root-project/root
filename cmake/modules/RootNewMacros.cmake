@@ -728,7 +728,6 @@ function(ROOT_INSTALL_HEADERS)
   set (filter "(${filter})")
   string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
   string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-  #add_custom_target(${tgt})
   set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
