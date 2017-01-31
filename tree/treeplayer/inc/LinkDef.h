@@ -28,7 +28,6 @@
 #pragma link C++ class TTreeTableInterface;
 #pragma link C++ class TSimpleAnalysis+;
 #pragma link C++ class ROOT::TTreeProcessorMT-;
-#pragma link C++ typedef ROOT::Experimental::TDataFrame;
 
 #pragma link C++ class ROOT::Internal::TBranchProxyDirector+;
 #pragma link C++ class ROOT::Detail::TBranchProxy+;
