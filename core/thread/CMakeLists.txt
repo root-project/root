@@ -28,8 +28,8 @@ else()
 endif()
 
 if (imt)
-  set(sources_imt TImplicitMT.cxx TThreadExecutor.cxx)
-  set(headers_imt ROOT/TThreadExecutor.hxx)
+  set(sources_imt TImplicitMT.cxx TThreadExecutor.cxx TScheduler.cxx)
+  set(headers_imt ROOT/TThreadExecutor.hxx ROOT/TScheduler.hxx)
 endif()
 
 include_directories(${TBB_INCLUDE_DIRS})
