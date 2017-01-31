@@ -11,7 +11,8 @@ namespace ROOT{
   TThreadExecutor::TThreadExecutor():TThreadExecutor::TThreadExecutor(tbb::task_scheduler_init::default_num_threads()){}
 
   TThreadExecutor::TThreadExecutor(size_t nThreads):fInitTBB(new tbb::task_scheduler_init(nThreads)){
-
+    //ImplicitMT and TThreadExecutor share the same pool. If EnableImplicitMT has been called we need 
+    // to get the size of the already initialized pool of threads
     fgPoolSize += fgPoolSize == 0? ROOT::GetImplicitMTPoolSize(): 0;
 
     if(fgPoolSize != 0){
