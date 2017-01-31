@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.8.1 13/12/2016";
+   JSROOT.version = "4.8.2 31/01/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -262,7 +262,7 @@
       var map = [], newfmt = undefined;
 
       function unref_value(value) {
-         if (value===null) return;
+         if ((value===null) || (value===undefined)) return;
 
          if (typeof value === 'string') {
             if (newfmt || (value.length < 6) || (value.indexOf("$ref:") !== 0)) return;
@@ -276,8 +276,7 @@
 
          var i, k, res, proto = Object.prototype.toString.apply(value);
 
-         // TODO: should we process here typed arrays???
-         //       are there special JSON syntax for typed arrays
+         // scan array - it can contain other objects
          if ((proto.indexOf('[object')==0) && (proto.indexOf('Array]')>0)) {
              for (i = 0; i < value.length; ++i) {
                 res = unref_value(value[i]);
@@ -293,6 +292,43 @@
             if (isNaN(ref) || (ref < 0) || (ref >= map.length)) return;
             newfmt = true;
             return map[ref];
+         }
+         
+         if ((newfmt!==false) && (len>1) && (ks[0]==='$arr') && (ks[1]==='len')) {
+            // this is ROOT-coded array
+            var arr = null, dflt = (value.$arr==="Bool") ? false : 0;
+            switch (value.$arr) {
+               case "Int8" : arr = new Int8Array(value.len); break;
+               case "Uint8" : arr = new Uint8Array(value.len); break;
+               case "Int16" : arr = new Int16Array(value.len); break;
+               case "Uint16" : arr = new Uint16Array(value.len); break;
+               case "Int32" : arr = new Int32Array(value.len); break;
+               case "Uint32" : arr = new Uint32Array(value.len); break;
+               case "Float32" : arr = new Float32Array(value.len); break;
+               case "Int64" : 
+               case "Uint64" : 
+               case "Float64" : arr = new Float64Array(value.len); break;
+               default : arr = new Array(value.len); break;
+            }
+            for (var k=0;k<value.len;++k) arr[k] = dflt;
+            
+            var nkey = 2, p = 0;
+            while (nkey<len) {
+               if (ks[nkey][0]=="p") p = value[ks[nkey++]]; // position
+               if (ks[nkey][0]!=='v') throw new Error('Unexpected member ' + ks[nkey] + ' in array decoding');
+               var v = value[ks[nkey++]]; // value
+               if (typeof v === 'object') {
+                  for (var k=0;k<v.length;++k) arr[p++] = v[k];
+               } else {
+                  arr[p++] = v;
+                  if ((nkey<len) && (ks[nkey][0]=='n')) {
+                     var cnt = value[ks[nkey++]]; // counter
+                     while (--cnt) arr[p++] = v; 
+                  } 
+               }
+            }
+            
+            return arr;
          }
          
          if ((newfmt!==false) && (len===3) && (ks[0]==='$pair') && (ks[1]==='first') && (ks[2]==='second')) {
@@ -454,7 +490,6 @@
       return arr;
    }
    
-   /** @memberOf JSROOT */
    JSROOT.GetUrlOption = function(opt, url, dflt) {
       // analyzes document.URL and extracts options after '?' mark
       // following options supported ?opt1&opt2=3
@@ -485,7 +520,7 @@
 
             // replace several symbols which are known to make a problem
             if (url.charAt(opt.length)=="=")
-               return url.slice(opt.length+1, pos).replace(/%27/g, "'").replace(/%22/g, '"').replace(/%20/g, ' ').replace(/%3C/g, '<').replace(/%3E/g, '>').replace(/%5B/g, '[').replace(/%5D/g, ']');
+               return decodeURI(url.slice(opt.length+1, pos));
          }
 
          url = url.slice(pos+1);

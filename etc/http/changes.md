@@ -1,5 +1,14 @@
 # JSROOT changelog
 
+## Changes in 4.8.2
+1. Support compressed array, produced with newest TBufferJSON
+   - $arr field identify such array and contains data type
+   - native arrays are used when decoding such array
+   - zero values are not stored
+   - many similar values stored as one with repetition factor
+   - position stored only when differ from produced with previous block
+   - array [3,3,3,3,3,3,1,2,2,2,2,2,2,2] compressed as {$arr:1,len:14,v:3,n:6,v1:1,v2:2,n2:7}
+
 
 ## Changes in 4.8.1
 1. Support new JSON format, produced with newest TBufferJSON
