@@ -23,11 +23,10 @@
 #else
 
 #include "ROOT/TExecutor.hxx"
+#include "ROOT/TScheduler.hxx"
 #include <functional>
 #include <memory>
 #include <numeric>
-
-namespace tbb { class task_scheduler_init;}
 
 namespace ROOT {
 
@@ -42,8 +41,6 @@ public:
 
    TThreadExecutor(TThreadExecutor &) = delete;
    TThreadExecutor & operator=(TThreadExecutor &) = delete;
-
-   ~TThreadExecutor();
 
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
@@ -75,9 +72,6 @@ public:
   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
   using TExecutor<TThreadExecutor>::Reduce;
 
-  //Returns the number of threads set in the scheduler at call time.
-  static int GetPoolSize(){return fgPoolSize;}
-
 protected:
 
    template<class F, class R, class Cond = noReferenceCond<F>>
@@ -96,8 +90,7 @@ private:
     template<class T, class R>
     auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-    std::unique_ptr<tbb::task_scheduler_init> fInitTBB;
-    static unsigned fgPoolSize;
+    ROOT::Internal::TScheduler fSched;
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/

@@ -20,15 +20,14 @@
 
 #include "TError.h"
 #include "TThread.h"
-
+#include "ROOT/TScheduler.hxx"
 #include <atomic>
 #include "tbb/task_scheduler_init.h"
 
-
-static tbb::task_scheduler_init &GetScheduler()
+static ROOT::Internal::TScheduler &GetSchedulerMT()
 {
-   static tbb::task_scheduler_init scheduler(tbb::task_scheduler_init::deferred);
-   return scheduler;
+  static ROOT::Internal::TScheduler schedMT;
+  return schedMT;
 }
 
 static bool &GetImplicitMTFlag()
@@ -49,24 +48,14 @@ static std::atomic_int &GetParTreeProcessingCount()
    return count;
 }
 
-static UInt_t &GetImplicitMTPoolSize()
-{
-   static UInt_t size = 0;
-   return size;
-};
-
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
    if (!GetImplicitMTFlag()) {
-      if (!GetScheduler().is_active()) {
+      if(ROOT::Internal::TScheduler::GetPoolSize() ==0) {
          TThread::Initialize();
-         bool defaultSize = numthreads == 0;
-         if (defaultSize)
-            numthreads = tbb::task_scheduler_init::automatic;
-
-         GetScheduler().initialize(numthreads);
-         GetImplicitMTPoolSize() = defaultSize ? tbb::task_scheduler_init::default_num_threads() : numthreads;
+         numthreads = numthreads!=0? numthreads : tbb::task_scheduler_init::default_num_threads();
       }
+      GetSchedulerMT().Subscribe(numthreads);
       GetImplicitMTFlag() = true;
    }
    else {
@@ -78,6 +67,7 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 {
    if (GetImplicitMTFlag()) {
       GetImplicitMTFlag() = false;
+      GetSchedulerMT().Unsubscribe();
    }
    else {
       ::Warning("ROOT_TImplicitMT_DisableImplicitMT", "Implicit multi-threading is already disabled");
@@ -91,7 +81,7 @@ extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 
 extern "C" UInt_t ROOT_TImplicitMT_GetImplicitMTPoolSize()
 {
-   return GetImplicitMTPoolSize();
+   return ROOT::Internal::TScheduler::GetPoolSize();
 };
 
 
