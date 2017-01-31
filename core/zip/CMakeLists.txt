@@ -24,14 +24,18 @@ set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${
 install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
 string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-add_custom_target(${tgt})
 set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
+set(dst_list)
 foreach(include_file ${ZLIB_HEADERS})
+  get_filename_component(incname ${include_file} NAME)
+  set(dst ${CMAKE_BINARY_DIR}/include/${incname})
   add_custom_command(
-    TARGET ${tgt}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${include_file} ${CMAKE_BINARY_DIR}/include
+    OUTPUT ${dst}
+    COMMAND ${CMAKE_COMMAND} -E copy ${include_file} ${dst}
     DEPENDS ${include_file})
+    list(APPEND dst_list ${dst})  
 endforeach()
+add_custom_target(${tgt} DEPENDS ${dst_list})
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})

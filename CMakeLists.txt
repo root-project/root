@@ -105,22 +105,19 @@ add_custom_command(OUTPUT ${stamp_file}
 
 #---Copy the the tutorials to the build area, with dependency---------------------------------
 file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/*)
-set(tutorial_files_builddir "")
+set(tutorial_files_builddir)
 foreach(tutorial_file ${tutorial_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
   # target below will interfere.
   if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
-    # Works, but triggers re-config for every change in tutorials/
-    #configure_file(${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file} COPYONLY)
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${tutorial_file}
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file}
+      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${tutorial_file}"
       DEPENDS ${CMAKE_SOURCE_DIR}/${tutorial_file})
-    set(tutorial_files_builddir "${CMAKE_BINARY_DIR}/${tutorial_file};${tutorial_files_builddir}")
+    list(APPEND tutorial_files_builddir ${CMAKE_BINARY_DIR}/${tutorial_file})
   endif()
 endforeach()
-
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
-
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.

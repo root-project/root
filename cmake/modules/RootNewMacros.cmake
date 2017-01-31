@@ -700,10 +700,10 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
   if( ARGN )
     set(dirs ${ARGN})
   else()
-    set(dirs inc/)
+    set(dirs inc)
     if(root7)
-      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/)
-        set(dirs inc/ v7/inc/)
+      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+        set(dirs inc v7/inc)
       endif()
     endif()
   endif()
@@ -728,7 +728,7 @@ function(ROOT_INSTALL_HEADERS)
   set (filter "(${filter})")
   string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
   string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-  add_custom_target(${tgt})
+  #add_custom_target(${tgt})
   set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -742,12 +742,15 @@ function(ROOT_INSTALL_HEADERS)
       set (src ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${include_file})
       set (dst ${CMAKE_BINARY_DIR}/include/${include_file})
       add_custom_command(
-        TARGET ${tgt}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${src} ${dst}
+        OUTPUT ${dst}
+        COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
+        COMMENT "Copying header ${src} to /include"
         DEPENDS ${src})
+      list(APPEND dst_list ${dst})  
     endforeach()
     set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${d})
   endforeach()
+  add_custom_target(${tgt} DEPENDS ${dst_list})
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
