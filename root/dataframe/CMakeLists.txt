@@ -5,7 +5,7 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-ROOTTEST_GENERATE_EXECUTABLE(misc test_misc.cxx LIBRARIES Core TreePlayer Hist)
+ROOTTEST_GENERATE_EXECUTABLE(misc test_misc.cxx LIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 ROOTTEST_ADD_TEST(misc
                   EXEC misc
                   OUTREF test_misc.ref
