@@ -1,4 +1,3 @@
-// @(#)root/thread:$Id$
 // Author: Enrico Guiraud, Danilo Piparo CERN  12/2016
 
 /*************************************************************************
