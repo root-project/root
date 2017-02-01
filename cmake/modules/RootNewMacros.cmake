@@ -700,10 +700,10 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
   if( ARGN )
     set(dirs ${ARGN})
   else()
-    set(dirs inc)
+    set(dirs inc/)
     if(root7)
       if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-        set(dirs inc v7/inc)
+        set(dirs inc/ v7/inc/)
       endif()
     endif()
   endif()
@@ -733,6 +733,7 @@ function(ROOT_INSTALL_HEADERS)
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
                            COMPONENT headers
                            ${options})
+    string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
     ROOT_GLOB_FILES(include_files
       RECURSE
       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/${d}
