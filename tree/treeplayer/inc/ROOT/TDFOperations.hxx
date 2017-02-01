@@ -19,6 +19,8 @@
 #include <limits>
 #include <vector>
 
+/// \cond HIDDEN_SYMBOLS
+
 class TH1F;
 
 namespace ROOT {
@@ -331,5 +333,7 @@ public:
 } // end of NS Internal
 
 } // end of NS ROOT
+
+/// \endcond
 
 #endif

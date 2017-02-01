@@ -15,6 +15,8 @@
 #include <vector>
 #include <type_traits> // std::decay
 
+/// \cond HIDDEN_SYMBOLS
+
 namespace ROOT {
 namespace Internal {
 namespace TDFTraitsUtils {
@@ -128,5 +130,7 @@ struct TIsContainer {
 } // end NS Internal
 
 } // end NS ROOT
+
+/// \endcond
 
 #endif
