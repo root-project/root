@@ -436,7 +436,7 @@ def getExtraHeaders():
 def removeUnwantedHeaders(allHeadersContent):
    """ remove unwanted headers, e.g. the ones used for dictionaries but not desirable in the pch
    """
-   unwantedHeaders = []
+   unwantedHeaders = ['ROOT/TDataFrame.hxx']
    for unwantedHeader in unwantedHeaders:
       allHeadersContent = allHeadersContent.replace('#include "%s"' %unwantedHeader,"")
    return allHeadersContent
