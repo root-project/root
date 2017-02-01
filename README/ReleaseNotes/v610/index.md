@@ -139,7 +139,7 @@ The following interfaces have been removed, after deprecation in v6.08.
   range should be recomputed. This has the side effect that some graph parameters
   (like the axis titles) were also deleted. This now fixed. It was reported
   [here](https://sft.its.cern.ch/jira/browse/ROOT-8092).
-- Improve the error bars drawing in TLegend to better match the plot's error
+- Improve the error bars drawing in TLegend to match the plot's error
   drawing. This improvement was requested [here](https://sft.its.cern.ch/jira/browse/ROOT-5468).
 - Implement text clipping in TASImage as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-4538).
   Also the text size in batch mode for png (gif jpeg) files better matches the
@@ -164,7 +164,6 @@ The following interfaces have been removed, after deprecation in v6.08.
   of the lego was red instead of gray.
 
 ![New box option for 3D histograms](NewBoxOption.png)
-
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
