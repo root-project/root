@@ -187,10 +187,6 @@ namespace cling {
     ///
     mutable std::vector<ClangInternalState*> m_StoredStates;
 
-    ///\brief Processes the invocation options.
-    ///
-    void handleFrontendOptions();
-
     ///\brief Worker function, building block for interpreter's public
     /// interfaces.
     ///
@@ -316,6 +312,10 @@ namespace cling {
 
     virtual ~Interpreter();
 
+    ///\brief Whether the Interpreter is setup and ready to be used.
+    ///
+    bool isValid() const;
+
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
 
@@ -342,7 +342,7 @@ namespace cling {
     ///
     ///\returns The current svn revision (svn Id).
     ///
-    const char* getVersion() const;
+    static const char* getVersion();
 
     ///\brief Creates unique name that can be used for various aims.
     ///
@@ -615,6 +615,7 @@ namespace cling {
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
 
     clang::CompilerInstance* getCI() const;
+    clang::CompilerInstance* getCIOrNull() const;
     clang::Sema& getSema() const;
 
     //FIXME: This must be in InterpreterCallbacks.
