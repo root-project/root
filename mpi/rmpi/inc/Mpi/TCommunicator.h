@@ -130,6 +130,10 @@ namespace ROOT {
 
          virtual void Probe(Int_t source, Int_t tag) const;
 
+         ////////////////////////////////////////
+         //utility methods with single argument//
+         ////////////////////////////////////////
+
          template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
 
          template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
@@ -142,25 +146,22 @@ namespace ROOT {
 
          template<class Type> TRequest IRecv(Type &var, Int_t source, Int_t tag) const;
 
-
          template<class Type> void Bcast(Type &var, Int_t root) const;
 
          template<class Type> TRequest IBcast(Type &var, Int_t root) const;
 
-         template<class Type> void Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
-
-         template<class Type> void Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
-
          template<class Type> void Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const;
 
 
-         /////////////////////////////////
-         //methods with arrary arguments//
-         /////////////////////////////////
+         ////////////////////////////////
+         //methods with arrar arguments//
+         ////////////////////////////////
 
          template<class Type> void Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const;
 
          template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
+
+         //methods with nonblocking//
 
          template<class Type> TRequest ISend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
 
@@ -175,6 +176,19 @@ namespace ROOT {
          template<class Type> void Bcast(Type *vars, Int_t count, Int_t root) const;
 
          template<class Type> void Reduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)(), Int_t root) const;
+
+
+         template<class Type> void Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
+
+         template<class Type> void Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
+
+         /////////////////////////////////////
+         //methods with results in all ranks//
+         /////////////////////////////////////
+
+         template<class Type> void AllReduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)()) const;
+
+         template<class Type> void AllGather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount) const;
 
          /**
           * static method to serialize objects. used in the multiple communication schemas.
@@ -581,7 +595,7 @@ namespace ROOT {
        * \param vars any selializable object reference to send/receive the message
        * \param count number of elements in array \p vars
        * \param root id of the main message where message was sent
-       * \return TGrequest obj
+       * \return TRequest obj
        */
       template<class Type> TRequest TCommunicator::IBcast(Type *vars, Int_t count, Int_t root) const
       {
@@ -744,6 +758,35 @@ namespace ROOT {
          if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, MPI_TAG_UB);
       }
 
+      //______________________________________________________________________________
+      /**
+       * Method to apply reduce operation over and array of elements using binary tree reduction. and the results is send to all processes.
+       * \param in_var variable to eval in the reduce operation
+       * \param out_var variable to receive the variable operation
+       * \param count Number of elements to reduce in \p in_var and \p out_var
+       * \param opf function the perform operation
+       */
+      template<class Type> void TCommunicator::AllReduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)()) const
+      {
+         Reduce(in_vars, out_vars, count, opf, GetMainProcess());
+         if (IsMainProcess()) Bcast(out_vars, count, GetMainProcess());
+      }
+      //______________________________________________________________________________
+      /**
+       *  Each process (TCommunicator::GetMainProcess() process included) sends the contents of its send buffer to the TCommunicator::GetMainProcess() process.
+      *  The TCommunicator::GetMainProcess() process receives the messages and stores them in rank order, after that send a bcast message with the results.
+      *  The outcome is as if each of the n processes in the group (including the root process)
+       * \param in_vars any selializable object vector reference to send the message
+       * \param incount Number of elements in receive in \p in_vars
+       * \param out_vars any selializable object vector reference to receive the message
+       * \param outcount Number of elements in receive in \p out_vars
+       * \return TGrequest obj
+       */
+      template<class Type> void TCommunicator::AllGather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount) const
+      {
+         Gather(in_vars, incount, out_vars, outcount, GetMainProcess());
+         if (IsMainProcess()) Bcast(out_vars, outcount, GetMainProcess());
+      }
       //______________________________________________________________________________
       template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root);
 
