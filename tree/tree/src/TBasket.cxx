@@ -23,6 +23,9 @@
 #include "TTimeStamp.h"
 #include "RZip.h"
 
+#include <chrono>
+#include <iostream>
+
 // TODO: Copied from TBranch.cxx
 #if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
 #if !defined(R__unlikely)
@@ -47,6 +50,9 @@ Manages buffers for branches of a Tree.
 See picture in TTree.
 */
 
+static std::chrono::steady_clock::duration globalDuration = std::chrono::steady_clock::duration::zero();//##
+static std::chrono::steady_clock::time_point startDuration;
+static std::chrono::steady_clock::time_point endDuration;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.
 
@@ -563,6 +569,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    fBuffer = rawUncompressedBuffer;
 
    oldCase = OLD_CASE_EXPRESSION;
+
+   startDuration = std::chrono::steady_clock::now();//##
    // Case where ROOT thinks the buffer is compressed.  Copy over the key and uncompress the object
    if (fObjlen > fNbytes-fKeylen || oldCase) {
       if (R__unlikely(TestBit(TBufferFile::kNotDecompressed) && (fNevBuf==1))) {
@@ -591,6 +599,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          if (R__unlikely(oldCase && (nin > fObjlen || nbuf > fObjlen))) {
             //buffer was very likely not compressed in an old version
             memcpy(rawUncompressedBuffer+fKeylen, rawCompressedObjectBuffer+fKeylen, fObjlen);
+            endDuration = std::chrono::steady_clock::now();//##
+            globalDuration += endDuration - startDuration;//##
             goto AfterBuffer;
          }
 
@@ -620,9 +630,12 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       // Nothing is compressed - copy over wholesale.
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, len);
    }
+   endDuration = std::chrono::steady_clock::now();//##
+   globalDuration += endDuration - startDuration;//##
 
 AfterBuffer:
 
+   std::cout << globalDuration.count() << std::endl;//##
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
    // Read offsets table if needed.

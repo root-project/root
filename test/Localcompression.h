@@ -19,6 +19,7 @@
 
 #define LARGESIZE 1000000
 #define SMALLSIZE 1000
+#define FLOATSIZE 6
 
 class TLarge : public TObject {
 
@@ -60,24 +61,24 @@ public:
    ClassDef(TSmall,1)
 };
 
-class TInt : public TObject {
+class TFloat : public TObject {
 
 private:
    Int_t         fSize;
-   Int_t        *fInt; //[fSize]
+   Float_t      *fFloat; //[fSize]
 
 public:
-   TInt(Int_t size = 1); 
-   TInt(const TInt& aint);
-   virtual ~TInt();
-   TInt &operator=(const TInt &aint);
+   TFloat(Int_t size = FLOATSIZE); 
+   TFloat(const TFloat& aint);
+   virtual ~TFloat();
+   TFloat &operator=(const TFloat &afloat);
 
    void          Clear(Option_t *option ="");
    void          Build();
    Int_t         GetSize() const { return fSize; }
-   Int_t        *GetInt() const { return fInt; }
+   Float_t      *GetFloat() const { return fFloat; }
 
-   ClassDef(TInt,1)
+   ClassDef(TFloat,1)
 };
 
 #endif

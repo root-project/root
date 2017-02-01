@@ -40,7 +40,7 @@ int main(int argc, char **argv)
    TBranch *branch    = 0;
    TLarge *eventlarge = 0;
    TSmall *eventsmall = 0;
-   TInt   *eventint   = 0;
+   TFloat *eventfloat   = 0;
 
    // Fill event, header and tracks with some random numbers
    //   Create a timer object to benchmark this loop
@@ -70,10 +70,10 @@ int main(int argc, char **argv)
          Int_t nentries = (Int_t)tree->GetEntries();
          nevent = TMath::Min(nevent,nentries);
       } else if (object == 2) {
-         hfile = new TFile("TInt.root");
+         hfile = new TFile("TFloat.root");
          tree = (TTree*)hfile->Get("T");
          branch = tree->GetBranch("event");
-         branch->SetAddress(&eventint);
+         branch->SetAddress(&eventfloat);
          Int_t nentries = (Int_t)tree->GetEntries();
          nevent = TMath::Min(nevent,nentries);
       }
@@ -111,8 +111,8 @@ int main(int argc, char **argv)
        hfile = new TFile("TLarge.root","RECREATE","TTree benchmark ROOT file");
        eventlarge = new TLarge();
     } else if (object == 2) {
-       hfile = new TFile("TInt.root","RECREATE","TTree benchmark ROOT file");
-       eventint = new TInt();
+       hfile = new TFile("TFloat.root","RECREATE","TTree benchmark ROOT file");
+       eventfloat = new TFloat();
     }
 
     hfile->SetCompressionLevel(comp);
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
      } else if (object == 0) {
         branch = tree->Branch("event", &eventlarge, bufsize,0);
      } else if (object == 2) {
-        branch = tree->Branch("event", &eventint, bufsize, 0);
+        branch = tree->Branch("event", &eventfloat, bufsize, 0);
      }
 
      branch->SetAutoDelete(kFALSE);
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
         } else if (object == 0) {
            eventlarge->Build();
         } else if (object == 2) {
-           eventint->Build();
+           eventfloat->Build();
         }
         nb += tree->Fill();  //fill the tree
      }
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
   } else if (object == 0) {
      delete eventlarge;  eventlarge = 0;
   } else if (object == 2) {
-     delete eventint;    eventint = 0;
+     delete eventfloat;    eventfloat = 0;
   }
 
   //  Stop timer and print results

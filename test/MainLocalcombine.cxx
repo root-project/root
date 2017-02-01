@@ -21,7 +21,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-   Int_t nevent = 40;     // by default create 400 events
+   Int_t nevent = 1000;     // by default create 400 events
    Int_t comp   = 1;       // by default file is compressed
    Int_t read   = 0;
    Int_t object  = 0;
@@ -39,9 +39,9 @@ int main(int argc, char **argv)
    TTree *tree;
    TLarge *eventlarge = 0;
    TSmall *eventsmall = 0;
-   TInt   *eventint   = 0;
+   TFloat *eventfloat = 0;
    Int_t nsmall = 1000;
-   Int_t nint = nsmall*100;
+   Int_t nfloat = nsmall*100;
 
    TStopwatch timer;
    timer.Start();
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
    TBranch *branch;
    TBranch *branchsmall;
    TBranch *branchlarge;
-   TBranch *branchint;
+   TBranch *branchfloat;
 
 // Read case
    if (read) {
@@ -72,8 +72,8 @@ int main(int argc, char **argv)
          branch = tree->GetBranch("EventLarge");
          branch->SetAddress(&eventlarge);
       } else if (object == 2) {
-         branch = tree->GetBranch("EventInt");
-         branch->SetAddress(&eventint);
+         branch = tree->GetBranch("EventFloat");
+         branch->SetAddress(&eventfloat);
       } else {
          branch = 0;
       }
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 
       eventsmall = new TSmall();
       eventlarge = new TLarge();
-      eventint = new TInt();
+      eventfloat = new TFloat();
 
       hfile->SetCompressionLevel(comp);
       hfile->SetCompressionAlgorithm(algorithm);
@@ -132,11 +132,11 @@ int main(int argc, char **argv)
       TTree::SetBranchStyle(branchStyle);
       branchsmall = tree->Branch("EventSmall", &eventsmall, bufsize,0);
       branchlarge = tree->Branch("EventLarge", &eventlarge, bufsize,0);
-      branchint   = tree->Branch("EventInt", &eventint, bufsize, 0);
+      branchfloat = tree->Branch("EventFloat", &eventfloat, bufsize, 0);
 
       branchsmall->SetAutoDelete(kFALSE);
       branchlarge->SetAutoDelete(kFALSE);
-      branchint->SetAutoDelete(kFALSE);
+      branchfloat->SetAutoDelete(kFALSE);
 
       if(branchStyle) tree->BranchRef();
 
@@ -155,9 +155,9 @@ int main(int argc, char **argv)
             nbs += branchsmall->Fill();
 //            printf("event%d, iner%d, nb small = %lld\n", ev, i, nbs);
          }
-         for (Int_t i = 0; i < nint; ++i) {
-            eventint->Build();
-            nbi += branchint->Fill();
+         for (Int_t i = 0; i < nfloat; ++i) {
+            eventfloat->Build();
+            nbi += branchfloat->Fill();
 //            printf("event%d, iner%d, nb int = %lld\n", ev, i, nbi);
          }
 //         nb += tree->Fill();  //fill the tree
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
    // We own the event (since we set the branch address explicitly), we need to delete it.
    delete eventsmall;  eventsmall = 0;
    delete eventlarge;  eventlarge = 0;
-   delete eventint;    eventint = 0;
+   delete eventfloat;  eventfloat = 0;
 
    // Stop timer and print results
    timer.Stop();

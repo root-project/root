@@ -11,7 +11,7 @@
 
 ClassImp(TLarge)
 ClassImp(TSmall)
-ClassImp(TInt)
+ClassImp(TFloat)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an TLarge.
@@ -20,7 +20,7 @@ TLarge::TLarge(Int_t size)
    fSize = size;
    fLarge = new Float_t[fSize];
    for(int i=0;i<fSize;++i) {
-      if (i%60==0) fLarge[i] = gRandom->Rndm(1);
+      if (i%6==0) fLarge[i] = gRandom->Rndm(1);
       else fLarge[i] = fLarge[i-1];
    }
 }
@@ -117,52 +117,52 @@ void TSmall::Clear(Option_t * /*option*/)
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Create an TFloat.
-TInt::TInt(Int_t size)
+TFloat::TFloat(Int_t size)
 {
    fSize  = size;
-   fInt = new Int_t[fSize];
-   fInt[0] = Int_t(gRandom->Rndm(1));
+   fFloat = new Float_t[fSize];
+   fFloat[0] = Float_t(gRandom->Rndm(1));
    for(int i=1;i<fSize;++i) {
-      fInt[i] = fInt[0];
+      fFloat[i] = fFloat[0];
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an TSmall.
-TInt::TInt(const TInt& aint) : TObject(aint)
+TFloat::TFloat(const TFloat& afloat) : TObject(afloat)
 {
-   Int_t *intermediate = aint.GetInt();
-   Int_t size = aint.GetSize();
-   fInt = new Int_t[size];
+   Float_t *intermediate = afloat.GetFloat();
+   Int_t size = afloat.GetSize();
+   fFloat = new Float_t[size];
    for(int i=0;i<size;++i)
-      fInt[i] = intermediate[i];
+      fFloat[i] = intermediate[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TInt::~TInt()
+TFloat::~TFloat()
 {
    Clear();
-   delete fInt;
+   delete fFloat;
    fSize = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
 
-void TInt::Build()
+void TFloat::Build()
 {
-   fInt[0] = Int_t(gRandom->Rndm(1));
+   fFloat[0] = Float_t(gRandom->Rndm(1));
    for(int i=1;i<fSize;++i) {
-      fInt[i] = fInt[0];
+      fFloat[i] = fFloat[0];
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void TInt::Clear(Option_t * /*option*/)
+void TFloat::Clear(Option_t * /*option*/)
 {
    TObject::Clear();
    for(int i=0;i<fSize;++i)
-      fInt[i] = 0;
+      fFloat[i] = 0;
 }
 
