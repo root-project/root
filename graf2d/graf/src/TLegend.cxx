@@ -742,15 +742,17 @@ void TLegend::PaintPrimitives()
 
       // depending on the object drawing option, the endcaps for error
       // bar are drawn differently.
-      TString eobjopt = eobj->GetDrawOption();
-      eobjopt.ToLower();
       Int_t endcaps  = 0; // no endcaps.
-      if (eobjopt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
-      if (eobj->InheritsFrom(TGraph::Class())) {
-         endcaps = 1; // a bar, default for TGraph
-         if (eobjopt.Contains("z"))  endcaps = 0; // no endcaps.
-         if (eobjopt.Contains(">"))  endcaps = 2; // empty arrow.
-         if (eobjopt.Contains("|>")) endcaps = 3; // filled arrow.
+      if (eobj) {
+         TString eobjopt = eobj->GetDrawOption();
+         eobjopt.ToLower();
+         if (eobjopt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
+         if (eobj->InheritsFrom(TGraph::Class())) {
+            endcaps = 1; // a bar, default for TGraph
+            if (eobjopt.Contains("z"))  endcaps = 0; // no endcaps.
+            if (eobjopt.Contains(">"))  endcaps = 2; // empty arrow.
+            if (eobjopt.Contains("|>")) endcaps = 3; // filled arrow.
+         }
       }
 
       // Draw fill pattern (in a box)
