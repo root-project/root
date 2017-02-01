@@ -846,10 +846,8 @@ if(vc)
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)  # equivalent to MSVC 2010
-      message(STATUS "VC requires MSVC version >= 2011; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    endif()
+    message(STATUS "VC is not supported on Windows; switching OFF 'vc' option")
+    set(vc OFF CACHE BOOL "" FORCE)
   endif()
 endif()
 
