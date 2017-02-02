@@ -38,9 +38,18 @@ PROOFXMAP    := $(PROOFXLIB:.$(SOEXT)=.rootmap)
 
 ifeq ($(HASXRD),yes)
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFXH))
+PROOFXH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFXH))
+ALLHDRS      += $(PROOFXH_REL)
 ALLLIBS      += $(PROOFXLIB)
 ALLMAPS      += $(PROOFXMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PROOFXH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Proof_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PROOFXLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PROOFXDEP)

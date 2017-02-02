@@ -154,6 +154,7 @@ TPie::TPie(const TPie &cpy) : TNamed(cpy), TAttText(cpy)
 TPie::~TPie()
 {
    if (fNvals>0) {
+      for (int i=0; i<fNvals; ++i) delete fPieSlices[i];
       delete [] fPieSlices;
    }
 

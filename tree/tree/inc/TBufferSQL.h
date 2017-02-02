@@ -69,6 +69,8 @@ public:
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
    virtual   void     ReadStdString(std::string *s);
+   using              TBuffer::ReadStdString;
+   virtual   void     ReadCharStar(char* &s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -86,7 +88,8 @@ public:
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString  &s);
    virtual   void     WriteStdString(const std::string *s);
-
+   using              TBuffer::WriteStdString;
+   virtual   void     WriteCharStar(char *s);
 
    virtual   void     WriteFastArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteFastArray(const Char_t    *c, Int_t n);

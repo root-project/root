@@ -162,16 +162,16 @@ void CreateVariableTransforms( const TString& trafoDefinitionIn,
         else log << kFATAL <<Form("Dataset[%s] : ",dataInfo.GetName())<< "<ProcessOptions> Variable transform '"
                      << trName << "' unknown." << Endl;
 
-      
+
         if (transformation) {
             ClassInfo* clsInfo = dataInfo.GetClassInfo(idxCls);
              if (clsInfo )
-	        log << kHEADER <<Form("[%s] : ",dataInfo.GetName())
-		    << "Create Transformation \"" << trName << "\" with reference class "
+        log << kHEADER <<Form("[%s] : ",dataInfo.GetName())
+    << "Create Transformation \"" << trName << "\" with reference class "
                     << clsInfo->GetName() << "=("<< idxCls <<")"<<Endl << Endl;
-		else
-	        log << kHEADER <<Form("[%s] : ",dataInfo.GetName())
-		    << "Create Transformation \"" << trName << "\" with events from all classes." << Endl << Endl;
+else
+        log << kHEADER <<Form("[%s] : ",dataInfo.GetName())
+    << "Create Transformation \"" << trName << "\" with events from all classes." << Endl << Endl;
 
             transformation->SelectInput( variables );
             transformationHandler.AddTransformation(transformation, idxCls);

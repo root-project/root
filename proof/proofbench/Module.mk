@@ -51,9 +51,20 @@ PBCPARS     := $(MODDIRS)/TSelHist.cxx
 PBCPAR      := $(PBPARDIR)/ProofBenchCPUSel.par
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFBENCHH))
+PROOFBENCHH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFBENCHH))
+ALLHDRS      += $(PROOFBENCHH_REL)
 ALLLIBS      += $(PROOFBENCHLIB) $(PBDPAR) $(PBCPAR)
 ALLMAPS      += $(PROOFBENCHMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PROOFBENCHH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Proof_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PROOFBENCHLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PBDPAR)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PBCPAR)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PROOFBENCHDEP)

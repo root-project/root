@@ -10,6 +10,8 @@
 #ifndef CLING_INCREMENTAL_JIT_H
 #define CLING_INCREMENTAL_JIT_H
 
+#include "cling/Utils/Output.h"
+
 #include <map>
 #include <memory>
 #include <set>
@@ -172,13 +174,9 @@ private:
 
 
   std::string Mangle(llvm::StringRef Name) {
-    std::string MangledName;
-    {
-      llvm::raw_string_ostream MangledNameStream(MangledName);
-      llvm::Mangler::getNameWithPrefix(MangledNameStream, Name,
-                                       m_TMDataLayout);
-    }
-    return MangledName;
+    stdstrstream MangledName;
+    llvm::Mangler::getNameWithPrefix(MangledName, Name, m_TMDataLayout);
+    return MangledName.str();
   }
 
   llvm::orc::JITSymbol getInjectedSymbols(const std::string& Name) const;
@@ -217,9 +215,10 @@ public:
   ///\brief Get the address of a symbol from the process' loaded libraries.
   /// \param Name - symbol to look for
   /// \param Addr - known address of the symbol that can be cached later use
+  /// \param Jit - add to the injected symbols cache
   /// \returns The address of the symbol and whether it was cached
-  static std::pair<void*, bool>
-  searchLibraries(llvm::StringRef Name, void* Addr = nullptr);
+  std::pair<void*, bool>
+  lookupSymbol(llvm::StringRef Name, void* Addr = nullptr, bool Jit = false);
 };
 } // end cling
 #endif // CLING_INCREMENTAL_EXECUTOR_H

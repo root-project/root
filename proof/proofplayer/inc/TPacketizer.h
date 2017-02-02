@@ -35,8 +35,8 @@ class TMessage;
 class TTimer;
 class TTree;
 class TMap;
+class TProofProgressStatus;
 class TProofStats;
-
 
 class TPacketizer : public TVirtualPacketizer {
 

@@ -28,9 +28,18 @@ SPECTRUMLIB  := $(LPATH)/libSpectrum.$(SOEXT)
 SPECTRUMMAP  := $(SPECTRUMLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SPECTRUMH))
+SPECTRUMH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(SPECTRUMH))
+ALLHDRS      += $(SPECTRUMH_REL)
 ALLLIBS      += $(SPECTRUMLIB)
 ALLMAPS      += $(SPECTRUMMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(SPECTRUMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Hist_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SPECTRUMLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(SPECTRUMDEP)

@@ -30,9 +30,18 @@ KRB5AUTHLIB  := $(LPATH)/libKrb5Auth.$(SOEXT)
 KRB5AUTHMAP  := $(KRB5AUTHLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(KRB5AUTHH))
+KRB5AUTHH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(KRB5AUTHH))
+ALLHDRS     += $(KRB5AUTHH_REL)
 ALLLIBS     += $(KRB5AUTHLIB)
 ALLMAPS     += $(KRB5AUTHMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(KRB5AUTHH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(KRB5AUTHLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(KRB5AUTHDEP)

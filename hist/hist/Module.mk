@@ -21,7 +21,6 @@ HISTDH       := $(HISTDS:.cxx=.h)
 HISTMH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)) \
 		$(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h)) \
 		$(filter-out $(MODDIRI)/v5/LinkDef%,$(wildcard $(MODDIRI)/v5/*.h))
-HISTINCH     := $(patsubst $(MODDIRI)/%,include/%,$(HISTMH))
 #HISTHMAT     += mathcore/inc/Math/WrappedFunction.h
 
 HISTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -33,9 +32,18 @@ HISTLIB      := $(LPATH)/libHist.$(SOEXT)
 HISTMAP      := $(HISTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(HISTINCH)
+HISTMH_REL  := $(patsubst $(MODDIRI)/%,include/%,$(HISTMH))
+ALLHDRS     += $(HISTMH_REL)
 ALLLIBS     += $(HISTLIB)
 ALLMAPS     += $(HISTMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(HISTMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Hist_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(HBOOKLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(HISTDEP)
@@ -66,15 +74,15 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 $(call pcmrule,HIST)
 	$(noop)
 
-$(HISTDS):      $(HISTINCH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
+$(HISTDS):      $(HISTMH_REL) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HIST) -c -writeEmptyRootPCM $(patsubst include/%,%,$(HISTINCH)) $(HISTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HIST) -c -writeEmptyRootPCM $(patsubst include/%,%,$(HISTMH_REL)) $(HISTL)
 
-$(HISTMAP):     $(HISTINCH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
+$(HISTMAP):     $(HISTMH_REL) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(HISTDS) $(call dictModule,HIST) -c $(patsubst include/%,%,$(HISTINCH)) $(HISTL)
+		$(ROOTCLINGSTAGE2) -r $(HISTDS) $(call dictModule,HIST) -c $(patsubst include/%,%,$(HISTMH_REL)) $(HISTL)
 
 all-$(MODNAME): $(HISTLIB)
 

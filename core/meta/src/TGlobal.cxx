@@ -68,7 +68,7 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
 
 TGlobal::~TGlobal()
 {
-   gCling->DataMemberInfo_Delete(fInfo);
+   if (fInfo && gCling) gCling->DataMemberInfo_Delete(fInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,6 +172,11 @@ TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
 {
    // Used to storeTGlobalMappedFunctions from other libs, before gROOT was initialized
    static TList fEarlyRegisteredGlobals;
+   // For thread-safe setting of SetOwner(kTRUE).
+   static bool earlyRegisteredGlobalsSetOwner
+      = (fEarlyRegisteredGlobals.SetOwner(kTRUE), true);
+   (void) earlyRegisteredGlobalsSetOwner; // silence unused var
+
    return fEarlyRegisteredGlobals;
 }
 

@@ -45,6 +45,7 @@ namespace cling {
     ///
     std::unique_ptr<MetaParser> m_MetaParser;
 
+#ifndef NDEBUG
     ///\brief Currently executing file as passed into executeFile
     ///
     llvm::StringRef m_CurrentlyExecutingFile;
@@ -52,57 +53,32 @@ namespace cling {
     ///\brief Outermost currently executing file as passed into executeFile
     ///
     llvm::StringRef m_TopExecutingFile;
+#endif
 
     ///\brief The output stream being used for various purposes.
     ///
     llvm::raw_ostream* m_Outs;
 
-    ///\brief The file descriptor of the copy of stdout.
+    ///\brief Internal class to store redirection state.
     ///
-    int m_backupFDStdout;
-
-    ///\brief The file descriptor of the copy of stdout.
-    ///
-    int m_backupFDStderr;
-
-    ///\brief Stores the stack for the redirect file paths for out.
-    llvm::SmallVector<llvm::SmallString<128>, 2> m_PrevStdoutFileName;
-    ///\brief Stores the stack for the redirect file paths for err.
-    llvm::SmallVector<llvm::SmallString<128>, 2> m_PrevStderrFileName;
-
-    //Counter to handle more than one redirection RAAI's
-    int m_RedirectionRAIILevel = 0;
+    class RedirectOutput;
+    std::unique_ptr<RedirectOutput> m_RedirectOutput;
 
   public:
     enum RedirectionScope {
       kSTDOUT = 1,
-      kSTDERR = 2,
-      kSTDBOTH = 3
+      kSTDERR,
+      kSTDBOTH,
+      kSTDSTRM  // "&1" or "&2" is not a filename
     };
 
-  public:
     ///\brief Class to be created for each processing input to be
     /// able to redirect std.
     class MaybeRedirectOutputRAII {
-    private:
-      MetaProcessor* m_MetaProcessor;
-      int m_isCurrentlyRedirecting;
-
+      MetaProcessor& m_MetaProcessor;
     public:
-      MaybeRedirectOutputRAII(MetaProcessor* p);
+      MaybeRedirectOutputRAII(MetaProcessor& P);
       ~MaybeRedirectOutputRAII();
-
-      // Don't mess with m_RedirectionRAIILevel
-      MaybeRedirectOutputRAII(const MaybeRedirectOutputRAII&) = delete;
-      MaybeRedirectOutputRAII(MaybeRedirectOutputRAII&&) = delete;
-      MaybeRedirectOutputRAII& operator=(const MaybeRedirectOutputRAII&) = delete;
-      MaybeRedirectOutputRAII& operator=(MaybeRedirectOutputRAII&&) = delete;
-
-    private:
-      void pop();
-      void redirect(FILE* file, const std::string& fileName,
-                    MetaProcessor::RedirectionScope scope);
-      void unredirect(int backFD, int expectedFD, FILE* file);
     };
 
   public:
@@ -126,11 +102,6 @@ namespace cling {
       m_Outs = &outs;
       return prev;
     }
-    void increaseRedirectionRAIILevel() { m_RedirectionRAIILevel++; }
-
-    void decreaseRedirectionRAIILevel() { m_RedirectionRAIILevel--; }
-
-    int getRedirectionRAIILevel() { return m_RedirectionRAIILevel; }
 
     ///\brief Process the input coming from the prompt and possibli returns
     /// result of the execution of the last statement
@@ -145,7 +116,7 @@ namespace cling {
     ///
     int process(const char* input_line,
                 Interpreter::CompilationResult& compRes,
-                cling::Value* result);
+                cling::Value* result = nullptr);
 
     ///\brief When continuation is requested, this cancels and ignores previous
     /// input, resetting the continuation to a new line.
@@ -161,13 +132,15 @@ namespace cling {
     /// @param[out] result - the cling::Value as result of the
     ///             execution of the last statement
     ///\param [in] posOpenCurly - position of the opening '{'; -1 if no curly.
+    ///\param [in] lineByLine - Process each line individually.
     ///
     ///\returns result of the compilation.
     ///
     Interpreter::CompilationResult
     readInputFromFile(llvm::StringRef filename,
                       Value* result,
-                      size_t posOpenCurly = (size_t)(-1));
+                      size_t posOpenCurly = (size_t)(-1),
+                      bool lineByLine = false);
 
     ///\brief Set the stdout and stderr stream to the appropriate file.
     ///
@@ -184,23 +157,6 @@ namespace cling {
     ///\param [in] T - the last transaction stay should filename be unloaded.
     ///\param [in] filename - The name of the file to be used as unload point.
     void registerUnloadPoint(const Transaction* T, llvm::StringRef filename);
-
-  private:
-    ///\brief Set a stream to a file
-    ///
-    ///\param [in] file - The file for the redirection.
-    ///\param [in] append - Write in append mode.
-    ///\param [in] fd - File descriptor for the file we want to open.
-    ///\param [out] prevFileStack - The stack of previous file paths.
-    void setFileStream(llvm::StringRef file, bool append, int fd,
-                  llvm::SmallVector<llvm::SmallString<128> ,2>& prevFileStack);
-
-    ///\brief Copy a file descriptor.
-    ///
-    ///\param [in] fd - The fd to be copied.
-
-    ///\returns - The copy of the file descriptor.
-    int copyFileDescriptor(int fd);
   };
 } // end namespace cling
 

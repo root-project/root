@@ -20,6 +20,10 @@
 #ifndef ROOT_Math_CramerInversionSym_icc
 #define ROOT_Math_CramerInversionSym_icc
 
+#ifndef ROOT_Math_Dinv
+#error "Do not use CramerInversionSym.icc directly. #include \"Math/Dinv.h\" instead."
+#endif // ROOT_Math_Dinv
+
 #include <cmath>
 
 

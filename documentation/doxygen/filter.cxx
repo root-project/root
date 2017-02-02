@@ -14,6 +14,9 @@
 ///  - by a reference to a C++ file
 /// The tag `Begin_Macro` can have the parameter `(source)`. The directive becomes:
 /// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
+/// `Begin_Macro` also accept the image file type as option. "png" or "svg".
+/// "png" is the default value. For example: `Begin_Macro(source, svg)` will show
+/// the code of the macro and the image will be is svg format.
 ///
 /// ## In the ROOT tutorials
 ///
@@ -92,6 +95,7 @@ string gLineString;    // Current line (as a string) in the current input file
 string gClassName;     // Current class name
 string gImageName;     // Current image name
 string gMacroName;     // Current macro name
+string gImageType;     // Type of image used to produce pictures (png, svg ...)
 string gCwd;           // Current working directory
 string gOutDir;        // Output directory
 string gSourceDir;     // Source directory
@@ -121,6 +125,7 @@ int main(int argc, char *argv[])
    gImageID       = 0;
    gMacroID       = 0;
    gOutputName    = "stdout.dat";
+   gImageType     = "png";
    gShowTutSource = 0;
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
@@ -180,7 +185,7 @@ void FilterClass()
                m = 0;
                ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\""
                                               , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
-                                              , StringFormat("%s_%3.3d.png", gClassName.c_str(), gImageID).c_str()
+                                              , StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str()
                                               , gOutDir.c_str()));
                ExecuteCommand(StringFormat("rm %s_%3.3d.C", gClassName.c_str(), gMacroID));
             }
@@ -211,7 +216,7 @@ void FilterClass()
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.png", gClassName.c_str(), gImageID));
+                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()));
                } else {
                   gLineString = "\n";
                }
@@ -225,6 +230,13 @@ void FilterClass()
                spos = gLineString.find_first_not_of(' ', 3);
             }
             if (gLineString.find("source") != string::npos) gImageSource = true;
+            if (gLineString.find("png") != string::npos) {
+               gImageType = "png";
+            } else if (gLineString.find("svg") != string::npos) {
+               gImageType = "svg";
+            } else {
+               gImageType = "png";
+            }
             gImageID++;
             gInMacro++;
             gLineString = "\n";
@@ -265,7 +277,7 @@ void FilterTutorial()
    int i1      = gFileName.rfind('/')+1;
    int i2      = gFileName.rfind('C');
    gMacroName  = gFileName.substr(i1,i2-i1+1);
-   gImageName  = StringFormat("%s.png", gMacroName.c_str()); // Image name
+   gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
    gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
 
    // Parse the source and generate the image if needed
@@ -375,7 +387,7 @@ void GetClassName()
 void ExecuteMacro()
 {
    // Name of the next Image to be generated
-   gImageName = StringFormat("%s_%3.3d.png", gClassName.c_str(), gImageID);
+   gImageName = StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str());
 
    // Retrieve the macro to be executed.
    if (gLineString.find("../../..") != string::npos) {

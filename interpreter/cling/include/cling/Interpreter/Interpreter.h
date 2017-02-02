@@ -187,10 +187,6 @@ namespace cling {
     ///
     mutable std::vector<ClangInternalState*> m_StoredStates;
 
-    ///\brief Processes the invocation options.
-    ///
-    void handleFrontendOptions();
-
     ///\brief Worker function, building block for interpreter's public
     /// interfaces.
     ///
@@ -274,13 +270,16 @@ namespace cling {
                                                 llvm::StringRef code,
                                                 bool withAccessControl);
 
-    ///\brief Include C++ runtime headers and definitions.
+    ///\brief Initialize runtime and C/C++ level overrides
     ///
-    void IncludeCXXRuntime();
-
-    ///\brief Include C runtime headers and definitions.
+    ///\param[in] NoRuntime - Don't include the runtime headers / gCling
+    ///\param[in] SyntaxOnly - In SyntaxOnly mode
+    ///\param[out] Globals - Global symbols that need to be emitted
     ///
-    void IncludeCRuntime();
+    ///\returns The resulting Transation of initialization.
+    ///
+    Transaction* Initialize(bool NoRuntime, bool SyntaxOnly,
+                            llvm::SmallVectorImpl<llvm::StringRef>& Globals);
 
     ///\brief The target constructor to be called from both the delegating
     /// constructors. parentInterp might be nullptr.
@@ -313,6 +312,10 @@ namespace cling {
 
     virtual ~Interpreter();
 
+    ///\brief Whether the Interpreter is setup and ready to be used.
+    ///
+    bool isValid() const;
+
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
 
@@ -339,7 +342,7 @@ namespace cling {
     ///
     ///\returns The current svn revision (svn Id).
     ///
-    const char* getVersion() const;
+    static const char* getVersion();
 
     ///\brief Creates unique name that can be used for various aims.
     ///
@@ -402,9 +405,16 @@ namespace cling {
 
     ///\brief Prints the current include paths that are used.
     ///
-    ///\param[in] S - stream to dump to or nullptr for default (llvm::outs)
+    ///\param[in] S - stream to dump to or nullptr for default (cling::outs)
     ///
     void DumpIncludePath(llvm::raw_ostream* S = nullptr);
+
+    ///\brief Dump various internal data.
+    ///
+    ///\param[in] what - which data to dump. 'undo', 'ast', 'asttree'
+    ///\param[in] filter - optional argument to filter data with.
+    ///
+    void dump(llvm::StringRef what, llvm::StringRef filter);
 
     ///\brief Store the interpreter state in files
     /// Store the AST, the included files and the lookup tables
@@ -612,6 +622,7 @@ namespace cling {
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
 
     clang::CompilerInstance* getCI() const;
+    clang::CompilerInstance* getCIOrNull() const;
     clang::Sema& getSema() const;
 
     //FIXME: This must be in InterpreterCallbacks.
@@ -711,18 +722,6 @@ namespace cling {
 
     friend class runtime::internal::LifetimeHandler;
   };
-
-  namespace internal {
-    // Force symbols needed by runtime to be included in binaries.
-    void symbol_requester();
-    static struct ForceSymbolsAsUsed {
-      ForceSymbolsAsUsed(){
-        // Never true, but don't tell the compiler.
-        // Prevents stripping the symbol due to dead-code optimization.
-        if (std::getenv("bar") == (char*) -1) symbol_requester();
-      }
-    } sForceSymbolsAsUsed;
-  }
 } // namespace cling
 
 #endif // CLING_INTERPRETER_H

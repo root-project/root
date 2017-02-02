@@ -39,22 +39,17 @@ public:
 
 
 private:
-   TGraphDelaunay2D(const TGraphDelaunay2D&); // Not implemented
+   TGraphDelaunay2D(const TGraphDelaunay2D&);            // Not implemented
    TGraphDelaunay2D& operator=(const TGraphDelaunay2D&); // Not implemented
 
 protected:
 
-
-   TGraph2D   *fGraph2D;     //!2D graph containing the user data
-
-   ROOT::Math::Delaunay2D   fDelaunay; //! Delaunay interpolator class 
-
-   //Triangles   fTriangles;   //!Triangles of Triangulation
-
+   TGraph2D   *fGraph2D;               ///<!2D graph containing the user data
+   ROOT::Math::Delaunay2D   fDelaunay; ///<! Delaunay interpolator class
 
 public:
 
-   typedef  ROOT::Math::Delaunay2D::Triangles Triangles; 
+   typedef  ROOT::Math::Delaunay2D::Triangles Triangles;
 
    TGraphDelaunay2D(TGraph2D *g = 0);
 

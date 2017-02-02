@@ -25,8 +25,8 @@ class RooCBShape : public RooAbsPdf {
 public:
   RooCBShape() {} ;
   RooCBShape(const char *name, const char *title, RooAbsReal& _m,
-	     RooAbsReal& _m0, RooAbsReal& _sigma,
-	     RooAbsReal& _alpha, RooAbsReal& _n);
+        RooAbsReal& _m0, RooAbsReal& _sigma,
+        RooAbsReal& _alpha, RooAbsReal& _n);
 
   RooCBShape(const RooCBShape& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooCBShape(*this,newname); }

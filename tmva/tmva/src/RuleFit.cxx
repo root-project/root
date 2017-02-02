@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      A class describung a 'rule'                                               *
+ *      A class describing a 'rule'                                               *
  *      Each internal node of a tree defines a rule from all the parental nodes.  *
  *      A rule with 0 or 1 nodes in the list is a root rule -> corresponds to a0. *
  *      Input: a decision tree (in the constructor)                               *
@@ -28,6 +28,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::RuleFit
+\ingroup TMVA
+A class implementing various fits of rule ensembles
+*/
 #include "TMVA/RuleFit.h"
 
 #include "TMVA/DataSet.h"
@@ -116,14 +120,14 @@ void TMVA::RuleFit::Initialize(  const MethodBase *rfbase )
 {
    InitPtrs(rfbase);
 
-   if (fMethodRuleFit){ 
+   if (fMethodRuleFit){
       fMethodRuleFit->Data()->SetCurrentType(Types::kTraining);
       UInt_t nevents = fMethodRuleFit->Data()->GetNTrainingEvents();
       std::vector<const TMVA::Event*> tmp;
       for (Long64_t ievt=0; ievt<nevents; ievt++) {
          const Event *event = fMethodRuleFit->GetEvent(ievt);
          tmp.push_back(event);
-      }      
+      }
       SetTrainingEvents( tmp );
    }
    //     SetTrainingEvents( fMethodRuleFit->GetTrainingEvents() );
@@ -159,7 +163,7 @@ void TMVA::RuleFit::Copy( const RuleFit& other )
       fMethodBase      = other.GetMethodBase();
       fTrainingEvents  = other.GetTrainingEvents();
       //      fSubsampleEvents = other.GetSubsampleEvents();
-   
+
       fForest       = other.GetForest();
       fRuleEnsemble = other.GetRuleEnsemble();
    }
@@ -229,9 +233,8 @@ void TMVA::RuleFit::MakeForest()
    //
    TRandom3 rndGen;
    //
-   //
    // First save all event weights.
-   // Weights are modifed by the boosting.
+   // Weights are modified by the boosting.
    // Those weights we do not want for the later fitting.
    //
    Bool_t useBoost = fMethodRuleFit->UseBoost(); // (AdaBoost (True) or RandomForest/Tree (False)
@@ -258,7 +261,7 @@ void TMVA::RuleFit::MakeForest()
       while (tryAgain) {
          frnd = 100*rndGen.Uniform( fMethodRuleFit->GetMinFracNEve(), 0.5*fMethodRuleFit->GetMaxFracNEve() );
          Int_t     iclass = 0; // event class being treated as signal during training
-         Bool_t    useRandomisedTree = !useBoost;  
+         Bool_t    useRandomisedTree = !useBoost;
          dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), frnd, fMethodRuleFit->GetNCuts(), &(fMethodRuleFit->DataInfo()), iclass, useRandomisedTree);
          dt->SetNVars(fMethodBase->GetNvar());
 
@@ -286,7 +289,7 @@ void TMVA::RuleFit::MakeForest()
          Log() << kWARNING << "------------------------------------------------------------------" << Endl;
       }
 
-      Log() << kDEBUG << "Built tree with minimum cut at N = " << frnd <<"% events" 
+      Log() << kDEBUG << "Built tree with minimum cut at N = " << frnd <<"% events"
             << " => N(nodes) = " << fForest.back()->GetNNodes()
             << " ; n(tries) = " << ntries
             << Endl;
@@ -335,7 +338,7 @@ void TMVA::RuleFit::RestoreEventWeights()
 void TMVA::RuleFit::Boost( DecisionTree *dt )
 {
    Double_t sumw=0;      // sum of initial weights - all events
-   Double_t sumwfalse=0; // idem, only missclassified events
+   Double_t sumwfalse=0; // idem, only misclassified events
    //
    std::vector<Char_t> correctSelected; // <--- boolean stored
    //
@@ -343,28 +346,28 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
       Bool_t isSignalType = (dt->CheckEvent(*e,kTRUE) > 0.5 );
       Double_t w = (*e)->GetWeight();
       sumw += w;
-      // 
+      //
       if (isSignalType == fMethodBase->DataInfo().IsSignal(*e)) { // correctly classified
          correctSelected.push_back(kTRUE);
-      } 
-      else {                                // missclassified
+      }
+      else {                                // misclassified
          sumwfalse+= w;
          correctSelected.push_back(kFALSE);
-      }    
+      }
    }
-   // missclassification error
+   // misclassification error
    Double_t err = sumwfalse/sumw;
-   // calculate boost weight for missclassified events
+   // calculate boost weight for misclassified events
    // use for now the exponent = 1.0
    // one could have w = ((1-err)/err)^beta
    Double_t boostWeight = (err>0 ? (1.0-err)/err : 1000.0);
    Double_t newSumw=0.0;
    UInt_t ie=0;
-   // set new weight to missclassified events
+   // set new weight to misclassified events
    for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
       if (!correctSelected[ie])
          (*e)->SetBoostWeight( (*e)->GetBoostWeight() * boostWeight);
-      newSumw+=(*e)->GetWeight();    
+      newSumw+=(*e)->GetWeight();
       ie++;
    }
    // reweight all events
@@ -377,7 +380,7 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// summary of statistics of all trees
-/// * end-nodes: average and spread
+///  - end-nodes: average and spread
 
 void TMVA::RuleFit::ForestStatistics()
 {
@@ -468,7 +471,7 @@ void TMVA::RuleFit::GetRndmSampleEvents(std::vector< const Event * > & evevec, U
       for (UInt_t ie=0; ie<nevents; ie++) {
          evevec[ie] = fTrainingEventsRndm[ie];
       }
-   } 
+   }
    else {
       Log() << kWARNING << "GetRndmSampleEvents() : requested sub sample size larger than total size (BUG!).";
    }
@@ -478,7 +481,6 @@ void TMVA::RuleFit::GetRndmSampleEvents(std::vector< const Event * > & evevec, U
 ///
 /// if all weights are positive, the scale will be 1/maxweight
 /// if minimum weight < 0, then the scale will be 1/max(maxweight,abs(minweight))
-///
 
 void TMVA::RuleFit::NormVisHists(std::vector<TH2F *> & hlist)
 {
@@ -496,7 +498,7 @@ void TMVA::RuleFit::NormVisHists(std::vector<TH2F *> & hlist)
       if (i==0) {
          wmin=wm;
          wmax=w;
-      } 
+      }
       else {
          if (w>wmax)  wmax=w;
          if (wm<wmin) wmin=wm;
@@ -508,13 +510,13 @@ void TMVA::RuleFit::NormVisHists(std::vector<TH2F *> & hlist)
       scale = 1.0/awmin;
       usemin = -1.0;
       usemax = scale*wmax;
-   } 
+   }
    else {
       scale = 1.0/wmax;
       usemin = scale*wmin;
       usemax = 1.0;
    }
-   
+
    //
    for (UInt_t i=0; i<hlist.size(); i++) {
       TH2F *hs = hlist[i];
@@ -567,7 +569,7 @@ void TMVA::RuleFit::FillCut(TH2F* h2, const Rule *rule, Int_t vind)
       //
       if (fVisHistsUseImp) {
          val = rule->GetImportance();
-      } 
+      }
       else {
          val = rule->GetCoefficient()*rule->GetSupport();
       }
@@ -651,10 +653,10 @@ void TMVA::RuleFit::FillCorr(TH2F* h2,const Rule *rule,Int_t vx, Int_t vy)
    for (Int_t binx = binxmin; binx<binxmax+1; binx++) {
       if (binx==binxmin) {
          fx = fxbinmin;
-      } 
+      }
       else if (binx==binxmax) {
          fx = fxbinmax;
-      } 
+      }
       else {
          fx = 1.0;
       }
@@ -662,10 +664,10 @@ void TMVA::RuleFit::FillCorr(TH2F* h2,const Rule *rule,Int_t vx, Int_t vy)
       for (Int_t biny = binymin; biny<binymax+1; biny++) {
          if (biny==binymin) {
             fy = fybinmin;
-         } 
+         }
          else if (biny==binymax) {
             fy = fybinmax;
-         } 
+         }
          else {
             fy = 1.0;
          }
@@ -700,7 +702,7 @@ void TMVA::RuleFit::FillVisHistCut(const Rule* rule, std::vector<TH2F *> & hlist
          if (rule->ContainsVariable(vindex[iv])) {
             FillCut(hlist[iv],rule,vindex[iv]);
          }
-      } 
+      }
       else {
          FillLin(hlist[iv],vindex[iv]);
       }
@@ -732,7 +734,7 @@ void TMVA::RuleFit::FillVisHistCorr(const Rule * rule, std::vector<TH2F *> & hli
          iv1 = fMethodBase->DataInfo().FindVarIndex( var1 );
          iv2 = fMethodBase->DataInfo().FindVarIndex( var2 );
          vindex.push_back( std::pair<Int_t,Int_t>(iv2,iv1) ); // pair X, Y
-      } 
+      }
       else {
          Log() << kERROR << "BUG TRAP: should not be here - failed getting var1 and var2" << Endl;
       }
@@ -762,7 +764,7 @@ Bool_t TMVA::RuleFit::GetCorrVars(TString & title, TString & var1, TString & var
       var1 = titleCopy(0,splitPos);
       var2 = titleCopy(splitPos+4, titleCopy.Length());
       return kTRUE;
-   } 
+   }
    else {
       var1 = titleCopy;
       return kFALSE;
@@ -779,8 +781,8 @@ void TMVA::RuleFit::MakeVisHists()
                                     "InputVariables_Gauss",
                                     "InputVariables_Gauss_Deco" };
 
-   const TString corrDirName = "CorrelationPlots";   
-   
+   const TString corrDirName = "CorrelationPlots";
+
    TDirectory* rootDir   = fMethodBase->GetFile();
    TDirectory* varDir    = 0;
    TDirectory* corrDir   = 0;
@@ -827,7 +829,7 @@ void TMVA::RuleFit::MakeVisHists()
    // how many plots are in the var directory?
    Int_t noPlots = ((varDir->GetListOfKeys())->GetEntries()) / 2;
    Log() << kDEBUG << "Got number of plots = " << noPlots << Endl;
- 
+
    // loop over all objects in directory
    std::vector<TH2F *> h1Vector;
    std::vector<TH2F *> h2CorrVector;
@@ -885,13 +887,13 @@ void TMVA::RuleFit::MakeVisHists()
             Int_t iv2 = fMethodBase->DataInfo().FindVarIndex(var2);
             if (iv1<0) {
                sig->GetYaxis()->SetTitle(var1);
-            } 
+            }
             else {
                sig->GetYaxis()->SetTitle(fMethodBase->GetInputTitle(iv1));
             }
             if (iv2<0) {
                sig->GetXaxis()->SetTitle(var2);
-            } 
+            }
             else {
                sig->GetXaxis()->SetTitle(fMethodBase->GetInputTitle(iv2));
             }
@@ -900,7 +902,6 @@ void TMVA::RuleFit::MakeVisHists()
          h2CorrVector.push_back( newhist );
       }
    }
-
 
    varDir->cd();
    // fill rules
@@ -913,7 +914,7 @@ void TMVA::RuleFit::MakeVisHists()
    // fill linear terms and normalise hists
    FillVisHistCut(0, h1Vector);
    NormVisHists(h1Vector);
- 
+
    //
    corrDir->cd();
    // fill rules
@@ -923,7 +924,7 @@ void TMVA::RuleFit::MakeVisHists()
    }
    NormVisHists(h2CorrVector);
 
-   // write histograms to file   
+   // write histograms to file
    methodDir->cd();
    for (UInt_t i=0; i<h1Vector.size();     i++) h1Vector[i]->Write();
    for (UInt_t i=0; i<h2CorrVector.size(); i++) h2CorrVector[i]->Write();

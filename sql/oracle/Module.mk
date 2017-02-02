@@ -28,9 +28,18 @@ ORACLELIB     := $(LPATH)/libOracle.$(SOEXT)
 ORACLEMAP     := $(ORACLELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ORACLEH))
+ORACLEH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ORACLEH))
+ALLHDRS      += $(ORACLEH_REL)
 ALLLIBS      += $(ORACLELIB)
 ALLMAPS      += $(ORACLEMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ORACLEH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Sql_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(ORACLELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(ORACLEDEP)

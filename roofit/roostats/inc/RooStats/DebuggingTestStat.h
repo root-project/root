@@ -11,17 +11,14 @@
 #ifndef ROOSTATS_DebuggingTestStat
 #define ROOSTATS_DebuggingTestStat
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
+/** \class DebuggingTestStat
+    \ingroup Roostats
+
 DebuggingTestStat is a simple implementation of the DistributionCreator interface used for debugging.
 The sampling distribution is uniformly random between [0,1] and is INDEPENDENT of the data.  So it is not useful
 for true statistical tests, but it is useful for debugging.
-</p>
-END_HTML
+
 */
-//
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -53,7 +50,7 @@ namespace RooStats {
        //       delete fRand;
        //       delete fTestStatistic;
      }
-    
+
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/)  {
        //data = data; // avoid warning
@@ -61,9 +58,9 @@ namespace RooStats {
        return fRand->Uniform();
      }
 
-   
 
-     
+
+
    private:
 
       RooRealVar* fTestStatistic;

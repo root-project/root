@@ -45,6 +45,7 @@ Examples:
 
 #include "Riostream.h"
 #include "TEnv.h"
+#include "TInterpreter.h"
 #include "TList.h"
 #include "TMacro.h"
 #include "TMD5.h"

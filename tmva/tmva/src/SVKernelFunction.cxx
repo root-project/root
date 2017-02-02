@@ -15,11 +15,11 @@
  *      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
  *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
  *                                                                                *
- * MultiGaussian, Product and Sum kernels included:                               *   
- *      Adrian Bevan   <adrian.bevan@cern.ch>  -         Queen Mary               *   
- *                                                       University of London, UK *   
- *      Tom Stevenson <thomas.james.stevenson@cern.ch> - Queen Mary               *   
- *                                                       University of London, UK *   
+ * MultiGaussian, Product and Sum kernels included:                               *
+ *      Adrian Bevan   <adrian.bevan@cern.ch>  -         Queen Mary               *
+ *                                                       University of London, UK *
+ *      Tom Stevenson <thomas.james.stevenson@cern.ch> - Queen Mary               *
+ *                                                       University of London, UK *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         *
@@ -30,6 +30,11 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
+/*! \class TMVA::SVKernelFunction
+\ingroup TMVA
+Kernel for Support Vector Machine
+*/
 
 #include "TMVA/SVKernelFunction.h"
 #include "TMVA/SVEvent.h"
@@ -76,7 +81,7 @@ TMVA::SVKernelFunction::SVKernelFunction( EKernelType k, Float_t param1, Float_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor 
+/// constructor
 
 TMVA::SVKernelFunction::SVKernelFunction( std::vector<float> params ) :
    fKernel(kMultiGauss)
@@ -86,7 +91,7 @@ TMVA::SVKernelFunction::SVKernelFunction( std::vector<float> params ) :
            ; ++iter ){
       fmGamma.push_back(*iter);
    }
-   //fKernelsList.clear();                                                             
+   //fKernelsList.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +112,7 @@ TMVA::SVKernelFunction::SVKernelFunction(EKernelType k, std::vector<EKernelType>
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::SVKernelFunction::~SVKernelFunction() 
+TMVA::SVKernelFunction::~SVKernelFunction()
 {
    fmGamma.clear();
    fKernelsList.clear();
@@ -140,10 +145,10 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
       }
    case kMultiGauss:
       {
-         // Kernel function with a kernel parameter gamma for                            
-         // each input variable. Described in "An Introduction to                        
-         // Support Vector Machines and Other Kernel-based Learning                      
-         // Methods" by Cristianini and Shawe-Taylor, Section 3.5                        
+         // Kernel function with a kernel parameter gamma for
+         // each input variable. Described in "An Introduction to
+         // Support Vector Machines and Other Kernel-based Learning
+         // Methods" by Cristianini and Shawe-Taylor, Section 3.5
          std::vector<Float_t> *v1 = ev1->GetDataVector();
          std::vector<Float_t> *v2 = ev2->GetDataVector();
          if(fmGamma.size() != v1->size()){
@@ -174,8 +179,8 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
       }
    case kLinear:
       {
-         // This is legacy code. The linear polynomial is a special case                 
-         // of the polynomial with order=1 and theta=0. 
+         // This is legacy code. The linear polynomial is a special case
+         // of the polynomial with order=1 and theta=0.
          std::vector<Float_t> *v1 = ev1->GetDataVector();
          std::vector<Float_t> *v2 = ev2->GetDataVector();
          Float_t prod = 0;
@@ -184,8 +189,8 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
       }
    case kSigmoidal:
       {
-         // This kernel doesn't always result in a positive-semidefinite Gram            
-         // matrix so should be used with caution and therefore not                      
+         // This kernel doesn't always result in a positive-semidefinite Gram
+         // matrix so should be used with caution and therefore not
          // currently accessible. This is not a valid Mercer kernel
          std::vector<Float_t> *v1 = ev1->GetDataVector();
          std::vector<Float_t> *v2 = ev2->GetDataVector();
@@ -197,8 +202,8 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
       }
    case kProd:
       {
-         // Calculate product of kernels by looping over list of kernels                 
-         // and evaluating the value for each, setting kernel back to                    
+         // Calculate product of kernels by looping over list of kernels
+         // and evaluating the value for each, setting kernel back to
          // kProd before returning so it can be used again. Described in "An Introduction to         // Support Vector Machines and Other Kernel-based Learning
          // Methods" by Cristianini and Shawe-Taylor, Section 3.3.2
          Float_t kernelVal;
@@ -213,10 +218,10 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
       }
    case kSum:
       {
-         // Calculate sum of kernels by looping over list of kernels                     
-         // and evaluating the value for each, setting kernel back to                    
-         // kSum before returning so it can be used again. Described in "An Introduction to          // Support Vector Machines and Other Kernel-based Learning                      
-         // Methods" by Cristianini and Shawe-Taylor, Section 3.3.2                      
+         // Calculate sum of kernels by looping over list of kernels
+         // and evaluating the value for each, setting kernel back to
+         // kSum before returning so it can be used again. Described in "An Introduction to          // Support Vector Machines and Other Kernel-based Learning
+         // Methods" by Cristianini and Shawe-Taylor, Section 3.3.2
          Float_t kernelVal = 0;
          for(UInt_t i = 0; i<fKernelsList.size(); i++){
             fKernel = fKernelsList.at(i);

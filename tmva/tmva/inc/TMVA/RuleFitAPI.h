@@ -229,7 +229,7 @@ void TMVA::RuleFitAPI::VarImp()
 //_______________________________________________________________________
 TString TMVA::RuleFitAPI::GetRFName(TString name)
 {
-   // get the name inluding the rulefit directory
+   // get the name including the rulefit directory
    return fRFWorkDir+"/"+name;
 }
 

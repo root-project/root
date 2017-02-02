@@ -14,9 +14,6 @@
 #include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include <TMVA/PyMethodBase.h>
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-function"
-
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/MsgLogger.h"
@@ -35,6 +32,8 @@ using namespace TMVA;
 
 ClassImp(PyMethodBase)
 
+// NOTE: Introduce here nothing that breaks if multiple instances
+// of the same method share these objects, e.g., the local namespace.
 PyObject *PyMethodBase::fModuleBuiltin = NULL;
 PyObject *PyMethodBase::fEval = NULL;
 PyObject *PyMethodBase::fOpen = NULL;
@@ -45,7 +44,6 @@ PyObject *PyMethodBase::fPickleLoads = NULL;
 
 PyObject *PyMethodBase::fMain = NULL;
 PyObject *PyMethodBase::fGlobalNS = NULL;
-PyObject *PyMethodBase::fLocalNS = NULL;
 
 class PyGILRAII {
    PyGILState_STATE m_GILState;
@@ -65,6 +63,12 @@ PyMethodBase::PyMethodBase(const TString &jobName,
    if (!PyIsInitialized()) {
       PyInitialize();
    }
+
+   // Set up private local namespace for each method instance
+   fLocalNS = PyDict_New();
+   if (!fLocalNS) {
+      Log() << kFATAL << "Can't init local namespace" << Endl;
+   }
 }
 
 //_______________________________________________________________________
@@ -75,6 +79,12 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
 {
    if (!PyIsInitialized()) {
       PyInitialize();
+   }
+
+   // Set up private local namespace for each method instance
+   fLocalNS = PyDict_New();
+   if (!fLocalNS) {
+      Log() << kFATAL << "Can't init local namespace" << Endl;
    }
 }
 
@@ -94,6 +104,10 @@ PyObject *PyMethodBase::Eval(TString code)
 }
 
 //_______________________________________________________________________
+// NOTE: We introduce a shared global namespace fGlobalNS, but using
+// a private local namespace fLocalNS. This prohibits the interference
+// of instances of the same method with the same factory, e.g., by overriding
+// variables in the same local namespace.
 void PyMethodBase::PyInitialize()
 {
    TMVA::MsgLogger Log;
@@ -118,12 +132,6 @@ void PyMethodBase::PyInitialize()
    fGlobalNS = PyModule_GetDict(fMain);
    if (!fGlobalNS) {
       Log << kFATAL << "Can't init global namespace" << Endl;
-      Log << Endl;
-   }
-
-   fLocalNS = PyDict_New();
-   if (!fMain) {
-      Log << kFATAL << "Can't init local namespace" << Endl;
       Log << Endl;
    }
 
@@ -167,8 +175,6 @@ void PyMethodBase::PyInitialize()
 
    Py_DECREF(pName);
    Py_DECREF(pDict);
-
-
 }
 
 //_______________________________________________________________________

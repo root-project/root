@@ -11,13 +11,14 @@
 
 #if defined(LLVM_ON_WIN32)
 
+#include "cling/Utils/Output.h"
+
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/raw_ostream.h"
 
 #include <sstream>
 #include <stdlib.h>
@@ -37,6 +38,10 @@
 #include <direct.h>  // _getcwd
 #include <shlobj.h>  // SHGetFolderPath
 #pragma comment(lib, "Advapi32.lib")
+
+extern "C" char* __unDName(char *demangled, const char *mangled, int out_len,
+                           void * (* pAlloc )(size_t), void (* pFree )(void *),
+                           unsigned short int flags);
 
 #define MAX_PATHC (MAX_PATH + 1)
 
@@ -67,7 +72,7 @@ static void GetErrorAsString(DWORD Err, std::string& ErrStr, const char* Prefix)
 static void ReportError(DWORD Err, const char* Prefix) {
   std::string Message;
   GetErrorAsString(Err, Message, Prefix);
-  llvm::errs() << Err << '\n';
+  cling::errs() << Err << '\n';
 }
 
 bool GetLastErrorAsString(std::string& ErrStr, const char* Prefix) {
@@ -128,10 +133,10 @@ static bool readFullStringValue(HKEY hkey, const char *valueName,
 static void logSearch(const char* Name, const std::string& Value,
                       const char* Found = nullptr) {
   if (Found)
-    llvm::errs() << "Found " << Name << " '" << Value << "' that matches "
-                 << Found << " version\n";
+    cling::errs() << "Found " << Name << " '" << Value << "' that matches "
+                  << Found << " version\n";
   else
-    llvm::errs() << Name << " '" << Value << "' not found.\n";
+    cling::errs() << Name << " '" << Value << "' not found.\n";
 }
 
 static void trimString(const char* Value, const char* Sub, std::string& Out) {
@@ -388,7 +393,7 @@ bool GetVisualStudioDirs(std::string& Path, std::string* WinSDK,
     if (!getWindowsSDKDir(*WinSDK)) {
       WinSDK->clear();
       if (Verbose)
-        llvm::errs() << "Could not get Windows SDK path\n";
+        cling::errs() << "Could not get Windows SDK path\n";
     } else
       fixupPath(*WinSDK);
   }
@@ -400,7 +405,7 @@ bool GetVisualStudioDirs(std::string& Path, std::string* WinSDK,
     if (!getUniversalCRTSdkDir(*UniversalSDK, UCRTVersion)) {
       UniversalSDK->clear();
       if (Verbose)
-        llvm::errs() << "Could not get Universal SDK path\n";
+        cling::errs() << "Could not get Universal SDK path\n";
     } else
       fixupPath(*UniversalSDK, "ucrt");
   }
@@ -419,7 +424,7 @@ bool GetVisualStudioDirs(std::string& Path, std::string* WinSDK,
   if (const char* VCInstall = ::getenv("VCINSTALLDIR")) {
     trimString(VCInstall, "\\VC", Path);
     if (Verbose)
-      llvm::errs() << "Using VCINSTALLDIR '" << VCInstall << "'\n";
+      cling::errs() << "Using VCINSTALLDIR '" << VCInstall << "'\n";
     return true;
   }
 
@@ -507,10 +512,9 @@ bool IsMemoryValid(const void *P) {
 }
 
 const void* DLOpen(const std::string& Path, std::string* Err) {
-  HMODULE dyLibHandle = ::LoadLibraryExA(Path.c_str(), NULL,
-                                         DONT_RESOLVE_DLL_REFERENCES);
+  HMODULE dyLibHandle = ::LoadLibraryA(Path.c_str());
   if (!dyLibHandle && Err)
-    GetLastErrorAsString(*Err, "LoadLibraryEx");
+    GetLastErrorAsString(*Err, "LoadLibrary");
 
   return reinterpret_cast<void*>(dyLibHandle);
 }
@@ -683,6 +687,16 @@ bool Popen(const std::string& Cmd, llvm::SmallVectorImpl<char>& Buf, bool RdE) {
   CloseHandle(hOutputRead);
 
   return !Buf.empty();
+}
+
+std::string Demangle(const std::string& Symbol) {
+  struct AutoFree {
+    char* Str;
+    AutoFree(char* Ptr) : Str(Ptr) {}
+    ~AutoFree() { ::free(Str); };
+  };
+  AutoFree af(__unDName(0, Symbol.c_str(), 0, ::malloc, ::free, 0));
+  return af.Str ? std::string(af.Str) : std::string();
 }
 
 } // namespace platform

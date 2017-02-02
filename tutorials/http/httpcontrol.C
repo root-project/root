@@ -90,7 +90,7 @@ void httpcontrol()
          // IMPORTANT: one should regularly call ProcessEvents
          // to let http server process requests
 
-         serv->SetItemField("/Debug", "value", Form("\\(\\displaystyle{x+1\\over y-1}\\) Loop:%d", cnt/kUPDATE));
+         serv->SetItemField("/Debug", "value", Form("\\(\\displaystyle{x+1\\over y-1}\\) Loop:%ld", cnt/kUPDATE));
 
          if (gSystem->ProcessEvents()) break;
       }

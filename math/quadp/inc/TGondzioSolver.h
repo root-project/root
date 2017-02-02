@@ -43,6 +43,7 @@
 #ifndef ROOT_TGondzioSolver
 #define ROOT_TGondzioSolver
 
+#include "Rtypes.h"
 #include "TQpSolverBase.h"
 
 ///////////////////////////////////////////////////////////////////////////

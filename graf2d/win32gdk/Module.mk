@@ -78,9 +78,18 @@ GDKLIBS      := $(GLIBLIB)
 GDKDLLS      := $(GLIBDLL) $(ICONVDLL)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(WIN32GDKH))
+WIN32GDKH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(WIN32GDKH))
+ALLHDRS     += $(WIN32GDKH_REL)
 ALLLIBS     += $(WIN32GDKLIB)
 ALLMAPS     += $(WIN32GDKMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(WIN32GDKH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(WIN32GDKLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(WIN32GDKDEP)

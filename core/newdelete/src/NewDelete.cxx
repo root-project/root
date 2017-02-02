@@ -63,7 +63,7 @@
 #include "MemCheck.h"
 #include "TObjectTable.h"
 #include "TError.h"
-#include "TMapFile.h"
+#include "TStorage.h" // for ROOT::Internal::gFreeIfTMapFile
 #include "TSystem.h"
 #include "mmalloc.h"
 
@@ -75,7 +75,6 @@ public:
    TReAllocInit() { TStorage::SetReAllocHooks(&CustomReAlloc1, &CustomReAlloc2); }
 };
 static TReAllocInit gReallocInit;
-
 
 //---- memory checking macros --------------------------------------------------
 
@@ -207,8 +206,8 @@ void *operator new(size_t size) R__THROW_BAD
    }
 
    void *vp;
-   if (gMmallocDesc)
-      vp = ::mcalloc(gMmallocDesc, RealSize(size), sizeof(char));
+   if (ROOT::Internal::gMmallocDesc)
+      vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
    else
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
@@ -216,6 +215,27 @@ void *operator new(size_t size) R__THROW_BAD
    StoreSizeMagic(vp, size, where);
    return ExtStart(vp);
 }
+
+void *operator new(size_t size, const std::nothrow_t&) noexcept
+{
+   return ::operator new(size);
+}
+
+#if __cplusplus >= 201700L
+
+void *operator new(size_t size, std::align_val_t al)
+{
+   Fatal("operator new","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
+{
+   Fatal("operator new","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+#endif
 
 #ifndef R__PLACEMENTINLINE
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,8 +256,8 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
          return TMemHashTable::AddPointer(size);
 
       void *vp;
-      if (gMmallocDesc)
-         vp = ::mcalloc(gMmallocDesc, RealSize(size), sizeof(char));
+      if (ROOT::Internal::gMmallocDesc)
+         vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
       else
          vp = ::calloc(RealSize(size), sizeof(char));
       if (vp == 0)
@@ -271,10 +291,8 @@ void operator delete(void *ptr) R__THROW_NULL
       RemoveStatMagic(ptr, where);
       MemClear(RealStart(ptr), 0, RealSize(storage_size(ptr)));
       TSystem::ResetErrno();
-      TMapFile *mf = TMapFile::WhichMapFile(RealStart(ptr));
-      if (mf) {
-         if (mf->IsWritable()) ::mfree(mf->GetMmallocDesc(), RealStart(ptr));
-      } else {
+      if (!ROOT::Internal::gFreeIfTMapFile
+          || !ROOT::Internal::gFreeIfTMapFile(RealStart(ptr))) {
          do {
             TSystem::ResetErrno();
             ::free(RealStart(ptr));
@@ -285,12 +303,35 @@ void operator delete(void *ptr) R__THROW_NULL
    }
 }
 
+void operator delete(void *ptr, const std::nothrow_t&) noexcept
+{
+   operator delete(ptr);
+}
+
+#if __cplusplus >= 201700L
+void operator delete(void *ptr, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete","with std::align_val_t is not implemented yet");
+}
+void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noexcept
+{
+   Fatal("operator delete","with std::align_val_t is not implemented yet");
+}
+#endif
+
+
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete(void* ptr, std::size_t) {
    operator delete(ptr);
 }
+#if __cplusplus >= 201700L
+void operator delete(void *ptr, std::size_t, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete","with std::align_val_t is not implemented yet");
+}
+#endif
 #endif
 
 #ifdef R__VECNEWDELETE
@@ -301,6 +342,27 @@ void *operator new[](size_t size) R__THROW_BAD
 {
    return ::operator new(size);
 }
+
+void *operator new[](size_t size, const std::nothrow_t&) noexcept
+{
+   return ::operator new(size);
+}
+
+#if __cplusplus >= 201700L
+
+void *operator new[](size_t size, std::align_val_t al) R__THROW_BAD
+{
+   Fatal("operator new[]","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
+{
+   Fatal("operator new[]","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+#endif
 
 #ifndef R__PLACEMENTINLINE
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,12 +381,25 @@ void operator delete[](void *ptr) R__THROW_NULL
    ::operator delete(ptr);
 }
 
+#if __cplusplus >= 201700L
+void operator delete[](void *ptr, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete[]","with std::align_val_t is not implemented yet");
+}
+#endif
+
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete[](void* ptr, std::size_t) {
    operator delete[](ptr);
 }
+#if __cplusplus >= 201700L
+void operator delete[](void *ptr, std::size_t, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete[]","with size_t and std::align_val_t is not implemented yet");
+}
+#endif
 #endif
 
 #endif
@@ -351,8 +426,8 @@ void *CustomReAlloc1(void *ovp, size_t size)
       return ovp;
    RemoveStatMagic(ovp, where);
    void *vp;
-   if (gMmallocDesc)
-      vp = ::mrealloc(gMmallocDesc, RealStart(ovp), RealSize(size));
+   if (ROOT::Internal::gMmallocDesc)
+      vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)
@@ -391,8 +466,8 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
       return ovp;
    RemoveStatMagic(ovp, where);
    void *vp;
-   if (gMmallocDesc)
-      vp = ::mrealloc(gMmallocDesc, RealStart(ovp), RealSize(size));
+   if (ROOT::Internal::gMmallocDesc)
+      vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)

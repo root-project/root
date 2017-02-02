@@ -10,9 +10,11 @@
  *************************************************************************/
 
 #include "TGeoStateInfo.h"
+
+#include "Rtypes.h"
 #include "TGeoNode.h"
-#include "TGeoPolygon.h"
 #include "TGeoManager.h"
+#include "TGeoPolygon.h"
 
 /** \class TGeoStateInfo
 \ingroup Geometry_classes

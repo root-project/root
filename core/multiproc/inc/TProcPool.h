@@ -4,7 +4,7 @@
 // Placeholder header file for users accessing TProcPool.h and the class TProcPool
 
 #ifndef __CLING__
-//  #pragma message("class 'TProcPool' is deprecated, replace it by 'ROOT::TProcessExecutor'")
+//  #pragma message("class 'TProcPool' is deprecated, replace it by 'ROOT::TProcessExecutor' (for TTree processing see 'ROOT:TTreeProcessorMP')")
 #endif
 
 #include "ROOT/TProcessExecutor.hxx"

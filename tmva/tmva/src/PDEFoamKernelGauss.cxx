@@ -25,13 +25,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// PDEFoamKernelGauss
-//
-// This PDEFoam kernel estimates a cell value for a given event by
-// weighting all cell values with a gauss function.
-// _____________________________________________________________________
+/*! \class TMVA::PDEFoamKernelGauss
+\ingroup TMVA
+This PDEFoam kernel estimates a cell value for a given event by
+weighting all cell values with a gauss function.
+*/
 
 #include "TMVA/PDEFoamKernelGauss.h"
 
@@ -128,7 +126,7 @@ Float_t TMVA::PDEFoamKernelGauss::GetAverageNeighborsValue(PDEFoam *foam,
    Float_t norm   = 0; // normalisation
    Float_t result = 0; // return value
 
-   PDEFoamCell *cell = foam->FindCell(txvec); // find cooresponding cell
+   PDEFoamCell *cell = foam->FindCell(txvec); // find corresponding cell
    PDEFoamVect cellSize(foam->GetTotDim());
    PDEFoamVect cellPosi(foam->GetTotDim());
    cell->GetHcub(cellPosi, cellSize); // get cell coordinates
@@ -172,11 +170,16 @@ Float_t TMVA::PDEFoamKernelGauss::GetAverageNeighborsValue(PDEFoam *foam,
 ///   set to 0, >1 are set to 1)
 ///
 /// Returns:
-/// exp(-(d/sigma)^2/2), where
+///
+/// \f[
+/// e^(\frac{-(\frac{d}{\sigma})^2}{2})
+/// \f]
+///
+/// where:
 ///  - d - is the euclidean distance between 'txvec' and the point of the 'cell'
 ///    which is most close to 'txvec' (in order to avoid artefacts because of the
 ///    form of the cells).
-///  - sigma = 1/VolFrac
+///  - \f$ sigma = \frac{1}{VolFrac} \f$
 
 Float_t TMVA::PDEFoamKernelGauss::WeightGaus(PDEFoam *foam, PDEFoamCell* cell,
                                              std::vector<Float_t> &txvec)

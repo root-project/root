@@ -132,7 +132,7 @@ namespace ROOT {
       std::shared_ptr<T> GetAtSlot(unsigned i)
       {
          if ( i >= fObjPointers.size()) {
-            Warning("TThreadedObject::Merge", "Maximum number of slots reached.");
+            Warning("TThreadedObject::GetAtSlot", "Maximum number of slots reached.");
             return nullptr;
          }
          auto objPointer = fObjPointers[i];
@@ -141,6 +141,12 @@ namespace ROOT {
             fObjPointers[i] = objPointer;
          }
          return objPointer;
+      }
+
+      /// Set the value of a particular slot.
+      void SetAtSlot(unsigned i, std::shared_ptr<T> v)
+      {
+         fObjPointers[i] = v;
       }
 
       /// Access a particular slot which corresponds to a single thread.

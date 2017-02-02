@@ -28,9 +28,18 @@ GLITELIB     := $(LPATH)/libRgLite.$(SOEXT)
 GLITEMAP     := $(GLITELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLITEH))
+GLITEH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLITEH))
+ALLHDRS     += $(GLITEH_REL)
 ALLLIBS     += $(GLITELIB)
 ALLMAPS     += $(GLITEMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GLITEH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GLITELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GLITEDEP)

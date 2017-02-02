@@ -26,8 +26,8 @@ public:
 
   // Constructors, assignment etc
   inline RooDecay() { }
-  RooDecay(const char *name, const char *title, RooRealVar& t, 
-	   RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;
+  RooDecay(const char *name, const char *title, RooRealVar& t,
+      RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;
   RooDecay(const RooDecay& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooDecay(*this,newname) ; }
   virtual ~RooDecay();
@@ -36,15 +36,15 @@ public:
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);
-  
+
 protected:
-  
+
   RooRealProxy _t ;
   RooRealProxy _tau ;
   DecayType    _type ;
   Int_t        _basisExp ;
 
-  ClassDef(RooDecay,1) // General decay function p.d.f 
+  ClassDef(RooDecay,1) // General decay function p.d.f
 };
 
 #endif

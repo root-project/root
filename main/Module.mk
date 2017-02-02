@@ -128,17 +128,30 @@ ifeq ($(PLATFORM),win32)
 SSH2RPD         :=
 endif
 
+##### rootcling #####
+ROOTCLINGS      := $(MODDIRS)/rootcling.cxx
+ROOTCLINGO      := $(call stripsrc,$(ROOTCLINGS:.cxx=.o))
+ROOTCLINGDEP    := $(ROOTCLINGO:.o=.d)
+
+# See ModuleVars.mk
+# ROOTCLINGEXE    := bin/rootcling$(EXEEXT)
+# ROOTCLINGSTAGE2 := $(ROOTCLINGEXE) -rootbuild
+# Dependencies for all dictionaries
+# ROOTCLINGSTAGE2DEP := $(ROOTCLINGEXE)
+
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(XPROOFDSH) $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) \
-                $(ROOTSSH) $(ROOTNBEXE)
+                $(ROOTSSH) $(ROOTNBEXE) $(ROOTCLINGEXE) $(ROOTCINTEXE) \
+                $(GENREFLEXEXE)
 ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
 # include all dependency files
 INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(XPDTESTDEP) $(HADDDEP) \
-                $(H2ROOTDEP) $(SSH2RPDDEP) $(ROOTSEXEDEP) $(ROOTNBEXEDEP)
+                $(H2ROOTDEP) $(SSH2RPDDEP) $(ROOTSEXEDEP) $(ROOTNBEXEDEP) \
+                $(ROOTCLINGDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -202,19 +215,34 @@ $(G2ROOT):      $(G2ROOTO) $(ORDER_) $(MINICERNLIB)
 		   $(RPATH) $(MINICERNLIB) \
 		   $(F77LIBS) $(SYSLIBS)
 
+$(ROOTCLINGEXE): $(ROOTCLINGO) $(ROOTCLINGLIBSDEP)
+	$(LD) $(LDFLAGS) $(OSTHREADLIBDIR) $(OSTHREADLIB) -o $@ $(ROOTCLINGO) $(UTILSO) \
+	   $(RPATH) $(ROOTCLINGLIBS) $(CILIBS) $(CORELIBEXTRA) \
+	   $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)
+
+$(ROOTCINTEXE): $(ROOTCLINGEXE)
+	ln -f $(ROOTCLINGEXE) $(ROOTCINTEXE)
+
+$(GENREFLEXEXE): $(ROOTCLINGEXE)
+	ln -f $(ROOTCLINGEXE) $(GENREFLEXEXE)
+
+
 ifneq ($(F77),)
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) \
-                $(ROOTSEXE) $(ROOTSSH) $(ROOTNBEXE)
+                $(ROOTSEXE) $(ROOTSSH) $(ROOTNBEXE) $(ROOTCLINGEXE) $(ROOTCINTEXE) \
+                $(GENREFLEXEXE)
 else
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH) \
-                $(ROOTNBEXE)
+                $(ROOTNBEXE) $(ROOTCLINGEXE) $(ROOTCINTEXE) \
+                $(GENREFLEXEXE)
 endif
 
 clean-$(MODNAME):
 		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(XPDTESTO) $(HADDO) \
-		   $(H2ROOTO) $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO) $(ROOTNBEXEO)
+		   $(H2ROOTO) $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO) $(ROOTNBEXEO) \
+                   $(ROOTCLINGO)
 
 clean::         clean-$(MODNAME)
 
@@ -230,3 +258,5 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PROOFSERVO): CXXFLAGS += $(AFSEXTRACFLAGS)
+$(ROOTCLINGO): $(LLVMDEP)
+$(ROOTCLINGO): CXXFLAGS += -UR__HAVE_CONFIG -I$(METACLINGDIRR) -I$(DICTGENDIRR) -I$(ROOTPCMDIRR)

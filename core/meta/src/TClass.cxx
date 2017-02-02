@@ -119,14 +119,14 @@ using namespace std;
 
 TVirtualMutex* gInterpreterMutex = 0;
 
-void *gMmallocDesc = 0; //is used and set in TMapFile
 namespace {
    class TMmallocDescTemp {
    private:
       void *fSave;
    public:
-      TMmallocDescTemp(void *value = 0) : fSave(gMmallocDesc) { gMmallocDesc = value; }
-      ~TMmallocDescTemp() { gMmallocDesc = fSave; }
+      TMmallocDescTemp(void *value = 0) :
+         fSave(ROOT::Internal::gMmallocDesc) { ROOT::Internal::gMmallocDesc = value; }
+      ~TMmallocDescTemp() { ROOT::Internal::gMmallocDesc = fSave; }
    };
 }
 
@@ -1414,7 +1414,7 @@ void TClass::Init(const char *name, Version_t cversion,
          // This is because we do not expect the CINT dictionary
          // to be present for all STL classes (and we can handle
          // the lack of CINT dictionary in that cases).
-         // However, we cling the dictionary no longer carries
+         // However, the cling the dictionary no longer carries
          // an instantiation with it, unless we request the loading
          // here *or* the user explicitly instantiate the template
          // we would not have a ClassInfo for the template
@@ -1722,17 +1722,7 @@ Int_t TClass::ReadRules()
 {
    static const char *suffix = "class.rules";
    TString sname = suffix;
-#ifdef ROOTETCDIR
-   gSystem->PrependPathName(ROOTETCDIR, sname);
-#else
-   TString etc = gRootDir;
-#ifdef WIN32
-   etc += "\\etc";
-#else
-   etc += "/etc";
-#endif
-   gSystem->PrependPathName(etc, sname);
-#endif
+   gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
 
    Int_t res = -1;
 

@@ -1819,11 +1819,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       }
    }
 
-   //    Draw the histogram with a simple line or/and a marker
+   //    Draw the histogram with a simple line
 
-   optionMarker = 0;
-   if ((optionStar) || (optionMark))optionMarker=1;
-   if ((optionMarker) || (optionLine)) {
+   if (optionLine) {
       wminstep = wmin + 0.5*delta;
       Axis_t ax1,ax2,ay1,ay2;
       gPad->GetRangeAxis(ax1,ay1,ax2,ay2);
@@ -1844,23 +1842,14 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
             }
             if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
-            if ((optionMark != 10) && (optionLine == 0)) {
-               if (y[i-1] <= rwymin)  {npt--; continue;}
-            }
             gywork[npt-1] = y[i-1];
             gywork[npt]   = y[i-1]; //new
             if ((gywork[npt-1] < rwymin) || ((gywork[npt-1] > rwymax) && !optionFill2)) {
                if ((gywork[npt-1] < rwymin)) gywork[npt-1] = rwymin;
                if ((gywork[npt-1] > rwymax)) gywork[npt-1] = rwymax;
                if (npt > 2) {
-                  if (optionMarker) {
-                     ComputeLogs(npt, optionZ);
-                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-                  }
-                  if (optionLine) {
-                     if (!optionMarker) ComputeLogs(npt, optionZ);
-                     gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
-                  }
+                  ComputeLogs(npt, optionZ);
+                  gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
@@ -1869,30 +1858,22 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             }
 
             if (npt >= fgMaxPointsPerLine) {
-               if (optionMarker) {
-                  ComputeLogs(fgMaxPointsPerLine, optionZ);
-                  gPad->PaintPolyMarker(fgMaxPointsPerLine,gxworkl,gyworkl);
-               }
                if (optionLine) {
-                  if (!optionMarker) ComputeLogs(fgMaxPointsPerLine, optionZ);
+                  ComputeLogs(fgMaxPointsPerLine, optionZ);
                   if (optionFill2) {
                      gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
                      gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
                      gPad->PaintFillArea(fgMaxPointsPerLine+2,gxworkl,gyworkl);
                   }
-                  gPad->PaintPolyLine(fgMaxPointsPerLine,gxworkl,gyworkl);
+                  gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
                npt      = 1;
             }
          }  //endfor (i=first; i<=last;i++)
-         if (optionMarker && npt > 0) {
+         if (npt > 1) {
             ComputeLogs(npt, optionZ);
-            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-         }
-         if (optionLine && npt > 1) {
-            if (!optionMarker) ComputeLogs(npt, optionZ);
             if (optionFill2) {
                gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
                gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
@@ -1918,12 +1899,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gxwork[npt-1] = x[i-1];
             if ((gxwork[npt-1] < uxmin) || (gxwork[npt-1] > uxmax)) {
                if (npt > 2) {
-                  if (optionMarker) {
-                     ComputeLogs(npt, optionZ);
-                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-                  }
                   if (optionLine) {
-                     if (!optionMarker) ComputeLogs(npt, optionZ);
+                     ComputeLogs(npt, optionZ);
                      gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                   }
                }
@@ -1933,12 +1910,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                continue;
             }
             if (npt >= fgMaxPointsPerLine) {
-               if (optionMarker) {
-                  ComputeLogs(fgMaxPointsPerLine, optionZ);
-                  gPad->PaintPolyMarker(fgMaxPointsPerLine,gxworkl,gyworkl);
-               }
                if (optionLine) {
-                  if (!optionMarker) ComputeLogs(fgMaxPointsPerLine, optionZ);
+                  ComputeLogs(fgMaxPointsPerLine, optionZ);
                   gPad->PaintPolyLine(fgMaxPointsPerLine,gxworkl,gyworkl);
                }
                gxwork[0] = gxwork[npt-1];
@@ -1946,12 +1919,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                npt      = 1;
             }
          }  //endfor (i=first; i<=last;i++)
-         if (optionMarker && npt > 0) {
-            ComputeLogs(npt, optionZ);
-            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-         }
          if (optionLine != 0 && npt > 1) {
-            if (!optionMarker) ComputeLogs(npt, optionZ);
+            ComputeLogs(npt, optionZ);
             gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
          }
       }
@@ -2040,6 +2009,75 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       }
       gStyle->SetDrawBorder(drawbordersav);
    }
+
+   //    Draw the histogram with a simple marker
+
+   optionMarker = 0;
+   if ((optionStar) || (optionMark)) optionMarker=1;
+
+   if (optionMarker) {
+      Double_t xm,ym;
+      npt = 0;
+      if (!optionRot) {
+         for (i=first; i<=last;i++) {
+            if (!optionBins) xm = wmin+(i-first)*delta+0.5*delta;
+            else             xm = x[i-1] + 0.5*(x[i]-x[i-1]);
+            ym                  = y[i-1];
+            if (optionMark != 10) {
+               if (ym<rwymax && ym > rwymin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            } else {
+               if (ym<rwymax && ym >= rwymin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            }
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(npt, optionZ);
+               gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+               npt = 0;
+            }
+         }
+         if (npt > 0) {
+            ComputeLogs(npt, optionZ);
+            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+         }
+      } else {
+         wminstep = wmin + 0.5*delta;
+         for (i=first; i<=last;i++) {
+            if (!optionBins) ym = wminstep+(i-first)*delta+0.5*delta;
+            else             ym = y[i-1] + 0.5*(y[i]-y[i-1]);
+            xm                  = x[i-1];
+            if (optionMark != 10) {
+               if (xm<rwxmax && xm > rwxmin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            } else {
+               if (xm<rwxmax && xm >= rwxmin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            }
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(npt, optionZ);
+               gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+               npt = 0;
+            }
+         }
+         if (npt > 0) {
+            ComputeLogs(npt, optionZ);
+            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+         }
+      }
+   }
+
    gPad->ResetBit(TGraph::kClipFrame);
 
    delete [] gxwork;
@@ -2906,26 +2944,29 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    // Draw the error bars.
    // Y errors are lines, but X errors are pieces of circles.
    if (opt.Contains("E")) {
+      Double_t c=1;
+      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
+      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
       if (theEY) {
          for (i=0; i<theNpoints; i++) {
             Double_t eymin, eymax, exmin,exmax;
             exmin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
             eymin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Sin(c*(theX[i]-rwtmin)/thetaNDC);
             exmax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
             eymax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Sin(c*(theX[i]-rwtmin)/thetaNDC);
             theGraphPolar->TAttLine::Modify();
             if (exmin != exmax || eymin != eymax) gPad->PaintLine(exmin,eymin,exmax,eymax);
          }
       }
       if (theEX) {
          for (i=0; i<theNpoints; i++) {
-            Double_t rad = (theY[i]-rwrmin)/radiusNDC;
-            Double_t phimin = (theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
-            Double_t phimax = (theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
+            Double_t rad    = c*(theY[i]-rwrmin)/radiusNDC;
+            Double_t phimin = c*(theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
+            Double_t phimax = c*(theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             theGraphPolar->TAttLine::Modify();
             if (phimin != phimax) thePolargram->PaintCircle(0,0,rad,phimin,phimax,0);
          }
@@ -2940,10 +2981,9 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       Double_t xt   = 0;
       Double_t yt   = 0 ;
       Int_t j       = -1;
+      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
+      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
       for (i=0; i<theNpoints; i++) {
-         if (thePolargram->IsRadian()) {c=1;}
-         if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
-         if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
          xts  = xt;
          yts  = yt;
          xt   = (theY[i]-rwrmin)/radiusNDC*TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);

@@ -48,9 +48,18 @@ EVELIB    := $(LPATH)/libEve.$(SOEXT)
 EVEMAP    := $(EVELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(EVEH))
+EVEH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(EVEH))
+ALLHDRS     += $(EVEH_REL)
 ALLLIBS     += $(EVELIB)
 ALLMAPS     += $(EVEMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(EVEH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(EVELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(EVEDEP)
@@ -97,10 +106,7 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(ARCH),win32)
 $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 else
-# We need to disallow the direct use of gl.h. This way people will see the error
-# and the suggested fix. This happens by providing our own "fake" system gl.h.
-$(EVEO) $(EVEDO): CXXFLAGS += -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/ \
-		  $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 $(EVEO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 endif
 ifeq ($(MACOSX_GLU_DEPRECATED),yes)

@@ -22,6 +22,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::VariableRearrangeTransform
+\ingroup TMVA
+Rearrangement of input variables
+*/
+
 #include "TMVA/VariableRearrangeTransform.h"
 
 #include "TMVA/DataSet.h"
@@ -41,7 +46,7 @@ ClassImp(TMVA::VariableRearrangeTransform)
 
 TMVA::VariableRearrangeTransform::VariableRearrangeTransform( DataSetInfo& dsi )
 :  VariableTransformBase( dsi, Types::kRearranged, "Rearrange" )
-{ 
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,9 +128,9 @@ std::vector<TString>* TMVA::VariableRearrangeTransform::GetTransformationStrings
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    // create XML description of Rearrange transformation
+/// create XML description of Rearrange transformation
 
-void TMVA::VariableRearrangeTransform::AttachXMLTo(void* parent) 
+void TMVA::VariableRearrangeTransform::AttachXMLTo(void* parent)
 {
    void* trfxml = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trfxml, "Name", "Rearrange");
@@ -134,9 +139,9 @@ void TMVA::VariableRearrangeTransform::AttachXMLTo(void* parent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    // Read the transformation matrices from the xml node
+/// Read the transformation matrices from the xml node
 
-void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode ) 
+void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode )
 {
 
    void* inpnode = NULL;
@@ -144,23 +149,23 @@ void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode )
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
    if(inpnode == NULL)
       Log() << kFATAL << "Unknown weight file format for transformations. (tried to read in 'rearrange' transform)" << Endl;
-   
+
    VariableTransformBase::ReadFromXML( inpnode );
-   
+
    SetCreated();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// prints the transformation ranges
 
-void TMVA::VariableRearrangeTransform::PrintTransformation( std::ostream& ) 
+void TMVA::VariableRearrangeTransform::PrintTransformation( std::ostream& )
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// creates a normalizing function
 
-void TMVA::VariableRearrangeTransform::MakeFunction( std::ostream& /*fout*/, const TString& /*fcncName*/, 
-                                                     Int_t /*part*/, UInt_t /*trCounter*/, Int_t ) 
+void TMVA::VariableRearrangeTransform::MakeFunction( std::ostream& /*fout*/, const TString& /*fcncName*/,
+                                                     Int_t /*part*/, UInt_t /*trCounter*/, Int_t )
 {
 }

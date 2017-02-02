@@ -1,6 +1,6 @@
 platform:
-  - x86
   - x64
+  #- x86
 configuration:
   #- Debug
   - Release
@@ -25,8 +25,12 @@ build:
   parallel: true
   verbosity: detailed
 
+
 install:
-  - C:\"Program Files (x86)"\"Microsoft Visual Studio 14.0"\VC\vcvarsall.bat
+  - C:\"Program Files (x86)"\"Microsoft Visual Studio 14.0"\VC\vcvarsall.bat %platform%
+  - appveyor DownloadFile http://gnuwin32.sourceforge.net/downlinks/make-bin-zip.php -FileName make.zip
+  - unzip make.zip -d c:\gnuwin32\
+  - set PATH=c:\gnuwin32\bin;%PATH%
 
 build_script:
   - tools\packaging\cpt.py ^
@@ -34,11 +38,15 @@ build_script:
         --with-cling-url=https://github.com/%APPVEYOR_REPO_NAME% ^
         --with-clang-url=http://root.cern.ch/git/clang.git ^
         --with-llvm-url=http://root.cern.ch/git/llvm.git ^
-        --no-test
+        --with-cmake-flags="-G\"Visual Studio 14 2015 Win64\""
 
 init:
 - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+- cmd: wmic os get osarchitecture
+- cmd: echo platform is %platform%
+- cmd: set
 
 on_failure:
 # Your RDP session is limited by overall build time (60 min).
-- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# On every failing build, we have to wait for hours... Uncomment the next line if remote access to the machine is really needed (e.g. for debugging)
+#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

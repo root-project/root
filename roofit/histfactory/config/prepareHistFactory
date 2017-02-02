@@ -2,16 +2,10 @@
 
 # HistFactory workplace setup script
 
-ROOTPREFDIR=`root-config --prefix`
-ROOTETCDIR=`root-config --etcdir`
+ROOTETCDIR=`root -b -q -l -n -e "std::cout << TROOT::GetEtcDir() << std::endl;" | tail -1`
 echo "Using etcdir "$ROOTETCDIR
-ROOTTUTDIR=$ROOTPREFDIR/tutorials
-if test -e $ROOTTUTDIR; then
-    echo "Using tutorials dir" $ROOTTUTDIR 
-else     
-    ROOTTUTDIR=${ROOTPREFDIR}/share/doc/root/tutorials
-    echo "Using tutorials dir" $ROOTTUTDIR 
-fi
+ROOTTUTDIR=`root -b -q -l -n -e "std::cout << TROOT::GetTutorialDir() << std::endl;" | tail -1`
+echo "Using tutorials dir" $ROOTTUTDIR 
 
 if [ $# -eq 1 ]
 then

@@ -133,6 +133,7 @@ Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
       if (len >= fBufferSize) {
          //buffer larger than the cache itself: direct write to file
          fRecursive = kTRUE;
+         fFile->Seek(pos); // Flush may have changed this
          if (fFile->WriteBuffer(buf,len)) return -1;  // failure
          fRecursive = kFALSE;
          return 1;

@@ -10,12 +10,10 @@
  *                                                                           *
  *****************************************************************************/
 
-/**
-\file RooCFunction3Binding.cxx
-\class RooCFunction3Binding
-\ingroup Roofit
+/** \class RooCFunction3Binding
+    \ingroup Roofit
 
-RooCFunction3Binding is a templated implementation of class RooAbsReal that binds 
+RooCFunction3Binding is a templated implementation of class RooAbsReal that binds
 generic C(++) functions to a RooAbsReal argument thus allowing generic C++
 functions to be used as RooFit functions. Instances of function binding
 classes are fully functional RooFit function objects with one exception:
@@ -24,17 +22,17 @@ class cannot be persisted in a RooWorkspace without registering the function
 pointer first using RooCFunction3Binding<T1,T2,T3,T4>::register().
 **/
 
-#include "Riostream.h" 
-#include "RooCFunction3Binding.h" 
+#include "Riostream.h"
+#include "RooCFunction3Binding.h"
 #include "RooCintUtils.h"
 
 using namespace std ;
 
 #ifndef ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
 #define ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
-templateClassImp(RooCFunction3Binding) 
-templateClassImp(RooCFunction3Ref) 
-#endif 
+templateClassImp(RooCFunction3Binding)
+templateClassImp(RooCFunction3Ref)
+#endif
 
 
 namespace RooFit {

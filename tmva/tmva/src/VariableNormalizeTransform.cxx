@@ -27,6 +27,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::VariableNormalizeTransform
+\ingroup TMVA
+Linear interpolation class
+*/
+
 #include "TMVA/VariableNormalizeTransform.h"
 
 #include "TMVA/DataSet.h"
@@ -53,7 +58,7 @@ ClassImp(TMVA::VariableNormalizeTransform)
 
 TMVA::VariableNormalizeTransform::VariableNormalizeTransform( DataSetInfo& dsi )
 : VariableTransformBase( dsi, Types::kNormalized, "Norm" )
-{ 
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,8 +75,8 @@ void TMVA::VariableNormalizeTransform::Initialize()
    Int_t numC = GetNClasses()+1;
    if (GetNClasses() <= 1 ) numC = 1;
 
-   fMin.resize( numC ); 
-   fMax.resize( numC ); 
+   fMin.resize( numC );
+   fMax.resize( numC );
    for (Int_t i=0; i<numC; i++) {
       fMin.at(i).resize(inputSize);
       fMax.at(i).resize(inputSize);
@@ -99,19 +104,19 @@ Bool_t TMVA::VariableNormalizeTransform::PrepareTransformation (const std::vecto
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// apply the normalization transformation
 
 const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Event* const ev, Int_t cls ) const
 {
-   // apply the normalization transformation
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
-   // if cls (the class chosen by the user) not existing, 
-   // assume that he wants to have the matrix for all classes together. 
+   // if cls (the class chosen by the user) not existing,
+   // assume that he wants to have the matrix for all classes together.
    // if (cls < 0 || cls > GetNClasses()) {
    //       if (GetNClasses() > 1 ) cls = GetNClasses();
    //       else cls = (fMin.size()==1?0:2);
    //    }
-   // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
+   // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...)
    if (cls < 0 || cls >= (int) fMin.size()) cls = fMin.size()-1;
    // EVT workaround end
 
@@ -123,10 +128,10 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
    if (fTransformedEvent==0) fTransformedEvent = new Event();
 
    Float_t min,max;
-   const FloatVector& minVector = fMin.at(cls); 
+   const FloatVector& minVector = fMin.at(cls);
    const FloatVector& maxVector = fMax.at(cls);
-   
-   UInt_t iidx = 0;          
+
+   UInt_t iidx = 0;
    std::vector<Char_t>::iterator itMask = mask.begin();
    for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
       if( (*itMask) ){
@@ -138,7 +143,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
 
       Float_t val = (*itInp);
 
-      min = minVector.at(iidx); 
+      min = minVector.at(iidx);
       max = maxVector.at(iidx);
       Float_t offset = min;
       Float_t scale  = 1.0/(max-min);
@@ -149,7 +154,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
       ++iidx;
       ++itMask;
    }
-   
+
    SetOutput( fTransformedEvent, output, mask, ev );
    return fTransformedEvent;
 }
@@ -161,8 +166,8 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform(const TMVA
 {
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
-   // if cls (the class chosen by the user) not existing, 
-   // assume that user wants to have the transformation for all classes together. 
+   // if cls (the class chosen by the user) not existing,
+   // assume that user wants to have the transformation for all classes together.
    if (cls < 0 || cls > GetNClasses()) {
       if (GetNClasses() > 1 ) cls = GetNClasses();
       else cls = 0;
@@ -176,14 +181,14 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform(const TMVA
    if (fBackTransformedEvent==0) fBackTransformedEvent = new Event( *ev );
 
    Float_t min,max;
-   const FloatVector& minVector = fMin.at(cls); 
+   const FloatVector& minVector = fMin.at(cls);
    const FloatVector& maxVector = fMax.at(cls);
-   
-   UInt_t iidx = 0;          
+
+   UInt_t iidx = 0;
    for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
       Float_t val = (*itInp);
 
-      min = minVector.at(iidx); 
+      min = minVector.at(iidx);
       max = maxVector.at(iidx);
       Float_t offset = min;
       Float_t scale  = 1.0/(max-min);
@@ -204,9 +209,9 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform(const TMVA
 
 void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vector< Event*>& events )
 {
-   if (events.size() <= 1) 
+   if (events.size() <= 1)
       Log() << kFATAL << "Not enough events (found " << events.size() << ") to calculate the normalization" << Endl;
-   
+
    FloatVector input; // will be filled with the selected variables, targets, (spectators)
    std::vector<Char_t> mask;
 
@@ -233,14 +238,14 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
 
       UInt_t cls = (*evIt)->GetClass(); // get the class of this event
 
-      FloatVector& minVector = fMin.at(cls); 
+      FloatVector& minVector = fMin.at(cls);
       FloatVector& maxVector = fMax.at(cls);
 
       FloatVector& minVectorAll = fMin.at(all);
       FloatVector& maxVectorAll = fMax.at(all);
 
       GetInput(event,input,mask);    // select the input variables for the transformation and get them from the event
-      UInt_t iidx = 0;          
+      UInt_t iidx = 0;
       for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
          Float_t val = (*itInp);
 
@@ -264,8 +269,8 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
 
 std::vector<TString>* TMVA::VariableNormalizeTransform::GetTransformationStrings( Int_t cls ) const
 {
-   // if cls (the class chosen by the user) not existing, assume that user wants to 
-   // have the matrix for all classes together. 
+   // if cls (the class chosen by the user) not existing, assume that user wants to
+   // have the matrix for all classes together.
    if (cls < 0 || cls > GetNClasses()) cls = GetNClasses();
 
    Float_t min, max;
@@ -280,7 +285,7 @@ std::vector<TString>* TMVA::VariableNormalizeTransform::GetTransformationStrings
       Char_t type = (*itGet).first;
       UInt_t idx  = (*itGet).second;
       Float_t offset = min;
-      Float_t scale  = 1.0/(max-min);      
+      Float_t scale  = 1.0/(max-min);
       TString str("");
       VariableInfo& varInfo = (type=='v'?fDsi.GetVariableInfo(idx):(type=='t'?fDsi.GetTargetInfo(idx):fDsi.GetSpectatorInfo(idx)));
 
@@ -310,10 +315,10 @@ void TMVA::VariableNormalizeTransform::WriteTransformationToStream( std::ostream
    for (Int_t icls = 0; icls < numC; icls++ ) {
       o << icls << std::endl;
       for (UInt_t ivar=0; ivar<nvars; ivar++)
-         o << std::setprecision(12) << std::setw(20) << fMin.at(icls).at(ivar) << " " 
+         o << std::setprecision(12) << std::setw(20) << fMin.at(icls).at(ivar) << " "
            << std::setprecision(12) << std::setw(20) << fMax.at(icls).at(ivar) << std::endl;
       for (UInt_t itgt=0; itgt<ntgts; itgt++)
-         o << std::setprecision(12) << std::setw(20) << fMin.at(icls).at(nvars+itgt) << " " 
+         o << std::setprecision(12) << std::setw(20) << fMin.at(icls).at(nvars+itgt) << " "
            << std::setprecision(12) << std::setw(20) << fMax.at(icls).at(nvars+itgt) << std::endl;
    }
    o << "##" << std::endl;
@@ -322,7 +327,7 @@ void TMVA::VariableNormalizeTransform::WriteTransformationToStream( std::ostream
 ////////////////////////////////////////////////////////////////////////////////
 /// create XML description of Normalize transformation
 
-void TMVA::VariableNormalizeTransform::AttachXMLTo(void* parent) 
+void TMVA::VariableNormalizeTransform::AttachXMLTo(void* parent)
 {
    void* trfxml = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trfxml, "Name", "Normalize");
@@ -348,12 +353,12 @@ void TMVA::VariableNormalizeTransform::AttachXMLTo(void* parent)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the transformation matrices from the xml node
 
-void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode ) 
+void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
 {
    Bool_t newFormat = kFALSE;
 
    void* inpnode = NULL;
-   
+
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
    if( inpnode != NULL )
       newFormat = kTRUE;
@@ -364,7 +369,7 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
       VariableTransformBase::ReadFromXML( inpnode );
 
       // read transformation information
-      
+
       UInt_t size = fGet.size();
       UInt_t classindex, idx;
 
@@ -376,7 +381,7 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
 
          fMin.resize(classindex+1);
          fMax.resize(classindex+1);
-         
+
          fMin[classindex].resize(size,Float_t(0));
          fMax[classindex].resize(size,Float_t(0));
 
@@ -399,7 +404,7 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
       SetCreated();
       return;
    }
-   
+
    // ------------- old format --------------------
    UInt_t classindex, varindex, tgtindex, nvars, ntgts;
    // coverity[tainted_data_argument]
@@ -455,7 +460,7 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
 /// from old text files
 /// in this case regression didn't exist and there were no targets
 
-void TMVA::VariableNormalizeTransform::BuildTransformationFromVarInfo( const std::vector<TMVA::VariableInfo>& var ) 
+void TMVA::VariableNormalizeTransform::BuildTransformationFromVarInfo( const std::vector<TMVA::VariableInfo>& var )
 {
    UInt_t nvars = GetNVariables();
 
@@ -527,7 +532,7 @@ void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istrea
 ////////////////////////////////////////////////////////////////////////////////
 /// prints the transformation ranges
 
-void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o */ ) 
+void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o */ )
 {
    Int_t nCls = GetNClasses();
    Int_t numC = nCls+1;
@@ -541,10 +546,10 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o *
       for( ItVarTypeIdxConst itGet = fGet.begin(), itGetEnd = fGet.end(); itGet != itGetEnd; ++itGet ){
          Char_t type = (*itGet).first;
          UInt_t idx  = (*itGet).second;
-         
+
          TString typeString = (type=='v'?"Variable: ": (type=='t'?"Target : ":"Spectator : ") );
          Log() << typeString.Data() << std::setw(20) << fMin[icls][idx] << std::setw(20) << fMax[icls][idx] << Endl;
-         
+
          ++iinp;
       }
    }
@@ -554,8 +559,8 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o *
 /// creates a normalizing function
 /// TODO include target-transformation into makefunction
 
-void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
-                                                     Int_t part, UInt_t trCounter, Int_t ) 
+void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const TString& fcncName,
+                                                     Int_t part, UInt_t trCounter, Int_t )
 {
    UInt_t nVar = fGet.size();
    UInt_t numC = fMin.size();
@@ -595,7 +600,7 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
       fout << "   // get indices of used variables" << std::endl;
       VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0 );
       fout << "   static std::vector<double> dv;" << std::endl; // simply made it static so it doesn't need to be re-booked every time
-      fout << "   dv.resize(nVar);" << std::endl; 
+      fout << "   dv.resize(nVar);" << std::endl;
       fout << "   for (int ivar=0; ivar<nVar; ivar++) dv[ivar] = iv[indicesGet.at(ivar)];" << std::endl;
 
       fout << "   for (int ivar=0;ivar<"<<nVar<<";ivar++) {" << std::endl;

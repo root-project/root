@@ -4,20 +4,18 @@
  * Package: RooFitCore                                                       *
  * @(#)root/roofitcore:$Id$
  * Author:                                                                   *
- * Tristan du Pree, Nikhef, Amsterdam, tdupree@nikhef.nl                     * 
+ * Tristan du Pree, Nikhef, Amsterdam, tdupree@nikhef.nl                     *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooMultiBinomial.cxx
-\class RooMultiBinomial
-\ingroup Roofit
+/** \class RooMultiBinomial
+    \ingroup Roofit
 
-RooMultiBinomial is an efficiency function which makes all combinations of 
-efficiencies given as input different effiency functions for different categories.
+RooMultiBinomial is an efficiency function which makes all combinations of
+efficiencies given as input different efficiency functions for different categories.
 
 Given a dataset with a category C that determines if a given
 event is accepted (1) or rejected (0) for the efficiency to be measured,
@@ -42,23 +40,21 @@ The combination only 'reject' can be chosen to be visible or not visible
 using namespace std ;
 
 ClassImp(RooMultiBinomial)
-  ;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct the efficiency functions from a list of efficiency functions
 /// and a list of categories cat with two states (0,1) that indicate if a given
 /// event should be counted as rejected or accepted respectively
 
-RooMultiBinomial::RooMultiBinomial(const char *name, const char *title, 
-				   const RooArgList& effFuncList, 
-				   const RooArgList& catList,
-				   Bool_t ignoreNonVisible) :
+RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
+               const RooArgList& effFuncList,
+               const RooArgList& catList,
+               Bool_t ignoreNonVisible) :
   RooAbsReal(name,title),
   _catList("catList","list of cats", this),
   _effFuncList("effFuncList","list of eff funcs",this),
   _ignoreNonVisible(ignoreNonVisible)
-{  
+{
   _catList.add(catList);
   _effFuncList.add(effFuncList);
 
@@ -69,12 +65,10 @@ RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooMultiBinomial::RooMultiBinomial(const RooMultiBinomial& other, const char* name) : 
+RooMultiBinomial::RooMultiBinomial(const RooMultiBinomial& other, const char* name) :
   RooAbsReal(other, name),
   _catList("catList",this,other._catList),
   _effFuncList("effFuncList",this,other._effFuncList),
@@ -82,16 +76,12 @@ RooMultiBinomial::RooMultiBinomial(const RooMultiBinomial& other, const char* na
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMultiBinomial::~RooMultiBinomial() 
+RooMultiBinomial::~RooMultiBinomial()
 {
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the raw value of the function which is the effFunc
@@ -112,13 +102,13 @@ Double_t RooMultiBinomial::evaluate() const
 
   for (int i=0; i<effFuncListSize; ++i) {
     if (effFuncVal[i]>1) {
-      coutW(Eval) << "WARNING: Efficency >1 (equal to " << effFuncVal[i] 
-		  << " ), for i = " << i << "...TRUNCATED" << endl;
+      coutW(Eval) << "WARNING: Efficiency >1 (equal to " << effFuncVal[i]
+        << " ), for i = " << i << "...TRUNCATED" << endl;
       effFuncVal[i] = 1.0 ;
     } else if (effFuncVal[i]<0) {
       effFuncVal[i] = 0.0 ;
-      coutW(Eval) << "WARNING: Efficency <0 (equal to " << effFuncVal[i] 
-		  << " ), for i = " << i << "...TRUNCATED" << endl;
+      coutW(Eval) << "WARNING: Efficiency <0 (equal to " << effFuncVal[i]
+        << " ), for i = " << i << "...TRUNCATED" << endl;
     }
   }
 
@@ -156,6 +146,3 @@ Double_t RooMultiBinomial::evaluate() const
   return _effVal;
 
 }
-
-
-

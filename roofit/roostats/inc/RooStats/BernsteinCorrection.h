@@ -26,27 +26,27 @@ namespace RooStats {
    public:
       BernsteinCorrection(double tolerance = 0.05);
       virtual ~BernsteinCorrection() {}
-      
+
       Int_t ImportCorrectedPdf(RooWorkspace*, const char*,const char*,const char*);
       void SetMaxCorrection(Double_t maxCorr){fMaxCorrection = maxCorr;}
       void SetMaxDegree(Int_t maxDegree){fMaxDegree = maxDegree;}
-      void CreateQSamplingDist(RooWorkspace* wks, 
-                               const char* nominalName, 
-                               const char* varName, 
+      void CreateQSamplingDist(RooWorkspace* wks,
+                               const char* nominalName,
+                               const char* varName,
                                const char* dataName,
                                TH1F*, TH1F*,
-                               Int_t degree, 
+                               Int_t degree,
                                Int_t nToys=500);
-      
+
    private:
 
       Int_t    fMaxDegree;     // maximum polynomial degree correction (default is 10)
       Double_t fMaxCorrection; // maximum correction factor at any point (default is 100)
-      Double_t fTolerance; // probability to add an unnecessary term
-      
+      Double_t fTolerance;     // probability to add an unnecessary term
+
 
    protected:
-      ClassDef(BernsteinCorrection,2) // A utility to add polynomial corrrection terms to a model to improve the description of data.
+      ClassDef(BernsteinCorrection,2) // A utility to add polynomial correction terms to a model to improve the description of data.
    };
 }
 

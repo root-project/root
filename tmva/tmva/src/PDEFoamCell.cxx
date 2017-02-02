@@ -9,7 +9,7 @@
  *                                                                                *
  * Description:                                                                   *
  *      Objects of this class are hyperrectangular cells organized in             *
- *      the binary tree. Special algoritm for encoding relalive                   *
+ *      the binary tree. Special algoritm for encoding relative                   *
  *      positioning of the cells saves total memory allocation needed             *
  *      for the system of cells.                                                  *
  *                                                                                *
@@ -28,6 +28,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::PDEFoamCell
+\ingroup TMVA
+
+*/
 #include "TMVA/PDEFoamCell.h"
 
 #include "TMVA/PDEFoamVect.h"
@@ -205,7 +209,7 @@ void TMVA::PDEFoamCell::CalcVolume(void)
 
 UInt_t TMVA::PDEFoamCell::GetDepth()
 {
-   // check wheter we are in the root cell
+   // check whether we are in the root cell
    if (fParent == 0)
       return 1;
 

@@ -25,13 +25,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// PDEFoamKernelLinN
-//
-// This PDEFoam kernel estimates a cell value for a given event by
-// weighting with cell values of the nearest neighbor cells.
-// _____________________________________________________________________
+/*! \class TMVA::PDEFoamKernelLinN
+\ingroup TMVA
+This PDEFoam kernel estimates a cell value for a given event by
+weighting with cell values of the nearest neighbor cells.
+*/
 
 #include "TMVA/PDEFoamKernelLinN.h"
 
@@ -177,7 +175,7 @@ Float_t TMVA::PDEFoamKernelLinN::GetAverageNeighborsValue(PDEFoam *foam,
    Float_t norm   = 0; // normalisation
    Float_t result = 0; // return value
 
-   PDEFoamCell *cell = foam->FindCell(txvec); // find cooresponding cell
+   PDEFoamCell *cell = foam->FindCell(txvec); // find corresponding cell
    PDEFoamVect cellSize(foam->GetTotDim());
    PDEFoamVect cellPosi(foam->GetTotDim());
    cell->GetHcub(cellPosi, cellSize); // get cell coordinates

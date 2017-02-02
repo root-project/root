@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -25,6 +25,13 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
+
+/*! \class TMVA::Config
+\ingroup TMVA
+
+Singleton class for global configuration settings used by TMVA.
+
+*/
 
 #include "TMVA/Config.h"
 #include "TMVA/MsgLogger.h"
@@ -57,7 +64,7 @@ TMVA::Config::Config() :
    fVariablePlotting.fNbins1D  = 40;
    fVariablePlotting.fNbins2D  = 300;
    fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = 20;
-   
+
    fVariablePlotting.fNbinsMVAoutput   = 40;
    fVariablePlotting.fNbinsXOfROCCurve = 100;
 

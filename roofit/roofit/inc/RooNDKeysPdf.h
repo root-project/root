@@ -34,8 +34,8 @@ class RooArgSet;
 #ifndef __CINT__
 class VecVecDouble : public std::vector<std::vector<Double_t> >  { } ;
 class VecTVecDouble : public std::vector<TVectorD> { } ;
-typedef std::pair<Int_t, VecVecDouble::iterator > iiPair; 
-typedef std::vector< iiPair > iiVec; 
+typedef std::pair<Int_t, VecVecDouble::iterator > iiPair;
+typedef std::vector< iiPair > iiVec;
 typedef std::pair<Int_t, VecTVecDouble::iterator > itPair;
 typedef std::vector< itPair > itVec;
 #else
@@ -53,32 +53,32 @@ public:
                MirrorAsymBoth };
 
   RooNDKeysPdf(const char *name, const char *title,
-               const RooArgList& varList, RooDataSet& data, 
-	       TString options="a", Double_t rho=1, Double_t nSigma=3, Bool_t rotate=kTRUE) ; 
+               const RooArgList& varList, RooDataSet& data,
+          TString options="a", Double_t rho=1, Double_t nSigma=3, Bool_t rotate=kTRUE) ;
 
   RooNDKeysPdf(const char *name, const char *title,
-               const RooArgList& varList, RooDataSet& data, const TVectorD& rho, 
-	       TString options="a", Double_t nSigma=3, Bool_t rotate=kTRUE) ; 
+               const RooArgList& varList, RooDataSet& data, const TVectorD& rho,
+          TString options="a", Double_t nSigma=3, Bool_t rotate=kTRUE) ;
 
   RooNDKeysPdf(const char *name, const char *title,
-               RooAbsReal& x, RooDataSet& data, 
-               Mirror mirror= NoMirror, Double_t rho=1, Double_t nSigma=3, Bool_t rotate=kTRUE) ; 
+               RooAbsReal& x, RooDataSet& data,
+               Mirror mirror= NoMirror, Double_t rho=1, Double_t nSigma=3, Bool_t rotate=kTRUE) ;
 
   RooNDKeysPdf(const char *name, const char *title,
-               RooAbsReal& x, RooAbsReal &y, RooDataSet& data, 
-               TString options="a", Double_t rho = 1.0, Double_t nSigma=3, Bool_t rotate=kTRUE); 
+               RooAbsReal& x, RooAbsReal &y, RooDataSet& data,
+               TString options="a", Double_t rho = 1.0, Double_t nSigma=3, Bool_t rotate=kTRUE);
 
   RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=0);
   virtual ~RooNDKeysPdf();
 
   virtual TObject* clone(const char* newname) const { return new RooNDKeysPdf(*this,newname); }
-  
+
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
-  inline void fixShape(Bool_t fix) { 
+  inline void fixShape(Bool_t fix) {
     createPdf(kFALSE);
-    _fixedShape=fix; 
+    _fixedShape=fix;
   }
 
   struct BoxInfo {
@@ -89,22 +89,22 @@ public:
     std::vector<Double_t> xVarLo, xVarHi;
     std::vector<Double_t> xVarLoM3s, xVarLoP3s, xVarHiM3s, xVarHiP3s;
     std::map<Int_t,Bool_t> bpsIdcs;
-    std::vector<Int_t> sIdcs;	
+    std::vector<Int_t> sIdcs;
     std::vector<Int_t> bIdcs;
     std::vector<Int_t> bmsIdcs;
   } ;
 
 protected:
-  
+
   RooListProxy _varList ;
   TIterator* _varItr ;   //! do not persist
 
   Double_t evaluate() const;
 
 
-  void     createPdf(Bool_t firstCall=kTRUE) const;  
+  void     createPdf(Bool_t firstCall=kTRUE) const;
   void     setOptions() const;
-  void     initialize() const; 
+  void     initialize() const;
   void     loadDataSet(Bool_t firstCall) const;
   void     mirrorDataSet() const;
   void     loadWeightSet() const;
@@ -133,7 +133,7 @@ protected:
   mutable Double_t _nEventsW;
   mutable Double_t _d;
   mutable Double_t _n;
-  
+
   // cached info on variable
 
   mutable std::vector<std::vector<Double_t> > _dataPts;
@@ -162,7 +162,7 @@ protected:
   mutable std::vector<Double_t> _xVarLo, _xVarHi;
   mutable std::vector<Double_t> _xVarLoM3s, _xVarLoP3s, _xVarHiM3s, _xVarHiP3s;
   mutable std::map<Int_t,Bool_t> _bpsIdcs;
-  mutable std::vector<Int_t>	_sIdcs;	
+  mutable std::vector<Int_t>   _sIdcs;
   mutable std::vector<Int_t> _bIdcs;
   mutable std::vector<Int_t> _bmsIdcs;
 
@@ -174,10 +174,10 @@ protected:
   mutable Double_t _maxWeight;
   mutable std::map<Int_t,Double_t> _wMap;
 
-  mutable TMatrixDSym* _covMat; 
-  mutable TMatrixDSym* _corrMat; 
-  mutable TMatrixD* _rotMat; 
-  mutable TVectorD* _sigmaR; 
+  mutable TMatrixDSym* _covMat;
+  mutable TMatrixDSym* _corrMat;
+  mutable TMatrixD* _rotMat;
+  mutable TVectorD* _sigmaR;
   mutable TVectorD* _dx;
   mutable Double_t _sigmaAvgR;
 
@@ -186,11 +186,11 @@ protected:
   /// sorter function
   struct SorterTV_L2H {
     Int_t idx;
-    
+
     SorterTV_L2H (Int_t index) : idx(index) {}
     bool operator() (const itPair& a, const itPair& b) {
-      const TVectorD& aVec = *(a.second); 
-      const TVectorD& bVec = *(b.second); 
+      const TVectorD& aVec = *(a.second);
+      const TVectorD& bVec = *(b.second);
       return (aVec[idx]<bVec[idx]);
     }
   };

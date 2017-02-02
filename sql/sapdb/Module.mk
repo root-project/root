@@ -28,9 +28,18 @@ SAPDBLIB     := $(LPATH)/libSapDB.$(SOEXT)
 SAPDBMAP     := $(SAPDBLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SAPDBH))
+SAPDBH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(SAPDBH))
+ALLHDRS     += $(SAPDBH_REL)
 ALLLIBS     += $(SAPDBLIB)
 ALLMAPS     += $(SAPDBMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(SAPDBH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Sql_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SAPDBLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(SAPDBDEP)

@@ -348,6 +348,39 @@ void TBufferFile::WriteStdString(const std::string *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Read char* from TBuffer.
+
+void TBufferFile::ReadCharStar(char* &s)
+{
+   delete [] s;
+   s = 0;
+
+   Int_t nch;
+   *this >> nch;
+   if (nch > 0) {
+      s = new char[nch+1];
+      ReadFastArray(s, nch);
+      s[nch] = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write char* into TBuffer.
+
+void TBufferFile::WriteCharStar(char *s)
+{
+   Int_t nch = 0;
+   if (s) {
+      nch = strlen(s);
+      *this  << nch;
+      WriteFastArray(s,nch);
+   } else {
+      *this << nch;
+   }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set byte count at position cntpos in the buffer. Generate warning if
 /// count larger than kMaxMapCount. The count is excluded its own size.
 

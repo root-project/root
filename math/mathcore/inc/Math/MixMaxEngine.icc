@@ -17,7 +17,9 @@
 #ifndef ROOT_Math_MixMaxEngine_icc
 #define ROOT_Math_MixMaxEngine_icc
 
-#include "Math/MixMaxEngine.h"
+#ifndef ROOT_Math_MixMaxEngine
+#error "Do not use MixMaxEngine.icc directly. #include \"MixMaxEngine.h\" instead."
+#endif // ROOT_Math_MixMaxEngine
 
 //#include "Math/mixmax/mixmax.h"
 #include <cassert>

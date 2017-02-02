@@ -73,7 +73,7 @@ void ConvertPointsROOTToCocoa(Int_t nPoints, const TPoint *xy, std::vector<TPoin
 
 //______________________________________________________________________________
 TGQuartz::TGQuartz()
-            : fUseAA(true)
+            : fUseAA(true), fUseFAAA(false)
 {
    //Default ctor.
 
@@ -95,7 +95,7 @@ TGQuartz::TGQuartz()
 //______________________________________________________________________________
 TGQuartz::TGQuartz(const char *name, const char *title)
             : TGCocoa(name, title),
-              fUseAA(true)
+              fUseAA(true), fUseFAAA(false)
 {
    //Constructor.
    if (!TTF::IsInitialized())
@@ -200,7 +200,7 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
 
    const Quartz::CGStateGuard ctxGuard(ctx);
    //AA flag is not a part of a state.
-   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseFAAA);
 
    const TColor * const fillColor = gROOT->GetColor(GetFillColor());
    if (!fillColor) {
@@ -997,6 +997,15 @@ void TGQuartz::SetAA()
       else {
          assert(value == "yes" && "SetAA, value must be 'yes', 'no' or 'auto'");
          fUseAA = true;
+      }
+      const TString valuefa(TString(gEnv->GetValue("Cocoa.EnableFillAreaAntiAliasing", "auto")).Strip());
+      if (valuefa == "auto") {
+         [[NSScreen mainScreen] backingScaleFactor] > 1. ? fUseFAAA = true : fUseFAAA = false;
+      } else if (valuefa == "no")
+         fUseFAAA = false;
+      else {
+         assert(valuefa == "yes" && "SetAA, value must be 'yes', 'no' or 'auto'");
+         fUseFAAA = true;
       }
    }
 }

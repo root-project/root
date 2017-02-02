@@ -8,8 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGeoGlobalMagField.h"
 #include "TVirtualMagField.h"
+
+#include "TGeoGlobalMagField.h"
+#include "Rtypes.h"
 
 /** \class TVirtualMagField
 \ingroup Geometry_classes

@@ -29,9 +29,18 @@ HISTPAINTERLIB := $(LPATH)/libHistPainter.$(SOEXT)
 HISTPAINTERMAP := $(HISTPAINTERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HISTPAINTERH))
+HISTPAINTERH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(HISTPAINTERH))
+ALLHDRS       += $(HISTPAINTERH_REL)
 ALLLIBS       += $(HISTPAINTERLIB)
 ALLMAPS       += $(HISTPAINTERMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(HISTPAINTERH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Hist_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(HISTPAINTERLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(HISTPAINTERDEP)

@@ -34,9 +34,18 @@ RTCONFDEP    := $(RTCONFO:.o=.d)
 RTCONF       := bin/rtconf
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SRPUTILSH))
+SRPUTILSH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(SRPUTILSH))
+ALLHDRS     += $(SRPUTILSH_REL)
 ALLLIBS     += $(SRPUTILSLIB)
 ALLEXECS    += $(RPASSWD) $(RTCONF)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(SRPUTILSH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SRPUTILSLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(SRPUTILSDEP) $(RPASSWDDEP) $(RTCONFDEP)
@@ -76,5 +85,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(SRPUTILSO): CXXFLAGS += $(SRPINCDIR:%=-I%)
+$(SRPUTILSO): CXXFLAGS += $(SRPINCDIR:%=-I%) -I$(ROOT_SRCDIR)/net/rpdutils/res
 $(RTCONFO): CFLAGS += $(SRPUTILINCDIR:%=-I%) $(SRPINCDIR:%=-I%)

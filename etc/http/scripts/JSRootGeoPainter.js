@@ -4,7 +4,7 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       // AMD. Register as an anonymous module.
-      define( [ 'd3', 'JSRootPainter', 'JSRoot3DPainter', 'JSRootGeoBase' ], factory );
+      define( [ 'd3', 'JSRootPainter', 'threejs', 'JSRoot3DPainter', 'JSRootGeoBase' ], factory );
    } else {
 
       if (typeof JSROOT == 'undefined')
@@ -19,9 +19,9 @@
       if (typeof THREE == 'undefined')
          throw new Error('THREE is not defined', 'JSRootGeoPainter.js');
 
-      factory( d3, JSROOT);
+      factory( d3, JSROOT, THREE );
    }
-} (function( d3, JSROOT ) {
+} (function( d3, JSROOT, THREE ) {
 
 
    if ( typeof define === "function" && define.amd )
@@ -380,7 +380,7 @@
       // Clipping Options
 
       var bound = new THREE.Box3().setFromObject(this._toplevel);
-      bound.expandByVector(bound.size().multiplyScalar(0.01));
+      bound.expandByVector(bound.getSize().multiplyScalar(0.01));
 
       var clipFolder = this._datgui.addFolder('Clipping');
 
@@ -483,8 +483,8 @@
          });
 
          advanced.add( this._advceOptions, 'clipIntersection').listen().onChange( function (value) {
-            painter._renderer.clipIntersection = value;
-            painter.Render3D(0);
+            painter.clipIntersection = value;
+            painter.updateClipping();
          });
 
          advanced.add(this._advceOptions, 'depthTest').onChange( function (value) {
@@ -759,7 +759,7 @@
             painter.ActiavteInBrowser([]);
       }
 
-      this._controls.ProcessMouseDblclick = function() {
+      this._controls.ProcessDblClick = function() {
          if (painter._last_manifest) {
             painter._last_manifest.wireframe = !painter._last_manifest.wireframe;
             if (painter._last_hidden)
@@ -932,7 +932,12 @@
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
          var need_worker = (numvis > 10000) || (matrix && (this._clones.ScanVisible() > 1e5));
-         // need_worker = false;
+         
+         // worker does not work when starting from file system
+         if (need_worker && JSROOT.source_dir.indexOf("file://")==0) {
+            console.log('disable worker for jsroot from file system');
+            need_worker = false;
+         }
 
          if (need_worker && !this._worker && (this.options.use_worker >= 0))
             this.startWorker(); // we starting worker, but it may not be ready so fast
@@ -1199,12 +1204,13 @@
       this._renderer.setPixelRatio(pixel_ratio);
       this._renderer.setClearColor(0xffffff, 1);
       this._renderer.setSize(w, h);
-      this._renderer.clipIntersection = true;
+      this._renderer.localClippingEnabled = true;
 
       this._animating = false;
 
       // Clipping Planes
 
+      this.clipIntersection = true;
       this.bothSides = false; // which material kind should be used
       this.enableX = this.enableY = this.enableZ = false;
       this.clipX = this.clipY = this.clipZ = 0.0;
@@ -1320,7 +1326,7 @@
 
       this._advceOptions.depthTest = this._defaultAdvanced.depthTest;
       this._advceOptions.clipIntersection = this._defaultAdvanced.clipIntersection;
-      this._renderer.clipIntersection = this._defaultAdvanced.clipIntersection;
+      this.clipIntersection = this._defaultAdvanced.clipIntersection;
 
       var painter = this;
       this._toplevel.traverse( function (node) {
@@ -1348,10 +1354,17 @@
       this._clipPlanes[0].constant = this.clipX;
       this._clipPlanes[1].constant = -this.clipY;
       this._clipPlanes[2].constant = this.options._yup ? -this.clipZ : this.clipZ;
-      this._renderer.clippingPlanes = [];
-      if (this.enableX) this._renderer.clippingPlanes.push(this._clipPlanes[0]);
-      if (this.enableY) this._renderer.clippingPlanes.push(this._clipPlanes[1]);
-      if (this.enableZ) this._renderer.clippingPlanes.push(this._clipPlanes[2]);
+
+      var painter = this;
+      this._scene.traverse( function (node) {
+         if (node instanceof THREE.Mesh) {
+            node.material.clipIntersection = painter.clipIntersection;
+            node.material.clippingPlanes = [];
+            if (painter.enableX) node.material.clippingPlanes.push(painter._clipPlanes[0]);
+            if (painter.enableY) node.material.clippingPlanes.push(painter._clipPlanes[1]);
+            if (painter.enableZ) node.material.clippingPlanes.push(painter._clipPlanes[2]);
+         }
+      });
 
       this.updateMaterialSide(this.enableX || this.enableY || this.enableZ);
 
@@ -1536,8 +1549,10 @@
           painter = this, last = new Date();
 
       function animate() {
+         if (!painter._renderer || !painter.options) return;
+         
          var current = new Date();
-
+         
          if ( painter.options.autoRotate ) requestAnimationFrame( animate );
 
          if (painter._controls) {
@@ -1730,10 +1745,12 @@
 
    JSROOT.TGeoPainter.prototype.drawTrack = function(track, itemname) {
       if (!track) return false;
+      if (track.fN <= 0) return false;
 
       var track_width = track.fLineWidth;
 
       var track_color = JSROOT.Painter.root_colors[track.fLineColor];
+      if (track_color == undefined) track_color = "rgb(255,0,255)";
 
       if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
 
@@ -1765,6 +1782,7 @@
 
    JSROOT.TGeoPainter.prototype.drawHit = function(hit, itemname) {
       if (!hit) return false;
+      if (hit.fN <= 0) return false;
 
       var hit_size = 25.0 * hit.fMarkerSize;
       var hit_color = JSROOT.Painter.root_colors[hit.fMarkerColor];
@@ -2052,9 +2070,9 @@
 
       this.add_3d_canvas(size, this._renderer.domElement);
 
-      this.set_as_main_painter();
-
-      // set DIVID when first child exists - we use it for painter
+      // set top painter only when first child exists
+      
+      this.AccessTopPainter(true);
 
       this.CreateToolbar();
 
@@ -2133,6 +2151,11 @@
    }
 
    JSROOT.TGeoPainter.prototype.Render3D = function(tmout, measure) {
+      if (!this._renderer) {
+         console.warn('renderer object not exists - check code');
+         return;
+      }
+
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
       if (tmout <= 0) {
@@ -2306,7 +2329,6 @@
             this.enableZ = this.options.clipz;
             this.updateClipping(true); // only set clip panels, do not render
          }
-
       }
 
       if (this.options.transparancy!==1)
@@ -2354,6 +2376,9 @@
    JSROOT.TGeoPainter.prototype.Cleanup = function(first_time) {
 
       if (!first_time) {
+         
+         this.AccessTopPainter(false); // remove as pointer
+         
          this.helpText();
 
          JSROOT.Painter.DisposeThreejsObject(this._scene);
@@ -2362,7 +2387,7 @@
             this._tcontrols.dispose();
 
          if (this._controls)
-            this._controls.dispose();
+            this._controls.Cleanup();
 
          if (this._context_menu)
             this._renderer.domElement.removeEventListener( 'contextmenu', this._context_menu, false );
@@ -2374,15 +2399,29 @@
          if (obj) delete obj._painter;
 
          if (this._worker) this._worker.terminate();
+         
+         JSROOT.TObjectPainter.prototype.Cleanup.call(this);
+         
+         delete this.options;
       }
-
+      
+      if (this._renderer) {
+         if (this._renderer.dispose) this._renderer.dispose(); 
+         if (this._renderer.context) delete this._renderer.context; 
+      }
+      
       delete this._scene;
       this._scene_width = 0;
       this._scene_height = 0;
       this._renderer = null;
       this._toplevel = null;
-      delete this._clone;
       this._camera = null;
+      
+      if (this._clones) this._clones.Cleanup(this._draw_nodes, this._build_shapes);
+      delete this._clones;
+      delete this._draw_nodes;
+      delete this._build_shapes;
+      delete this._new_draw_nodes;
 
       this.first_render_tm = 0;
       this.last_render_tm = 2000;
@@ -2410,13 +2449,13 @@
       if (pad_painter)
          if (!pad_painter.CheckCanvasResize(size)) return false;
 
-      var size3d = this.size_for_3d();
+      var sz = this.size_for_3d();
 
-      if ((this._scene_width === size3d.width) && (this._scene_height === size3d.height)) return false;
-      if ((size3d.width<10) || (size3d.height<10)) return;
+      if ((this._scene_width === sz.width) && (this._scene_height === sz.height)) return false;
+      if ((sz.width<10) || (sz.height<10)) return;
 
-      this._scene_width = size3d.width;
-      this._scene_height = size3d.height;
+      this._scene_width = sz.width;
+      this._scene_height = sz.height;
 
       this._camera.aspect = this._scene_width / this._scene_height;
       this._camera.updateProjectionMatrix();
@@ -2533,7 +2572,8 @@
          this.ymin = box.min.y; this.ymax = box.max.y;
          this.zmin = box.min.z; this.zmax = box.max.z;
 
-         this.size3d = 0; // use min/max values directly as graphical coordinates
+         // use min/max values directly as graphical coordinates
+         this.size_xy3d = this.size_z3d =  0;
 
          this.DrawXYZ = JSROOT.Painter.HPainter_DrawXYZ;
 

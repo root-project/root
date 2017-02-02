@@ -82,7 +82,7 @@ while ! [ "x$1" = "x" ]; do
     shift
 done
 
-for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx  | grep -v core/metautils/src/G__std_`; do
+for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v core/metautils/src/G__std_`; do
     dirname=`dirname $dict`                   # to get foo/src
     dirname=`echo $dirname | sed -e 's,/src$,,' -e 's,^[.]/,,' ` # to get foo/
 

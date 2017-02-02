@@ -1,13 +1,7 @@
-/*****************************************************************************
-
- *****************************************************************************/
-
-/**
-\file RooJeffreysPrior.cxx
-\class RooJeffreysPrior
+/** \class RooJeffreysPrior
 \ingroup Roofit
 
-RooJeffreysPrior 
+RooJeffreysPrior
 **/
 
 
@@ -35,17 +29,16 @@ RooJeffreysPrior
 using namespace std;
 
 ClassImp(RooJeffreysPrior)
-;
 
 using namespace RooFit;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///_obsSet("!obsSet","obs-side variation",this),
 
-RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title, 
-			     RooAbsPdf& nominal,
-			     const RooArgList& paramSet,
-			     const RooArgList& obsSet) :
+RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
+              RooAbsPdf& nominal,
+              const RooArgList& paramSet,
+              const RooArgList& obsSet) :
   RooAbsPdf(name, title),
   _nominal("nominal","nominal",this,nominal,kFALSE,kFALSE),
   _obsSet("!obsSet","obs-side variation",this,kFALSE,kFALSE),
@@ -59,8 +52,8 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)inputIter1->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " in first list is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
+             << " in first list is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
     _obsSet.add(*comp) ;
@@ -70,13 +63,11 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
   }
   delete inputIter1 ;
 
-
-
   TIterator* inputIter3 = paramSet.createIterator() ;
   while((comp = (RooAbsArg*)inputIter3->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " in first list is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooJeffreysPrior::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
+             << " in first list is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
     _paramSet.add(*comp) ;
@@ -86,20 +77,17 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
   }
   delete inputIter3 ;
 
-
   // use a different integrator by default.
   if(paramSet.getSize()==1)
     this->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ;
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooJeffreysPrior::RooJeffreysPrior(const RooJeffreysPrior& other, const char* name) :
-  RooAbsPdf(other, name), 
+  RooAbsPdf(other, name),
   _nominal("!nominal",this,other._nominal),
   _obsSet("!obsSet",this,other._obsSet),
   _paramSet("!paramSet",this,other._paramSet)
@@ -113,31 +101,26 @@ RooJeffreysPrior::RooJeffreysPrior(const RooJeffreysPrior& other, const char* na
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooJeffreysPrior::RooJeffreysPrior() 
+RooJeffreysPrior::RooJeffreysPrior()
 {
   _obsIter = NULL;
   _paramIter = NULL;
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooJeffreysPrior::~RooJeffreysPrior() 
+RooJeffreysPrior::~RooJeffreysPrior()
 {
   if (_obsIter) delete _obsIter ;
   if (_paramIter) delete _paramIter ;
 }
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return current value of self
 
-Double_t RooJeffreysPrior::evaluate() const 
+Double_t RooJeffreysPrior::evaluate() const
 {
   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
@@ -158,17 +141,17 @@ Double_t RooJeffreysPrior::evaluate() const
   TMatrixDSym cov = res->covarianceMatrix();
   cov.Invert();
   double ret =  sqrt(cov.Determinant());
-  
+
   /*
     // for 1 parameter can avoid making TMatrix etc.
     // but number of params may be > 1 with others held constant
   if(_paramSet.getSize()==1){
     RooRealVar* var = (RooRealVar*) _paramSet.first();
     // also, the _paramSet proxy one does not pick up a different value
-    cout << "eval at "<< ret << " " << 1/(var->getError()) << endl; 
+    cout << "eval at "<< ret << " " << 1/(var->getError()) << endl;
     // need to get the actual variable instance out of the pdf like below
     var = (RooRealVar*) _nominal->getVariables()->find(var->GetName());
-    cout << "eval at "<< ret << " " << 1/(var->getError()) << endl; 
+    cout << "eval at "<< ret << " " << 1/(var->getError()) << endl;
   }
   */
 
@@ -177,7 +160,7 @@ Double_t RooJeffreysPrior::evaluate() const
   delete res;
   RooMsgService::instance().setGlobalKillBelow(msglevel);
 
-  //  cout << "eval at "<< ret << endl; 
+  //  cout << "eval at "<< ret << endl;
   //  _paramSet.Print("v");
   return ret;
 
@@ -188,20 +171,16 @@ Double_t RooJeffreysPrior::evaluate() const
 ///  if (matchArgs(allVars,analVars,mean)) return 2 ;
 ///  return 1;
 
-Int_t RooJeffreysPrior::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/, const char* /*rangeName*/) const 
+Int_t RooJeffreysPrior::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/, const char* /*rangeName*/) const
 {
   return 0 ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooJeffreysPrior::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+Double_t RooJeffreysPrior::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   R__ASSERT(code==1 );
   //cout << "evaluating analytic integral" << endl;
   return 1.;
 }
-
-

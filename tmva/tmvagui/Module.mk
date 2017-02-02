@@ -38,9 +38,18 @@ TMVAGUILIB      := $(LPATH)/libTMVAGui.$(SOEXT)
 TMVAGUIMAP      := $(TMVAGUILIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/TMVA/%.h,include/TMVA/%.h,$(TMVAGUIH))
+TMVAGUIH_REL := $(patsubst $(MODDIRI)/TMVA/%.h,include/TMVA/%.h,$(TMVAGUIH))
+ALLHDRS      += $(TMVAGUIH_REL)
 ALLLIBS      += $(TMVAGUILIB)
 ALLMAPS      += $(TMVAGUIMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TMVAGUIH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Tmva_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(TMVAGUILIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(TMVAGUIDEP)

@@ -70,10 +70,13 @@ public:
    auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
    // /// \endcond
    using TExecutor<TThreadExecutor>::MapReduce;
-   
+
   template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
   using TExecutor<TThreadExecutor>::Reduce;
+
+  //Returns the number of threads set in the scheduler at call time.
+  static int GetPoolSize(){return fgPoolSize;}
 
 protected:
 
@@ -90,10 +93,11 @@ private:
     void   ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);
     double ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc);
     float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
-    template<class T, class R> 
+    template<class T, class R>
     auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
     std::unique_ptr<tbb::task_scheduler_init> fInitTBB;
+    static unsigned fgPoolSize;
 };
 
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
@@ -147,7 +151,7 @@ auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typen
    using retType = decltype(func(start));
    std::vector<retType> reslist(end-start);
    auto lambda = [&](unsigned int i){
-                      reslist[i]+=func(i);
+                      reslist[i] = func(i);
                   };
    ParallelFor(start, end, 1, lambda);
 

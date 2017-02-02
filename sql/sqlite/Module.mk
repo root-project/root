@@ -28,9 +28,18 @@ SQLITELIB     := $(LPATH)/libRSQLite.$(SOEXT)
 SQLITEMAP     := $(SQLITELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SQLITEH))
+SQLITEH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(SQLITEH))
+ALLHDRS     += $(SQLITEH_REL)
 ALLLIBS     += $(SQLITELIB)
 ALLMAPS     += $(SQLITEMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(SQLITEH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Sql_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SQLITELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(SQLITEDEP)

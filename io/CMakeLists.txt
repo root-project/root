@@ -1,4 +1,5 @@
-add_subdirectory(io)  # special CMakeListst.txt
+add_subdirectory(io)  # special CMakeLists.txt
+add_subdirectory(rootpcm)
 add_subdirectory(sql)
 add_subdirectory(xml)
 if(xml)

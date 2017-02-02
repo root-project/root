@@ -15,11 +15,11 @@
 #include "Rtypes.h"
 #endif
 
-extern "C" {
-
 #ifndef __CFORTRAN_LOADED
 #include "cfortran.h"
 #endif
+
+extern "C" {
 
 /// HEPEVT common block
 typedef struct {

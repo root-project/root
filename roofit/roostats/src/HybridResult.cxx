@@ -13,8 +13,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::HybridResult
+    \ingroup Roostats
 
+Class encapsulating the result of the HybridCalculatorOriginal.
+This class is a fresh rewrite in RooStats of
+RooStatsCms/LimitResults developed by D. Piparo and G. Schott
+New contributions to this class have been written by Matthias Wolf (error estimation)
+
+The objects of this class store and access with lightweight methods the
+information calculated by LimitResults through a Lent calculation using
+MC toy experiments.
+In some ways can be considered an extended and extensible implementation of the
+TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
+
+*/
 
 
 #include "RooDataHist.h"
@@ -35,7 +48,8 @@ ClassImp(RooStats::HybridResult)
 
 using namespace RooStats;
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// Construtor
 
 HybridResult::HybridResult( const char *name) :
    HypoTestResult(name),
@@ -47,7 +61,8 @@ HybridResult::HybridResult( const char *name) :
    // HybridResult default constructor (with name )
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// Construtor
 
 HybridResult::HybridResult( const char *name,
                             const std::vector<double>& testStat_sb_vals,
@@ -77,7 +92,7 @@ HybridResult::HybridResult( const char *name,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// HybridResult destructor
 
 HybridResult::~HybridResult()
@@ -87,7 +102,7 @@ HybridResult::~HybridResult()
    fTestStat_b.clear();
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// set the value of the test statistics on data
 
 void HybridResult::SetDataTestStatistics(double testStat_data_val)
@@ -98,7 +113,7 @@ void HybridResult::SetDataTestStatistics(double testStat_data_val)
    return;
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Returns \f$1 - CL_{b}\f$ : the B p-value
 
 double HybridResult::NullPValue() const
@@ -128,7 +143,7 @@ double HybridResult::NullPValue() const
    return fNullPValue;
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Returns \f$CL_{s+b}\f$ : the S+B p-value
 
 double HybridResult::AlternatePValue() const
@@ -158,7 +173,7 @@ double HybridResult::AlternatePValue() const
    return fAlternatePValue;
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Returns an estimate of the error on \f$CL_{b}\f$ assuming a binomial
 /// error on \f$CL_{b}\f$:
 /// \f[
@@ -171,7 +186,7 @@ Double_t HybridResult::CLbError() const
   return TMath::Sqrt(CLb() * (1. - CLb()) / n);
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Returns an estimate of the error on \f$CL_{s+b}\f$ assuming a binomial
 /// error on \f$CL_{s+b}\f$:
 /// \f[
@@ -184,7 +199,7 @@ Double_t HybridResult::CLsplusbError() const
   return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Returns an estimate of the error on \f$CL_{s}\f$ through combination
 /// of the errors on \f$CL_{b}\f$ and \f$CL_{s+b}\f$:
 /// \f[
@@ -205,7 +220,7 @@ Double_t HybridResult::CLsError() const
   return CLs() * TMath::Sqrt(cl_b_err + cl_sb_err);
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// add additional toy-MC experiments to the current results
 /// use the data test statistics of the added object if none is already present
 /// (otherwise, ignore the new one)
@@ -231,7 +246,7 @@ void HybridResult::Add(HybridResult* other)
    return;
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// prepare a plot showing a result and return a pointer to a HybridPlot object
 /// the needed arguments are: an object name, a title and the number of bins in the plot
 
@@ -263,7 +278,7 @@ HybridPlot* HybridResult::GetPlot(const char* name,const char* title, int n_bins
    return plot;
 }
 
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 /// Print out some information about the results
 
 void HybridResult::PrintMore(const char* /*options */)

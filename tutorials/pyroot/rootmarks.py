@@ -13,7 +13,7 @@
 import os
 import ROOT
 
-macrodir = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'pyroot')
+macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'pyroot')
 
 # use ROOT macro to make sure that bench numbers get updated in one place
 ROOT.gROOT.Macro( ROOT.gSystem.UnixPathName( os.path.join( macrodir, os.pardir, 'rootmarks.C' ) ) )

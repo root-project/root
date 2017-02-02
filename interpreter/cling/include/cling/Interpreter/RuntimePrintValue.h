@@ -43,6 +43,12 @@ namespace cling {
 
   std::string printValue(const unsigned char *val);
 
+  std::string printValue(const char16_t *val);
+
+  std::string printValue(const char32_t *val);
+
+  std::string printValue(const wchar_t *val);
+
   // Ints
   std::string printValue(const short *val);
 
@@ -75,6 +81,40 @@ namespace cling {
   // std::string
   std::string printValue(const std::string *val);
 
+  std::string printValue(const std::wstring *val);
+
+  std::string printValue(const std::u16string *val);
+
+  std::string printValue(const std::u32string *val);
+
+  // constant unicode strings, i.e. u"String"
+  template <typename T>
+  std::string toUTF8(const T* const Src, size_t N, const char Prefix = 0);
+
+  template <size_t N>
+  std::string printValue(char16_t const (*val)[N]) {
+    return toUTF8(reinterpret_cast<const char16_t * const>(val), N, 'u');
+  }
+
+  template <size_t N>
+  std::string printValue(char32_t const (*val)[N]) {
+    return toUTF8(reinterpret_cast<const char32_t * const>(val), N, 'U');
+  }
+
+  template <size_t N>
+  std::string printValue(wchar_t const (*val)[N]) {
+#ifdef _WIN32
+    return toUTF8(reinterpret_cast<const char16_t * const>(val), N, 'L');
+#else
+    return toUTF8(reinterpret_cast<const char32_t * const>(val), N, 'L');
+#endif
+  }
+
+  template <size_t N>
+  std::string printValue(char const (*val)[N]) {
+    return toUTF8(reinterpret_cast<const char * const>(val), N, 1);
+  }
+
   // cling::Value
   std::string printValue(const Value *value);
 
@@ -103,10 +143,10 @@ namespace cling {
         return valuePrinterInternal::kEmptyCollection;
 
       std::string str("{ ");
-      str += printPair(*iter);
+      str += printPair(iter);
       while (++iter != iterEnd) {
         str += ", ";
-        str += printPair(*iter);
+        str += printPair(iter);
       }
       return str + " }";
     }

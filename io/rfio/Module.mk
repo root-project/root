@@ -28,9 +28,18 @@ RFIOLIB      := $(LPATH)/libRFIO.$(SOEXT)
 RFIOMAP      := $(RFIOLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RFIOH))
+RFIOH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(RFIOH))
+ALLHDRS     += $(RFIOH_REL)
 ALLLIBS     += $(RFIOLIB)
 ALLMAPS     += $(RFIOMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RFIOH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(RFIOLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(RFIODEP)

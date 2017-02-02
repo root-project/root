@@ -36,9 +36,19 @@ COCOALIB     := $(LPATH)/libGCocoa.$(SOEXT)
 COCOAMAP     := $(COCOALIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(COCOAH))
+COCOAH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(COCOAH))
+ALLHDRS      += $(COCOAH_REL)
 ALLLIBS      += $(COCOALIB)
 ALLMAPS      += $(COCOAMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(COCOAH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += requires objc \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(COCOALIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(COCOADEP)
@@ -82,5 +92,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-$(COCOAOBJCPPO) $(COCOADO) $(COCOAO): CXXFLAGS += $(COCOANDEBUG) $(FREETYPEINC)
-
+ifeq ($(CXXMODULES),yes)
+# We cannot compile objc/objc++ TU with -fmodules-local-submodule-visibility.
+$(COCOAOBJCPPO) $(COCOADO) $(COCOAO):
+OBJCXXFLAGS := $(CXXFLAGS) $(COCOANDEBUG) $(FREETYPEINC)
+# FIXME: Until we resolve the TMVA Pattern vs cocoa Pattern Quick*.h
+OBJCXXFLAGS  := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(OBJCXXFLAGS))
+else
+$(COCOAOBJCPPO) $(COCOADO) $(COCOAO): OBJCXXFLAGS := $(CXXFLAGS) $(COCOANDEBUG) $(FREETYPEINC)
+endif

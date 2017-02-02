@@ -40,6 +40,8 @@
 #include "TTimer.h"
 #include "TBase64.h"
 
+#include "rsafun.h"
+
 #ifndef R__LYNXOS
 #include <sys/stat.h>
 #endif
@@ -80,6 +82,10 @@ extern "C" char *crypt(const char *, const char *);
 #   include <openssl/ssl.h>
 #endif
 
+struct R__rsa_KEY: rsa_KEY { R__rsa_KEY(): rsa_KEY() {} };
+struct R__rsa_KEY_export: rsa_KEY_export {};
+struct R__rsa_NUMBER: rsa_NUMBER {};
+
 // Statics initialization
 TList          *TAuthenticate::fgAuthInfo = 0;
 TString         TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5",
@@ -100,9 +106,10 @@ Bool_t          TAuthenticate::fgReadHomeAuthrc = kTRUE; // on/off search for $H
 TString         TAuthenticate::fgRootAuthrc;    // Path to last rootauthrc-like file read
 Int_t           TAuthenticate::fgRSAKey  = -1;  // Default RSA key type to be used
 Int_t           TAuthenticate::fgRSAInit = 0;
-rsa_KEY         TAuthenticate::fgRSAPriKey;
-rsa_KEY_export  TAuthenticate::fgRSAPubExport[2] = {{0,0},{0,0}};
-rsa_KEY         TAuthenticate::fgRSAPubKey;
+R__rsa_KEY         TAuthenticate::fgRSAPriKey;
+R__rsa_KEY_export R__fgRSAPubExport[2] = {{}, {}};
+R__rsa_KEY_export* TAuthenticate::fgRSAPubExport = R__fgRSAPubExport;
+R__rsa_KEY         TAuthenticate::fgRSAPubKey;
 #ifdef R__SSL
 BF_KEY          TAuthenticate::fgBFKey;
 #endif
@@ -3814,8 +3821,8 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
 ////////////////////////////////////////////////////////////////////////////////
 /// Store RSA public keys from export string rsaPubExport.
 
-Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n,
-                                     rsa_NUMBER &rsa_d, char **rsassl)
+Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, R__rsa_NUMBER &rsa_n,
+                                     R__rsa_NUMBER &rsa_d, char **rsassl)
 {
    if (!rsaPubExport)
       return -1;
@@ -3967,7 +3974,7 @@ Int_t TAuthenticate::SetRSAPublic(const char *rsaPubExport, Int_t klen)
       if (rsakey == 0) {
 
          // Decode input string
-         rsa_NUMBER rsa_n, rsa_d;
+         R__rsa_NUMBER rsa_n, rsa_d;
          rsakey = TAuthenticate::DecodeRSAPublic(rsaPubExport,rsa_n,rsa_d);
 
          // Save Public key
@@ -4007,7 +4014,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
              "received key from server %ld bytes", (Long_t)strlen(serverPubKey));
 
    // Decode it
-   rsa_NUMBER rsa_n, rsa_d;
+   R__rsa_NUMBER rsa_n, rsa_d;
 #ifdef R__SSL
    char *tmprsa = 0;
    if (TAuthenticate::DecodeRSAPublic(serverPubKey,rsa_n,rsa_d,
@@ -4107,19 +4114,9 @@ Int_t TAuthenticate::ReadRootAuthrc()
          ::Info("TAuthenticate::ReadRootAuthrc",
                 "file %s cannot be read (errno: %d)", authrc, errno);
       delete [] authrc;
-#ifdef ROOTETCDIR
-      authrc = gSystem->ConcatFileName(ROOTETCDIR,"system.rootauthrc");
-#else
-      char etc[1024];
-#ifdef WIN32
-      snprintf(etc, 1024, "%s\\etc", gRootDir);
-#else
-      snprintf(etc, 1024, "%s/etc", gRootDir);
-#endif
-      authrc = gSystem->ConcatFileName(etc,"system.rootauthrc");
-#endif
+      authrc = gSystem->ConcatFileName(TROOT::GetEtcDir(), "system.rootauthrc");
       if (gDebug > 2)
-         ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file:%s",authrc);
+         ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file: %s", authrc);
       if (gSystem->AccessPathName(authrc, kReadPermission)) {
          if (gDebug > 1)
             ::Info("TAuthenticate::ReadRootAuthrc",

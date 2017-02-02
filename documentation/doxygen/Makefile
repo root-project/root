@@ -37,7 +37,7 @@ doxygen: filter
 	time python ./parallelNotebooks.py
 	./makehtmlfooter.sh > htmlfooter.html
 	doxygen
-	rm -rf files c1* *.ps *.png *.svg *.pdf *.root *.xpm *.out *.dat
+	rm -rf files c1* *.ps *.png *.svg *.pdf *.root *.xpm *.out *.dat *.dtd
 
 clean:
 	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html dataset*

@@ -15,14 +15,14 @@
             'd3'                   : dir+'d3.v3.min',
             'jquery'               : dir+'jquery.min',
             'jquery-ui'            : dir+'jquery-ui.min',
-            'jqueryui-mousewheel'  : dir+'jquery.mousewheel'+ext,
+            'jqueryui-mousewheel'  : dir+'jquery.mousewheel.min',
             'jqueryui-touch-punch' : dir+'touch-punch.min',
-            'rawinflate'           : dir+'rawinflate'+ext,
+            'rawinflate'           : dir+'rawinflate.min',
             'MathJax'              : 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
-            'saveSvgAsPng'         : dir+'saveSvgAsPng'+ext,
+            'saveSvgAsPng'         : dir+'saveSvgAsPng.min',
             'dat.gui'              : dir+'dat.gui.min',
-            'threejs'              : dir+'three',
-            'threejs_all'          : dir+'three.extra'+ext,
+            'threejs'              : dir+'three.min',
+            'threejs_all'          : dir+'three.extra.min',
             'JSRootCore'           : dir+'JSRootCore'+ext,
             'JSRootMath'           : dir+'JSRootMath'+ext,
             'JSRootInterface'      : dir+'JSRootInterface'+ext,
@@ -57,7 +57,7 @@
          'MathJax': {
              exports: 'MathJax',
              init: function () {
-                MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }});
+                MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }, SVG: { mtextFontInherit: true } });
                 MathJax.Hub.Register.StartupHook("SVG Jax Ready",function () {
                    var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;
                    VARIANT["normal"].fonts.unshift("MathJax_SansSerif");
@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "4.7.1 1/11/2016";
+   JSROOT.version = "4.8.2 31/01/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -135,32 +135,80 @@
    JSROOT.browser.isWebKit = JSROOT.browser.isChrome || JSROOT.browser.isSafari;
 
    // default draw styles, can be changed after loading of JSRootCore.js
+   // this style also can be changed providing style=itemname in the URL
    JSROOT.gStyle = {
          Tooltip : 1, // 0 - off, 1 - on
          ContextMenu : true,
-         Zooming : true,
+         Zooming : true,  // global zooming flag, enable/disable any kind of interactive zooming
+         ZoomMouse : true,  // Zooming with the mouse events
+         ZoomWheel : true,  // Zooming with mouse wheel
+         ZoomTouch : true,  // Zooming with the touch devices
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
          DragAndDrop : true,  // enables drag and drop functionality
          ToolBar : true,    // show additional tool buttons on the canvas
          OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
          AutoStat : true,
-         OptStat  : 1111,
-         OptFit   : 0,
          FrameNDC : { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
-         StatNDC  : { fX1NDC: 0.78, fY1NDC: 0.75, fX2NDC: 0.98, fY2NDC: 0.91 },
-         StatText : { fTextAngle: 0, fTextSize: 9, fTextAlign: 12, fTextColor: 1, fTextFont: 42 },
-         StatFill : { fFillColor: 0, fFillStyle: 1001 },
-         TimeOffset : 788918400000, // UTC time at 01/01/95
-         StatFormat : "6.4g",
-         FitFormat : "5.4g",
          Palette : 57,
          MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
          ProgressBox : true,  // show progress box
          Embed3DinSVG : 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
          NoWebGL : false, // if true, WebGL will be disabled,
-         EndErrorSize : 2, // size in pixels of end error for E1 draw options
          GeoGradPerSegm : 6, // amount of grads per segment in TGeo spherical shapes like tube
-         GeoCompressComp : true // if one should compress faces after creation of composite shape
+         GeoCompressComp : true, // if one should compress faces after creation of composite shape,
+         IgnoreUrlOptions : false, // if true, ignore all kind of URL options in the browser URL
+
+         // these are TStyle attributes, which can be chenged via URL 'style' parameter
+
+         fPadBottomMargin : 0.1,
+         fPadTopMargin : 0.1,
+         fPadLeftMargin : 0.1,
+         fPadRightMargin : 0.1,
+         fPadGridX : false,
+         fPadGridY : false,
+         fPadTickX : 0,
+         fPadTickY : 0,
+         fStatColor : 0,
+         fStatTextColor : 1,
+         fStatBorderSize : 1,
+         fStatFont : 42,
+         fStatFontSize : 0,
+         fStatStyle : 1001,
+         fStatFormat : "6.4g",
+         fStatX : 0.98,
+         fStatY : 0.935,
+         fStatW : 0.2,
+         fStatH : 0.16,
+         fTitleAlign : 23,
+         fTitleColor : 0,
+         fTitleTextColor : 1,
+         fTitleBorderSize : 0,
+         fTitleFont : 42,
+         fTitleFontSize : 0.05,
+         fTitleStyle : 0,
+         fTitleX : 0.5,
+         fTitleY : 0.995,
+         fTitleW : 0,
+         fTitleH : 0,
+         fFitFormat : "5.4g",
+         fOptStat : 1111,
+         fOptFit : 0,
+         fNumberContours : 20,
+         fGridColor : 0,
+         fGridStyle : 11,
+         fGridWidth : 1,
+         fFrameFillColor : 0,
+         fFrameLineColor : 1,
+         fFrameFillStyle : 1001,
+         fFrameLineStyle : 1,
+         fFrameLineWidth : 1,
+         fFrameBorderSize : 1,
+         fFrameBorderMode : 0,
+         fEndErrorSize : 2,   // size in pixels of end error for E1 draw options
+         fErrorX : 0.5,   // X size of the error marks for the histogram drawings
+         fHistMinimumZero: false,   // when true, BAR and LEGO drawing using base = 0
+         fPaintTextFormat : "g",
+         fTimeOffset : 788918400, // UTC time at 01/01/95
       };
 
    JSROOT.BIT = function(n) { return 1 << (n); }
@@ -204,65 +252,118 @@
          console.log(value);
    }
 
-   // extract reference, coded inside string
-   // check already should be done, that string starts from "$ref:"
-   JSROOT.JSONR_unref_str = function(value, dy) {
-      // if ((value.length > 5) && (value.indexOf("$ref:") === 0))
-      var i = parseInt(value.substr(5));
-      return (!isNaN(i) && (i >= 0) && (i < dy.length)) ? dy[i] : value;
-   }
-
-   // replace all references inside object
-   // object should not be null
-   // This is part of the JSON-R code, found on
+   /// Should be used to reintroduce objects references, produced by TBufferJSON
+   // Replace all references inside object, object should not be null
+   // Idea of the code taken from JSON-R code, found on
    // https://github.com/graniteds/jsonr
    // Only unref part was used, arrays are not accounted as objects
-   JSROOT.JSONR_unref_obj = function(value, dy) {
-      var i, fld, proto = Object.prototype.toString.apply(value);
+   JSROOT.JSONR_unref = function(obj) {
 
-      if (proto === '[object Array]') {
-          for (i = 0; i < value.length; ++i) {
-             fld = value[i];
-             if (typeof fld === 'string') {
-                if ((fld.length > 5) && (fld.indexOf("$ref:") === 0))
-                   value[i] = this.JSONR_unref_str(fld, dy);
-             } else
-             if ((typeof fld === 'object') && (fld !== null))
-                this.JSONR_unref_obj(fld, dy);
-          }
-          return;
+      var map = [], newfmt = undefined;
+
+      function unref_value(value) {
+         if ((value===null) || (value===undefined)) return;
+
+         if (typeof value === 'string') {
+            if (newfmt || (value.length < 6) || (value.indexOf("$ref:") !== 0)) return;
+            var ref = parseInt(value.substr(5));
+            if (isNaN(ref) || (ref < 0) || (ref >= map.length)) return;
+            newfmt = false;
+            return map[ref];
+         }
+
+         if (typeof value !== 'object') return;
+
+         var i, k, res, proto = Object.prototype.toString.apply(value);
+
+         // scan array - it can contain other objects
+         if ((proto.indexOf('[object')==0) && (proto.indexOf('Array]')>0)) {
+             for (i = 0; i < value.length; ++i) {
+                res = unref_value(value[i]);
+                if (res!==undefined) value[i] = res;
+             }
+             return;
+         }
+
+         var ks = Object.keys(value), len = ks.length;
+
+         if ((newfmt!==false) && (len===1) && (ks[0]==='$ref')) {
+            var ref = parseInt(value['$ref']);
+            if (isNaN(ref) || (ref < 0) || (ref >= map.length)) return;
+            newfmt = true;
+            return map[ref];
+         }
+
+         if ((newfmt!==false) && (len>1) && (ks[0]==='$arr') && (ks[1]==='len')) {
+            // this is ROOT-coded array
+            var arr = null, dflt = (value.$arr==="Bool") ? false : 0;
+            switch (value.$arr) {
+               case "Int8" : arr = new Int8Array(value.len); break;
+               case "Uint8" : arr = new Uint8Array(value.len); break;
+               case "Int16" : arr = new Int16Array(value.len); break;
+               case "Uint16" : arr = new Uint16Array(value.len); break;
+               case "Int32" : arr = new Int32Array(value.len); break;
+               case "Uint32" : arr = new Uint32Array(value.len); break;
+               case "Float32" : arr = new Float32Array(value.len); break;
+               case "Int64" :
+               case "Uint64" :
+               case "Float64" : arr = new Float64Array(value.len); break;
+               default : arr = new Array(value.len); break;
+            }
+            for (var k=0;k<value.len;++k) arr[k] = dflt;
+
+            var nkey = 2, p = 0;
+            while (nkey<len) {
+               if (ks[nkey][0]=="p") p = value[ks[nkey++]]; // position
+               if (ks[nkey][0]!=='v') throw new Error('Unexpected member ' + ks[nkey] + ' in array decoding');
+               var v = value[ks[nkey++]]; // value
+               if (typeof v === 'object') {
+                  for (var k=0;k<v.length;++k) arr[p++] = v[k];
+               } else {
+                  arr[p++] = v;
+                  if ((nkey<len) && (ks[nkey][0]=='n')) {
+                     var cnt = value[ks[nkey++]]; // counter
+                     while (--cnt) arr[p++] = v;
+                  }
+               }
+            }
+
+            return arr;
+         }
+
+         if ((newfmt!==false) && (len===3) && (ks[0]==='$pair') && (ks[1]==='first') && (ks[2]==='second')) {
+            newfmt = true;
+            var f1 = unref_value(value.first),
+                s1 = unref_value(value.second);
+            if (f1!==undefined) value.first = f1;
+            if (s1!==undefined) value.second = s1;
+            value._typename = value['$pair'];
+            delete value['$pair'];
+            return; // pair object is not counted in the objects map
+         }
+
+         // debug code, can be commented out later
+         if (map.indexOf(value) >= 0) {
+            JSROOT.console('should never happen - object already in the map');
+            return;
+         }
+
+         // add object to object map
+         map.push(value);
+
+         // add methods to all objects, where _typename is specified
+         if ('_typename' in value) JSROOT.addMethods(value);
+
+         for (k = 0; k < len; ++k) {
+            i = ks[k];
+            res = unref_value(value[i]);
+            if (res!==undefined) value[i] = res;
+         }
       }
 
-      // if object in the table, return it
-      if (dy.indexOf(value) >= 0) return;
+      unref_value(obj);
 
-      // add object to object map
-      dy.push(value);
-
-      // add methods to all objects, where _typename is specified
-      if ('_typename' in value) this.addMethods(value);
-
-      var ks = Object.keys(value);
-      for (var k = 0; k < ks.length; ++k) {
-         i = ks[k];
-         fld = value[i];
-
-         if (typeof fld === 'string') {
-            if ((fld.length > 5) && (fld.indexOf("$ref:") === 0))
-               value[i] = this.JSONR_unref_str(fld, dy);
-         } else
-         if ((typeof fld === 'object') && (fld !== null))
-            this.JSONR_unref_obj(fld, dy);
-      }
-
-      return value;
-   }
-
-   /// Should be used to reintroduce objects references, produced by TBufferJSON
-   JSROOT.JSONR_unref = function(value) {
-      if ((typeof value === 'object') && (value !== null))
-         this.JSONR_unref_obj(value, []);
-      return value;
+      return obj;
    }
 
    JSROOT.debug = 0;
@@ -369,7 +470,8 @@
       return src;
    }
 
-
+   /** @memberOf JSROOT
+    * Method should be used to parse JSON code, produced with TBufferJSON */
    JSROOT.parse = function(arg) {
       if ((arg==null) || (arg=="")) return null;
       var obj = JSON.parse(arg);
@@ -377,18 +479,28 @@
       return obj;
    }
 
-   /** @memberOf JSROOT */
+   /** @memberOf JSROOT
+    * Method should be used to parse JSON code, produced by multi.json of THttpServer */
+   JSROOT.parse_multi = function(arg) {
+      if (!arg) return null;
+      var arr = JSON.parse(arg);
+      if (arr && arr.length)
+         for (var i=0;i<arr.length;++i)
+            arr[i] = this.JSONR_unref(arr[i]);
+      return arr;
+   }
+
    JSROOT.GetUrlOption = function(opt, url, dflt) {
       // analyzes document.URL and extracts options after '?' mark
       // following options supported ?opt1&opt2=3
       // In case of opt1 empty string will be returned, in case of opt2 '3'
       // If option not found, null is returned (or provided default value)
 
-      if (arguments.length < 3) dflt = null;
-      if ((opt==null) || (typeof opt != 'string') || (opt.length==0)) return dflt;
+      if (dflt === undefined) dflt = null;
+      if ((opt===null) || (typeof opt != 'string') || (opt.length==0)) return dflt;
 
       if (!url) {
-         if (typeof document === 'undefined') return dflt;
+         if (JSROOT.gStyle.IgnoreUrlOptions || (typeof document === 'undefined')) return dflt;
          url = document.URL;
       }
 
@@ -408,7 +520,7 @@
 
             // replace several symbols which are known to make a problem
             if (url.charAt(opt.length)=="=")
-               return url.slice(opt.length+1, pos).replace(/%27/g, "'").replace(/%22/g, '"').replace(/%20/g, ' ').replace(/%3C/g, '<').replace(/%3E/g, '>').replace(/%5B/g, '[').replace(/%5D/g, ']');
+               return decodeURI(url.slice(opt.length+1, pos));
          }
 
          url = url.slice(pos+1);
@@ -433,23 +545,46 @@
          res.push(val); return res;
       }
 
-      // try to parse ourself
-      var arr = val.substr(1, val.length-2).split(","); // remove brackets
+      // try to split ourself, checking quotes and brackes
+      var nbr = 0, nquotes = 0, ndouble = 0, last = 1;
 
-      for (var i = 0; i < arr.length; ++i) {
-         var sub = arr[i].trim();
-         if ((sub.length>1) && (sub[0]==sub[sub.length-1]) && ((sub[0]=='"') || (sub[0]=="'")))
-            sub = sub.substr(1, sub.length-2);
-         res.push(sub);
+      for (var indx = 1; indx < val.length; ++indx) {
+         if (nquotes > 0) {
+            if (val[indx]==="'") nquotes--;
+            continue;
+         }
+         if (ndouble > 0) {
+            if (val[indx]==='"') ndouble--;
+            continue;
+         }
+         switch (val[indx]) {
+            case "'" : nquotes++; break;
+            case '"' : ndouble++; break;
+            case "[" : nbr++; break;
+            case "]" :  if (indx < val.length - 1) { nbr--; break; }
+            case "," :
+               if (nbr === 0) {
+                  var sub =  val.substring(last, indx).trim();
+                  if ((sub.length>1) && (sub[0]==sub[sub.length-1]) && ((sub[0]=='"') || (sub[0]=="'")))
+                     sub = sub.substr(1, sub.length-2);
+                  res.push(sub);
+                  last = indx+1;
+               }
+               break;
+         }
       }
+
+      if (res.length === 0)
+         res.push(val.substr(1, val.length-2).trim());
+
       return res;
    }
 
    JSROOT.GetUrlOptionAsArray = function(opt, url) {
       // special handling of URL options to produce array
       // if normal option is specified ...?opt=abc, than array with single element will be created
-      // one could specify normal JSON array ...?opt=['item1','item2']
-      // but also one could skip quotes ...?opt=[item1,item2]
+      // one could specify normal JSON array ...?opts=['item1','item2']
+      // but also one could skip quotes ...?opts=[item1,item2]
       // one could collect values from several options, specifying
       // options names via semicolon like opt='item;items'
 
@@ -457,11 +592,17 @@
 
       while (opt.length>0) {
          var separ = opt.indexOf(";");
-         var part = separ>0 ? opt.substr(0, separ) : opt;
+         var part = (separ>0) ? opt.substr(0, separ) : opt;
+
          if (separ>0) opt = opt.substr(separ+1); else opt = "";
 
+         var canarray = true;
+         if (part[0]=='#') { part = part.substr(1); canarray = false; }
+
          var val = this.GetUrlOption(part, url, null);
-         res = res.concat(JSROOT.ParseAsArray(val));
+
+         if (canarray) res = res.concat(JSROOT.ParseAsArray(val));
+                  else if (val!==null) res.push(val);
       }
       return res;
    }
@@ -515,6 +656,7 @@
       //  "object" - returns JSROOT.parse(req.responseText)
       //  "xml" - returns res.responseXML
       //  "head" - returns request itself, uses "HEAD" method
+      //  "multi" - returns correctly parsed multi.json request, uses "POST" method
       // Result will be returned to the callback functions
       // Request will be set as this pointer in the callback
       // If failed, request returns null
@@ -526,7 +668,9 @@
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
-      var pthis = this;
+      var pthis = this, method = "GET";
+      if (kind === "head") method = "HEAD"; else
+      if (kind === "multi") method = "POST";
 
       if (window.ActiveXObject) {
 
@@ -541,6 +685,7 @@
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(pthis.parse(xhr.responseText));
+            if (kind == "multi") return callback(pthis.parse_multi(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             if ((kind == "buf") && ('responseType' in xhr) &&
@@ -555,7 +700,7 @@
             callback(filecontent);
          }
 
-         xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
+         xhr.open(method, url, true);
 
          if (kind=="buf") {
             if (('Uint8Array' in window) && ('responseType' in xhr))
@@ -567,13 +712,15 @@
          xhr.onreadystatechange = function() {
             if (xhr.readyState != 4) return;
 
-            if (xhr.status != 200 && xhr.status != 206) {
+            if ((xhr.status != 200) && (xhr.status != 206) &&
+                ((xhr.status !== 0) || (url.indexOf("file://")!==0))) {
                return callback(null);
             }
 
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(pthis.parse(xhr.responseText));
+            if (kind == "multi") return callback(pthis.parse_multi(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             // if no response type is supported, return as text (most probably, will fail)
@@ -594,7 +741,7 @@
             callback(xhr.response);
          }
 
-         xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
+         xhr.open(method, url, true);
 
          if ((kind == "bin") || (kind == "buf")) {
             if (('Uint8Array' in window) && ('responseType' in xhr)) {
@@ -606,6 +753,7 @@
          }
 
       }
+
       return xhr;
    }
 
@@ -787,7 +935,7 @@
           modules = [];  // modules used for require.js
 
       if (kind.indexOf('io;')>=0) {
-         mainfiles += "$$$scripts/rawinflate" + ext + ".js;" +
+         mainfiles += "$$$scripts/rawinflate.min.js;" +
                       "$$$scripts/JSRootIOEvolution" + ext + ".js;";
          modules.push('JSRootIOEvolution');
       }
@@ -809,7 +957,7 @@
 
       if (kind.indexOf('savepng;')>=0) {
          modules.push('saveSvgAsPng');
-         mainfiles += '$$$scripts/saveSvgAsPng' + ext + ".js;";
+         mainfiles += '$$$scripts/saveSvgAsPng.min.js;';
       }
 
       if (kind.indexOf('jq;')>=0) need_jquery = true;
@@ -845,10 +993,10 @@
                         "###threejs/examples/js/shaders/SSAOShader.js;"
            extrafiles += "###threejs/examples/fonts/helvetiker_regular.typeface.json;";
          } else {
-            mainfiles += "$$$scripts/three.js;" +
-                         "$$$scripts/three.extra" + ext + ".js;";
+            mainfiles += "$$$scripts/three.min.js;" +
+                         "$$$scripts/three.extra.min.js;";
          }
-         modules.push("threejs_all");
+         modules.push("threejs", "threejs_all");
          mainfiles += "$$$scripts/JSRoot3DPainter" + ext + ".js;";
          modules.push('JSRoot3DPainter');
       }
@@ -907,7 +1055,6 @@
       if (pos<0) pos = kind.indexOf("load:");
       if (pos>=0) extrafiles += kind.slice(pos+5);
 
-
       function load_callback() {
          var req = jsroot.doing_assert.shift();
          for (var n=0;n<req.modules.length;++n)
@@ -946,9 +1093,10 @@
    // function can be used to draw supported ROOT classes,
    // required functionality will be loaded automatically
    // if painter pointer required, one should load '2d' functionlity itself
-   JSROOT.draw = function(divid, obj, opt) {
+   // or use callback function which provides painter pointer as first argument
+   JSROOT.draw = function(divid, obj, opt, callback) {
       JSROOT.AssertPrerequisites("2d", function() {
-         JSROOT.draw(divid, obj, opt);
+         JSROOT.draw(divid, obj, opt, callback);
       });
    }
 
@@ -964,15 +1112,17 @@
          user_scripts = null;
       }
 
-      var debugout = null;
-      var nobrowser = JSROOT.GetUrlOption('nobrowser')!=null;
-      var requirements = "io;2d;";
+      var debugout = null,
+          nobrowser = JSROOT.GetUrlOption('nobrowser')!=null,
+          requirements = "io;2d;",
+          simplegui = document.getElementById('simpleGUI');
 
-      if (document.getElementById('simpleGUI')) {
+      if (simplegui) {
          debugout = 'simpleGUI';
          if ((JSROOT.GetUrlOption('json')!=null) &&
              (JSROOT.GetUrlOption('file')==null) &&
              (JSROOT.GetUrlOption('files')==null)) requirements = "2d;";
+         if (simplegui.getAttribute('nobrowser') && (simplegui.getAttribute('nobrowser')!="false")) nobrowser = true;
       } else
       if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;"; } else
       if (document.getElementById('drawGUI')) { debugout = 'drawGUI'; requirements = "2d;"; nobrowser = true; }
@@ -1060,6 +1210,19 @@
             JSROOT.Create("TPaveText", obj);
             JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
             break;
+         case 'TLegend':
+            JSROOT.Create("TPave", obj);
+            JSROOT.Create("TAttText", obj);
+            JSROOT.extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: JSROOT.Create("TList") });
+            break;
+         case 'TLegendEntry':
+            JSROOT.Create("TObject", obj);
+            JSROOT.Create("TAttText", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttFill", obj);
+            JSROOT.Create("TAttMarker", obj);
+            JSROOT.extend(obj, { fLabel: "", fObject: null, fOption: "" });
+            break;
          case 'TObjString':
             JSROOT.Create("TObject", obj);
             JSROOT.extend(obj, { fString: "" });
@@ -1131,11 +1294,18 @@
                                   fWmax: 100, fWmin: 0 });
             break;
          case 'TAttPad':
-            JSROOT.extend(obj, { fLeftMargin: 0.1, fRightMargin: 0.1, fBottomMargin: 0.1, fTopMargin: 0.1,
+            JSROOT.extend(obj, { fLeftMargin: JSROOT.gStyle.fPadLeftMargin,
+                                 fRightMargin: JSROOT.gStyle.fPadRightMargin,
+                                 fBottomMargin: JSROOT.gStyle.fPadBottomMargin,
+                                 fTopMargin: JSROOT.gStyle.fPadTopMargin,
                                  fXfile: 2, fYfile: 2, fAfile: 1, fXstat: 0.99, fYstat: 0.99, fAstat: 2,
-                                 fFrameFillColor: 0, fFrameLineColor: 1, fFrameFillStyle: 1001,
-                                 fFrameLineStyle: 1, fFrameLineWidth: 1, fFrameBorderSize: 1,
-                                 fFrameBorderMode: 0 });
+                                 fFrameFillColor: JSROOT.gStyle.fFrameFillColor,
+                                 fFrameLineColor: JSROOT.gStyle.fFrameLineColor,
+                                 fFrameFillStyle: JSROOT.gStyle.fFrameFillStyle,
+                                 fFrameLineStyle: JSROOT.gStyle.fFrameLineStyle,
+                                 fFrameLineWidth: JSROOT.gStyle.fFrameLineWidth,
+                                 fFrameBorderSize: JSROOT.gStyle.fFrameBorderSize,
+                                 fFrameBorderMode: JSROOT.gStyle.fFrameBorderMode });
             break;
          case 'TPad':
             JSROOT.Create("TObject", obj);
@@ -1150,12 +1320,17 @@
                                  fXlowNDC: 0, fYlowNDC: 0, fXUpNDC: 0, fYUpNDC: 0, fWNDC: 1, fHNDC: 1,
                                  fAbsXlowNDC: 0, fAbsYlowNDC: 0, fAbsWNDC: 1, fAbsHNDC: 1,
                                  fUxmin: 0, fUymin: 0, fUxmax: 0, fUymax: 0, fTheta: 30, fPhi: 30, fAspectRatio: 0,
-                                 fNumber: 0, fTickx: 0, fTicky: 0, fLogx: 0, fLogy: 0, fLogz: 0,
+                                 fNumber: 0, fLogx: 0, fLogy: 0, fLogz: 0,
+                                 fTickx: JSROOT.gStyle.fPadTickX,
+                                 fTicky: JSROOT.gStyle.fPadTickY,
                                  fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: 2,
-                                 fBorderMode: 0, fModified: false, fGridx: false, fGridy: false,
+                                 fBorderMode: 0, fModified: false,
+                                 fGridx: JSROOT.gStyle.fPadGridX,
+                                 fGridy: JSROOT.gStyle.fPadGridY,
                                  fAbsCoord: false, fEditable: true, fFixedAspectRatio: false,
                                  fPrimitives: JSROOT.Create("TList"), fExecs: null,
                                  fName: "pad", fTitle: "canvas" });
+
             break;
          case 'TAttCanvas':
             JSROOT.extend(obj, { fXBetween: 2, fYBetween: 2, fTitleFromTop: 1.2,
@@ -1310,53 +1485,68 @@
          }
       }
 
-      if (typename.indexOf("TF1") == 0) {
+      if ((typename.indexOf("TF1") == 0) || (typename === "TF2")) {
          m.addFormula = function(obj) {
-            if (obj==null) return;
-            if (!('formulas' in this)) this.formulas = [];
+            if (!obj) return;
+            if (this.formulas === undefined) this.formulas = [];
             this.formulas.push(obj);
          }
 
-         m.evalPar = function(x) {
+         m.evalPar = function(x, y) {
             if (! ('_func' in this) || (this._title !== this.fTitle)) {
 
-              var _func = this.fTitle;
+              var _func = this.fTitle, isformula = false;
               if (_func === "gaus") _func = "gaus(0)";
+              if (this.fFormula && typeof this.fFormula.fFormula == "string")
+                 if (this.fFormula.fFormula.indexOf("[](double*x,double*p)")==0) {
+                    isformula = true;
+                    _func = this.fFormula.fFormula.substr(21);
+                 }
 
               if ('formulas' in this)
                  for (var i=0;i<this.formulas.length;++i)
                     while (_func.indexOf(this.formulas[i].fName) >= 0)
                        _func = _func.replace(this.formulas[i].fName, this.formulas[i].fTitle);
-              _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs');
-              _func = _func.replace('TMath::Exp(', 'Math.exp(');
-              _func = _func.replace('TMath::Abs(', 'Math.abs(');
+              _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs')
+                           .replace(/TMath::Exp\(/g, 'Math.exp(')
+                           .replace(/TMath::Abs\(/g, 'Math.abs(');
               if (typeof JSROOT.Math == 'object') {
                  this._math = JSROOT.Math;
-                 _func = _func.replace('TMath::Prob(', 'this._math.Prob(');
-                 _func = _func.replace('TMath::Gaus(', 'this._math.Gaus(');
-                 _func = _func.replace('gaus(', 'this._math.gaus(this, x, ');
-                 _func = _func.replace('gausn(', 'this._math.gausn(this, x, ');
-                 _func = _func.replace('expo(', 'this._math.expo(this, x, ');
-                 _func = _func.replace('landau(', 'this._math.landau(this, x, ');
-                 _func = _func.replace('landaun(', 'this._math.landaun(this, x, ');
+                 _func = _func.replace(/TMath::Prob\(/g, 'this._math.Prob(')
+                              .replace(/TMath::Gaus\(/g, 'this._math.Gaus(')
+                              .replace(/gaus\(/g, 'this._math.gaus(this, x, ')
+                              .replace(/gausn\(/g, 'this._math.gausn(this, x, ')
+                              .replace(/expo\(/g, 'this._math.expo(this, x, ')
+                              .replace(/landau\(/g, 'this._math.landau(this, x, ')
+                              .replace(/landaun\(/g, 'this._math.landaun(this, x, ')
+                              .replace(/ROOT::Math::/g, 'this._math.');
               }
-              _func = _func.replace('pi', 'Math.PI');
-              for (var i=0;i<this.fNpar;++i)
-                 while(_func.indexOf('['+i+']') != -1)
-                    _func = _func.replace('['+i+']', '('+this.GetParValue(i)+')');
-              _func = _func.replace(/\b(sin)\b/gi, 'Math.sin');
-              _func = _func.replace(/\b(cos)\b/gi, 'Math.cos');
-              _func = _func.replace(/\b(tan)\b/gi, 'Math.tan');
-              _func = _func.replace(/\b(exp)\b/gi, 'Math.exp');
+              for (var i=0;i<this.fNpar;++i) {
+                 var parname = (isformula ? "p[" : "[") + i + "]";
+                 while(_func.indexOf(parname) != -1)
+                    _func = _func.replace(parname, '('+this.GetParValue(i)+')');
+              }
+              _func = _func.replace(/\b(sin)\b/gi, 'Math.sin')
+                           .replace(/\b(cos)\b/gi, 'Math.cos')
+                           .replace(/\b(tan)\b/gi, 'Math.tan')
+                           .replace(/\b(exp)\b/gi, 'Math.exp')
+                           .replace(/pi/g, 'Math.PI');
               for (var n=2;n<10;++n)
                  _func = _func.replace('x^'+n, 'Math.pow(x,'+n+')');
 
-              this._func = new Function("x", "return " + _func).bind(this);
+              if (isformula) {
+                 _func = _func.replace(/x\[0\]/g,"x");
+                 this._func = new Function("x", _func).bind(this);
+              } else
+              if (this._typename==="TF2")
+                 this._func = new Function("x", "y", "return " + _func).bind(this);
+              else
+                 this._func = new Function("x", "return " + _func).bind(this);
 
               this._title = this.fTitle;
             }
 
-            return this._func(x);
+            return this._func(x, y);
          }
          m.GetParName = function(n) {
             if (('fFormula' in this) && ('fParams' in this.fFormula)) return this.fFormula.fParams[n].first;
@@ -1434,13 +1624,30 @@
       }
 
       if (typename.indexOf("TProfile") == 0) {
-         m.getBin = function(x) { return x; }
-         m.getBinContent = function(bin) {
-            if (bin < 0 || bin >= this.fNcells) return 0;
-            if (this.fBinEntries[bin] < 1e-300) return 0;
-            if (!this.fArray) return 0;
-            return this.fArray[bin]/this.fBinEntries[bin];
-         };
+         if (typename.indexOf("TProfile2D") == 0) {
+            m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
+            m.getBinContent = function(x, y) {
+               var bin = this.getBin(x, y);
+               if (bin < 0 || bin >= this.fNcells) return 0;
+               if (this.fBinEntries[bin] < 1e-300) return 0;
+               if (!this.fArray) return 0;
+               return this.fArray[bin]/this.fBinEntries[bin];
+            }
+            m.getBinEntries = function(x, y) {
+               var bin = this.getBin(x, y);
+               if (bin < 0 || bin >= this.fNcells) return 0;
+               return this.fBinEntries[bin];
+            }
+         }
+         else {
+            m.getBin = function(x) { return x; }
+            m.getBinContent = function(bin) {
+               if (bin < 0 || bin >= this.fNcells) return 0;
+               if (this.fBinEntries[bin] < 1e-300) return 0;
+               if (!this.fArray) return 0;
+               return this.fArray[bin]/this.fBinEntries[bin];
+            };
+         }
          m.getBinEffectiveEntries = function(bin) {
             if (bin < 0 || bin >= this.fNcells) return 0;
             var sumOfWeights = this.fBinEntries[bin];

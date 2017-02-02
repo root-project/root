@@ -88,6 +88,7 @@ options="                    \
    enable_gsl_shared         \
    enable_hdfs               \
    enable_http               \
+   enable_imt                \
    enable_krb5               \
    enable_ldap               \
    enable_mathmore           \
@@ -174,6 +175,7 @@ enable_globus=no
 enable_explicitlink=no
 enable_gsl_shared=no
 enable_http=no
+enable_imt=no
 enable_qt=no
 enable_qtgsi=no
 enable_r=no
@@ -1747,6 +1749,7 @@ enable/disable options, prefix with either --enable- or --disable-
   gsl-shared         Enable linking against shared libraries for GSL (default no)
   hdfs               HDFS support; requires libhdfs from HDFS >= 0.19.1
   http               Build the HTTP server library
+  imt                Enable ROOT multi processing support
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   genvector          Build the new libGenVector library
@@ -6577,7 +6580,7 @@ check_explicit "$enable_shadowpw" "$enable_shadowpw_explicit" \
 ### echo %%% TBB Support - Third party libraries
 #
 useimt="undef"
-if test ! "x$enable_tbb" = "xno" ; then
+if test "x$enable_tbb" = "xyes" ; then
     check_header "tbb/tbb.h" "$tbbincdir" \
         $TBB ${TBB:+$TBB/include} \
         /usr/local/include \
@@ -6593,8 +6596,12 @@ if test ! "x$enable_tbb" = "xno" ; then
 
     if test "x$tbbincdir" = "x" || test "x$tbblib" = "x"; then
         enable_tbb="no"
+        enable_imt="no"
+        result "no"
+        exit 1
      else
         useimt="define"
+        enable_imt="yes"
         # on OSX libtbb.dylib is build with @rpath/libtbb.dylib so it
         # should reside in the application's lib/
         if test "x$platform" = "xmacosx" ; then
@@ -6604,10 +6611,21 @@ if test ! "x$enable_tbb" = "xno" ; then
            message "Copying $found_raw_dir/$found_raw_lib to lib"
            cp -f $found_raw_dir/$found_raw_lib lib
         fi
+        result "yes"
     fi
 fi
 check_explicit "$enable_tbb" "$enable_tbb_explicit" \
-     "Explicitly required TBB dependencies not fulfilled"
+               "Explicitly required TBB dependencies not fulfilled"
+
+##########################################################################
+#
+### echo %%% imt - Enable ROOT multi processing support
+#
+useimt="undef"
+if test "x$enable_imt" = "xyes"; then
+        usecxxmodules="define"
+        result "yes"
+fi
 
 ##########################################################################
 #
@@ -8217,6 +8235,7 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
+    -e "s|@extraiconpath@|$extraiconpath|" \
     -e "s|@iconpath@|$iconpath|"           \
     -e "s|@hasxrd@|$hasxrd|"               \
     -e "s|@hasnotxrd@|$hasnotxrd|"         \

@@ -25,8 +25,8 @@ GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
                 TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h TGButtonGroup.h \
                 TGNumberEntry.h TGTableLayout.h WidgetMessageTypes.h \
                 TGIdleHandler.h TGInputDialog.h TGPack.h
-GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
-                TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
+GUIH2        := TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
+                TGTab.h TGSlider.h TGListView.h TGMimeTypes.h \
                 TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h \
                 TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h \
                 TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h \
@@ -61,9 +61,18 @@ GUILIB       := $(LPATH)/libGui.$(SOEXT)
 GUIMAP       := $(GUILIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIH))
+GUIH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIH))
+ALLHDRS     += $(GUIH_REL)
 ALLLIBS     += $(GUILIB)
 ALLMAPS     += $(GUIMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GUIH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GUILIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GUIDEP)

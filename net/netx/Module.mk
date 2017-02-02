@@ -29,9 +29,18 @@ NETXMAP      := $(NETXLIB:.$(SOEXT)=.rootmap)
 
 ifeq ($(HASXRD),yes)
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETXH))
+NETXH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETXH))
+ALLHDRS      += $(NETXH_REL)
 ALLLIBS      += $(NETXLIB)
 ALLMAPS      += $(NETXMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(NETXH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(NETXLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(NETXDEP)

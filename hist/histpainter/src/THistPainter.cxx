@@ -65,7 +65,6 @@
 #include "TImage.h"
 #include "TCandle.h"
 
-////////////////////////////////////////////////////////////////////////////////
 /*! \class THistPainter
 \ingroup Histpainter
 \brief The histogram painter class. Implements all histograms' drawing's options.
@@ -94,8 +93,9 @@
 - [The ARRow option](#HP12)
 - [The BOX option](#HP13)
 - [The COLor option](#HP14)
-- [The CANDLE option](#HP140)
-- [The VIOLIN option](#HP141)
+- [The CANDLE and VIOLIN options](#HP140)
+   - [The CANDLE option](#HP140a)
+   - [The VIOLIN option](#HP140b)
 - [The TEXT and TEXTnn Option](#HP15)
 - [The CONTour options](#HP16)
    - [The LIST option](#HP16a)
@@ -276,9 +276,13 @@ using `TH1::GetOption`:
 | "CANDLE"  | Draw a candle plot along X axis.|
 | "CANDLEX" | Same as "CANDLE".|
 | "CANDLEY" | Draw a candle plot along Y axis.|
+| "CANDLEXn"| Draw a candle plot along X axis. Different candle-styles with n from 1 to 6.|
+| "CANDLEYn"| Draw a candle plot along Y axis. Different candle-styles with n from 1 to 6.|
 | "VIOLIN"  | Draw a violin plot along X axis.|
 | "VIOLINX" | Same as "VIOLIN".|
 | "VIOLINY" | Draw a violin plot along Y axis.|
+| "VIOLINXn"| Draw a violin plot along X axis. Different violin-styles with n being 1 or 2.|
+| "VIOLINYn"| Draw a violin plot along Y axis. Different violin-styles with n being 1 or 2.|
 | "CONT"    | Draw a contour plot (same as CONT0).|
 | "CONT0"   | Draw a contour plot using surface colors to distinguish contours.|
 | "CONT1"   | Draw a contour plot using line styles to distinguish contours.|
@@ -1107,8 +1111,71 @@ and COLZ options. There is one major difference and that concerns the treatment 
 bins with zero content. The COL2 and COLZ2 options color these bins the color of zero.
 
 
-### <a name="HP140"></a> The CANDLE option
+### <a name="HP140"></a> The CANDLE and VIOLIN options
 
+The mechanism behind Candle plots and Violin plots is very similar. Because of this they are
+implemented in the same class TCandle. The keywords CANDLE or VIOLIN will initiate the drawing of
+the corresponding plots. Followed by the keyword the user can select a plot direction (X or V for
+vertical projections, or Y or H for horizontal projections) and/or predefined definitions
+(1-6 for candles, 1-2 for violins). The order doesn't matter. Default is X and 1.
+
+Instead of using the predefined representations, the candle and violin parameters can be
+changed individually. In that case the option have the following form:
+
+    CANDLEX(<option-string>)
+    CANDLEY(<option-string>)
+    VIOLINX(<option-string>)
+    VIOLINY(<option-string>).
+
+All zeros at the beginning of `option-string` can be omitted.
+
+`option-string` consists eight values, defined as follow:
+
+    "CANDLEX(zhpawMmb)"
+
+Where:
+
+  -  `b = 0`;  no box drawn
+  -  `b = 1`;  the box is drawn. As the candle-plot is also called a box-plot it
+               makes sense in the very most cases to always draw the box
+  -  `b = 2`;  draw a filled box with border
+
+  -  `m = 0`;  no median drawn
+  -  `m = 1`;  median is drawn as a line
+  -  `m = 2`;  median is drawn with errors (notches)
+  -  `m = 3`;  median is drawn as a circle
+
+  -  `M = 0`;  no mean drawn
+  -  `M = 1`;  mean is drawn as a dashed line
+  -  `M = 3`;  mean is drawn as a circle
+
+  -  `w = 0`;  no whisker drawn
+  -  `w = 1`;  whisker is drawn to end of distribution.
+  -  `w = 2`;  whisker is drawn to max 1.5*iqr
+
+  -  `a = 0`;  no anchor drawn
+  -  `a = 1`;  the anchors are drawn
+
+  -  `p = 0`;  no points drawn
+  -  `p = 1`;  only outliers are drawn
+  -  `p = 2`;  all datapoints are drawn
+  -  `p = 3`:  all datapoints are drawn scattered
+
+  -  `h = 0`;  no histogram is drawn
+  -  `h = 1`;  histogram at the left or bottom side is drawn
+  -  `h = 2`;  histogram at the right or top side is drawn
+  -  `h = 3`;  histogram at left and right or top and bottom (violin-style) is drawn
+
+  -  `z = 0`;  no zero indicator line is drawn
+  -  `z = 1`;  zero indicator line is drawn.
+
+As one can see all individual options for both candle and violin plots can be accessed by this
+mechanism. In deed the keywords CANDLE(<option-string>) and VIOLIN(<option-string>) have the same
+meaning. So you can parametrise an option-string for a candle plot and use the keywords VIOLIN and
+vice versa, if you wish.
+
+
+#### <a name="HP140a"></a> The CANDLE option
 
 <a href="http://en.wikipedia.org/wiki/Box_plot">A Candle plot</a> (also known as
 a "box plot" or "whisker plot") was invented in 1977 by John Tukey. It is a convenient
@@ -1122,9 +1189,9 @@ way to describe graphically a data distribution (D) with only five numbers:
 
 In this implementation a TH2 is considered as a collection of TH1 along
 X (option `CANDLE` or `CANDLEX`) or Y (option `CANDLEY`).
-Each TH1 is represented as a candle plot.
+Each TH1 is represented as one candle.
 
-Begin_Macro
+Begin_Macro(source)
 ../../../tutorials/hist/candleplotwhiskers.C
 End_Macro
 
@@ -1265,6 +1332,10 @@ Depending on the configuration the points can have different meanings:
     drawn as dots and will be scattered within the width of the candle. The color
     of the points will be the color of the candle-chart.
 
+##### Other Options
+Is is possible to combine all options of candle and violin plots with each other. E.g. a box-plot
+with a histogram.
+
 
 #### How to use the candle-plots drawing option
 
@@ -1283,16 +1354,6 @@ There are six predefined candle-plot representations:
   - "CANDLEX6": Like candle2 but showing all datapoints scattered.
                 For huge datasets
 
-Of course "CANDLEY" works as well. X shows vertical candles, Y shows
-horizontal candles
-
-The option "CANDLE" is equivalent to "CANDLE1X" or "CANDLEX".
-
-The option "CANDLEY" is equivalent to "CANDLEY1"
-
-There is no difference between options "CANDLE1X" and "CANDLEX1".
-
-Instead of "X" or "Y" one can use "V" or "H"
 
 The following picture shows how the six predefined representations look.
 
@@ -1319,51 +1380,7 @@ Begin_Macro
 }
 End_Macro
 
-Instead of using the predefined representations, the candle parameters can be
-changed individually. In that case the option has the following form:
 
-    CANDLEX(<option-string>)
-
-or
-
-    CANDLEY(<option-string>).
-
-All zeros at the beginning of `option-string` can be omitted.
-
-`option-string` consists six values, defined as follow:
-
-    "CANDLEX(pawMmb)"
-
-Where:
-
-  -  `b = 0`;  no box drawn
-  -  `b = 1`;  the box is drawn. As the candle-plot is also called a box-plot it
-               makes sense in the very most cases to always draw the box.
-     `b = 2`; draw a filled box with border.
-
-  -  `m = 0`;  no median drawn
-  -  `m = 1`;  median is drawn as a line
-  -  `m = 2`;  median is drawn with errors (notches)
-  -  `m = 3`;  median is drawn as a circle
-
-  -  `M = 0`;  no mean drawn
-  -  `M = 1`;  mean is drawn as a dashed line
-  -  `M = 3`;  mean is drawn as a circle
-
-  -  `w = 0`;  no whisker drawn
-  -  `w = 1`;  whisker is drawn to end of distribution.
-  -  `w = 2`;  whisker is drawn to max 1.5*iqr
-
-  -  `a = 0`;  no anchor drawn
-  -  `a = 1`;  the anchors are drawn
-
-  -  `p = 0`;  no points drawn
-  -  `p = 1`;  only outliers are drawn
-  -  `p = 2`;  all datapoints are drawn
-  -  `p = 3`:  all datapoints are drawn scattered
-
-The values on the left of `option-string` are in the middle of the candle,
-the values on the right of `option-string` are in the outer part of the candle.
 
 #### Example 1
 Box and improved whisker, no mean, no median, no anchor no outliers
@@ -1385,8 +1402,7 @@ Begin_Macro(source)
 ../../../tutorials/hist/candleplot.C
 End_Macro
 
-### <a name="HP141"></a> The VIOLIN option
-
+#### <a name="HP140b"></a> The VIOLIN option
 
 <a href="http://en.wikipedia.org/wiki/Violin_plot">A violin plot</a> is a candle plot
 that also encodes the pdf information at each point.
@@ -1397,6 +1413,47 @@ and two lines.
 
 In this implementation a TH2 is considered as a collection of TH1 along
 X (option `VIOLIN` or `VIOLINX`) or Y (option `VIOLINY`).
+
+#### What a violin is made of
+
+\since **ROOT version 6.09/02**
+
+##### The histogram
+The histogram is typically drawn to both directions with respect to the middle-line of the
+corresponding bin. This can be achieved by using h=3. It is possible to draw a histogram only to
+one side (h=1, or h=2).
+The maximum number of bins in the histogram is limited to 500, if the number of bins in the used
+histogram is higher it will be rebinned automatically. The maximum height of the histogram can
+be modified by using SetBarWidth() and the position can be changed with SetBarOffset().
+A solid fill style is recommended.
+
+##### The zero indicator line
+Typical for violin charts is a line in the background over the whole histogram indicating
+the bins with zero entries. The zero indicator line can be activated with z=1. The line color
+will always be the same as the fill-color of the histogram.
+
+##### The Mean
+The Mean is illustrated with the same mechanism as used for candle plots. Usually a circle is used.
+
+##### Whiskers
+The whiskers are illustrated by the same mechanism as used for candle plots. There is only one
+difference. When using the simple whisker definition (w=1) and the zero indicator line (z=1), then
+the whiskers will be forced to be solid (usually hashed)
+
+##### Points
+The points are illustrated by the same mechanism as used for candle plots. E.g. VIOLIN2 uses
+better whisker definition (w=2) and outliers (p=1).
+
+##### Other options
+It is possible to combine all options of candle or violin plots with each other. E.g. a violin plot
+including a box-plot.
+
+#### How to use the violin-plots drawing option
+
+There are two predefined violin-plot representations:
+  - "VIOLINX1": Standard violin (histogram, mean, whisker over full distribution,
+                zero indicator line)
+  - "VIOLINX2": Line VIOLINX1 both with better whisker definition + outliers.
 
 A solid fill style is recommended for this plot (as opposed to a hollow or
 hashed style).
@@ -1425,6 +1482,12 @@ Begin_Macro(source)
     c1->Update();
     return c1;
 }
+End_Macro
+
+The next example illustrates a time development of a certain value:
+
+Begin_Macro(source)
+../../../tutorials/hist/candledecay.C
 End_Macro
 
 
@@ -3509,7 +3572,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx    = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf    = 0;
    Hoption.Off  = Hoption.Tri    = Hoption.Proj    = Hoption.AxisPos = 0;
-   Hoption.Spec = Hoption.Pie    = Hoption.Candle  = Hoption.Violin  = 0;
+   Hoption.Spec = Hoption.Pie    = Hoption.Candle  = 0;
 
    //    special 2D options
    Hoption.List     = 0;
@@ -3605,11 +3668,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"VIOLIN");
    if (l) {
+      TCandle candle;
+      Hoption.Candle = candle.ParseOption(l);
       Hoption.Scat = 0;
-      Hoption.Violin = 1;
-      strncpy(l,"   ",6);
-      if (l[6] == 'X') { Hoption.Violin = 1; l[6] = ' '; }
-      if (l[6] == 'Y') { Hoption.Violin = 2; l[6] = ' '; }
    }
 
    l = strstr(chopt,"LEGO");
@@ -4097,11 +4158,6 @@ paintstat:
 
 void THistPainter::PaintArrows(Option_t *)
 {
-
-   Style_t linesav   = fH->GetLineStyle();
-   Width_t widthsav  = fH->GetLineWidth();
-   fH->SetLineStyle(1);
-   fH->SetLineWidth(1);
    fH->TAttLine::Modify();
 
    Double_t xk, xstep, yk, ystep;
@@ -4176,9 +4232,6 @@ void THistPainter::PaintArrows(Option_t *)
    }
 
    if (Hoption.Zscale) PaintPalette();
-   fH->SetLineStyle(linesav);
-   fH->SetLineWidth(widthsav);
-   fH->TAttLine::Modify();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4765,7 +4818,7 @@ void THistPainter::PaintBoxes(Option_t *)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a candle (box) plot.](#HP14)
+/// [Control function to draw a 2D histogram as a candle (box) plot or violin plot](#HP14)
 
 void THistPainter::PaintCandlePlot(Option_t *)
 {
@@ -4793,7 +4846,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
          if (hproj->GetEntries() !=0) {
             Double_t width = fH->GetBarWidth();
             Double_t offset = fH->GetBarOffset()*binWidth;
-            if (width > 0.999) width = standardCandleWidth;
+            if (width > 0.999 && width < 1.001) width = standardCandleWidth;
             myCandle.SetAxisPosition(binPosX+binWidth/2. + offset);
             myCandle.SetWidth(width*binWidth);
             myCandle.SetHistogram(hproj);
@@ -4808,7 +4861,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
          if (hproj->GetEntries() !=0) {
             Double_t width = fH->GetBarWidth();
             Double_t offset = fH->GetBarOffset()*binWidth;
-            if (width > 0.999) width = standardCandleWidth;
+            if (width > 0.999 && width < 1.001) width = standardCandleWidth;
             myCandle.SetAxisPosition(binPosY+binWidth/2. + offset);
             myCandle.SetWidth(width*binWidth);
             myCandle.SetHistogram(hproj);
@@ -4818,117 +4871,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a 2D histogram as a violin plot](#HP141)
 
-void THistPainter::PaintViolinPlot(Option_t *)
-{
-   Double_t x,y,w;
-   Double_t bw, bcen, bcon;
-   Double_t xpm[1], ypm[1];
-
-   TH1D *hp;
-   TH2D *h2 = (TH2D*)fH;
-
-   Double_t *quantiles = new Double_t[5];
-   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
-   Double_t *prob = new Double_t[5];
-   prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
-
-   Style_t fillsav   = h2->GetFillStyle();
-   Style_t colsav    = h2->GetFillColor();
-   Style_t linesav   = h2->GetLineStyle();
-   Style_t widthsav  = h2->GetLineWidth();
-   Style_t pmssav    = h2->GetMarkerStyle();
-
-   if (h2->GetFillColor() == 0)  h2->SetFillStyle(0);
-
-   h2->SetMarkerStyle(pmssav);
-   h2->TAttLine::Modify();
-   h2->TAttFill::Modify();
-   h2->TAttMarker::Modify();
-
-   // Violin plot along X
-   if (Hoption.Violin == 1) {
-      for (Int_t i=Hparam.xfirst; i<=Hparam.xlast; i++) {
-         x = fXaxis->GetBinCenter(i);
-         w = fXaxis->GetBinWidth(i);
-         hp = h2->ProjectionY("_px", i, i);
-         if (hp->GetEntries() !=0 && hp->GetMaximum()!=0) {
-             hp->Scale(1.0/hp->Integral());
-             hp->Scale(w/hp->GetMaximum());
-             hp->GetQuantiles(5, quantiles, prob);
-             ypm[0] = hp->GetMean();
-
-             TAxis *ax = hp->GetXaxis();
-             for(Int_t j=ax->GetFirst(); j<ax->GetLast(); ++j){
-                 bw = ax->GetBinWidth(j);
-                 bcen = ax->GetBinCenter(j);
-                 bcon = hp->GetBinContent(j);
-                 gPad->PaintBox(x-0.5*bcon, bcen-0.5*bw, x+0.5*bcon, bcen+0.5*bw);
-             }
-
-             h2->SetLineWidth(widthsav);
-             h2->TAttLine::Modify();
-
-             h2->SetLineStyle(linesav);
-             h2->TAttLine::Modify();
-             gPad->PaintLine(x, quantiles[3], x, quantiles[4]);
-             gPad->PaintLine(x, quantiles[0], x, quantiles[1]);
-
-             xpm[0] = x;
-             gPad->PaintPolyMarker(1,xpm,ypm);
-         }
-      }
-   // Violin plot along Y
-   } else {
-       for (Int_t i=Hparam.yfirst; i<=Hparam.ylast; i++) {
-           y = fYaxis->GetBinCenter(i);
-           w = fYaxis->GetBinWidth(i);
-           hp = h2->ProjectionX("_py", i, i);
-           if (hp->GetEntries() !=0 && hp->GetMaximum()!=0) {
-             hp->Scale(1.0/hp->Integral());
-             hp->Scale(w/hp->GetMaximum());
-             hp->GetQuantiles(5, quantiles, prob);
-             xpm[0] = hp->GetMean();
-
-             h2->SetLineWidth(1);
-             h2->TAttLine::Modify();
-             TAxis *ax = hp->GetXaxis();
-             for(Int_t j=ax->GetFirst(); j<ax->GetLast(); ++j){
-                 bw = ax->GetBinWidth(j);
-                 bcen = ax->GetBinCenter(j);
-                 bcon = hp->GetBinContent(j);
-                 gPad->PaintBox(bcen-0.5*bw, y-0.5*bcon, bcen+0.5*bw, y+0.5*bcon);
-             }
-
-             hp->GetQuantiles(5, quantiles, prob);
-             xpm[0] = hp->GetMean();
-
-             h2->SetLineWidth(widthsav);
-             h2->SetLineStyle(2);
-             h2->TAttLine::Modify();
-             gPad->PaintLine(quantiles[3], y, quantiles[4], y);
-             gPad->PaintLine(quantiles[0], y, quantiles[1], y);
-
-             ypm[0] = y;
-             gPad->PaintPolyMarker(1,xpm,ypm);
-           }
-       }
-   }
-
-   h2->SetFillStyle(fillsav);
-   h2->SetFillColor(colsav);
-   h2->SetLineStyle(linesav);
-   h2->SetMarkerStyle(pmssav);
-   h2->SetLineWidth(widthsav);
-   h2->TAttFill::Modify();
-   h2->TAttLine::Modify();
-   h2->TAttMarker::Modify();
-
-   delete [] prob;
-   delete [] quantiles;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the rendering regions for an axis to use in the COL2 option
@@ -5238,6 +5181,7 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// [Control function to draw a 2D histogram as a color plot.](#HP14)
+
 void THistPainter::PaintColorLevels(Option_t*)
 {
    Double_t z, zc, xk, xstep, yk, ystep, xlow, xup, ylow, yup;
@@ -6448,7 +6392,8 @@ void THistPainter::PaintH3(Option_t *option)
    Int_t irep;
 
    if (fH->GetDrawOption() && (strstr(opt,"box") ||  strstr(opt,"lego"))) {
-      cmd = Form("TMarker3DBox::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
+      PaintH3Box();
+      return;
    } else if (fH->GetDrawOption() && strstr(opt,"iso")) {
       PaintH3Iso();
       return;
@@ -6914,6 +6859,134 @@ Int_t THistPainter::PaintInitH()
    Hparam.xmin = xmin;
    Hparam.xmax = xmax;
    return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// [Control function to draw a 3D histogram with boxes.](#HP25)
+
+void THistPainter::PaintH3Box()
+{
+   //       Predefined box structure
+   Double_t wxyz[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,1,-1}, {-1,1,-1},
+                           {-1,-1, 1}, {1,-1, 1}, {1,1, 1}, {-1,1, 1} };
+   Int_t iface[6][4] = { {0,3,2,1}, {4,5,6,7},
+                         {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7} };
+
+   //       Define dimensions of world space
+   TGaxis *axis = new TGaxis();
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+
+   fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
+   fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
+   fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
+   fYbuf[1] = yaxis->GetBinUpEdge(yaxis->GetLast());
+   fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
+   fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+
+   //       Set view
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTF3", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   Int_t irep;
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   Int_t backcolor = gPad->GetFrameFillColor();
+   view->PadRange(backcolor);
+
+   //       Draw back surfaces of axis box
+   fLego->InitMoveScreen(-1.1,1.1);
+   if (Hoption.BackBox) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
+
+   fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode1);
+
+   //       Define order of drawing
+   Double_t *tnorm = view->GetTnorm();
+   if (!tnorm) return;
+   Int_t incrx = (tnorm[ 8] < 0.) ? -1 : +1;
+   Int_t incry = (tnorm[ 9] < 0.) ? -1 : +1;
+   Int_t incrz = (tnorm[10] < 0.) ? -1 : +1;
+   Int_t ix1 = (incrx == +1) ? xaxis->GetFirst() : xaxis->GetLast();
+   Int_t iy1 = (incry == +1) ? yaxis->GetFirst() : yaxis->GetLast();
+   Int_t iz1 = (incrz == +1) ? zaxis->GetFirst() : zaxis->GetLast();
+   Int_t ix2 = (incrx == +1) ? xaxis->GetLast()  : xaxis->GetFirst();
+   Int_t iy2 = (incry == +1) ? yaxis->GetLast()  : yaxis->GetFirst();
+   Int_t iz2 = (incrz == +1) ? zaxis->GetLast()  : zaxis->GetFirst();
+
+   //       Set graphic attributes (colour, style, etc.)
+   fH->TAttFill::Modify();
+   fH->TAttLine::Modify();
+
+   //       Create bin boxes and draw
+   Double_t wmin = fH->GetMinimum();
+   Double_t wmax = fH->GetMaximum();
+   Double_t pmin[3], pmax[3], sxyz[8][3];
+   for (Int_t ix = ix1; ix !=ix2+incrx; ix += incrx) {
+      pmin[0] = xaxis->GetBinLowEdge(ix);
+      pmax[0] = xaxis->GetBinUpEdge(ix);
+      for (Int_t iy = iy1; iy != iy2+incry; iy += incry) {
+         pmin[1] = yaxis->GetBinLowEdge(iy);
+         pmax[1] = yaxis->GetBinUpEdge(iy);
+         for (Int_t iz = iz1; iz != iz2+incrz; iz += incrz) {
+            pmin[2] = zaxis->GetBinLowEdge(iz);
+            pmax[2] = zaxis->GetBinUpEdge(iz);
+            Double_t w = fH->GetBinContent(fH->GetBin(ix,iy,iz));
+            if (w < wmin) continue;
+            if (w > wmax) w = wmax;
+            Double_t scale = (TMath::Power((w-wmin)/(wmax-wmin),1./3.))/2.;
+            if (scale == 0) continue;
+            for (Int_t i=0; i<3; ++i) {
+               Double_t c = (pmax[i] + pmin[i])*0.5;
+               Double_t d = (pmax[i] - pmin[i])*scale;
+               for (Int_t k=0; k<8; ++k) { // set bin box vertices
+                  sxyz[k][i] = wxyz[k][i]*d + c;
+               }
+            }
+            for (Int_t k=0; k<8; ++k) { // transform to normalized space
+               view->WCtoNDC(&sxyz[k][0],&sxyz[k][0]);
+            }
+            Double_t x[5], y[5]; // draw bin box faces
+            for (Int_t k=0; k<6; ++k) {
+               for (Int_t i=0; i<4; ++i) {
+                  Int_t iv = iface[k][i];
+                  x[i] = sxyz[iv][0];
+                  y[i] = sxyz[iv][1];
+               }
+               x[4] = x[0]; y[4] = y[0];
+               Double_t z = (x[2]-x[0])*(y[3]-y[1]) - (y[2]-y[0])*(x[3]-x[1]);
+               if (z <= 0.) continue;
+               gPad->PaintFillArea(4, x, y);
+               gPad->PaintPolyLine(5, x, y);
+            }
+         }
+      }
+   }
+
+   //       Draw front surfaces of axis box
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+
+   PaintTitle();
+
+   delete axis;
+   delete fLego; fLego = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8704,7 +8777,6 @@ void THistPainter::PaintTable(Option_t *option)
          if (Hoption.Text)         PaintText(option);
          if (Hoption.Error >= 100) Paint2DErrors(option);
          if (Hoption.Candle)       PaintCandlePlot(option);
-         if (Hoption.Violin)       PaintViolinPlot(option);
       }
       if (Hoption.Lego)                     PaintLego(option);
       if (Hoption.Surf && !Hoption.Contour) PaintSurface(option);
@@ -10780,9 +10852,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
          }
          break;
-
    }
    c->Update();
    padsav->cd();
 }
-

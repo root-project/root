@@ -156,8 +156,8 @@ public:
 /// | kCharStar| Pointer to array of char |
 /// | kLegacyChar | Equal to TDataType's kchar |
 /// | kBits    | TObject::fBits in case of a referenced object |
-/// | kObject  | Class  derived from TObject |
-/// | kObjectp | Class* derived from TObject and with    comment field //->Class |
+/// | kObject  | Class  derived from TObject, or for TStreamerSTL::fCtype non-pointer elements |
+/// | kObjectp | Class* derived from TObject and with    comment field //->Class, or for TStreamerSTL::fCtype: pointer elements |
 /// | kObjectP | Class* derived from TObject and with NO comment field //->Class |
 /// | kAny     | Class  not derived from TObject |
 /// | kAnyp    | Class* not derived from TObject with    comment field //->Class |

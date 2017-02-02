@@ -19,36 +19,21 @@
 #include <vector>
 #include <iostream>
 
-#ifndef ROOT_TNamed 
+#ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
 
-// these  should be maybe forward decleared 
-// by moving implementations in source file 
+// these  should be maybe forward declared
+// by moving implementations in source file
+
 #include "TH1.h"
 
-
-class TLine; 
-class TLegend; 
-class TH1; 
-class TVirtualPad; 
-
+class TLine;
+class TLegend;
+class TH1;
+class TVirtualPad;
 
 namespace RooStats {
-
-
-   /**
-      This class provides the plots for the result of a study performed with the 
-      HybridCalculatorOriginal class.
-
-
-      Authors: D. Piparo, G. Schott - Universitaet Karlsruhe
-
-
-      An example plot is available here:
-      http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
-*/
-
 
    class HybridPlot : public TNamed {
 
@@ -106,7 +91,7 @@ namespace RooStats {
       /// Get B histo
       TH1F* GetSBhisto(){return fSb_histo;}
 
-       /// Get the pad (or canvas) where it has been drawn 
+       /// Get the pad (or canvas) where it has been drawn
       TVirtualPad * GetCanvas() { return fPad; }
 
       /// Write an image on disk

@@ -28,9 +28,18 @@ HBOOKLIB     := $(LPATH)/libHbook.$(SOEXT)
 HBOOKMAP     := $(HBOOKLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HBOOKH))
+HBOOKH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(HBOOKH))
+ALLHDRS     += $(HBOOKH_REL)
 ALLLIBS     += $(HBOOKLIB)
 ALLMAPS     += $(HBOOKMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(HBOOKH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Hist_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(HBOOKLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(HBOOKDEP)

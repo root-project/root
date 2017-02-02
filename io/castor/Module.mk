@@ -28,9 +28,18 @@ CASTORLIB    := $(LPATH)/libRCastor.$(SOEXT)
 CASTORMAP    := $(CASTORLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CASTORH))
+CASTORH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(CASTORH))
+ALLHDRS     += $(CASTORH_REL)
 ALLLIBS     += $(CASTORLIB)
 ALLMAPS     += $(CASTORMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(CASTORH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(CASTORLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(CASTORDEP)

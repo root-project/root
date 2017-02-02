@@ -29,9 +29,18 @@ VMCLIB       := $(LPATH)/libVMC.$(SOEXT)
 VMCMAP       := $(VMCLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(VMCH))
+VMCH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(VMCH))
+ALLHDRS     += $(VMCH_REL)
 ALLLIBS     += $(VMCLIB)
 ALLMAPS     += $(VMCMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(VMCH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Montecarlo_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(VMCLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(VMCDEP)

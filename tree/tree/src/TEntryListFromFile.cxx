@@ -85,7 +85,7 @@ TEntryListFromFile::~TEntryListFromFile()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns entry #index
+/// Returns entry \#index
 /// See also Next() for a faster alternative
 
 Long64_t TEntryListFromFile::GetEntry(Int_t index)
@@ -226,7 +226,7 @@ Long64_t TEntryListFromFile::Next()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loads the list #listnumber
+/// Loads the list \#listnumber
 /// This is the only function that can modify fCurrent and fFile data members
 
 Int_t TEntryListFromFile::LoadList(Int_t listnumber)

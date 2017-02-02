@@ -99,7 +99,13 @@ namespace cling {
     IncrementalParser(Interpreter* interp, const char* llvmdir);
     ~IncrementalParser();
 
-    void Initialize(llvm::SmallVectorImpl<ParseResultTransaction>& result,
+    ///\brief Whether the IncrementalParser is valid.
+    ///
+    ///\param[in] initialized - check if IncrementalParser has been initialized.
+    ///
+    bool isValid(bool initialized = true) const;
+
+    bool Initialize(llvm::SmallVectorImpl<ParseResultTransaction>& result,
                     bool isChildInterpreter);
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
@@ -121,10 +127,12 @@ namespace cling {
     ///\brief Commits a transaction if it was complete. I.e pipes it
     /// through the consumer chain, including codegen.
     ///
-    ///\param[in] PRT - the transaction (ParseResultTransaction, really) to be
+    ///\param[in] PRT - the transaction (ParseResultTransaction) to be
     /// committed
+    ///\param[in] ClearDiagClient - Reset the DiagnosticsEngine client or not
     ///
-    void commitTransaction(ParseResultTransaction& PRT);
+    void commitTransaction(ParseResultTransaction& PRT,
+                           bool ClearDiagClient = true);
 
     ///\brief Runs the consumers (e.g. CodeGen) on a non-parsed transaction.
     ///

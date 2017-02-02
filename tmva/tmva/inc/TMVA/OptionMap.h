@@ -33,13 +33,13 @@
 
 
 namespace TMVA {
-       
+
        /**
-        *      \class OptionMap
-        *         class to storage options for the differents methods
-        *         \ingroup TMVA
+        * \class TMVA::OptionMap
+        * \ingroup TMVA
+        *  class to storage options for the differents methods
         */
-       
+
        class OptionMap
        {
        protected:
@@ -53,7 +53,7 @@ namespace TMVA {
                TString fInternalKey;
            public:
                Binding(std::map<TString,TString>  &fmap,TString key):fInternalMap(fmap),fInternalKey(key){}
-               Binding(const Binding &obj):fInternalMap(obj.fInternalMap)  
+               Binding(const Binding &obj):fInternalMap(obj.fInternalMap)
                {
                    fInternalKey  = obj.fInternalKey;
                }
@@ -62,17 +62,17 @@ namespace TMVA {
                TString GetKey(){return fInternalKey;}
                Binding &operator=(const Binding &obj)
                {
-                   fInternalMap  = obj.fInternalMap;    
+                   fInternalMap  = obj.fInternalMap;
                    fInternalKey  = obj.fInternalKey;
                    return *this;
                }
-               
+
                template<class T> Binding& operator=(const T &value)
                {
                    ParseValue(fInternalMap[fInternalKey],*const_cast<T*>(&value));
                    return *this;
                }
-               
+
                template<class T> operator T()
                {
                    return GetValue<T>();
@@ -83,7 +83,7 @@ namespace TMVA {
                    ParseValue(fInternalMap[fInternalKey],result,kFALSE);
                    return result;
                }
-            
+
                template<class T> void  ParseValue(TString &str,T &value,Bool_t input=kTRUE)
                {
                    std::stringstream fStringStream;
@@ -95,19 +95,19 @@ namespace TMVA {
                        fStringStream<<str.Data();
                        fStringStream>>value;
                    }
-                   
+
                }
 
-               
+
            };
            Binding fBinder;     //!
        public:
            OptionMap(const TString options="",const TString name="Option"):fName(name),fLogger(name.Data()),fBinder(fOptMap,""){
-               ParseOption(options); 
+               ParseOption(options);
            }
-           
+
            OptionMap(const Char_t *options,const TString name="Option"):fName(name),fLogger(name.Data()),fBinder(fOptMap,""){
-               ParseOption(options); 
+               ParseOption(options);
            }
            OptionMap(const OptionMap &obj):fBinder(obj.fBinder)
            {
@@ -116,30 +116,30 @@ namespace TMVA {
            }
 //            OptionMap(const Char_t *options,const TString name="Option"):fName(name),fLogger(name.Data()),fBinder(fOptMap,"")
 //            {
-//              ParseOption(options);  
+//              ParseOption(options);
 //            }
-           
+
            virtual ~OptionMap(){}
-           
+
            Bool_t IsEmpty(){return fOptMap.empty();}
-           
+
            Bool_t HasKey(TString key)
            {
                return fOptMap.count( key )==1;
            }
-           
+
            Binding& operator[](TString key)
            {
                fBinder.SetKey(key);
                return fBinder;
            }
-           
+
            OptionMap& operator=(TString options)
            {
                ParseOption(options);
                return *this;
            }
-           
+
            void Print() const
            {
                MsgLogger Log(fLogger);
@@ -155,8 +155,8 @@ namespace TMVA {
                fBinder.ParseValue(fOptMap[key],result,kFALSE);
                return result;
            }
-           
-           
+
+
            template<class T> T GetValue(const TString & key) const
            {
                T result;
@@ -172,21 +172,21 @@ namespace TMVA {
                for(auto opt:*opts)
                {
                    TObjString *objstr=(TObjString*)opt;
-                   
+
                    if(objstr->GetString().Contains("="))
                    {
                       auto pair=objstr->String().Tokenize("=");
                       TObjString *key   = (TObjString *)pair->At(0);
                       TObjString *value = (TObjString *)pair->At(1);
-                      
+
                       fOptMap[key->GetString()] = value->GetString();
                    }else{
                       if(objstr->GetString().BeginsWith("!"))
                       {
                           objstr->GetString().ReplaceAll("!","");
-                          fOptMap[objstr->GetString()]=TString("0");    
+                          fOptMap[objstr->GetString()]=TString("0");
                       }else{
-                          fOptMap[objstr->GetString()]=TString("1");                              
+                          fOptMap[objstr->GetString()]=TString("1");
                       }
                    }
                }
@@ -194,7 +194,7 @@ namespace TMVA {
            }
            ClassDef(OptionMap,1);
        };
-       
+
 }
 
 #endif

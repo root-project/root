@@ -2736,6 +2736,14 @@ void TBufferXML::ReadStdString(std::string *s)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Read a char* string
+
+void TBufferXML::ReadCharStar(char* &s)
+{
+   TBufferFile::ReadCharStar(s);
+}
+
 
 // macro for left shift operator for basic types
 #define TBufferXML_operatorout(vname) \
@@ -2883,6 +2891,15 @@ void TBufferXML::WriteStdString(const std::string *s)
       else XmlWriteValue("", xmlio::String);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write a char* string
+
+void TBufferXML::WriteCharStar(char *s)
+{
+   TBufferFile::WriteCharStar(s);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts Char_t to string and add xml node to buffer

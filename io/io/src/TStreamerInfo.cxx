@@ -1695,7 +1695,7 @@ void TStreamerInfo::BuildOld()
    Int_t offset = 0;
    TMemberStreamer* streamer = 0;
 
-   Int_t sp = sizeof(void*);
+   constexpr size_t kSizeOfPtr = sizeof(void*);
 
    int nBaze = 0;
 
@@ -1967,8 +1967,8 @@ void TStreamerInfo::BuildOld()
             offset += asize;
             element->Init(this);
             continue;
-         }
-      }
+         } // if element is of type TStreamerBase or not.
+      } // if (element->IsBase())
 
       // If we get here, this means that we looked at all the base classes.
       if (shouldHaveInfoLoc && fNVirtualInfoLoc==0) {
@@ -2069,7 +2069,7 @@ void TStreamerInfo::BuildOld()
                element->SetSize(dsize*narr);
             }
          }
-      }
+      } // Class corresponding to StreamerInfo is emulated or not.
 
       // Now let's deal with Schema evolution
       Int_t newType = -1;
@@ -2398,8 +2398,8 @@ void TStreamerInfo::BuildOld()
             asize = element->GetSize();
          }
          // align the non-basic data types (required on alpha and IRIX!!)
-         if ((offset % sp) != 0) {
-            offset = offset - (offset % sp) + sp;
+         if ((offset % kSizeOfPtr) != 0) {
+            offset = offset - (offset % kSizeOfPtr) + kSizeOfPtr;
          }
          element->SetOffset(offset);
          offset += asize;
@@ -3043,6 +3043,14 @@ void TStreamerInfo::ComputeSize()
    fSize = element ? element->GetOffset() + element->GetSize() : 0;
    if (fNVirtualInfoLoc > 0 && (fVirtualInfoLoc[0]+sizeof(TStreamerInfo*)) >= (ULong_t)fSize) {
       fSize = fVirtualInfoLoc[0] + sizeof(TStreamerInfo*);
+   }
+
+   // On some platform and in some case of layout non-basic data types needs
+   // to be aligned.  So let's be on the safe side and align on the size of
+   // the pointers.  (Question: is that the right thing on x32 ABI ?)
+   constexpr size_t kSizeOfPtr = sizeof(void*);
+   if ((fSize % kSizeOfPtr) != 0) {
+      fSize = fSize - (fSize % kSizeOfPtr) + kSizeOfPtr;
    }
 }
 

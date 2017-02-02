@@ -12,6 +12,9 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Casting.h"
+#include "cling/Utils/Output.h"
+#include "cling/Utils/UTF8.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CanonicalType.h"
@@ -25,10 +28,6 @@
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/raw_os_ostream.h"
-#include "llvm/Support/raw_ostream.h"
-
-#include <iostream>
-#include <sstream>
 
 namespace {
 
@@ -57,23 +56,14 @@ namespace {
     ///\brief The start of the allocation.
     char m_Payload[1];
 
-    static DtorFunc_t PtrToFunc(void* ptr) {
-      union {
-        void* m_Ptr;
-        DtorFunc_t m_Func;
-      };
-      m_Ptr = ptr;
-      return m_Func;
-    }
-
-
   public:
     ///\brief Initialize the storage management part of the allocated object.
     ///  The allocator is referencing it, thus initialize m_RefCnt with 1.
     ///\param [in] dtorFunc - the function to be called before deallocation.
     AllocatedValue(void* dtorFunc, size_t allocSize, size_t nElements):
-      m_RefCnt(1), m_DtorFunc(PtrToFunc(dtorFunc)), m_AllocSize(allocSize),
-      m_NElements(nElements)
+      m_RefCnt(1),
+      m_DtorFunc(cling::utils::VoidToFunctionPtr<DtorFunc_t>(dtorFunc)),
+      m_AllocSize(allocSize), m_NElements(nElements)
     {}
 
     char* getPayload() { return m_Payload; }
@@ -241,23 +231,37 @@ namespace cling {
     std::string printValueInternal(const Value& V);
   } // end namespace valuePrinterInternal
 
-  void Value::print(llvm::raw_ostream& Out) const {
+  void Value::print(llvm::raw_ostream& Out, bool Escape) const {
+    // Save the default type string representation so output can occur as one
+    // operation (calling printValueInternal below may write to stderr).
+    const std::string Type = valuePrinterInternal::printTypeInternal(*this);
 
-    // Get the default type string representation
-    std::string typeStr = cling::valuePrinterInternal::printTypeInternal(*this);
     // Get the value string representation, by printValue() method overloading
-    std::string valueStr = cling::valuePrinterInternal::printValueInternal(*this);
+    const std::string Val = cling::valuePrinterInternal::printValueInternal(*this);
+    if (Escape) {
+      const char* Data = Val.data();
+      const size_t N = Val.size();
+      switch (N ? Data[0] : 0) {
+        case 'u': case 'U': case 'L':
+          if (N < 3 || Data[1] != '\"')
+            break;
 
-    // Print the type and the value:
-    Out << typeStr << " " << valueStr << '\n';
+          // Unicode string, encoded as Utf-8
+        case '\"':
+          if (N > 2 && Data[N-1] == '\"') {
+            // Drop the terminating " so Utf-8 errors can be detected ("\xeA")
+            Out << Type << ' '
+                << utils::utf8::EscapeSequence().encode(Data, N-1) << "\"\n";
+            return;
+          }
+        default:
+          break;
+      }
+    }
+    Out << Type << ' ' << Val << '\n';
   }
 
-  void Value::dump() const {
-    // We need stream that doesn't close its file descriptor, thus we are not
-    // using llvm::outs. Keeping file descriptor open we will be able to use
-    // the results in pipes (Savannah #99234).
-
-    llvm::raw_os_ostream Out(std::cout);
-    print(Out);
+  void Value::dump(bool Escape) const {
+    print(cling::outs(), Escape);
   }
 } // end namespace cling

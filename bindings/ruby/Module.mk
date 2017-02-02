@@ -28,9 +28,19 @@ RUBYROOTLIB    := $(LPATH)/libRuby.$(SOEXT)
 RUBYROOTMAP    := $(RUBYROOTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS        += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RUBYROOTH))
+RUBYROOTH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(RUBYROOTH))
+ALLHDRS        += $(RUBYROOTH_REL)
 ALLLIBS        += $(RUBYROOTLIB)
 ALLMAPS        += $(RUBYROOTMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RUBYROOTH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module $(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(RUBYROOTLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
+
 
 # include all dependency files
 INCLUDEFILES   += $(RUBYROOTDEP)

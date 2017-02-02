@@ -71,7 +71,8 @@ endif()
 
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  xml/*.C
-                histfactory/*.C)   # histfactory requires xml
+                histfactory/*.C    # histfactory requires xml
+                unfold/*.C)        # unfold requires xml
 endif()
 
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
@@ -117,7 +118,7 @@ if(NOT GRAPHVIZ_FOUND)
   set(gviz_veto graphs/graphstruct.C)
 endif()
 
-if(NOT TBB_FOUND)
+if(NOT TBB_FOUND AND NOT builtin_tbb)
   set(tbb_veto  multicore/mtbb*.C)
 endif()
 
@@ -140,8 +141,12 @@ set(gui_veto fit/fitpanel_playback.C
              tree/tvdemo.C
              eve/*.C)
 
-#---These do not need to run for TMVA
-set (tmva_veto tmva/createData.C)
+if (NOT ROOT_tmva_FOUND)
+  set(tmva_veto tmva/*.C tmva/*.py tmva/keras/*.C tmva/keras/*.py)
+else()
+  #---These do not need to run for TMVA
+  set(tmva_veto tmva/createData.C)
+endif()
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
@@ -225,9 +230,12 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  math/chi2test.C
                  r/SimpleFitting.C)
 #---Dependencies------------------------------------------------------
-set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
-set(math-testUnfold5c-depends tutorial-math-testUnfold5b)
-set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
+set(unfold-testUnfold5d-depends tutorial-unfold-testUnfold5c)
+set(unfold-testUnfold5c-depends tutorial-unfold-testUnfold5b)
+set(unfold-testUnfold5b-depends tutorial-unfold-testUnfold5a)
+set(unfold-testUnfold7d-depends tutorial-unfold-testUnfold7c)
+set(unfold-testUnfold7c-depends tutorial-unfold-testUnfold7b)
+set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)

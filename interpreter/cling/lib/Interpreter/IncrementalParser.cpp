@@ -26,12 +26,14 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Utils/Output.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclGroup.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -45,7 +47,6 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/CrashRecoveryContext.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/raw_os_ostream.h"
 
 #include <iostream>
 #include <sstream>
@@ -88,14 +89,16 @@ namespace {
     const clang::Preprocessor& PP = CI->getPreprocessor();
     const clang::Token* Tok = getMacroToken(PP, CLING_CXXABI_NAME);
     if (Tok && Tok->isLiteral()) {
+      // Tok::getLiteralData can fail even if Tok::isLiteral is true!
+      SmallString<64> Buffer;
+      CurABI = PP.getSpelling(*Tok, Buffer);
       // Strip any quotation marks.
-      CurABI = llvm::StringRef(Tok->getLiteralData(),
-                               Tok->getLength()).trim("\"");
+      CurABI = CurABI.trim("\"");
       if (CurABI.equals(CLING_CXXABI_VERS))
         return true;
     }
 
-    llvm::errs() <<
+    cling::errs() <<
       "Warning in cling::IncrementalParser::CheckABICompatibility():\n"
       "  Possible C++ standard library mismatch, compiled with "
       << CLING_CXXABI_NAME << " '" << CLING_CXXABI_VERS << "'\n"
@@ -104,6 +107,74 @@ namespace {
 
     return false;
   }
+
+  class FilteringDiagConsumer: public ForwardingDiagnosticConsumer {
+    std::unique_ptr<DiagnosticConsumer> fOwnedTarget;
+    std::stack<bool> fIgnorePromptDiags;
+
+    void SyncDiagCountWithTarget() {
+      NumWarnings = fOwnedTarget->getNumWarnings();
+      NumErrors = fOwnedTarget->getNumErrors();
+    }
+
+  public:
+    FilteringDiagConsumer(std::unique_ptr<DiagnosticConsumer>&& Target):
+      ForwardingDiagnosticConsumer(*Target),
+      fOwnedTarget(std::move(Target)) {}
+
+    void BeginSourceFile(const LangOptions &LangOpts,
+                         const Preprocessor *PP=nullptr) override {
+      fOwnedTarget->BeginSourceFile(LangOpts, PP);
+    }
+
+    void EndSourceFile() override {
+      fOwnedTarget->EndSourceFile();
+      SyncDiagCountWithTarget();
+    }
+
+    void finish() override {
+      fOwnedTarget->finish();
+      SyncDiagCountWithTarget();
+    }
+
+    void clear() override {
+      fOwnedTarget->clear();
+      SyncDiagCountWithTarget();
+    }
+
+    void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
+                          const Diagnostic &Info) override {
+      if (Ignoring()) {
+        if (Info.getID() == diag::warn_unused_expr
+            || Info.getID() == diag::warn_unused_call
+            || Info.getID() == diag::warn_unused_comparison)
+          return; // ignore!
+        if (Info.getID() == diag::warn_falloff_nonvoid_function) {
+          DiagLevel = DiagnosticsEngine::Error;
+        }
+        if (Info.getID() == diag::ext_return_has_expr) {
+          // An error that we need to suppress.
+          auto Diags = const_cast<DiagnosticsEngine*>(Info.getDiags());
+          assert(Diags->hasErrorOccurred() && "Expected ErrorOccurred");
+          if (fOwnedTarget->getNumErrors() == 0) { // first error
+            Diags->Reset(true /*soft - only counts, not mappings*/);
+          } // else we had other errors, too.
+          return; // ignore!
+        }
+      }
+      ForwardingDiagnosticConsumer::HandleDiagnostic(DiagLevel, Info);
+      SyncDiagCountWithTarget();
+    }
+
+    void push(bool ignoreDiags) { fIgnorePromptDiags.push(ignoreDiags); }
+    void pop() {
+      assert(!fIgnorePromptDiags.empty() && "Unignoring non-ignored prompt diags!");
+      fIgnorePromptDiags.pop();
+    }
+    bool Ignoring() const {
+      return !fIgnorePromptDiags.empty() && fIgnorePromptDiags.top();
+    }
+  };
 } // unnamed namespace
 
 namespace cling {
@@ -111,14 +182,25 @@ namespace cling {
     m_Interpreter(interp),
     m_CI(CIFactory::createCI("", interp->getOptions(), llvmdir)),
     m_Consumer(nullptr), m_ModuleNo(0) {
-    assert(m_CI.get() && "CompilerInstance is (null)!");
+
+    if (!m_CI) {
+      cling::errs() << "Compiler instance could not be created.\n";
+      return;
+    }
+    // Is the CompilerInstance being used to generate output only?
+    if (m_Interpreter->getOptions().CompilerOpts.HasOutput)
+      return;
 
     m_Consumer = dyn_cast<DeclCollector>(&m_CI->getSema().getASTConsumer());
-    assert(m_Consumer && "Expected ChainedConsumer!");
+    if (!m_Consumer) {
+      cling::errs() << "No AST consumer available.\n";
+      return;
+    }
 
+    DiagnosticsEngine& Diag = m_CI->getDiagnostics();
     if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
       m_CodeGen.reset(CreateLLVMCodeGen(
-          m_CI->getDiagnostics(), "cling-module-0", m_CI->getHeaderSearchOpts(),
+          Diag, "cling-module-0", m_CI->getHeaderSearchOpts(),
           m_CI->getPreprocessorOpts(), m_CI->getCodeGenOpts(),
           *m_Interpreter->getLLVMContext()));
       m_Consumer->setContext(this, m_CodeGen.get());
@@ -126,10 +208,14 @@ namespace cling {
       m_Consumer->setContext(this, 0);
     }
 
+    DiagnosticConsumer* DC
+      = new FilteringDiagConsumer(Diag.takeClient());
+    Diag.setClient(DC, true /*own*/);
+
     initializeVirtualFile();
   }
 
-  void
+  bool
   IncrementalParser::Initialize(llvm::SmallVectorImpl<ParseResultTransaction>&
                                 result, bool isChildInterpreter) {
     m_TransactionPool.reset(new TransactionPool);
@@ -143,18 +229,24 @@ namespace cling {
 
     Transaction* CurT = beginTransaction(CO);
     Preprocessor& PP = m_CI->getPreprocessor();
+    DiagnosticsEngine& Diags = m_CI->getSema().getDiagnostics();
 
     // Pull in PCH.
     const std::string& PCHFileName
       = m_CI->getInvocation().getPreprocessorOpts().ImplicitPCHInclude;
     if (!PCHFileName.empty()) {
-      Transaction* CurT = beginTransaction(CO);
+      Transaction* PchT = beginTransaction(CO);
+      DiagnosticErrorTrap Trap(Diags);
       m_CI->createPCHExternalASTSource(PCHFileName,
                                        true /*DisablePCHValidation*/,
                                        true /*AllowPCHWithCompilerErrors*/,
                                        0 /*DeserializationListener*/,
                                        true /*OwnsDeserializationListener*/);
-      result.push_back(endTransaction(CurT));
+      result.push_back(endTransaction(PchT));
+      if (Trap.hasErrorOccurred()) {
+        result.push_back(endTransaction(CurT));
+        return false;
+      }
     }
 
     addClingPragmas(*m_Interpreter);
@@ -164,8 +256,8 @@ namespace cling {
     PP.EnterMainSourceFile();
 
     Sema* TheSema = &m_CI->getSema();
-    m_Parser.reset(new Parser(PP, *TheSema,
-                              false /*skipFuncBodies*/));
+    m_Parser.reset(new Parser(PP, *TheSema, false /*skipFuncBodies*/));
+
     // Initialize the parser after PP has entered the main source file.
     m_Parser->Initialize();
 
@@ -173,10 +265,9 @@ namespace cling {
     if (External)
       External->StartTranslationUnit(m_Consumer);
 
-    Parser::DeclGroupPtrTy ADecl;
     // Start parsing the "main file" to warm up lexing (enter caching lex mode
     // for ParseInternal()'s call EnterSourceFile() to make sense.
-    while (!m_Parser->ParseTopLevelDecl(ADecl)) {}
+    while (!m_Parser->ParseTopLevelDecl()) {}
 
     // If I belong to the parent Interpreter, only then do
     // the #include <new>
@@ -194,6 +285,13 @@ namespace cling {
     // been defined yet!
     ParseResultTransaction PRT = endTransaction(CurT);
     result.push_back(PRT);
+    return true;
+  }
+
+  bool IncrementalParser::isValid(bool initialized) const {
+    return m_CI && m_CI->hasFileManager() && m_Consumer
+           && !m_VirtualFileID.isInvalid()
+           && (!initialized || (m_TransactionPool && m_Parser));
   }
 
   const Transaction* IncrementalParser::getCurrentTransaction() const {
@@ -295,14 +393,16 @@ namespace cling {
     return ParseResultTransaction(T, ParseResult);
   }
 
-  void IncrementalParser::commitTransaction(ParseResultTransaction& PRT) {
+  void IncrementalParser::commitTransaction(ParseResultTransaction& PRT,
+                                            bool ClearDiagClient) {
     Transaction* T = PRT.getPointer();
     if (!T) {
       if (PRT.getInt() != kSuccess) {
         // Nothing has been emitted to Codegen, reset the Diags.
         DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
         Diags.Reset(/*soft=*/true);
-        Diags.getClient()->clear();
+        if (ClearDiagClient)
+          Diags.getClient()->clear();
       }
       return;
     }
@@ -333,7 +433,8 @@ namespace cling {
       // Module has been released from Codegen, reset the Diags now.
       DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
       Diags.Reset(/*soft=*/true);
-      Diags.getClient()->clear();
+      if (ClearDiagClient)
+        Diags.getClient()->clear();
 
       PRT.setPointer(nullptr);
       PRT.setInt(kFailed);
@@ -341,12 +442,9 @@ namespace cling {
 
       if (MustStartNewModule) {
         // Create a new module.
-        std::string ModuleName;
-        {
-          llvm::raw_string_ostream strm(ModuleName);
-          strm << "cling-module-" << ++m_ModuleNo;
-        }
-        getCodeGenerator()->StartModule(ModuleName,
+        stdstrstream ModuleName;
+        ModuleName << "cling-module-" << ++m_ModuleNo;
+        getCodeGenerator()->StartModule(ModuleName.str(),
                                         *m_Interpreter->getLLVMContext(),
                                         getCI()->getCodeGenOpts());
       }
@@ -478,12 +576,9 @@ namespace cling {
       }
 
       // Create a new module.
-      std::string ModuleName;
-      {
-        llvm::raw_string_ostream strm(ModuleName);
-        strm << "cling-module-" << ++m_ModuleNo;
-      }
-      getCodeGenerator()->StartModule(ModuleName,
+      smallstream ModuleName;
+      ModuleName << "cling-module-" << ++m_ModuleNo;
+      getCodeGenerator()->StartModule(ModuleName.str(),
                                       *m_Interpreter->getLLVMContext(),
                                       getCI()->getCodeGenOpts());
     }
@@ -550,7 +645,8 @@ namespace cling {
   void IncrementalParser::initializeVirtualFile() {
     SourceManager& SM = getCI()->getSourceManager();
     m_VirtualFileID = SM.getMainFileID();
-    assert(!m_VirtualFileID.isInvalid() && "No VirtualFileID created?");
+    if (m_VirtualFileID.isInvalid())
+      cling::errs() << "VirtualFileID could not be created.\n";
   }
 
   IncrementalParser::ParseResultTransaction
@@ -646,33 +742,15 @@ namespace cling {
 
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();
 
-    bool IgnorePromptDiags = CO.IgnorePromptDiags;
-    if (IgnorePromptDiags) {
-      // Disable warnings which doesn't make sense when using the prompt
-      // This gets reset with the clang::Diagnostics().Reset(/*soft*/=false)
-      // using clang's API we simulate:
-      // #pragma warning push
-      // #pragma warning ignore ...
-      // #pragma warning ignore ...
-      // #pragma warning pop
-      SourceLocation Loc = SM.getLocForStartOfFile(FID);
-      Diags.pushMappings(Loc);
-      // The source locations of #pragma warning ignore must be greater than
-      // the ones from #pragma push
+    FilteringDiagConsumer* PromptDiagClient
+      = static_cast<FilteringDiagConsumer*>(Diags.getClient());
 
-      auto setIgnore = [&](clang::diag::kind Diag) {
-        Diags.setSeverity(Diag, diag::Severity::Ignored, SourceLocation());
-      };
+    struct PromptDiagClientRAII_t {
+      FilteringDiagConsumer* fClient;
+      ~PromptDiagClientRAII_t() { fClient->pop(); }
+    } PromptDiagClientRAII{PromptDiagClient};
 
-      setIgnore(clang::diag::warn_unused_expr);
-      setIgnore(clang::diag::warn_unused_call);
-      setIgnore(clang::diag::warn_unused_comparison);
-      setIgnore(clang::diag::ext_return_has_expr);
-    }
-    auto setError = [&](clang::diag::kind Diag) {
-      Diags.setSeverity(Diag, diag::Severity::Error, SourceLocation());
-    };
-    setError(clang::diag::warn_falloff_nonvoid_function);
+    PromptDiagClient->push(CO.IgnorePromptDiags);
 
     Sema::SavePendingInstantiationsRAII SavedPendingInstantiations(S);
 
@@ -716,11 +794,6 @@ namespace cling {
     PP.Lex(AssertTok);
     assert(AssertTok.is(tok::eof) && "Lexer must be EOF when starting incremental parse!");
 #endif
-
-    if (IgnorePromptDiags) {
-      SourceLocation Loc = SM.getLocForEndOfFile(m_MemoryBuffers.back().second);
-      Diags.popMappings(Loc);
-    }
 
     // Process any TopLevelDecls generated by #pragma weak.
     for (llvm::SmallVector<Decl*,2>::iterator I = S.WeakTopLevelDecls().begin(),

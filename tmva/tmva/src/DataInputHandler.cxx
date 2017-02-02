@@ -24,6 +24,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::DataInputHandler
+\ingroup TMVA
+
+Class that contains all the data information.
+
+*/
+
 #include "TMVA/DataInputHandler.h"
 
 #include "TMVA/DataLoader.h"
@@ -45,7 +52,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::DataInputHandler::DataInputHandler() 
+TMVA::DataInputHandler::DataInputHandler()
    : fLogger( new MsgLogger("DataInputHandler", kINFO) )
 {
    fExplicitTrainTest["Signal"] = fExplicitTrainTest["Background"] = kFALSE;
@@ -54,7 +61,7 @@ TMVA::DataInputHandler::DataInputHandler()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::DataInputHandler::~DataInputHandler() 
+TMVA::DataInputHandler::~DataInputHandler()
 {
    delete fLogger;
 }
@@ -62,11 +69,11 @@ TMVA::DataInputHandler::~DataInputHandler()
 ////////////////////////////////////////////////////////////////////////////////
 /// add a *className* tree to the dataset to be used as input
 
-void TMVA::DataInputHandler::AddTree( const TString& fn, 
-                                      const TString& className, 
-                                      Double_t weight, 
-                                      const TCut& cut, 
-                                      Types::ETreeType tt  ) 
+void TMVA::DataInputHandler::AddTree( const TString& fn,
+                                      const TString& className,
+                                      Double_t weight,
+                                      const TCut& cut,
+                                      Types::ETreeType tt  )
 {
    TTree * tr = ReadInputTree(fn);
    tr->SetName( TString("Tree")+className );
@@ -74,34 +81,34 @@ void TMVA::DataInputHandler::AddTree( const TString& fn,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// add  tree of *className* events  for tt (Training;Testing..) type as input .. 
+/// add  tree of *className* events  for tt (Training;Testing..) type as input ..
 
-void TMVA::DataInputHandler::AddTree( TTree* tree, 
-                                      const TString& className, 
-                                      Double_t weight, 
-                                      const TCut& cut, 
-                                      Types::ETreeType tt ) 
+void TMVA::DataInputHandler::AddTree( TTree* tree,
+                                      const TString& className,
+                                      Double_t weight,
+                                      const TCut& cut,
+                                      Types::ETreeType tt )
 {
    if (!tree) Log() << kFATAL << "Zero pointer for tree of class " << className.Data() << Endl;
    if (tree->GetEntries()==0) Log() << kFATAL << "Encountered empty TTree or TChain of class " << className.Data() << Endl;
    if (fInputTrees[className.Data()].empty()) {
       // on the first tree (of the class) check if explicit treetype is given
       fExplicitTrainTest[className.Data()] = (tt != Types::kMaxTreeType);
-   } 
+   }
    else {
       // if the first tree has a specific type, all later tree's must also have one
       if (fExplicitTrainTest[className.Data()] != (tt!=Types::kMaxTreeType)) {
          if (tt==Types::kMaxTreeType)
             Log() << kFATAL << "For the tree " << tree->GetName() << " of class " << className.Data()
                   << " you did "<< (tt==Types::kMaxTreeType?"not ":"") << "specify a type,"
-                  << " while you did "<< (tt==Types::kMaxTreeType?"":"not ") << "for the first tree " 
+                  << " while you did "<< (tt==Types::kMaxTreeType?"":"not ") << "for the first tree "
                   << fInputTrees[className.Data()][0].GetTree()->GetName() << " of class " << className.Data()
                   << Endl;
       }
    }
    if (cut.GetTitle()[0] != 0) {
       fInputTrees[className.Data()].push_back(TreeInfo( tree->CopyTree(cut.GetTitle()), className, weight, tt ));
-   } 
+   }
    else {
       fInputTrees[className.Data()].push_back(TreeInfo( tree, className, weight, tt ));
    }
@@ -110,7 +117,7 @@ void TMVA::DataInputHandler::AddTree( TTree* tree,
 ////////////////////////////////////////////////////////////////////////////////
 /// add a signal tree to the dataset to be used as input
 
-void TMVA::DataInputHandler::AddSignalTree( TTree* tr, Double_t weight, Types::ETreeType tt ) 
+void TMVA::DataInputHandler::AddSignalTree( TTree* tr, Double_t weight, Types::ETreeType tt )
 {
    AddTree( tr, "Signal", weight, "", tt );
 }
@@ -126,7 +133,7 @@ void TMVA::DataInputHandler::AddBackgroundTree( TTree* tr, Double_t weight, Type
 ////////////////////////////////////////////////////////////////////////////////
 /// add a signal tree to the dataset to be used as input
 
-void TMVA::DataInputHandler::AddSignalTree( const TString& fn, Double_t weight, Types::ETreeType tt ) 
+void TMVA::DataInputHandler::AddSignalTree( const TString& fn, Double_t weight, Types::ETreeType tt )
 {
    TTree * tr = ReadInputTree(fn);
    tr->SetName("TreeS");
@@ -150,18 +157,18 @@ TTree* TMVA::DataInputHandler::ReadInputTree( const TString& dataFile )
 {
    TTree* tr = new TTree( "tmp", dataFile );
    std::ifstream in(dataFile);
-   tr->SetDirectory(0); Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl; 
+   tr->SetDirectory(0); Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl;
    if (!in.good()) Log() << kFATAL << "Could not open file: " << dataFile << Endl;
    in.close();
 
    tr->ReadFile( dataFile );
-  
+
    return tr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// define the input trees for signal and background from single input tree,
-/// containing both signal and background events distinguished by the type 
+/// containing both signal and background events distinguished by the type
 /// identifiers: SigCut and BgCut
 
 void TMVA::DataInputHandler::AddInputTrees(TTree* inputTree, const TCut& SigCut, const TCut& BgCut)
@@ -175,8 +182,8 @@ void TMVA::DataInputHandler::AddInputTrees(TTree* inputTree, const TCut& SigCut,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::DataInputHandler::ClearTreeList( const TString& className ) 
-{ 
+void TMVA::DataInputHandler::ClearTreeList( const TString& className )
+{
    try {
       fInputTrees.find(className)->second.clear();
    }
@@ -187,8 +194,8 @@ void TMVA::DataInputHandler::ClearTreeList( const TString& className )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector< TString >* TMVA::DataInputHandler::GetClassList() const 
-{ 
+std::vector< TString >* TMVA::DataInputHandler::GetClassList() const
+{
    std::vector< TString >* ret = new std::vector< TString >();
    for ( std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++ ){
       ret->push_back( it->first );
@@ -199,7 +206,7 @@ std::vector< TString >* TMVA::DataInputHandler::GetClassList() const
 ////////////////////////////////////////////////////////////////////////////////
 /// return number of entries in tree
 
-UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) const 
+UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) const
 {
    UInt_t entries = 0;
    std::vector<TreeInfo>::const_iterator tiIt = tiV.begin();
@@ -210,11 +217,11 @@ UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) cons
 ////////////////////////////////////////////////////////////////////////////////
 /// return number of entries in tree
 
-UInt_t TMVA::DataInputHandler::GetEntries() const 
+UInt_t TMVA::DataInputHandler::GetEntries() const
 {
    UInt_t number = 0;
    for (std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); it++) {
       number += GetEntries( it->second );
    }
-   return number; 
+   return number;
 }

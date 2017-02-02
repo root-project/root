@@ -54,14 +54,14 @@ class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarke
 
 protected:
 
-   Int_t              fMaxSize;   //!Current dimension of arrays fX and fY
-   Int_t              fNpoints;   //Number of points <= fMaxSize
-   Double_t          *fX;         //[fNpoints] array of X points
-   Double_t          *fY;         //[fNpoints] array of Y points
-   TList             *fFunctions; //Pointer to list of functions (fits and user)
-   TH1F              *fHistogram; //Pointer to histogram used for drawing axis
-   Double_t           fMinimum;   //Minimum value for plotting along y
-   Double_t           fMaximum;   //Maximum value for plotting along y
+   Int_t              fMaxSize;   ///<!Current dimension of arrays fX and fY
+   Int_t              fNpoints;   ///< Number of points <= fMaxSize
+   Double_t          *fX;         ///<[fNpoints] array of X points
+   Double_t          *fY;         ///<[fNpoints] array of Y points
+   TList             *fFunctions; ///< Pointer to list of functions (fits and user)
+   TH1F              *fHistogram; ///< Pointer to histogram used for drawing axis
+   Double_t           fMinimum;   ///< Minimum value for plotting along y
+   Double_t           fMaximum;   ///< Maximum value for plotting along y
 
    static void        SwapValues(Double_t* arr, Int_t pos1, Int_t pos2);
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
@@ -79,9 +79,10 @@ protected:
 public:
    // TGraph status bits
    enum {
-      kClipFrame     = BIT(10),  // clip to the frame boundary
-      kNotEditable   = BIT(18),  // bit set if graph is non editable
-      kIsSortedX     = BIT(19)   // graph is sorted in X points
+      kClipFrame     = BIT(10),  ///< clip to the frame boundary
+      kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
+      kNotEditable   = BIT(18),  ///< bit set if graph is non editable
+      kIsSortedX     = BIT(19)   ///< graph is sorted in X points
    };
 
    TGraph();

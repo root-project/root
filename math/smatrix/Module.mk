@@ -45,10 +45,19 @@ SMATRIXMAP  := $(SMATRIXLIB:.$(SOEXT)=.rootmap)
 SMATRIXMAP32:= $(SMATRIXLIB:.$(SOEXT)=32.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(SMATRIXH1))
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.icc,include/Math/%.icc,$(SMATRIXH2))
+SMATRIXH1_REL := $(patsubst $(MODDIRI)/Math/%,include/Math/%,$(SMATRIXH1))
+SMATRIXH2_REL := $(patsubst $(MODDIRI)/Math/%,include/Math/%,$(SMATRIXH2))
+ALLHDRS      += $(SMATRIXH1_REL) $(SMATRIXH2_REL)
 ALLLIBS      += $(SMATRIXLIB)
 ALLMAPS      += $(SMATRIXMAP) $(SMATRIXMAP32)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(SMATRIXH1_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SMATRIXLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(SMATRIXDEP)

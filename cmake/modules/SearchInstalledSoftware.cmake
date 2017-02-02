@@ -82,6 +82,7 @@ endif()
 if(builtin_freetype)
   set(freetype_version 2.6.1)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
+  set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
       set(freetypeliba objs/freetype261MT_D.lib)
@@ -98,7 +99,8 @@ if(builtin_freetype)
       BUILD_COMMAND ${CMAKE_COMMAND} -E chdir builds/windows/visualc/
                     nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS=-D_CRT_SECURE_NO_DEPRECATE 
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ./libs/freetype.lib     
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   else()
     set(_freetype_cflags -O)
     if(ROOT_ARCHITECTURE MATCHES aix)
@@ -112,13 +114,13 @@ if(builtin_freetype)
                          --with-harfbuzz=no ${_freetype_zlib}
                           CC=${CMAKE_C_COMPILER} CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""                    
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   endif()
-  ExternalProject_Get_Property(FREETYPE SOURCE_DIR)
-  set(FREETYPE_INCLUDE_DIR ${SOURCE_DIR}/include)
+  set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
-  set(FREETYPE_LIBRARY ${SOURCE_DIR}/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY})
+  set(FREETYPE_TARGET FREETYPE)
 endif()
 
 #---Check for PCRE-------------------------------------------------------------------
@@ -134,6 +136,7 @@ endif()
 if(builtin_pcre)
   set(pcre_version 8.37)
   message(STATUS "Building pcre version ${pcre_version} included in ROOT itself")
+  set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
       set(pcrebuild "libpcre - Win32 Debug")
@@ -154,7 +157,8 @@ if(builtin_pcre)
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpp.h  <INSTALL_DIR>/include
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcrecpparg.h  <INSTALL_DIR>/include
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcreposix.h  <INSTALL_DIR>/include              
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${PCRE_LIBRARY})
   else()
     set(_pcre_cflags -O)
     ExternalProject_Add(
@@ -163,11 +167,12 @@ if(builtin_pcre)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic --disable-shared
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${PCRE_LIBRARY})
   endif()
   set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
   set(PCRE_LIBRARIES ${PCRE_LIBRARY})
+  set(PCRE_TARGET PCRE)
 endif()
 
 #---Check for LZMA-------------------------------------------------------------------
@@ -186,8 +191,10 @@ if(NOT builtin_lzma)
 endif()
 if(builtin_lzma)
   set(lzma_version 5.2.1)
+  set(LZMA_TARGET LZMA)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
+    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
@@ -196,9 +203,9 @@ if(builtin_lzma)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.dll <INSTALL_DIR>/bin
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${LZMA_LIBRARIES})
     install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
-    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else()
     if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
@@ -207,6 +214,7 @@ if(builtin_lzma)
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
       set(LZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179 -wd2102")
     endif()
+    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
@@ -215,8 +223,8 @@ if(builtin_lzma)
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
                         CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LZMA_CFLAGS} LDFLAGS=${LZMA_LDFLAGS}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
-    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${LZMA_LIBRARIES})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
 endif()
@@ -306,6 +314,7 @@ if(NOT builtin_afterimage)
   endif()
 endif()
 if(builtin_afterimage)
+  set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
       set(astepbld "libAfterImage - Win32 Debug")
@@ -319,7 +328,8 @@ if(builtin_afterimage)
       BUILD_COMMAND nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
                     CFG=${astepbld} NMAKECXXFLAGS="${CMAKE_CXX_FLAGS} /wd4244"
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
   else()
     message(STATUS "Building AfterImage library included in ROOT itself")
     if(JPEG_FOUND)
@@ -357,15 +367,14 @@ if(builtin_afterimage)
                         --with-builtin-ungif  --with-jpeg ${_jpeginclude} 
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1)
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
   endif()
   if(builtin_freetype)
     add_dependencies(AFTERIMAGE FREETYPE)
   endif()
-    
-  ExternalProject_Get_Property(AFTERIMAGE INSTALL_DIR)
-  set(AFTERIMAGE_INCLUDE_DIR ${INSTALL_DIR}/include/libAfterImage)
-  set(AFTERIMAGE_LIBRARIES ${INSTALL_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libAfterImage)
+  set(AFTERIMAGE_TARGET AFTERIMAGE)
 endif()
 
 #---Check for GSL library---------------------------------------------------------------
@@ -387,6 +396,9 @@ if(mathmore OR builtin_gsl)
   else()
     set(gsl_version 2.1)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
+    foreach(l gsl gslcblas)
+      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
     ExternalProject_Add(
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
@@ -394,11 +406,9 @@ if(mathmore OR builtin_gsl)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${GSL_LIBRARIES}
     )
-    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    foreach(l gsl gslcblas)
-      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endforeach()
+    set(GSL_TARGET GSL)
     set(mathmore ON CACHE BOOL "" FORCE)
   endif()
 endif()
@@ -579,6 +589,7 @@ if(ssl OR builtin_openssl)
     else()
       set(openssl_config_cmd ./config)
     endif()
+    set(OPENSSL_LIBRARIES ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libssl.a ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libcrypto.a)
     ExternalProject_Add(
       OPENSSL
       URL ${repository_tarfiles}/openssl-${openssl_version}.tar.gz
@@ -587,11 +598,11 @@ if(ssl OR builtin_openssl)
       INSTALL_COMMAND make install_sw
       BUILD_IN_SOURCE 1
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES}
     )
-    ExternalProject_Get_Property(OPENSSL INSTALL_DIR)
-    set(OPENSSL_INCLUDE_DIR ${INSTALL_DIR}/include)
-    set(OPENSSL_LIBRARIES ${INSTALL_DIR}/lib/libssl.a ${INSTALL_DIR}/lib/libcrypto.a)
-    set(OPENSSL_PREFIX ${INSTALL_DIR})
+    set(OPENSSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/OPENSSL-prefix/include)
+    set(OPENSSL_PREFIX ${CMAKE_BINARY_DIR}/OPENSSL-prefix)
+    set(OPENSSL_TARGET OPENSSL)
     set(ssl ON CACHE BOOL "" FORCE)
   else()
     message(STATUS "Looking for OpenSSL")
@@ -754,6 +765,7 @@ endif()
 if(builtin_fftw3)
   set(FFTW_VERSION 3.1.2)
   message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
+  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
   ExternalProject_Add(
     FFTW3
     URL ${repository_tarfiles}/fftw-${FFTW_VERSION}.tar.gz
@@ -762,9 +774,10 @@ if(builtin_fftw3)
     BUILD_COMMAND make CFLAGS=-fPIC
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
   )
   set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
+  set(FFTW3_TARGET FFTW3)
   set(fftw3 ON CACHE BOOL "" FORCE)
 endif()
 
@@ -774,6 +787,7 @@ if(fitsio OR builtin_cfitsio)
     set(cfitsio_version 3.280)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
+    set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
     ExternalProject_Add(
       CFITSIO
       # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
@@ -782,10 +796,11 @@ if(fitsio OR builtin_cfitsio)
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
     )
     set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(fitsio ON CACHE BOOL "" FORCE)
+    set(CFITSIO_TARGET CFITSIO)
   else()
     message(STATUS "Looking for CFITSIO")
     find_package(CFITSIO)
@@ -845,6 +860,9 @@ if(builtin_xrootd)
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
+  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     XROOTD
     # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
@@ -858,22 +876,18 @@ if(builtin_xrootd)
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
+               -DENABLE_CEPH=OFF
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
-  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
-  if(xrootd_version VERSION_LESS 4)
-    list(APPEND XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX})
-  else()
-    set(XROOTD_NOMAIN TRUE)
-  endif()
+  set(XROOTD_NOMAIN TRUE)
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   install(DIRECTORY ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR}
                     COMPONENT libraries
                     FILES_MATCHING PATTERN "libXrd*")
+  set(XROOTD_TARGET XROOTD)
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
 if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
@@ -917,7 +931,7 @@ if(cling)
   if(MSVC)
     set(CLING_CXXFLAGS "-D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNOMINMAX -D_XKEYCHECK_H")
   else()
-    set(CLING_CXXFLAGS "-fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
+    set(CLING_CXXFLAGS "-fvisibility=hidden -Wno-shadow -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
     set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
@@ -1065,6 +1079,9 @@ if(davix OR builtin_davix)
     ROOT_ADD_CXX_FLAG(__cxxflags -Wno-unused-const-variable)
     ROOT_ADD_C_FLAG(__cflags -Wno-format)
     ROOT_ADD_C_FLAG(__cflags -Wno-implicit-function-declaration)
+    foreach(l davix neon boost_static_internal)
+      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
     ExternalProject_Add(
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
@@ -1085,14 +1102,12 @@ if(davix OR builtin_davix)
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                  -DLIB_SUFFIX=
       LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${DAVIX_LIBRARIES}
     )
-    ExternalProject_Get_Property(DAVIX INSTALL_DIR)
-    set(DAVIX_INCLUDE_DIR ${INSTALL_DIR}/include/davix)
-    set(DAVIX_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-prefix/include/davix)
+    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
-    foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endforeach()
+    set(DAVIX_TARGET DAVIX)
     if(builtin_openssl)
       add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL
     endif()
@@ -1179,6 +1194,7 @@ endif()
 if(builtin_tbb)
   set(tbb_version 44_20160413)
   ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
+  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     TBB
     URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
@@ -1190,10 +1206,11 @@ if(builtin_tbb)
     INSTALL_COMMAND ""
     BUILD_IN_SOURCE 1
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    BUILD_BYPRODUCTS ${TBB_LIBRARIES}
   )
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
+  set(TBB_TARGET TBB)
 endif()
 
 #---Check for OCC--------------------------------------------------------------------
@@ -1242,19 +1259,22 @@ if(vc OR builtin_vc)
         set(vc OFF CACHE BOOL "" FORCE)
       endif()
     endif()
-    set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})    # Missing from VcConfig.cmake
+    set(VC_INCLUDE_DIRS ${Vc_INCLUDE_DIR})    # Missing from VcConfig.cmake
+    set(VC_LIBRARIES ${Vc_LIBRARIES})         # ROOT project name is "VC"; upstream uses "Vc".
   endif()
   if(builtin_vc)
     set(vc_version 1.1.0)
+    set(VC_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VC
       URL ${repository_tarfiles}/Vc-${vc_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${VC_LIBRARIES}
     )
-    set(Vc_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    set(Vc_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(VC_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(VC_TARGET VC)
     set(vc ON CACHE BOOL "" FORCE)
   endif()
 endif()
@@ -1277,19 +1297,20 @@ if(vdt OR builtin_vdt)
   endif()
   if(builtin_vdt)
     set(vdt_version 0.3.9)
+    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${repository_tarfiles}/vdt-${vdt_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${VDT_LIBRARIES}
     )
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX} 
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "" FORCE)
   endif()
 endif()
@@ -1309,9 +1330,9 @@ if(tmva AND cuda)
   endif()
 endif()
 
-if(tmva)
+if(tmva AND imt)
   message(STATUS "Looking for BLAS for optional parts of TMVA")
-  find_package(BLAS QUIET)
+  find_package(BLAS)
 endif()
 
 #---Report non implemented options---------------------------------------------------

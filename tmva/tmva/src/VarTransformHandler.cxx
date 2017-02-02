@@ -1,3 +1,11 @@
+// @(#)root/tmva $Id$
+// Author:
+
+/*! \class TMVA::VarTransformHandler
+\ingroup TMVA
+Extension of the Interval to "logarithmic" intervals
+*/
+
 #include "TMVA/VarTransformHandler.h"
 
 #include "TMVA/ClassifierFactory.h"
@@ -180,7 +188,7 @@ void TMVA::VarTransformHandler::CalcNorm()
    }
 
    if (sumOfWeights <= 0) {
-      Log() << kFATAL << " the sum of event weights calcualted for your input is == 0"
+      Log() << kFATAL << " the sum of event weights calculated for your input is == 0"
             << " or exactly: " << sumOfWeights << " there is obviously some problem..."<< Endl;
    }
 
@@ -270,7 +278,7 @@ void TMVA::VarTransformHandler::CalcNorm()
    Log() << std::setprecision(5); // reset to better value
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
 void TMVA::VarTransformHandler::CopyDataLoader(TMVA::DataLoader* des, TMVA::DataLoader* src)
 {
    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)

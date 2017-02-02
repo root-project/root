@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk
 
 /**********************************************************************************
@@ -17,18 +17,18 @@
  *                                                                                *
  * Copyright (c) 2008:                                                            *
  *      IFJ-Krakow, Poland                                                        *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//
-// Implementation of Simulated Annealing fitter
-////////////////////////////////////////////////////////////////////////////////
+/*! \class TMVA::SimulatedAnnealing
+\ingroup TMVA
+Base implementation of simulated annealing fitting procedure.
+*/
 
 #include "TMVA/SimulatedAnnealing.h"
 
@@ -79,7 +79,7 @@ void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
                                            Double_t adaptiveSpeed,
                                            Double_t temperatureAdaptiveStep,
                                            Bool_t   useDefaultScale,
-                                           Bool_t   useDefaultTemperature)   
+                                           Bool_t   useDefaultTemperature)
 {
    fMaxCalls = maxCalls;
    fInitialTemperature = initialTemperature;
@@ -87,23 +87,23 @@ void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
    fEps = eps;
 
    if      (kernelTemperatureS == "IncreasingAdaptive") {
-      fKernelTemperature = kIncreasingAdaptive; 
+      fKernelTemperature = kIncreasingAdaptive;
       Log() << kINFO << "Using increasing adaptive algorithm" << Endl;
    }
    else if (kernelTemperatureS == "DecreasingAdaptive") {
-      fKernelTemperature = kDecreasingAdaptive; 
+      fKernelTemperature = kDecreasingAdaptive;
       Log() << kINFO << "Using decreasing adaptive algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Sqrt") {
-      fKernelTemperature = kSqrt; 
+      fKernelTemperature = kSqrt;
       Log() << kINFO << "Using \"Sqrt\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Homo") {
-      fKernelTemperature = kHomo; 
+      fKernelTemperature = kHomo;
       Log() << kINFO << "Using \"Homo\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Log") {
-      fKernelTemperature = kLog;  
+      fKernelTemperature = kLog;
       Log() << kINFO << "Using \"Log\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Sin") {
@@ -118,6 +118,7 @@ void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
    fUseDefaultScale         = useDefaultScale;
    fUseDefaultTemperature   = useDefaultTemperature;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
@@ -146,7 +147,7 @@ void TMVA::SimulatedAnnealing::ReWriteParameters( std::vector<Double_t>& from, s
 ////////////////////////////////////////////////////////////////////////////////
 /// generate adjacent parameters
 
-void TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& parameters, std::vector<Double_t>& oldParameters, 
+void TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& parameters, std::vector<Double_t>& oldParameters,
                                                   Double_t currentTemperature )
 {
    ReWriteParameters( parameters, oldParameters );
@@ -167,7 +168,7 @@ void TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& paramet
 
 std::vector<Double_t> TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& parameters, Double_t currentTemperature )
 {
-   std::vector<Double_t> newParameters( fRanges.size() );   
+   std::vector<Double_t> newParameters( fRanges.size() );
 
    for (UInt_t rIter=0; rIter<parameters.size(); rIter++) {
       Double_t uni,distribution,sign;
@@ -250,7 +251,7 @@ void TMVA::SimulatedAnnealing::SetDefaultScale()
 Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>& parameters  )
 {
    Int_t equilibrium;
-   Bool_t stopper = 0; 
+   Bool_t stopper = 0;
    Double_t t, dT, cold, delta, deltaY, y, yNew, yBest, yOld;
    std::vector<Double_t> x( fRanges.size() ), xNew( fRanges.size() ), xBest( fRanges.size() ), xOld( fRanges.size() );
    t = fMinTemperature;
@@ -266,7 +267,7 @@ Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>
       }
       t += dT*i;
       x = xOld = GenerateNeighbour(x,t);
-      y = yOld = fFitterTarget.EstimatorFunction( xOld );   
+      y = yOld = fFitterTarget.EstimatorFunction( xOld );
       equilibrium = 0;
       for ( Int_t k=0; (k<30) && (equilibrium<=12); k++ ) {
          xNew = GenerateNeighbour(x,t);
@@ -284,7 +285,7 @@ Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>
             if      (y    != 0.0) delta /= y;
             else if (yNew != 0.0) delta /= y;
 
-            // equilibrium is defined as a 10% or smaller change in 10 iterations 
+            // equilibrium is defined as a 10% or smaller change in 10 iterations
             if (delta < 0.1) equilibrium++;
             else             equilibrium = 0;
          }
@@ -292,7 +293,7 @@ Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>
       }
 
       // "energy"
-      yNew = fFitterTarget.EstimatorFunction( xNew ); 
+      yNew = fFitterTarget.EstimatorFunction( xNew );
       deltaY = yNew - yOld;
       if ( (deltaY < 0.0 )&&( yNew < yBest)) {
          xBest=x;
@@ -320,23 +321,23 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
 
    if (fUseDefaultTemperature) {
       if (fKernelTemperature == kIncreasingAdaptive) {
-         fMinTemperature = currentTemperature = 1e-06; 
+         fMinTemperature = currentTemperature = 1e-06;
          FillWithRandomValues( parameters );
       }
       else fInitialTemperature = currentTemperature = GenerateMaxTemperature( parameters );
    }
    else {
       if (fKernelTemperature == kIncreasingAdaptive)
-         currentTemperature = fMinTemperature; 
+         currentTemperature = fMinTemperature;
       else
          currentTemperature = fInitialTemperature;
-      FillWithRandomValues( parameters ); 
+      FillWithRandomValues( parameters );
    }
 
    if (fUseDefaultScale) SetDefaultScale();
 
    Log() << kINFO
-         << "Temperatur scale = "      << fTemperatureScale  
+         << "Temperatur scale = "      << fTemperatureScale
          << ", current temperature = " << currentTemperature  << Endl;
 
    bestParameters = parameters;
@@ -353,7 +354,7 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
      if (fExitFromTraining && *fExitFromTraining) break;
       GenerateNeighbour( parameters, oldParameters, currentTemperature );
       Double_t localFit = fFitterTarget.EstimatorFunction( parameters );
-      
+
       if (localFit < currentFit || TMath::Abs(currentFit-localFit) < fEps) { // if not worse than last one
          if (TMath::Abs(currentFit-localFit) < fEps) { // if the same as last one
             equals++;
@@ -364,9 +365,9 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
             fProgress = 0.0;
             equals = 0;
          }
-         
+
          currentFit = localFit;
-         
+
          if (currentFit < bestFit) {
             ReWriteParameters( parameters, bestParameters );
             bestFit = currentFit;
@@ -377,34 +378,34 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
             ReWriteParameters( oldParameters, parameters );
          else
             currentFit = localFit;
-         
+
          fProgress+=1.0;
          equals = 0;
       }
-      
+
       GenerateNewTemperature( currentTemperature, sample );
-      
+
       if ((fMaxCalls<100) || sample%Int_t(fMaxCalls/100.0) == 0) timer.DrawProgressBar( sample );
    }
 
-   // get elapsed time   
-   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
-         << "                            " << Endl;  
-   
-   // supose this minimum is the best one, now just try to improve it
+   // get elapsed time
+   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()
+         << "                            " << Endl;
 
-   Double_t startingTemperature = fMinTemperature*(fRanges.size())*2.0; 
+   // suppose this minimum is the best one, now just try to improve it
+
+   Double_t startingTemperature = fMinTemperature*(fRanges.size())*2.0;
    currentTemperature = startingTemperature;
 
    Int_t changes = 0;
    for (Int_t sample=0;sample<optimizeCalls;sample++) {
       GenerateNeighbour( parameters, oldParameters, currentTemperature );
       Double_t localFit = fFitterTarget.EstimatorFunction( parameters );
-      
+
       if (localFit < currentFit) { //if better than last one
          currentFit = localFit;
          changes++;
-         
+
          if (currentFit < bestFit) {
             ReWriteParameters( parameters, bestParameters );
             bestFit = currentFit;
@@ -417,6 +418,5 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
 
    ReWriteParameters( bestParameters, parameters );
 
-   return bestFit; 
+   return bestFit;
 }
-

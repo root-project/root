@@ -13,7 +13,7 @@
 A graphic user interface designed to handle ROOT trees and to take advantage of
 TTree class features.
 
-It uses ROOT native GUI widgets adapted for 'drag and drop' functionality.
+It uses ROOT native GUI widgets adapted for "drag and drop" functionality.
 in the same session.
 
 ### The following capabilities are making the viewer a helpful tool for analysis:
@@ -59,17 +59,17 @@ in the same session.
 
 ### Opening a new tree and saving a session :
 
-  To open a new tree in the viewer use <File/Open tree file> menu
-The content of the file (keys) will be listed. Use <SetTreeName> function
+  To open a new tree in the viewer use `<File/Open tree file>` menu
+The content of the file (keys) will be listed. Use `<SetTreeName>` function
 from the context menu of the right panel, entering a tree name among those
 listed.
 
-  To save the current session, use <File/Save> menu or the <SaveSource>
+  To save the current session, use `<File/Save>` menu or the `<SaveSource>`
 function from the context menu of the right panel (to specify the name of the
 file - name.C)
 
   To open a previously saved session for the tree MyTree, first open MyTree
-in the browser, then use <File/Open session> menu.
+in the browser, then use `<File/Open session>` menu.
 
 ### Dragging items:
 
@@ -89,8 +89,8 @@ operators have a specific icon and may be dragged to the active cut (scissors
 item) position.
 
    The expression editor can be activated by double-clicking empty expression,
-using <EditExpression> from the selected expression context menu or using
-<Edit/Expression> menu.
+using `<EditExpression>` from the selected expression context menu or using
+`<Edit/Expression>` menu.
 
    The editor will pop-up in the left part, but it can be moved.
 The editor usage is the following :
@@ -137,7 +137,7 @@ Context menu for the right panel:
   - Process         : equivalent of TTree::Process();
   - SaveSource      : save the current session as a C++ macro;
   - SetScanFileName : define a name for the file where TTree::Scan command
-    is redirected when the <Scan> button is checked;
+    is redirected when the `<Scan>` button is checked;
   - SetTreeName     : open a new tree with this name in the viewer;
 
   A specific context menu is activated if expressions/leaves are right-clicked.
@@ -446,7 +446,7 @@ void TTreeViewer::SetNexpressions(Int_t expr)
    for (Int_t i=0; i<TMath::Abs(diff); i++) NewExpression();
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the name of the file where to redirect <Scan> output.
+/// Set the name of the file where to redirect `<Scan>` output.
 
 void TTreeViewer::SetScanFileName(const char *name)
 {
@@ -2048,14 +2048,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kHelpAbout:
                      {
 #ifdef R__UNIX
-                        TString rootx;
-# ifdef ROOTBINDIR
-                        rootx = ROOTBINDIR;
-# else
-                        rootx = gSystem->Getenv("ROOTSYS");
-                        if (!rootx.IsNull()) rootx += "/bin";
-# endif
-                        rootx += "/root -a &";
+                        TString rootx = TROOT::GetBinDir() + "/root -a &";
                         gSystem->Exec(rootx);
 #else
 #ifdef WIN32

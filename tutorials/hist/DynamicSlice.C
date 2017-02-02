@@ -12,7 +12,7 @@
 void DynamicSlice()
 {
    // Create a new canvas.
-   c1 = new TCanvas("c1","Dynamic Slice Example",10,10,700,500);
+   TCanvas* c1 = new TCanvas("c1","Dynamic Slice Example",10,10,700,500);
 
    //create a 2-d histogram, fill and draw it
    TH2F *hpxpy  = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);

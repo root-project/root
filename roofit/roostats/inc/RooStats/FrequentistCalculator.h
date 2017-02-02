@@ -26,20 +26,7 @@
 
 #include "RooFitResult.h"
 
-
-
-
 namespace RooStats {
-
-   /**
-   Hypothesis Test Calculator using a full frequentist procedure for sampling the 
-   test statistic distribution.
-   The nuisance parameters are fixed to their MLEs.
-   The use of ToyMCSampler as the TestStatSampler is assumed.
-
-   \ingroup Roostats
-*/
-
 
    class FrequentistCalculator : public HypoTestCalculatorGeneric {
 
@@ -57,15 +44,15 @@ namespace RooStats {
          fNToysAlt(-1),
          fNToysNullTail(0),
          fNToysAltTail(0),
-	 fFitInfo(NULL),
-	 fStoreFitInfo(false)
+    fFitInfo(NULL),
+    fStoreFitInfo(false)
       {
       }
 
       ~FrequentistCalculator() {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
-	 if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
-	 if( fFitInfo ) delete fFitInfo;
+    if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
+    if( fFitInfo ) delete fFitInfo;
       }
 
 
@@ -79,7 +66,7 @@ namespace RooStats {
       /// profiled value for Null toys
       void SetConditionalMLEsNull( const RooArgSet* c ) {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
-         
+
          if( c ) fConditionalMLEsNull = (const RooArgSet*)c->snapshot();
          else fConditionalMLEsNull = NULL;
       }
@@ -88,17 +75,17 @@ namespace RooStats {
       /// profiled value for Alternate toys
       void SetConditionalMLEsAlt( const RooArgSet* c ) {
          if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
-         
+
          if( c ) fConditionalMLEsAlt = (const RooArgSet*)c->snapshot();
          else fConditionalMLEsAlt = NULL;
       }
 
       void StoreFitInfo(bool val = true) {
-	      fStoreFitInfo = val;
+         fStoreFitInfo = val;
       }
 
       const RooArgSet* GetFitInfo() const {
-	      return fFitInfo;
+         return fFitInfo;
       }
 
    protected:
@@ -115,7 +102,7 @@ namespace RooStats {
       // MLE inputs
       const RooArgSet* fConditionalMLEsNull;
       const RooArgSet* fConditionalMLEsAlt;
-   
+
       // different number of toys for null and alt
       int fNToysNull;
       int fNToysAlt;

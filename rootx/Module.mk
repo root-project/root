@@ -27,8 +27,17 @@ ROOTXDEP     := $(ROOTXO:.o=.d) $(ROOTXXO:.o=.d)
 ROOTX        := bin/root
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOTXH))
+ROOTXH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOTXH))
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOTXH_REL))
 ALLEXECS     += $(ROOTX)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ROOTXH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Roofit_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += // link no-library-created \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(ROOTXDEP)
@@ -62,4 +71,6 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 ifneq ($(BUILDCOCOA),yes)
 $(ROOTXXO): CXXFLAGS += $(X11INCDIR:%=-I%)
+else
+$(ROOTXXO): OBJCXXFLAGS += $(CXXFLAGS)
 endif

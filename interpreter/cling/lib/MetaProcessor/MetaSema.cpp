@@ -17,8 +17,6 @@
 #include "cling/Interpreter/Value.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 
-#include "../lib/Interpreter/IncrementalParser.h"
-
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -84,6 +82,29 @@ namespace cling {
     m_Interpreter.declare(comment);
   }
 
+  namespace {
+    /// Replace non-identifier chars by '_'
+    std::string normalizeDotXFuncName(const std::string& FuncName) {
+      std::string ret = FuncName;
+      // Prepend '_' if name starts with a digit.
+      if (ret[0] >= '0' && ret[0] <= '9')
+        ret.insert(ret.begin(), '_');
+      for (char& c: ret) {
+        // Instead of "escaping" all non-C++-id chars, only escape those that
+        // are fairly certainly file names, to keep helpful error messages for
+        // broken quoting or parsing. Example:
+        // "Cannot find '_func_1___'" is much less helpful than
+        // "Cannot find '/func(1)*&'"
+        // I.e. find a compromise between helpful diagnostics and common file
+        // name (stem) ingredients.
+        if (c == '+' || c == '-' || c == '=' || c == '.' || c == ' '
+            || c == '@')
+          c = '_';
+      }
+      return ret;
+    }
+  }
+
   MetaSema::ActionResult MetaSema::actOnxCommand(llvm::StringRef file,
                                                  llvm::StringRef args,
                                                  Value* result) {
@@ -95,10 +116,11 @@ namespace cling {
     // T can be nullptr if there is no code (but comments)
     if (actionResult == AR_Success && T) {
       std::string expression;
-      llvm::StringRef FuncName = llvm::sys::path::stem(file);
+      std::string FuncName = llvm::sys::path::stem(file);
       if (!FuncName.empty()) {
+        FuncName = normalizeDotXFuncName(FuncName);
         if (T->containsNamedDecl(FuncName)) {
-          expression = FuncName.str() + args.str();
+          expression = FuncName + args.str();
           // Give the user some context in case we have a problem invoking
           expression += " /* invoking function corresponding to '.x' */";
           if (m_Interpreter.echo(expression, result) != Interpreter::kSuccess)
@@ -263,10 +285,9 @@ namespace cling {
     m_Interpreter.compareInterpreterState(name);
   }
 
-  void MetaSema::actOnstatsCommand(llvm::StringRef name) const {
-    if (name.equals("ast")) {
-      m_Interpreter.getCI()->getSema().getASTContext().PrintStats();
-    }
+  void MetaSema::actOnstatsCommand(llvm::StringRef name,
+                                   llvm::StringRef args) const {
+    m_Interpreter.dump(name, args);
   }
 
   void MetaSema::actOndynamicExtensionsCommand(SwitchMode mode/* = kToggle*/)
@@ -337,8 +358,11 @@ namespace cling {
       "   " << metaString << "compareState <filename>\t- Compare the interpreter's state with the one"
                              "\n\t\t\t\t  saved in a given file\n"
       "\n"
-      "   " << metaString << "stats [name]\t\t- Show stats for various internal data"
-                             "\n\t\t\t\t  structures (only 'ast' for the time being)\n"
+      "   " << metaString << "stats [name]\t\t- Show stats for internal data structures\n"
+                             "\t\t\t\t  'ast'  abstract syntax tree stats\n"
+                             "\t\t\t\t  'asttree [filter]'  abstract syntax tree layout\n"
+                             "\t\t\t\t  'decl' dump ast declarations\n"
+                             "\t\t\t\t  'undo' show undo stack\n"
       "\n"
       "   " << metaString << "help\t\t\t- Shows this information\n"
       "\n"

@@ -37,6 +37,7 @@
 #include "TInterpreter.h"
 #include "TObjArray.h"
 #include "TObjString.h"
+#include "TStorage.h" // ROOT::Internal::gMmallocDesc
 #include "TTabCom.h"
 #include "TError.h"
 #include <stdlib.h>
@@ -47,8 +48,6 @@
 #ifdef R__UNIX
 #include <signal.h>
 #endif
-
-R__EXTERN void *gMmallocDesc; //is used and set in TMapFile and TClass
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +95,7 @@ Bool_t TInterruptHandler::Notify()
    }
 
    // make sure we use the sbrk heap (in case of mapped files)
-   gMmallocDesc = 0;
+   ROOT::Internal::gMmallocDesc = 0;
 
    if (TROOT::Initialized() && gROOT->IsLineProcessing()) {
       Break("TInterruptHandler::Notify", "keyboard interrupt");
@@ -305,17 +304,7 @@ void TRint::ExecLogon()
    TString name = ".rootlogon.C";
    TString sname = "system";
    sname += name;
-#ifdef ROOTETCDIR
-   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
-#else
-   TString etc = gRootDir;
-#ifdef WIN32
-   etc += "\\etc";
-#else
-   etc += "/etc";
-#endif
-   char *s = gSystem->ConcatFileName(etc, sname);
-#endif
+   char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
    }
@@ -353,7 +342,10 @@ void TRint::ExecLogon()
 
 void TRint::Run(Bool_t retrn)
 {
-   Getlinem(kInit, GetPrompt());
+   if (!QuitOpt()) {
+      // Promt prompt only if we are expecting / allowing input.
+      Getlinem(kInit, GetPrompt());
+   }
 
    Long_t retval = 0;
    Int_t  error = 0;

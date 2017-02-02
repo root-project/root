@@ -1311,7 +1311,7 @@ typedef std::tuple<Settings&, Batch&, DropContainer&> pass_through_type;
 
 
 // include the implementations (in header file, because they are templated)
-#include "NeuralNet.icc"
+#include "TMVA/NeuralNet.icc"
 
 #endif
 

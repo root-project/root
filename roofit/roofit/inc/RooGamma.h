@@ -3,8 +3,8 @@
  * Package: RooFitModels
  *
  * authors: Stefan A. Schmitz, Gregory Schott
- * implementation of the Gamma distribution (class structure derived 
- * from the class RooGaussian by Wouter Verkerke and David Kirkby)  
+ * implementation of the Gamma distribution (class structure derived
+ * from the class RooGaussian by Wouter Verkerke and David Kirkby)
  *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
@@ -23,7 +23,7 @@ class RooGamma : public RooAbsPdf {
 public:
   RooGamma() {} ;
   RooGamma(const char *name, const char *title,
-	      RooAbsReal& _x, RooAbsReal& _gamma, RooAbsReal& _beta, RooAbsReal& _mu);
+         RooAbsReal& _x, RooAbsReal& _gamma, RooAbsReal& _beta, RooAbsReal& _mu);
   RooGamma(const RooGamma& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooGamma(*this,newname); }
   inline virtual ~RooGamma() { }
@@ -40,7 +40,7 @@ protected:
   RooRealProxy gamma ;
   RooRealProxy beta ;
   RooRealProxy mu ;
-  
+
   Double_t evaluate() const ;
 
 private:

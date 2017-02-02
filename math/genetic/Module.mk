@@ -31,9 +31,18 @@ GENETICLIB  := $(LPATH)/libGenetic.$(SOEXT)
 GENETICMAP  := $(GENETICLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(GENETICH))
+GENETICH_REL := $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(GENETICH))
+ALLHDRS      += $(GENETICH_REL)
 ALLLIBS      += $(GENETICLIB)
 ALLMAPS      += $(GENETICMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GENETICH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_Genetic { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GENETICLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GENETICDEP)

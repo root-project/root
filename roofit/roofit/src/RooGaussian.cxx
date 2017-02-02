@@ -14,10 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooGaussian.cxx
-\class RooGaussian
-\ingroup Roofit
+/** \class RooGaussian
+    \ingroup Roofit
 
 Plain Gaussian p.d.f
 **/
@@ -38,12 +36,11 @@ using namespace std;
 
 ClassImp(RooGaussian)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooGaussian::RooGaussian(const char *name, const char *title,
-			 RooAbsReal& _x, RooAbsReal& _mean,
-			 RooAbsReal& _sigma) :
+          RooAbsReal& _x, RooAbsReal& _mean,
+          RooAbsReal& _sigma) :
   RooAbsPdf(name,title),
   x("x","Observable",this,_x),
   mean("mean","Mean",this,_mean),
@@ -51,23 +48,19 @@ RooGaussian::RooGaussian(const char *name, const char *title,
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGaussian::RooGaussian(const RooGaussian& other, const char* name) : 
+RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
   RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
   sigma("sigma",this,other.sigma)
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t RooGaussian::evaluate() const
 {
-  Double_t arg= x - mean;  
+  Double_t arg= x - mean;
   Double_t sig = sigma ;
   Double_t ret =exp(-0.5*arg*arg/(sig*sig)) ;
 //   if (gDebug>2) {
@@ -76,43 +69,38 @@ Double_t RooGaussian::evaluate() const
   return ret ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// calculate and return the negative log-likelihood of the Poisson                                                                                                                                    
+/// calculate and return the negative log-likelihood of the Poisson
 
-Double_t RooGaussian::getLogVal(const RooArgSet* set) const 
+Double_t RooGaussian::getLogVal(const RooArgSet* set) const
 {
   return RooAbsPdf::getLogVal(set) ;
 //   Double_t prob = getVal(set) ;
 //   return log(prob) ;
 
-  Double_t arg= x - mean;  
+  Double_t arg= x - mean;
   Double_t sig = sigma ;
-  
+
   //static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   //Double_t extra = -0.5*arg*arg/(sig*sig) - log(2*rootPiBy2*sig) ;
   Double_t extra = -0.5*arg*arg/(sig*sig) - log(analyticalIntegral(1,0)) ;
-  
-  return extra ; 
-  
-}
 
+  return extra ;
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   if (matchArgs(allVars,analVars,mean)) return 2 ;
   return 0 ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(code==1 || code==2) ;
 
@@ -120,7 +108,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
   static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   Double_t xscale = root2*sigma;
   Double_t ret = 0;
-  if(code==1){  
+  if(code==1){
     ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
 //     if (gDebug>2) {
 //       cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
@@ -134,19 +122,14 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 }
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
-  if (matchArgs(directVars,generateVars,x)) return 1 ;  
-  if (matchArgs(directVars,generateVars,mean)) return 2 ;  
+  if (matchArgs(directVars,generateVars,x)) return 1 ;
+  if (matchArgs(directVars,generateVars,mean)) return 2 ;
   return 0 ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,19 +138,19 @@ void RooGaussian::generateEvent(Int_t code)
   assert(code==1 || code==2) ;
   Double_t xgen ;
   if(code==1){
-    while(1) {    
+    while(1) {
       xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);
       if (xgen<x.max() && xgen>x.min()) {
-	x = xgen ;
-	break;
+   x = xgen ;
+   break;
       }
     }
   } else if(code==2){
-    while(1) {    
+    while(1) {
       xgen = RooRandom::randomGenerator()->Gaus(x,sigma);
       if (xgen<mean.max() && xgen>mean.min()) {
-	mean = xgen ;
-	break;
+   mean = xgen ;
+   break;
       }
     }
   } else {
@@ -176,4 +159,3 @@ void RooGaussian::generateEvent(Int_t code)
 
   return;
 }
-

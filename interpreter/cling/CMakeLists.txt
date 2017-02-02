@@ -206,6 +206,8 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   endforeach ()
 endif ()
 
+# Lots of cling is needed at runtime (e.g. Value, or Interpreter::Evaluate()).
+# The JIT needs to be able to resolve these symbols from cling; unhide them.
 string(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 # The package needs to be compiler without RTTI information
 if(MSVC)
@@ -288,7 +290,44 @@ macro(add_cling_library name)
   if(ARG_SHARED)
     set(ARG_ENABLE_SHARED SHARED)
   endif()
+
+  if (MSVC)
+    # On Windows exceptions aren’t as generic as an x64 ABI.
+    # Stack unwinding code must be generated for every function between the
+    # throw and catch blocks.
+    if (${name} STREQUAL "clingInterpreter")
+      # All of libClingInterpreter is compiled with exceptions, mostly because
+      # llvm_unreachable throws an exception. Otherwise it could be reduced:
+      #    Exception.cpp, Interpreter.cpp, IncrementalParser.cpp,
+      #    IncrementalExecutor.cpp
+      set(cling_ex_file_match ".cpp$")
+    elseif(${name} STREQUAL "clingUserInterface")
+      # For libClingUserInterface, only UserInterface.cpp uses exceptions.
+      set(cling_ex_file_match "^UserInterface.cpp$")
+    endif()
+    if(cling_ex_file_match)
+      # needs to be on before llvm_add_library so flags can be set below
+      set(LLVM_REQUIRES_EH ON)
+      set(LLVM_REQUIRES_RTTI ON)
+    endif()
+  endif()
+
   llvm_add_library(${name} ${ARG_ENABLE_SHARED} ${ARG_UNPARSED_ARGUMENTS} ${srcs})
+
+  if (MSVC AND cling_ex_file_match)
+    # /EHs because cling_runtime_internal_throwIfInvalidPointer is extern “C”
+    if (cling_ex_file_match)
+      foreach(file_var ${ARGN})
+        if (file_var MATCHES ${cling_ex_file_match})
+          set_property(SOURCE ${file_var} APPEND_STRING PROPERTY COMPILE_FLAGS
+                       " /D _HAS_EXCEPTIONS=1 /EHs /GR /wd4714 ")
+        elseif (file_var MATCHES ".cpp$")
+          set_property(SOURCE ${file_var} APPEND_STRING PROPERTY COMPILE_FLAGS
+                       " /D _HAS_EXCEPTIONS=0 /EHs-c- /GR- ")
+        endif()
+      endforeach()
+    endif()
+  endif()
 
   if(TARGET ${name})
     target_link_libraries(${name} ${INTERFACE} ${LLVM_COMMON_LIBS})
@@ -422,6 +461,7 @@ list(APPEND LLVM_COMMON_DEPENDS ${CLANG_TABLEGEN_TARGETS})
 
 # And llvm-intrinsics.
 list(APPEND LLVM_COMMON_DEPENDS intrinsics_gen)
+list(APPEND LLVM_COMMON_DEPENDS clang-headers)
 
 add_subdirectory(lib)
 add_subdirectory(tools)

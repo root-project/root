@@ -14,6 +14,7 @@
 #include "TStyle.h"
 #include "TLatex.h"
 #include "TLine.h"
+#include "TPolyLine.h"
 #include "TBox.h"
 #include "TMarker.h"
 #include "TLegend.h"
@@ -24,6 +25,7 @@
 #include "TLegendEntry.h"
 #include "Riostream.h"
 #include "TMultiGraph.h"
+#include "TGraph.h"
 #include "THStack.h"
 
 ClassImp(TLegend)
@@ -738,6 +740,21 @@ void TLegend::PaintPrimitives()
 
       TObject *eobj = entry->GetObject();
 
+      // depending on the object drawing option, the endcaps for error
+      // bar are drawn differently.
+      Int_t endcaps  = 0; // no endcaps.
+      if (eobj) { // eobj == nullptr for the legend header
+         TString eobjopt = eobj->GetDrawOption();
+         eobjopt.ToLower();
+         if (eobjopt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
+         if (eobj->InheritsFrom(TGraph::Class())) {
+            endcaps = 1; // a bar, default for TGraph
+            if (eobjopt.Contains("z"))  endcaps = 0; // no endcaps.
+            if (eobjopt.Contains(">"))  endcaps = 2; // empty arrow.
+            if (eobjopt.Contains("|>")) endcaps = 3; // filled arrow.
+         }
+      }
+
       // Draw fill pattern (in a box)
 
       if ( opt.Contains("f")) {
@@ -763,6 +780,20 @@ void TLegend::PaintPrimitives()
          gPad->PaintFillArea(4,xf,yf);
       }
 
+      // Get Polymarker size
+
+      Double_t symbolsize = 0.;
+      TMarker entrymarker( xsym, ysym, 0 );
+
+      if ( opt.Contains("p")) {
+         if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
+            dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
+         }
+         entrymarker.SetNDC();
+         entry->TAttMarker::Copy(entrymarker);
+         if (entrymarker.GetMarkerStyle() != 1 ) symbolsize = entrymarker.GetMarkerSize();
+      }
+
       // Draw line
 
       if ( opt.Contains("l") || opt.Contains("f")) {
@@ -782,18 +813,71 @@ void TLegend::PaintPrimitives()
             if ( boxwidth > margin ) boxwidth = margin;
 
             entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
-                                 xsym + boxw, ysym + yspace*0.35);
+                                    xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                 xsym + boxw, ysym - yspace*0.35);
+                                    xsym + boxw, ysym - yspace*0.35);
             entryline.PaintLineNDC( xsym + boxw, ysym - yspace*0.35,
-                                 xsym + boxw, ysym + yspace*0.35);
+                                    xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                 xsym - boxw, ysym + yspace*0.35);
+                                    xsym - boxw, ysym + yspace*0.35);
          } else {
             entryline.Paint();
             if (opt.Contains("e")) {
-               entryline.PaintLineNDC( xsym, ysym - yspace*0.30,
-                                       xsym, ysym + yspace*0.30);
+               if ( !opt.Contains("p")) {
+                  entryline.PaintLineNDC( xsym, ysym - yspace*0.30,
+                                          xsym, ysym + yspace*0.30);
+               } else {
+                  Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+                  TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
+                  entryline1.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entryline1);
+                  entryline1.Paint();
+                  TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*0.30);
+                  entryline2.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entryline2);
+                  entryline2.Paint();
+               }
+               if (endcaps == 1) {
+                  TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+                  entrytop1.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entrytop1);
+                  entrytop1.Paint();
+                  TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+                  entrytop2.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entrytop2);
+                  entrytop2.Paint();
+               } else if (endcaps == 2) {
+                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+                  TPolyLine ple1(3,xe1,ye1);
+                  ple1.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(ple1);
+                  ple1.Paint();
+                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+                  TPolyLine ple2(3,xe2,ye2);
+                  ple2.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(ple2);
+               } else if (endcaps == 3) {
+                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+                  for (Int_t i=0;i<3;i++) {
+                     xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
+                     ye1[i] = gPad->GetY1() + ye1[i]*(gPad->GetY2()-gPad->GetY1());
+                     xe2[i] = gPad->GetX1() + xe2[i]*(gPad->GetX2()-gPad->GetX1());
+                     ye2[i] = gPad->GetY1() + ye2[i]*(gPad->GetY2()-gPad->GetY1());
+                  }
+                  TPolyLine ple1(3,xe1,ye1);
+                  ple1.SetFillColor(entry->GetLineColor());
+                  ple1.SetFillStyle(1001);
+                  ple1.Paint("f");
+                  TPolyLine ple2(3,xe2,ye2);
+                  ple2.SetFillColor(entry->GetLineColor());
+                  ple2.SetFillStyle(1001);
+                  ple2.Paint("f");
+               }
             }
          }
       }
@@ -804,27 +888,70 @@ void TLegend::PaintPrimitives()
          if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
             dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
          }
-         TLine entryline(xsym, ysym - yspace*0.30,
-                         xsym, ysym + yspace*0.30);
-         entryline.SetBit(TLine::kLineNDC);
-         entry->TAttLine::Copy(entryline);
-         entryline.Paint();
+         if ( !opt.Contains("p")) {
+            TLine entryline(xsym, ysym - yspace*0.30,
+                            xsym, ysym + yspace*0.30);
+            entryline.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline);
+            entryline.Paint();
+         } else {
+            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+            TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
+            entryline1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline1);
+            entryline1.Paint();
+            TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*0.30);
+            entryline2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline2);
+            entryline2.Paint();
+         }
+         if (endcaps == 1) {
+            TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+            entrytop1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entrytop1);
+            entrytop1.Paint();
+            TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+            entrytop2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entrytop2);
+            entrytop2.Paint();
+         } else if (endcaps == 2) {
+            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+            TPolyLine ple1(3,xe1,ye1);
+            ple1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(ple1);
+            ple1.Paint();
+            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+            TPolyLine ple2(3,xe2,ye2);
+            ple2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(ple2);
+            ple2.Paint();
+         } else if (endcaps == 3) {
+            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+            for (Int_t i=0;i<3;i++) {
+               xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
+               ye1[i] = gPad->GetY1() + ye1[i]*(gPad->GetY2()-gPad->GetY1());
+               xe2[i] = gPad->GetX1() + xe2[i]*(gPad->GetX2()-gPad->GetX1());
+               ye2[i] = gPad->GetY1() + ye2[i]*(gPad->GetY2()-gPad->GetY1());
+            }
+            TPolyLine ple1(3,xe1,ye1);
+            ple1.SetFillColor(entry->GetLineColor());
+            ple1.SetFillStyle(1001);
+            ple1.Paint("f");
+            TPolyLine ple2(3,xe2,ye2);
+            ple2.SetFillColor(entry->GetLineColor());
+            ple2.SetFillStyle(1001);
+            ple2.Paint("f");
+         }
       }
 
       // Draw Polymarker
-
-      if ( opt.Contains("p")) {
-
-         if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
-            dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
-         }
-         TMarker entrymarker( xsym, ysym, 0 );
-         entrymarker.SetNDC();
-         entry->TAttMarker::Copy(entrymarker);
-         entrymarker.Paint();
-      }
+      if ( opt.Contains("p"))  entrymarker.Paint();
    }
-
    SetTextSize(save_textsize);
    delete [] columnWidths;
 }

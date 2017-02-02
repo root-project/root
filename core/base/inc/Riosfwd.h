@@ -21,6 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+
+#warning "Riosfwd.h is deprecated. It will be removed in ROOT v6.12. Please use #include <iosfwd>, instead.")
+
 #include <iosfwd>
 
 #endif

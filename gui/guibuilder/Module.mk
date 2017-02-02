@@ -28,9 +28,18 @@ GUIBLDLIB    := $(LPATH)/libGuiBld.$(SOEXT)
 GUIBLDMAP    := $(GUIBLDLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIBLDH))
+GUIBLDH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIBLDH))
+ALLHDRS     += $(GUIBLDH_REL)
 ALLLIBS     += $(GUIBLDLIB)
 ALLMAPS     += $(GUIBLDMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GUIBLDH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GUIBLDLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GUIBLDDEP)

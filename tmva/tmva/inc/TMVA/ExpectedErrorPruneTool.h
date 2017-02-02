@@ -33,7 +33,7 @@
 // Uses an upper limit on the error made by the classification done by each node. If the S/S+B of the node //
 // is f, then according to the training sample, the error rate (fraction of misclassified events by this   //
 // node) is (1-f). Now f has a statistical error according to the binomial distribution hence the error on //
-// f can be estimated (same error as the binomial error for efficency calculations                         //
+// f can be estimated (same error as the binomial error for efficiency calculations                         //
 // ( sigma = sqrt(eff(1-eff)/nEvts ) )                                                                     //
 //                                                                                                         //
 // This tool prunes branches from a tree if the expected error of a node is less than that of the sum  of  //

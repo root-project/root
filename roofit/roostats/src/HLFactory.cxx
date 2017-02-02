@@ -24,6 +24,16 @@
 
 #include "RooSimultaneous.h"
 
+/** \class RooStats::HLFactory
+    \ingroup Roostats
+
+HLFactory is an High Level model Factory allows you to
+describe your models in a configuration file
+(_datacards_) acting as an interface with the RooFactoryWSTool.
+Moreover it provides tools for the combination of models and datasets.
+
+*/
+
 using namespace std;
 
 ClassImp(RooStats::HLFactory) ;
@@ -62,7 +72,7 @@ HLFactory::HLFactory(const char *name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor without a card but with an exrernal workspace.
+/// Constructor without a card but with an external workspace.
 
 HLFactory::HLFactory(const char* name,
                      RooWorkspace* externalWs,
@@ -175,7 +185,7 @@ int HLFactory::AddChannel(const char* label,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the signal plus background channels.
-/// The facory owns the object.
+/// The factory owns the object.
 
 RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
     if (fSigBkgPdfNames.GetSize()==0)
@@ -221,11 +231,12 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 
     return fComboSigBkgPdf;
 
-    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the background only channels.
 /// If no background channel is specified a NULL pointer is returned.
-/// The facory owns the object.
+/// The factory owns the object.
 
 RooAbsPdf* HLFactory::GetTotBkgPdf(){
     if (fBkgPdfNames.GetSize()==0)
@@ -274,7 +285,7 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the datasets.
 /// If no dataset is specified a NULL pointer is returned.
-/// The facory owns the object.
+/// The factory owns the object.
 
 RooDataSet* HLFactory::GetTotDataSet(){
     if (fDatasetsNames.GetSize()==0)
@@ -327,7 +338,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the category.
-/// The facory owns the object.
+/// The factory owns the object.
 
 RooCategory* HLFactory::GetTotCategory(){
     if (fComboCat!=NULL)
@@ -348,7 +359,7 @@ RooCategory* HLFactory::GetTotCategory(){
 
 int HLFactory::ProcessCard(const char* filename){
     return fReadFile(filename,0);
-    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parses the configuration file. The objects can be specified following
@@ -358,24 +369,24 @@ int HLFactory::ProcessCard(const char* filename){
 ///
 /// All the instructions end with a ";" (like in C++).
 ///
-/// Carriage returns and white lines are irrelevant but adviced since they
+/// Carriage returns and white lines are irrelevant but advised since they
 /// improve readability (like in C++).
 ///
-/// The (Roo)ClassName::objname(description) can be replaced with the more
-/// "pythonic" objname = (Roo)ClassName(description).
+/// The `(Roo)ClassName::objname(description)` can be replaced with the more
+/// "pythonic" `objname = (Roo)ClassName(description)`.
 ///
 /// The comments can be specified with a "//" if on a single line or with
-/// /* */ if on multiple lines (like in C++).
+/// "multiple lines" in C/C++ like comments.
 ///
-/// The "#include path/to/file.rs" statement triggers the inclusion of a
+/// The `"#include path/to/file.rs"` statement triggers the inclusion of a
 /// configuration fragment.
 ///
-/// The "import myobject:myworkspace:myrootfile" will add to the Workspace
+/// The `"import myobject:myworkspace:myrootfile"` will add to the Workspace
 /// the object myobject located in myworkspace recorded in myrootfile.
-/// Alternatively, one could choose the "import myobject:myrootfile" in case
+/// Alternatively, one could choose the `"import myobject:myrootfile"` in case
 /// no Workspace is present.
 ///
-/// The "echo" statement prompts a message on screen.
+/// The `"echo"` statement prompts a message on screen.
 
 int HLFactory::fReadFile(const char*fileName, bool is_included){
     // Check the deepness of the inclusion
@@ -517,7 +528,7 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Builds the category necessary for the mutidimensional models. Its name
-/// will be <HLFactory name>_category and the types are specified by the
+/// will be `<HLFactory name>_category` and the types are specified by the
 /// model labels.
 
 void HLFactory::fCreateCategory(){
@@ -650,7 +661,3 @@ int HLFactory::fParseLine(TString& line){
     return 0;
 
 }
-
-
-
-

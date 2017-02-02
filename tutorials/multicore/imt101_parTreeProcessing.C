@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
-/// Illustrate the usage of the TTreeProcessor::Process method.
+/// Illustrate the usage of the TTreeProcessorMT::Process method.
 /// Such method provides an implicit parallelisation of the reading and processing of a TTree.
 /// In particular, when invoking Process, the user provides a function that iterates on a subrange
 /// of the tree via a TTreeReader. Multiple tasks will be spawned, one for each sub-range, so that
@@ -28,9 +28,9 @@ int imt101_parTreeProcessing()
   ROOT::TThreadedObject<TH1F> pzHist("pz_dist","p_{Z} Distribution;p_{Z};dN/dp_{Z}", 100, 0, 5);
   ROOT::TThreadedObject<TH2F> pxpyHist("px_py","p_{X} vs p_{Y} Distribution;p_{X};p_{Y}", 100, -5., 5., 100, -5., 5.);
 
-  // Create a TTreeProcessor: specify the file and the tree in it
-  ROOT::TTreeProcessor tp("http://root.cern.ch/files/tp_process_imt.root",
-                          "events");
+  // Create a TTreeProcessorMT: specify the file and the tree in it
+  ROOT::TTreeProcessorMT tp("http://root.cern.ch/files/tp_process_imt.root",
+                            "events");
 
   // Define the function that will process a subrange of the tree.
   // The function must receive only one parameter, a TTreeReader,

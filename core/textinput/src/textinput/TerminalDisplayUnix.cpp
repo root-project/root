@@ -17,6 +17,7 @@
 
 #include "textinput/TerminalDisplayUnix.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 // putenv not in cstdlib on Solaris
 #include <stdlib.h>
@@ -102,8 +103,15 @@ namespace textinput {
   // If input is not a tty don't write in tty-mode either.
   TerminalDisplayUnix::TerminalDisplayUnix():
     TerminalDisplay(TerminalConfigUnix::Get().IsInteractive()),
-    fIsAttached(false), fNColors(16) {
-    HandleResizeSignal();
+    fIsAttached(false), fNColors(16), fOutputID(STDOUT_FILENO)
+  {
+    if (::isatty(::fileno(stdin)) && !::isatty(fOutputID)) {
+      // Display prompt, even if stdout is going somewhere else
+      fOutputID = ::open("/dev/tty", O_WRONLY);
+      SetIsTTY(true);
+    }
+
+    HandleResizeSignal(); // needs fOutputID
     gTerminalDisplayUnix() = this;
     signal(SIGWINCH, TerminalDisplayUnix__handleResizeSignal);
 #ifdef TCSANOW
@@ -116,15 +124,22 @@ namespace textinput {
     }
   }
 
+// Don't rely on flushing here.
+#define SYNC_OUT(fd) /*if (fd==STDOUT_FILENO) { ::fflush(stdout); } }*/
+
   TerminalDisplayUnix::~TerminalDisplayUnix() {
     Detach();
+    if (fOutputID != STDOUT_FILENO) {
+      SYNC_OUT(fOutputID);
+      ::close(fOutputID);
+    }
   }
 
   void
   TerminalDisplayUnix::HandleResizeSignal() {
 #ifdef TIOCGWINSZ
     struct winsize sz;
-    int ret = ioctl(fileno(stdout), TIOCGWINSZ, (char*)&sz);
+    int ret = ioctl(fOutputID, TIOCGWINSZ, (char*)&sz);
     if (!ret && sz.ws_col) {
       SetWidth(sz.ws_col);
 
@@ -245,7 +260,7 @@ namespace textinput {
   /// \param[in] len length of the raw string
   void
   TerminalDisplayUnix::WriteRawString(const char *text, size_t len) {
-    if (write(fileno(stdout), text, len) == -1) {
+    if (write(fOutputID, text, len) == -1) {
       // Silence Ubuntu's "unused result". We don't care if it fails.
     }
   }
@@ -264,7 +279,7 @@ namespace textinput {
   TerminalDisplayUnix::Attach() {
     // set to noecho
     if (fIsAttached) return;
-    fflush(stdout);
+    SYNC_OUT(fOutputID);
     TerminalConfigUnix::Get().Attach();
     fWritePos = Pos();
     fWriteLen = 0;
@@ -274,7 +289,7 @@ namespace textinput {
   void
   TerminalDisplayUnix::Detach() {
     if (!fIsAttached) return;
-    fflush(stdout);
+    SYNC_OUT(fOutputID);
     TerminalConfigUnix::Get().Detach();
     TerminalDisplay::Detach();
     fIsAttached = false;

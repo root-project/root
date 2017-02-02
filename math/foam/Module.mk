@@ -28,9 +28,18 @@ FOAMLIB    := $(LPATH)/libFoam.$(SOEXT)
 FOAMMAP    := $(FOAMLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FOAMH))
+FOAMH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(FOAMH))
+ALLHDRS     += $(FOAMH_REL)
 ALLLIBS     += $(FOAMLIB)
 ALLMAPS     += $(FOAMMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(FOAMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_Foam { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(FOAMLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(FOAMDEP)

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description: Implementation of the SdivSqrtSplusB as separation criterion      *
- *              s / sqrt( s+b )                                                   * 
+ *              s / sqrt( s+b )                                                   *
  *                                                                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
@@ -17,14 +17,21 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      Heidelberg U., Germany                                                    * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      Heidelberg U., Germany                                                    *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
+/*! \class TMVA::SdivSqrtSplusB
+\ingroup TMVA
+Implementation of the SdivSqrtSplusB as separation criterion.
+
+\f$ Index = \frac{S}{\sqrt{S+B}} \f$ (statistical significance)
+*/
 
 #include "TMath.h"
 #include "TMVA/SdivSqrtSplusB.h"
@@ -32,7 +39,7 @@
 ClassImp(TMVA::SdivSqrtSplusB)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Index = S/sqrt(S+B)  (statistical significance)                 
+/// Index = S/sqrt(S+B)  (statistical significance)
 
 Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
@@ -40,14 +47,12 @@ Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t &s, const Dou
    else return 0;
 }
 
-
- 
 ////////////////////////////////////////////////////////////////////////////////
 /// Separation Gain:
 /// the measure of how the quality of separation of the sample increases
 /// by splitting the sample e.g. into a "left-node" and a "right-node"
 /// (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
-/// this is then the quality crition which is optimized for when trying
+/// this is then the quality criterion which is optimized for when trying
 /// to increase the information in the system (making the best selection
 
 Double_t TMVA::SdivSqrtSplusB::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB,
@@ -65,12 +70,11 @@ Double_t TMVA::SdivSqrtSplusB::GetSeparationGain(const Double_t &nSelS, const Do
    Double_t diff = (parentIndex - leftIndex - rightIndex)/(nTotS+nTotB);
 
    if(diff<fPrecisionCut ) {
-      // std::cout << " Warning value in GetSeparation is below numerical presicion " 
-      //           << diff/parentIndex 
+      // std::cout << " Warning value in GetSeparation is below numerical precision "
+      //           << diff/parentIndex
       //           << std::endl;
       return 0;
    }
 
    return diff;
 }
-

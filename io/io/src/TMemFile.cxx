@@ -168,7 +168,8 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
       fWritable = kFALSE;
    }
 
-   SysWrite(fD,buffer,size);
+
+   SysWriteImpl(fD,buffer,size);
 
    Init(create || recreate);
    return;
@@ -235,7 +236,7 @@ Long64_t TMemFile::CopyTo(void *to, Long64_t maxsize) const
    TMemBlock *storedBlockSeek = fBlockSeek;
 
    const_cast<TMemFile*>(this)->SysSeek(fD, 0, SEEK_SET);
-   len = const_cast<TMemFile*>(this)->SysRead(fD, to, len);
+   len = const_cast<TMemFile*>(this)->SysReadImpl(fD, to, len);
 
    const_cast<TMemFile*>(this)->fBlockSeek   = storedBlockSeek;
    const_cast<TMemFile*>(this)->fBlockOffset = storedBlockOffset;
@@ -399,7 +400,7 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
 /// Read specified number of bytes from current offset into the buffer.
 /// See documentation for TFile::SysRead().
 
-Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
+Int_t TMemFile::SysReadImpl(Int_t, void *buf, Long64_t len)
 {
    TRACE("READ")
 
@@ -450,6 +451,16 @@ Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
       fSysOffset += len;
       return len;
    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified number of bytes from current offset into the buffer.
+/// See documentation for TFile::SysRead().
+
+Int_t TMemFile::SysRead(Int_t fd, void *buf, Int_t len)
+{
+   return SysReadImpl(fd, buf, len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -557,7 +568,7 @@ Int_t TMemFile::SysClose(Int_t /* fd */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a buffer into the file.
 
-Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
+Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
 {
    TRACE("WRITE")
 
@@ -611,6 +622,14 @@ Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
       fSysOffset += len;
       return len;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write a buffer into the file.
+
+Int_t TMemFile::SysWrite(Int_t fd, const void *buf, Int_t len)
+{
+   return SysWriteImpl(fd,buf,len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

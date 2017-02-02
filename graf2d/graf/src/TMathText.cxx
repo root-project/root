@@ -630,6 +630,7 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    newText.ReplaceAll("\\Chi","X");
    newText.ReplaceAll("\\varomega","\\varpi");
    newText.ReplaceAll("\\mbox","\\hbox");
+   newText.ReplaceAll("\\bar","\\wwbar");
    if (newText.Contains("\\frac")) {
       Int_t len,i1,i2;
       TString str;

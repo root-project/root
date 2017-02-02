@@ -77,20 +77,22 @@ namespace Internal {
       ESetupStatus GetSetupStatus() const { return fSetupStatus; }
       virtual EReadStatus GetReadStatus() const { return fReadStatus; }
 
-      TLeaf* GetLeaf();
+      /// If we are reading a leaf, return the corresponding TLeaf.
+      TLeaf* GetLeaf() { return fLeaf; }
 
       void* GetAddress();
 
       const char* GetBranchName() const { return fBranchName; }
+
+      virtual ~TTreeReaderValueBase();
 
    protected:
       TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
       TTreeReaderValueBase(const TTreeReaderValueBase&);
       TTreeReaderValueBase& operator=(const TTreeReaderValueBase&);
 
-      virtual ~TTreeReaderValueBase();
-
       void RegisterWithTreeReader();
+      void NotifyNewTree(TTree* newTree);
 
       virtual void CreateProxy();
       const char* GetBranchDataType(TBranch* branch,
@@ -111,7 +113,6 @@ namespace Internal {
       TDictionary* fDict; // type that the branch should contain
       Detail::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
       TLeaf*       fLeaf;
-      Int_t        fLastTreeNumber; // Tree index (in a TChain) that the TLeaf* belongs to.
       ESetupStatus fSetupStatus; // setup status of this data access
       EReadStatus  fReadStatus; // read status of this data access
       std::vector<Long64_t> fStaticClassOffsets;

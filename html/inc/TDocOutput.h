@@ -24,9 +24,6 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 #ifndef ROOT_TDocParser
 #include "TDocParser.h"
 #endif

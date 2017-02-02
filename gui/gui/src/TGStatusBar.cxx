@@ -155,7 +155,8 @@ void TGStatusBar::SetText(TGString *text, Int_t partidx)
 
 void TGStatusBar::SetText(const char *text, Int_t partidx)
 {
-   SetText(new TGString(text), partidx);
+   if ((partidx >= 0) && (partidx < fNpart))
+      SetText(new TGString(text), partidx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

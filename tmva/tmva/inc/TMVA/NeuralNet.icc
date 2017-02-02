@@ -1,5 +1,9 @@
 #ifndef TMVA_NEURAL_NET_I
 #define TMVA_NEURAL_NET_I
+
+#ifndef TMVA_NEURAL_NET
+#error "Do not use NeuralNet.icc directly. #include \"NeuralNet.h\" instead."
+#endif // TMVA_NEURAL_NET
 #pragma once
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
@@ -8,7 +12,8 @@
 
 #include "Math/Util.h"
 
-#include "MethodBase.h"
+#include "TMVA/Pattern.h"
+#include "TMVA/MethodBase.h"
 
 namespace TMVA
 {

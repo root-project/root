@@ -10,7 +10,7 @@
 /// \author Rene Brun
 
 void basic2() {
-   TString dir = gROOT->GetTutorialsDir();
+   TString dir = gROOT->GetTutorialDir();
    dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
 

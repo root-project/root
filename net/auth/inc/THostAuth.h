@@ -39,7 +39,7 @@
 #include "AuthConst.h"
 #endif
 
-
+#include "TSecContext.h" // for kROOTTZERO.
 
 class THostAuth : public TObject {
 

@@ -27,13 +27,13 @@ public:
 
   // Constructors, assignment etc
   inline RooBCPEffDecay() { }
-  RooBCPEffDecay(const char *name, const char *title, 
-		 RooRealVar& t, RooAbsCategory& tag,
-		 RooAbsReal& tau, RooAbsReal& dm,
-		 RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
-		 RooAbsReal& a, RooAbsReal& b,
-		 RooAbsReal& effRatio, RooAbsReal& delMistag,
-		 const RooResolutionModel& model, DecayType type=DoubleSided) ;
+  RooBCPEffDecay(const char *name, const char *title,
+       RooRealVar& t, RooAbsCategory& tag,
+       RooAbsReal& tau, RooAbsReal& dm,
+       RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
+       RooAbsReal& a, RooAbsReal& b,
+       RooAbsReal& effRatio, RooAbsReal& delMistag,
+       const RooResolutionModel& model, DecayType type=DoubleSided) ;
 
   RooBCPEffDecay(const RooBCPEffDecay& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooBCPEffDecay(*this,newname) ; }
@@ -47,7 +47,7 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void initGenerator(Int_t code) ;
   void generateEvent(Int_t code) ;
-  
+
 protected:
 
   RooRealProxy _absLambda ;
@@ -61,7 +61,7 @@ protected:
   RooRealProxy _dm ;
   RooCategoryProxy _tag ;
   Double_t _genB0Frac ;
-  
+
   DecayType _type ;
   Int_t _basisExp ;
   Int_t _basisSin ;

@@ -89,7 +89,6 @@ public:
    virtual void       PaintBarH(Option_t *option);
    virtual void       PaintBoxes(Option_t *option);
    virtual void       PaintCandlePlot(Option_t *option);
-   virtual void       PaintViolinPlot(Option_t *option);
    virtual void       PaintColorLevels(Option_t *option);
    virtual void       PaintColorLevelsFast(Option_t *option);
    virtual std::vector<THistRenderingRegion> ComputeRenderingRegions(TAxis *pAxis, Int_t nPixels, bool isLog);
@@ -108,6 +107,7 @@ public:
    virtual void       PaintFunction(Option_t *option);
    virtual void       PaintHist(Option_t *option);
    virtual void       PaintH3(Option_t *option="");
+   virtual void       PaintH3Box();
    virtual void       PaintH3Iso();
    virtual Int_t      PaintInit();
    virtual Int_t      PaintInitH();

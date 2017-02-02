@@ -16,7 +16,6 @@
 #ifndef ROO_ABS_TEST_STATISTIC
 #define ROO_ABS_TEST_STATISTIC
 
-#include "Riosfwd.h"
 #include "RooAbsReal.h"
 #include "RooSetProxy.h"
 #include "RooRealProxy.h"

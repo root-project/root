@@ -645,7 +645,6 @@ void TGFileBrowser::Update()
    Long_t id = 0, flags = 0, modtime = 0;
    char path[1024];
    TGListTreeItem *item = fCurrentDir;
-   TObject *selected = 0;
    if (!item) item = fRootDir;
    if (!item) return;
    //fListTree->DeleteChildren(item);
@@ -682,11 +681,6 @@ void TGFileBrowser::Update()
             }
          }
       }
-      selected = obj;
-      if (selected && selected->InheritsFrom("TLeaf"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", (ULong_t)selected));
-      if (selected && selected->InheritsFrom("TBranch"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", (ULong_t)selected));
    }
    TString actpath = FullPathName(item);
    flags = id = size = modtime = 0;
@@ -721,14 +715,6 @@ void TGFileBrowser::Update()
    DoubleClicked(item, 1);
    fListLevel = sav;
    CheckFiltered(fListLevel, kTRUE);
-
-   if (selected && gPad && IsObjectEditable(selected->IsA())) {
-      TVirtualPadEditor *ved = TVirtualPadEditor::GetPadEditor(kFALSE);
-      if (ved) {
-         TGedEditor *ged = (TGedEditor *)ved;
-         ged->SetModel(gPad, selected, kButton1Down);
-      }
-   }
 }
 
 /**************************************************************************/
@@ -1304,11 +1290,11 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          fDblClick = kTRUE;
          if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
             act = action;
-            if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
-            else if (fBrowser && act.Contains("->Browse()")) obj->Browse(fBrowser);
+            if (fBrowser && act.Contains("->Browse()")) obj->Browse(fBrowser);
             else if (act.Contains("->Draw()")) obj->Draw(GetDrawOption());
             else {
-               act.Prepend(obj->GetName());
+               if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
+               else act.Prepend(obj->GetName());
                gInterpreter->SaveGlobalsContext();
                if (act[0] == '!') {
                   act.Remove(0, 1);

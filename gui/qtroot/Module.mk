@@ -28,9 +28,18 @@ QTROOTLIB    := $(LPATH)/libQtRoot.$(SOEXT)
 QTROOTMAP    := $(QTROOTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTROOTH))
+QTROOTH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTROOTH))
+ALLHDRS     += $(QTROOTH_REL)
 ALLLIBS     += $(QTROOTLIB)
 ALLMAPS     += $(QTROOTMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(QTROOTH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(QTROOTLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(QTROOTDEP)

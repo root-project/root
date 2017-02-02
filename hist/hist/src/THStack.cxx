@@ -88,7 +88,10 @@ End_Macro
 Note that picking is supported for all drawing modes.
 
 \since **ROOT version 6.07/07:**
-Stacks of 2D histogram can also be painted as candle plots:
+Stacks of 2D histograms can also be painted as candle plots:
+\since **ROOT version 6.09/02:**
+Stacks of 2D histograms can also be painted as violin plots, combinations of candle and
+violin plots are possible as well:
 
 Begin_Macro(source)
 ../../../tutorials/hist/candleplotstack.C
@@ -779,12 +782,13 @@ void THStack::Paint(Option_t *choptin)
    char *nostack  = strstr(loption,"nostack");
    char *nostackb = strstr(loption,"nostackb");
    char *candle = strstr(loption,"candle");
+   char *violin = strstr(loption,"violin");
 
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   if (!opt.Contains("nostack") && (!opt.Contains("candle"))) BuildStack();
+   if (!opt.Contains("nostack") && (!opt.Contains("candle")) && (!opt.Contains("violin"))) BuildStack();
 
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);
@@ -880,7 +884,7 @@ void THStack::Paint(Option_t *choptin)
    char noption[32];
    strlcpy(noption,loption,32);
    Int_t nhists = fHists->GetSize();
-   if (nostack || candle) {
+   if (nostack || candle || violin) {
       lnk = (TObjOptLink*)fHists->FirstLink();
       TH1* hAti;
       Double_t bo=0.03;
@@ -893,7 +897,7 @@ void THStack::Paint(Option_t *choptin)
             TString indivOpt = lnk->GetOption();
             indivOpt.ToLower();
             if (nostackb) snprintf(loption,31,"%ssame%s b",noption,lnk->GetOption());
-            else if (candle && indivOpt.Contains("candle")) snprintf(loption,31,"%ssame",lnk->GetOption());
+            else if (candle && (indivOpt.Contains("candle") || indivOpt.Contains("violin"))) snprintf(loption,31,"%ssame",lnk->GetOption());
             else          snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
          }
          hAti = (TH1F*)(fHists->At(i));
@@ -902,7 +906,7 @@ void THStack::Paint(Option_t *choptin)
             hAti->SetBarOffset(bo);
             bo += bw;
          }
-         if (candle) {
+         if (candle || violin) {
             float candleSpace = 1./(nhists*2);
             float candleOffset = - 1./2 + candleSpace + 2*candleSpace*i;
             candleSpace *= 1.66; //width of the candle per bin: 1.0 means space is as great as the candle, 2.0 means there is no space
@@ -1009,8 +1013,12 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TH1 *h;
    if (fHists) {
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      Int_t hcount = 0;
       while (lnk) {
          h = (TH1*)lnk->GetObject();
+         TString hname = h->GetName();
+         hname += Form("_stack_%d",++hcount);
+         h->SetName(hname);
          h->SavePrimitive(out,"nodraw");
          out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
          lnk = (TObjOptLink*)lnk->Next();

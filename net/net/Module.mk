@@ -52,9 +52,18 @@ EXTRANETFLAGS =
 NETINCH      := $(subst $(MODDIRI)/%.h,include/%.h,$(NETMH))
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETMH))
+NETMH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETMH))
+ALLHDRS      += $(NETMH_REL)
 ALLLIBS      += $(NETLIB)
 ALLMAPS      += $(NETMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(NETMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(NETLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(NETDEP)

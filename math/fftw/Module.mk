@@ -28,9 +28,18 @@ FFTWLIB      := $(LPATH)/libFFTW.$(SOEXT)
 FFTWMAP      := $(FFTWLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FFTWH))
+FFTWH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(FFTWH))
+ALLHDRS      += $(FFTWH_REL)
 ALLLIBS      += $(FFTWLIB)
 ALLMAPS      += $(FFTWMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(FFTWH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_FFTW { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(FFTWLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(FFTWDEP)

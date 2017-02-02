@@ -28,9 +28,18 @@ GDMLLIB      := $(LPATH)/libGdml.$(SOEXT)
 GDMLMAP      := $(GDMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GDMLH))
+GDMLH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GDMLH))
+ALLHDRS      += $(GDMLH_REL)
 ALLLIBS      += $(GDMLLIB)
 ALLMAPS      += $(GDMLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GDMLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Geom_GDML { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GDMLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GDMLDEP)

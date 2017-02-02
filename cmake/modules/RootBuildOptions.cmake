@@ -178,7 +178,6 @@ if(WIN32)
 elseif(APPLE)
   set(x11_defvalue OFF)
   set(cocoa_defvalue ON)
-  set(davix_defvalue OFF)
 endif()
 
 #--- The 'all' option swithes ON major options---------------------------------------------------
@@ -195,6 +194,29 @@ if(all)
  set(unuran_defvalue ON)
  set(vc_defvalue ON)
  set(vdt_defvalue ON)
+endif()
+
+#--- The 'builtin_all' option swithes ON old the built in options-------------------------------
+if(builtin_all)
+  set(builtin_afterimage_defvalue ON)
+  set(builtin_fftw3_defvalue ON)
+  set(builtin_ftgl_defvalue ON)
+  set(builtin_freetype_defvalue ON)
+  set(builtin_gl2ps_defvalue ON)
+  set(builtin_glew_defvalue ON)
+  set(builtin_openssl_defvalue ON)
+  set(builtin_pcre_defvalue ON)
+  set(builtin_unuran_defvalue ON)
+  set(builtin_zlib_defvalue ON)
+  set(builtin_lzma_defvalue ON)
+  set(builtin_davix_defvalue ON)
+  set(builtin_gsl_defvalue ON)
+  set(builtin_cfitsio_defvalue ON)
+  set(builtin_xrootd_defvalue ON)
+  set(builtin_llvm_defvalue ON)
+  set(builtin_tbb_defvalue ON)
+  set(builtin_vdt_defvalue ON)
+  set(builtin_vc_defvalue ON)
 endif()
 
 #---VC does not support yet Arm and PPC processors----------------------------------------------
@@ -236,7 +258,7 @@ set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # point to directories outside the build tree to the install RPATH
 
 # Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
-if(rpath OR gnuinstall)
+if(rpath)
   set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
   set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
 elseif(APPLE)

@@ -447,7 +447,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    if (pf) {
       Int_t res = -1;
       Bool_t free = kTRUE;
-      char *buffer;
+      char *buffer = nullptr;
       res = pf->GetUnzipBuffer(&buffer, pos, len, &free);
       if (R__unlikely(res >= 0)) {
          len = ReadBasketBuffersUnzip(buffer, res, free, file);
@@ -933,6 +933,15 @@ Int_t TBasket::WriteBuffer()
    }
    fMotherDir = file; // fBranch->GetDirectory();
 
+   // This mutex prevents multiple TBasket::WriteBuffer invocations from interacting
+   // with the underlying TFile at once - TFile is assumed to *not* be thread-safe.
+   //
+   // The only parallelism we'd like to exploit (right now!) is the compression
+   // step - everything else should be serialized at the TFile level.
+#ifdef R__USE_IMT
+   std::unique_lock<std::mutex> sentry(file->fWriteMutex);
+#endif  // R__USE_IMT
+
    if (R__unlikely(fBufferRef->TestBit(TBufferFile::kNotDecompressed))) {
       // Read the basket information that was saved inside the buffer.
       Bool_t writing = fBufferRef->IsWriting();
@@ -997,8 +1006,19 @@ Int_t TBasket::WriteBuffer()
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else bufmax = kMAXZIPBUF;
-         //compress the buffer
+         // Compress the buffer.  Note that we allow multiple TBasket compressions to occur at once
+         // for a given TFile: that's because the compression buffer when we use IMT is no longer
+         // shared amongst several threads.
+#ifdef R__USE_IMT
+         sentry.unlock();
+#endif  // R__USE_IMT
+         // NOTE this is declared with C linkage, so it shouldn't except.  Also, when
+         // USE_IMT is defined, we are guaranteed that the compression buffer is unique per-branch.
+         // (see fCompressedBufferRef in constructor).
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+#ifdef R__USE_IMT
+         sentry.lock();
+#endif  // R__USE_IMT
 
          // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed

@@ -38,7 +38,8 @@ BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 BASEDEP      := $(BASEO:.o=.d) $(ROOTAO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%,include/%,$(BASEH))
+BASEH_REL   := $(patsubst $(MODDIRI)/%,include/%,$(BASEH))
+ALLHDRS     += $(BASEH_REL)
 
 # include all dependency files
 INCLUDEFILES += $(BASEDEP)

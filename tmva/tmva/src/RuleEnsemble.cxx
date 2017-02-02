@@ -26,6 +26,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::RuleEnsemble
+\ingroup TMVA
+
+*/
 #include "TMVA/RuleEnsemble.h"
 
 #include "TMVA/DataSetInfo.h"
@@ -151,11 +155,9 @@ void TMVA::RuleEnsemble::SetMsgType( EMsgType t ) {
    fLogger->SetMinType(t);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Get a pointer to the original MethodRuleFit.
-///
 
 const TMVA::MethodRuleFit*  TMVA::RuleEnsemble::GetMethodRuleFit() const
 {
@@ -165,7 +167,6 @@ const TMVA::MethodRuleFit*  TMVA::RuleEnsemble::GetMethodRuleFit() const
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Get a pointer to the original MethodRuleFit.
-///
 
 const TMVA::MethodBase*  TMVA::RuleEnsemble::GetMethodBase() const
 {
@@ -178,7 +179,7 @@ const TMVA::MethodBase*  TMVA::RuleEnsemble::GetMethodBase() const
 void TMVA::RuleEnsemble::MakeModel()
 {
    MakeRules( fRuleFit->GetForest() );
-   
+
    MakeLinearTerms();
 
    MakeRuleMap();
@@ -193,7 +194,6 @@ void TMVA::RuleEnsemble::MakeModel()
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Calculates sqrt(Sum(a_i^2)), i=1..N (NOTE do not include a0)
-///
 
 Double_t TMVA::RuleEnsemble::CoefficientRadius()
 {
@@ -228,7 +228,7 @@ void TMVA::RuleEnsemble::SetCoefficients( const std::vector< Double_t > & v )
 {
    UInt_t nrules = fRules.size();
    if (v.size()!=nrules) {
-      Log() << kFATAL << "<SetCoefficients> - BUG TRAP - input vector worng size! It is = " << v.size()
+      Log() << kFATAL << "<SetCoefficients> - BUG TRAP - input vector wrong size! It is = " << v.size()
             << " when it should be = " << nrules << Endl;
    }
    for (UInt_t i=0; i<nrules; i++) {
@@ -254,7 +254,7 @@ void TMVA::RuleEnsemble::GetCoefficients( std::vector< Double_t > & v )
 /// get list of training events from the rule fitter
 
 const std::vector<const TMVA::Event*>* TMVA::RuleEnsemble::GetTrainingEvents()  const
-{ 
+{
    return &(fRuleFit->GetTrainingEvents());
 }
 
@@ -267,7 +267,7 @@ const TMVA::Event * TMVA::RuleEnsemble::GetTrainingEvent(UInt_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// remove rules that behave similar 
+/// remove rules that behave similar
 
 void TMVA::RuleEnsemble::RemoveSimilarRules()
 {
@@ -291,7 +291,7 @@ void TMVA::RuleEnsemble::RemoveSimilarRules()
                if (equal) {
                   r = gRandom->Rndm();
                   remind = (r>0.5 ? k:i); // randomly select rule
-               } 
+               }
                else {
                   remind = -1;
                }
@@ -314,11 +314,11 @@ void TMVA::RuleEnsemble::RemoveSimilarRules()
 #if _MSC_VER >= 1400
          fRules.erase( std::vector<Rule *>::iterator(&fRules[ind], &fRules) );
 #else
-         fRules.erase( fRules.begin() + ind ); 
+         fRules.erase( fRules.begin() + ind );
 #endif
          delete theRule;
          ind--;
-      } 
+      }
       ind++;
    }
    UInt_t nrulesOut = fRules.size();
@@ -349,7 +349,7 @@ void TMVA::RuleEnsemble::CleanupRules()
 #endif
          delete therule;
          ind--;
-      } 
+      }
       ind++;
    }
    Log() << kINFO << "Removed " << nrules-ind << " out of a total of " << nrules
@@ -490,9 +490,7 @@ Double_t TMVA::RuleEnsemble::CalcLinImportance()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// Calculates variable importance using eq (35) in RuleFit paper by Friedman et.al
-///
 
 void TMVA::RuleEnsemble::CalcVarImportance()
 {
@@ -556,10 +554,8 @@ void TMVA::RuleEnsemble::SetRules( const std::vector<Rule *> & rules )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// Makes rules from the given decision tree.
 /// First node in all rules is ALWAYS the root node.
-///
 
 void TMVA::RuleEnsemble::MakeRules( const std::vector< const DecisionTree *> & forest )
 {
@@ -595,8 +591,8 @@ void TMVA::RuleEnsemble::MakeRules( const std::vector< const DecisionTree *> & f
    Log() << kVERBOSE << "Corresponds to L (eq. 13, RuleFit ppr) = " << nmean << Endl;
    // a BUG trap
    if (nrulesCheck != static_cast<Int_t>(fRules.size())) {
-      Log() << kFATAL 
-            << "BUG! number of generated and possible rules do not match! N(rules) =  " << fRules.size() 
+      Log() << kFATAL
+            << "BUG! number of generated and possible rules do not match! N(rules) =  " << fRules.size()
             << " != " << nrulesCheck << Endl;
    }
    Log() << kVERBOSE << "Number of generated rules: " << fRules.size() << Endl;
@@ -611,10 +607,8 @@ void TMVA::RuleEnsemble::MakeRules( const std::vector< const DecisionTree *> & f
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// Make the linear terms as in eq 25, ref 2
-/// For this the b and (1-b) quatiles are needed
-///
+/// For this the b and (1-b) quantiles are needed
 
 void TMVA::RuleEnsemble::MakeLinearTerms()
 {
@@ -661,9 +655,9 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
    Double_t neff;
    UInt_t   indquantM;
    UInt_t   indquantP;
-   
+
    MethodBase *fMB=const_cast<MethodBase *>(fRuleFit->GetMethodBase());
-   
+
    for (UInt_t v=0; v<nvars; v++) {
       varsum[v] = 0;
       varsum2[v] = 0;
@@ -689,7 +683,7 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
       //
       fLinDM[v] = vardata[v][indquantM].first; // delta-
       fLinDP[v] = vardata[v][indquantP].first; // delta+
-        
+
       if(!fMB->IsSilentFile())
       {
             if (fLinPDFB[v]) delete fLinPDFB[v];
@@ -731,11 +725,8 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// This function returns Pr( y = 1 | x ) for the linear terms.
-///
 
 Double_t TMVA::RuleEnsemble::PdfLinear( Double_t & nsig, Double_t & ntot  ) const
 {
@@ -758,10 +749,8 @@ Double_t TMVA::RuleEnsemble::PdfLinear( Double_t & nsig, Double_t & ntot  ) cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// This function returns Pr( y = 1 | x ) for rules.
 /// The probability returned is normalized against the number of rules which are actually passed
-///
 
 Double_t TMVA::RuleEnsemble::PdfRule( Double_t & nsig, Double_t & ntot  ) const
 {
@@ -778,7 +767,7 @@ Double_t TMVA::RuleEnsemble::PdfRule( Double_t & nsig, Double_t & ntot  ) const
          neve = GetRulesConst(ir)->GetSSBNeve(); // number of events accepted by the rule
          sump  += ssb*neve; // number of signal events
          sumok += neve; // total number of events passed
-      } 
+      }
       else sumz += 1.0; // all events
    }
 
@@ -790,11 +779,8 @@ Double_t TMVA::RuleEnsemble::PdfRule( Double_t & nsig, Double_t & ntot  ) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// We want to estimate F* = argmin Eyx( L(y,F(x) ), min wrt F(x)
 /// F(x) = FL(x) + FR(x) , linear and rule part
-/// 
-///
 
 Double_t TMVA::RuleEnsemble::FStar( const Event & e )
 {
@@ -804,11 +790,8 @@ Double_t TMVA::RuleEnsemble::FStar( const Event & e )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// We want to estimate F* = argmin Eyx( L(y,F(x) ), min wrt F(x)
 /// F(x) = FL(x) + FR(x) , linear and rule part
-/// 
-///
 
 Double_t TMVA::RuleEnsemble::FStar() const
 {
@@ -874,7 +857,7 @@ void TMVA::RuleEnsemble::RuleResponseStats()
       sigRule = fRules[i]->IsSignalRule();
       if (sigRule) { // rule is a signal rule (ie s/(s+b)>0.5)
          nsig++;
-      } 
+      }
       else {
          nbkg++;
       }
@@ -982,8 +965,8 @@ void TMVA::RuleEnsemble::Print() const
    if (isDebug) {
       Log() << kDEBUG << "Variable importance:" << Endl;
       for (UInt_t iv = 0; iv<fVarImportance.size(); iv++) {
-         Log() << kDEBUG << std::setw(maxL) << GetMethodBase()->GetInputLabel(iv) 
-               << std::resetiosflags(std::ios::right) 
+         Log() << kDEBUG << std::setw(maxL) << GetMethodBase()->GetInputLabel(iv)
+               << std::resetiosflags(std::ios::right)
                << " : " << Form(" %3.3f",fVarImportance[iv]) << Endl;
       }
    }
@@ -1010,25 +993,25 @@ void TMVA::RuleEnsemble::Print() const
                      << std::resetiosflags(std::ios::right)
                      << " : " << Form(" %10.3e",fLinCoefficients[i]*fLinNorm[i])
                      << " : " << Form(" %3.3f",fLinImportance[i]/fImportanceRef) << Endl;
-            } 
+            }
             else {
-               Log() << kmtype << "-> importance below threshhold = "
+               Log() << kmtype << "-> importance below threshold = "
                      << Form(" %3.3f",fLinImportance[i]/fImportanceRef) << Endl;
             }
          }
          Log() << kmtype << "------------------------------------" << Endl;
       }
-   } 
+   }
    else Log() << kmtype << "Linear terms were disabled" << Endl;
 
    if ((!DoRules()) || (nrules==0)) {
       if (!DoRules()) {
          Log() << kmtype << "Rule terms were disabled" << Endl;
-      } 
-      else {
-         Log() << kmtype << "Eventhough rules were included in the model, none passed! " << nrules << Endl;
       }
-   } 
+      else {
+         Log() << kmtype << "Even though rules were included in the model, none passed! " << nrules << Endl;
+      }
+   }
    else {
       Log() << kmtype << "Number of rules = " << nrules << Endl;
       if (isDebug) {
@@ -1055,15 +1038,15 @@ void TMVA::RuleEnsemble::Print() const
       for ( std::list< std::pair<double,int> >::reverse_iterator itpair = sortedImp.rbegin();
             itpair != sortedImp.rend(); itpair++ ) {
          ind = itpair->second;
-         //    if (pind==0) impref = 
-         //         Log() << kmtype << "Rule #" << 
+         //    if (pind==0) impref =
+         //         Log() << kmtype << "Rule #" <<
          //         Log() << kmtype << *fRules[ind] << Endl;
          fRules[ind]->PrintLogger(Form("Rule %4d : ",pind+1));
          pind++;
          if (pind==printN) {
             if (nrules==printN) {
                Log() << kmtype << "All rules printed" << Endl;
-            } 
+            }
             else {
                Log() << kmtype << "Skipping the next " << nrules-printN << " rules" << Endl;
             }
@@ -1089,7 +1072,7 @@ void TMVA::RuleEnsemble::PrintRaw( std::ostream & os ) const
    os << "AverageSupport= "   << fAverageSupport << std::endl;
    os << "AverageRuleSigma= " << fAverageRuleSigma << std::endl;
    os << "Offset= "           << fOffset << std::endl;
-   os << "NRules= "           << nrules << std::endl; 
+   os << "NRules= "           << nrules << std::endl;
    for (UInt_t i=0; i<nrules; i++){
       os << "***Rule " << i << std::endl;
       (fRules[i])->PrintRaw(os);
@@ -1143,7 +1126,7 @@ void* TMVA::RuleEnsemble::AddXMLTo(void* parent) const
 ////////////////////////////////////////////////////////////////////////////////
 /// read rules from XML
 
-void TMVA::RuleEnsemble::ReadFromXML( void* wghtnode ) 
+void TMVA::RuleEnsemble::ReadFromXML( void* wghtnode )
 {
    UInt_t nrules, nlinear;
    gTools().ReadAttr( wghtnode, "NRules",   nrules );
@@ -1309,7 +1292,7 @@ void TMVA::RuleEnsemble::FindNEndNodes( const Node *node, Int_t & nendnodes )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// create rules from the decsision tree structure 
+/// create rules from the decision tree structure
 
 void TMVA::RuleEnsemble::MakeRulesFromTree( const DecisionTree *dtree )
 {
@@ -1326,14 +1309,14 @@ void TMVA::RuleEnsemble::AddRule( const Node *node )
    if (node->GetParent()==0) { // it's a root node, don't make a rule
       AddRule( node->GetRight() );
       AddRule( node->GetLeft() );
-   } 
+   }
    else {
       Rule *rule = MakeTheRule(node);
       if (rule) {
          fRules.push_back( rule );
          AddRule( node->GetRight() );
          AddRule( node->GetLeft() );
-      } 
+      }
       else {
          Log() << kFATAL << "<AddRule> - ERROR failed in creating a rule! BUG!" << Endl;
       }
@@ -1341,13 +1324,10 @@ void TMVA::RuleEnsemble::AddRule( const Node *node )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
 /// Make a Rule from a given Node.
 /// The root node (ie no parent) does not generate a Rule.
 /// The first node in a rule is always the root node => fNodes.size()>=2
 /// Each node corresponds to a cut and the cut value is given by the parent node.
-///
-///
 
 TMVA::Rule *TMVA::RuleEnsemble::MakeTheRule( const Node *node )
 {
@@ -1365,7 +1345,7 @@ TMVA::Rule *TMVA::RuleEnsemble::MakeTheRule( const Node *node )
    //
    // Make list with the input node at the end:
    // <root node> <node1> <node2> ... <node given as argument>
-   // 
+   //
    nodeVec.push_back( node );
    while (parent!=0) {
       parent = parent->GetParent();
@@ -1411,7 +1391,7 @@ void TMVA::RuleEnsemble::MakeRuleMap(const std::vector<const Event *> *events, U
    fRuleMapInd0   = ifirst;
    fRuleMapInd1   = ilast;
    // check number of rules
-   UInt_t nrules = GetNRules(); 
+   UInt_t nrules = GetNRules();
    if (nrules==0) {
       Log() << kVERBOSE << "No rules found in MakeRuleMap()" << Endl;
       fRuleMapOK = kTRUE;

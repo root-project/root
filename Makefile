@@ -26,6 +26,19 @@ include config/Makefile.config
 ##### bit build options.
 CONFIG_SITE =
 
+##### Make sure build products are taken instead of        #####
+##### binaries from a different, existing build.           #####
+export PATH := $(ROOT_OBJDIR)/bin:$(PATH)
+ifeq ($(subst win,,$(ARCH)),$(ARCH))
+# not windows
+ifeq ($(LD_LIBRARY_PATH),)
+export LD_LIBRARY_PATH := $(ROOT_OBJDIR)/lib
+else
+export LD_LIBRARY_PATH := $(ROOT_OBJDIR)/lib:$(LD_LIBRARY_PATH)
+endif
+endif
+
+
 ##### Include compiler overrides specified via ./configure #####
 ##### However, if we are building packages or cleaning, we #####
 ##### don't include this file since it may screw up things #####
@@ -76,10 +89,12 @@ include $(MAKEFILEDEP)
 
 ##### Modules to build #####
 
-MODULES       = build interpreter/llvm interpreter/cling core/metautils \
+MODULES       = build interpreter/llvm interpreter/cling core/foundation \
+                core/clingutils core/dictgen core/metacling \
                 core/pcre core/clib \
                 core/textinput core/base core/cont core/meta core/thread \
-                io/io math/mathcore net/net core/zip core/lzma math/matrix \
+                io/rootpcm io/io math/mathcore net/net core/zip core/lzma \
+                math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
                 graf2d/mathtext graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
@@ -96,7 +111,7 @@ ifeq ($(ARCH),win32)
 MODULES      += core/winnt graf2d/win32gdk
 MODULES      := $(filter-out core/newdelete,$(MODULES))
 SYSTEMDH      = $(WINNTH1)
-SYSTEMDICTH   = -DSYSTEM_TYPE_winnt $(SYSTEMDH)
+SYTSTEMDEF   := -DSYSTEM_TYPE_winnt
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
@@ -104,14 +119,14 @@ else
 ifeq ($(ARCH),win32gcc)
 MODULES      += core/unix
 SYSTEMDH      = $(UNIXH)
-SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
+SYSTEMDEF     = -DSYSTEM_TYPE_unix
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
 MODULES      += core/unix
 SYSTEMDH      = $(UNIXH)
-SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
+SYSTEMDEF     = -DSYSTEM_TYPE_unix
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
@@ -124,23 +139,29 @@ endif # not win32
 ifeq ($(BUILDCOCOA),yes)
 MODULES += core/macosx
 endif
-# utils/rootcling depends on system; must come after:
-MODULES += core/utils
+
+# rootcling_stage1 depends on system; must come after:
+MODULES += core/rootcling_stage1
 
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
+
 ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
 MODULES      += rootx
 SYSTEMDH     += $(MACOSXH1)
-SYSTEMDICTH   = -DSYSTEM_TYPE_macosx $(SYSTEMDH)
+SYSTEMDEF    := -DSYSTEM_TYPE_macosx
 SYSTEML      += $(MACOSXL)
 SYSTEMO      += $(MACOSXO)
 SYSTEMDO     += $(MACOSXDO)
 CORELIBEXTRA += -framework Cocoa
 endif
+
+SYSTEMDICTH = $(SYSTEMDEF) $(SYSTEMDH)
+
+
 ifeq ($(BUILDX11),yes)
 MODULES      += graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
 endif
@@ -341,8 +362,8 @@ endif
 MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
 
 ifeq ($(BUILDTOOLS),yes)
-MODULES       = build interpreter/llvm interpreter/cling core/metautils \
-                core/clib core/base core/meta core/utils
+MODULES       = build interpreter/llvm interpreter/cling core/foundation core/dictgen \
+                core/clib core/base core/meta core/rootcling_stage1
 endif
 
 ##### ROOT libraries #####
@@ -353,12 +374,14 @@ ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 NEWLIBS      := -lNew
 BOOTLIBS     := -lCore
+ROOTCLINGLIBS:= -lRIO $(BOOTLIBS) -lCling
 ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad -lTree \
                 -lMatrix -lNet -lThread -lMathCore $(BOOTLIBS)
 RINTLIBS     := -lRint
 else
 NEWLIBS      := $(LPATH)/libNew.lib
 BOOTLIBS     := $(LPATH)/libCore.lib
+ROOTCLINGLIBS:= $(LPATH)/libRIO.lib $(BOOTLIBS) $(LPATH)/libCling.lib
 ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
                 $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
                 $(LPATH)/libGpad.lib $(LPATH)/libTree.lib \
@@ -374,6 +397,7 @@ PROOFSERVA   := bin/proofserva
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 BOOTLIBSDEP   = $(ORDER_) $(CORELIB)
+ROOTCLINGLIBSDEP = $(ORDER_) $(CORELIB) $(IOLIB) $(CLINGLIB)
 ROOTLIBSDEP   = $(BOOTLIBSDEP) $(MATHCORELIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 
@@ -554,16 +578,17 @@ COREBASEDIRS := $(ROOT_SRCDIR)/core/base/src
 COREBASEDIRI := $(ROOT_SRCDIR)/core/base/inc
 COREL0        = -I$(ROOT_SRCDIR) $(COREBASEDIRI)/LinkDef.h
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
+                $(SYSTEML) $(CLIBL) $(FOUNDATIONL) $(DICTGENL) \
+                $(METACLINGL) $(TEXTINPUTL)
 COREDS       := $(call stripsrc,$(COREBASEDIRS)/G__Core.cxx)
 COREDO       := $(COREDS:.cxx=.o)
 COREDH       := $(COREDS:.cxx=.h)
-COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMH) $(ZIPDICTH) \
-		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
-COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
-                $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
-COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
-                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO)
+COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDH) \
+		$(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
+COREDICTH     = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDICTH) \
+                $(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
+COREO         = $(BASEO) $(CONTO) $(FOUNDATIONO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
+                $(CLIBO) $(TEXTINPUTO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
@@ -592,15 +617,38 @@ endif
 ##### all #####
 ALLHDRS :=
 ifeq ($(CXXMODULES),yes)
+# Add the ROOT Core module. It is organized differently and we cannot do it in
+# a Module.mk
+CXXMODULES_HEADERS :=
+CXXMODULES_MODULEMAP_CONTENTS :=
+
 # Copy the modulemap in $ROOTSYS/include first.
 ALLHDRS  := include/module.modulemap
-ROOT_CXXMODULES_CXXFLAGS =  -fmodules -fcxx-modules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
-ROOT_CXXMODULES_CFLAGS =  -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/
+# FIXME: Remove -fno-autolink once the clang's modules autolinking is done on a
+#use of a header not unconditionally.
+ROOT_CXXMODULES_COMMONFLAGS := -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Rmodule-build
+ifeq ($(PLATFORM),macosx)
 # FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
-# Frameworks' modulemaps predate the flag.
-ifneq ($(PLATFORM),macosx)
-ROOT_CXXMODULES_CXXFLAGS += -Xclang -fmodules-local-submodule-visibility
-endif # not macos
+# Frameworks' modulemaps predate the flag. Here we exclude the system module maps
+# and use only the ROOT one. This is suboptimal, because module-aware systems
+# should give us better performance.
+ROOT_CXXMODULES_COMMONFLAGS += -fno-implicit-module-maps -fmodule-map-file=$(ROOT_OBJDIR)/include/module.modulemap
+# FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+# trickery to override the contents of system's OpenGL.
+# On OSX #include TGLIncludes.h will trigger the creation of the system
+# OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+# the translation units which it needs to 'rewrite'. The translation units
+# which need glew support are in graf3d. However, depending on the modulemap
+# organization we could request it implicitly (eg. one big module for ROOT).
+# In these cases we need to 'prepend' this include path to the compiler in order
+# for glew.h to it its trick.
+#
+# Turn on when we remove -fno-implicit-module-maps
+#ROOT_CXXMODULES_COMMONFLAGS +=  -isystem $(ROOT_SRCDIR)/graf3d/glew/isystem/
+endif # macosx
+
+ROOT_CXXMODULES_CXXFLAGS :=  $(ROOT_CXXMODULES_COMMONFLAGS) -fcxx-modules -Xclang -fmodules-local-submodule-visibility
+ROOT_CXXMODULES_CFLAGS := $(ROOT_CXXMODULES_COMMONFLAGS)
 
 CXXFLAGS += $(ROOT_CXXMODULES_CXXFLAGS)
 CFLAGS   += $(ROOT_CXXMODULES_CFLAGS)
@@ -611,7 +659,6 @@ CXXFLAGS += --gcc-toolchain=$(GCCTOOLCHAIN)
 CFLAGS   += --gcc-toolchain=$(GCCTOOLCHAIN)
 LDFLAGS  += --gcc-toolchain=$(GCCTOOLCHAIN)
 endif
-
 
 ALLLIBS      := $(CORELIB)
 ALLMAPS      := $(COREMAP)
@@ -654,8 +701,8 @@ $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.c
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.mm
 	$$(MAKEDIR)
-	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXMKDEPFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
+	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(OBJCXXFLAGS) -D__cplusplus -- $$<
+	$$(CXX) $$(OPT) $$(OBJCXXFLAGS) $$(CXXMKDEPFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.f
 	$$(MAKEDIR)
@@ -684,8 +731,8 @@ $(foreach module,$(MODULESGENERIC),$(eval $(call SRCTOOBJ_template,$(module))))
 	$(CC) $(OPT) $(CFLAGS) $(CXXMKDEPFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.mm
-	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXMKDEPFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(OBJCXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(OBJCXXFLAGS) $(CXXMKDEPFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
 
 %.o: %.f
 ifeq ($(F77),f2c)
@@ -711,11 +758,9 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
-ifeq ($(USECONFIG),FALSE)
 all: tutorials/hsimple.root
 tutorials/hsimple.root: rootexecs postbin
-	@(cd tutorials; ! ../bin/root -l -q -b -n -x hsimple.C)
-endif
+	@(cd tutorials; ! ROOTIGNOREPREFIX=1 ../bin/root -l -q -b -n -x hsimple.C)
 
 all:            rootexecs postbin
 	@echo " "
@@ -749,7 +794,7 @@ endif
 endif
 endif
 
-rootcling:      all-cling all-utils compiledata
+rootcling:      all-cling compiledata
 
 rootlibs:       rootcling $(ALLLIBS)
 
@@ -812,7 +857,7 @@ Makefile: $(addprefix $(ROOT_SRCDIR)/,configure config/rootrc.in \
   config/RConfigure.in config/Makefile.in config/Makefile.$(ARCH) \
   config/Makefile-comp.in config/root-config.in config/rootauthrc.in \
   config/rootdaemonrc.in config/mimes.unix.in config/mimes.win32.in \
-  config/proofserv.in config/roots.in) config.status
+  config/proofserv.in config/xproofd.in config/roots.in) config.status
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 	cp $(ROOT_SRCDIR)/Makefile $@
 endif
@@ -832,8 +877,44 @@ $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp Make
 	   "$(EXPLICITLINK)"
 
 ifeq ($(CXXMODULES),yes)
-include/module.modulemap:    $(ROOT_SRCDIR)/build/unix/module.modulemap
+
+# We cannot use the usual way of setting CXXMODULES_MODULEMAP_CONTENTS for core,
+# because we require information from the core submodules. Thus we have to access
+# the information at the target.
+#
+# We use the relative path of COREDICT.
+# FIXME: We probably should be chaning the COREDICTH to use relative paths, too.
+# COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
+#                $(ZIPDICTH) $(CLIBHH) $(CLINGUTILSH) $(TEXTINPUTH)
+include/module.modulemap:
+COREDICTH_REL := $(BASEH_REL) $(CONTH_REL) $(METAH_REL) $(CLINGUTILSH_REL)
+COREDICTH_REL := $(patsubst include/%,%, $(COREDICTH_REL))
+CXXMODULES_CORE_EXCLUDE := RConfig.h RVersion.h  RtypesImp.h \
+			   Rtypes.h RtypesCore.h TClassEdit.h TClingUtils.h \
+			   DllImport.h TGenericClassInfo.h \
+			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
+			   RootMetaSelection.h libcpp_string_view.h \
+			   RWrap_libcpp_string_view.h TAtomicCountGcc.h \
+			   TException.h ROOT/TThreadExecutor.hxx TBranchProxyTemplate.h \
+			   TGLIncludes.h TGLWSIncludes.h snprintf.h strlcpy.h
+COREDICTH_REL := $(filter-out $(CXXMODULES_CORE_EXCLUDE),$(COREDICTH_REL))
+CXXMODULES_CORE_HEADERS := $(patsubst %,header \"%\"\\n, $(COREDICTH_REL))
+CXXMODULES_CORE_MODULEMAP_CONTENTS := module Core { \\n \
+  requires cplusplus \\n \
+  $(CXXMODULES_CORE_HEADERS) \
+  "export * \\n" \
+  link \"$(CORELIB)\" \\n \
+  } \\n
+CXXMODULES_ROOT_MODULE := "module ROOT {\\n" \
+	                  "$(CXXMODULES_CORE_MODULEMAP_CONTENTS)" \
+                          "$(CXXMODULES_MODULEMAP_CONTENTS)" \
+			  "\\n } //module ROOT \\n"
+ifneq ($(PLATFORM),macosx)
+CXXMODULES_ECHO_ARGS := -e
+endif
+include/module.modulemap: $(ROOT_SRCDIR)/build/unix/module.modulemap
 	cp $< $@
+	@echo $(CXXMODULES_ECHO_ARGS) "$(CXXMODULES_ROOT_MODULE)" | sed -e 's|export \\|export |g' | sed -E 's|(\s*)(.*) header "(.*)"|\1 module "\3" { \2 header "\3" export * }|g' >> $@
 endif
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.
@@ -867,7 +948,7 @@ endif
 $(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating dictionary $@..."
-	$(ROOTCLINGSTAGE1) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
+	$(ROOTCLINGSTAGE1) -f $@ -s $(CORELIB) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0) && touch lib/libCore_rdict.pcm
 
 $(call pcmname,$(CORELIB)): $(COREDS)
@@ -1110,7 +1191,7 @@ maintainer-clean:: distclean
 	   etc/system.rootdaemonrc etc/root.mimes etc/daemons/rootd.rc.d \
 	   etc/daemons/rootd.xinetd etc/daemons/proofd.rc.d etc/cling \
 	   etc/daemons/proofd.xinetd main/src/proofserv.sh main/src/roots.sh \
-	   macros/html.C \
+	   main/src/xproofd.sh macros/html.C \
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
@@ -1141,19 +1222,19 @@ changelog:
 
 releasenotes:
 	@$(MAKERELNOTES)
-ROOTCLING_CXXFLAGS := $(CXXFLAGS)
+ROOTPCHCXXFLAGS := $(CXXFLAGS)
 # rootcling uses our internal version of clang. Passing the modules flags here
 # would allow rootcling to find module files built by the external compiler
 # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
 # different clang version (even different commit revision) as the modules files
 # are not guaranteed to be compatible among clang revisions.
 ifeq ($(CXXMODULES),yes)
-ROOTCLING_CXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(CXXFLAGS))
+ROOTPCHCXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(ROOTPCHCXXFLAGS))
 endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTCLING_CXXFLAGS)
-	@$(MAKEPCH) $@
+	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS) $(SYSTEMDEF)
+	@ROOTIGNOREPREFIX=1 $(MAKEPCH) $@
 
 $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
 	@mkdir -p $(dir $@)
@@ -1258,8 +1339,6 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
-	   (cd $(DESTDIR)$(TUTDIR); \
-	      ! LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
 	fi
 
 uninstall:
@@ -1386,7 +1465,6 @@ runtimedirs:
 		--exclude proofd.xinetd \
 		--exclude rootd.rc.d \
 		--exclude rootd.xinetd \
-		--exclude gitinfo.txt \
 		$(ROOT_SRCDIR)/etc . ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
 	$(RSYNC) \

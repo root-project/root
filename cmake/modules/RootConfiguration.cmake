@@ -645,7 +645,7 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
 install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake
               ${CMAKE_BINARY_DIR}/installtree/ROOTUseFile.cmake
               ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
-install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+install(EXPORT ${CMAKE_PROJECT_NAME}Exports NAMESPACE ROOT:: FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
@@ -670,8 +670,8 @@ endif()
 
 #---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
-
-configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
+file(REMOVE ${CMAKE_BINARY_DIR}/installtree/root-config)
+configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
@@ -688,6 +688,15 @@ if(WIN32)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
 endif()
 
+#--Local root-configure
+set(prefix $ROOTSYS)
+set(bindir $ROOTSYS/bin)
+set(libdir $ROOTSYS/lib)
+set(incdir $ROOTSYS/include)
+set(etcdir $ROOTSYS/etc)
+set(mandir $ROOTSYS/man)
+configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
+
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
@@ -699,7 +708,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               DESTINATION ${CMAKE_INSTALL_BINDIR})
               
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config
+              ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv

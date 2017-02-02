@@ -28,9 +28,18 @@ POSTSCRIPTLIB := $(LPATH)/libPostscript.$(SOEXT)
 POSTSCRIPTMAP := $(POSTSCRIPTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(POSTSCRIPTH))
+POSTSCRIPTH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(POSTSCRIPTH))
+ALLHDRS       += $(POSTSCRIPTH_REL)
 ALLLIBS       += $(POSTSCRIPTLIB)
 ALLMAPS       += $(POSTSCRIPTMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(POSTSCRIPTH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Core_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(POSTSCRIPTLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(POSTSCRIPTDEP)

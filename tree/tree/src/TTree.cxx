@@ -1336,17 +1336,17 @@ Long64_t TTree::AutoSave(Option_t* option)
 {
    if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return 0;
    if (gDebug > 0) {
-      printf("AutoSave Tree:%s after %lld bytes written\n",GetName(),fTotBytes);
+      Info("AutoSave", "Tree:%s after %lld bytes written\n",GetName(),GetTotBytes());
    }
    TString opt = option;
    opt.ToLower();
 
    if (opt.Contains("flushbaskets")) {
-      if (gDebug > 0) printf("AutoSave:  calling FlushBaskets \n");
+      if (gDebug > 0) Info("AutoSave", "calling FlushBaskets \n");
       FlushBaskets();
    }
 
-   fSavedBytes = fZipBytes;
+   fSavedBytes = GetZipBytes();
 
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
    Long64_t nbytes;
@@ -3608,7 +3608,7 @@ void TTree::Delete(Option_t* option /* = "" */)
          key = fDirectory->GetKey(GetName());
       }
       if (dirsav) dirsav->cd();
-      if (gDebug) printf(" Deleting Tree: %s: %d baskets deleted. Total space freed = %d bytes\n",GetName(),nbask,ntot);
+      if (gDebug) Info("TTree::Delete", "Deleting Tree: %s: %d baskets deleted. Total space freed = %d bytes\n",GetName(),nbask,ntot);
    }
 
    if (fDirectory) {
@@ -4417,24 +4417,25 @@ Int_t TTree::Fill()
    if (fEntries > fMaxEntries) {
       KeepCircular();
    }
-   if (gDebug > 0) printf("TTree::Fill - A:  %d %lld %lld %lld %lld %lld %lld \n",
-       nbytes, fEntries, fAutoFlush,fAutoSave,fZipBytes,fFlushedBytes,fSavedBytes);
+   if (gDebug > 0) Info("TTree::Fill", " - A:  %d %lld %lld %lld %lld %lld %lld \n",
+       nbytes, fEntries, fAutoFlush,fAutoSave,GetZipBytes(),fFlushedBytes,fSavedBytes);
 
    if (fAutoFlush != 0 || fAutoSave != 0) {
       // Is it time to flush or autosave baskets?
       if (fFlushedBytes == 0) {
          // Decision can be based initially either on the number of bytes
          // or the number of entries written.
-         if ((fAutoFlush<0 && fZipBytes > -fAutoFlush)  ||
-             (fAutoSave <0 && fZipBytes > -fAutoSave )  ||
+         Long64_t zipBytes = GetZipBytes();
+         if ((fAutoFlush<0 && zipBytes > -fAutoFlush)  ||
+             (fAutoSave <0 && zipBytes > -fAutoSave )  ||
              (fAutoFlush>0 && fEntries%TMath::Max((Long64_t)1,fAutoFlush) == 0) ||
              (fAutoSave >0 && fEntries%TMath::Max((Long64_t)1,fAutoSave)  == 0) ) {
 
             //First call FlushBasket to make sure that fTotBytes is up to date.
             FlushBaskets();
-            OptimizeBaskets(fTotBytes,1,"");
-            if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
-            fFlushedBytes = fZipBytes;
+            OptimizeBaskets(GetTotBytes(),1,"");
+            if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
+            fFlushedBytes = GetZipBytes();
             fAutoFlush    = fEntries;  // Use test on entries rather than bytes
 
             // subsequently in run
@@ -4442,10 +4443,11 @@ Int_t TTree::Fill()
                // Set fAutoSave to the largest integer multiple of
                // fAutoFlush events such that fAutoSave*fFlushedBytes
                // < (minus the input value of fAutoSave)
-               if (fZipBytes != 0) {
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fZipBytes)/fEntries));
-               } else if (fTotBytes != 0) {
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fTotBytes)/fEntries));
+               Long64_t totBytes = GetTotBytes();
+               if (zipBytes != 0) {
+                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/zipBytes)/fEntries));
+               } else if (totBytes != 0) {
+                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/totBytes)/fEntries));
                } else {
                   TBufferFile b(TBuffer::kWrite, 10000);
                   TTree::Class()->WriteBuffer(b, (TTree*) this);
@@ -4462,24 +4464,24 @@ Int_t TTree::Fill()
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
             //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
             AutoSave("flushbaskets");
-            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,GetZipBytes(),fSavedBytes);
          } else {
             //We only FlushBaskets
             FlushBaskets();
-            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
          }
-         fFlushedBytes = fZipBytes;
+         fFlushedBytes = GetZipBytes();
       } else if (fNClusterRange == 0 && fEntries > 1 && fAutoFlush && fEntries%fAutoFlush == 0) {
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
             //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
             AutoSave("flushbaskets");
-            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,GetZipBytes(),fSavedBytes);
          } else {
             //We only FlushBaskets
             FlushBaskets();
-            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
          }
-         fFlushedBytes = fZipBytes;
+         fFlushedBytes = GetZipBytes();
       }
    }
    // Check that output file is still below the maximum size.
@@ -4790,8 +4792,41 @@ Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection
    return -1;
 }
 
+namespace {
+struct BoolRAIIToggle {
+   Bool_t &m_val;
+
+   BoolRAIIToggle(Bool_t &val) : m_val(val) { m_val = true; }
+   ~BoolRAIIToggle() { m_val = false; }
+};
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Write to disk all the basket that have not yet been individually written.
+///
+/// If ROOT has IMT-mode enabled, this will launch multiple TBB tasks in parallel
+/// to do this operation; one per basket compression.  If the caller utilizes
+/// TBB also, care must be taken to prevent deadlocks.
+///
+/// For example, let's say the caller holds mutex A and calls FlushBaskets; while
+/// TBB is waiting for the ROOT compression tasks to complete, it may decide to
+/// run another one of the user's tasks in this thread.  If the second user task
+/// tries to acquire A, then a deadlock will occur.  The example call sequence
+/// looks like this:
+///
+/// - User acquires mutex A
+/// - User calls FlushBaskets.
+/// - ROOT launches N tasks and calls wait.
+/// - TBB schedules another user task, T2.
+/// - T2 tries to acquire mutex A.
+///
+/// At this point, the thread will deadlock: the code may function with IMT-mode
+/// disabled if the user assumed the legacy code never would run their own TBB
+/// tasks.
+///
+/// SO: users of TBB who want to enable IMT-mode should carefully review their
+/// locking patterns and make sure they hold no coarse-grained application
+/// locks when they invoke ROOT.
 ///
 /// Return the number of bytes written or -1 in case of write error.
 
@@ -4802,6 +4837,53 @@ Int_t TTree::FlushBaskets() const
    Int_t nerror = 0;
    TObjArray *lb = const_cast<TTree*>(this)->GetListOfBranches();
    Int_t nb = lb->GetEntriesFast();
+
+#ifdef R__USE_IMT
+   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+      if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeSortedBranches(); }
+
+      BoolRAIIToggle sentry(fIMTFlush);
+      fIMTZipBytes.store(0);
+      fIMTTotBytes.store(0);
+      std::atomic<Int_t> nerrpar(0);
+      std::atomic<Int_t> nbpar(0);
+      std::atomic<Int_t> pos(0);
+      tbb::task_group g;
+
+      for (Int_t i = 0; i < nb; i++) {
+         g.run([&]() {
+            // The branch to process is obtained when the task starts to run.
+            // This way, since branches are sorted, we make sure that branches
+            // leading to big tasks are processed first. If we assigned the
+            // branch at task creation time, the scheduler would not necessarily
+            // respect our sorting.
+            Int_t j = pos.fetch_add(1);
+
+            auto branch = fSortedBranches[j].second;
+            if (R__unlikely(!branch)) { return; }
+
+            if (R__unlikely(gDebug > 0)) {
+               std::stringstream ss;
+               ss << std::this_thread::get_id();
+               Info("FlushBaskets", "[IMT] Thread %s", ss.str().c_str());
+               Info("FlushBaskets", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+            }
+
+            Int_t nbtask = branch->FlushBaskets();
+
+            if (nbtask < 0) { nerrpar++; }
+            else            { nbpar += nbtask; }
+         });
+      }
+      g.wait();
+
+      fIMTFlush = false;
+      const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
+      const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
+
+      return nerrpar ? -1 : nbpar.load();
+   }
+#endif
    for (Int_t j = 0; j < nb; j++) {
       TBranch* branch = (TBranch*) lb->UncheckedAt(j);
       if (branch) {
@@ -5006,7 +5088,7 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 
    if (fAutoFlush < 0) cacheSize = Long64_t(-cacheFactor*fAutoFlush);
    else if (fAutoFlush == 0) cacheSize = 0;
-   else cacheSize = Long64_t(cacheFactor*1.5*fAutoFlush*fZipBytes/(fEntries+1));
+   else cacheSize = Long64_t(cacheFactor*1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
 
    if (cacheSize >= (INT_MAX / 4)) {
       cacheSize = INT_MAX / 4;
@@ -5019,7 +5101,7 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
    if (cacheSize == 0 && withDefault) {
       if (fAutoFlush < 0) cacheSize = -fAutoFlush;
       else if (fAutoFlush == 0) cacheSize = 0;
-      else cacheSize = Long64_t(1.5*fAutoFlush*fZipBytes/(fEntries+1));
+      else cacheSize = Long64_t(1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
    }
 
    return cacheSize;
@@ -6246,7 +6328,7 @@ Int_t TTree::MakeCode(const char* filename)
 /// The default histogram is accessible via the variable named 'htemp'.
 ///
 /// If the library of the classes describing the data in the branch is
-/// loaded, the skeleton will add the needed #include statements and
+/// loaded, the skeleton will add the needed `include` statements and
 /// give the ability to access the object stored in the branches.
 ///
 /// To draw px using the file hsimple.root (generated by the
@@ -6516,7 +6598,7 @@ Bool_t TTree::Notify()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function may be called after having filled some entries in a Tree
+/// This function may be called after having filled some entries in a Tree.
 /// Using the information in the existing branch buffers, it will reassign
 /// new branch buffer sizes to optimize time and memory.
 ///
@@ -6600,7 +6682,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (newBsize < bmin) newBsize = bmin;
          if (newBsize > 10000000) newBsize = bmax;
          if (pass) {
-            if (pDebug) printf("Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
+            if (pDebug) Info("OptimizeBaskets", "Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
             branch->SetBasketSize(newBsize);
          }
          newMemsize += newBsize;
@@ -6613,7 +6695,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          Double_t comp = 1;
          if (branch->GetZipBytes() > 0) comp = totBytes/Double_t(branch->GetZipBytes());
          if (comp > 1 && comp < minComp) {
-            if (pDebug) printf("Disabling compression for branch : %s\n",branch->GetName());
+            if (pDebug) Info("OptimizeBaskets", "Disabling compression for branch : %s\n",branch->GetName());
             branch->SetCompressionSettings(0);
          }
       }
@@ -6634,8 +6716,8 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
       bmax = (bmax_new > hardmax) ? bmin : (UInt_t)bmax_new;
    }
    if (pDebug) {
-      printf("oldMemsize = %d,  newMemsize = %d\n",oldMemsize, newMemsize);
-      printf("oldBaskets = %d,  newBaskets = %d\n",oldBaskets, newBaskets);
+      Info("OptimizeBaskets", "oldMemsize = %d,  newMemsize = %d\n",oldMemsize, newMemsize);
+      Info("OptimizeBaskets", "oldBaskets = %d,  newBaskets = %d\n",oldBaskets, newBaskets);
    }
 }
 
@@ -6702,16 +6784,17 @@ void TTree::Print(Option_t* option) const
       }
    }
    Long64_t total = skey;
-   if (fZipBytes > 0) {
-      total += fTotBytes;
+   Long64_t zipBytes = GetZipBytes();
+   if (zipBytes > 0) {
+      total += GetTotBytes();
    }
    TBufferFile b(TBuffer::kWrite, 10000);
    TTree::Class()->WriteBuffer(b, (TTree*) this);
    total += b.Length();
-   Long64_t file = fZipBytes + s;
+   Long64_t file = zipBytes + s;
    Float_t cx = 1;
-   if (fZipBytes) {
-      cx = (fTotBytes + 0.00001) / fZipBytes;
+   if (zipBytes) {
+      cx = (GetTotBytes() + 0.00001) / zipBytes;
    }
    Printf("******************************************************************************");
    Printf("*Tree    :%-10s: %-54s *", GetName(), GetTitle());
@@ -6758,7 +6841,7 @@ void TTree::Print(Option_t* option) const
          if (count[l] < 0) continue;
          leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
          br   = leaf->GetBranch();
-         printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
+         Printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
       }
       delete [] count;
    } else {
@@ -6790,7 +6873,8 @@ void TTree::Print(Option_t* option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print statistics about the TreeCache for this tree, like
+/// Print statistics about the TreeCache for this tree.
+/// Like:
 /// ~~~ {.cpp}
 ///     ******TreeCache statistics for file: cms2.root ******
 ///     Reading 73921562 bytes in 716 transactions
@@ -7352,8 +7436,8 @@ void TTree::Refresh()
 
    fAutoSave = tree->fAutoSave;
    fEntries = tree->fEntries;
-   fTotBytes = tree->fTotBytes;
-   fZipBytes = tree->fZipBytes;
+   fTotBytes = tree->GetTotBytes();
+   fZipBytes = tree->GetZipBytes();
    fSavedBytes = tree->fSavedBytes;
    fTotalBuffers = tree->fTotalBuffers.load();
 
@@ -7662,7 +7746,7 @@ void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function may be called at the start of a program to change
-/// the default value for fAutoSave (and for SetAutoSave) is -300000000, ie 300 MBytes
+/// the default value for fAutoSave (and for SetAutoSave) is -300000000, ie 300 MBytes.
 /// When filling the Tree the branch buffers as well as the Tree header
 /// will be flushed to disk when the watermark is reached.
 /// If fAutoSave is positive the watermark is reached when a multiple of fAutoSave
@@ -8823,10 +8907,12 @@ void TTree::Streamer(TBuffer& b)
          } else if (fAutoFlush != 0) {
             // Estimate the cluster size.
             // This will allow TTree::Process to enable the cache.
-            if (fZipBytes != 0) {
-               fCacheSize =  fAutoFlush*(fZipBytes/fEntries);
-            } else if (fTotBytes != 0) {
-               fCacheSize =  fAutoFlush*(fTotBytes/fEntries);
+            Long64_t zipBytes = GetZipBytes();
+            Long64_t totBytes = GetTotBytes();
+            if (zipBytes != 0) {
+               fCacheSize =  fAutoFlush*(zipBytes/fEntries);
+            } else if (totBytes != 0) {
+               fCacheSize =  fAutoFlush*(totBytes/fEntries);
             } else {
                fCacheSize = 30000000;
             }

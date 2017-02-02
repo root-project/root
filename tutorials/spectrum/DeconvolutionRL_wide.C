@@ -17,12 +17,12 @@ void DeconvolutionRL_wide() {
    Double_t response[nbins];
    gROOT->ForceStyle();
 
-   TString dir  = gROOT->GetTutorialsDir();
+   TString dir  = gROOT->GetTutorialDir();
    TString file = dir+"/spectrum/TSpectrum.root";
    TFile *f     = new TFile(file.Data());
-   h = (TH1F*) f->Get("decon3");
+   TH1F* h = (TH1F*) f->Get("decon3");
    h->SetTitle("Deconvolution of closely positioned overlapping peaks using Richardson-Lucy deconvolution method");
-   d = (TH1F*) f->Get("decon_response_wide");
+   TH1F* d = (TH1F*) f->Get("decon_response_wide");
 
    for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
    for (i = 0; i < nbins; i++) response[i]=d->GetBinContent(i + 1);

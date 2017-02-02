@@ -26,8 +26,17 @@ PQ2LIBSDEP    = $(BOOTLIBSDEP) $(IOLIB) $(NETLIB) $(HISTLIB) $(TREELIB) \
                 $(MATRIXLIB) $(MATHCORELIB) $(PROOFLIB) $(THREADLIB)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PQ2H))
+PQ2H_REL     := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PQ2H))
+ALLHDRS      += $(PQ2H_REL)
 ALLEXECS     += $(PQ2)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PQ2H_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Proof_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += // link no-library-created \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PQ2DEP)

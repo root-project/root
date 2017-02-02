@@ -17,10 +17,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-/**
-\file RooBCPGenDecay.cxx
-\class RooBCPGenDecay
-\ingroup Roofit
+/** \class RooBCPGenDecay
+    \ingroup Roofit
 
 Implement standard CP physics model with S and C (no mention of lambda)
 Suitably stolen and modified from RooBCPEffDecay
@@ -33,28 +31,25 @@ Suitably stolen and modified from RooBCPEffDecay
 
 using namespace std;
 
-ClassImp(RooBCPGenDecay) 
-;
-
-
+ClassImp(RooBCPGenDecay)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title, 
-			       RooRealVar& t, RooAbsCategory& tag,
-			       RooAbsReal& tau, RooAbsReal& dm,
-			       RooAbsReal& avgMistag, 
-			       RooAbsReal& a, RooAbsReal& b,
-			       RooAbsReal& delMistag,
+RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
+                RooRealVar& t, RooAbsCategory& tag,
+                RooAbsReal& tau, RooAbsReal& dm,
+                RooAbsReal& avgMistag,
+                RooAbsReal& a, RooAbsReal& b,
+                RooAbsReal& delMistag,
                                RooAbsReal& mu,
-			       const RooResolutionModel& model, DecayType type) :
-  RooAbsAnaConvPdf(name,title,model,t), 
+                const RooResolutionModel& model, DecayType type) :
+  RooAbsAnaConvPdf(name,title,model,t),
   _avgC("C","Coefficient of cos term",this,a),
   _avgS("S","Coefficient of sin term",this,b),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
-  _delMistag("delMistag","Delta mistag rate",this,delMistag),  
-  _mu("mu","Tagg efficiency difference",this,mu),  
+  _delMistag("delMistag","Delta mistag rate",this,delMistag),
+  _mu("mu","Tagg efficiency difference",this,mu),
   _t("t","time",this,t),
   _tau("tau","decay time",this,tau),
   _dm("dm","mixing frequency",this,dm),
@@ -81,13 +76,11 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
   }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) : 
-  RooAbsAnaConvPdf(other,name), 
+RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
+  RooAbsAnaConvPdf(other,name),
   _avgC("C",this,other._avgC),
   _avgS("S",this,other._avgS),
   _avgMistag("avgMistag",this,other._avgMistag),
@@ -105,8 +98,6 @@ RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -114,13 +105,11 @@ RooBCPGenDecay::~RooBCPGenDecay()
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// B0    : _tag = +1 
-/// B0bar : _tag = -1 
+/// B0    : _tag = +1
+/// B0bar : _tag = -1
 
-Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const 
+Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
 {
   if (basisIndex==_basisExp) {
     //exp term: (1 -/+ dw + mu*_tag*w)
@@ -133,32 +122,28 @@ Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
     return (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS ;
     // =   (_tag*avgDil + _mu*(1 + tag*deltaDil/2)) * S
   }
-  
+
   if (basisIndex==_basisCos) {
     //cos term: -(+/- (1-2w) + _mu*(1 -/+ delw))*C
     return -1.*(_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC ;
     // =   -(_tag*avgDil + _mu*(1 + _tag*deltaDil/2) )* C
-  } 
-  
+  }
+
   return 0 ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   if (rangeName) return 0 ;
   if (matchArgs(allVars,analVars,_tag)) return 1 ;
   return 0 ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
+Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
 {
   switch(code) {
     // No integration
@@ -169,7 +154,7 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
     if (basisIndex==_basisExp) {
       return 2 ;
     }
-    
+
     if (basisIndex==_basisSin) {
       return 2*_mu*_avgS ;
     }
@@ -177,15 +162,13 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
       return -2*_mu*_avgC ;
     }
     break ;
-    
+
   default:
     assert(0) ;
   }
-    
+
   return 0 ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,11 +177,9 @@ Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &gener
   if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;
   }
-  if (matchArgs(directVars,generateVars,_t)) return 1 ;  
+  if (matchArgs(directVars,generateVars,_t)) return 1 ;
   return 0 ;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -210,10 +191,8 @@ void RooBCPGenDecay::initGenerator(Int_t code)
     _tag = 1 ;
     Double_t b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
     _genB0Frac = b0Int/sumInt ;
-  }  
+  }
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate mix-state dependent
@@ -245,18 +224,17 @@ void RooBCPGenDecay::generateEvent(Int_t code)
     // Accept event if T is in generated range
     Double_t maxDil = 1.0 ;
 // 2 in next line is conservative and inefficient - allows for delMistag=1!
-    Double_t maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);        
-    Double_t acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag)) 
-                           + (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS*sin(_dm*tval) 
+    Double_t maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);
+    Double_t acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag))
+                           + (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC*cos(_dm*tval);
 
     Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
-    
+
     if (tval<_t.max() && tval>_t.min() && accept) {
       _t = tval ;
       break ;
     }
   }
-  
-}
 
+}

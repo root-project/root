@@ -1,8 +1,16 @@
 // @(#)root/hist:$Id$
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::HybridPlot
+    \ingroup Roostats
 
+This class provides the plots for the result of a study performed with the
+HybridCalculatorOriginal class.
 
+Authors: D. Piparo, G. Schott - Universitaet Karlsruhe
+
+An example plot is available here:
+http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
+*/
 
 #include "assert.h"
 #include <cmath>
@@ -28,7 +36,8 @@ ClassImp(RooStats::HybridPlot)
 
 using namespace RooStats;
 
-/*----------------------------------------------------------------------------*/
+////////////////////////////////////////////////////////////////////////////////
+/// HybridPlot constructor
 
 HybridPlot::HybridPlot(const char* name,
                        const  char* title,
@@ -47,77 +56,74 @@ HybridPlot::HybridPlot(const char* name,
   fPad(0),
   fVerbose(verbosity)
 {
-  // HybridPlot constructor
+   int nToysSB = sb_vals.size();
+   int nToysB = sb_vals.size();
+   assert (nToysSB >0);
+   assert (nToysB >0);
 
-  int nToysSB = sb_vals.size();
-  int nToysB = sb_vals.size();
-  assert (nToysSB >0);
-  assert (nToysB >0);
+   // Get the max and the min of the plots
+   double min = *std::min_element(sb_vals.begin(), sb_vals.end());
+   double max = *std::max_element(sb_vals.begin(), sb_vals.end());
 
-  // Get the max and the min of the plots
-  double min = *std::min_element(sb_vals.begin(), sb_vals.end());
-  double max = *std::max_element(sb_vals.begin(), sb_vals.end());
+   double min_b = *std::min_element(b_vals.begin(), b_vals.end());
+   double max_b = *std::max_element(b_vals.begin(), b_vals.end());
 
-  double min_b = *std::min_element(b_vals.begin(), b_vals.end());
-  double max_b = *std::max_element(b_vals.begin(), b_vals.end());
-  
 
-  if ( min_b < min) min = min_b; 
-  if ( max_b > max) max = max_b; 
+   if ( min_b < min) min = min_b;
+   if ( max_b > max) max = max_b;
 
-  if (testStat_data<min) min = testStat_data;
-  if (testStat_data>max) max = testStat_data;
+   if (testStat_data<min) min = testStat_data;
+   if (testStat_data>max) max = testStat_data;
 
-  min *= 1.1;
-  max *= 1.1;
+   min *= 1.1;
+   max *= 1.1;
 
-  // Build the histos
+   // Build the histos
 
-  fSb_histo = new TH1F ("SB_model",title,n_bins,min,max);
-  fSb_histo->SetTitle(fSb_histo->GetTitle());
-  fSb_histo->SetLineColor(kBlue);
-  fSb_histo->GetXaxis()->SetTitle("test statistics");
-  fSb_histo->SetLineWidth(2);
+   fSb_histo = new TH1F ("SB_model",title,n_bins,min,max);
+   fSb_histo->SetTitle(fSb_histo->GetTitle());
+   fSb_histo->SetLineColor(kBlue);
+   fSb_histo->GetXaxis()->SetTitle("test statistics");
+   fSb_histo->SetLineWidth(2);
 
-  fB_histo = new TH1F ("B_model",title,n_bins,min,max);
-  fB_histo->SetTitle(fB_histo->GetTitle());
-  fB_histo->SetLineColor(kRed);
-  fB_histo->GetXaxis()->SetTitle("test statistics");
-  fB_histo->SetLineWidth(2);
+   fB_histo = new TH1F ("B_model",title,n_bins,min,max);
+   fB_histo->SetTitle(fB_histo->GetTitle());
+   fB_histo->SetLineColor(kRed);
+   fB_histo->GetXaxis()->SetTitle("test statistics");
+   fB_histo->SetLineWidth(2);
 
-  for (int i=0;i<nToysSB;++i) fSb_histo->Fill(sb_vals[i]);
-  for (int i=0;i<nToysB;++i) fB_histo->Fill(b_vals[i]);
+   for (int i=0;i<nToysSB;++i) fSb_histo->Fill(sb_vals[i]);
+   for (int i=0;i<nToysB;++i) fB_histo->Fill(b_vals[i]);
 
-  double histos_max_y = fSb_histo->GetMaximum();
-  double line_hight = histos_max_y/nToysSB;
-  if (histos_max_y<fB_histo->GetMaximum()) histos_max_y = fB_histo->GetMaximum()/nToysB;
+   double histos_max_y = fSb_histo->GetMaximum();
+   double line_hight = histos_max_y/nToysSB;
+   if (histos_max_y<fB_histo->GetMaximum()) histos_max_y = fB_histo->GetMaximum()/nToysB;
 
-  // Build the line of the measured -2lnQ
-  fData_testStat_line = new TLine(testStat_data,0,testStat_data,line_hight);
-  fData_testStat_line->SetLineWidth(3);
-  fData_testStat_line->SetLineColor(kBlack);
+   // Build the line of the measured -2lnQ
+   fData_testStat_line = new TLine(testStat_data,0,testStat_data,line_hight);
+   fData_testStat_line->SetLineWidth(3);
+   fData_testStat_line->SetLineColor(kBlack);
 
-  // The legend
-  double golden_section = (std::sqrt(5.)-1)/2;
+   // The legend
+   double golden_section = (std::sqrt(5.)-1)/2;
 
-  fLegend = new TLegend(0.75,0.95-0.2*golden_section,0.95,0.95);
-  TString title_leg="test statistics distributions ";
-  title_leg+=sb_vals.size();
-  title_leg+=" toys";
-  fLegend->SetName(title_leg.Data());
-  fLegend->AddEntry(fSb_histo,"SB toy datasets");
-  fLegend->AddEntry(fB_histo,"B toy datasets");
-  fLegend->AddEntry((TLine*)fData_testStat_line,"test statistics on data","L");
-  fLegend->SetFillColor(0);
-
+   fLegend = new TLegend(0.75,0.95-0.2*golden_section,0.95,0.95);
+   TString title_leg="test statistics distributions ";
+   title_leg+=sb_vals.size();
+   title_leg+=" toys";
+   fLegend->SetName(title_leg.Data());
+   fLegend->AddEntry(fSb_histo,"SB toy datasets");
+   fLegend->AddEntry(fB_histo,"B toy datasets");
+   fLegend->AddEntry((TLine*)fData_testStat_line,"test statistics on data","L");
+   fLegend->SetFillColor(0);
 }
 
-/*----------------------------------------------------------------------------*/
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
 
 HybridPlot::~HybridPlot()
 {
-  // destructor 
-  
+
   if (fSb_histo) delete fSb_histo;
   if (fB_histo) delete fB_histo;
   if (fSb_histo_shaded) delete fSb_histo_shaded;
@@ -126,13 +132,11 @@ HybridPlot::~HybridPlot()
   if (fLegend) delete fLegend;
 }
 
-/*----------------------------------------------------------------------------*/
+////////////////////////////////////////////////////////////////////////////////
+/// draw the S+B and B histogram in the current canvas
 
 void HybridPlot::Draw(const char* )
 {
-  // draw the S+B and B histogram in the current canvas
-
-
    // We don't want the statistics of the histos
    gStyle->SetOptStat(0);
 
@@ -173,26 +177,26 @@ void HybridPlot::Draw(const char* )
    fB_histo_shaded->Draw("same");
    fSb_histo_shaded->Draw("same");
 
-   // The line 
+   // The line
    fData_testStat_line->Draw("same");
 
    // The legend
    fLegend->Draw("same");
 
-   if (gPad) { 
-      gPad->SetName(GetName()); 
-      gPad->SetTitle(GetTitle() ); 
+   if (gPad) {
+      gPad->SetName(GetName());
+      gPad->SetTitle(GetTitle() );
    }
 
-   fPad = gPad; 
+   fPad = gPad;
 
 }
 
-/*----------------------------------------------------------------------------*/
+////////////////////////////////////////////////////////////////////////////////
+/// All the objects are written to rootfile
 
 void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
 {
-  // All the objects are written to rootfile
 
    TFile ofile(RootFileName,options);
    ofile.cd();
@@ -207,7 +211,7 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
       fSb_histo_shaded->Write();
    }
 
-   // The line 
+   // The line
    fData_testStat_line->Write("Measured test statistics line tag");
 
    // The legend
@@ -217,34 +221,31 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
 
 }
 
-void HybridPlot::DumpToImage(const char * filename) { 
-   if (!fPad) { 
-      Error("HybridPlot","Hybrid plot has not yet been drawn "); 
+////////////////////////////////////////////////////////////////////////////////
+
+void HybridPlot::DumpToImage(const char * filename) {
+   if (!fPad) {
+      Error("HybridPlot","Hybrid plot has not yet been drawn ");
       return;
    }
-   fPad->Print(filename); 
+   fPad->Print(filename);
 }
 
-/*----------------------------------------------------------------------------*/
+////////////////////////////////////////////////////////////////////////////////
+/// Perform 2 times a gaussian fit to fetch the center of the histo.
+/// To get the second fit range get an interval that tries to keep into account
+/// the skewness of the distribution.
 
-// from Rsc.cxx
-
-
-/**
-   Perform 2 times a gaussian fit to fetch the center of the histo.
-   To get the second fit range get an interval that tries to keep into account 
-   the skewness of the distribution.
-**/
 double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_result){
    // Get the center of the histo
-   
+
    TString optfit = "Q0";
    if (display_result) optfit = "Q";
 
    TH1F* histo = (TH1F*)histo_orig->Clone();
 
    // get the histo x extremes
-   double x_min = histo->GetXaxis()->GetXmin(); 
+   double x_min = histo->GetXaxis()->GetXmin();
    double x_max = histo->GetXaxis()->GetXmax();
 
    // First fit!
@@ -280,24 +281,23 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
 
    double center = gaus2->GetParameter("Mean");
 
-   if (display_result) { 
+   if (display_result) {
       histo->Draw();
       gaus2->Draw("same");
    }
-   else { 
+   else {
       delete histo;
    }
-   delete gaus2; 
+   delete gaus2;
 
    return center;
 
 
 }
 
-/**
-   We let an orizzontal bar go down and we stop when we have the integral 
-   equal to the desired one.
-**/
+////////////////////////////////////////////////////////////////////////////////
+/// We let an horizontal bar go down and we stop when we have the integral
+/// equal to the desired one.
 
 double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
@@ -346,20 +346,19 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
    return d;
 }
 
-//----------------------------------------------------------------------------//
-/**
-   Get the median of an histogram.
-**/
+////////////////////////////////////////////////////////////////////////////////
+/// Get the median of an histogram.
+
 double HybridPlot::GetMedian(TH1* histo){
 
    //int xbin_median;
    Double_t* integral = histo->GetIntegral();
    int median_i = 0;
-   for (int j=0;j<histo->GetNbinsX(); j++) 
-      if (integral[j]<0.5) 
+   for (int j=0;j<histo->GetNbinsX(); j++)
+      if (integral[j]<0.5)
          median_i = j;
 
-   double median_x = 
+   double median_x =
       histo->GetBinCenter(median_i)+
       (histo->GetBinCenter(median_i+1)-
        histo->GetBinCenter(median_i))*
@@ -367,5 +366,3 @@ double HybridPlot::GetMedian(TH1* histo){
 
    return median_x;
 }
-
-

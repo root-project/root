@@ -2035,7 +2035,7 @@ void TLatex::Paint(Option_t *)
 
 void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   if (size<=0) return; // do not paint text with size <= 0
+   if (size<=0 || strlen(text1) <= 0) return; // do not paint empty text or text with size <= 0
 
    TAttText::Modify();  // Change text attributes only if necessary.
 
@@ -2061,6 +2061,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
             t.ReplaceAll("#void1","R");
             t.ReplaceAll("#3dots","\\ldots");
             t.ReplaceAll("#lbar","\\mid");
+            t.ReplaceAll("#bar","\\wwbar");
             t.ReplaceAll("#void8","\\mid");
             t.ReplaceAll("#divide","\\div");
             t.ReplaceAll("#Jgothic","\\Im");

@@ -199,7 +199,7 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
 
    // keep also a copy of FCN function and set this in minimizer so they will be managed together
    // (remember that cloned copy will still depends on data and model function pointers)
-   fObjFunction = std::auto_ptr<ROOT::Math::IMultiGenFunction> ( fcn.Clone() );
+   fObjFunction = std::unique_ptr<ROOT::Math::IMultiGenFunction> ( fcn.Clone() );
 
    return true;
 }
@@ -578,7 +578,7 @@ bool Fitter::CalculateHessErrors() {
    // update minimizer results with what comes out from Hesse
    // in case is empty - create from a FitConfig
    if (fResult->IsEmpty() )
-      fResult = std::auto_ptr<ROOT::Fit::FitResult>(new ROOT::Fit::FitResult(fConfig) );
+      fResult = std::unique_ptr<ROOT::Fit::FitResult>(new ROOT::Fit::FitResult(fConfig) );
 
 
    // re-give a minimizer instance in case it has been changed 
@@ -747,7 +747,7 @@ bool Fitter::DoMinimization(const BaseFunc & objFunc, const ROOT::Math::IMultiGe
 
    // keep also a copy of FCN function and set this in minimizer so they will be managed together
    // (remember that cloned copy will still depends on data and model function pointers)
-   fObjFunction = std::auto_ptr<ROOT::Math::IMultiGenFunction> ( objFunc.Clone() );
+   fObjFunction = std::unique_ptr<ROOT::Math::IMultiGenFunction> ( objFunc.Clone() );
    if (!DoInitMinimizer()) return false;
    return DoMinimization(chi2func);
 }

@@ -36,9 +36,20 @@ QUARTZLIB    := $(LPATH)/libGQuartz.$(SOEXT)
 QUARTZMAP    := $(QUARTZLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QUARTZH))
+QUARTZH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(QUARTZH))
+ALLHDRS      += $(QUARTZH_REL)
 ALLLIBS      += $(QUARTZLIB)
 ALLMAPS      += $(QUARTZMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(QUARTZH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Qt_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += requires objc \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(QUARTZLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
+
 
 # include all dependency files
 INCLUDEFILES += $(QUARTZDEP)
@@ -82,4 +93,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-$(QUARTZOBJCPPO): CXXFLAGS += $(QUARTZNDEBUG)
+$(QUARTZOBJCPPO): OBJCXXFLAGS += $(CXXFLAGS) $(QUARTZNDEBUG)

@@ -24,6 +24,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::DataSet
+\ingroup TMVA
+
+Class that contains all the data information
+
+*/
+
 #include <vector>
 #include <algorithm>
 #include <cstdlib>
@@ -61,11 +68,10 @@
 
 #include "TRandom3.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::DataSet::DataSet(const DataSetInfo& dsi) 
+TMVA::DataSet::DataSet(const DataSetInfo& dsi)
     :TNamed(dsi.GetName(),"DataSet"),
      fdsi(&dsi),
      fEventCollection(4),
@@ -75,7 +81,7 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
      fLogger( new MsgLogger(TString(TString("Dataset:")+dsi.GetName()).Data()) ),
      fTrainingBlockSize(0)
 {
-   
+
    fClassEvents.resize(4);
    fBlockBelongToTraining.reserve(10);
    fBlockBelongToTraining.push_back(kTRUE);
@@ -84,10 +90,10 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
    fSamplingRandom = 0;
 
    Int_t treeNum = 2;
-   fSampling.resize( treeNum );  
-   fSamplingNEvents.resize( treeNum ); 
+   fSampling.resize( treeNum );
+   fSamplingNEvents.resize( treeNum );
    fSamplingWeight.resize(treeNum);
-  
+
    for (Int_t treeIdx = 0; treeIdx < treeNum; treeIdx++) {
       fSampling.at(treeIdx) = kFALSE;
       fSamplingNEvents.at(treeIdx) = 0;
@@ -95,7 +101,10 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
    }
 }
 
-TMVA::DataSet::DataSet() 
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
+TMVA::DataSet::DataSet()
     :fdsi(new DataSetInfo(GetName())),
      fEventCollection(4),
      fCurrentTreeIdx(0),
@@ -104,19 +113,19 @@ TMVA::DataSet::DataSet()
      fLogger( new MsgLogger(TString(TString("Dataset:")+GetName()).Data()) ),
      fTrainingBlockSize(0)
 {
-    
+
     fClassEvents.resize(4);
     fBlockBelongToTraining.reserve(10);
     fBlockBelongToTraining.push_back(kTRUE);
-    
+
     // sampling
     fSamplingRandom = 0;
-    
+
     Int_t treeNum = 2;
-    fSampling.resize( treeNum );  
-    fSamplingNEvents.resize( treeNum ); 
+    fSampling.resize( treeNum );
+    fSamplingNEvents.resize( treeNum );
     fSamplingWeight.resize(treeNum);
-    
+
     for (Int_t treeIdx = 0; treeIdx < treeNum; treeIdx++) {
         fSampling.at(treeIdx) = kFALSE;
         fSamplingNEvents.at(treeIdx) = 0;
@@ -124,18 +133,16 @@ TMVA::DataSet::DataSet()
     }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::DataSet::~DataSet() 
+TMVA::DataSet::~DataSet()
 {
    // delete event collection
    Bool_t deleteEvents=true; // dataset owns the events /JS
    DestroyCollection( Types::kTraining, deleteEvents );
    DestroyCollection( Types::kTesting, deleteEvents );
-   
+
    fBlockBelongToTraining.clear();
    // delete results
    for (std::vector< std::map< TString, Results* > >::iterator it = fResults.begin(); it != fResults.end(); it++) {
@@ -157,7 +164,7 @@ TMVA::DataSet::~DataSet()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::DataSet::IncrementNClassEvents( Int_t type, UInt_t classNumber ) 
+void TMVA::DataSet::IncrementNClassEvents( Int_t type, UInt_t classNumber )
 {
    if (fClassEvents.size()<(UInt_t)(type+1)) fClassEvents.resize( type+1 );
    if (fClassEvents.at( type ).size() < classNumber+1) fClassEvents.at( type ).resize( classNumber+1 );
@@ -166,7 +173,7 @@ void TMVA::DataSet::IncrementNClassEvents( Int_t type, UInt_t classNumber )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::DataSet::ClearNClassEvents( Int_t type ) 
+void TMVA::DataSet::ClearNClassEvents( Int_t type )
 {
    if (fClassEvents.size()<(UInt_t)(type+1)) fClassEvents.resize( type+1 );
    fClassEvents.at( type ).clear();
@@ -174,18 +181,18 @@ void TMVA::DataSet::ClearNClassEvents( Int_t type )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber ) 
+Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber )
 {
    try {
       return fClassEvents.at(type).at(classNumber);
-   } 
+   }
    catch (std::out_of_range excpt) {
       ClassInfo* ci = fdsi->GetClassInfo( classNumber );
-      Log() << kFATAL << Form("Dataset[%s] : ",fdsi->GetName()) << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_")) 
+      Log() << kFATAL << Form("Dataset[%s] : ",fdsi->GetName()) << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_"))
             << " events for class " << (ci==NULL?"_no_name_known_":ci->GetName()) << " (index # "<<classNumber<<")"
-            << " available. Check if all class names are spelled correctly and if events are" 
+            << " available. Check if all class names are spelled correctly and if events are"
             << " passing the selection cuts." << Endl;
-   } 
+   }
    catch (...) {
       Log() << kFATAL << Form("Dataset[%s] : ",fdsi->GetName()) << "ERROR/CAUGHT : DataSet/GetNClassEvents, .. unknown error" << Endl;
    }
@@ -200,7 +207,7 @@ void TMVA::DataSet::DestroyCollection(Types::ETreeType type, Bool_t deleteEvents
    UInt_t i = TreeIndex(type);
    if (i>=fEventCollection.size() || fEventCollection[i].size()==0) return;
    if (deleteEvents) {
-       
+
       for (UInt_t j=0; j<fEventCollection[i].size(); j++) delete fEventCollection[i][j];
    }
    fEventCollection[i].clear();
@@ -222,7 +229,7 @@ const TMVA::Event* TMVA::DataSet::GetEvent() const
 ////////////////////////////////////////////////////////////////////////////////
 /// access the number of variables through the datasetinfo
 
-UInt_t TMVA::DataSet::GetNVariables() const 
+UInt_t TMVA::DataSet::GetNVariables() const
 {
    return fdsi->GetNVariables();
 }
@@ -230,7 +237,7 @@ UInt_t TMVA::DataSet::GetNVariables() const
 ////////////////////////////////////////////////////////////////////////////////
 /// access the number of targets through the datasetinfo
 
-UInt_t TMVA::DataSet::GetNTargets() const 
+UInt_t TMVA::DataSet::GetNTargets() const
 {
    return fdsi->GetNTargets();
 }
@@ -238,7 +245,7 @@ UInt_t TMVA::DataSet::GetNTargets() const
 ////////////////////////////////////////////////////////////////////////////////
 /// access the number of targets through the datasetinfo
 
-UInt_t TMVA::DataSet::GetNSpectators() const 
+UInt_t TMVA::DataSet::GetNSpectators() const
 {
    return fdsi->GetNSpectators();
 }
@@ -247,7 +254,7 @@ UInt_t TMVA::DataSet::GetNSpectators() const
 /// add event to event list
 /// after which the event is owned by the dataset
 
-void TMVA::DataSet::AddEvent(Event * ev, Types::ETreeType type) 
+void TMVA::DataSet::AddEvent(Event * ev, Types::ETreeType type)
 {
    fEventCollection.at(Int_t(type)).push_back(ev);
    if (ev->GetWeight()<0) fHasNegativeEventWeights = kTRUE;
@@ -256,7 +263,7 @@ void TMVA::DataSet::AddEvent(Event * ev, Types::ETreeType type)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the event collection (by DataSetFactory)
 
-void TMVA::DataSet::SetEventCollection(std::vector<TMVA::Event*>* events, Types::ETreeType type, Bool_t deleteEvents) 
+void TMVA::DataSet::SetEventCollection(std::vector<TMVA::Event*>* events, Types::ETreeType type, Bool_t deleteEvents)
 {
    DestroyCollection(type,deleteEvents);
 
@@ -270,22 +277,10 @@ void TMVA::DataSet::SetEventCollection(std::vector<TMVA::Event*>* events, Types:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    TString info(resultsName+"/");
-///    switch(type) {
-///    case Types::kTraining: info += "kTraining/";  break;
-///    case Types::kTesting:  info += "kTesting/";   break;
-///    default: break;
-///    }
-///    switch(analysistype) {
-///    case Types::kClassification: info += "kClassification";  break;
-///    case Types::kRegression:     info += "kRegression";      break;
-///    case Types::kNoAnalysisType: info += "kNoAnalysisType";  break;
-///    case Types::kMaxAnalysisType:info += "kMaxAnalysisType"; break;
-///    }
 
 TMVA::Results* TMVA::DataSet::GetResults( const TString & resultsName,
                                           Types::ETreeType type,
-                                          Types::EAnalysisType analysistype ) 
+                                          Types::EAnalysisType analysistype )
 {
    UInt_t t = TreeIndex(type);
    if (t<fResults.size()) {
@@ -329,14 +324,14 @@ TMVA::Results* TMVA::DataSet::GetResults( const TString & resultsName,
    return newresults;
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// delete the results stored for this particulary 
-///      Method instance  (here appareantly called resultsName instead of MethodTitle
-///      Tree type (Training, testing etc..)
-///      Analysis Type (Classification, Multiclass, Regression etc..)
+/// delete the results stored for this particular Method instance.
+/// (here apparently called resultsName instead of MethodTitle
+/// Tree type (Training, testing etc..)
+/// Analysis Type (Classification, Multiclass, Regression etc..)
 
 void TMVA::DataSet::DeleteResults( const TString & resultsName,
                                    Types::ETreeType type,
-                                   Types::EAnalysisType /* analysistype */ ) 
+                                   Types::EAnalysisType /* analysistype */ )
 {
    if (fResults.empty()) return;
 
@@ -347,13 +342,13 @@ void TMVA::DataSet::DeleteResults( const TString & resultsName,
    std::map< TString, Results* >& resultsForType = fResults[UInt_t(type)];
    std::map< TString, Results* >::iterator it = resultsForType.find(resultsName);
    if (it!=resultsForType.end()) {
-      Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << " Delete Results previous existing result:" << resultsName 
+      Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << " Delete Results previous existing result:" << resultsName
             << " of type " << type << Endl;
       delete it->second;
       resultsForType.erase(it->first);
    }
    else {
-      Log() << kINFO << Form("Dataset[%s] : ",fdsi->GetName()) << "could not fine Result class of " << resultsName 
+      Log() << kINFO << Form("Dataset[%s] : ",fdsi->GetName()) << "could not fine Result class of " << resultsName
             << " of type " << type << " which I should have deleted" << Endl;
    }
 }
@@ -402,7 +397,7 @@ void TMVA::DataSet::ApplyTrainingSetDivision()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// move training block 
+/// move training block
 
 void TMVA::DataSet::MoveTrainingBlock( Int_t blockInd,Types::ETreeType dest, Bool_t applyChanges )
 {
@@ -416,33 +411,33 @@ void TMVA::DataSet::MoveTrainingBlock( Int_t blockInd,Types::ETreeType dest, Boo
 ////////////////////////////////////////////////////////////////////////////////
 /// return number of signal test events in dataset
 
-Long64_t TMVA::DataSet::GetNEvtSigTest()   
-{ 
-   return GetNClassEvents(Types::kTesting, fdsi->GetClassInfo("Signal")->GetNumber() ); 
+Long64_t TMVA::DataSet::GetNEvtSigTest()
+{
+   return GetNClassEvents(Types::kTesting, fdsi->GetClassInfo("Signal")->GetNumber() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return number of background test events in dataset
 
-Long64_t TMVA::DataSet::GetNEvtBkgdTest()  
-{ 
-   return GetNClassEvents(Types::kTesting, fdsi->GetClassInfo("Background")->GetNumber() ); 
+Long64_t TMVA::DataSet::GetNEvtBkgdTest()
+{
+   return GetNClassEvents(Types::kTesting, fdsi->GetClassInfo("Background")->GetNumber() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return number of signal training events in dataset
 
-Long64_t TMVA::DataSet::GetNEvtSigTrain()  
-{ 
-   return GetNClassEvents(Types::kTraining, fdsi->GetClassInfo("Signal")->GetNumber() ); 
+Long64_t TMVA::DataSet::GetNEvtSigTrain()
+{
+   return GetNClassEvents(Types::kTraining, fdsi->GetClassInfo("Signal")->GetNumber() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return number of background training events in dataset
 
-Long64_t TMVA::DataSet::GetNEvtBkgdTrain() 
-{ 
-   return GetNClassEvents(Types::kTraining, fdsi->GetClassInfo("Background")->GetNumber() ); 
+Long64_t TMVA::DataSet::GetNEvtBkgdTrain()
+{
+   return GetNClassEvents(Types::kTraining, fdsi->GetClassInfo("Background")->GetNumber() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +463,7 @@ void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed 
    if (fSampling.size() < UInt_t(treeIdx+1) )         fSampling.resize(treeIdx+1);
    if (fSamplingNEvents.size() < UInt_t(treeIdx+1) ) fSamplingNEvents.resize(treeIdx+1);
    if (fSamplingWeight.size() < UInt_t(treeIdx+1) )   fSamplingWeight.resize(treeIdx+1);
-      
+
    if (fraction > 0.999999 || fraction < 0.0000001) {
       fSampling.at( treeIdx ) = false;
       fSamplingNEvents.at( treeIdx ) = 0;
@@ -505,7 +500,7 @@ void TMVA::DataSet::CreateSampling() const
    if (!fSampling.at(treeIdx) ) return;
 
    if (fSamplingRandom == 0 )
-      Log() << kFATAL<< Form("Dataset[%s] : ",fdsi->GetName()) 
+      Log() << kFATAL<< Form("Dataset[%s] : ",fdsi->GetName())
             << "no random generator present for creating a random/importance sampling (initialized?)" << Endl;
 
    // delete the previous selection
@@ -536,10 +531,10 @@ void TMVA::DataSet::CreateSampling() const
       pos = fSamplingRandom->Rndm()*sumWeights;
       rnds.push_back( pos );
    }
-   
+
    // sort the random numbers
    std::sort(rnds.begin(),rnds.end());
-   
+
    // select the events according to the random numbers
    std::vector< Float_t >::iterator rndsIt = rnds.begin();
    Float_t runningSum = 0.000000001;
@@ -559,7 +554,7 @@ void TMVA::DataSet::CreateSampling() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// increase the importance sampling weight of the event 
+/// increase the importance sampling weight of the event
 /// when not successful and decrease it when successful
 
 void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
@@ -571,13 +566,13 @@ void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
    Long64_t start = 0;
    Long64_t stop  = fSamplingEventList.at(fCurrentTreeIdx).size() -1;
    if (evtNumber >= 0) {
-      start = evtNumber; 
+      start = evtNumber;
       stop  = evtNumber;
    }
    for ( Long64_t iEvt = start; iEvt <= stop; iEvt++ ){
       if (Long64_t(fSamplingEventList.at(fCurrentTreeIdx).size()) < iEvt) {
-         Log() << kWARNING << Form("Dataset[%s] : ",fdsi->GetName()) << "event number (" << iEvt 
-               << ") larger than number of sampled events (" 
+         Log() << kWARNING << Form("Dataset[%s] : ",fdsi->GetName()) << "event number (" << iEvt
+               << ") larger than number of sampled events ("
                << fSamplingEventList.at(fCurrentTreeIdx).size() << " of tree " << fCurrentTreeIdx << ")" << Endl;
          return;
       }
@@ -595,15 +590,15 @@ void TMVA::DataSet::EventResult( Bool_t successful, Long64_t evtNumber )
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// create the test/trainings tree with all the variables, the weights, the classes, the targets, the spectators, the MVA outputs
+/// create the test/trainings tree with all the variables, the weights, the
+/// classes, the targets, the spectators, the MVA outputs
 
-TTree* TMVA::DataSet::GetTree( Types::ETreeType type ) 
-{ 
+TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
+{
    Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "GetTree(" << ( type==Types::kTraining ? "training" : "testing" ) << ")" << Endl;
 
-   // the dataset does not hold the tree, this function returns a new tree everytime it is called
+   // the dataset does not hold the tree, this function returns a new tree every time it is called
 
    if (type!=Types::kTraining && type!=Types::kTesting) return 0;
 
@@ -612,7 +607,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    SetCurrentType(type);
    const UInt_t t = TreeIndex(type);
    if (fResults.size() <= t) {
-      Log() << kWARNING << Form("Dataset[%s] : ",fdsi->GetName()) << "No results for treetype " << ( type==Types::kTraining ? "training" : "testing" ) 
+      Log() << kWARNING << Form("Dataset[%s] : ",fdsi->GetName()) << "No results for treetype " << ( type==Types::kTraining ? "training" : "testing" )
             << " found. Size=" << fResults.size() << Endl;
    }
 
@@ -637,32 +632,32 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
       metVals[i] = new Float_t[fdsi->GetNTargets()+fdsi->GetNClasses()];
 
    // create branches for event-variables
-   tree->Branch( "classID", &cls, "classID/I" ); 
-   tree->Branch( "className",(void*)className, "className/C" ); 
+   tree->Branch( "classID", &cls, "classID/I" );
+   tree->Branch( "className",(void*)className, "className/C" );
 
    // create all branches for the variables
    Int_t n = 0;
-   for (std::vector<VariableInfo>::const_iterator itVars = fdsi->GetVariableInfos().begin(); 
+   for (std::vector<VariableInfo>::const_iterator itVars = fdsi->GetVariableInfos().begin();
         itVars != fdsi->GetVariableInfos().end(); itVars++) {
 
       // has to be changed to take care of types different than float: TODO
-      tree->Branch( (*itVars).GetInternalName(), &varVals[n], (*itVars).GetInternalName()+TString("/F") ); 
+      tree->Branch( (*itVars).GetInternalName(), &varVals[n], (*itVars).GetInternalName()+TString("/F") );
       n++;
    }
    // create the branches for the targets
    n = 0;
-   for (std::vector<VariableInfo>::const_iterator itTgts = fdsi->GetTargetInfos().begin(); 
+   for (std::vector<VariableInfo>::const_iterator itTgts = fdsi->GetTargetInfos().begin();
         itTgts != fdsi->GetTargetInfos().end(); itTgts++) {
       // has to be changed to take care of types different than float: TODO
-      tree->Branch( (*itTgts).GetInternalName(), &tgtVals[n], (*itTgts).GetInternalName()+TString("/F") ); 
+      tree->Branch( (*itTgts).GetInternalName(), &tgtVals[n], (*itTgts).GetInternalName()+TString("/F") );
       n++;
    }
    // create the branches for the spectator variables
    n = 0;
-   for (std::vector<VariableInfo>::const_iterator itVis = fdsi->GetSpectatorInfos().begin(); 
+   for (std::vector<VariableInfo>::const_iterator itVis = fdsi->GetSpectatorInfos().begin();
         itVis != fdsi->GetSpectatorInfos().end(); itVis++) {
       // has to be changed to take care of types different than float: TODO
-      tree->Branch( (*itVis).GetInternalName(), &visVals[n], (*itVis).GetInternalName()+TString("/F") ); 
+      tree->Branch( (*itVis).GetInternalName(), &visVals[n], (*itVis).GetInternalName()+TString("/F") );
       n++;
    }
 
@@ -670,17 +665,17 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // create all the branches for the results
    n = 0;
-   for (std::map< TString, Results* >::iterator itMethod = fResults.at(t).begin(); 
+   for (std::map< TString, Results* >::iterator itMethod = fResults.at(t).begin();
         itMethod != fResults.at(t).end(); itMethod++) {
 
 
       Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "analysis type: " << (itMethod->second->GetAnalysisType()==Types::kRegression ? "Regression" :
                                                                                         (itMethod->second->GetAnalysisType()==Types::kMulticlass ? "Multiclass" : "Classification" )) << Endl;
-      
+
       if (itMethod->second->GetAnalysisType() == Types::kClassification) {
          // classification
          tree->Branch( itMethod->first, &(metVals[n][0]), itMethod->first + "/F" );
-      } 
+      }
       else if (itMethod->second->GetAnalysisType() == Types::kMulticlass) {
          // multiclass classification
          TString leafList("");
@@ -689,10 +684,10 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
             leafList.Append( fdsi->GetClassInfo( iCls )->GetName() );
             leafList.Append( "/F" );
          }
-         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
+         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: "
                << leafList << "    itMethod->second " << itMethod->second <<  Endl;
          tree->Branch( itMethod->first, (metVals[n]), leafList );
-      } 
+      }
       else if (itMethod->second->GetAnalysisType() == Types::kRegression) {
          // regression
          TString leafList("");
@@ -702,10 +697,10 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
             //            leafList.Append( fdsi->GetTargetInfo( iTgt ).GetLabel() );
             leafList.Append( "/F" );
          }
-         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: " 
+         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: "
                << leafList << "    itMethod->second " << itMethod->second <<  Endl;
          tree->Branch( itMethod->first, (metVals[n]), leafList );
-      } 
+      }
       else {
          Log() << kWARNING << Form("Dataset[%s] : ",fdsi->GetName()) << "Unknown analysis type for result found when writing TestTree." << Endl;
       }
@@ -764,8 +759,8 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
       tree->Fill();
    }
 
-   Log() << kHEADER //<< Form("[%s] : ",fdsi.GetName()) 
-	 << "Created tree '" << tree->GetName() << "' with " << tree->GetEntries() << " events" << Endl << Endl;
+   Log() << kHEADER //<< Form("[%s] : ",fdsi.GetName())
+    << "Created tree '" << tree->GetName() << "' with " << tree->GetEntries() << " events" << Endl << Endl;
 
    SetCurrentType(savedType);
 

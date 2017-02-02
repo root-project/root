@@ -24,21 +24,6 @@ namespace RooStats {
 
    class HybridPlot;
 
-   /*
-
-     Class encapsulating the result of the HybridCalculatorOriginal.
-     This class is a fresh rewrite in RooStats of
-     RooStatsCms/LimitResults developed by D. Piparo and G. Schott
-     New contributions to this class have been written by Matthias Wolf (error estimation)
-
-     The objects of this class store and access with lightweight methods the
-     information calculated by LimitResults through a Lent calculation using
-     MC toy experiments.
-     In some ways can be considered an extended and extensible implementation of the
-     TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
-
-*/
-
    class HybridResult : public HypoTestResult {
 
    public:

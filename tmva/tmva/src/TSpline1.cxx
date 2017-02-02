@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,19 +16,19 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Linear interpolation of TGraph
-//_______________________________________________________________________
+/*! \class TMVA::TSpline1
+\ingroup TMVA
+Linear interpolation of TGraph
+*/
 
 #include "TMVA/TSpline1.h"
 
@@ -44,7 +44,7 @@ ClassImp(TMVA::TSpline1)
 TMVA::TSpline1::TSpline1( const TString& title, TGraph* theGraph )
 : fGraph( theGraph )
 {
-   SetNameTitle( title, title );  
+   SetNameTitle( title, title );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ TMVA::TSpline1::~TSpline1( void )
 /// returns linearly interpolated TGraph entry around x
 
 Double_t TMVA::TSpline1::Eval( Double_t x ) const
-{  
+{
    Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
                                      fGraph->GetX(),
                                      x );
@@ -70,10 +70,10 @@ Double_t TMVA::TSpline1::Eval( Double_t x ) const
    if (ibin >= nbin) ibin = nbin - 1;
 
    Int_t nextbin = ibin;
-   if ((x > fGraph->GetX()[ibin] && ibin != nbin-1) || ibin == 0) 
+   if ((x > fGraph->GetX()[ibin] && ibin != nbin-1) || ibin == 0)
       nextbin++;
    else
-      nextbin--;  
+      nextbin--;
 
    // linear interpolation
    Double_t dx = fGraph->GetX()[ibin] - fGraph->GetX()[nextbin];
@@ -94,4 +94,3 @@ void TMVA::TSpline1::BuildCoeff( void )
 void TMVA::TSpline1::GetKnot( Int_t /* i*/, Double_t&  /*x*/, Double_t& /*y*/ ) const
 {
 }
-

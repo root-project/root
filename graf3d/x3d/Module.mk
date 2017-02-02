@@ -31,9 +31,18 @@ X3DLIB       := $(LPATH)/libX3d.$(SOEXT)
 X3DMAP       := $(X3DLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X3DH))
+X3DH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(X3DH))
+ALLHDRS     += $(X3DH_REL)
 ALLLIBS     += $(X3DLIB)
 ALLMAPS     += $(X3DMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(X3DH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graph3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(X3DLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(X3DDEP)

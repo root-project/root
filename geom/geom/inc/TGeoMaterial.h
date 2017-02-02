@@ -114,9 +114,9 @@ public:
    virtual Bool_t           IsMixture() const {return kFALSE;}
    virtual void             Print(const Option_t *option="") const;
    virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
-   void                     SetA(Double_t a) {fA = a; SetRadLen(0);}
-   void                     SetZ(Double_t z) {fZ = z; SetRadLen(0);}
-   void                     SetDensity(Double_t density) {fDensity = density; SetRadLen(0);}
+   virtual void             SetA(Double_t a) {fA = a; SetRadLen(0);}
+   virtual void             SetZ(Double_t z) {fZ = z; SetRadLen(0);}
+   virtual void             SetDensity(Double_t density) {fDensity = density; SetRadLen(0);}
    void                     SetIndex(Int_t index) {fIndex=index;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
    void                     SetRadLen(Double_t radlen, Double_t intlen=0.);
@@ -190,8 +190,9 @@ public:
    virtual Bool_t           IsMixture() const {return kTRUE;}
    virtual void             Print(const Option_t *option="") const;
    virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
-   void                     SetA(Double_t a) {fA = a;}
-   void                     SetZ(Double_t z) {fZ = z;}
+   virtual void             SetA(Double_t a) {fA = a;}
+   virtual void             SetZ(Double_t z) {fZ = z;}
+   virtual void             SetDensity(Double_t density) {fDensity = density; AverageProperties();}
 
    ClassDef(TGeoMixture, 2)              // material mixtures
 };

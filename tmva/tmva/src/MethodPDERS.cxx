@@ -29,44 +29,39 @@
  * (http://tmva.sourceforge.net/LICENSE)                                           *
  ***********************************************************************************/
 
-//_______________________________________________________________________
-// Begin_Html
-/*
-  This is a generalization of the above Likelihood methods to <i>N</i><sub>var</sub>
-  dimensions, where <i>N</i><sub>var</sub> is the number of input variables
-  used in the MVA. If the multi-dimensional probability density functions
-  (PDFs) for signal and background were known, this method contains the entire
-  physical information, and is therefore optimal. Usually, kernel estimation
-  methods are used to approximate the PDFs using the events from the
-  training sample. <br><p></p>
+/*! \class TMVA::MethodPDERS
+\ingroup TMVA
 
-  A very simple probability density estimator (PDE) has been suggested
-  in <a href="http://arxiv.org/abs/hep-ex/0211019">hep-ex/0211019</a>. The
-  PDE for a given test event is obtained from counting the (normalized)
-  number of signal and background (training) events that occur in the
-  "vicinity" of the test event. The volume that describes "vicinity" is
-  user-defined. A <a href="http://arxiv.org/abs/hep-ex/0211019">search
-  method based on binary-trees</a> is used to effectively reduce the
-  selection time for the range search. Three different volume definitions
-  are optional: <br><p></p>
-  <ul>
-  <li><u>MinMax:</u>
-  the volume is defined in each dimension with respect
-  to the full variable range found in the training sample. </li>
-  <li><u>RMS:</u>
-  the volume is defined in each dimensions with respect
-  to the RMS estimated from the training sample. </li>
-  <li><u>Adaptive:</u>
-  a volume element is defined in each dimensions with
-  respect to the RMS estimated from the training sample. The overall
-  scale of the volume element is then determined for each event so
-  that the total number of events confined in the volume be within
-  a user-defined range.</li>
-  </ul><p></p>
-  The adaptive range search is used by default.
-  // End_Html
-  */
-//_______________________________________________________________________
+This is a generalization of the above Likelihood methods to \f$ N_{var} \f$
+dimensions, where \f$ N_{var} \f$ is the number of input variables
+used in the MVA. If the multi-dimensional probability density functions
+(PDFs) for signal and background were known, this method contains the entire
+physical information, and is therefore optimal. Usually, kernel estimation
+methods are used to approximate the PDFs using the events from the
+training sample.
+
+A very simple probability density estimator (PDE) has been suggested
+in [hep-ex/0211019](http://arxiv.org/abs/hep-ex/0211019). The
+PDE for a given test event is obtained from counting the (normalized)
+number of signal and background (training) events that occur in the
+"vicinity" of the test event. The volume that describes "vicinity" is
+user-defined. A [search method based on binary-trees](http://arxiv.org/abs/hep-ex/0211019)
+is used to effectively reduce the
+selection time for the range search. Three different volume definitions
+are optional:
+
+  - *MinMax:* the volume is defined in each dimension with respect
+      to the full variable range found in the training sample.
+  - *RMS:* the volume is defined in each dimensions with respect
+      to the RMS estimated from the training sample.
+  - *Adaptive:* a volume element is defined in each dimensions with
+      respect to the RMS estimated from the training sample. The overall
+      scale of the volume element is then determined for each event so
+      that the total number of events confined in the volume be within
+      a user-defined range.
+
+The adaptive range search is used by default.
+*/
 
 #include "TMVA/MethodPDERS.h"
 
@@ -217,37 +212,40 @@ TMVA::MethodPDERS::~MethodPDERS( void )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// define the options (their key words) that can be set in the option string
+/// define the options (their key words) that can be set in the option string.
+///
 /// know options:
-/// VolumeRangeMode   <string>  Method to determine volume range
-///    available values are:        MinMax
-///                                 Unscaled
-///                                 RMS
-///                                 kNN
-///                                 Adaptive <default>
+///  - VolumeRangeMode   <string>  Method to determine volume range
+///    available values are:
+///    - MinMax
+///    - Unscaled
+///    - RMS
+///    - kNN
+///    - Adaptive <default>
 ///
-/// KernelEstimator   <string>  Kernel estimation function
-///    available values are:        Box <default>
-///                                 Sphere
-///                                 Teepee
-///                                 Gauss
-///                                 Sinc3
-///                                 Sinc5
-///                                 Sinc7
-///                                 Sinc9
-///                                 Sinc11
-///                                 Lanczos2
-///                                 Lanczos3
-///                                 Lanczos5
-///                                 Lanczos8
-///                                 Trim
+///  - KernelEstimator   <string>  Kernel estimation function
+///    available values are:
+///    - Box <default>
+///    - Sphere
+///    - Teepee
+///    - Gauss
+///    - Sinc3
+///    - Sinc5
+///    - Sinc7
+///    - Sinc9
+///    - Sinc11
+///    - Lanczos2
+///    - Lanczos3
+///    - Lanczos5
+///    - Lanczos8
+///    - Trim
 ///
-/// DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
-/// NEventsMin        <int>     Minimum number of events for adaptive volume range
-/// NEventsMax        <int>     Maximum number of events for adaptive volume range
-/// MaxVIterations    <int>     Maximum number of iterations for adaptive volume range
-/// InitialScale      <float>   Initial scale for adaptive volume range
-/// GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
+///  - DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
+///  - NEventsMin        <int>     Minimum number of events for adaptive volume range
+///  - NEventsMax        <int>     Maximum number of events for adaptive volume range
+///  - MaxVIterations    <int>     Maximum number of iterations for adaptive volume range
+///  - InitialScale      <float>   Initial scale for adaptive volume range
+///  - GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
 
 void TMVA::MethodPDERS::DeclareOptions()
 {
@@ -699,7 +697,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
       Volume v(*volume);
 
       events.clear();
-      // check number of signals in begining volume
+      // check number of signals in beginning volume
       Int_t kNNcount = fBinaryTree->SearchVolumeWithMaxLimit( &v, &events, fkNNMax+1 );
       //if this number is too large return fkNNMax+1
 
@@ -723,7 +721,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          t_times++;
 
          if (t_times == fMaxVIterations) {
-            Log() << kWARNING << "warining in event" << e
+            Log() << kWARNING << "warning in event" << e
                   << ": kNN volume adjustment reached "
                   << "max. #iterations (" << fMaxVIterations << ")"
                   << "[ kNN: " << fkNNMin << " " << fkNNMax << Endl;
@@ -974,7 +972,7 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
 Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
 {
    // Caching jammed to disable function.
-   // It's not really useful afterall, badly implemented and untested :-)
+   // It's not really useful after all, badly implemented and untested :-)
    TTHREAD_TLS(Double_t) ret = 1.0;
 
    if (ret != 0.0) return ret*pdf;
@@ -1002,7 +1000,7 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
    case kLanczos3:
    case kLanczos5:
    case kLanczos8:
-      // We use the full range integral here. Reasonable because the central lobe domintes it.
+      // We use the full range integral here. Reasonable because the central lobe dominates it.
       ret = 1 / TMath::Power ( 2., (Double_t) GetNvar() );
       break;
    default:

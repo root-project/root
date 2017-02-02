@@ -9,7 +9,7 @@ TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 ( cd $ROOTSRCDIR; git checkout $CURVERS )
 # generate etc/gitinfo.txt
-$ROOTSRCDIR/build/unix/gitinfo.sh
+$ROOTSRCDIR/build/unix/gitinfo.sh $ROOTSRCDIR
 
 ( cd $ROOTSRCDIR; git archive -v -o ../$TARFILE --prefix=root-$ROOTVERS/ $CURVERS )
 

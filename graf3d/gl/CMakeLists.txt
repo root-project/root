@@ -12,7 +12,7 @@ ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRE
 if(WIN32 OR cocoa)
   list(REMOVE_ITEM headers TX11GL.h)
   list(REMOVE_ITEM sources TX11GL.cxx)
-  set(installoptions OPTIONS REGEX "TX11GL" EXCLUDE)
+  set(installoptions FILTER "TX11GL")
 endif()
 
 if(builtin_gl2ps)
@@ -33,10 +33,6 @@ endif()
 if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
-
-# We need to disallow the direct use of gl.h. This way people will see the error
-# and the suggested fix. This happens by providing our own "fake" system gl.h.
-set(CMAKE_CXX_FLAGS " -isystem ${CMAKE_CURRENT_SOURCE_DIR}/../glew/isystem ${CMAKE_CXX_FLAGS}")
 
 set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")

@@ -91,11 +91,14 @@ robust Streamer mechanism I opted for 3).
 #include "TKeyMapFile.h"
 #include "TDirectoryFile.h"
 #include "TBrowser.h"
+#include "TStorage.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TClass.h"
 #include "TBufferFile.h"
 #include "TVirtualMutex.h"
+#include "mmprivate.h"
+
 #include <cmath>
 
 #if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
@@ -122,8 +125,34 @@ union semun {
 Long_t TMapFile::fgMapAddress = 0;
 void  *TMapFile::fgMmallocDesc = 0;
 
-//void *gMmallocDesc = 0; //is initialized in TClass.cxx
+//void *ROOT::Internal::gMmallocDesc = 0; //is initialized in TStorage.cxx
 
+
+namespace {
+////////////////////////////////////////////////////////////////////////////////
+/// Delete memory and return true if memory belongs to a TMapFile.
+   static bool FreeIfTMapFile(void* ptr) {
+      if (TMapFile *mf = TMapFile::WhichMapFile(ptr)) {
+         if (mf->IsWritable())
+            ::mfree(mf->GetMmallocDesc(), ptr);
+         return true;
+      }
+      return false;
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set ROOT::Internal::gFreeIfTMapFile on library load.
+
+struct SetFreeIfTMapFile_t {
+   SetFreeIfTMapFile_t() {
+      ROOT::Internal::gFreeIfTMapFile = FreeIfTMapFile;
+   }
+   ~SetFreeIfTMapFile_t() {
+      ROOT::Internal::gFreeIfTMapFile = nullptr;
+   }
+} gSetFreeIfTMapFile;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -392,7 +421,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       if (fWritable) {
          // create new TMapFile object in mapped heap to get correct vtbl ptr
          CreateSemaphore();
-         gMmallocDesc = fMmallocDesc;
+         ROOT::Internal::gMmallocDesc = fMmallocDesc;
          TMapFile *mf = new TMapFile(*mapfil);
          mf->fFd        = fFd;
          mf->fWritable  = kTRUE;
@@ -403,10 +432,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          mf->CreateSemaphore(fSemaphore);
 #endif
          mmalloc_setkey(fMmallocDesc, 0, mf);
-         gMmallocDesc = 0;
+         ROOT::Internal::gMmallocDesc = 0;
          mapfil = mf;
       } else {
-         gMmallocDesc = 0;    // make sure we are in sbrk heap
+         ROOT::Internal::gMmallocDesc = 0;    // make sure we are in sbrk heap
          fOffset      = ((struct mdesc *) fMmallocDesc)->offset;
          TMapFile *mf = new TMapFile(*mapfil, fOffset);
          delete [] mf->fOption;
@@ -444,12 +473,12 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 
       CreateSemaphore();
 
-      gMmallocDesc = fMmallocDesc;
+      ROOT::Internal::gMmallocDesc = fMmallocDesc;
 
       mapfil = new TMapFile(*this);
       mmalloc_setkey(fMmallocDesc, 0, mapfil);
 
-      gMmallocDesc = 0;
+      ROOT::Internal::gMmallocDesc = 0;
 
       // store shadow mapfile
       fVersion  = -1;   // make this the shadow map file
@@ -474,7 +503,7 @@ zombie:
    // error in file opening occured, make this object a zombie
    MakeZombie();
    newMapFile   = this;
-   gMmallocDesc = 0;
+   ROOT::Internal::gMmallocDesc = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -567,7 +596,7 @@ void TMapFile::Add(const TObject *obj, const char *name)
    if (lock)
       AcquireSemaphore();
 
-   gMmallocDesc = fMmallocDesc;
+   ROOT::Internal::gMmallocDesc = fMmallocDesc;
 
    const char *n;
    if (name && *name)
@@ -588,7 +617,7 @@ void TMapFile::Add(const TObject *obj, const char *name)
       fLast        = mr;
    }
 
-   gMmallocDesc = 0;
+   ROOT::Internal::gMmallocDesc = 0;
 
    if (lock)
       ReleaseSemaphore();
@@ -603,7 +632,7 @@ void TMapFile::Update(TObject *obj)
 
    AcquireSemaphore();
 
-   gMmallocDesc = fMmallocDesc;
+   ROOT::Internal::gMmallocDesc = fMmallocDesc;
 
    Bool_t all = (obj == 0) ? kTRUE : kFALSE;
 
@@ -627,7 +656,7 @@ void TMapFile::Update(TObject *obj)
       mr = mr->fNext;
    }
 
-   gMmallocDesc = 0;
+   ROOT::Internal::gMmallocDesc = 0;
 
    ReleaseSemaphore();
 }
@@ -1088,6 +1117,15 @@ Int_t TMapFile::GetBestBuffer()
    return (Int_t)(mean + std::sqrt(rms2));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current location in the memory region for this malloc heap which
+/// represents the end of memory in use. Returns 0 if map file was closed.
+
+void *TMapFile::GetBreakval() const
+{
+   if (!fMmallocDesc) return 0;
+   return (void *)((struct mdesc *)fMmallocDesc)->breakval;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a memory mapped file.
@@ -1183,3 +1221,22 @@ void TMapFile::operator delete(void *ptr)
 
    TObject::operator delete(ptr);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+TMapFile *TMapFile::WhichMapFile(void *addr)
+{
+   if (!gROOT || !gROOT->GetListOfMappedFiles()) return 0;
+
+   TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
+   while (lnk) {
+      TMapFile *mf = (TMapFile*)lnk->GetObject();
+      if (!mf) return 0;
+      if ((ULong_t)addr >= mf->fBaseAddr + mf->fOffset &&
+          (ULong_t)addr <  (ULong_t)mf->GetBreakval() + mf->fOffset)
+         return mf;
+      lnk = lnk->Prev();
+   }
+   return 0;
+}
+

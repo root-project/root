@@ -114,12 +114,22 @@ TMatrixTRow<Element>::TMatrixTRow(const TMatrixTRow<Element> &mr) : TMatrixTRow_
 /// Assign val to every element of the matrix row.
 
 template<class Element>
-void TMatrixTRow<Element>::operator=(Element val)
+void TMatrixTRow<Element>::Assign(Element val)
 {
    R__ASSERT(this->fMatrix->IsValid());
    Element *rp = const_cast<Element *>(this->fPtr);
    for ( ; rp < this->fPtr+this->fMatrix->GetNcols(); rp += this->fInc)
       *rp = val;
+}
+
+template<class Element>
+void TMatrixTRow<Element>::operator=(std::initializer_list<Element>  l)
+{
+   R__ASSERT(this->fMatrix->IsValid());
+   Element *rp = const_cast<Element *>(this->fPtr);
+   auto litr = l.begin();
+   for ( ; rp < this->fPtr+this->fMatrix->GetNcols() && litr != l.end(); rp += this->fInc)
+      *rp = *litr++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,12 +320,25 @@ TMatrixTColumn<Element>::TMatrixTColumn(const TMatrixTColumn<Element> &mc) : TMa
 /// Assign val to every element of the matrix column.
 
 template<class Element>
-void TMatrixTColumn<Element>::operator=(Element val)
+void TMatrixTColumn<Element>::Assign(Element val)
 {
    R__ASSERT(this->fMatrix->IsValid());
    Element *cp = const_cast<Element *>(this->fPtr);
    for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
       *cp = val;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assign element of the matrix column using given initializer list
+
+template<class Element>
+void TMatrixTColumn<Element>::operator=(std::initializer_list<Element>  l)
+{
+   R__ASSERT(this->fMatrix->IsValid());
+   Element *rp = const_cast<Element *>(this->fPtr);
+   auto litr = l.begin();
+   for ( ; rp < this->fPtr+this->fMatrix->GetNoElements() && litr != l.end(); rp += this->fInc)
+      *rp = *litr++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

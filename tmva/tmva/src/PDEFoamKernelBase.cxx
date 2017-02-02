@@ -25,18 +25,16 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// PDEFoamKernelBase
-//
-// This class is the abstract kernel interface for PDEFoam.  The
-// kernel can be used for manipulating (smearing) the cell values of a
-// PDEFoam, by passing it as an argument to
-// PDEFoam::GetCellValue(...).
-//
-// Derived classes must implement the Estimate() function to provide a
-// specific kernel behaviour.
-// _____________________________________________________________________
+/*! \class TMVA::PDEFoamKernelBase
+\ingroup TMVA
+This class is the abstract kernel interface for PDEFoam.  The
+kernel can be used for manipulating (smearing) the cell values of a
+PDEFoam, by passing it as an argument to
+PDEFoam::GetCellValue(...).
+
+Derived classes must implement the Estimate() function to provide a
+specific kernel behaviour.
+*/
 
 #include "TMVA/PDEFoamKernelBase.h"
 

@@ -811,9 +811,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
             TF1::RejectPoint(kFALSE);
             bin = binx + ncellsx * (biny + ncellsy * binz);
             if (integral) {
-               xx[0] = fXaxis.GetBinLowEdge(binx);
-               cu  = c1*f1->EvalPar(xx);
-               cu += c1*f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx)) * fXaxis.GetBinWidth(binx);
+               cu = c1*f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx)) / fXaxis.GetBinWidth(binx);
             } else {
                cu  = c1*f1->EvalPar(xx);
             }
@@ -4743,7 +4741,7 @@ Bool_t TH1::IsBinOverflow(Int_t bin, Int_t iaxis) const
    Int_t binx, biny, binz;
    GetBinXYZ(bin, binx, biny, binz);
 
-   if (iaxis == 0) { 
+   if (iaxis == 0) {
       if ( fDimension == 1 )
          return binx >= GetNbinsX() + 1;
       if ( fDimension == 2 )
@@ -4761,7 +4759,7 @@ Bool_t TH1::IsBinOverflow(Int_t bin, Int_t iaxis) const
       return biny >= GetNbinsY() + 1;
    if (iaxis == 3)
       return binz >= GetNbinsZ() + 1;
-   
+
    Error("IsBinOverflow","Invalid axis value");
    return kFALSE;
 }
@@ -4775,7 +4773,7 @@ Bool_t TH1::IsBinUnderflow(Int_t bin, Int_t iaxis) const
    Int_t binx, biny, binz;
    GetBinXYZ(bin, binx, biny, binz);
 
-   if (iaxis == 0) { 
+   if (iaxis == 0) {
       if ( fDimension == 1 )
          return (binx <= 0);
       else if ( fDimension == 2 )
@@ -4791,7 +4789,7 @@ Bool_t TH1::IsBinUnderflow(Int_t bin, Int_t iaxis) const
       return (biny <= 0);
    if (iaxis == 3)
       return (binz <= 0);
-   
+
    Error("IsBinUnderflow","Invalid axis value");
    return kFALSE;
 }
@@ -5854,7 +5852,7 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
    //set new axis limits
    axis->SetLimits(xmin,xmax);
 
-   
+
    //now loop on all bins and refill
    Int_t errors = GetSumw2N();
 
@@ -6549,13 +6547,12 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    histName = gInterpreter-> MapCppName(histName);
    const char *hname = histName.Data();
    if (!strlen(hname)) hname = "unnamed";
-
    TString t(GetTitle());
    t.ReplaceAll("\\","\\\\");
    t.ReplaceAll("\"","\\\"");
    out << hname << " = new " << ClassName() << "(" << quote
-      << hname << quote << "," << quote<< t.Data() << quote
-      << "," << GetXaxis()->GetNbins();
+       << GetName() << quote << "," << quote<< t.Data() << quote
+       << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", "<<sxaxis;
    else
@@ -7837,8 +7834,8 @@ Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
 /// \endcode
 ///
 /// \param min     reference to variable that will hold found minimum value
-/// \param max     reference to varaible that will hold found maximum value
-///
+/// \param max     reference to variable that will hold found maximum value
+
 void TH1::GetMinimumAndMaximum(Double_t& min, Double_t& max) const
 {
    // empty the buffer

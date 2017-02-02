@@ -20,7 +20,6 @@
 #include "TH3.h"
 #include "THnBase.h"
 #include "TMath.h"
-#include "TMetaUtils.h"
 
 void THnChain::AddFile(const char* fileName)
 {

@@ -76,9 +76,18 @@ UNURANLIB    := $(LPATH)/libUnuran.$(SOEXT)
 UNURANMAP    := $(UNURANLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(UNURANH))
+UNURANH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(UNURANH))
+ALLHDRS      += $(UNURANH_REL)
 ALLLIBS      += $(UNURANLIB)
 ALLMAPS      += $(UNURANMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(UNURANH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(UNURANLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(UNURANDEP)

@@ -163,10 +163,6 @@ TRatioPlot::~TRatioPlot()
 
    gROOT->GetListOfCleanups()->Remove(this);
 
-   if (fUpperPad != 0) delete fUpperPad;
-   if (fLowerPad != 0) delete fLowerPad;
-   if (fTopPad != 0) delete fTopPad;
-
    if (fRatioGraph != 0) delete fRatioGraph;
    if (fConfidenceInterval1 != 0) delete fConfidenceInterval1;
    if (fConfidenceInterval2 != 0) delete fConfidenceInterval2;
@@ -236,7 +232,7 @@ void TRatioPlot::Init(TH1* h1, TH1* h2,Option_t *option)
 
 
    // build ratio, everything is ready
-   BuildLowerPlot();
+   if (!BuildLowerPlot()) return;
 
    // taking x axis information from h1 by cloning it x axis
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
@@ -364,7 +360,7 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
 
    fOption = optionString;
 
-   BuildLowerPlot();
+   if (!BuildLowerPlot()) return;
 
    // emulate option behaviour of TH1
    if (fH1->GetSumw2N() > 0) {
@@ -375,8 +371,8 @@ TRatioPlot::TRatioPlot(TH1* h1, Option_t *option, TFitResult *fitres)
    fGraphDrawOpt = "LX"; // <- default
 
    fSharedXAxis = (TAxis*)(fH1->GetXaxis()->Clone());
-   fUpYaxis = (TAxis*)(fH1->GetYaxis()->Clone());
-   fLowYaxis = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
+   fUpYaxis     = (TAxis*)(fH1->GetYaxis()->Clone());
+   fLowYaxis    = (TAxis*)(fRatioGraph->GetYaxis()->Clone());
 
    //SyncAxesRanges();
 
@@ -435,6 +431,11 @@ void TRatioPlot::SetupPads() {
    if (fLowerPad != 0) {
       delete fLowerPad;
       fLowerPad = 0;
+   }
+
+   if (!gPad) {
+      Error("SetupPads", "need to create a canvas first");
+      return;
    }
 
    double pm = fInsetWidth;
@@ -572,7 +573,10 @@ Float_t TRatioPlot::GetSeparationMargin() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draws the ratio plot to the currently active pad. Takes the following options
+/// Draws the ratio plot to the currently active pad. Therefore it requires that
+/// a TCanvas has been created first.
+///
+/// It takes the following options
 ///
 /// | Option     | Description                                                  |
 /// | ---------- | ------------------------------------------------------------ |
@@ -618,6 +622,11 @@ void TRatioPlot::Draw(Option_t *option)
       fHideLabelMode = TRatioPlot::HideLabelMode::kNoHide;
    } else {
       fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; // <- default
+   }
+
+   if (!gPad) {
+      Error("Draw", "need to create a canvas first");
+      return;
    }
 
    TVirtualPad *padsav = gPad;
@@ -900,7 +909,7 @@ void TRatioPlot::SyncAxesRanges()
 /// Build the lower plot according to which constructor was called, and
 /// which options were passed.
 
-void TRatioPlot::BuildLowerPlot()
+Int_t TRatioPlot::BuildLowerPlot()
 {
    // Clear and delete the graph if not exists
    if (fRatioGraph != 0) {
@@ -1008,7 +1017,7 @@ void TRatioPlot::BuildLowerPlot()
       if (func == 0) {
          // this is checked in constructor and should thus not occur
          Error("BuildLowerPlot", "h1 does not have a fit function");
-         return;
+         return 0;
       }
 
       fRatioGraph = new TGraphAsymmErrors();
@@ -1121,7 +1130,7 @@ void TRatioPlot::BuildLowerPlot()
    } else {
       // this should not occur
       Error("BuildLowerPlot", "Invalid fMode value");
-      return;
+      return 0;
    }
 
    // need to set back to "" since recreation. we don't ever want
@@ -1129,12 +1138,14 @@ void TRatioPlot::BuildLowerPlot()
 
    if (fRatioGraph == 0) {
       Error("BuildLowerPlot", "Error creating lower graph");
-      return;
+      return 0;
    }
 
    fRatioGraph->SetTitle("");
    fConfidenceInterval1->SetTitle("");
    fConfidenceInterval2->SetTitle("");
+
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1697,7 +1708,7 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 {
    fCl1 = c1;
    fCl2 = c2;
-   BuildLowerPlot();
+   if (!BuildLowerPlot()) return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

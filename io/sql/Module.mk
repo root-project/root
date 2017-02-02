@@ -28,9 +28,18 @@ SQLLIB       := $(LPATH)/libSQLIO.$(SOEXT)
 SQLMAP       := $(SQLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SQLH))
+SQLH_REL     := $(patsubst $(MODDIRI)/%.h,include/%.h,$(SQLH))
+ALLHDRS      += $(SQLH_REL)
 ALLLIBS      += $(SQLLIB)
 ALLMAPS      += $(SQLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(SQLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SQLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(SQLDEP)

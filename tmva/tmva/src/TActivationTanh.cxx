@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski 
+// Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -20,14 +20,13 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
-  
-//_______________________________________________________________________
-//                                                                      
-//  Tanh activation function for ANN. This really simple implementation
-//  uses TFormulas and should probably be replaced with something more
-//  efficient later.
-//                                                                      
-//_______________________________________________________________________
+
+/*! \class TMVA::TActivationTanh
+\ingroup TMVA
+Tanh activation function for ANN. This really simple implementation
+uses TFormula and should probably be replaced with something more
+efficient later.
+*/
 
 #include "TMVA/TActivationTanh.h"
 
@@ -87,7 +86,7 @@ Double_t TMVA::TActivationTanh::EvalDerivative(Double_t arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// get expressions for the tanh and its derivative
-/// whatever that may be good for ... 
+/// whatever that may be good for ...
 
 TString TMVA::TActivationTanh::GetExpression()
 {
@@ -98,7 +97,7 @@ TString TMVA::TActivationTanh::GetExpression()
 ////////////////////////////////////////////////////////////////////////////////
 /// writes the sigmoid activation function source code
 
-void TMVA::TActivationTanh::MakeFunction( std::ostream& fout, const TString& fncName ) 
+void TMVA::TActivationTanh::MakeFunction( std::ostream& fout, const TString& fncName )
 {
    fout << "double " << fncName << "(double x) const {" << std::endl;
    fout << "   // hyperbolic tan" << std::endl;

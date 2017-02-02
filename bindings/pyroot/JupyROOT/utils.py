@@ -14,7 +14,6 @@ import pty
 import itertools
 import re
 import fnmatch
-import handlers
 import time
 from hashlib import sha1
 from contextlib import contextmanager
@@ -24,7 +23,7 @@ from IPython.display import HTML
 from IPython.core.extensions import ExtensionManager
 import IPython.display
 import ROOT
-import cppcompleter
+from JupyROOT import handlers
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
@@ -200,7 +199,7 @@ def _codeToFilename(code):
     >>> _codeToFilename("int f(i){return i*i;}")
     'dbf7e731.C'
     '''
-    fileNameBase = sha1(code).hexdigest()[0:8]
+    fileNameBase = sha1(code.encode('utf-8')).hexdigest()[0:8]
     return fileNameBase + ".C"
 
 def _dumpToUniqueFile(code):
@@ -289,8 +288,8 @@ class StreamCapture(object):
         out = self.ioHandler.GetStdout()
         err = self.ioHandler.GetStderr()
         if not transformers:
-            self.nbOutStream.write(out.decode(sys.stdout.encoding))
-            self.nbErrStream.write(err.decode(sys.stderr.encoding))
+            self.nbOutStream.write(out)
+            self.nbErrStream.write(err)
         else:
             for t in transformers:
                 (out, err, otype) = t(out, err)
@@ -472,14 +471,13 @@ def setStyle():
 
 captures = []
 
-def loadExtensionsAndCapturers():
+def loadMagicsAndCapturers():
     global captures
     extNames = ["JupyROOT.magics." + name for name in ["cppmagic","jsrootmagic"]]
     ip = get_ipython()
     extMgr = ExtensionManager(ip)
     for extName in extNames:
         extMgr.load_extension(extName)
-    cppcompleter.load_ipython_extension(ip)
     captures.append(StreamCapture())
     captures.append(CaptureDrawnPrimitives())
 
@@ -498,7 +496,7 @@ def enableCppHighlighting():
 
 def iPythonize():
     setStyle()
-    loadExtensionsAndCapturers()
+    loadMagicsAndCapturers()
     enableCppHighlighting()
     enhanceROOTModule()
     welcomeMsg()

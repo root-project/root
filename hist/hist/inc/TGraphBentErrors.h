@@ -27,15 +27,15 @@
 class TGraphBentErrors : public TGraph {
 
 protected:
-   Double_t    *fEXlow;        //[fNpoints] array of X low errors
-   Double_t    *fEXhigh;       //[fNpoints] array of X high errors
-   Double_t    *fEYlow;        //[fNpoints] array of Y low errors
-   Double_t    *fEYhigh;       //[fNpoints] array of Y high errors
+   Double_t    *fEXlow;        ///<[fNpoints] array of X low errors
+   Double_t    *fEXhigh;       ///<[fNpoints] array of X high errors
+   Double_t    *fEYlow;        ///<[fNpoints] array of Y low errors
+   Double_t    *fEYhigh;       ///<[fNpoints] array of Y high errors
 
-   Double_t    *fEXlowd;       //[fNpoints] array of X low displacements
-   Double_t    *fEXhighd;      //[fNpoints] array of X high displacements
-   Double_t    *fEYlowd;       //[fNpoints] array of Y low displacements
-   Double_t    *fEYhighd;      //[fNpoints] array of Y high displacements
+   Double_t    *fEXlowd;       ///<[fNpoints] array of X low displacements
+   Double_t    *fEXhighd;      ///<[fNpoints] array of X high displacements
+   Double_t    *fEYlowd;       ///<[fNpoints] array of Y low displacements
+   Double_t    *fEYhighd;      ///<[fNpoints] array of Y high displacements
 
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
 

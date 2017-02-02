@@ -8,24 +8,25 @@
  *    Wouter Verkerke, Nikhef, Amsterdam, verkerke@nikhef.nl
  *                                                                           *
  * Copyright (c) 2009, NIKHEF. All rights reserved.                          *
- *           
+ *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// The  Step Function is a binned function whose parameters 
-// are the heights of each bin.  
-// 
-// This function may be used to describe oddly shaped distributions. A RooStepFunction
-// has free parameters. In particular, any statistical uncertainty 
-// used to model this efficiency may be understood with these free parameters.
-//
-// Note that in contrast to RooParametricStepFunction, a RooStepFunction is NOT a PDF,
-// but a not-normalized function (RooAbsReal)
-//
+/** \class RooStepFunction
+    \ingroup Roofit
+
+The  Step Function is a binned function whose parameters
+are the heights of each bin.
+
+This function may be used to describe oddly shaped distributions. A RooStepFunction
+has free parameters. In particular, any statistical uncertainty
+used to model this efficiency may be understood with these free parameters.
+
+Note that in contrast to RooParametricStepFunction, a RooStepFunction is NOT a PDF,
+but a not-normalized function (RooAbsReal)
+**/
 
 #include "RooFit.h"
 
@@ -43,8 +44,6 @@
 using namespace std;
 
 ClassImp(RooStepFunction)
-  ;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -55,14 +54,12 @@ RooStepFunction::RooStepFunction()
   _boundIter = _boundaryList.createIterator() ;
   _interpolate = kFALSE ;
 }
-				 
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooStepFunction::RooStepFunction(const char* name, const char* title, 
-				 RooAbsReal& x, const RooArgList& coefList, const RooArgList& boundaryList, Bool_t interpolate) :
+RooStepFunction::RooStepFunction(const char* name, const char* title,
+             RooAbsReal& x, const RooArgList& coefList, const RooArgList& boundaryList, Bool_t interpolate) :
   RooAbsReal(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefList","List of coefficients",this),
@@ -74,8 +71,8 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
   RooAbsArg* coef ;
   while((coef = (RooAbsArg*)coefIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
-	   << " is not of type RooAbsReal" << endl ;
+      cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
+      << " is not of type RooAbsReal" << endl ;
       assert(0) ;
     }
     _coefList.add(*coef) ;
@@ -87,8 +84,8 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
   RooAbsArg* boundary ;
   while((boundary = (RooAbsArg*)boundaryIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(boundary)) {
-      cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: boundary " << boundary->GetName() 
-	   << " is not of type RooAbsReal" << endl ;
+      cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: boundary " << boundary->GetName()
+      << " is not of type RooAbsReal" << endl ;
       assert(0) ;
     }
     _boundaryList.add(*boundary) ;
@@ -101,14 +98,12 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooStepFunction::RooStepFunction(const RooStepFunction& other, const char* name) :
-  RooAbsReal(other, name), 
-  _x("x", this, other._x), 
+  RooAbsReal(other, name),
+  _x("x", this, other._x),
   _coefList("coefList",this,other._coefList),
   _boundaryList("boundaryList",this,other._boundaryList),
   _interpolate(other._interpolate)
@@ -116,8 +111,6 @@ RooStepFunction::RooStepFunction(const RooStepFunction& other, const char* name)
   _coefIter = _coefList.createIterator();
   _boundIter = _boundaryList.createIterator();
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -128,12 +121,10 @@ RooStepFunction::~RooStepFunction()
   delete _boundIter ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer contents to vector for use below
 
-Double_t RooStepFunction::evaluate() const 
+Double_t RooStepFunction::evaluate() const
 {
   vector<double> b(_boundaryList.getSize()) ;
   vector<double> c(_coefList.getSize()+3) ;
@@ -152,9 +143,9 @@ Double_t RooStepFunction::evaluate() const
     // No interpolation -- Return values bin-by-bin
     for (Int_t i=0;i<nb-1;i++){
       if (_x>b[i]&&_x<=b[i+1]) {
-	return ((RooAbsReal*)_coefList.at(i))->getVal() ;
+   return ((RooAbsReal*)_coefList.at(i))->getVal() ;
       }
-    } 
+    }
     return 0 ;
 
   } else {
@@ -180,12 +171,11 @@ Double_t RooStepFunction::evaluate() const
 
     for (Int_t i=0;i<nc-1;i++){
       if (_x>c[i]&&_x<=c[i+1]) {
-	Double_t xx[2] ; xx[0]=c[i] ; xx[1]=c[i+1] ;
-	Double_t yy[2] ; yy[0]=y[i] ; yy[1]=y[i+1] ;
-	return RooMath::interpolate(xx,yy,2,_x) ;
+   Double_t xx[2] ; xx[0]=c[i] ; xx[1]=c[i+1] ;
+   Double_t yy[2] ; yy[0]=y[i] ; yy[1]=y[i+1] ;
+   return RooMath::interpolate(xx,yy,2,_x) ;
       }
-    } 
-    return 0;   
-  }  
+    }
+    return 0;
+  }
 }
-

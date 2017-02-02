@@ -90,18 +90,6 @@ core/base/src/RGitCommit.h
 # /core/pcre/src/
 /core/pcre/src/pcre-8.37
 
-# /core/utils/src/
-/core/utils/src/rootcint_tmp
-/core/utils/src/rootcint_tmp.exp
-/core/utils/src/rootcint_tmp.lib
-/core/utils/src/rootcint_tmp.pdb
-/core/utils/src/rootcint_tmp.cxx
-/core/utils/src/rootcint_tmp.exe
-/core/utils/src/rootcling_tmp
-/core/utils/src/rootcling_tmp.cxx
-/core/utils/src/RStl_tmp.cxx
-/core/utils/src/RConversionRuleParser_tmp.cxx
-
 # /documentation/primer/
 /documentation/primer/ROOTPrimer.tex
 /documentation/primer/ROOTPrimer.html
@@ -231,6 +219,7 @@ core/base/src/RGitCommit.h
 # /main/src/
 /main/src/roots.sh
 /main/src/proofserv.sh
+/main/src/xproofd.sh
 
 # /math/genetic/test/
 /math/genetic/test/testGAMinimizer

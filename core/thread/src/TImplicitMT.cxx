@@ -49,16 +49,23 @@ static std::atomic_int &GetParTreeProcessingCount()
    return count;
 }
 
+static UInt_t &GetImplicitMTPoolSize()
+{
+   static UInt_t size = 0;
+   return size;
+};
+
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
    if (!GetImplicitMTFlag()) {
       if (!GetScheduler().is_active()) {
          TThread::Initialize();
-
-         if (numthreads == 0)
+         bool defaultSize = numthreads == 0;
+         if (defaultSize)
             numthreads = tbb::task_scheduler_init::automatic;
 
          GetScheduler().initialize(numthreads);
+         GetImplicitMTPoolSize() = defaultSize ? tbb::task_scheduler_init::default_num_threads() : numthreads;
       }
       GetImplicitMTFlag() = true;
    }
@@ -81,6 +88,12 @@ extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 {
    return GetImplicitMTFlag();
 };
+
+extern "C" UInt_t ROOT_TImplicitMT_GetImplicitMTPoolSize()
+{
+   return GetImplicitMTPoolSize();
+};
+
 
 extern "C" void ROOT_TImplicitMT_EnableParBranchProcessing()
 {

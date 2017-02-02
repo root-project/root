@@ -2,7 +2,10 @@
 // author: Lukasz Janyst <ljanyst@cern.ch>
 
 #include "TSchemaRule.h"
+
+#include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
+#include "TSchemaType.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TNamed.h"
@@ -14,8 +17,6 @@
 #include <cstdlib>
 #include "TROOT.h"
 #include "Riostream.h"
-
-#include "RConversionRuleParser.h"
 
 ClassImp(TSchemaRule)
 
@@ -322,14 +323,14 @@ Bool_t TSchemaRule::SetFromRule( const char *rule )
    // Parse the rule and check it's validity
    /////////////////////////////////////////////////////////////////////////////
 
-   ROOT::MembersMap_t rule_values;
+   ROOT::Internal::MembersMap_t rule_values;
 
    std::string error_string;
-   if( !ParseRule( rule, rule_values, error_string) ) {
+   if( !ROOT::ParseRule(rule, rule_values, error_string) ) {
       Error("SetFromRule","The rule (%s) is invalid: %s",rule,error_string.c_str());
       return kFALSE;
    }
-   ROOT::MembersMap_t ::const_iterator it1;
+   ROOT::Internal::MembersMap_t::const_iterator it1;
 
    it1 = rule_values.find( "type" );
    if( it1 != rule_values.end() ) {

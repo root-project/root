@@ -26,21 +26,19 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_____________________________________________________________________
-//
-// PDEFoamDiscriminant
-//
-// This PDEFoam variant stores in every cell the discriminant
-//
-//    D = #events with given class / total number of events
-//
-// as well as the statistical error on the discriminant.  It therefore
-// acts as a discriminant estimator.  It should be booked together
-// with the PDEFoamDiscriminantDensity density estimator, which
-// returns the discriminant density at a given phase space point
-// during the foam build-up.
-//
-//_____________________________________________________________________
+/*! \class TMVA::PDEFoamDiscriminant
+\ingroup TMVA
+
+This PDEFoam variant stores in every cell the discriminant
+
+     D = #events with given class / total number of events
+
+as well as the statistical error on the discriminant.  It therefore
+acts as a discriminant estimator.  It should be booked together
+with the PDEFoamDiscriminantDensity density estimator, which
+returns the discriminant density at a given phase space point
+during the foam build-up.
+*/
 
 #include "TMVA/PDEFoamDiscriminant.h"
 

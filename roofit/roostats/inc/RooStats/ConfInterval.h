@@ -19,48 +19,43 @@
 #include "RooArgSet.h"
 #endif
 
-
-
-
-
 namespace RooStats {
 
 
-   /**
-  
-      ConfInterval is an interface class for a generic interval in the RooStats framework.
-      Any tool inheriting from IntervalCalculator can return a ConfInterval.
-      There are many types of intervals, they may be a simple range [a,b] in 1 dimension,
-      or they may be disconnected regions in multiple dimensions.
-      So the common interface is simply to ask the interval if a given point "IsInInterval".
-      The Interval also knows what confidence level it was constructed at and the space of 
-      parameters for which it was constructed.
-      Note, one could use the same class for a Bayesian "credible interval".
+/** \class ConfInterval
+    \ingroup Roostats
 
-      \ingroup Roostats
-      
-   */
+ConfInterval is an interface class for a generic interval in the RooStats framework.
+Any tool inheriting from IntervalCalculator can return a ConfInterval.
+There are many types of intervals, they may be a simple range [a,b] in 1 dimension,
+or they may be disconnected regions in multiple dimensions.
+So the common interface is simply to ask the interval if a given point "IsInInterval".
+The Interval also knows what confidence level it was constructed at and the space of
+parameters for which it was constructed.
+Note, one could use the same class for a Bayesian "credible interval".
+
+*/
 
    class ConfInterval : public TNamed {
 
    public:
 
-      /// constructor given name and title 
-      explicit ConfInterval(const char* name = 0) : TNamed(name,name) {} 
+      /// constructor given name and title
+      explicit ConfInterval(const char* name = 0) : TNamed(name,name) {}
 
       /// destructor
       virtual ~ConfInterval() {}
 
       /// operator=
       ConfInterval& operator=(const ConfInterval& other) {
-	if (&other==this) { return *this; }
-	TNamed::operator=(other);
-	return *this;
+   if (&other==this) { return *this; }
+   TNamed::operator=(other);
+   return *this;
       }
-    
+
       /// check if given point is in the interval
-      virtual Bool_t IsInInterval(const RooArgSet&) const = 0; 
-    
+      virtual Bool_t IsInInterval(const RooArgSet&) const = 0;
+
       /// used to set confidence level.  Keep pure virtual
       virtual void SetConfidenceLevel(Double_t cl) = 0;
 

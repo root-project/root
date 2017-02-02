@@ -30,10 +30,8 @@
 #include "TVirtualMutex.h"
 #endif
 
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
-
+#include <map>
+#include <typeinfo>
 #include <vector>
 
 class TClass;
@@ -56,6 +54,9 @@ protected:
    friend class SuspendAutoParsing;
 
 public:
+   // See as in TSchemaType.h.
+   typedef class std::map<std::string, std::string> MembersMap_t;
+
    enum EErrorCode {
       kNoError     = 0,
       kRecoverable = 1,
@@ -156,7 +157,8 @@ public:
                                    const char* /*fwdDeclsCode*/,
                                    void (* /*triggerFunc*/)(),
                                    const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
-                                   const char** classesHeaders) = 0;
+                                   const char** classesHeaders,
+                                   Bool_t lateRegistration = false) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
