@@ -100,6 +100,12 @@ public:
    unsigned int NPar() const { return fSettings.size(); }
 
    /**
+      return a vector of stored parameter values (i.e initial fit parameters)
+    */
+   std::vector<double> ParamsValues() const;
+
+
+   /**
       set the parameter settings from a model function.
       Create always new parameter setting list from a given model function
    */
