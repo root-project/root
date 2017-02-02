@@ -298,7 +298,7 @@ Rint.Logoff:             rootlogoff.C
 ### Prompt colors
 # Whether to use default colors for light-on-dark (i.e. reverse) color scheme:
 #Rint.ReverseColor:        no
-# Prompt colors: #rgb or #rrggbb or color names:
+# Prompt colors: %rgb or %rrggbb or color names:
 #  "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"
 #  "default" will keep the current terminal color.
 # can be combined with string containing "under" and "bold".
