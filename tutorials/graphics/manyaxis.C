@@ -10,7 +10,7 @@
 
 void manyaxis()
 {
-   c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
+   TCanvas* c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
 
    c1->Range(-10,-1,10,1);
 

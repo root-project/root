@@ -334,10 +334,6 @@ clang::QualType AddDefaultParameters(clang::QualType instanceType,
 //______________________________________________________________________________
 llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
 
-//______________________________________________________________________________
-// Return the ROOT include directory
-std::string GetROOTIncludeDir(bool rootbuild);
-
 enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType};
 
 //______________________________________________________________________________
@@ -542,18 +538,6 @@ std::string GetModuleFileName(const char* moduleName);
 clang::Module* declareModuleMap(clang::CompilerInstance* CI,
                                  const char* moduleFileName,
                                  const char* headers[]);
-
-//______________________________________________________________________________
-// Return the -I needed to find RuntimeUniverse.h
-std::string GetInterpreterExtraIncludePath(bool rootbuild);
-
-//______________________________________________________________________________
-// Return the LLVM / clang resource directory
-std::string GetLLVMResourceDir(bool rootbuild);
-
-//______________________________________________________________________________
-// Return the ROOT include directory
-std::string GetROOTIncludeDir(bool rootbuild);
 
 //______________________________________________________________________________
 // Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')

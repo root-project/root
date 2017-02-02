@@ -22,9 +22,6 @@
 
 
 #include "RConfigure.h"
-// #ifndef ROOTINCDIR
-// #define MATH_NO_PLUGIN_MANAGER
-// #endif
 
 #include <algorithm>
 #include <functional>

@@ -43,9 +43,9 @@ if(python)
   endforeach()
 
   install(FILES python/cmdLineUtils.py DESTINATION ${runtimedir})
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
-  configure_file(python/cmdLineUtils.py ${CMAKE_BINARY_DIR}/${runtimedir}/cmdLineUtils.py @ONLY)
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}${runtimedir}/cmdLineUtils.py)")
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}${runtimedir}/cmdLineUtils.py)")
+  configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 endif()
 
 

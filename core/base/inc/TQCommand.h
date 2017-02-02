@@ -26,6 +26,8 @@
 #include "TQObject.h"
 #endif
 
+class TQConnection;
+
 class TQCommand : public TList, public TQObject {
 
 friend class TQUndoManager;

@@ -433,6 +433,16 @@ def getExtraHeaders():
    return code
 
 #-------------------------------------------------------------------------------
+def removeUnwantedHeaders(allHeadersContent):
+   """ remove unwanted headers, e.g. the ones used for dictionaries but not desirable in the pch
+   """
+   unwantedHeaders = ['ROOT/TDataFrame.hxx']
+   for unwantedHeader in unwantedHeaders:
+      allHeadersContent = allHeadersContent.replace('#include "%s"' %unwantedHeader,"")
+   return allHeadersContent
+
+
+#-------------------------------------------------------------------------------
 def makePCHInput():
    """
    Create the input for the pch file, i.e. 3 files:
@@ -475,6 +485,8 @@ def makePCHInput():
       allLinkdefsContent += getLocalLinkDefs(rootSrcDir, outdir , dirName)
 
    allHeadersContent += getExtraHeaders()
+
+   allHeadersContent = removeUnwantedHeaders(allHeadersContent)
 
    copyLinkDefs(rootSrcDir, outdir)
 

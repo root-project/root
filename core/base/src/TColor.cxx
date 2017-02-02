@@ -1129,7 +1129,7 @@ void TColor::InitializeColors()
       Float_t  hue;
       Float_t r=0., g=0., b=0., h, l, s;
 
-      for (i=0 ; i<maxPretty ; i++) {
+      for (i=0 ; i<maxPretty-1 ; i++) {
          hue = maxHue-(i+1)*((maxHue-minHue)/maxPretty);
          TColor::HLStoRGB(hue, lightness, saturation, r, g, b);
          new TColor(i+51, r, g, b);
@@ -2336,7 +2336,8 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    if (ncolors == 1 && colors == 0) {
       ncolors = 50;
       fgPalette.Set(ncolors);
-      for (i=0;i<ncolors;i++) fgPalette.fArray[i] = 51+i;
+      for (i=0;i<ncolors-1;i++) fgPalette.fArray[i] = 51+i;
+      fgPalette.fArray[ncolors-1] = kRed; // the last color of this palette is red
       paletteType = 2;
       return;
    }

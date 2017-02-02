@@ -44,10 +44,10 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    };
 
    // Create the pool of processes
-   ROOT::TProcessExecutor workers(nFiles);
+   ROOT::TTreeProcessorMP workers(nFiles);
 
    // Process the TChain
-   auto sumHistogram = workers.ProcTree(inputChain, workItem, "multiCore");
+   auto sumHistogram = workers.Process(inputChain, workItem, "multiCore");
    sumHistogram->Fit("gaus", 0);
 
    return 0;

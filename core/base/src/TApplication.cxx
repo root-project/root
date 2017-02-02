@@ -276,11 +276,7 @@ void TApplication::InitializeGraphics()
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-#ifdef TTFFONTDIR
-                                       TTFFONTDIR);
-#else
-                                       "$(ROOTSYS)/fonts");
-#endif
+                                       TROOT::GetTTFFontDir());
    char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
    // Check for use of DFSG - fonts
    if (!ttfont)
@@ -888,29 +884,19 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
          Error("ProcessLine", "Cannot show demos in batch mode!");
          return 1;
       }
-#ifdef ROOTTUTDIR
-      ProcessLine(".x " ROOTTUTDIR "/demos.C");
-#else
-      ProcessLine(".x $(ROOTSYS)/tutorials/demos.C");
-#endif
+      ProcessLine(".x " + TROOT::GetTutorialDir() + "/demos.C");
       return 0;
    }
 
    if (!strncmp(line, ".license", 8)) {
-#ifdef ROOTDOCDIR
-      return PrintFile(ROOTDOCDIR "/LICENSE");
-#else
-      return PrintFile("$(ROOTSYS)/LICENSE");
-#endif
+      return PrintFile(TROOT::GetDocDir() + "/LICENSE");
    }
 
    if (!strncmp(line, ".credits", 8)) {
-#ifdef ROOTDOCDIR
-      return PrintFile(ROOTDOCDIR "/CREDITS");
-#else
-      return PrintFile("$(ROOTSYS)/README/CREDITS");
-#endif
-
+      TString credits = TROOT::GetDocDir() + "/CREDITS";
+      if (gSystem->AccessPathName(credits, kReadPermission))
+         credits = TROOT::GetDocDir() + "/README/CREDITS";
+      return PrintFile(credits);
    }
 
    if (!strncmp(line, ".pwd", 4)) {

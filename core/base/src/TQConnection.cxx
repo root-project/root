@@ -59,11 +59,14 @@ public:
    Bool_t      CheckSlot(Int_t nargs) const;
    Long_t      GetOffset() const { return fOffset; }
    CallFunc_t *StartExecuting();
+   CallFunc_t *GetFunc() const { return fFunc; }
    void        EndExecuting();
 
    const char *GetName() const {
       return fName.Data();
    }
+
+   Int_t GetMethodNargs() { return fMethod->GetNargs(); }
 
    void ExecuteMethod(void *object, Int_t nargs, va_list ap) = delete;
    void ExecuteMethod(void *object);
@@ -440,16 +443,15 @@ void TQSlotPool::Free(TQSlot *slot)
 
 static TQSlotPool gSlotPool;  // global pool of slots
 
-////////////////////////////////////////////////////////////////////////////////
+void TQConnection::SetArg(const Long_t *params, Int_t nparam/* = -1*/) {
+   if (nparam == -1)
+      nparam = fSlot->GetMethodNargs();
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
-
-TQConnection::TQConnection() : TList(), TQObject()
-{
-   fReceiver = 0;
-   fSlot     = 0;
+   // FIXME: Why TInterpreter needs non-const SetArgArray. TClingCallFunc
+   // doesn't modify the value.
+   gInterpreter->CallFunc_SetArgArray(fSlot->GetFunc(), const_cast<Long_t*>(params), nparam);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TQConnection ctor.
@@ -458,7 +460,7 @@ TQConnection::TQConnection() : TList(), TQObject()
 ///    cl == 0  - connection to function with name == method_name
 
 TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
-   : TList(), TQObject()
+   : TQObject()
 {
    const char *funcname = 0;
    fReceiver = receiver;      // fReceiver is pointer to receiver
@@ -482,7 +484,7 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
 ///    it could be interpreted class and with method == funcname.
 
 TQConnection::TQConnection(const char *class_name, void *receiver,
-                           const char *funcname) : TList(), TQObject()
+                           const char *funcname) : TQObject()
 {
    fClassName = class_name;
    fSlot = gSlotPool.New(class_name, funcname);  // new slot-method
@@ -492,7 +494,7 @@ TQConnection::TQConnection(const char *class_name, void *receiver,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Ignore connections to this TQConnections
 
-TQConnection::TQConnection(const TQConnection &con): TList(), TQObject()
+TQConnection::TQConnection(const TQConnection &con) : TQObject()
 {
    fClassName = con.fClassName;
    fSlot = con.fSlot;
@@ -672,4 +674,8 @@ void TQConnection::UnLockSlot(TQSlot *s) const {
    s->EndExecuting();
    if (s->References() <= 0) delete s;
    if (gInterpreterMutex) gInterpreterMutex->UnLock();
+}
+
+CallFunc_t* TQConnection::GetSlotCallFunc() const {
+   return fSlot->GetFunc();
 }

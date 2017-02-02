@@ -38,7 +38,7 @@ if(afs)
   ROOT_GENERATE_DICTIONARY(G__AFSAuth AFSAuth.h AFSAuthTypes.h TAFS.h MODULE AFSAuth LINKDEF LinkDefAFS.h)
   ROOT_LINKER_LIBRARY(AFSAuth AFSAuth.cxx TAFS.cxx G__AFSAuth.cxx LIBRARIES ${CRYPTLIBS} DEPENDENCIES  Net RIO )
 else()
-  set(installoptions OPTIONS REGEX "AFS" EXCLUDE)
+  set(installoptions FILTER "AFS")
 endif()
 
 ROOT_INSTALL_HEADERS(${installoptions})

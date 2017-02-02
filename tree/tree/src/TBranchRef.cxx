@@ -20,7 +20,7 @@ TBranch has read the TBranchRef's current entry it will not be told
 to re-read, in case the use has changed objects read from the
 branch.
 
-*** LIMITATION ***
+### LIMITATION :
 Note that this does NOT allow for autoloading of references spanning
 different entries. The TBranchRef's current entry has to correspond
 to the entry of the TBranch containing the referenced object.

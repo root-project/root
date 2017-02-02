@@ -262,12 +262,14 @@ void TEntryListArray::AddEntriesAndSubLists(const TEntryList *elist)
 /// - When tree = 0, returns from the current list
 /// - When tree != 0, finds the list corresponding to this tree
 /// - When tree is a chain, the entry is assumed to be global index and the local
+///
 /// entry is recomputed from the treeoffset information of the chain
+/// When subentry != -1, return true if the enter is present and not splitted
+/// or if the subentry list is found and contains \#subentry
 
 Int_t TEntryListArray::Contains(Long64_t entry, TTree *tree, Long64_t subentry)
 {
-   //When subentry != -1, return true if the enter is present and not splitted
-   //or if the subentry list is found and contains #subentry
+
 
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
@@ -329,7 +331,7 @@ void TEntryListArray::ConvertToTEntryListArray(TEntryList *e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add entry #entry (, #subentry) to the list
+/// Add entry \#entry (, \#subentry) to the list
 /// - When tree = 0, adds to the current list
 /// - When tree != 0, finds the list corresponding to this tree (or add a new one)
 /// - When tree is a chain, the entry is assumed to be global index and the local
@@ -478,7 +480,7 @@ void TEntryListArray::Print(const Option_t* option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove entry #entry (, #subentry)  from the list
+/// Remove entry \#entry (, \#subentry)  from the list
 /// - When tree = 0, removes from the current list
 /// - When tree != 0, finds the list, corresponding to this tree
 /// - When tree is a chain, the entry is assumed to be global index and the local

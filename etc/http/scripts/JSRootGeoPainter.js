@@ -1750,6 +1750,7 @@
       var track_width = track.fLineWidth;
 
       var track_color = JSROOT.Painter.root_colors[track.fLineColor];
+      if (track_color == undefined) track_color = "rgb(255,0,255)";
 
       if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
 

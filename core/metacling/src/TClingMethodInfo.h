@@ -62,6 +62,8 @@ private:
    SpecIterator                                *fTemplateSpecIter; // Iter over template specialization. [We own]
    const clang::FunctionDecl                   *fSingleDecl; // The single member
 
+   bool IsValidSlow() const;
+
 public:
    explicit TClingMethodInfo(cling::Interpreter *interp)
       : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
@@ -81,7 +83,10 @@ public:
    void                                         CreateSignature(TString &signature) const;
    void                                         Init(const clang::FunctionDecl *);
    void                                        *InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
-   bool                                         IsValid() const;
+   bool                                         IsValid() const {
+      if (fSingleDecl) return fSingleDecl;
+      return IsValidSlow();
+   }
    int                                          NArg() const;
    int                                          NDefaultArg() const;
    int                                          InternalNext();

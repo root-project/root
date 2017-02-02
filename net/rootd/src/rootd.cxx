@@ -2524,10 +2524,13 @@ int main(int argc, char **argv)
 
    if (argc > 0) {
       confdir = std::string(*argv);
-   } else {
-      // try to guess the config directory...
-#ifndef ROOTPREFIX
+   }
+
+#ifdef ROOTPREFIX
+   if (getenv("IGNOREROOTPREFIX")) {
+#endif
       if (!confdir.length()) {
+         // try to guess the config directory...
          if (getenv("ROOTSYS")) {
             confdir = getenv("ROOTSYS");
             if (gDebug > 0)
@@ -2538,31 +2541,26 @@ int main(int argc, char **argv)
                ErrorInfo("main: no config directory specified");
          }
       }
-#else
-      confdir = ROOTPREFIX;
-#endif
+      rootbindir = std::string(confdir).append("/bin");
+      rootetcdir = std::string(confdir).append("/etc");
+#ifdef ROOTPREFIX
    }
-#ifdef ROOTBINDIR
-   rootbindir= ROOTBINDIR;
-#endif
-#ifdef ROOTETCDIR
-   rootetcdir= ROOTETCDIR;
+   else {
+      if (!confdir.length())
+         confdir = ROOTPREFIX;
+      rootbindir = ROOTBINDIR;
+      rootetcdir = ROOTETCDIR;
+   }
 #endif
 
-   // Define rootbindir if not done already
-   if (!rootbindir.length())
-      rootbindir = std::string(confdir).append("/bin");
-   // Make it available to all the session via env
+   // Make rootbindir available to all the session via env
    if (rootbindir.length()) {
       char *tmp1 = new char[15 + rootbindir.length()];
       sprintf(tmp1, "ROOTBINDIR=%s", rootbindir.c_str());
       putenv(tmp1);
    }
 
-   // Define rootetcdir if not done already
-   if (!rootetcdir.length())
-      rootetcdir = std::string(confdir).append("/etc");
-   // Make it available to all the session via env
+   // Make rootetcdir available to all the session via env
    if (rootetcdir.length()) {
       char *tmp1 = new char[15 + rootetcdir.length()];
       sprintf(tmp1, "ROOTETCDIR=%s", rootetcdir.c_str());

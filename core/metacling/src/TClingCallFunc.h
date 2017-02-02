@@ -63,6 +63,10 @@ private:
    const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    /// Current method, we own.
    TClingMethodInfo* fMethod;
+   /// Decl for the method
+   const clang::FunctionDecl *fDecl = nullptr;
+   /// Number of required arguments
+   size_t fMinRequiredArguments = -1;
    /// Pointer to compiled wrapper, we do *not* own.
    tcling_callfunc_Wrapper_t fWrapper;
    /// Stored function arguments, we own.
@@ -107,16 +111,22 @@ private:
 
    // Implemented in source file.
    template <typename T>
-   void execWithLL(void* address, clang::QualType QT,
-                   cling::Value* val) const;
+   void execWithLL(void* address, cling::Value* val);
    // Implemented in source file.
    template <typename T>
-   void execWithULL(void* address, clang::QualType QT,
-                    cling::Value* val) const;
-   void exec(void* address, void* ret) const;
+   void execWithULL(void* address, cling::Value* val);
+   void exec(void* address, void* ret);
    void exec_with_valref_return(void* address,
-                                cling::Value* ret) const;
+                                cling::Value* ret);
    void EvaluateArgList(const std::string& ArgList);
+
+   size_t CalculateMinRequiredArguments();
+
+   size_t GetMinRequiredArguments() {
+      if (fMinRequiredArguments == (size_t)-1)
+         fMinRequiredArguments = CalculateMinRequiredArguments();
+      return fMinRequiredArguments;
+   }
 
    // Implemented in source file.
    template <typename T>
@@ -174,7 +184,17 @@ public:
    void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
-   const clang::FunctionDecl* GetDecl() const { return fMethod->GetMethodDecl(); }
+   const clang::FunctionDecl *GetDecl() {
+      if (!fDecl)
+         fDecl = fMethod->GetMethodDecl();
+      return fDecl;
+   }
+
+   const clang::FunctionDecl* GetDecl() const {
+      if (fDecl)
+         return fDecl;
+      return fMethod->GetMethodDecl();
+   }
    void ResetArg();
    void SetArg(long arg);
    void SetArg(unsigned long arg);

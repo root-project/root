@@ -29,7 +29,7 @@ void fitCircle(Int_t n=10000) {
    //generates n points around a circle and fit them
    TCanvas *c1 = new TCanvas("c1","c1",600,600);
    c1->SetGrid();
-   gr = new TGraph(n);
+   TGraph* gr = new TGraph(n);
    if (n> 999) gr->SetMarkerStyle(1);
    else        gr->SetMarkerStyle(3);
    TRandom3 r;

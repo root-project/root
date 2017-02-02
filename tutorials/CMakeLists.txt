@@ -118,7 +118,7 @@ if(NOT GRAPHVIZ_FOUND)
   set(gviz_veto graphs/graphstruct.C)
 endif()
 
-if(NOT TBB_FOUND)
+if(NOT TBB_FOUND AND NOT builtin_tbb)
   set(tbb_veto  multicore/mtbb*.C)
 endif()
 

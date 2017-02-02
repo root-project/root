@@ -22,6 +22,7 @@
 #include "textinput/Callbacks.h"
 #include "Getline_color.h"
 #include "TApplication.h"
+#include "TInterpreter.h"
 
 extern "C" {
    int (* Gl_in_key)(int ch) = 0;

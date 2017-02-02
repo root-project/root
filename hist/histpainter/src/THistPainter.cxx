@@ -65,7 +65,6 @@
 #include "TImage.h"
 #include "TCandle.h"
 
-////////////////////////////////////////////////////////////////////////////////
 /*! \class THistPainter
 \ingroup Histpainter
 \brief The histogram painter class. Implements all histograms' drawing's options.
@@ -6393,7 +6392,8 @@ void THistPainter::PaintH3(Option_t *option)
    Int_t irep;
 
    if (fH->GetDrawOption() && (strstr(opt,"box") ||  strstr(opt,"lego"))) {
-      cmd = Form("TMarker3DBox::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
+      PaintH3Box();
+      return;
    } else if (fH->GetDrawOption() && strstr(opt,"iso")) {
       PaintH3Iso();
       return;
@@ -6859,6 +6859,134 @@ Int_t THistPainter::PaintInitH()
    Hparam.xmin = xmin;
    Hparam.xmax = xmax;
    return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// [Control function to draw a 3D histogram with boxes.](#HP25)
+
+void THistPainter::PaintH3Box()
+{
+   //       Predefined box structure
+   Double_t wxyz[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,1,-1}, {-1,1,-1},
+                           {-1,-1, 1}, {1,-1, 1}, {1,1, 1}, {-1,1, 1} };
+   Int_t iface[6][4] = { {0,3,2,1}, {4,5,6,7},
+                         {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7} };
+
+   //       Define dimensions of world space
+   TGaxis *axis = new TGaxis();
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+
+   fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
+   fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
+   fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
+   fYbuf[1] = yaxis->GetBinUpEdge(yaxis->GetLast());
+   fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
+   fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+
+   //       Set view
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTF3", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   Int_t irep;
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   Int_t backcolor = gPad->GetFrameFillColor();
+   view->PadRange(backcolor);
+
+   //       Draw back surfaces of axis box
+   fLego->InitMoveScreen(-1.1,1.1);
+   if (Hoption.BackBox) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
+
+   fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode1);
+
+   //       Define order of drawing
+   Double_t *tnorm = view->GetTnorm();
+   if (!tnorm) return;
+   Int_t incrx = (tnorm[ 8] < 0.) ? -1 : +1;
+   Int_t incry = (tnorm[ 9] < 0.) ? -1 : +1;
+   Int_t incrz = (tnorm[10] < 0.) ? -1 : +1;
+   Int_t ix1 = (incrx == +1) ? xaxis->GetFirst() : xaxis->GetLast();
+   Int_t iy1 = (incry == +1) ? yaxis->GetFirst() : yaxis->GetLast();
+   Int_t iz1 = (incrz == +1) ? zaxis->GetFirst() : zaxis->GetLast();
+   Int_t ix2 = (incrx == +1) ? xaxis->GetLast()  : xaxis->GetFirst();
+   Int_t iy2 = (incry == +1) ? yaxis->GetLast()  : yaxis->GetFirst();
+   Int_t iz2 = (incrz == +1) ? zaxis->GetLast()  : zaxis->GetFirst();
+
+   //       Set graphic attributes (colour, style, etc.)
+   fH->TAttFill::Modify();
+   fH->TAttLine::Modify();
+
+   //       Create bin boxes and draw
+   Double_t wmin = fH->GetMinimum();
+   Double_t wmax = fH->GetMaximum();
+   Double_t pmin[3], pmax[3], sxyz[8][3];
+   for (Int_t ix = ix1; ix !=ix2+incrx; ix += incrx) {
+      pmin[0] = xaxis->GetBinLowEdge(ix);
+      pmax[0] = xaxis->GetBinUpEdge(ix);
+      for (Int_t iy = iy1; iy != iy2+incry; iy += incry) {
+         pmin[1] = yaxis->GetBinLowEdge(iy);
+         pmax[1] = yaxis->GetBinUpEdge(iy);
+         for (Int_t iz = iz1; iz != iz2+incrz; iz += incrz) {
+            pmin[2] = zaxis->GetBinLowEdge(iz);
+            pmax[2] = zaxis->GetBinUpEdge(iz);
+            Double_t w = fH->GetBinContent(fH->GetBin(ix,iy,iz));
+            if (w < wmin) continue;
+            if (w > wmax) w = wmax;
+            Double_t scale = (TMath::Power((w-wmin)/(wmax-wmin),1./3.))/2.;
+            if (scale == 0) continue;
+            for (Int_t i=0; i<3; ++i) {
+               Double_t c = (pmax[i] + pmin[i])*0.5;
+               Double_t d = (pmax[i] - pmin[i])*scale;
+               for (Int_t k=0; k<8; ++k) { // set bin box vertices
+                  sxyz[k][i] = wxyz[k][i]*d + c;
+               }
+            }
+            for (Int_t k=0; k<8; ++k) { // transform to normalized space
+               view->WCtoNDC(&sxyz[k][0],&sxyz[k][0]);
+            }
+            Double_t x[5], y[5]; // draw bin box faces
+            for (Int_t k=0; k<6; ++k) {
+               for (Int_t i=0; i<4; ++i) {
+                  Int_t iv = iface[k][i];
+                  x[i] = sxyz[iv][0];
+                  y[i] = sxyz[iv][1];
+               }
+               x[4] = x[0]; y[4] = y[0];
+               Double_t z = (x[2]-x[0])*(y[3]-y[1]) - (y[2]-y[0])*(x[3]-x[1]);
+               if (z <= 0.) continue;
+               gPad->PaintFillArea(4, x, y);
+               gPad->PaintPolyLine(5, x, y);
+            }
+         }
+      }
+   }
+
+   //       Draw front surfaces of axis box
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+
+   PaintTitle();
+
+   delete axis;
+   delete fLego; fLego = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10724,9 +10852,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             }
          }
          break;
-
    }
    c->Update();
    padsav->cd();
 }
-

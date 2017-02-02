@@ -12,7 +12,7 @@ ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRE
 if(WIN32 OR cocoa)
   list(REMOVE_ITEM headers TX11GL.h)
   list(REMOVE_ITEM sources TX11GL.cxx)
-  set(installoptions OPTIONS REGEX "TX11GL" EXCLUDE)
+  set(installoptions FILTER "TX11GL")
 endif()
 
 if(builtin_gl2ps)

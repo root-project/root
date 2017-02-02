@@ -636,9 +636,6 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
 }
 
 bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
-   // Make sure that the failed lookup comes the prompt. Currently, we support
-   // only the prompt.
-
    // Should be disabled with the dynamic scopes.
    if (m_IsRuntime)
       return false;
@@ -651,6 +648,22 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
 
    if (!isa<FunctionDecl>(R.getSema().CurContext))
       return false;
+
+   {
+      // ROOT-8538: only top-most (function-level) scope is supported.
+      DeclContext* ScopeDC = S->getEntity();
+      if (!ScopeDC || !llvm::isa<FunctionDecl>(ScopeDC))
+         return false;
+
+      // Make sure that the failed lookup comes the prompt. Currently, we
+      // support only the prompt.
+      Scope* FnScope = S->getFnParent();
+      if (!FnScope)
+         return false;
+      auto FD = dyn_cast_or_null<FunctionDecl>(FnScope->getEntity());
+      if (!FD || !utils::Analyze::IsWrapper(FD))
+         return false;
+   }
 
    Sema& SemaRef = R.getSema();
    ASTContext& C = SemaRef.getASTContext();
@@ -676,19 +689,21 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
                                                    /*IsDependent*/false),
                                      /*TypeSourceInfo*/0, SC_None);
 
-   if (Result) {
-      // Annotate the decl to give a hint in cling.
-      // FIXME: We should move this in cling, when we implement turning it on
-      // and off.
-      SourceRange invalidRange;
-      Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto", 0));
-
-      R.addDecl(Result);
-      // Say that we can handle the situation. Clang should try to recover
-      return true;
+   if (!Result) {
+      ROOT::TMetaUtils::Error("TClingCallbacks::tryInjectImplicitAutoKeyword",
+                              "Cannot create VarDecl");
+      return false;
    }
-   // We cannot handle the situation. Give up.
-   return false;
+
+   // Annotate the decl to give a hint in cling.
+   // FIXME: We should move this in cling, when we implement turning it on
+   // and off.
+   SourceRange invalidRange;
+   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto", 0));
+
+   R.addDecl(Result);
+   // Say that we can handle the situation. Clang should try to recover
+   return true;
 }
 
 void TClingCallbacks::Initialize() {

@@ -86,9 +86,9 @@ void TTreeDrawArgsParser::ClearPrevious()
 /// all characters after (fgMaxDimension - 1)th colon is put into
 /// the last variable.
 ///
-///  - fDimension := <number of variables>
-///  - fVarExp[0] := <first variable string>
-///  - fVarExp[1] := <second variable string>
+///  - `fDimension := <number of variables>`
+///  - `fVarExp[0] := <first variable string>`
+///  - `fVarExp[1] := <second variable string>`
 /// ..
 /// Returns kFALSE in case of an error.
 
@@ -124,7 +124,7 @@ Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
 ///
 /// num's are floating point numbers
 /// sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
-/// to apropriate values.
+/// to appropriate values.
 ///
 /// Returns kFALSE in case of an error.
 
@@ -230,9 +230,9 @@ Bool_t TTreeDrawArgsParser::ParseOption()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parses parameters from TTree::Draw().
-/// varexp - Variable expression; see TTree::Draw()
-/// selection - selection expression; see TTree::Draw()
-/// option - Drawnig option; see TTree::Draw
+///  - varexp - Variable expression; see TTree::Draw()
+///  - selection - selection expression; see TTree::Draw()
+///  - option - Drawing option; see TTree::Draw
 
 Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Option_t *option)
 {
@@ -309,7 +309,7 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns apropriate TSelector class name for proof for the object that is to be drawn
+/// Returns appropriate TSelector class name for proof for the object that is to be drawn
 /// assumes that Parse() method has been called before.
 
 TString TTreeDrawArgsParser::GetProofSelectorName() const

@@ -270,12 +270,6 @@ const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 bool gBuildingROOT = false;
 const ROOT::Internal::RootCling::DriverConfig* gDriverConfig = nullptr;
 
-#ifdef R__EXTERN_LLVMDIR
-# define R__LLVMDIR R__EXTERN_LLVMDIR
-#else
-# define R__LLVMDIR "./interpreter/llvm/inst" // only works for rootbuild for now!
-#endif
-
 namespace {
    // Copy-pasted from TClass.h We cannot #include TClass.h because we are compiling in -fno-rtti mode
    template <typename T> struct IsPointerTClassCopy {
@@ -705,7 +699,7 @@ void SetRootSys()
       if ((s = strrchr(ep, '/'))) {
          // $ROOTSYS/bin/rootcling
          int removesubdirs = 2;
-         if (!strncmp(s + 1, "rootcling_stage1", 13)) {
+         if (!strncmp(s + 1, "rootcling_stage1", 16)) {
             // $ROOTSYS/core/rootcling_stage1/src/rootcling_stage1
             removesubdirs = 4;
             gBuildingROOT = true;
@@ -3934,14 +3928,6 @@ int RootClingMain(int argc,
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
 
-#if !defined(ROOTINCDIR)
-   if (!gBuildingROOT)
-      SetRootSys();
-#else
-   if (gBuildingROOT)
-      SetRootSys(); // Ignore install prefix
-#endif
-
    if (ic < argc && !strcmp(argv[ic], "-c")) {
       // Simply ignore the -c options.
       ic++;
@@ -4097,7 +4083,7 @@ int RootClingMain(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(gBuildingROOT));
+   clingArgs.push_back(std::string("-I") + gDriverConfig->fTROOT__GetIncludeDir());
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -4121,7 +4107,7 @@ int RootClingMain(int argc,
    }
 
    // cling-only arguments
-   clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(gBuildingROOT));
+   clingArgs.push_back(std::string("-I") + gDriverConfig->fTROOT__GetEtcDir());
    // We do not want __ROOTCLING__ in the pch!
    if (!onepcm) {
       clingArgs.push_back("-D__ROOTCLING__");
@@ -4146,11 +4132,9 @@ int RootClingMain(int argc,
    }
 
 #ifdef R__EXTERN_LLVMDIR
-   std::string resourceDir = R__EXTERN_LLVMDIR ;
+   std::string resourceDir = R__EXTERN_LLVMDIR;
 #else
-   std::string resourceDir = gDriverConfig->fLLVMResourceDir;
-   if (resourceDir.empty())
-      resourceDir = TMetaUtils::GetLLVMResourceDir(gBuildingROOT);
+   std::string resourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
 #endif
 
    std::unique_ptr<cling::Interpreter> owningInterpPtr;
@@ -4201,11 +4185,6 @@ int RootClingMain(int argc,
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
-#ifdef ROOTINCDIR
-   const bool useROOTINCDIR = !gBuildingROOT;
-#else
-   const bool useROOTINCDIR = false;
-#endif
    if (isGenreflex) {
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
          // There was an error.
@@ -4221,17 +4200,10 @@ int RootClingMain(int argc,
                               "#include <stddef.h>\n"
                               "#include <string.h>\n"
                              ) != cling::Interpreter::kSuccess
-            || (!useROOTINCDIR
-                && interp.declare("#include \"Rtypes.h\"\n"
-                                  "#include \"TClingRuntime.h\"\n"
-                                  "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
-#ifdef ROOTINCDIR
-            || (useROOTINCDIR
-                && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
-                                  "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
-                                  "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
-               )
-#endif
+            || interp.declare("#include \"Rtypes.h\"\n"
+                              "#include \"TClingRuntime.h\"\n"
+                              "#include \"TObject.h\""
+                             ) != cling::Interpreter::kSuccess
          ) {
          // There was an error.
          ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");

@@ -626,7 +626,7 @@ CXXMODULES_MODULEMAP_CONTENTS :=
 ALLHDRS  := include/module.modulemap
 # FIXME: Remove -fno-autolink once the clang's modules autolinking is done on a
 #use of a header not unconditionally.
-ROOT_CXXMODULES_COMMONFLAGS := -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack
+ROOT_CXXMODULES_COMMONFLAGS := -fmodules -fmodules-cache-path=$(ROOT_OBJDIR)/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Rmodule-build
 ifeq ($(PLATFORM),macosx)
 # FIXME: OSX doesn't support -fmodules-local-submodule-visibility because its
 # Frameworks' modulemaps predate the flag. Here we exclude the system module maps
@@ -758,11 +758,9 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
-ifeq ($(USECONFIG),FALSE)
 all: tutorials/hsimple.root
 tutorials/hsimple.root: rootexecs postbin
-	@(cd tutorials; ! ../bin/root -l -q -b -n -x hsimple.C)
-endif
+	@(cd tutorials; ! ROOTIGNOREPREFIX=1 ../bin/root -l -q -b -n -x hsimple.C)
 
 all:            rootexecs postbin
 	@echo " "
@@ -859,7 +857,7 @@ Makefile: $(addprefix $(ROOT_SRCDIR)/,configure config/rootrc.in \
   config/RConfigure.in config/Makefile.in config/Makefile.$(ARCH) \
   config/Makefile-comp.in config/root-config.in config/rootauthrc.in \
   config/rootdaemonrc.in config/mimes.unix.in config/mimes.win32.in \
-  config/proofserv.in config/roots.in) config.status
+  config/proofserv.in config/xproofd.in config/roots.in) config.status
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 	cp $(ROOT_SRCDIR)/Makefile $@
 endif
@@ -1193,7 +1191,7 @@ maintainer-clean:: distclean
 	   etc/system.rootdaemonrc etc/root.mimes etc/daemons/rootd.rc.d \
 	   etc/daemons/rootd.xinetd etc/daemons/proofd.rc.d etc/cling \
 	   etc/daemons/proofd.xinetd main/src/proofserv.sh main/src/roots.sh \
-	   macros/html.C \
+	   main/src/xproofd.sh macros/html.C \
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
@@ -1236,7 +1234,7 @@ endif
 
 $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
 	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS) $(SYSTEMDEF)
-	@$(MAKEPCH) $@
+	@ROOTIGNOREPREFIX=1 $(MAKEPCH) $@
 
 $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
 	@mkdir -p $(dir $@)
@@ -1341,8 +1339,6 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
-	   (cd $(DESTDIR)$(TUTDIR); \
-	      ! LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
 	fi
 
 uninstall:
@@ -1469,7 +1465,6 @@ runtimedirs:
 		--exclude proofd.xinetd \
 		--exclude rootd.rc.d \
 		--exclude rootd.xinetd \
-		--exclude gitinfo.txt \
 		$(ROOT_SRCDIR)/etc . ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
 	$(RSYNC) \

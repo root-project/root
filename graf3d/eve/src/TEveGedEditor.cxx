@@ -90,28 +90,13 @@ void TEveGedEditor::CloseWindow()
 
    fgExtraEditors->Remove(this);
 
-   DeleteWindow();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// This is exact clone of TGFrame::DeleteWindow().
-/// Needs to be overriden together with CloseWindow() otherwise CINT
-/// goes kaboom in timer execution.
-
-void TEveGedEditor::DeleteWindow()
-{
-   if (gDebug > 0)
-      Info("TEveGedEditor::DeleteWindow", "%p shooting timer.", this);
-
    DisplayElement(0);
 
    if (gDNDManager) {
       if (gDNDManager->GetMainFrame() == this)
          gDNDManager->SetMainFrame(0);
    }
-   if (!TestBit(kDeleteWindowCalled))
-      TTimer::SingleShot(150, IsA()->GetName(), this, "ReallyDelete()");
-   SetBit(kDeleteWindowCalled);
+   DeleteWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

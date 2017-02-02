@@ -1053,18 +1053,19 @@ Each minimizer can be configured using the `ROOT::Math::MinimizerOptions` class.
 *   *Tolerance* (`MinimizerOptions::SetTolerance(double )`)  tolerance used to control the iterations.
 *   *Maximum number of function calls* (`MinimizerOptions::SetMaxFunctionCalls(int )`).
 *   *Maximum number of iterations* (`MinimizerOptions::SetMaxIterations(int )`). Note that this is not used by *Minuit*
-*   *FCN Upper value for Error Definition* (`MinimizerOptions::SetMaxIterations(int )`). Value in the minimization function used to compute the parameter errors.
+*   *FCN Upper value for Error Definition* (`MinimizerOptions::SetErrorDef(double )`). Value in the minimization function used to compute the parameter errors.
     The default is to get the uncertainties at the 68% CL is a value of 1 for a chi-squared function minimization  and 0.5 for a log-likelihood function.
 *   *Strategy* (`MinimizerOptions::SetStrategy(int )`), minimization strategy used. For each minimization strategy *Minuit* uses different configuration parameters
     (e.g. different requirements in computing derivatives, computing full Hessian (strategy = 2) or an approximate version.  The default is a value of 1. In this case the full Hessian matrix
     is computed only after the minimization. 
-*  *Precision* (`MinimizerOptions::SetTolerance(double )`).  Precision value in the evaluation of the minimization function. Default is numerical double precision.  
+*  *Precision* (`MinimizerOptions::SetPrecision(double )`).  Precision value in the evaluation of the minimization function. Default is numerical double precision.  
 
 Note that not all the options are implemented by all the minimizers.
 For example in *Minuit* is possible to set the maximum number of function calls, but not the maximum number of iterations.  The Strategy and the Precision options apply instead only for *Minuit*  (and
 *Minuit2*).
 
-The class supports also setting different default values for the options, by using the static functions `MinimizerOptions::SetDefault...` (for example `MinimizerOptions::SetDefaultPrintLevel(int )`).
+The class supports also setting global default values for the options, by using the static functions `MinimizerOptions::SetDefault...` (for example `MinimizerOptions::SetDefaultPrintLevel(int )`). The
+static functions can be also used to set the minimizer options when using `TH1::Fit` or `TGraph::Fit`.
 The list of the current option values can be inspected by using `MinimizerOptions::Print`.
 ```{.cpp}
 ROOT::Math::MinimizerOptions() opt;

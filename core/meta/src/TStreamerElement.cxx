@@ -442,7 +442,7 @@ Bool_t TStreamerElement::IsTransient() const
    if (fType == TVirtualStreamerInfo::kCacheDelete) return kTRUE;
    if (fType == TVirtualStreamerInfo::kCache) return kTRUE;
    if (fType == TVirtualStreamerInfo::kMissing) return kTRUE;
-   // if (TVirtualStreamerInfo::kSkip <= fType && fType < TVirtualStreamerInfo::kSkip) return kTRUE;
+   if (TVirtualStreamerInfo::kSkip <= fType && fType < TVirtualStreamerInfo::kConv) return kTRUE;
 
    return kFALSE;
 }

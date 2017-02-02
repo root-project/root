@@ -75,24 +75,10 @@ void HighPriority(const char *signal_name,const char *slot_name=0){fQObject.High
 void LowPriority(const char *signal_name,const char *slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
 template <typename... T> void EmitVA(const char *signal_name, Int_t nargs, const T&... params) \
 { fQObject.EmitVA(signal_name,nargs,params...); } \
-void Emit(const char *signal){fQObject.Emit(signal);}\
-void Emit(const char *signal,const char *params){fQObject.Emit(signal,params);}\
-void Emit(const char *signal,Long_t *paramArr){fQObject.Emit(signal,paramArr);}\
-void Emit(const char *signal,Double_t param){fQObject.Emit(signal,param);}\
-void Emit(const char *signal,Long_t param){fQObject.Emit(signal,param);}
+void Emit(const char *signal){EmitVA(signal, /*nargs*/0);} \
+template <typename T> void Emit(const char *signal, const T& arg) { EmitVA(signal, /*nargs*/ 1, arg); } \
 
 #define RQ_OBJECT2(sender_class)\
-void Emit(const char *signal,Long64_t param){fQObject.Emit(signal,param);}\
-void Emit(const char *signal,ULong64_t param){fQObject.Emit(signal,param);}\
-void Emit(const char *signal,Bool_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,Char_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,UChar_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,Short_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,UShort_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,Int_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,UInt_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,ULong_t param){Emit(signal,(Long_t)param);}\
-void Emit(const char *signal,Float_t param){Emit(signal,(Double_t)param);}\
 void Destroyed(){Emit("Destroyed()");}\
 void ChangedBy(const char *method){Emit("ChangedBy(char*)",method);}\
 void Message(const char *msg){Emit("Message(char*)",msg);}\

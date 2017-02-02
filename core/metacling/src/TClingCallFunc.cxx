@@ -97,8 +97,6 @@ static
 void
 EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
 {
-   R__LOCKGUARD(gInterpreterMutex);
-
    // Evaluate an Expr* and return its cling::Value
    ASTContext &C = interp.getCI()->getASTContext();
    APSInt res;
@@ -259,6 +257,12 @@ namespace {
 
 } // unnamed namespace.
 
+size_t TClingCallFunc::CalculateMinRequiredArguments()
+{
+   // This function is non-const to use caching overload of GetDecl()!
+   return GetDecl()->getMinRequiredArguments();
+}
+
 void *TClingCallFunc::compile_wrapper(const string &wrapper_name, const string &wrapper,
                                       bool withAccessControl/*=true*/)
 {
@@ -275,7 +279,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
    //  Collect information about type type of a function parameter
    //  needed for building the wrapper function.
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
    if (QT->isRecordType() && forArgument) {
@@ -347,7 +351,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
    //
    // new ClassName(args...)
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
 
    callbuf << "new " << class_name << "(";
    for (unsigned i = 0U; i < N; ++i) {
@@ -392,7 +396,7 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
    //
    // ((<class>*)obj)-><method>(*(<arg-i-type>*)args[i], ...)
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(FD)) {
       // This is a class, struct, or union member.
       if (MD->isConst())
@@ -536,7 +540,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
    //    ((class_name*)obj)->func(args...);
    // }
    //
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
       (void) CD;
       make_narg_ctor_with_return(N, class_name, buf, indent_level);
@@ -641,7 +645,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
    R__LOCKGUARD(gInterpreterMutex);
 
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
    ASTContext &Context = FD->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
    //
@@ -1010,7 +1014,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
             break;
       }
    }
-   unsigned min_args = FD->getMinRequiredArguments();
+   unsigned min_args = GetMinRequiredArguments();
    unsigned num_params = FD->getNumParams();
    //
    //  Make the wrapper name.
@@ -1437,7 +1441,7 @@ public:
    } u;
 };
 
-void TClingCallFunc::exec(void *address, void *ret) const
+void TClingCallFunc::exec(void *address, void *ret)
 {
    SmallVector<ValHolder, 8> vh_ary;
    SmallVector<void *, 8> vp_ary;
@@ -1446,7 +1450,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
    {
       R__LOCKGUARD(gInterpreterMutex);
 
-      const FunctionDecl *FD = fMethod->GetMethodDecl();
+      const FunctionDecl *FD = GetDecl();
 
       //
       //  Convert the arguments from cling::Value to their
@@ -1455,11 +1459,11 @@ void TClingCallFunc::exec(void *address, void *ret) const
       //
       unsigned num_params = FD->getNumParams();
 
-      if (num_args < FD->getMinRequiredArguments()) {
+      if (num_args < GetMinRequiredArguments()) {
          ::Error("TClingCallFunc::exec",
                "Not enough arguments provided for %s (%d instead of the minimum %d)",
                fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
-               num_args, FD->getMinRequiredArguments());
+               num_args, (int)GetMinRequiredArguments());
          return;
       }
       if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
@@ -1752,8 +1756,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
 }
 
 template <typename T>
-void TClingCallFunc::execWithLL(void *address, clang::QualType QT,
-                                cling::Value *val) const
+void TClingCallFunc::execWithLL(void *address, cling::Value *val)
 {
    T ret; // leave uninit for valgrind's sake!
    exec(address, &ret);
@@ -1761,15 +1764,27 @@ void TClingCallFunc::execWithLL(void *address, clang::QualType QT,
 }
 
 template <typename T>
-void TClingCallFunc::execWithULL(void *address, clang::QualType QT,
-                                 cling::Value *val) const
+void TClingCallFunc::execWithULL(void *address, cling::Value *val)
 {
    T ret; // leave uninit for valgrind's sake!
    exec(address, &ret);
    val->getULL() = ret;
 }
 
-void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) const
+
+#define R__CF_InitRetAndExec(T, address, QT, ret)                 \
+   *ret = cling::Value::Create<T>(QT.getAsOpaquePtr(), *fInterp); \
+   /* Release lock during user function execution*/               \
+   R__LOCKGUARD_UNLOCK(global);                                   \
+                                                                  \
+   static_assert(std::is_integral<T>::value, "Must be called with integral T"); \
+   if (std::is_signed<T>::value)                                  \
+      execWithLL<T>(address, ret);                            \
+   else                                                           \
+      execWithULL<T>(address, ret)
+
+
+void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
 {
    if (!ret) {
       exec(address, 0);
@@ -1778,7 +1793,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
 
    R__LOCKGUARD_NAMED(global,gInterpreterMutex);
 
-   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = GetDecl();
 
    if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
       ASTContext &Context = FD->getASTContext();
@@ -1817,7 +1832,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       return;
    } else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
-      *ret = cling::Value(QT, *fInterp);
+      *ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
       R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
@@ -1832,12 +1847,12 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       (void) ET;
       *ret = cling::Value(QT, *fInterp);
       R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-      execWithLL<int>(address, QT, ret);
+      execWithLL<int>(address, ret);
       return;
    } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
-      *ret = cling::Value(QT, *fInterp);
       switch (BT->getKind()) {
          case BuiltinType::Void:
+            *ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, 0);
             return;
@@ -1847,22 +1862,16 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             //  Unsigned Types
             //
          case BuiltinType::Bool:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<bool>(address, QT, ret);
+            R__CF_InitRetAndExec(bool, address, QT, ret);
             return;
             break;
          case BuiltinType::Char_U: // char on targets where it is unsigned
          case BuiltinType::UChar:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<char>(address, QT, ret);
+            R__CF_InitRetAndExec(char, address, QT, ret);
             return;
             break;
          case BuiltinType::WChar_U:
-            // wchar_t on targets where it is unsigned.
-            // The standard doesn't allow to specify signednedd of wchar_t
-            // thus this maps simply to wchar_t.
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<wchar_t>(address, QT, ret);
+            R__CF_InitRetAndExec(wchar_t, address, QT, ret);
             return;
             break;
          case BuiltinType::Char16:
@@ -1876,23 +1885,19 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::UShort:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned short>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned short, address, QT, ret);
             return;
             break;
          case BuiltinType::UInt:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned int>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned int, address, QT, ret);
             return;
             break;
          case BuiltinType::ULong:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned long>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned long, address, QT, ret);
             return;
             break;
          case BuiltinType::ULongLong:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithULL<unsigned long long>(address, QT, ret);
+            R__CF_InitRetAndExec(unsigned long long, address, QT, ret);
             return;
             break;
          case BuiltinType::UInt128: {
@@ -1907,36 +1912,30 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             //
          case BuiltinType::Char_S: // char on targets where it is signed
          case BuiltinType::SChar:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<signed char>(address, QT, ret);
+            R__CF_InitRetAndExec(signed char, address, QT, ret);
             return;
             break;
          case BuiltinType::WChar_S:
             // wchar_t on targets where it is signed.
             // The standard doesn't allow to specify signednedd of wchar_t
             // thus this maps simply to wchar_t.
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<wchar_t>(address, QT, ret);
+            R__CF_InitRetAndExec(wchar_t, address, QT, ret);
             return;
             break;
          case BuiltinType::Short:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<short>(address, QT, ret);
+            R__CF_InitRetAndExec(short, address, QT, ret);
             return;
             break;
          case BuiltinType::Int:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<int>(address, QT, ret);
+            R__CF_InitRetAndExec(int, address, QT, ret);
             return;
             break;
          case BuiltinType::Long:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<long>(address, QT, ret);
+            R__CF_InitRetAndExec(long, address, QT, ret);
             return;
             break;
          case BuiltinType::LongLong:
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
-            execWithLL<long long>(address, QT, ret);
+            R__CF_InitRetAndExec(long long, address, QT, ret);
             return;
             break;
          case BuiltinType::Int128:
@@ -1951,16 +1950,19 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::Float:
+            *ret = cling::Value::Create<float>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, &ret->getFloat());
             return;
             break;
          case BuiltinType::Double:
+            *ret = cling::Value::Create<double>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, &ret->getDouble());
             return;
             break;
          case BuiltinType::LongDouble:
+            *ret = cling::Value::Create<long double>(QT.getAsOpaquePtr(), *fInterp);
             R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
             exec(address, &ret->getLongDouble());
             return;
@@ -1986,6 +1988,8 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
 
 void TClingCallFunc::EvaluateArgList(const string &ArgList)
 {
+   R__LOCKGUARD(gInterpreterMutex);
+
    SmallVector<Expr *, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs,
                                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
@@ -2155,15 +2159,15 @@ void TClingCallFunc::Init()
    delete fMethod;
    fMethod = 0;
    fWrapper = 0;
+   fDecl = nullptr;
+   fMinRequiredArguments = -1;
    ResetArg();
 }
 
 void TClingCallFunc::Init(TClingMethodInfo *minfo)
 {
-   delete fMethod;
+   Init();
    fMethod = new TClingMethodInfo(*minfo);
-   fWrapper = 0;
-   ResetArg();
 }
 
 void *TClingCallFunc::InterfaceMethod()
@@ -2172,7 +2176,7 @@ void *TClingCallFunc::InterfaceMethod()
       return 0;
    }
    if (!fWrapper) {
-      const FunctionDecl *decl = fMethod->GetMethodDecl();
+      const FunctionDecl *decl = GetDecl();
 
       R__LOCKGUARD(gInterpreterMutex);
       map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
@@ -2201,7 +2205,7 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       return TInterpreter::CallFuncIFacePtr_t();
    }
    if (!fWrapper) {
-      const FunctionDecl *decl = fMethod->GetMethodDecl();
+      const FunctionDecl *decl = GetDecl();
 
       R__LOCKGUARD(gInterpreterMutex);
       map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
@@ -2224,42 +2228,42 @@ void TClingCallFunc::ResetArg()
 
 void TClingCallFunc::SetArg(unsigned long param)
 {
-   ASTContext &C = fInterp->getCI()->getASTContext();
+   const ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.UnsignedLongTy, *fInterp));
    fArgVals.back().getLL() = param;
 }
 
 void TClingCallFunc::SetArg(long param)
 {
-   ASTContext &C = fInterp->getCI()->getASTContext();
+   const ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.LongTy, *fInterp));
    fArgVals.back().getLL() = param;
 }
 
 void TClingCallFunc::SetArg(float param)
 {
-   ASTContext &C = fInterp->getCI()->getASTContext();
+   const ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.FloatTy, *fInterp));
    fArgVals.back().getFloat() = param;
 }
 
 void TClingCallFunc::SetArg(double param)
 {
-   ASTContext &C = fInterp->getCI()->getASTContext();
+   const ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.DoubleTy, *fInterp));
    fArgVals.back().getDouble() = param;
 }
 
 void TClingCallFunc::SetArg(long long param)
 {
-   ASTContext &C = fInterp->getCI()->getASTContext();
+   const ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.LongLongTy, *fInterp));
    fArgVals.back().getLL() = param;
 }
 
 void TClingCallFunc::SetArg(unsigned long long param)
 {
-   ASTContext &C = fInterp->getCI()->getASTContext();
+   const ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, *fInterp));
    fArgVals.back().getULL() = param;
 }
@@ -2287,9 +2291,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
 void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *arglist,
                              bool objectIsConst, long *poffset)
 {
-   fWrapper = 0;
-   delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   Init(new TClingMethodInfo(fInterp));
    if (poffset) {
       *poffset = 0L;
    }
@@ -2316,9 +2318,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
 
 void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 {
-   fWrapper = 0;
-   delete fMethod;
-   fMethod = new TClingMethodInfo(*info);
+   Init(new TClingMethodInfo(*info));
    ResetArg();
    if (!fMethod->IsValid()) {
       return;
@@ -2336,9 +2336,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
                                   const char *proto, bool objectIsConst, long *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
-   fWrapper = 0;
-   delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   Init(new TClingMethodInfo(fInterp));
    if (poffset) {
       *poffset = 0L;
    }
@@ -2367,8 +2365,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
                                   bool objectIsConst, long *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
-   delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   Init(new TClingMethodInfo(fInterp));
    if (poffset) {
       *poffset = 0L;
    }

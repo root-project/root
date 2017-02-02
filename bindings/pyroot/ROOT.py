@@ -540,7 +540,7 @@ class ModuleFacade( types.ModuleType ):
 
           # system logon, user logon, and local logon (skip Rint.Logon)
             name = '.rootlogon.C'
-            logons = [ os.path.join( str(gRootDir), 'etc', 'system' + name ),
+            logons = [ os.path.join( str(self.TROOT.GetEtcDir()), 'system' + name ),
                        os.path.expanduser( os.path.join( '~', name ) ) ]
             if logons[-1] != os.path.join( os.getcwd(), name ):
                logons.append( name )

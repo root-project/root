@@ -24,7 +24,7 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
                 $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
                 $(MODDIRI)/TThreadPool.h $(MODDIRI)/ThreadLocalStorage.h \
-                $(MODDIRI)/ROOT/TExecutor.hxx $(MODDIRI)/ROOT/TThreadedObject.hxx \
+                $(MODDIRI)/ROOT/TThreadedObject.hxx \
                 $(MODDIRI)/ROOT/TSpinMutex.hxx
 
 ifeq ($(IMT),yes)

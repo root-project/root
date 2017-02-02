@@ -89,9 +89,11 @@ namespace {
     const clang::Preprocessor& PP = CI->getPreprocessor();
     const clang::Token* Tok = getMacroToken(PP, CLING_CXXABI_NAME);
     if (Tok && Tok->isLiteral()) {
+      // Tok::getLiteralData can fail even if Tok::isLiteral is true!
+      SmallString<64> Buffer;
+      CurABI = PP.getSpelling(*Tok, Buffer);
       // Strip any quotation marks.
-      CurABI = llvm::StringRef(Tok->getLiteralData(),
-                               Tok->getLength()).trim("\"");
+      CurABI = CurABI.trim("\"");
       if (CurABI.equals(CLING_CXXABI_VERS))
         return true;
     }
@@ -180,11 +182,20 @@ namespace cling {
     m_Interpreter(interp),
     m_CI(CIFactory::createCI("", interp->getOptions(), llvmdir)),
     m_Consumer(nullptr), m_ModuleNo(0) {
-    assert(m_CI.get() && "CompilerInstance is (null)!");
+
+    if (!m_CI) {
+      cling::errs() << "Compiler instance could not be created.\n";
+      return;
+    }
+    // Is the CompilerInstance being used to generate output only?
+    if (m_Interpreter->getOptions().CompilerOpts.HasOutput)
+      return;
 
     m_Consumer = dyn_cast<DeclCollector>(&m_CI->getSema().getASTConsumer());
-    assert(m_Consumer && "Expected ChainedConsumer!");
-
+    if (!m_Consumer) {
+      cling::errs() << "No AST consumer available.\n";
+      return;
+    }
 
     DiagnosticsEngine& Diag = m_CI->getDiagnostics();
     if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
@@ -204,7 +215,7 @@ namespace cling {
     initializeVirtualFile();
   }
 
-  void
+  bool
   IncrementalParser::Initialize(llvm::SmallVectorImpl<ParseResultTransaction>&
                                 result, bool isChildInterpreter) {
     m_TransactionPool.reset(new TransactionPool);
@@ -218,18 +229,24 @@ namespace cling {
 
     Transaction* CurT = beginTransaction(CO);
     Preprocessor& PP = m_CI->getPreprocessor();
+    DiagnosticsEngine& Diags = m_CI->getSema().getDiagnostics();
 
     // Pull in PCH.
     const std::string& PCHFileName
       = m_CI->getInvocation().getPreprocessorOpts().ImplicitPCHInclude;
     if (!PCHFileName.empty()) {
-      Transaction* CurT = beginTransaction(CO);
+      Transaction* PchT = beginTransaction(CO);
+      DiagnosticErrorTrap Trap(Diags);
       m_CI->createPCHExternalASTSource(PCHFileName,
                                        true /*DisablePCHValidation*/,
                                        true /*AllowPCHWithCompilerErrors*/,
                                        0 /*DeserializationListener*/,
                                        true /*OwnsDeserializationListener*/);
-      result.push_back(endTransaction(CurT));
+      result.push_back(endTransaction(PchT));
+      if (Trap.hasErrorOccurred()) {
+        result.push_back(endTransaction(CurT));
+        return false;
+      }
     }
 
     addClingPragmas(*m_Interpreter);
@@ -239,8 +256,8 @@ namespace cling {
     PP.EnterMainSourceFile();
 
     Sema* TheSema = &m_CI->getSema();
-    m_Parser.reset(new Parser(PP, *TheSema,
-                              false /*skipFuncBodies*/));
+    m_Parser.reset(new Parser(PP, *TheSema, false /*skipFuncBodies*/));
+
     // Initialize the parser after PP has entered the main source file.
     m_Parser->Initialize();
 
@@ -248,10 +265,9 @@ namespace cling {
     if (External)
       External->StartTranslationUnit(m_Consumer);
 
-    Parser::DeclGroupPtrTy ADecl;
     // Start parsing the "main file" to warm up lexing (enter caching lex mode
     // for ParseInternal()'s call EnterSourceFile() to make sense.
-    while (!m_Parser->ParseTopLevelDecl(ADecl)) {}
+    while (!m_Parser->ParseTopLevelDecl()) {}
 
     // If I belong to the parent Interpreter, only then do
     // the #include <new>
@@ -269,6 +285,13 @@ namespace cling {
     // been defined yet!
     ParseResultTransaction PRT = endTransaction(CurT);
     result.push_back(PRT);
+    return true;
+  }
+
+  bool IncrementalParser::isValid(bool initialized) const {
+    return m_CI && m_CI->hasFileManager() && m_Consumer
+           && !m_VirtualFileID.isInvalid()
+           && (!initialized || (m_TransactionPool && m_Parser));
   }
 
   const Transaction* IncrementalParser::getCurrentTransaction() const {
@@ -370,14 +393,16 @@ namespace cling {
     return ParseResultTransaction(T, ParseResult);
   }
 
-  void IncrementalParser::commitTransaction(ParseResultTransaction& PRT) {
+  void IncrementalParser::commitTransaction(ParseResultTransaction& PRT,
+                                            bool ClearDiagClient) {
     Transaction* T = PRT.getPointer();
     if (!T) {
       if (PRT.getInt() != kSuccess) {
         // Nothing has been emitted to Codegen, reset the Diags.
         DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
         Diags.Reset(/*soft=*/true);
-        Diags.getClient()->clear();
+        if (ClearDiagClient)
+          Diags.getClient()->clear();
       }
       return;
     }
@@ -408,7 +433,8 @@ namespace cling {
       // Module has been released from Codegen, reset the Diags now.
       DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
       Diags.Reset(/*soft=*/true);
-      Diags.getClient()->clear();
+      if (ClearDiagClient)
+        Diags.getClient()->clear();
 
       PRT.setPointer(nullptr);
       PRT.setInt(kFailed);
@@ -619,7 +645,8 @@ namespace cling {
   void IncrementalParser::initializeVirtualFile() {
     SourceManager& SM = getCI()->getSourceManager();
     m_VirtualFileID = SM.getMainFileID();
-    assert(!m_VirtualFileID.isInvalid() && "No VirtualFileID created?");
+    if (m_VirtualFileID.isInvalid())
+      cling::errs() << "VirtualFileID could not be created.\n";
   }
 
   IncrementalParser::ParseResultTransaction

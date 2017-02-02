@@ -470,6 +470,10 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       TPH__IsReadingDirs() = kTRUE;
 
       TString plugindirs = gEnv->GetValue("Root.PluginPath", (char*)0);
+      if (plugindirs.Length() == 0) {
+         plugindirs = "plugins";
+         gSystem->PrependPathName(TROOT::GetEtcDir(), plugindirs);
+      }
 #ifdef WIN32
       dirs = plugindirs.Tokenize(";");
 #else

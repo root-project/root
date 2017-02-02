@@ -30,7 +30,7 @@ There are two types of entry lists:
     except for the last block).
     Individual entry lists can be merged (functions Merge() and Add())
     to make an entry list for a TChain of corresponding TTrees.
-Begin_Macro(source)
+Begin_Macro
 entrylist_figure1.C
 End_Macro
 
@@ -41,7 +41,7 @@ End_Macro
     All sub-lists are returned by the GetLists() function and individual lists are
     returned by GetEntryList() function. Such lists are no different from the lists for
     TTrees, described above.
-Begin_Macro(source)
+Begin_Macro
 entrylist_figure2.C
 End_Macro
 
@@ -551,7 +551,7 @@ void TEntryList::DirectoryAutoAdd(TDirectory* dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Add entry #entry to the list
+/// Add entry \#entry to the list
 /// - When tree = 0, adds to the current list
 /// - When tree != 0, finds the list, corresponding to this tree
 /// - When tree is a chain, the entry is assumed to be global index and the local
@@ -606,7 +606,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove entry #entry from the list
+/// Remove entry \#entry from the list
 /// - When tree = 0, removes from the current list
 /// - When tree != 0, finds the list, corresponding to this tree
 /// - When tree is a chain, the entry is assumed to be global index and the local
@@ -649,7 +649,7 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the number of the entry #index of this TEntryList in the TTree or TChain
+/// Return the number of the entry \#index of this TEntryList in the TTree or TChain
 /// See also Next().
 
 Long64_t TEntryList::GetEntry(Int_t index)
@@ -771,7 +771,7 @@ void TEntryList::GetFileName(const char *filename, TString &fn, Bool_t *local)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the entry list, correspoding to treename and filename
+/// Return the entry list, corresponding to treename and filename
 /// By default, the filename is first tried as is, and then, if the corresponding list
 /// is not found, the filename is expanded to the absolute path, and compared again.
 /// To avoid it, use option "ne"
@@ -1401,7 +1401,7 @@ Int_t TEntryList::Relocate(const char *fn,
 /// - 1         a is contained in b, i.e. c == a (includes a == empty)
 /// - 2         b is contained in a, i.e. c == b (includes b == empty)
 /// - 3         b is a, i.e. c == b == a (includes a == b == empty)
-/// Auxilliary function for path scans.
+/// Auxiliary function for path scans.
 
 static Int_t GetCommonString(TString a, TString b, TString &c)
 {
@@ -1473,7 +1473,7 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
    if (notify) {
       Printf(" * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *");
       Printf(" * Entry-list: %s", GetName());
-      Printf(" *   %d commont root paths found", nrl);
+      Printf(" *   %d common root paths found", nrl);
       nxr.Reset();
       while ((objs = (TObjString *) nxr())) {
          Printf(" *     %s", objs->GetName());

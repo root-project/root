@@ -12,7 +12,7 @@
 void basic() {
 // read file $ROOTSYS/tutorials/tree/basic.dat
 // this file has 3 columns of float data
-   TString dir = gROOT->GetTutorialsDir();
+   TString dir = gROOT->GetTutorialDir();
    dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
    ifstream in;

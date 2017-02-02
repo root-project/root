@@ -129,11 +129,11 @@ void RadioNuclides()
    pt->SetFillColor(5);
    pt->SetTextAlign(12);
    pt->SetTextColor(4);
-   text = pt->AddText("Time evolution of a population of radionuclides.");
-   text = pt->AddText("The concentration of a nuclide X represent the  ");
-   text = pt->AddText("ratio between the number of X nuclei and the    ");
-   text = pt->AddText("number of nuclei of the top element of the decay");
-   text = pt->AddText("from which X derives from at T=0.               ");
+   pt->AddText("Time evolution of a population of radionuclides.");
+   pt->AddText("The concentration of a nuclide X represent the  ");
+   pt->AddText("ratio between the number of X nuclei and the    ");
+   pt->AddText("number of nuclei of the top element of the decay");
+   pt->AddText("from which X derives from at T=0.               ");
    pt->Draw();
    c1->Modified();
    vect->Clear();

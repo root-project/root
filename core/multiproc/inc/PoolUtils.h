@@ -17,35 +17,6 @@
 #include "TObject.h"
 #include <vector>
 
-namespace PoolCode {
-
-   //////////////////////////////////////////////////////////////////////////
-   ///
-   /// An enumeration of the message codes handled by TPool, TPoolWorker and TPoolProcessor
-   ///
-   //////////////////////////////////////////////////////////////////////////
-
-   enum EPoolCode : unsigned {
-      //not an enum class because we want to be able to easily cast back and forth from unsigned
-      /* TPool::Map */
-      kExecFunc = 0,    ///< Execute function without arguments
-      kExecFuncWithArg, ///< Execute function with the argument contained in the message
-      kFuncResult,      ///< The message contains the result of a function execution
-      /* TPool::MapReduce */
-      kIdling,          ///< We are ready for the next task
-      kSendResult,      ///< Ask for a kFuncResult/kProcResult
-      /* TPool::Process */
-      kProcFile,        ///< Tell a TPoolProcessor which tree to process. The object sent is a TreeInfo
-      kProcRange,       ///< Tell a TPoolProcessor which tree and entries range to process. The object sent is a TreeRangeInfo
-      kProcTree,        ///< Tell a TPoolProcessor to process the tree that was passed to it at construction time
-      kProcSelector,    ///< Tell a TPoolProcessor to process the tree using the selector passed to it at construction time
-      kProcResult,      ///< The message contains the result of the processing of a TTree
-      kProcEnded,       ///< Tell the client we are done processing (i.e. we have reached the target number of entries to process)
-      kProcError,       ///< Tell the client there was an error while processing
-   };
-
-}
-
 //////////////////////////////////////////////////////////////////////////
 ///
 /// This namespace contains pre-defined functions to be used in

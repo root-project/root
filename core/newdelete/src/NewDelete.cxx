@@ -216,6 +216,27 @@ void *operator new(size_t size) R__THROW_BAD
    return ExtStart(vp);
 }
 
+void *operator new(size_t size, const std::nothrow_t&) noexcept
+{
+   return ::operator new(size);
+}
+
+#if __cplusplus >= 201700L
+
+void *operator new(size_t size, std::align_val_t al)
+{
+   Fatal("operator new","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
+{
+   Fatal("operator new","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+#endif
+
 #ifndef R__PLACEMENTINLINE
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom new() operator with placement argument.
@@ -282,12 +303,35 @@ void operator delete(void *ptr) R__THROW_NULL
    }
 }
 
+void operator delete(void *ptr, const std::nothrow_t&) noexcept
+{
+   operator delete(ptr);
+}
+
+#if __cplusplus >= 201700L
+void operator delete(void *ptr, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete","with std::align_val_t is not implemented yet");
+}
+void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noexcept
+{
+   Fatal("operator delete","with std::align_val_t is not implemented yet");
+}
+#endif
+
+
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete(void* ptr, std::size_t) {
    operator delete(ptr);
 }
+#if __cplusplus >= 201700L
+void operator delete(void *ptr, std::size_t, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete","with std::align_val_t is not implemented yet");
+}
+#endif
 #endif
 
 #ifdef R__VECNEWDELETE
@@ -298,6 +342,27 @@ void *operator new[](size_t size) R__THROW_BAD
 {
    return ::operator new(size);
 }
+
+void *operator new[](size_t size, const std::nothrow_t&) noexcept
+{
+   return ::operator new(size);
+}
+
+#if __cplusplus >= 201700L
+
+void *operator new[](size_t size, std::align_val_t al) R__THROW_BAD
+{
+   Fatal("operator new[]","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
+{
+   Fatal("operator new[]","with std::align_val_t is not implemented yet");
+   return nullptr;
+}
+
+#endif
 
 #ifndef R__PLACEMENTINLINE
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,12 +381,25 @@ void operator delete[](void *ptr) R__THROW_NULL
    ::operator delete(ptr);
 }
 
+#if __cplusplus >= 201700L
+void operator delete[](void *ptr, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete[]","with std::align_val_t is not implemented yet");
+}
+#endif
+
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete[](void* ptr, std::size_t) {
    operator delete[](ptr);
 }
+#if __cplusplus >= 201700L
+void operator delete[](void *ptr, std::size_t, std::align_val_t al) R__THROW_NULL
+{
+   Fatal("operator delete[]","with size_t and std::align_val_t is not implemented yet");
+}
+#endif
 #endif
 
 #endif

@@ -1057,27 +1057,26 @@ TCling::TCling(const char *name, const char *title)
    std::vector<std::string> clingArgsStorage;
    clingArgsStorage.push_back("cling4root");
 
-   std::string interpInclude;
    // rootcling sets its arguments through TROOT::GetExtraInterpreterArgs().
    if (!fromRootCling) {
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
 
       // Add -I early so ASTReader can find the headers.
-      std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
-      clingArgsStorage.push_back(interpInclude);
+      std::string interpInclude(TROOT::GetEtcDir());
+      clingArgsStorage.push_back("-I" + interpInclude);
 
       // Add include path to etc/cling. FIXME: This is a short term solution. The
       // llvm/clang header files shouldn't be there at all. We have to get rid of
       // that dependency and avoid copying the header files.
-      clingArgsStorage.push_back(interpInclude + "/cling");
+      clingArgsStorage.push_back("-I" + interpInclude + "/cling");
 
       // Add the root include directory and etc/ to list searched by default.
-      clingArgsStorage.push_back(std::string("-I") + ROOT::TMetaUtils::GetROOTIncludeDir(false));
+      clingArgsStorage.push_back(std::string("-I" + TROOT::GetIncludeDir()));
 
       // Add the current path to the include path
       // TCling::AddIncludePath(".");
 
-      std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
+      std::string pchFilename = interpInclude + "/allDict.cxx.pch";
       if (gSystem->Getenv("ROOT_PCH")) {
          pchFilename = gSystem->Getenv("ROOT_PCH");
       }
@@ -1096,7 +1095,11 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
-   std::string llvmResourceDir = ROOT::TMetaUtils::GetLLVMResourceDir(false);
+#ifdef R__EXTERN_LLVMDIR
+   TString llvmResourceDir = R__EXTERN_LLVMDIR;
+#else
+   TString llvmResourceDir = TROOT::GetEtcDir() + "/cling";
+#endif
    // Add statically injected extra arguments, usually coming from rootcling.
    for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
         extraArgs && *extraArgs; ++extraArgs) {
@@ -1110,7 +1113,7 @@ TCling::TCling(const char *name, const char *title)
 
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
-                                         llvmResourceDir.c_str());
+                                         llvmResourceDir);
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
@@ -4720,21 +4723,7 @@ void TCling::InitRootmapFile(const char *name)
 
    TString sname = "system";
    sname += name;
-#ifdef ROOTETCDIR
-   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
-#else
-   TString etc = gRootDir;
-#ifdef WIN32
-   etc += "\\etc";
-#else
-   etc += "/etc";
-#endif
-#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   // on iOS etc does not exist and system<name> resides in $ROOTSYS
-   etc = gRootDir;
-#endif
-   char *s = gSystem->ConcatFileName(etc, sname);
-#endif
+   char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
 
    Int_t ret = ReadRootmapFile(s);
    if (ret == -3) // old format

@@ -1671,8 +1671,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
    case kROOT_Load:
       {
          const TString fileName = s3("[^\"]*$");
-//             const TString  dynamicPath  = DeterminePath( fileName, TROOT::GetDynamicPath() ); /* should use this one */
-         const TString dynamicPath = DeterminePath(fileName,gEnv->GetValue("Root.DynamicPath",(char *) 0));
+         const TString dynamicPath = DeterminePath(fileName, gSystem->GetDynamicPath());
          const TSeqCollection *pListOfFiles = GetListOfFilesInPath(dynamicPath);
 
 //             pos = Complete( "[^\"/]*$", pListOfFiles, "\");", out);

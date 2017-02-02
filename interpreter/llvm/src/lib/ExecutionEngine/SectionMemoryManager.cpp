@@ -83,8 +83,6 @@ uint8_t *SectionMemoryManager::allocateSection(MemoryGroup &MemGroup,
   //
   // FIXME: Initialize the Near member for each memory group to avoid
   // interleaving.
-  // Note: this would not be sufficient as the Near member is just a hint
-  // to mmap.
   std::error_code ec;
   sys::MemoryBlock MB = sys::Memory::allocateMappedMemory(RequiredSize,
                                                           &MemGroup.Near,
@@ -94,64 +92,6 @@ uint8_t *SectionMemoryManager::allocateSection(MemoryGroup &MemGroup,
   if (ec) {
     // FIXME: Add error propagation to the interface.
     return nullptr;
-  }
-
-  // To be sure that there is no interleaving, enforce the monotonic decrease
-  // of the memory adddress.  This is required by libgcc's _Unwind_Find_FDE
-  // which does a linear search (of the top level dwarf objects) and note in
-  // the code:
-  // "Note that pc_begin is sorted descending, and we expect objects to be
-  // non-overlapping. "
-  using CheckerType = bool (*)(void *, void *);
-  CheckerType isNotMonotonicLinux = [](void *newAlloc, void *target) {
-    return (size_t)newAlloc > (size_t)target;
-  };
-  CheckerType isNotMonotonicAlternateOrder = [](void *newAlloc, void *target) {
-    return (size_t)newAlloc < (size_t)target;
-  };
-  auto getMonotonicChecker = [=]() {
-    std::error_code ec;
-    sys::MemoryBlock MB2 = sys::Memory::allocateMappedMemory(RequiredSize,
-                                                             &MemGroup.Near,
-                                                             sys::Memory::MF_READ |
-                                                             sys::Memory::MF_WRITE,
-                                                             ec);
-    bool linuxType = false;
-    if ((size_t)MB2.base() < (size_t)MB.base()) {
-      linuxType = true;
-    }
-    sys::Memory::releaseMappedMemory(MB2);
-    if (linuxType) {
-      return isNotMonotonicLinux;
-    } else {
-      return isNotMonotonicAlternateOrder;
-    }
-  };
-  static CheckerType isNotMonotonic = getMonotonicChecker();
-
-  if (MemGroup.Near.base() && isNotMonotonic(MB.base(), MemGroup.Near.base())) {
-    SmallVector<sys::MemoryBlock, 16> MemToDelete;
-    while (isNotMonotonic(MB.base(), MemGroup.Near.base())) {
-
-      // Hold on to the memory until we get an acceptable one
-      // just so that we are not given it back.
-      MemToDelete.push_back(MB);
-      MB = sys::Memory::allocateMappedMemory(RequiredSize,
-                                             &MemGroup.Near,
-                                             sys::Memory::MF_READ |
-                                               sys::Memory::MF_WRITE,
-                                             ec);
-      if (ec) {
-        for (sys::MemoryBlock &Block : MemToDelete) {
-          sys::Memory::releaseMappedMemory(Block);
-        }
-        // FIXME: Add error propagation to the interface.
-        return nullptr;
-      }
-    }
-    for (sys::MemoryBlock &Block : MemToDelete) {
-      sys::Memory::releaseMappedMemory(Block);
-    }
   }
 
   // Save this address as the basis for our next request

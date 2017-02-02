@@ -35,7 +35,7 @@ void fit1() {
    // We connect the ROOT file generated in a previous tutorial
    // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>) 
    //
-   TString dir = gROOT->GetTutorialsDir();
+   TString dir = gROOT->GetTutorialDir();
    dir.Append("/fit/");
    TFile *file = TFile::Open("fillrandom.root");
    if (!file) {

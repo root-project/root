@@ -22,7 +22,7 @@ void xyplot()
    const Int_t n = 4;
    Double_t x[n] = {-1, -3, -9, 3};
    Double_t y[n] = {-1000,  900,  300, 300};
-   gr = new TGraph(n,x,y);
+   TGraph* gr = new TGraph(n,x,y);
    gr->SetTitle("XY plot");
    gr->SetMinimum(-1080);
    gr->SetMaximum(1080);

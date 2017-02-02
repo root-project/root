@@ -1,5 +1,6 @@
 /* @(#)root/multiproc:$Id$ */
 // Author: Enrico Guiraud July 2015
+// Modified: G Ganis Jan 2017
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -23,10 +24,7 @@
 #include "THashList.h"
 #include "TMPClient.h"
 #include "ROOT/TExecutor.hxx"
-#include "TPoolProcessor.h"
-#include "TPoolWorker.h"
-#include "TSelector.h"
-#include "TTreeReader.h"
+#include "TMPWorkerExecutor.h"
 #include <algorithm> //std::generate
 #include <numeric> //std::iota
 #include <string>
@@ -55,20 +53,6 @@ public:
    /// \endcond
    using TExecutor<TProcessExecutor>::Map;
 
-   // ProcTree
-   // these versions requires that procFunc returns a ptr to TObject or inheriting classes and takes a TTreeReader& (both enforced at compile-time)
-   template<class F> auto ProcTree(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   // these versions require a TSelector
-   TList* ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(const std::string &fileName, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(TChain& files, TSelector& selector, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   TList* ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess = 0);
-
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
@@ -79,7 +63,6 @@ private:
    template<class T> void Collect(std::vector<T> &reslist);
    template<class T> void HandlePoolCode(MPCodeBufPair &msg, TSocket *sender, std::vector<T> &reslist);
 
-   void FixLists(std::vector<TObject*> &lists);
    void Reset();
    void ReplyToFuncResult(TSocket *s);
    void ReplyToIdle(TSocket *s);
@@ -91,11 +74,9 @@ private:
    /// It is used to interpret in the right way and properly reply to the
    /// messages received (see, for example, TProcessExecutor::HandleInput)
    enum class ETask : unsigned char {
-      kNoTask,   ///< no task is being executed
+      kNoTask,       ///< no task is being executed
       kMap,          ///< a Map method with no arguments is being executed
-      kMapWithArg,   ///< a Map method with arguments is being executed
-      kProcByRange,   ///< a ProcTree method is being executed and each worker will process a certain range of each file
-      kProcByFile,    ///< a ProcTree method is being executed and each worker will process a different file
+      kMapWithArg    ///< a Map method with arguments is being executed
    };
 
    ETask fTaskType = ETask::kNoTask; ///< the kind of task that is being executed, if any
@@ -121,7 +102,7 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
    unsigned oldNWorkers = GetNWorkers();
    if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
-   TPoolWorker<F> worker(func);
+   TMPWorkerExecutor<F> worker(func);
    bool ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok)
@@ -134,7 +115,7 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
    fNToProcess = nTimes;
    std::vector<retType> reslist;
    reslist.reserve(fNToProcess);
-   fNProcessed = Broadcast(PoolCode::kExecFunc, fNToProcess);
+   fNProcessed = Broadcast(MPCode::kExecFunc, fNToProcess);
 
    //collect results, give out other tasks if needed
    Collect(reslist);
@@ -160,11 +141,11 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
    fTaskType = ETask::kMapWithArg;
 
    //fork max(args.size(), fNWorkers) times
-   //N.B. from this point onwards, args is filled with undefined (but valid) values, since TPoolWorker moved its content away
+   //N.B. from this point onwards, args is filled with undefined (but valid) values, since TMPWorkerExecutor moved its content away
    unsigned oldNWorkers = GetNWorkers();
    if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
-   TPoolWorker<F, T> worker(func, args);
+   TMPWorkerExecutor<F, T> worker(func, args);
    bool ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok)
@@ -179,7 +160,7 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
    reslist.reserve(fNToProcess);
    std::vector<unsigned> range(fNToProcess);
    std::iota(range.begin(), range.end(), 0);
-   fNProcessed = Broadcast(PoolCode::kExecFuncWithArg, range);
+   fNProcessed = Broadcast(MPCode::kExecFuncWithArg, range);
 
    //collect results, give out other tasks if needed
    Collect(reslist);
@@ -209,152 +190,22 @@ T TProcessExecutor::Reduce(const std::vector<T> &objs, R redfunc)
    return redfunc(objs);
 }
 
-template<class F>
-auto TProcessExecutor::ProcTree(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
-{
-   using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
-
-   //prepare environment
-   Reset();
-   unsigned nWorkers = GetNWorkers();
-
-   //fork
-   TPoolProcessor<F> worker(procFunc, fileNames, treeName, nWorkers, nToProcess);
-   bool ok = Fork(worker);
-   if(!ok) {
-      Error("TProcessExecutor::ProcTree", "[E][C] Could not fork. Aborting operation.");
-      return nullptr;
-   }
-
-   if(fileNames.size() < nWorkers) {
-      //TTree entry granularity. For each file, we divide entries equally between workers
-      fTaskType = ETask::kProcByRange;
-      //Tell workers to start processing entries
-      fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
-      std::vector<unsigned> args(nWorkers);
-      std::iota(args.begin(), args.end(), 0);
-      fNProcessed = Broadcast(PoolCode::kProcRange, args);
-      if(fNProcessed < nWorkers)
-         Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
-   } else {
-      //file granularity. each worker processes one whole file as a single task
-      fTaskType = ETask::kProcByFile;
-      fNToProcess = fileNames.size();
-      std::vector<unsigned> args(nWorkers);
-      std::iota(args.begin(), args.end(), 0);
-      fNProcessed = Broadcast(PoolCode::kProcFile, args);
-      if(fNProcessed < nWorkers)
-         Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
-   }
-
-   //collect results, distribute new tasks
-   std::vector<TObject*> reslist;
-   Collect(reslist);
-
-   //merge
-   PoolUtils::ReduceObjects<TObject *> redfunc;
-   auto res = redfunc(reslist);
-
-   //clean-up and return
-   ReapWorkers();
-   fTaskType = ETask::kNoTask;
-   return static_cast<retType>(res);
-}
-
-
-template<class F>
-auto TProcessExecutor::ProcTree(const std::string& fileName, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
-{
-   std::vector<std::string> singleFileName(1, fileName);
-   return ProcTree(singleFileName, procFunc, treeName, nToProcess);
-}
-
-
-template<class F>
-auto TProcessExecutor::ProcTree(TFileCollection& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
-{
-   std::vector<std::string> fileNames(files.GetNFiles());
-   unsigned count = 0;
-   for(auto f : *static_cast<THashList*>(files.GetList()))
-      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
-
-   return ProcTree(fileNames, procFunc, treeName, nToProcess);
-}
-
-
-template<class F>
-auto TProcessExecutor::ProcTree(TChain& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
-{
-   TObjArray* filelist = files.GetListOfFiles();
-   std::vector<std::string> fileNames(filelist->GetEntries());
-   unsigned count = 0;
-   for(auto f : *filelist)
-      fileNames[count++] = f->GetTitle();
-
-   return ProcTree(fileNames, procFunc, treeName, nToProcess);
-}
-
-
-template<class F>
-auto TProcessExecutor::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
-{
-   using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
-
-   //prepare environment
-   Reset();
-   unsigned nWorkers = GetNWorkers();
-
-   //fork
-   TPoolProcessor<F> worker(procFunc, &tree, nWorkers, nToProcess);
-   bool ok = Fork(worker);
-   if(!ok) {
-      Error("TProcessExecutor::ProcTree", "[E][C] Could not fork. Aborting operation.");
-      return nullptr;
-   }
-
-   //divide entries equally between workers
-   fTaskType = ETask::kProcByRange;
-
-   //tell workers to start processing entries
-   fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
-   std::vector<unsigned> args(nWorkers);
-   std::iota(args.begin(), args.end(), 0);
-   fNProcessed = Broadcast(PoolCode::kProcTree, args);
-   if(fNProcessed < nWorkers)
-      Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.");
-
-   //collect results, distribute new tasks
-   std::vector<TObject*> reslist;
-   Collect(reslist);
-
-   //merge
-   PoolUtils::ReduceObjects<TObject *> redfunc;
-   auto res = redfunc(reslist);
-
-   //clean-up and return
-   ReapWorkers();
-   fTaskType = ETask::kNoTask;
-   return static_cast<retType>(res);
-}
-
 //////////////////////////////////////////////////////////////////////////
 /// Handle message and reply to the worker
 template<class T>
 void TProcessExecutor::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &reslist)
 {
    unsigned code = msg.first;
-   if (code == PoolCode::kFuncResult) {
+   if (code == MPCode::kFuncResult) {
       reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
       ReplyToFuncResult(s);
-   } else if (code == PoolCode::kIdling) {
+   } else if (code == MPCode::kIdling) {
       ReplyToIdle(s);
-   } else if(code == PoolCode::kProcResult) {
+   } else if(code == MPCode::kProcResult) {
       if(msg.second != nullptr)
          reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
       MPSend(s, MPCode::kShutdownOrder);
-   } else if(code == PoolCode::kProcError) {
+   } else if(code == MPCode::kProcError) {
       const char *str = ReadBuffer<const char*>(msg.second.get());
       Error("TProcessExecutor::HandlePoolCode", "[E][C] a worker encountered an error: %s\n"
                                          "Continuing execution ignoring these entries.", str);

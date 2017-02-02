@@ -12,15 +12,6 @@
 #ifndef ROOT_TPainter3dAlgorithms
 #define ROOT_TPainter3dAlgorithms
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPainter3dAlgorithms                                                 //
-//                                                                      //
-// 3D graphics representations package.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -44,65 +35,65 @@ class TF3;
 class TPainter3dAlgorithms : public TObject, public TAttLine, public TAttFill {
 
 private:
-   Double_t     fX0;               //
-   Double_t     fDX;               //
-   Double_t     fRmin[3];          //Lower limits of lego
-   Double_t     fRmax[3];          //Upper limits of lego
-   Double_t     fU[2000];          //
-   Double_t     fD[2000];          //
-   Double_t     fT[200];           //
-   Double_t     fFunLevel[257];    //Function levels corresponding to colors
-   Double_t     fPlines[1200];     //
-   Double_t     fAphi[183];        //
-   Double_t     fYdl;              //
-   Double_t     fYls[4];           //
-   Double_t     fVls[12];          //
-   Double_t     fQA;               //
-   Double_t     fQD;               //
-   Double_t     fQS;               //
-   Double_t     fXrast;            //
-   Double_t     fYrast;            //
-   Double_t     fDXrast;           //
-   Double_t     fDYrast;           //
-   Int_t        fSystem;           //Coordinate system
-   Int_t        fNT;               //
-   Int_t        fNlevel;           //Number of color levels
-   Int_t        fColorLevel[258];  //Color levels corresponding to functions
-   Int_t       *fColorMain;        //
-   Int_t       *fColorDark;        //
-   Int_t        fColorTop;         //
-   Int_t        fColorBottom;      //
-   Int_t       *fEdgeColor;        //
-   Int_t       *fEdgeStyle;        //
-   Int_t       *fEdgeWidth;        //
-   Int_t        fEdgeIdx;          //
-   Int_t        fMesh;             //(=1 if mesh to draw, o otherwise)
-   Int_t        fNlines;           //
-   Int_t        fLevelLine[200];   //
-   Int_t        fLoff;             //
-   Int_t        fNqs;              //
-   Int_t        fNStack;           //Number of histograms in the stack to be painted
-   Int_t        fNxrast;           //
-   Int_t        fNyrast;           //
-   Int_t        fIfrast;           //
-   Int_t        *fRaster;          //pointer to raster buffer
-   Int_t        fJmask[30];        //
-   Int_t        fMask[465];        //
-   Double_t     fP8[8][3];         //
-   Double_t     fF8[8];            //
-   Double_t     fG8[8][3];         //
-   Double_t     fFmin;             // IsoSurface minimum function value
-   Double_t     fFmax;             // IsoSurface maximum function value
-   Int_t        fNcolor;           // Number of colours per Iso surface
-   Int_t        fIc1;              // Base colour for the 1st Iso Surface
-   Int_t        fIc2;              // Base colour for the 2nd Iso Surface
-   Int_t        fIc3;              // Base colour for the 3rd Iso Surface
+   Double_t     fX0;               ///
+   Double_t     fDX;               ///
+   Double_t     fRmin[3];          /// Lower limits of lego
+   Double_t     fRmax[3];          /// Upper limits of lego
+   Double_t     fU[2000];          ///
+   Double_t     fD[2000];          ///
+   Double_t     fT[200];           ///
+   Double_t     fFunLevel[257];    /// Function levels corresponding to colors
+   Double_t     fPlines[1200];     ///
+   Double_t     fAphi[183];        ///
+   Double_t     fYdl;              ///
+   Double_t     fYls[4];           ///
+   Double_t     fVls[12];          ///
+   Double_t     fQA;               ///
+   Double_t     fQD;               ///
+   Double_t     fQS;               ///
+   Double_t     fXrast;            ///
+   Double_t     fYrast;            ///
+   Double_t     fDXrast;           ///
+   Double_t     fDYrast;           ///
+   Int_t        fSystem;           /// Coordinate system
+   Int_t        fNT;               ///
+   Int_t        fNlevel;           /// Number of color levels
+   Int_t        fColorLevel[258];  /// Color levels corresponding to functions
+   Int_t       *fColorMain;        ///
+   Int_t       *fColorDark;        ///
+   Int_t        fColorTop;         ///
+   Int_t        fColorBottom;      ///
+   Int_t       *fEdgeColor;        ///
+   Int_t       *fEdgeStyle;        ///
+   Int_t       *fEdgeWidth;        ///
+   Int_t        fEdgeIdx;          ///
+   Int_t        fMesh;             /// (=1 if mesh to draw, o otherwise)
+   Int_t        fNlines;           ///
+   Int_t        fLevelLine[200];   ///
+   Int_t        fLoff;             ///
+   Int_t        fNqs;              ///
+   Int_t        fNStack;           /// Number of histograms in the stack to be painted
+   Int_t        fNxrast;           ///
+   Int_t        fNyrast;           ///
+   Int_t        fIfrast;           ///
+   Int_t        *fRaster;          /// pointer to raster buffer
+   Int_t        fJmask[30];        ///
+   Int_t        fMask[465];        ///
+   Double_t     fP8[8][3];         ///
+   Double_t     fF8[8];            ///
+   Double_t     fG8[8][3];         ///
+   Double_t     fFmin;             /// IsoSurface minimum function value
+   Double_t     fFmax;             /// IsoSurface maximum function value
+   Int_t        fNcolor;           /// Number of colours per Iso surface
+   Int_t        fIc1;              /// Base colour for the 1st Iso Surface
+   Int_t        fIc2;              /// Base colour for the 2nd Iso Surface
+   Int_t        fIc3;              /// Base colour for the 3rd Iso Surface
 
-   static Int_t    fgF3Clipping;   // Clipping box is off (0) or on (1)
-   static Double_t fgF3XClip;      // Clipping plne along X
-   static Double_t fgF3YClip;      // Clipping plne along Y
-   static Double_t fgF3ZClip;      // Clipping plne along Y
-   static TF3      *fgCurrentF3;   // Pointer to the 3D function to be paint.
+   static Int_t    fgF3Clipping;   /// Clipping box is off (0) or on (1)
+   static Double_t fgF3XClip;      /// Clipping plane along X
+   static Double_t fgF3YClip;      /// Clipping plane along Y
+   static Double_t fgF3ZClip;      /// Clipping plane along Y
+   static TF3      *fgCurrentF3;   /// Pointer to the 3D function to be paint.
 
 
 public:
@@ -111,9 +102,9 @@ public:
    typedef void (TPainter3dAlgorithms::*SurfaceFunc_t)(Int_t,Int_t,Double_t*,Double_t*);
 
 private:
-   DrawFaceFunc_t  fDrawFace;        //pointer to face drawing function
-   LegoFunc_t      fLegoFunction;    //pointer to lego function
-   SurfaceFunc_t   fSurfaceFunction; //pointer to surface function
+   DrawFaceFunc_t  fDrawFace;        /// pointer to face drawing function
+   LegoFunc_t      fLegoFunction;    /// pointer to lego function
+   SurfaceFunc_t   fSurfaceFunction; /// pointer to surface function
 
 public:
    TPainter3dAlgorithms();

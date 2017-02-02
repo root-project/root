@@ -9,21 +9,22 @@ set(libname TreePlayer)
 # source matches the ROOT interface. It should not end up in the dictionary nor
 # in the PCH.
 ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
+list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/ROOT/TDataFrame.hxx)
 list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TBranchProxyTemplate.h)
 
 ROOT_GLOB_SOURCES(sources src/*.cxx)
 
 if(NOT imt)
-  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessor.h)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TTreeProcessor.cxx)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMT.h)
+  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TTreeProcessorMT.cxx)
 else()
   include_directories(${TBB_INCLUDE_DIRS})
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__DataFrame inc/ROOT/TDataFrame.hxx MULTIDICT MODULE ${libname} LINKDEF DataFrameLinkDef.h)
 
-
-ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore)
+ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx G__DataFrame.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc)
 ROOT_INSTALL_HEADERS()
 
 

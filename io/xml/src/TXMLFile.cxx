@@ -87,6 +87,7 @@
 #include "TProcessID.h"
 #include "TError.h"
 #include "TClass.h"
+#include "TVirtualMutex.h"
 
 ClassImp(TXMLFile);
 

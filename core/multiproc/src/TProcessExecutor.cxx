@@ -1,5 +1,6 @@
 /* @(#)root/multiproc:$Id$ */
 // Author: Enrico Guiraud July 2015
+// Modified: G Ganis Jan 2017
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -11,7 +12,6 @@
 
 #include "TEnv.h"
 #include "ROOT/TProcessExecutor.hxx"
-#include "TPoolPlayer.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -95,191 +95,6 @@ TProcessExecutor::TProcessExecutor(unsigned nWorkers) : TMPClient(nWorkers)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// TSelector-based tree processing: memory resident tree
-TList* TProcessExecutor::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess)
-{
-   //prepare environment
-   Reset();
-   unsigned nWorkers = GetNWorkers();
-   selector.Begin(nullptr);
-
-   //fork
-   TPoolPlayer worker(selector, &tree, nWorkers, nToProcess/nWorkers);
-   bool ok = Fork(worker);
-   if(!ok) {
-      Error("TProcessExecutor::ProcTree", "[E][C] Could not fork. Aborting operation");
-      return nullptr;
-   }
-
-   //divide entries equally between workers
-   fTaskType = ETask::kProcByRange;
-
-   //tell workers to start processing entries
-   fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
-   std::vector<unsigned> args(nWorkers);
-   std::iota(args.begin(), args.end(), 0);
-   fNProcessed = Broadcast(PoolCode::kProcTree, args);
-   if (fNProcessed < nWorkers)
-      Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
-                                   " Some entries might not be processed.");
-
-   //collect results, distribute new tasks
-   std::vector<TObject*> outLists;
-   Collect(outLists);
-
-   // The first element must be a TList instead of a TSelector List, to avoid duplicate problems with merging
-   FixLists(outLists);
-
-   PoolUtils::ReduceObjects<TObject *> redfunc;
-   auto outList = static_cast<TList*>(redfunc(outLists));
-
-   TList *selList = selector.GetOutputList();
-   for(auto obj : *outList) {
-      selList->Add(obj);
-   }
-   outList->SetOwner(false);
-   delete outList;
-
-   selector.Terminate();
-
-   //clean-up and return
-   ReapWorkers();
-   fTaskType = ETask::kNoTask;
-   return outList;
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// TSelector-based tree processing: dataset as a vector of files
-TList* TProcessExecutor::ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
-{
-
-   //prepare environment
-   Reset();
-   unsigned nWorkers = GetNWorkers();
-   selector.Begin(nullptr);
-
-   //fork
-   TPoolPlayer worker(selector, fileNames, treeName, nWorkers, nToProcess);
-   bool ok = Fork(worker);
-   if (!ok) {
-      Error("TProcessExecutor::ProcTree", "[E][C] Could not fork. Aborting operation");
-      return nullptr;
-   }
-
-   Int_t procByFile = gEnv->GetValue("MultiProc.TestProcByFile", 0);
-
-   if (procByFile) {
-      if (fileNames.size() < nWorkers) {
-         // TTree entry granularity: for each file, we divide entries equally between workers
-         fTaskType = ETask::kProcByRange;
-         // Tell workers to start processing entries
-         fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
-         std::vector<unsigned> args(nWorkers);
-         std::iota(args.begin(), args.end(), 0);
-         fNProcessed = Broadcast(PoolCode::kProcRange, args);
-         if (fNProcessed < nWorkers)
-            Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
-                                         " Some entries might not be processed");
-      } else {
-         // File granularity: each worker processes one whole file as a single task
-         fTaskType = ETask::kProcByFile;
-         fNToProcess = fileNames.size();
-         std::vector<unsigned> args(nWorkers);
-         std::iota(args.begin(), args.end(), 0);
-         fNProcessed = Broadcast(PoolCode::kProcFile, args);
-         if (fNProcessed < nWorkers)
-            Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
-                                         " Some entries might not be processed.");
-      }
-   } else {
-      // TTree entry granularity: for each file, we divide entries equally between workers
-      fTaskType = ETask::kProcByRange;
-      // Tell workers to start processing entries
-      fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
-      std::vector<unsigned> args(nWorkers);
-      std::iota(args.begin(), args.end(), 0);
-      fNProcessed = Broadcast(PoolCode::kProcRange, args);
-      if (fNProcessed < nWorkers)
-         Error("TProcessExecutor::ProcTree", "[E][C] There was an error while sending tasks to workers."
-                                      " Some entries might not be processed.");
-   }
-
-   // collect results, distribute new tasks
-   std::vector<TObject*> outLists;
-   Collect(outLists);
-
-   // The first element must be a TList instead of a TSelector List, to avoid duplicate problems with merging
-   FixLists(outLists);
-
-   PoolUtils::ReduceObjects<TObject *> redfunc;
-   auto outList = static_cast<TList*>(redfunc(outLists));
-
-   TList *selList = selector.GetOutputList();
-   for(auto obj : *outList) {
-      selList->Add(obj);
-   }
-   outList->SetOwner(false);
-   delete outList;
-
-   selector.Terminate();
-
-   //clean-up and return
-   ReapWorkers();
-   fTaskType = ETask::kNoTask;
-   return outList;
-
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// TSelector-based tree processing: dataset as a TFileCollection
-TList* TProcessExecutor::ProcTree(TFileCollection& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
-{
-   std::vector<std::string> fileNames(files.GetNFiles());
-   unsigned count = 0;
-   for(auto f : *static_cast<THashList*>(files.GetList()))
-      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
-
-   TList *rl = ProcTree(fileNames, selector, treeName, nToProcess);
-   return rl;
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// TSelector-based tree processing: dataset as a TChain
-TList* TProcessExecutor::ProcTree(TChain& files, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
-{
-   TObjArray* filelist = files.GetListOfFiles();
-   std::vector<std::string> fileNames(filelist->GetEntries());
-   unsigned count = 0;
-   for(auto f : *filelist)
-      fileNames[count++] = f->GetTitle();
-
-   return ProcTree(fileNames, selector, treeName, nToProcess);
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// TSelector-based tree processing: dataset as a single file
-TList* TProcessExecutor::ProcTree(const std::string& fileName, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
-{
-   std::vector<std::string> singleFileName(1, fileName);
-   return ProcTree(singleFileName, selector, treeName, nToProcess);
-}
-
-/// Fix list of lists before merging (to avoid errors about duplicated objects)
-void TProcessExecutor::FixLists(std::vector<TObject*> &lists) {
-
-   // The first element must be a TList instead of a TSelector List, to avoid duplicate problems with merging
-   TList *firstlist = new TList;
-   TList *oldlist = (TList *) lists[0];
-   TIter nxo(oldlist);
-   TObject *o = 0;
-   while ((o = nxo())) { firstlist->Add(o); }
-   oldlist->SetOwner(kFALSE);
-   lists.erase(lists.begin());
-   lists.insert(lists.begin(), firstlist);
-   delete oldlist;
-}
-
-//////////////////////////////////////////////////////////////////////////
 /// Reset TProcessExecutor's state.
 void TProcessExecutor::Reset()
 {
@@ -287,7 +102,6 @@ void TProcessExecutor::Reset()
    fNToProcess = 0;
    fTaskType = ETask::kNoTask;
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 /// Reply to a worker who just sent a result.
@@ -298,9 +112,9 @@ void TProcessExecutor::ReplyToFuncResult(TSocket *s)
    if (fNProcessed < fNToProcess) {
       //this cannot be a "greedy worker" task
       if (fTaskType == ETask::kMap)
-         MPSend(s, PoolCode::kExecFunc);
+         MPSend(s, MPCode::kExecFunc);
       else if (fTaskType == ETask::kMapWithArg)
-         MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
+         MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
       ++fNProcessed;
    } else //whatever the task is, we are done
       MPSend(s, MPCode::kShutdownOrder);
@@ -316,16 +130,12 @@ void TProcessExecutor::ReplyToIdle(TSocket *s)
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
       if (fTaskType == ETask::kMapWithArg)
-         MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
+         MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
       else if (fTaskType == ETask::kMap)
-         MPSend(s, PoolCode::kExecFunc);
-      else if (fTaskType == ETask::kProcByRange)
-         MPSend(s, PoolCode::kProcRange, fNProcessed);
-      else if (fTaskType == ETask::kProcByFile)
-         MPSend(s, PoolCode::kProcFile, fNProcessed);
+         MPSend(s, MPCode::kExecFunc);
       ++fNProcessed;
    } else
-      MPSend(s, PoolCode::kSendResult);
+      MPSend(s, MPCode::kSendResult);
 }
 
 } // namespace ROOT

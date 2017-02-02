@@ -29,7 +29,7 @@ function is called by TEntryList when it starts filling the next block. If
 Enter() or Remove() is called after OptimizeStorage(), representation is
 again changed to 1).
 
-Begin_Macro(source)
+Begin_Macro
 entrylistblock_figure1.C
 End_Macro
 
@@ -158,7 +158,7 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove entry #entry
+/// Remove entry \#entry
 /// If the block has already been optimized and the entries
 /// are stored as a list and not as bits, trying to remove a new entry
 /// will make the block switch to bits representation
@@ -189,7 +189,7 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// True if the block contains entry #entry
+/// True if the block contains entry \#entry
 
 Int_t TEntryListBlock::Contains(Int_t entry)
 {
@@ -376,7 +376,7 @@ Int_t TEntryListBlock::GetNPassed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return entry #entry.
+/// Return entry \#entry.
 /// See also Next()
 
 Int_t TEntryListBlock::GetEntry(Int_t entry)
@@ -499,7 +499,7 @@ void TEntryListBlock::Print(const Option_t *option) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the indices of this block + shift (used from TEntryList::Print()) to
-/// print the corrent values
+/// print the current values
 
 void TEntryListBlock::PrintWithShift(Int_t shift) const
 {

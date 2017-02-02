@@ -1338,11 +1338,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       // Is it the default selector?
       if (fDataGenSel == kPROOF_BenchSelDataGenDef) {
          // Load the parfile
-#ifdef R__HAVE_CONFIG
-         TString par = TString::Format("%s/%s%s.par", ROOTETCDIR, kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
-#else
-         TString par = TString::Format("$ROOTSYS/etc/%s%s.par", kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
-#endif
+         TString par = TString::Format("%s/%s%s.par", TROOT::GetEtcDir().Data(), kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
          Info("MakeDataSet", "uploading '%s' ...", par.Data());
          if (fProof->UploadPackage(par) != 0) {
             Error("MakeDataSet", "problems uploading '%s' - cannot continue", par.Data());
