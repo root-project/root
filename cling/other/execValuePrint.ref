@@ -5,6 +5,6 @@ Processing execValuePrint.C...
 (TH1F &) Name:  Title:  NbinsX: 1
 (TDatime &) Mon Jan 30 12:45:59 1995
 (TString &) "123ABC"[6]
-FitResult::Print - Error: Empty  FitResult  ! 
-(TFitResult &) 
+(TFitResult &) <Empty FitResult>
+
 (TFitResultPtr &) <nullptr TFitResult>
