@@ -374,9 +374,9 @@ public:
       fFormula(0),
       fParams(new TF1Parameters(npar))
    {
-      using TType = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
+      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
 
-      fFunctor = new TF1FunctorPointerImpl<TType>(ROOT::Math::ParamFunctorTempl<TType>(f)),
+      fFunctor = new TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(f)),
       DoInitialize(addToGlobList);
    }
 
@@ -745,18 +745,18 @@ namespace ROOT {
       template<class Func>
       void TF1Builder<Func>::Build(TF1 *f, Func func)
       {
-         using TType = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
+         using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
          f->fType = 3;
-         f->fFunctor = new TF1::TF1FunctorPointerImpl<TType>(ROOT::Math::ParamFunctorTempl<TType>(func));
+         f->fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func));
          f->fParams = new TF1Parameters(f->fNpar);
       }
 
       template<class Func>
       void TF1Builder<Func *>::Build(TF1 *f, Func *func)
       {
-         using TType = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
+         using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
          f->fType = 3;
-         f->fFunctor = new TF1::TF1FunctorPointerImpl<TType>(ROOT::Math::ParamFunctorTempl<TType>(func));
+         f->fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func));
          f->fParams = new TF1Parameters(f->fNpar);
       }
 

@@ -458,7 +458,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
 }
 
 
-bool Fitter::DoUnbinnedLikelihoodFit(bool extended) {
+bool Fitter::DoUnbinnedLikelihoodFit(bool extended, unsigned executionPolicy) {
    // perform a likelihood fit on a set of unbinned data
 
    std::shared_ptr<UnBinData> data = std::dynamic_pointer_cast<UnBinData>(fData);
@@ -466,7 +466,8 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended) {
 
    bool useWeight = fConfig.UseWeightCorrection();
 
-   if (!fFunc) {
+   if (!fFunc)
+     if(!fFunc_v) {
       MATH_ERROR_MSG("Fitter::DoUnbinnedLikelihoodFit","model function is not set");
       return false;
    }
@@ -492,14 +493,27 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended) {
 
    if (!fUseGradient) {
       // do minimization without using the gradient
-      LogLikelihoodFCN<BaseFunc> logl(data,fFunc, useWeight, extended);
-      fFitType = logl.Type();
-      if (!DoMinimization (logl) ) return false;
-      if (useWeight) {
-         logl.UseSumOfWeightSquare();
-         if (!ApplyWeightCorrection(logl) ) return false;
-      }
-      return true;
+     if (fFunc_v ){
+       LogLikelihoodFCN<BaseFunc, IModelFunction_v> logl(data, fFunc_v, useWeight, extended, executionPolicy);
+       fFitType = logl.Type();
+        if (!DoMinimization (logl) ) return false;
+        if (useWeight) {
+          logl.UseSumOfWeightSquare();
+          if (!ApplyWeightCorrection(logl) ) return false;
+        }
+        return true;
+     }
+     else{
+       LogLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
+
+        fFitType = logl.Type();
+        if (!DoMinimization (logl) ) return false;
+        if (useWeight) {
+          logl.UseSumOfWeightSquare();
+          if (!ApplyWeightCorrection(logl) ) return false;
+        }
+        return true;
+     }
    }
    else {
       // use gradient : check if fFunc provides gradient
@@ -921,9 +935,6 @@ void Fitter::ExamineFCN()  {
    //MATH_INFO_MSG("Fitter::ExamineFCN","Objective function is not of a known type - FitData and ModelFunction objects are not available");
    return;
 }
-
-
-
 
    } // end namespace Fit
 

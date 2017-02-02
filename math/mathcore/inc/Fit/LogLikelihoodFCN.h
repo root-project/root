@@ -46,34 +46,38 @@ class LogLikelihoodFCN : public BasicFCN<DerivFunType,ModelFunType,UnBinData>  {
 
 public:
 
+   typedef typename ModelFunType::BackendType T;
    typedef  BasicFCN<DerivFunType,ModelFunType,UnBinData> BaseFCN;
 
    typedef  ::ROOT::Math::BasicFitMethodFunction<DerivFunType> BaseObjFunction;
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
 
-   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
+   typedef  ::ROOT::Math::IParamMultiFunctionTempl<T> IModelFunction;
+   typedef typename BaseObjFunction::Type_t Type_t;
 
 
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   LogLikelihoodFCN (const std::shared_ptr<UnBinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = false) :
+   LogLikelihoodFCN (const std::shared_ptr<UnBinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = false, unsigned executionPolicy=0) :
       BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
       fNEffPoints(0),
-      fGrad ( std::vector<double> ( func->NPar() ) )
+      fGrad ( std::vector<double> ( func->NPar() ) ),
+      fExecutionPolicy(executionPolicy)
    {}
 
       /**
       Constructor from unbin data set and model function (pdf) for object managed by users
    */
-   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false) :
+   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false, unsigned executionPolicy=0) :
       BaseFCN(std::shared_ptr<UnBinData>(const_cast<UnBinData*>(&data), DummyDeleter<UnBinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
       fNEffPoints(0),
-      fGrad ( std::vector<double> ( func.NPar() ) )
+      fGrad ( std::vector<double> ( func.NPar() ) ),
+      fExecutionPolicy(executionPolicy)
    {}
 
    /**
@@ -89,7 +93,8 @@ public:
       fIsExtended(f.fIsExtended ),
       fWeight( f.fWeight ),
       fNEffPoints( f.fNEffPoints ),
-      fGrad( f.fGrad)
+      fGrad( f.fGrad),
+      fExecutionPolicy(f.fExecutionPolicy)
    {  }
 
 
@@ -156,7 +161,7 @@ private:
 #ifdef ROOT_FIT_PARALLEL
       return FitUtilParallel::EvaluateLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 #else
-      return FitUtil::EvaluateLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints);
+      return FitUtil::Evaluate<T>::EvalLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
 #endif
    }
 
@@ -176,10 +181,11 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
+   unsigned fExecutionPolicy;
 
 };
-
       // define useful typedef's
+      // using LogLikelihoodFunction_v = LogLikelihoodFCN<ROOT::Math::IMultiGenFunction, ROOT::Math::IParametricFunctionMultiDimTempl<T>>;
       typedef LogLikelihoodFCN<ROOT::Math::IMultiGenFunction, ROOT::Math::IParamMultiFunction>  LogLikelihoodFunction;
       typedef LogLikelihoodFCN<ROOT::Math::IMultiGradFunction, ROOT::Math::IParamMultiFunction> LogLikelihoodGradFunction;
 
