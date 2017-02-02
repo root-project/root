@@ -743,7 +743,7 @@ void TLegend::PaintPrimitives()
       // depending on the object drawing option, the endcaps for error
       // bar are drawn differently.
       Int_t endcaps  = 0; // no endcaps.
-      if (eobj) {
+      if (eobj) { // eobj == nullptr for the legend header
          TString eobjopt = eobj->GetDrawOption();
          eobjopt.ToLower();
          if (eobjopt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
