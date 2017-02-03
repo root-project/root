@@ -213,7 +213,7 @@ if(cxxmodules)
                     DEPENDS build/unix/module.modulemap
                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap
                     )
-    add_dependencies(copystlmodulemap copymodulemap)
+    add_dependencies(copymodulemap copystlmodulemap)
   endif()
 
 endif(cxxmodules)
