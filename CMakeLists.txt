@@ -206,6 +206,16 @@ if(cxxmodules)
                      VERBATIM
                     )
   add_dependencies(move_artifacts copymodulemap)
+  if (NOT libcxx)
+    get_property(__libcpp_full_path GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+    add_custom_target(copystlmodulemap
+                    DEPENDS build/unix/module.modulemap
+                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap
+                    )
+    add_dependencies(copystlmodulemap copymodulemap)
+  endif()
+
 endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
