@@ -13,7 +13,7 @@
 The ROOT Data Frame allows to analyse data stored in TTrees with a high level interface, exploiting all the resources available on the machine in a transparent way for the user.
 
 In a nutshell:
-~~~ {.cpp}
+~~~{.cpp}
 ROOT::EnableImplicitMT(); // Tell ROOT you want to go parallel
 ROOT::TDataFrame d("myTree", file); // Interface to TTree and TChain
 auto myHisto = d.Histo("Branch_A"); // This happens in parallel!
