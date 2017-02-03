@@ -6,8 +6,8 @@
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date December 2016
+/// \author Danilo Piparo
 
 // ## Preparation
 // This notebook can be compiled with this invocation
@@ -28,7 +28,7 @@ using FourVector = ROOT::Math::XYZTVector;
 using FourVectors = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
 
-// A simple helper function to fill a test tree: this makes the example 
+// A simple helper function to fill a test tree: this makes the example
 // stand-alone.
 void fill_tree(const char* filename, const char* treeName) {
    TFile f(filename,"RECREATE");
@@ -71,7 +71,7 @@ int tdf002_dataModel() {
    auto treeName = "myTree";
    fill_tree(fileName,treeName);
 
-   // We read the tree from the file and create a TDataFrame, a class that 
+   // We read the tree from the file and create a TDataFrame, a class that
    // allows us to interact with the data contained in the tree.
    TFile f(fileName);
    ROOT::Experimental::TDataFrame d(treeName, &f, {"tracks"});
