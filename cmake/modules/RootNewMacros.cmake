@@ -376,9 +376,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
   if(cxxmodules)
-    # We build libSmatrix and libGenVector for 32 and 64 bits. Both contain the
-    # same header files, ignore the 32 bit version and make the module unique.
-    if(NOT ${dictionary} MATCHES .*32 )
+    # FIXME: Support mulptiple dictionaries. In some cases (libSMatrix and
+    # libGenVector) we have to have two or more dictionaries (eg. for math,
+    # we need the two for double vs Double32_t template specializations).
+    # In some other cases, eg. libTreePlayer.so we add in a separate dictionary
+    # files which for some reason (temporarily?) cannot be put in the PCH. Eg.
+    # all rest of the first dict is in the PCH but this file is not and it
+    # cannot be present in the original dictionary.
+    if(NOT ARG_MULTIDICT)
       ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${rheaderfiles}")
     endif()
   endif(cxxmodules)
