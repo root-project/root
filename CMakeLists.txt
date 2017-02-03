@@ -207,7 +207,11 @@ if(cxxmodules)
                     )
   add_dependencies(move_artifacts copymodulemap)
   if (NOT libcxx)
-    get_property(__libcpp_full_path GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
+    # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
+    get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
+    string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
+    list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
+
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
     add_custom_target(copystlmodulemap
                     DEPENDS build/unix/module.modulemap
