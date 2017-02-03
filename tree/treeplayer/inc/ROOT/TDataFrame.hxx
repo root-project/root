@@ -133,7 +133,7 @@ std::cout << *c << std::endl;
 
 ### Creating a temporary branch
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived quantity `z = sqrt(x*x + y*y)`.
-Using the `AddBranch` transformation, we can create a new column in the data-set containin the variable "z":
+Using the `AddBranch` transformation, we can create a new column in the data-set containing the variable "z":
 ~~~{.cpp}
 auto sqrtSum = [](double x, double y) { return sqrt(x*x + y*y); };
 auto zCut = [](double z) { return z > 0.; }
@@ -187,17 +187,6 @@ ROOT::Experimental::TDataFrame d2(treeName, &file, {"b1"});
 // `Min` here can fall back to the default "b1"
 auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}).Min();
 ~~~
-<!-- Commented out until we have the std::array_view in ROOT
-### Branches of collection types
-We can rely on several features when dealing with branches of collection types (e.g. `vector<double>`, `int[3]`, or anything that you would put in a `TTreeReaderArray` rather than a `TTreeReaderValue`).
-
-First of all, we **never need to spell out the exact type of the collection-type** branch in a transformation or an action. As it would be done when building a `TTreeReaderArray` for that branch, we just need to specify the type of the elements of the collection, in this way:
-```c++
-ROOT::Experimental::TDataFrame d(treeName, &file, {"vecBranch"});
-d.Filter(ROOT::ArrayView<double> vecBranch) { return vecBranch.size() > 0; }).Histo();
-```
-
-Moreover, actions detect whenever they are applied to a collection type and **adapt their behaviour to act on all elements of the collection**, for each entry. In the example above, `Histo()` (equivalent to `Histo("vecBranch")`) fills the histogram with the values of all elements of `vecBranch`, for each event.-->
 
 ### Branch type guessing and explicit declaration of branch types
 C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree` branches we want to work on. For filters, temporary branches and some of the actions, **branch types are deduced from the signature** of the relevant filter function/temporary branch expression/action function:
@@ -287,9 +276,6 @@ A filter is defined through a call to `Filter(f, branchList)`. `f` can be a func
 
 `TDataFrame` only evaluates filters when necessary: if multiple filters are chained one after another, they are executed in order and the first one returning `false` causes the event to be discarded and triggers the processing of the next entry. If multiple actions or transformations depend on the same filter, that filter is not executed multiple times for each entry: after the first access it simply serves a cached result.
 
-<!--#### Named filters To be uncommented when the support is added
-An optional string parameter `filterName` can be specified to `Filter`, defining a **named filter**. Named filters work as usual, but also keep track of how many entries they accept and reject. Statistics are retrieved through a call to the `Report` method (coming soon).-->
-
 ### Temporary branches
 Temporary branches are created by invoking `AddBranch(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary branch.
 
@@ -300,21 +286,11 @@ Use cases include:
 - extraction of quantities of interest from complex objects
 - branch aliasing, i.e. changing the name of a branch
 
-<!-- To be uncommented when the support is added
-Temporary branch values can be persistified by saving them to a new `TTree` using the `Snapshot` action.-->
 An exception is thrown if the `name` of the new branch is already in use for another branch in the `TTree`.
 
 ##  <a name="actions"></a>Actions
 ### Instant and lazy actions
 Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value are lazy, the others are instant.
-<!--One notable exception is `Snapshot` (see the table [below](#overview)).
-
-Whenever an action is executed, all (lazy) actions with the same **range** (see later) are executed within the same event loop.
-
-### Ranges (coming soon)
-Ranges of entries can (or must) be specified for all actions. **Only the specified range of entries will be processed** during the event loop.
-The default range is, of course, beginning to end.-->
-
 
 ### Overview
 Here is a quick overview of what actions are present and what they do. Each one is described in more detail in the reference guide.
@@ -335,13 +311,6 @@ In the following, whenever we say an action "returns" something, we always mean 
 | Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
 | ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
 
-<!-- to be added at the correct row when supported -->
-<!-- Accumulate | Execute a function with signature `R(R,T)` on each entry. T is a branch, R is an accumulator. Return the final value of the accumulator | coming soon -->
-<!-- Reduce | Execute a function with signature `T(T,T)` on each entry. Processed branch values are reduced (e.g. summed, merged) using this function. Return the final result of the reduction operation | coming soon -->
-<!-- Sum | Return the sum of processed branch values | coming soon -->
-<!-- Head | Take a number `n`, run and pretty-print the first `n` events that passed all filters | coming soon -->
-<!-- Snapshot | Save a set of branches and temporary branches to disk, return a new `TDataFrame` that works on the skimmed, augmented or otherwise processed data | coming soon -->
-<!-- Tail  | Take a number `n`, run and pretty-print the last `n` events that passed all filters | coming soon -->
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `TDataFrame` can transparently perform multi-threaded event loops to speed up the execution of its actions. Users only have to call `ROOT::EnableImplicitMT()` *before* constructing the `TDataFrame` object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct subset of entries**, and their partial results are merged before returning the final values to the user.
@@ -351,21 +320,8 @@ As pointed out before in this document, `TDataFrame` can transparently perform m
 Most `Filter`/`AddBranch` functions will in fact be pure in the functional programming sense.
 All actions are built to be thread-safe with the exception of `Foreach`, in which case users are responsible of thread-safety, see [here](#generic-actions).
 
-<!--## Example snippets
-Here you can find pre-made solutions to common problems. They should work out-of-the-box provided you have our "TDFTestTree.root" in the same directory where you execute the snippet.<br>
-Please contact us if you think we are missing important, common use-cases.
-
-```c++
-// evaluation of several cuts
-```-->
-
 */
-/*
 
-
-
-
-*/
 
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
@@ -934,7 +890,7 @@ public:
    TActionResultProxy<double> Min(const std::string &branchName = "")
    {
       auto theBranchName(branchName);
-      GetDefaultBranchName(theBranchName, "calculate the minumum");
+      GetDefaultBranchName(theBranchName, "calculate the minimum");
       auto minV = std::make_shared<T>(std::numeric_limits<T>::max());
       return CreateAction<T, ROOT::Internal::EActionType::kMin>(theBranchName, minV);
    }
