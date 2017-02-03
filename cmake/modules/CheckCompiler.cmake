@@ -136,10 +136,6 @@ if(cxxmodules)
   set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
   if(CXX_SUPPORTS_MODULES)
     set(ROOT_CXXMODULES_COMMONFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Rmodule-build")
-    if (NOT libcxx)
-      # Provide our own modulemap for other than libcxx implementations.
-      set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
-    endif()
     if (APPLE)
       # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
       # trickery to override the contents of system's OpenGL.
@@ -157,12 +153,9 @@ if(cxxmodules)
       # flag.
       set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
     endif(APPLE)
-    # This var is useful when we want to compile things without cxxmodules.
+    # These vars are useful when we want to compile things without cxxmodules.
     set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags.")
-
     set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
   else()
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
