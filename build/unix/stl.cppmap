@@ -353,10 +353,10 @@ module "stl" {
     export *
     header "vector"
   }
-  module "experimental/algorithm" {
-    export *
-    header "experimental/algorithm"
-  }
+  //module "experimental/algorithm" {
+  //  export *
+  //  header "experimental/algorithm"
+  //}
   module "ext/functional" {
     export *
     header "ext/functional"
