@@ -123,10 +123,10 @@ void TDataFrameImpl::Run()
    // forget actions and "detach" the action result pointers marking them ready
    // and forget them too
    fBookedActions.clear();
-   for (auto readiness : fResPtrsReadiness) {
+   for (auto readiness : fResProxyReadiness) {
       *readiness.get() = true;
    }
-   fResPtrsReadiness.clear();
+   fResProxyReadiness.clear();
 }
 
 // build reader values for all actions, filters and branches

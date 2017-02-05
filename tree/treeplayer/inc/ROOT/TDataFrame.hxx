@@ -410,7 +410,7 @@ class TActionResultProxy {
    TActionResultProxy(SPT_t objPtr, ShrdPtrBool_t readiness, SPTDFI_t firstData)
       : fReadiness(readiness), fFirstData(firstData), fObjPtr(objPtr) { }
    /// Factory to allow to keep the constructor private
-   static TActionResultProxy<T> MakeActionResultPtr(SPT_t objPtr, ShrdPtrBool_t readiness, SPTDFI_t firstData)
+   static TActionResultProxy<T> MakeActionResultProxy(SPT_t objPtr, ShrdPtrBool_t readiness, SPTDFI_t firstData)
    {
       return TActionResultProxy(objPtr, readiness, firstData);
    }
@@ -760,7 +760,7 @@ public:
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       auto cShared = std::make_shared<unsigned int>(0);
-      auto c = df->MakeActionResultPtr(cShared);
+      auto c = df->MakeActionResultProxy(cShared);
       auto cPtr = cShared.get();
       auto cOp = std::make_shared<ROOT::Internal::Operations::CountOperation>(cPtr, nSlots);
       auto countAction = [cOp](unsigned int slot) mutable { cOp->Exec(slot); };
@@ -786,7 +786,7 @@ public:
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "get the values of the branch");
       auto valuesPtr = std::make_shared<COLL>();
-      auto values = df->MakeActionResultPtr(valuesPtr);
+      auto values = df->MakeActionResultProxy(valuesPtr);
       auto getOp = std::make_shared<ROOT::Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
       auto getAction = [getOp] (unsigned int slot , const T &v) mutable { getOp->Exec(v, slot); };
       BranchNames bl = {theBranchName};
@@ -959,7 +959,7 @@ private:
             using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
             df->Book(std::make_shared<DFA_t>(fillLambda, bl, thisFrame->fProxiedPtr));
          }
-         return df->MakeActionResultPtr(h);
+         return df->MakeActionResultProxy(h);
       }
    };
 
@@ -975,7 +975,7 @@ private:
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
          auto df = thisFrame->GetDataFrameChecked();
          df->Book(std::make_shared<DFA_t>(minOpLambda, bl, thisFrame->fProxiedPtr));
-         return df->MakeActionResultPtr(minV);
+         return df->MakeActionResultProxy(minV);
       }
    };
 
@@ -991,7 +991,7 @@ private:
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
          auto df = thisFrame->GetDataFrameChecked();
          df->Book(std::make_shared<DFA_t>(maxOpLambda, bl, thisFrame->fProxiedPtr));
-         return df->MakeActionResultPtr(maxV);
+         return df->MakeActionResultProxy(maxV);
       }
    };
 
@@ -1007,7 +1007,7 @@ private:
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
          auto df = thisFrame->GetDataFrameChecked();
          df->Book(std::make_shared<DFA_t>(meanOpLambda, bl, thisFrame->fProxiedPtr));
-         return df->MakeActionResultPtr(meanV);
+         return df->MakeActionResultProxy(meanV);
       }
    };
    /// \endcond
@@ -1252,7 +1252,7 @@ class TDataFrameImpl {
    ROOT::Internal::ActionBaseVec_t fBookedActions;
    ROOT::Detail::FilterBaseVec_t fBookedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
-   std::vector<std::shared_ptr<bool>> fResPtrsReadiness;
+   std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    std::string fTreeName;
    TDirectory *fDirPtr = nullptr;
    TTree *fTree = nullptr;
@@ -1289,13 +1289,13 @@ public:
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const;
    template<typename T>
-   Experimental::TActionResultProxy<T> MakeActionResultPtr(std::shared_ptr<T> r)
+   Experimental::TActionResultProxy<T> MakeActionResultProxy(std::shared_ptr<T> r)
    {
       auto readiness = std::make_shared<bool>(false);
       // since fFirstData is a weak_ptr to `this`, we are sure the lock succeeds
       auto df = fFirstData.lock();
-      auto resPtr = Experimental::TActionResultProxy<T>::MakeActionResultPtr(r, readiness, df);
-      fResPtrsReadiness.emplace_back(readiness);
+      auto resPtr = Experimental::TActionResultProxy<T>::MakeActionResultProxy(r, readiness, df);
+      fResProxyReadiness.emplace_back(readiness);
       return resPtr;
    }
 };
