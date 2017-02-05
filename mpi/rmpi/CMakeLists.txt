@@ -12,9 +12,10 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
 		 Mpi/TCommunicator.h
 		 Mpi/TStatus.h
 		 Mpi/TRequest.h
-                 Mpi/Globals.h
-                 Mpi/TOp.h
-                 Mpi/TGroup.h
+         Mpi/Globals.h
+         Mpi/TOp.h
+         Mpi/TGroup.h
+         Mpi/TInfo.h
 		 Mpi.h
 		 )
 

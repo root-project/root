@@ -22,12 +22,14 @@
  */
 #pragma link C++ class MPI_Status+;
 #pragma link C++ class MPI_Request+;
+#pragma link C++ class MPI_Info+;
 
 /*
  * ROOTMpi datatypes
  */
 #pragma link C++ class ROOT::Mpi::TMpiMessage+;
 #pragma link C++ class ROOT::Mpi::TMpiMessageInfo+;
+#pragma link C++ class ROOT::Mpi::TInfo+;
 #pragma link C++ class ROOT::Mpi::TStatus+;
 #pragma link C++ class ROOT::Mpi::TRequest+;
 #pragma link C++ class ROOT::Mpi::TPrequest+;
@@ -40,11 +42,11 @@
  * Global communicator
  */
 // #pragma link C++ global ROOT::Mpi::COMM_WORLD;
+// #pragma link C++ global gComm;
 
 #ifdef USE_FOR_AUTLOADING
 #pragma link C++ class ROOT::Mpi;
 #endif
 
-#pragma link C++ global gComm;
 
 #endif
