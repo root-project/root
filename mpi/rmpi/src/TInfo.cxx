@@ -1,5 +1,5 @@
 #include<Mpi/TInfo.h>
-
+#include<iostream>
 
 using namespace ROOT::Mpi;
 
@@ -49,7 +49,7 @@ Bool_t TInfo::Get(const TString key, TString &value) const
 }
 
 //______________________________________________________________________________
-Int_t TInfo::GetNKeys()const
+Int_t TInfo::GetNKeys() const
 {
    Int_t nkeys;
    MPI_Info_get_nkeys(fInfo, &nkeys);
@@ -57,9 +57,11 @@ Int_t TInfo::GetNKeys()const
 }
 
 //______________________________________________________________________________
-void TInfo::GetNthKey(Int_t n, TString key) const
+TString TInfo::GetNthKey(Int_t n) const
 {
-   MPI_Info_get_nthkey(fInfo, n, const_cast<Char_t *>(key.Data()));
+   Char_t *key = new Char_t[MPI_MAX_INFO_KEY];
+   MPI_Info_get_nthkey(fInfo, n, const_cast<Char_t *>(key));
+   return TString(key);
 }
 
 //______________________________________________________________________________
@@ -74,4 +76,46 @@ Bool_t TInfo::GetValueLength(const TString key, Int_t &valuelen) const
 void TInfo::Set(const TString key, const TString value)
 {
    MPI_Info_set(fInfo, const_cast<Char_t *>(key.Data()), const_cast<Char_t *>(value.Data()));
+}
+
+//______________________________________________________________________________
+TString TInfo::GetValue(const TString key) const
+{
+   TString value;
+   if (!Get(key, value)) {
+      //TODO: added error handling here
+   }
+   return value;
+}
+
+//______________________________________________________________________________
+Bool_t TInfo::IsEmpty()
+{
+   return GetNKeys() == 0 ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TInfo::HasKey(TString key)
+{
+   if (IsEmpty()) return kFALSE;
+   Bool_t status = kFALSE;
+   auto i = 0;
+   while (i < GetNKeys()) {
+      if (key == GetNthKey(i)) {
+         status = kTRUE;
+         break;
+      }
+      i++;
+   }
+   return status;
+}
+
+//______________________________________________________________________________
+void TInfo::Print()
+{
+
+   for (auto i = 0; i < GetNKeys(); i++) {
+      std::cout << std::setw(MPI_MAX_INFO_KEY) << std::left << Form("[\"%s\"]", GetNthKey(i).Data()) << " = " << GetValue(GetNthKey(i)) << std::endl;
+      std::cout.flush();
+   }
 }
