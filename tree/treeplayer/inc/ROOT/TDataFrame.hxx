@@ -498,7 +498,7 @@ protected:
    std::vector<TVBVec_t> fReaderValues;
 public:
    virtual ~TDataFrameActionBase() {}
-   virtual void Run(unsigned int slot, int entry) = 0;
+   virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    void CreateSlots(unsigned int nSlots);
 
@@ -509,7 +509,7 @@ using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 
 // Forward declarations
 template <int S, typename T>
-T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, int entry, const std::string &branch,
+T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
                   std::weak_ptr<ROOT::Detail::TDataFrameImpl> df);
 
 template <typename F, typename PrevDataFrame>
@@ -520,29 +520,29 @@ class TDataFrameAction final : public TDataFrameActionBase {
    F fAction;
    const BranchNames fBranches;
    const BranchNames fTmpBranches;
-   PrevDataFrame *fPrevData;
+   PrevDataFrame &fPrevData;
    std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
 
 public:
-   TDataFrameAction(F f, const BranchNames &bl, std::weak_ptr<PrevDataFrame> pd)
-      : fAction(f), fBranches(bl), fTmpBranches(pd.lock()->GetTmpBranches()), fPrevData(pd.lock().get()),
-        fFirstData(pd.lock()->GetDataFrame()) { }
+   TDataFrameAction(F f, const BranchNames &bl, std::shared_ptr<PrevDataFrame> pd)
+      : fAction(f), fBranches(bl), fTmpBranches(pd->GetTmpBranches()), fPrevData(*pd),
+        fFirstData(pd->GetDataFrame()) { }
 
    TDataFrameAction(const TDataFrameAction &) = delete;
 
-   void Run(unsigned int slot, int entry)
+   void Run(unsigned int slot, Long64_t entry)
    {
       // check if entry passes all filters
       if (CheckFilters(slot, entry)) ExecuteAction(slot, entry);
    }
 
-   bool CheckFilters(unsigned int slot, int entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry)
    {
       // start the recursive chain of CheckFilters calls
-      return fPrevData->CheckFilters(slot, entry);
+      return fPrevData.CheckFilters(slot, entry);
    }
 
-   void ExecuteAction(unsigned int slot, int entry) { ExecuteActionHelper(slot, entry, TypeInd_t(), BranchTypes_t()); }
+   void ExecuteAction(unsigned int slot, Long64_t entry) { ExecuteActionHelper(slot, entry, TypeInd_t(), BranchTypes_t()); }
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot)
    {
@@ -550,7 +550,7 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   void ExecuteActionHelper(unsigned int slot, int entry,
+   void ExecuteActionHelper(unsigned int slot, Long64_t entry,
                             TDFTraitsUtils::TStaticSeq<S...>,
                             TDFTraitsUtils::TTypeList<BranchTypes...>)
    {
@@ -1123,7 +1123,7 @@ public:
    virtual ~TDataFrameBranchBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
-   virtual void *GetValue(unsigned int slot, int entry) = 0;
+   virtual void *GetValue(unsigned int slot, Long64_t entry) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    std::string GetName() const;
    BranchNames GetTmpBranches() const;
@@ -1142,12 +1142,12 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
 
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues;
    std::vector<std::shared_ptr<RetType_t>> fLastResultPtr;
-   PrevData *fPrevData;
-   std::vector<int> fLastCheckedEntry = {-1};
+   PrevData &fPrevData;
+   std::vector<Long64_t> fLastCheckedEntry = {-1};
 
 public:
    TDataFrameBranch(const std::string &name, F expression, const BranchNames &bl, std::shared_ptr<PrevData> pd)
-      : TDataFrameBranchBase(pd->GetDataFrame(), pd->GetTmpBranches(), name), fExpression(expression), fBranches(bl), fPrevData(pd.get())
+      : TDataFrameBranchBase(pd->GetDataFrame(), pd->GetTmpBranches(), name), fExpression(expression), fBranches(bl), fPrevData(*pd)
    {
       fTmpBranches.emplace_back(name);
    }
@@ -1161,7 +1161,7 @@ public:
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void *GetValue(unsigned int slot, int entry)
+   void *GetValue(unsigned int slot, Long64_t entry)
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
@@ -1181,16 +1181,16 @@ public:
       fLastResultPtr.resize(nSlots);
    }
 
-   bool CheckFilters(unsigned int slot, int entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry)
    {
       // dummy call: it just forwards to the previous object in the chain
-      return fPrevData->CheckFilters(slot, entry);
+      return fPrevData.CheckFilters(slot, entry);
    }
 
    template <int... S, typename... BranchTypes>
    std::shared_ptr<RetType_t> GetValueHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
                                              ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
-                                             unsigned int slot, int entry)
+                                             unsigned int slot, Long64_t entry)
    {
       auto valuePtr = std::make_shared<RetType_t>(fExpression(
          ROOT::Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...));
@@ -1203,7 +1203,7 @@ protected:
    std::weak_ptr<TDataFrameImpl> fFirstData;
    const BranchNames fTmpBranches;
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues = {};
-   std::vector<int> fLastCheckedEntry = {-1};
+   std::vector<Long64_t> fLastCheckedEntry = {-1};
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
 public:
    TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches);
@@ -1223,18 +1223,18 @@ class TDataFrameFilter final : public TDataFrameFilterBase {
 
    FilterF fFilter;
    const BranchNames fBranches;
-   PrevDataFrame *fPrevData;
+   PrevDataFrame &fPrevData;
 
 public:
    TDataFrameFilter(FilterF f, const BranchNames &bl, std::shared_ptr<PrevDataFrame> pd)
-      : TDataFrameFilterBase(pd->GetDataFrame(), pd->GetTmpBranches()), fFilter(f), fBranches(bl), fPrevData(pd.get()) { }
+      : TDataFrameFilterBase(pd->GetDataFrame(), pd->GetTmpBranches()), fFilter(f), fBranches(bl), fPrevData(*pd) { }
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
 
-   bool CheckFilters(unsigned int slot, int entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry)
    {
       if (entry != fLastCheckedEntry[slot]) {
-         if (!fPrevData->CheckFilters(slot, entry)) {
+         if (!fPrevData.CheckFilters(slot, entry)) {
             // a filter upstream returned false, cache the result
             fLastResult[slot] = false;
          } else {
@@ -1249,7 +1249,7 @@ public:
    template <int... S, typename... BranchTypes>
    bool CheckFilterHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
                           ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
-                          unsigned int slot, int entry)
+                          unsigned int slot, Long64_t entry)
    {
       // Take each pointer in tvb, cast it to a pointer to the
       // correct specialization of TTreeReaderValue, and get its content.
@@ -1300,7 +1300,7 @@ public:
    const BranchNames GetTmpBranches() const;
    TTree* GetTree() const;
    const TDataFrameBranchBase &GetBookedBranch(const std::string &name) const;
-   void *GetTmpBranchValue(const std::string &branch, unsigned int slot, int entry);
+   void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
    TDirectory *GetDirectory() const;
    std::string GetTreeName() const;
    void SetFirstData(const std::shared_ptr<TDataFrameImpl>& sp);
@@ -1359,7 +1359,7 @@ void Experimental::TActionResultProxy<T>::TriggerRun()
 
 namespace Internal {
 template <int S, typename T>
-T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, int entry, const std::string &branch,
+T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, const std::string &branch,
                   std::weak_ptr<ROOT::Detail::TDataFrameImpl> df)
 {
    if (readerValue == nullptr) {
