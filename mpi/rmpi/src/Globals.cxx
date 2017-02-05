@@ -1,6 +1,7 @@
 #include<Mpi/Globals.h>
 #include<TROOT.h>
 #include<Mpi/TGroup.h>
+#include<Mpi/TInfo.h>
 namespace ROOT {
    namespace Mpi {
 
@@ -126,13 +127,14 @@ namespace ROOT {
 
 // null handles
       const TGroup GROUP_NULL = MPI_GROUP_NULL;
+      const TInfo  INFO_NULL  = MPI_INFO_NULL;
 // empty group
       const TGroup GROUP_EMPTY = MPI_GROUP_NULL;
 
 
 
 //Custom none datatype
-      const MPI_Datatype DATATYPE_NONE = MPI_Datatype();
+      const MPI_Datatype DATATYPE_NULL = MPI_DATATYPE_NULL;
 
    }
 

@@ -63,7 +63,7 @@ static const int SEEK_END = rmpi_stdio_seek_end;
    }
 
 #define ROOT_MPI_CHECK_DATATYPE(T)\
-   if (GetDataType<T>() == DATATYPE_NONE) {\
+   if (GetDataType<T>() == DATATYPE_NULL) {\
       int err;\
       Error(__FUNCTION__,"Unknown datatype, returned null datatype   GetDataType<%s>()",TClassEdit::DemangleName(typeid(T).name(),err));\
       Abort(ERR_TYPE);\
@@ -192,14 +192,16 @@ namespace ROOT {
       R__EXTERN const Int_t UNEQUAL;
 
       class TGroup;
+      class TInfo;
       // null handles
       R__EXTERN const TGroup         GROUP_NULL;
+      R__EXTERN const TInfo          INFO_NULL;
+      R__EXTERN const MPI_Datatype   DATATYPE_NULL;
+      
       // empty group
       R__EXTERN const TGroup         GROUP_EMPTY;
 
-      //Custom none datatype
-      R__EXTERN const MPI_Datatype DATATYPE_NONE;
-
+      
       template<class T> MPI_Datatype GetDataType()
       {
          if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI_INT;
@@ -219,7 +221,7 @@ namespace ROOT {
 
          //TODO: better error control here if type is not supported
          Warning("GetDataType", "Unknown raw datatype <%s>, returning null datatype", ROOT_MPI_TYPE_NAME(T));
-         return DATATYPE_NONE;
+         return DATATYPE_NULL;
       }
 
 
