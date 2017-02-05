@@ -327,13 +327,9 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 #define ROOT_TDATAFRAME
 
 #include "TBranchElement.h"
-#include "TDirectory.h"
 #include "TH1F.h" // For Histo actions
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFTraitsUtils.hxx"
-#include "ROOT/TTreeProcessorMT.hxx"
-#include "ROOT/TSpinMutex.hxx"
-#include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
@@ -342,7 +338,6 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 #include <map>
 #include <memory>
 #include <string>
-#include <thread>
 #include <typeinfo>
 #include <vector>
 
@@ -458,13 +453,7 @@ class TDataFrameImpl;
 
 namespace Internal {
 
-unsigned int GetNSlots() {
-   unsigned int nSlots = 1;
-#ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled()) nSlots = ROOT::GetImplicitMTPoolSize();
-#endif // R__USE_IMT
-   return nSlots;
-}
+unsigned int GetNSlots();
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
@@ -499,31 +488,10 @@ void CheckFilter(Filter)
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
-void CheckTmpBranch(const std::string& branchName, TTree *treePtr)
-{
-   auto branch = treePtr->GetBranch(branchName.c_str());
-   if (branch != nullptr) {
-      auto msg = "branch \"" + branchName + "\" already present in TTree";
-      throw std::runtime_error(msg);
-   }
-}
+void CheckTmpBranch(const std::string& branchName, TTree *treePtr);
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, const BranchNames &defBl)
-{
-   bool useDefBl = false;
-   if (nArgs != bl.size()) {
-      if (bl.size() == 0 && nArgs == defBl.size()) {
-         useDefBl = true;
-      } else {
-         auto msg = "mismatch between number of filter arguments (" + std::to_string(nArgs) +
-                    ") and number of branches (" + std::to_string(bl.size() ? bl.size() : defBl.size()) + ")";
-         throw std::runtime_error(msg);
-      }
-   }
-
-   return useDefBl ? defBl : bl;
-}
+const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, const BranchNames &defBl);
 
 class TDataFrameActionBase {
 public:
@@ -1292,140 +1260,34 @@ class TDataFrameImpl {
    // always empty: each object in the chain copies this list from the previous
    // and they must copy an empty list from the base TDataFrameImpl
    const BranchNames fTmpBranches;
-   unsigned int fNSlots;
+   const unsigned int fNSlots;
    // TDataFrameInterface<TDataFrameImpl> calls SetFirstData to set this to a
    // weak pointer to the TDataFrameImpl object itself
    // so subsequent objects in the chain can call GetDataFrame on TDataFrameImpl
    std::weak_ptr<TDataFrameImpl> fFirstData;
 
 public:
-   TDataFrameImpl(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches = {})
-      : fTreeName(treeName), fDirPtr(dirPtr), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots()) { }
-
-   TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches = {}) : fTree(&tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-   { }
-
+   TDataFrameImpl(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches = {});
+   TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches = {});
    TDataFrameImpl(const TDataFrameImpl &) = delete;
-
-   void Run()
-   {
-#ifdef R__USE_IMT
-      if (ROOT::IsImplicitMTEnabled()) {
-         const auto fileName = fTree ? static_cast<TFile *>(fTree->GetCurrentFile())->GetName() : fDirPtr->GetName();
-         const std::string    treeName = fTree ? fTree->GetName() : fTreeName;
-         ROOT::TTreeProcessorMT tp(fileName, treeName);
-         ROOT::TSpinMutex     slotMutex;
-         std::map<std::thread::id, unsigned int> slotMap;
-         unsigned int globalSlotIndex = 0;
-         CreateSlots(fNSlots);
-         tp.Process([this, &slotMutex, &globalSlotIndex, &slotMap](TTreeReader &r) -> void {
-            const auto thisThreadID = std::this_thread::get_id();
-            unsigned int slot;
-            {
-               std::lock_guard<ROOT::TSpinMutex> l(slotMutex);
-               auto thisSlotIt = slotMap.find(thisThreadID);
-               if (thisSlotIt != slotMap.end()) {
-                  slot = thisSlotIt->second;
-               } else {
-                  slot = globalSlotIndex;
-                  slotMap[thisThreadID] = slot;
-                  ++globalSlotIndex;
-               }
-            }
-
-            BuildAllReaderValues(r, slot);
-
-            // recursive call to check filters and conditionally execute actions
-            while (r.Next())
-               for (auto &actionPtr : fBookedActions)
-                  actionPtr->Run(slot, r.GetCurrentEntry());
-         });
-      } else {
-#endif // R__USE_IMT
-         TTreeReader r;
-         if (fTree) {
-            r.SetTree(fTree);
-         } else {
-            r.SetTree(fTreeName.c_str(), fDirPtr);
-         }
-
-         CreateSlots(1);
-         BuildAllReaderValues(r, 0);
-
-         // recursive call to check filters and conditionally execute actions
-         while (r.Next())
-            for (auto &actionPtr : fBookedActions)
-               actionPtr->Run(0, r.GetCurrentEntry());
-#ifdef R__USE_IMT
-      }
-#endif // R__USE_IMT
-
-      // forget actions and "detach" the action result pointers marking them ready and forget them too
-      fBookedActions.clear();
-      for (auto readiness : fResPtrsReadiness) {
-         *readiness.get() = true;
-      }
-      fResPtrsReadiness.clear();
-   }
-
-   // build reader values for all actions, filters and branches
-   void BuildAllReaderValues(TTreeReader &r, unsigned int slot)
-   {
-      for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
-      for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
-      for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
-   }
-
-   // inform all actions filters and branches of the required number of slots
-   void CreateSlots(unsigned int nSlots)
-   {
-      for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
-      for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
-      for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
-   }
-
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrame() const { return fFirstData; }
-
-   const BranchNames &GetDefaultBranches() const { return fDefaultBranches; }
-
-   const BranchNames GetTmpBranches() const { return fTmpBranches; }
-
-   TTree* GetTree() const {
-      if (fTree) {
-         return fTree;
-      } else {
-         auto treePtr = static_cast<TTree*>(fDirPtr->Get(fTreeName.c_str()));
-         return treePtr;
-      }
-   }
-
-   const TDataFrameBranchBase &GetBookedBranch(const std::string &name) const
-   {
-      return *fBookedBranches.find(name)->second.get();
-   }
-
-   void *GetTmpBranchValue(const std::string &branch, unsigned int slot, int entry)
-   {
-      return fBookedBranches.at(branch)->GetValue(slot, entry);
-   }
-
-   TDirectory *GetDirectory() const { return fDirPtr; }
-
-   std::string GetTreeName() const { return fTreeName; }
-
-   void SetFirstData(const std::shared_ptr<TDataFrameImpl>& sp) { fFirstData = sp; }
-
-   void Book(Internal::ActionBasePtr_t actionPtr) { fBookedActions.emplace_back(actionPtr); }
-
-   void Book(ROOT::Detail::FilterBasePtr_t filterPtr) { fBookedFilters.emplace_back(filterPtr); }
-
-   void Book(TmpBranchBasePtr_t branchPtr) { fBookedBranches[branchPtr->GetName()] = branchPtr; }
-
-   // dummy call, end of recursive chain of calls
-   bool CheckFilters(int, unsigned int) { return true; }
-
-   unsigned int GetNSlots() {return fNSlots;}
-
+   ~TDataFrameImpl(){};
+   void Run();
+   void BuildAllReaderValues(TTreeReader &r, unsigned int slot);
+   void CreateSlots(unsigned int nSlots);
+   std::weak_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrame() const;
+   const BranchNames &GetDefaultBranches() const;
+   const BranchNames GetTmpBranches() const;
+   TTree* GetTree() const;
+   const TDataFrameBranchBase &GetBookedBranch(const std::string &name) const;
+   void *GetTmpBranchValue(const std::string &branch, unsigned int slot, int entry);
+   TDirectory *GetDirectory() const;
+   std::string GetTreeName() const;
+   void SetFirstData(const std::shared_ptr<TDataFrameImpl>& sp);
+   void Book(Internal::ActionBasePtr_t actionPtr);
+   void Book(ROOT::Detail::FilterBasePtr_t filterPtr);
+   void Book(TmpBranchBasePtr_t branchPtr);
+   bool CheckFilters(int, unsigned int);
+   unsigned int GetNSlots() const;
    template<typename T>
    Experimental::TActionResultProxy<T> MakeActionResultPtr(std::shared_ptr<T> r)
    {
