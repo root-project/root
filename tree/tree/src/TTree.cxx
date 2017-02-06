@@ -4384,13 +4384,23 @@ Int_t TTree::Fill()
    if (fBranchRef) {
       fBranchRef->Clear();
    }
+
+   TBranchIMTHelper imt_helper;
+   #ifdef R__USE_IMT
+   if (fIMTEnabled) {
+      fIMTFlush = true;
+      fIMTZipBytes.store(0);
+      fIMTTotBytes.store(0);
+   }
+   #endif
+
    for (Int_t i = 0; i < nb; ++i) {
       // Loop over all branches, filling and accumulating bytes written and error counts.
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      Int_t nwrite = branch->Fill();
+      Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imt_helper : nullptr);
       if (nwrite < 0)  {
          if (nerror < 2) {
             Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
@@ -4410,6 +4420,17 @@ Int_t TTree::Fill()
          nbytes += nwrite;
       }
    }
+   #ifdef R__USE_IMT
+   if (fIMTFlush) {
+      imt_helper.Wait();
+      fIMTFlush = false;
+      const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
+      const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
+      nbytes += imt_helper.GetNbytes();
+      nerror += imt_helper.GetNerrors();
+   }
+   #endif
+
    if (fBranchRef) {
       fBranchRef->Fill();
    }
@@ -4839,7 +4860,7 @@ Int_t TTree::FlushBaskets() const
    Int_t nb = lb->GetEntriesFast();
 
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+   if (fIMTEnabled) {
       if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeSortedBranches(); }
 
       BoolRAIIToggle sentry(fIMTFlush);
@@ -5317,7 +5338,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+   if (fIMTEnabled) {
       if (fSortedBranches.empty()) InitializeSortedBranches();
 
       // Enable this IMT use case (activate its locks)
