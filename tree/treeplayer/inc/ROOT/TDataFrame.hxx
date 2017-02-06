@@ -169,7 +169,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
                            TDFTraitsUtils::TStaticSeq<S...>)
 {
    // isTmpBranch has length bl.size(). Elements are true if the corresponding
-   // branch is a "fake" branch created with AddBranch, false if they are
+   // branch is a temporary branch created with AddBranch, false if they are
    // actual branches present in the TTree.
    std::array<bool, sizeof...(S)> isTmpBranch;
    for (unsigned int i = 0; i < isTmpBranch.size(); ++i)
@@ -190,7 +190,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
 template <typename Filter>
 void CheckFilter(Filter)
 {
-   using FilterRet_t = typename TDFTraitsUtils::TFunctionTraits<Filter>::RetType_t;
+   using FilterRet_t = typename TDFTraitsUtils::TFunctionTraits<Filter>::Ret_t;
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
@@ -224,7 +224,7 @@ std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Lon
 
 template <typename F, typename PrevDataFrame>
 class TDataFrameAction final : public TDataFrameActionBase {
-   using BranchTypes_t = typename TDFTraitsUtils::TRemoveFirst<typename TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t>::Types_t;
+   using BranchTypes_t = typename TDFTraitsUtils::TRemoveFirst<typename TDFTraitsUtils::TFunctionTraits<F>::Args_t>::Types_t;
    using TypeInd_t = typename TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    F fAction;
@@ -359,7 +359,7 @@ public:
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
       const BranchNames &defBl = df->GetDefaultBranches();
-      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (f, actualBl, fProxiedPtr, name);
@@ -395,7 +395,7 @@ public:
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
       const BranchNames &defBl = df->GetDefaultBranches();
-      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, expression, actualBl, fProxiedPtr);
@@ -418,9 +418,9 @@ public:
    void Foreach(F f, const BranchNames &bl = {})
    {
       namespace IU = ROOT::Internal::TDFTraitsUtils;
-      using ArgTypes_t = typename IU::TFunctionTraits<decltype(f)>::ArgTypesNoDecay_t;
-      using RetType_t = typename IU::TFunctionTraits<decltype(f)>::RetType_t;
-      auto fWithSlot = IU::AddSlotParameter<RetType_t>(f, ArgTypes_t());
+      using Args_t = typename IU::TFunctionTraits<decltype(f)>::ArgsNoDecay_t;
+      using Ret_t = typename IU::TFunctionTraits<decltype(f)>::Ret_t;
+      auto fWithSlot = IU::AddSlotParameter<Ret_t>(f, Args_t());
       ForeachSlot(fWithSlot, bl);
    }
 
@@ -443,7 +443,7 @@ public:
    void ForeachSlot(F f, const BranchNames &bl = {}) {
       auto df = GetDataFrameChecked();
       const BranchNames &defBl= df->GetDefaultBranches();
-      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs-1, bl, defBl);
       using DFA_t  = ROOT::Internal::TDataFrameAction<decltype(f), Proxied>;
       df->Book(std::make_shared<DFA_t>(f, actualBl, fProxiedPtr));
@@ -851,15 +851,15 @@ using TmpBranchBasePtr_t = std::shared_ptr<TDataFrameBranchBase>;
 template <typename F, typename PrevData>
 class TDataFrameBranch final : public TDataFrameBranchBase {
    using BranchTypes_t = typename Internal
-   ::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t;
+   ::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
    using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
-   using RetType_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::RetType_t;
+   using Ret_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
 
    F fExpression;
    const BranchNames fBranches;
 
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues;
-   std::vector<std::shared_ptr<RetType_t>> fLastResultPtr;
+   std::vector<std::shared_ptr<Ret_t>> fLastResultPtr;
    PrevData &fPrevData;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
@@ -890,12 +890,12 @@ public:
       return static_cast<void *>(fLastResultPtr[slot].get());
    }
 
-   const std::type_info &GetTypeId() const { return typeid(RetType_t); }
+   const std::type_info &GetTypeId() const { return typeid(Ret_t); }
 
    void CreateSlots(unsigned int nSlots)
    {
       fReaderValues.resize(nSlots);
-      fLastCheckedEntry.resize(nSlots);
+      fLastCheckedEntry.resize(nSlots, -1);
       fLastResultPtr.resize(nSlots);
    }
 
@@ -906,11 +906,11 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   std::shared_ptr<RetType_t> GetValueHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
+   std::shared_ptr<Ret_t> GetValueHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
                                              ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
                                              unsigned int slot, Long64_t entry)
    {
-      auto valuePtr = std::make_shared<RetType_t>(fExpression(
+      auto valuePtr = std::make_shared<Ret_t>(fExpression(
          Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
                                   fFirstData, Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
       return valuePtr;
@@ -953,7 +953,7 @@ using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
 
 template <typename FilterF, typename PrevDataFrame>
 class TDataFrameFilter final : public TDataFrameFilterBase {
-   using BranchTypes_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<FilterF>::ArgTypes_t;
+   using BranchTypes_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<FilterF>::Args_t;
    using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    FilterF fFilter;
@@ -1027,9 +1027,6 @@ class TDataFrameImpl {
    ::TDirectory *fDirPtr = nullptr;
    TTree *fTree = nullptr;
    const BranchNames fDefaultBranches;
-   // always empty: each object in the chain copies this list from the previous
-   // and they must copy an empty list from the base TDataFrameImpl
-   const BranchNames fTmpBranches;
    const unsigned int fNSlots;
    // TDataFrameInterface<TDataFrameImpl> calls SetFirstData to set this to a
    // weak pointer to the TDataFrameImpl object itself
@@ -1047,7 +1044,7 @@ public:
    void CreateSlots(unsigned int nSlots);
    std::weak_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrame() const;
    const BranchNames &GetDefaultBranches() const;
-   const BranchNames GetTmpBranches() const;
+   const BranchNames GetTmpBranches() const { return {}; };
    TTree* GetTree() const;
    const TDataFrameBranchBase &GetBookedBranch(const std::string &name) const;
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
