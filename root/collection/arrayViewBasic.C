@@ -1,6 +1,6 @@
 #include "ROOT/RArrayView.hxx"
 
-void show_int_array(std::array_view<int> view)
+void show_int_array_it(std::array_view<int> view)
 {
     std::cout << '{';
     if (!view.empty()) {
@@ -16,6 +16,48 @@ void show_int_array(std::array_view<int> view)
         }
     }
     std::cout << "}\n";
+}
+
+void show_int_array_at(std::array_view<int> view)
+{
+    std::cout << '{';
+    if (!view.empty()) {
+        const auto size = view.size();
+        for (auto i : ROOT::TSeqI(size)) {
+            std::cout << view.at(i);
+            if (i!= size-1) {
+                std::cout << ", ";
+            } else {
+                break;
+            }
+        }
+    }
+    std::cout << "}\n";
+}
+
+void show_int_array_op(std::array_view<int> view)
+{
+    std::cout << '{';
+    if (!view.empty()) {
+        const auto size = view.size();
+        for (auto i : ROOT::TSeqI(size)) {
+            std::cout << view[i];
+            if (i!= size-1) {
+                std::cout << ", ";
+            } else {
+                break;
+            }
+        }
+    }
+    std::cout << "}\n";
+}
+
+
+void show_int_array(std::array_view<int> view)
+{
+   show_int_array_at(view);
+   show_int_array_op(view);
+   show_int_array_it(view);
 }
 
 void arrayViewBasic()
