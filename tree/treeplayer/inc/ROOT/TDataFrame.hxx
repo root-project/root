@@ -597,6 +597,9 @@ struct Histo<T, true> {
 } // end NS Internal
 
 namespace Detail {
+
+class TDataFrameGuessedType{};
+
 // forward declarations for TDataFrameInterface
 template <typename F, typename PrevData>
 class TDataFrameFilter;
@@ -806,7 +809,7 @@ public:
    /// The returned histogram is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = double>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<TH1F> Histo(const std::string &branchName, const TH1F &model)
    {
       auto theBranchName(branchName);
@@ -832,7 +835,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = double>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<TH1F> Histo(const std::string &branchName = "", int nBins = 128, double minVal = 0.,
                                 double maxVal = 0.)
    {
@@ -854,12 +857,12 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = double>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<double> Min(const std::string &branchName = "")
    {
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "calculate the minimum");
-      auto minV = std::make_shared<T>(std::numeric_limits<T>::max());
+      auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
       return CreateAction<T, ROOT::Internal::EActionType::kMin>(theBranchName, minV);
    }
 
@@ -872,12 +875,12 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = double>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<double> Max(const std::string &branchName = "")
    {
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "calculate the maximum");
-      auto maxV = std::make_shared<T>(std::numeric_limits<T>::min());
+      auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
       return CreateAction<T, ROOT::Internal::EActionType::kMax>(theBranchName, maxV);
    }
 
@@ -890,12 +893,12 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = double>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<double> Mean(const std::string &branchName = "")
    {
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "calculate the mean");
-      auto meanV = std::make_shared<T>(0);
+      auto meanV = std::make_shared<double>(0);
       return CreateAction<T, ROOT::Internal::EActionType::kMean>(theBranchName, meanV);
    }
 
@@ -932,11 +935,22 @@ private:
    }
 
    /// \cond HIDDEN_SYMBOLS
-   template <typename BranchType, typename ActionResultType, enum ROOT::Internal::EActionType, typename ThisType>
+   template <typename BranchType, typename ActionResultType, enum ROOT::Internal::EActionType, typename ThisType, bool isGuessedType = std::is_same<BranchType, ROOT::Detail::TDataFrameGuessedType>::value>
    struct SimpleAction {};
 
+   template <typename BranchType, typename ActionResultType, enum ROOT::Internal::EActionType ART, typename ThisType>
+   struct SimpleAction<BranchType, ActionResultType, ART, ThisType, true> {
+      static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
+                                                               std::shared_ptr<ActionResultType> r, unsigned int nSlots)
+      {
+         // This code will never be executed!
+         auto df = thisFrame->GetDataFrameChecked();
+         return df->MakeActionResultProxy(r);
+      }
+   };
+
    template <typename BranchType, typename ThisType>
-   struct SimpleAction<BranchType, TH1F, ROOT::Internal::EActionType::kHisto1D, ThisType> {
+   struct SimpleAction<BranchType, TH1F, ROOT::Internal::EActionType::kHisto1D, ThisType, false> {
       static TActionResultProxy<TH1F> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                  std::shared_ptr<TH1F> h, unsigned int nSlots)
       {
@@ -964,7 +978,7 @@ private:
    };
 
    template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMin, ThisType> {
+   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMin, ThisType, false> {
       static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                              std::shared_ptr<ActionResultType> minV, unsigned int nSlots)
       {
@@ -980,7 +994,7 @@ private:
    };
 
    template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMax, ThisType> {
+   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMax, ThisType, false> {
       static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                              std::shared_ptr<ActionResultType> maxV, unsigned int nSlots)
       {
@@ -996,7 +1010,7 @@ private:
    };
 
    template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMean, ThisType> {
+   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMean, ThisType, false> {
       static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const std::string &theBranchName,
                                                              std::shared_ptr<ActionResultType> meanV, unsigned int nSlots)
       {
@@ -1010,6 +1024,7 @@ private:
          return df->MakeActionResultProxy(meanV);
       }
    };
+
    /// \endcond
 
    template <typename BranchType, ROOT::Internal::EActionType ActionType, typename ActionResultType>
@@ -1021,9 +1036,17 @@ private:
       using TT_t = decltype(this);
       const auto at = ActionType;
       auto df = GetDataFrameChecked();
+      unsigned int nSlots = df->GetNSlots();
+
+      // In this case the type is specified by the user. We do not need to guess it.
+      // Given that the boolean is known at compile time, the rest of the method will not be compiled.
+      // All this would be perfectly expressed by a constexpr if.
+      constexpr bool isGuessedType = std::is_same<BranchType, ROOT::Detail::TDataFrameGuessedType>::value;
+      if (!isGuessedType) return SimpleAction<BranchType, ART_t, at, TT_t>::BuildAndBook(this, theBranchName, r, nSlots);
+
       auto tree = static_cast<TTree*>(df->GetDirectory()->Get(df->GetTreeName().c_str()));
       auto branch = tree->GetBranch(theBranchName.c_str());
-      unsigned int nSlots = df->GetNSlots();
+
       if (!branch) {
          // temporary branch
          const auto &type_id = df->GetBookedBranch(theBranchName).GetTypeId();
@@ -1071,7 +1094,11 @@ private:
             return SimpleAction<std::vector<float>, ART_t, at, TT_t>::BuildAndBook(this, theBranchName, r, nSlots);
          }
       }
-      return SimpleAction<BranchType, ART_t, at, TT_t>::BuildAndBook(this, theBranchName, r, nSlots);
+
+      std::string exceptionText = "The type of branch ";
+      exceptionText += theBranchName;
+      exceptionText += " could not be guessed. Please specify one.";
+      throw std::runtime_error(exceptionText.c_str());
    }
 
    std::shared_ptr<Proxied> fProxiedPtr;
