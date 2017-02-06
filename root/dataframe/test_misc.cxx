@@ -129,7 +129,7 @@ int main() {
    auto h1 = d5.Histo();
    auto h2 = d5.Histo("b1");
    TH1F dvHisto("dvHisto","The DV histo", 64, -8, 8);
-   auto h3 = d5.Histo("dv",dvHisto);
+   auto h3 = d5.Histo("dv",std::move(dvHisto));
    auto h4 = d5.Histo<std::list<int>>("sl");
    std::cout << "Histo1: nEntries " << h1->GetEntries() << std::endl;
    std::cout << "Histo2: nEntries " << h2->GetEntries() << std::endl;
