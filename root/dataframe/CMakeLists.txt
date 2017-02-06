@@ -57,4 +57,10 @@ ROOTTEST_ADD_TEST(foreach
                   OUTREF test_foreach.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
+ROOTTEST_GENERATE_EXECUTABLE(typeguessing test_typeguessing.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(typeguessing
+                  EXEC typeguessing
+                  OUTREF test_typeguessing.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 endif()
