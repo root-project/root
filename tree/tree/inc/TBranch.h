@@ -154,7 +154,7 @@ protected:
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    TBasket *GetFreshBasket();
-   Int_t    WriteBasket(TBasket* basket, Int_t where) {return WriteBasketImpl(basket, where, nullptr);}
+   Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
 
@@ -176,7 +176,7 @@ public:
    virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();
-           Int_t     Fill() {return FillImpl(nullptr);}
+           Int_t     Fill() { return FillImpl(nullptr); }
    virtual Int_t     FillImpl(TBranchIMTHelper *);
    virtual TBranch  *FindBranch(const char *name);
    virtual TLeaf    *FindLeaf(const char *name);

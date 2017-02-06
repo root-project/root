@@ -744,7 +744,7 @@ void TBranch::ExpandBasketArrays()
 /// If no data are written, because e.g. the branch is disabled,
 /// the number of bytes returned is 0.
 
-Int_t TBranch::FillImpl(TBranchIMTHelper *imt_helper)
+Int_t TBranch::FillImpl(TBranchIMTHelper *imtHelper)
 {
    if (TestBit(kDoNotProcess)) {
       return 0;
@@ -806,7 +806,7 @@ Int_t TBranch::FillImpl(TBranchIMTHelper *imt_helper)
       if (fTree->TestBit(TTree::kCircular)) {
          return nbytes;
       }
-      Int_t nout = WriteBasketImpl(basket,fWriteBasket, imt_helper);
+      Int_t nout = WriteBasketImpl(basket,fWriteBasket, imtHelper);
       if (nout < 0) Error("TBranch::Fill", "Failed to write out basket.\n");
       return (nout >= 0) ? nbytes : -1;
    }
@@ -2585,7 +2585,7 @@ void TBranch::Streamer(TBuffer& b)
 /// Write the current basket to disk and return the number of bytes
 /// written to the file.
 
-Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *imt_helper)
+Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *imtHelper)
 {
    Int_t nevbuf = basket->GetNevBuf();
    if (fEntryOffsetLen > 10 &&  (4*nevbuf) < fEntryOffsetLen ) {
@@ -2599,7 +2599,7 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *i
    // Note: captures `basket`, `where`, and `this` by value; modifies the TBranch and basket,
    // as we make a copy of the pointer.  We cannot capture `basket` by reference as the pointer
    // itself might be modified after `WriteBasketImpl` exits.
-   auto do_updates = [=]() {
+   auto doUpdates = [=]() {
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
       if (nout < 0) Error("TBranch::WriteBasketImpl", "basket's WriteBuffer failed.\n");
       fBasketBytes[where]  = basket->GetNbytes();
@@ -2646,11 +2646,11 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *i
       }
       return nout;
    };
-   if (imt_helper) {
-      imt_helper->run(do_updates);
+   if (imtHelper) {
+      imtHelper->run(doUpdates);
       return 0;
    } else {
-      return do_updates();
+      return doUpdates();
    }
 }
 
