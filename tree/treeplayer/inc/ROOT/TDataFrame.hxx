@@ -657,7 +657,7 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F>
-   TDataFrameInterface<ROOT::Detail::TDataFrameFilter<F, Proxied>> Filter(F f, const BranchNames &bl = {})
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilter<F, Proxied>> Filter(F f, const BranchNames &bl = {}, const std::string& name = "")
    {
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
@@ -665,7 +665,7 @@ public:
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::ArgTypes_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<DFF_t> (f, actualBl, fProxiedPtr);
+      auto FilterPtr = std::make_shared<DFF_t> (f, actualBl, fProxiedPtr, name);
       TDataFrameInterface<DFF_t> tdf_f(FilterPtr);
       df->Book(FilterPtr);
       return tdf_f;
@@ -902,6 +902,23 @@ public:
       GetDefaultBranchName(theBranchName, "calculate the mean");
       auto meanV = std::make_shared<double>(0);
       return CreateAction<T, ROOT::Internal::EActionType::kMean>(theBranchName, meanV);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Print filtering statistics on screen
+   ///
+   /// Calling `Report` on the main `TDataFrame` object prints stats for
+   /// all named filters in the call graph. Calling this method on a
+   /// stored chain state (i.e. a graph node different from the first) prints
+   /// the stats for all named filters in the chain section between the original
+   /// `TDataFrame` and that node (included). Stats are printed in the same
+   /// order as the named filters have been added to the graph.
+   void Report() {
+      auto df = GetDataFrameChecked();
+      if (!df->HasRunAtLeastOnce())
+         Info("TDataFrame::Report", "Warning: the event-loop has not been run yet, all reports are empty");
+      else
+         fProxiedPtr->Report();
    }
 
 private:
@@ -1196,6 +1213,17 @@ public:
          ROOT::Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...));
       return valuePtr;
    }
+
+   // recursive chain of `Report`s
+   // TDataFrameBranch simply forwards the call to the previous node
+   void Report() const {
+      fPrevData.PartialReport();
+   }
+
+   void PartialReport() const {
+      fPrevData.PartialReport();
+   }
+
 };
 
 class TDataFrameFilterBase {
@@ -1205,13 +1233,18 @@ protected:
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues = {};
    std::vector<Long64_t> fLastCheckedEntry = {-1};
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
+   std::vector<ULong64_t> fAccepted = {0};
+   std::vector<ULong64_t> fRejected = {0};
+   const std::string fName;
+
 public:
-   TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches);
+   TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches, const std::string& name);
    virtual ~TDataFrameFilterBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
    BranchNames GetTmpBranches() const;
    void CreateSlots(unsigned int nSlots);
+   void PrintReport() const;
 };
 using FilterBasePtr_t = std::shared_ptr<TDataFrameFilterBase>;
 using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
@@ -1226,8 +1259,10 @@ class TDataFrameFilter final : public TDataFrameFilterBase {
    PrevDataFrame &fPrevData;
 
 public:
-   TDataFrameFilter(FilterF f, const BranchNames &bl, std::shared_ptr<PrevDataFrame> pd)
-      : TDataFrameFilterBase(pd->GetDataFrame(), pd->GetTmpBranches()), fFilter(f), fBranches(bl), fPrevData(*pd) { }
+   TDataFrameFilter(FilterF f, const BranchNames &bl,
+                    std::shared_ptr<PrevDataFrame> pd, const std::string& name = "")
+      : TDataFrameFilterBase(pd->GetDataFrame(), pd->GetTmpBranches(), name),
+        fFilter(f), fBranches(bl), fPrevData(*pd) { }
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
 
@@ -1239,7 +1274,9 @@ public:
             fLastResult[slot] = false;
          } else {
             // evaluate this filter, cache the result
-            fLastResult[slot] = CheckFilterHelper(BranchTypes_t(), TypeInd_t(), slot, entry);
+            auto passed = CheckFilterHelper(BranchTypes_t(), TypeInd_t(), slot, entry);
+            passed ? ++fAccepted[slot] : ++fRejected[slot];
+            fLastResult[slot] = passed;
          }
          fLastCheckedEntry[slot] = entry;
       }
@@ -1266,6 +1303,16 @@ public:
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
+
+   // recursive chain of `Report`s
+   void Report() const {
+      PartialReport();
+   }
+
+   void PartialReport() const {
+      fPrevData.PartialReport();
+      PrintReport();
+   }
 };
 
 class TDataFrameImpl {
@@ -1286,6 +1333,7 @@ class TDataFrameImpl {
    // weak pointer to the TDataFrameImpl object itself
    // so subsequent objects in the chain can call GetDataFrame on TDataFrameImpl
    std::weak_ptr<TDataFrameImpl> fFirstData;
+   bool fHasRunAtLeastOnce = false;
 
 public:
    TDataFrameImpl(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches = {});
@@ -1319,6 +1367,10 @@ public:
       fResProxyReadiness.emplace_back(readiness);
       return resPtr;
    }
+   bool HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
+   void Report() const;
+   /// End of recursive chain of calls, does nothing
+   void PartialReport() const {}
 };
 
 } // end NS ROOT::Detail

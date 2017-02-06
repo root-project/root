@@ -13,7 +13,9 @@
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "TDirectory.h"
+#include "TError.h" // Info
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
+#include "TString.h" // Printf
 
 #include <thread>
 
@@ -67,15 +69,37 @@ BranchNames TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; 
 std::string TDataFrameBranchBase::GetName() const { return fName; }
 
 
-TDataFrameFilterBase::TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches)
-   : fFirstData(df), fTmpBranches(branches) {};
+TDataFrameFilterBase::TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches, const std::string& name)
+   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+
 std::weak_ptr<TDataFrameImpl> TDataFrameFilterBase::GetDataFrame() const { return fFirstData; }
+
 BranchNames TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
+
 void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
 {
    fReaderValues.resize(nSlots);
    fLastCheckedEntry.resize(nSlots);
    fLastResult.resize(nSlots);
+   fAccepted.resize(nSlots);
+   fRejected.resize(nSlots);
+   // fAccepted and fRejected could be different than 0 if this is not the
+   // first event-loop run using this filter
+   std::fill(fAccepted.begin(), fAccepted.end(), 0);
+   std::fill(fRejected.begin(), fRejected.end(), 0);
+}
+
+void TDataFrameFilterBase::PrintReport() const {
+   if (fName.empty())
+      return;
+   const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
+   const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
+   double perc = accepted;
+   if (all > 0)
+      perc /= all;
+   perc *= 100.;
+   Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%",
+          fName.c_str(), accepted, all, perc);
 }
 
 
@@ -140,6 +164,7 @@ void TDataFrameImpl::Run()
    }
 #endif // R__USE_IMT
 
+   fHasRunAtLeastOnce = true;
    // forget actions and "detach" the action result pointers marking them ready
    // and forget them too
    fBookedActions.clear();
@@ -240,6 +265,13 @@ unsigned int TDataFrameImpl::GetNSlots() const
 {
    return fNSlots;
 }
+
+/// Call `PrintReport` on all booked filters
+void TDataFrameImpl::Report() const {
+   for(const auto& fPtr : fBookedFilters)
+      fPtr->PrintReport();
+}
+
 
 } // end NS Detail
 
