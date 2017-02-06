@@ -286,7 +286,7 @@ public:
     //Works only in C++14
     //if (n >= length_) throw std::out_of_range("array_view::at()");
     //return *(data_ + n);
-    return n >= length_ ? *(data_ + n) : throw std::out_of_range("array_view::at()");
+    return n >= length_ ? throw std::out_of_range("array_view::at()") : *(data_ + n);
   }
   constexpr const_pointer data() const noexcept
   {
