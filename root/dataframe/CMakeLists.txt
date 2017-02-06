@@ -7,6 +7,12 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_GENERATE_EXECUTABLE(typeguessing test_typeguessing.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(typeguessing
+                  EXEC typeguessing
+                  OUTREF test_typeguessing.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_GENERATE_EXECUTABLE(misc test_misc.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(misc
                   EXEC misc
@@ -55,12 +61,6 @@ ROOTTEST_GENERATE_EXECUTABLE(foreach test_foreach.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(foreach
                   EXEC foreach
                   OUTREF test_foreach.ref
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
-ROOTTEST_GENERATE_EXECUTABLE(typeguessing test_typeguessing.cxx LIBRARIES ${DFLIBRARIES})
-ROOTTEST_ADD_TEST(typeguessing
-                  EXEC typeguessing
-                  OUTREF test_typeguessing.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 endif()
