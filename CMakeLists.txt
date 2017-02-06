@@ -222,8 +222,8 @@ if(cxxmodules)
     set (__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
   endif()
 
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS} ${__vfs_overlay}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS} ${__vfs_overlay}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__vfs_overlay}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__vfs_overlay}")
 
 endif(cxxmodules)
 
