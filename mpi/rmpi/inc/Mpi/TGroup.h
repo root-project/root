@@ -9,9 +9,9 @@
 namespace ROOT {
 
    namespace Mpi {
-      class TWin;
+      class TCommunicator;
       class TGroup: public TObject {
-//          friend class TWin;
+         friend class TCommunicator;
       protected:
          MPI_Group fGroup; //!
       public:

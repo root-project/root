@@ -193,15 +193,16 @@ namespace ROOT {
 
       class TGroup;
       class TInfo;
+      class TCommunicator;
       // null handles
       R__EXTERN const TGroup         GROUP_NULL;
       R__EXTERN const TInfo          INFO_NULL;
       R__EXTERN const MPI_Datatype   DATATYPE_NULL;
-      
+      R__EXTERN const TCommunicator  COMM_NULL;
       // empty group
       R__EXTERN const TGroup         GROUP_EMPTY;
 
-      
+
       template<class T> MPI_Datatype GetDataType()
       {
          if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI_INT;

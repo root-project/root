@@ -18,6 +18,9 @@
 #include<Mpi/TRequest.h>
 #endif
 
+#ifndef ROOT_Mpi_TGroup
+#include<Mpi/TGroup.h>
+#endif
 
 #include<memory>
 
@@ -189,6 +192,22 @@ namespace ROOT {
          template<class Type> void AllReduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)()) const;
 
          template<class Type> void AllGather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount) const;
+
+
+         /////////////////////////////////////////
+         // Groups, Contexts, and Communicators //
+         /////////////////////////////////////////
+
+         TGroup GetGroup() const;
+
+         static Int_t Compare(const TCommunicator &comm1, const TCommunicator &comm2);
+
+         Int_t Compare(const TCommunicator &comm2);
+
+         virtual void Free(void);
+
+         virtual Bool_t IsInter() const;
+
 
          /**
           * static method to serialize objects. used in the multiple communication schemas.
