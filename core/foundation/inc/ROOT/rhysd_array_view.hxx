@@ -1,8 +1,7 @@
 /// \file ROOT/rhysd_array_view.h
-/// \ingroup Base StdExt ROOT7
+/// \ingroup Base StdExt
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -12,8 +11,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RHYSD_ARRAY_VIEW_H
-#define ROOT7_RHYSD_ARRAY_VIEW_H
+#ifndef ROOT_RHYSD_ARRAY_VIEW_H
+#define ROOT_RHYSD_ARRAY_VIEW_H
+
+// Necessary to compile in c++11 mode
+#if __cplusplus >= 201402L
+#define R__CONSTEXPR_IF_CXX14 constexpr
+#else
+#define R__CONSTEXPR_IF_CXX14
+#endif
 
 // From https://github.com/rhysd/array_view/blob/master/include/array_view.hpp
 
@@ -277,8 +283,10 @@ public:
   }
   constexpr const_reference at(size_type const n) const
   {
-    if (n >= length_) throw std::out_of_range("array_view::at()");
-    return *(data_ + n);
+    //Works only in C++14
+    //if (n >= length_) throw std::out_of_range("array_view::at()");
+    //return *(data_ + n);
+    return n >= length_ ? *(data_ + n) : throw std::out_of_range("array_view::at()");
   }
   constexpr const_pointer data() const noexcept
   {
@@ -300,24 +308,30 @@ public:
   // check bound {{{
   constexpr array_view<T> slice(check_bound_t, size_type const pos, size_type const slicelen) const
   {
-    if (pos >= length_ || pos + slicelen >= length_) {
-      throw std::out_of_range("array_view::slice()");
-    }
-    return array_view<T>{begin() + pos, begin() + pos + slicelen};
+    //Works only in C++14
+    //if (pos >= length_ || pos + slicelen >= length_) {
+    //  throw std::out_of_range("array_view::slice()");
+    //}
+    //return array_view<T>{begin() + pos, begin() + pos + slicelen};
+    return pos >= length_ || pos + slicelen >= length_ ? throw std::out_of_range("array_view::slice()") : array_view<T>{begin() + pos, begin() + pos + slicelen};
   }
   constexpr array_view<T> slice_before(check_bound_t, size_type const pos) const
   {
-    if (pos >= length_) {
-      throw std::out_of_range("array_view::slice()");
-    }
-    return array_view<T>{begin(), begin() + pos};
+    //Works only in C++14
+    //if (pos >= length_) {
+    //  throw std::out_of_range("array_view::slice()");
+    //}
+    //return array_view<T>{begin(), begin() + pos};
+    return pos >= length_ ? std::out_of_range("array_view::slice()") : array_view<T>{begin(), begin() + pos};
   }
   constexpr array_view<T> slice_after(check_bound_t, size_type const pos) const
   {
-    if (pos >= length_) {
-      throw std::out_of_range("array_view::slice()");
-    }
-    return array_view<T>{begin() + pos, end()};
+    //Works only in C++14
+    //if (pos >= length_) {
+    //  throw std::out_of_range("array_view::slice()");
+    //}
+    //return array_view<T>{begin() + pos, end()};
+    return pos >= length_ ? std::out_of_range("array_view::slice()") : array_view<T>{begin() + pos, end()};
   }
   // }}}
   // not check bound {{{
@@ -339,27 +353,36 @@ public:
   // check bound {{{
   constexpr array_view<T> slice(check_bound_t, iterator start, iterator last) const
   {
-    if ( start >= end() ||
-         last > end() ||
-         start > last ||
-         static_cast<size_t>(std::distance(start, last > end() ? end() : last)) > length_ - std::distance(begin(), start) ) {
-      throw std::out_of_range("array_view::slice()");
-    }
-    return array_view<T>{start, last > end() ? end() : last};
+    //Works only in C++14
+    //if ( start >= end() ||
+    //     last > end() ||
+    //     start > last ||
+    //     static_cast<size_t>(std::distance(start, last > end() ? end() : last)) > length_ - std::distance(begin(), start) ) {
+    //  throw std::out_of_range("array_view::slice()");
+    //}
+    //return array_view<T>{start, last > end() ? end() : last};
+    return ( start >= end() ||
+             last > end() ||
+             start > last ||
+             static_cast<size_t>(std::distance(start, last > end() ? end() : last)) > length_ - std::distance(begin(), start) ) ? throw std::out_of_range("array_view::slice()") : array_view<T>{start, last > end() ? end() : last};
   }
   constexpr array_view<T> slice_before(check_bound_t, iterator const pos) const
   {
-    if (pos < begin() || pos > end()) {
-      throw std::out_of_range("array_view::slice()");
-    }
-    return array_view<T>{begin(), pos > end() ? end() : pos};
+    //Works only in C++14
+    //if (pos < begin() || pos > end()) {
+    //  throw std::out_of_range("array_view::slice()");
+    //}
+    //return array_view<T>{begin(), pos > end() ? end() : pos};
+    return pos < begin() || pos > end() ? throw std::out_of_range("array_view::slice()") : array_view<T>{begin(), pos > end() ? end() : pos};
   }
   constexpr array_view<T> slice_after(check_bound_t, iterator const pos) const
   {
-    if (pos < begin() || pos > end()) {
-      throw std::out_of_range("array_view::slice()");
-    }
-    return array_view<T>{pos < begin() ? begin() : pos, end()};
+    //Works only in C++14
+    // if (pos < begin() || pos > end()) {
+    //  throw std::out_of_range("array_view::slice()");
+    //}
+    //return array_view<T>{pos < begin() ? begin() : pos, end()};
+    return pos < begin() || pos > end() ? throw std::out_of_range("array_view::slice()") : array_view<T>{pos < begin() ? begin() : pos, end()};
   }
   // }}}
   // not check bound {{{
@@ -410,8 +433,9 @@ private:
 
 // compare operators {{{
 namespace detail {
+
 template< class ArrayL, class ArrayR >
-inline constexpr
+inline R__CONSTEXPR_IF_CXX14
 bool operator_equal_impl(ArrayL const& lhs, size_t const lhs_size, ArrayR const& rhs, size_t const rhs_size)
 {
   if (lhs_size != rhs_size) {

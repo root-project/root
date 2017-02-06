@@ -1,8 +1,7 @@
 /// \file ROOT/RArrayView.h
-/// \ingroup Base StdExt ROOT7
+/// \ingroup Base StdExt
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -12,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RArrayView
-#define ROOT7_RArrayView
+#ifndef ROOT_RArrayView
+#define ROOT_RArrayView
 
 #include "RConfigure.h"
 
