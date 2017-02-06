@@ -91,19 +91,16 @@ namespace {
             "blue", "magenta", "cyan", "white", 0
          };
          static const unsigned char colorrgb[][3] = {
-            {0,0,0}, {127,0,0}, {0,127,0}, {127,127,0},
-            {0,0,127}, {127,0,127}, {0,127,127}, {127,127,127},
+            {0,0,0}, {255,48,48}, {48,255,48}, {255,255,48},
+            {48,48,255}, {255,48,255}, {48,255,255}, {255,255,255},
             {0}
          };
 
          for (int i = 0; colornames[i]; ++i) {
             if (lowname.find(colornames[i]) != std::string::npos) {
-               int boldify = 0;
-               if (ret.fModifiers & Color::kModBold)
-                  boldify = 64;
-               ret.fR = colorrgb[i][0] + boldify;
-               ret.fG = colorrgb[i][1] + boldify;
-               ret.fB = colorrgb[i][2] + boldify;
+               ret.fR = colorrgb[i][0];
+               ret.fG = colorrgb[i][1];
+               ret.fB = colorrgb[i][2];
                return ret;
             }
          }
