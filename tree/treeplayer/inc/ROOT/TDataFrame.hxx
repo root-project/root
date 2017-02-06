@@ -276,6 +276,16 @@ A filter is defined through a call to `Filter(f, branchList)`. `f` can be a func
 
 `TDataFrame` only evaluates filters when necessary: if multiple filters are chained one after another, they are executed in order and the first one returning `false` causes the event to be discarded and triggers the processing of the next entry. If multiple actions or transformations depend on the same filter, that filter is not executed multiple times for each entry: after the first access it simply serves a cached result.
 
+#### <a name="named-filters-and-cutflow-reports"></a>Named filters and cutflow reports
+An optional string parameter `name` can be passed to the `Filter` method to create a **named filter**. Named filters work as usual, but also keep track of how many entries they accept and reject.
+
+Statistics are retrieved through a call to the `Report` method:
+
+- when `Report` is called on the main `TDataFrame` object, it prints stats for all named filters declared up to that point
+- when called on a stored chain state (i.e. a chain/graph node), it prints stats for all named filters in the section of the chain between the main `TDataFrame` and that node (included).
+
+Stats are printed in the same order as named filters have been added to the graph, and *refer to the latest event-loop* that has been run using the relevant `TDataFrame`. A warning is printed if `Report` is called before the event-loop has been run at least once.
+
 ### Temporary branches
 Temporary branches are created by invoking `AddBranch(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary branch.
 
@@ -311,6 +321,9 @@ In the following, whenever we say an action "returns" something, we always mean 
 | Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
 | ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
 
+| **Extra** | **Description** |
+|-----------|-----------------|
+| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `TDataFrame` can transparently perform multi-threaded event loops to speed up the execution of its actions. Users only have to call `ROOT::EnableImplicitMT()` *before* constructing the `TDataFrame` object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct subset of entries**, and their partial results are merged before returning the final values to the user.
