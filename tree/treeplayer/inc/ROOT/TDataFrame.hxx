@@ -803,14 +803,16 @@ public:
    /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
    /// \tparam T The type of the branch the values of which are used to fill the histogram.
    /// \param[in] branchName The name of the branch of which the values are to be collected.
-   /// \param[in] model The model to be copied to build the new return value.
+   /// \param[in] model The model to be considered to build the new return value.
    ///
    /// If no branch type is specified, the implementation will try to guess one.
    /// The returned histogram is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
+   /// The user renounces to the ownership of the model. The value to be used is the
+   /// returned one.
    template <typename T = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<TH1F> Histo(const std::string &branchName, const TH1F &model)
+   TActionResultProxy<TH1F> Histo(const std::string &branchName, TH1F &&model)
    {
       auto theBranchName(branchName);
       GetDefaultBranchName(theBranchName, "fill the histogram");
