@@ -16,7 +16,7 @@ There are two ways to generate and execute the tests:
 
        Before building, enable the 'testing' and 'roottest' option:
 
-       cmake -Dtesting=ON -Droottest=ON $PATH_TO_ROOT_SOURCES .
+       cmake -Dtesting=ON -Droottest=ON $PATH_TO_ROOT_SOURCES
 
     2. As a stand-alone project, testing a ROOT build / installation.
 
@@ -26,7 +26,7 @@ There are two ways to generate and execute the tests:
 
        Create a build directory, change into it and execute
 
-       cmake $PATH_TO_ROOTTEST .
+       cmake $PATH_TO_ROOTTEST
 
 Tests can the be executed using the ctest command in the build directory:
 
