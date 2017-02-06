@@ -55,9 +55,29 @@ const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, co
    return useDefBl ? defBl : bl;
 }
 
+void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resize(nSlots); }
+
 } // end NS Internal
 
 namespace Detail {
+
+TDataFrameBranchBase::TDataFrameBranchBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches, const std::string &name)
+   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+BranchNames TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
+std::string TDataFrameBranchBase::GetName() const { return fName; }
+
+
+TDataFrameFilterBase::TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches)
+   : fFirstData(df), fTmpBranches(branches) {};
+std::weak_ptr<TDataFrameImpl> TDataFrameFilterBase::GetDataFrame() const { return fFirstData; }
+BranchNames TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
+void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
+{
+   fReaderValues.resize(nSlots);
+   fLastCheckedEntry.resize(nSlots);
+   fLastResult.resize(nSlots);
+}
+
 
 TDataFrameImpl::TDataFrameImpl(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches)
    : fTreeName(treeName), fDirPtr(dirPtr), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
