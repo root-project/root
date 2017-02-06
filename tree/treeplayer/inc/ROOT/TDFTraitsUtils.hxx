@@ -28,44 +28,44 @@ struct TTypeList {
 // extract parameter types from a callable object
 template <typename T>
 struct TFunctionTraits {
-   using ArgTypes_t = typename TFunctionTraits<decltype(&T::operator())>::ArgTypes_t;
-   using ArgTypesNoDecay_t = typename TFunctionTraits<decltype(&T::operator())>::ArgTypesNoDecay_t;
-   using RetType_t = typename TFunctionTraits<decltype(&T::operator())>::RetType_t;
+   using Args_t = typename TFunctionTraits<decltype(&T::operator())>::Args_t;
+   using ArgsNoDecay_t = typename TFunctionTraits<decltype(&T::operator())>::ArgsNoDecay_t;
+   using Ret_t = typename TFunctionTraits<decltype(&T::operator())>::Ret_t;
 };
 
 // lambdas and std::function
 template <typename R, typename T, typename... Args>
 struct TFunctionTraits<R (T::*)(Args...) const> {
-   using ArgTypes_t = TTypeList<typename std::decay<Args>::type...>;
-   using ArgTypesNoDecay_t = TTypeList<Args...>;
-   using RetType_t = R;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
+   using ArgsNoDecay_t = TTypeList<Args...>;
+   using Ret_t = R;
 };
 
 // mutable lambdas and functor classes
 template <typename R, typename T, typename... Args>
 struct TFunctionTraits<R (T::*)(Args...)> {
-   using ArgTypes_t = TTypeList<typename std::decay<Args>::type...>;
-   using ArgTypesNoDecay_t = TTypeList<Args...>;
-   using RetType_t = R;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
+   using ArgsNoDecay_t = TTypeList<Args...>;
+   using Ret_t = R;
 };
 
 // function pointers
 template <typename R, typename... Args>
 struct TFunctionTraits<R (*)(Args...)> {
-   using ArgTypes_t = TTypeList<typename std::decay<Args>::type...>;
-   using ArgTypesNoDecay_t = TTypeList<Args...>;
-   using RetType_t = R;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
+   using ArgsNoDecay_t = TTypeList<Args...>;
+   using Ret_t = R;
 };
 
 // free functions
 template <typename R, typename... Args>
 struct TFunctionTraits<R (Args...)> {
-   using ArgTypes_t = TTypeList<typename std::decay<Args>::type...>;
-   using ArgTypesNoDecay_t = TTypeList<Args...>;
-   using RetType_t = R;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
+   using ArgsNoDecay_t = TTypeList<Args...>;
+   using Ret_t = R;
 };
 
-// remove first type from TypeList
+// remove first type from TTypeList
 template <typename>
 struct TRemoveFirst { };
 

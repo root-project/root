@@ -448,7 +448,7 @@ BranchNames TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; 
 void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
 {
    fReaderValues.resize(nSlots);
-   fLastCheckedEntry.resize(nSlots);
+   fLastCheckedEntry.resize(nSlots, -1);
    fLastResult.resize(nSlots);
    fAccepted.resize(nSlots);
    fRejected.resize(nSlots);
@@ -567,11 +567,6 @@ std::weak_ptr<ROOT::Detail::TDataFrameImpl> TDataFrameImpl::GetDataFrame() const
 const BranchNames &TDataFrameImpl::GetDefaultBranches() const
 {
    return fDefaultBranches;
-}
-
-const BranchNames TDataFrameImpl::GetTmpBranches() const
-{
-   return fTmpBranches;
 }
 
 TTree *TDataFrameImpl::GetTree() const

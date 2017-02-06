@@ -232,7 +232,7 @@ public:
 
    ~TakeOperation()
    {
-      unsigned int totSize = 0;
+      ULong64_t totSize = 0;
       for (auto& coll : fColls) totSize += coll->size();
       auto rColl = fColls[0];
       rColl->reserve(totSize);
