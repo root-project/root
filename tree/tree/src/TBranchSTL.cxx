@@ -328,7 +328,7 @@ Int_t TBranchSTL::FillImpl(TBranchIMTHelper *imt_helper)
    // Store the indices
    /////////////////////////////////////////////////////////////////////////////
 
-   bytes = TBranch::Fill();
+   bytes = TBranch::FillImpl(nullptr);
    if( bytes < 0 ) {
       Error( "Fill", "The IO error while writing the indices!");
       return -1;
