@@ -1356,12 +1356,10 @@
 
             url += '&prototype="const char*,const char*,Option_t*,Long64_t,Long64_t"&varexp="' + expr + '"&selection="' + cut + '"';
 
-            // if any of optional arguments specified, specify all of them
-            if ((option!="") || (nentries!="") || (firstentry!="")) {
-               if (nentries=="") nentries = (this.root_version >= 394499) ? "TTree::kMaxEntries": "1000000000"; // kMaxEntries available since ROOT 6.05/03
-               if (firstentry=="") firstentry = "0";
-               url += '&option="' + option + '"&nentries=' + nentries + '&firstentry=' + firstentry;
-            }
+            // provide all optional arguments - default value kMaxEntries not works properly in ROOT6
+            if (nentries=="") nentries = (this.root_version >= 394499) ? "TTree::kMaxEntries": "1000000000"; // kMaxEntries available since ROOT 6.05/03
+            if (firstentry=="") firstentry = "0";
+            url += '&option="' + option + '"&nentries=' + nentries + '&firstentry=' + firstentry;
          } else {
             url += '&prototype="Option_t*"&opt="' + expr + '"';
          }
