@@ -2122,6 +2122,7 @@ void TFile::SetCompressionAlgorithm(Int_t algorithm)
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
    }
+   printf("algorithm = %d\n", algorithm);//##
 }
 
 ////////////////////////////////////////////////////////////////////////////////

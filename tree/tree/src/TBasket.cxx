@@ -51,8 +51,8 @@ See picture in TTree.
 */
 
 static std::chrono::steady_clock::duration globalDuration = std::chrono::steady_clock::duration::zero();//##
-static std::chrono::steady_clock::time_point startDuration;
-static std::chrono::steady_clock::time_point endDuration;
+static std::chrono::steady_clock::time_point startDuration;//##
+static std::chrono::steady_clock::time_point endDuration;//##
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.
 
@@ -1023,6 +1023,8 @@ Int_t TBasket::WriteBuffer()
          else bufmax = kMAXZIPBUF;
          //compress the buffer
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+//         std::cout << lbuf << ", " << fObjlen << ", " << fKeylen << ", " << nbuffers << ", " << bufmax << ", " << nout << std::endl;//##
+//         std::cout << fObjlen << std::endl;//##
 
          // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed
