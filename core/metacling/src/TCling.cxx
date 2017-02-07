@@ -6031,8 +6031,7 @@ void TCling::LibraryUnloaded(const void* dyLibHandle, const char* canonicalName)
 
 const char* TCling::GetSharedLibs()
 {
-   if (!fPrevLoadedDynLibInfo && fSharedLibs.IsNull())
-      UpdateListOfLoadedSharedLibraries();
+   UpdateListOfLoadedSharedLibraries();
    return fSharedLibs;
 }
 
