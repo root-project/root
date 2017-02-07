@@ -119,6 +119,8 @@ public:
          R__ASSERT(fArray && "invalid iterator!");
          return fArray->At(fIndex);
       }
+
+      operator const T*() const { return &fArray->At(fIndex); }
    };
 
    typedef Iterator_t iterator;

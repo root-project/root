@@ -341,9 +341,11 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 
 #include "TBranchElement.h"
 #include "TH1F.h" // For Histo actions
+#include "ROOT/RArrayView.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFTraitsUtils.hxx"
 #include "TTreeReader.h"
+#include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
 
 #include <algorithm> // std::find
@@ -471,6 +473,18 @@ unsigned int GetNSlots();
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
+template<typename BranchType>
+std::shared_ptr<ROOT::Internal::TTreeReaderValueBase>
+ReaderValueOrArray(TTreeReader& r, const std::string& branch, TDFTraitsUtils::TTypeList<BranchType>) {
+   return std::make_shared<TTreeReaderValue<BranchType>>(r, branch.c_str());
+}
+
+template<typename BranchType>
+std::shared_ptr<ROOT::Internal::TTreeReaderValueBase>
+ReaderValueOrArray(TTreeReader& r, const std::string& branch, TDFTraitsUtils::TTypeList<std::array_view<BranchType>>) {
+   return std::make_shared<TTreeReaderArray<BranchType>>(r, branch.c_str());
+}
+
 template <int... S, typename... BranchTypes>
 TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNames &tmpbl,
                            TDFTraitsUtils::TTypeList<BranchTypes...>,
@@ -484,12 +498,13 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
       isTmpBranch[i] = std::find(tmpbl.begin(), tmpbl.end(), bl.at(i)) != tmpbl.end();
 
    // Build vector of pointers to TTreeReaderValueBase.
-   // tvb[i] points to a TTreeReaderValue specialized for the i-th BranchType,
+   // tvb[i] points to a TTreeReader{Value,Array} specialized for the i-th BranchType,
    // corresponding to the i-th branch in bl
    // For temporary branches (declared with AddBranch) a nullptr is created instead
    // S is expected to be a sequence of sizeof...(BranchTypes) integers
-   TVBVec_t tvb{isTmpBranch[S] ? nullptr : std::make_shared<TTreeReaderValue<BranchTypes>>(
-                                            r, bl.at(S).c_str())...}; // "..." expands BranchTypes and S simultaneously
+   // Note that here TTypeList only contains one single type
+   TVBVec_t tvb{isTmpBranch[S] ? nullptr : ReaderValueOrArray(r, bl.at(S), TDFTraitsUtils::TTypeList<BranchTypes>())
+                ...}; // "..." expands BranchTypes and S simultaneously
 
    return tvb;
 }
@@ -521,9 +536,13 @@ using ActionBasePtr_t = std::shared_ptr<TDataFrameActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 
 // Forward declarations
-template <int S, typename T>
-T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
-                  std::weak_ptr<ROOT::Detail::TDataFrameImpl> df);
+template<typename T>
+T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
+                  std::weak_ptr<Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>);
+template<typename T>
+std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
+                  std::weak_ptr<Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
+
 
 template <typename F, typename PrevDataFrame>
 class TDataFrameAction final : public TDataFrameActionBase {
@@ -572,7 +591,9 @@ public:
       // S expands to a sequence of integers 0 to sizeof...(types)-1
       // S and types are expanded simultaneously by "..."
       (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
-      fAction(slot, GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...);
+      fAction(slot, GetBranchValue(fReaderValues[slot][S], slot, entry,
+                                   fBranches[S], fFirstData, TDFTraitsUtils::TTypeList<BranchTypes>())
+              ...);
    }
 };
 
@@ -1223,7 +1244,8 @@ public:
                                              unsigned int slot, Long64_t entry)
    {
       auto valuePtr = std::make_shared<RetType_t>(fExpression(
-         ROOT::Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...));
+         Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
+                                  fFirstData, Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
       return valuePtr;
    }
 
@@ -1307,8 +1329,8 @@ public:
       // S and types are expanded simultaneously by "..."
       (void) slot; // avoid bogus unused-but-set-parameter warning by gcc
       (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
-      return fFilter(
-         ROOT::Internal::GetBranchValue<S, BranchTypes>(fReaderValues[slot][S], slot, entry, fBranches[S], fFirstData)...);
+      return fFilter(Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
+                     fFirstData, Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
    }
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot)
@@ -1423,9 +1445,9 @@ void Experimental::TActionResultProxy<T>::TriggerRun()
 } // end NS Experimental
 
 namespace Internal {
-template <int S, typename T>
+template <typename T>
 T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, const std::string &branch,
-                  std::weak_ptr<ROOT::Detail::TDataFrameImpl> df)
+                  std::weak_ptr<Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>)
 {
    if (readerValue == nullptr) {
       // temporary branch
@@ -1434,6 +1456,24 @@ T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, cons
    } else {
       // real branch
       return **std::static_pointer_cast<TTreeReaderValue<T>>(readerValue);
+   }
+}
+
+template<typename T>
+std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
+                                    Long64_t entry, const std::string& branch,
+                                    std::weak_ptr<Detail::TDataFrameImpl> df,
+                                    TDFTraitsUtils::TTypeList<std::array_view<T>>)
+{
+   if(readerValue == nullptr) {
+      // temporary branch
+      void* tmpBranchVal = df.lock()->GetTmpBranchValue(branch, slot, entry);
+      auto& tra = *static_cast<TTreeReaderArray<T> *>(tmpBranchVal);
+      return std::array_view<T>(tra.begin(), tra.end());
+   } else {
+      // real branch
+      auto& tra = *std::static_pointer_cast<TTreeReaderArray<T>>(readerValue);
+      return std::array_view<T>(tra.begin(), tra.end());
    }
 }
 
