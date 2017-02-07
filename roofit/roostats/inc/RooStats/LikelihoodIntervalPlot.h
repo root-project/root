@@ -27,16 +27,6 @@
 
 namespace RooStats {
 
-/**
-
- \ingroup Roostats
-
- This class provides simple and straightforward utilities to plot a LikelihoodInterval
- object.
-
-*/
-
-
  class LikelihoodIntervalPlot : public TNamed, public RooPrintable {
 
    public:
@@ -59,8 +49,8 @@ namespace RooStats {
     void SetRange(double x1, double x2) { fXmin = x1; fXmax = x2; }
     /// set plot range (for 2D plot)
     void SetRange(double x1, double y1, double x2, double y2) {
-       fXmin = x1; fXmax = x2; 
-       fYmin = y1; fYmax = y2; 
+       fXmin = x1; fXmax = x2;
+       fYmin = y1; fYmax = y2;
     }
 
     ///set plot precision (when drawing a RooPlot)
@@ -77,9 +67,9 @@ namespace RooStats {
 
     /// draw the likelihood interval or contour
     /// for the 1D case a RooPlot is drawn by default of the profiled Log-Likelihood ratio
-    /// if option "TF1" is used the objects is drawn using a TF1 scanning the LL function in a 
-    /// grid of the setetd points (by default 
-    /// the TF1 can be costumized by setting maximum and the number of points to scan 
+    /// if option "TF1" is used the objects is drawn using a TF1 scanning the LL function in a
+    /// grid of the setetd points (by default
+    /// the TF1 can be costumized by setting maximum and the number of points to scan
     void Draw(const Option_t *options=0);
 
   private:
@@ -88,10 +78,10 @@ namespace RooStats {
     Style_t fFillStyle;     /// fill style for contours
     Color_t fLineColor;     /// line color for the interval (1D) or for other contours (2D)
     Int_t fNdimPlot;
-    Int_t fNPoints; /// number of points used to scan the PL 
+    Int_t fNPoints; /// number of points used to scan the PL
 
     Double_t fMaximum;   /// function maximum
-    // ranges for plots 
+    // ranges for plots
     Double_t fXmin;
     Double_t fXmax;
     Double_t fYmin;
