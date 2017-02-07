@@ -6,7 +6,6 @@
 using namespace ROOT::Mpi;
 
 ROOT::Mpi::TCommunicator *gComm = new ROOT::Mpi::TCommunicator(MPI_COMM_WORLD);
-ROOT::Mpi::TCommunicator COMM_WORLD(MPI_COMM_WORLD);
 
 //______________________________________________________________________________
 template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
@@ -97,7 +96,7 @@ TCommunicator::~TCommunicator()
 
 //______________________________________________________________________________
 /**
- *         Method for synchronization between MPI processes in a communicator
+ * Method for synchronization between MPI processes in a communicator
  */
 void  TCommunicator::Barrier() const
 {
@@ -106,8 +105,8 @@ void  TCommunicator::Barrier() const
 
 //______________________________________________________________________________
 /**
- *         Method for synchronization between MPI nonblocking processes in a communicator
- *         \param req request object
+ * Method for synchronization between MPI nonblocking processes in a communicator
+ * \param req request object
  */
 void  TCommunicator::IBarrier(TRequest &req) const
 {
@@ -117,11 +116,11 @@ void  TCommunicator::IBarrier(TRequest &req) const
 
 //______________________________________________________________________________
 /**
- *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
- *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
- *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
- *              \param status TStatus object with extra information.
- *              \return boolean true if the probe if ok
+ * Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ * \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ * \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ * \param status TStatus object with extra information.
+ * \return boolean true if the probe if ok
  */
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 {
@@ -134,10 +133,10 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 
 //______________________________________________________________________________
 /**
- *            Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
- *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
- *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
- *              \return boolean true if the probe if ok
+ * Nonblocking test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ * \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ * \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ * \return boolean true if the probe if ok
  */
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
 {
@@ -149,11 +148,11 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
 
 //______________________________________________________________________________
 /**
- *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
- *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
- *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
- *              \param status TStatus object with extra information.
- *              \return boolean true if the probe if ok
+ * Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ * \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ * \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ * \param status TStatus object with extra information.
+ * \return boolean true if the probe if ok
  */
 void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 {
@@ -164,10 +163,10 @@ void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 
 //______________________________________________________________________________
 /**
- *            Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
- *              \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
- *              \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
- *              \return boolean true if the probe if ok
+ * Test for a message. Operations  allow checking of incoming messages without actual receipt of them.
+ * \param source Source rank or ROOT::Mpi::ANY_SOURCE (integer).
+ * \param tag Tag value or ROOT::Mpi::ANY_TAG (integer).
+ * \return boolean true if the probe if ok
  */
 void TCommunicator::Probe(Int_t source, Int_t tag) const
 {
@@ -178,8 +177,8 @@ void TCommunicator::Probe(Int_t source, Int_t tag) const
 
 //______________________________________________________________________________
 /**
- *            return a group from communicator
- *            \return TGroup object
+ * return a group from communicator
+ * \return TGroup object
  */
 TGroup TCommunicator::GetGroup() const
 {
@@ -190,14 +189,14 @@ TGroup TCommunicator::GetGroup() const
 
 //______________________________________________________________________________
 /**
- *            static method to compare two communicators,
- *            ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same contexts).
- *            ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these communicators differ only by context.
- *            ROOT::Mpi::SIMILAR results of the group members of  both  communica‐tors are the same but the rank order differs.
- *            ROOT::Mpi::UNEQUAL results otherwise.
- *            \param comm1 TCommunicator 1 object
- *            \param comm2 TCommunicator 2 object
- *            \return integer
+ * static method to compare two communicators,
+ * ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same contexts).
+ * ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these communicators differ only by context.
+ * ROOT::Mpi::SIMILAR results of the group members of  both  communica‐tors are the same but the rank order differs.
+ * ROOT::Mpi::UNEQUAL results otherwise.
+ * \param comm1 TCommunicator 1 object
+ * \param comm2 TCommunicator 2 object
+ * \return integer
  */
 Int_t TCommunicator::Compare(const TCommunicator &comm1, const TCommunicator &comm2)
 {
@@ -207,13 +206,13 @@ Int_t TCommunicator::Compare(const TCommunicator &comm1, const TCommunicator &co
 }
 //______________________________________________________________________________
 /**
- *            compare the current communicator with other,
- *            ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same contexts).
- *            ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these communicators differ only by context.
- *            ROOT::Mpi::SIMILAR results of the group members of  both  communicators are the same but the rank order differs.
- *            ROOT::Mpi::UNEQUAL results otherwise.
- *            \param comm2 TCommunicator 2 object
- *            \return integer
+ * compare the current communicator with other,
+ * ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same contexts).
+ * ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these communicators differ only by context.
+ * ROOT::Mpi::SIMILAR results of the group members of  both  communicators are the same but the rank order differs.
+ * ROOT::Mpi::UNEQUAL results otherwise.
+ * \param comm2 TCommunicator 2 object
+ * \return integer
  */
 Int_t TCommunicator::Compare(const TCommunicator &comm2)
 {
@@ -224,11 +223,11 @@ Int_t TCommunicator::Compare(const TCommunicator &comm2)
 
 //______________________________________________________________________________
 /**
- *      This operation marks the communicator object for deallocation.
- *      The handle is set to ROOT::Mpi::COMM_NULL.
- *      Any pending operations that use this communicator will complete normally;
- *      the object is actually deallocated only if there are no other active references to it.
- *      This call applies to intracommunicators and intercommunicators.
+ * This operation marks the communicator object for deallocation.
+ * The handle is set to ROOT::Mpi::COMM_NULL.
+ * Any pending operations that use this communicator will complete normally;
+ * the object is actually deallocated only if there are no other active references to it.
+ * This call applies to intracommunicators and intercommunicators.
 */
 void TCommunicator::Free(void)
 {

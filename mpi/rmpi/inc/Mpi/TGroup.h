@@ -62,6 +62,8 @@ namespace ROOT {
 
          static Int_t Compare(const TGroup &group1, const TGroup &group2);
 
+         Int_t Compare(const TGroup &group2);
+
          static TGroup Union(const TGroup &group1, const TGroup &group2);
 
          static TGroup Intersect(const TGroup &group1, const TGroup &group2);

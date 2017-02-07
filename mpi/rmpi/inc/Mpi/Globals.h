@@ -203,6 +203,9 @@ namespace ROOT {
       R__EXTERN const TGroup         GROUP_EMPTY;
 
 
+      R__EXTERN TCommunicator COMM_WORLD;
+
+
       template<class T> MPI_Datatype GetDataType()
       {
          if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI_INT;

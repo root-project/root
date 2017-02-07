@@ -139,7 +139,7 @@ namespace ROOT {
 
 //Custom none datatype
       const MPI_Datatype DATATYPE_NULL = MPI_DATATYPE_NULL;
-
+      TCommunicator COMM_WORLD = TCommunicator(MPI_COMM_WORLD);
    }
 
 }

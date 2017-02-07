@@ -35,6 +35,15 @@ Int_t TGroup::Compare(const TGroup &group1, const TGroup &group2)
 }
 
 //______________________________________________________________________________
+Int_t TGroup::Compare(const TGroup &group2)
+{
+   Int_t result;
+   MPI_Group_compare(fGroup, group2.fGroup, &result);
+   return result;
+
+}
+
+//______________________________________________________________________________
 TGroup TGroup::Union(const TGroup &group1, const TGroup &group2)
 {
    MPI_Group newgroup;

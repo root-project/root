@@ -52,8 +52,8 @@ namespace ROOT {
          MPI_Comm fComm;           //! Raw communicator
          Int_t fMainProcess;    // Rank used like a main process
       public:
-         TCommunicator(const TCommunicator &comm);
-         TCommunicator(const MPI_Comm &comm = MPI_COMM_WORLD);
+         TCommunicator(const TCommunicator &comm = COMM_WORLD);
+         TCommunicator(const MPI_Comm &comm);
          ~TCommunicator();
 
          TCommunicator &operator=(const MPI_Comm &comm)
@@ -811,12 +811,9 @@ namespace ROOT {
 
       //______________________________________________________________________________
       template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root);
-
-
    }
 }
 R__EXTERN ROOT::Mpi::TCommunicator *gComm;
-R__EXTERN ROOT::Mpi::TCommunicator COMM_WORLD;
 
 
 #endif
