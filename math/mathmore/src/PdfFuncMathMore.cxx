@@ -57,8 +57,6 @@ double noncentral_chisquared_pdf(double x, double k, double lambda) {
 }
 
 
-
-
 } // namespace Math
 
 
@@ -66,9 +64,13 @@ double noncentral_chisquared_pdf(double x, double k, double lambda) {
 
 #include "Math/Error.h"
 
-// dummy method called to force auto-loading.
-// if method works the library has been loaded
-void ROOT::Math::MathMoreLibrary::Load() {
-   MATH_INFO_MSG("MathMoreLibrary","libMathMore has been loaded.");
-}
+// dummy method called to force auto-loading of MathMore Library
+//
+// note: a typdef MathMoreLIb to MathMoreLibrary has been introduced because for unknown reasons
+// loading on the MathMoreLibrary does not work while it works for the class name MathMoreLib
+// see ROOT-8455
+
+void ROOT::Math::MathMoreLib::Load() {
+    MATH_INFO_MSG("MathMoreLibrary","libMathMore has been loaded.");
+ }
 
