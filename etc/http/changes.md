@@ -4,6 +4,7 @@
 1. Fix - read branch entries as arrays 
 2. Fix - command submission to THttpServer
 3. Fix - let refill statbox also for empty histogram  
+4. Fix - propblem with online TTree::Draw and ROOT6 
 
 
 ## Changes in 5.0.1
