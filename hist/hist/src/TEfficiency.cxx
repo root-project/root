@@ -1483,11 +1483,6 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
             return false;
          }
 
-      if(!TMath::AreEqualRel(ax1->GetXmax(), ax2->GetXmax(), 1.E-15)) {
-         gROOT->Info("TEfficiency::CheckBinning","Histograms are not consistent: they have different axis max value");
-         return false;
-      }
-
 
    }
 

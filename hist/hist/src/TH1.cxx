@@ -7371,20 +7371,19 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    // Check consistency in number of channels
    if (ncx1 != ncx2) {
-      Error("KolmogorovTest","Number of channels is different, %d and %d\n",ncx1,ncx2);
+      Error("KolmogorovTest","Histograms have different number of bins, %d and %d\n",ncx1,ncx2);
       return 0;
    }
 
    // empty the buffer. Probably we could add as an unbinned test
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
-   // Check consistency in channel edges
-   Double_t difprec = 1e-5;
-   Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
-   Double_t diff2 = TMath::Abs(axis1->GetXmax() - axis2->GetXmax());
-   if (diff1 > difprec || diff2 > difprec) {
-      Error("KolmogorovTest","histograms with different binning");
-      return 0;
+   // Check consistency in bin edges
+   for(Int_t i = 1; i <= axis1->GetNbins() + 1; ++i) {
+      if(!TMath::AreEqualRel(axis1->GetBinLowEdge(i), axis2->GetBinLowEdge(i), 1.E-15)) {
+         Error("KolmogorovTest","Histograms are not consistent: they have different bin edges");
+         return 0;
+      }
    }
 
    Bool_t afunc1 = kFALSE;
