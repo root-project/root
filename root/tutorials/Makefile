@@ -85,6 +85,7 @@ endif
 
 ifeq ($(findstring xml, $(shell root-config --features)),)
   TUTORIALSTESTS_VETO += xml/%
+  TUTORIALSTESTS_VETO += unfold/%
 endif
 
 ifeq ($(findstring fitsio, $(shell root-config --features)),)
