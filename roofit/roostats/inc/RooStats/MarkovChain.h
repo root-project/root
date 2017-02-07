@@ -39,17 +39,6 @@
 
 namespace RooStats {
 
-   /**
-
-Stores the steps in a Markov Chain of points.  Allows user to access the
-weight and NLL value (if applicable) with which a point was added to the
-MarkovChain.
-
-\ingroup Roostats
-
-*/
-
-
    class MarkovChain : public TNamed {
 
    public:
@@ -79,7 +68,7 @@ MarkovChain.
       /// get the weight of entry at position i
       virtual Double_t Weight(Int_t i) const;
       /// get the NLL value of entry at position i
-      virtual Double_t NLL(Int_t i) const; 
+      virtual Double_t NLL(Int_t i) const;
       /// get the NLL value of the current (last indexed) entry
       virtual Double_t NLL() const;
 
@@ -95,7 +84,7 @@ MarkovChain.
                                        const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
                                        const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
                                        const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(),
-                                       const RooCmdArg& arg8=RooCmdArg::none() ) const; 
+                                       const RooCmdArg& arg8=RooCmdArg::none() ) const;
 
       virtual const RooDataSet* GetAsConstDataSet() const { return fChain; }
 
@@ -111,7 +100,7 @@ MarkovChain.
                                          const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
                                          const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
                                          const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(),
-                                         const RooCmdArg& arg8=RooCmdArg::none() ) const; 
+                                         const RooCmdArg& arg8=RooCmdArg::none() ) const;
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a sparse histogram.  You own the returned THnSparse*
