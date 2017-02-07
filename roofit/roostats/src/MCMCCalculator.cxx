@@ -10,6 +10,27 @@
  *************************************************************************/
 
 
+/** \class RooStats::MCMCCalculator
+    \ingroup Roostats
+
+   Bayesian Calculator estimating an interval or a credible region using the
+   Markov-Chain Monte Carlo method to integrate the likelihood function with the
+   prior to obtain the posterior function.
+
+   By using the Markov-Chain Monte Carlo methods this calculator can work with
+   model which require the integration of a large number of parameters.
+
+   MCMCCalculator is a concrete implementation of IntervalCalculator.  It uses a
+   MetropolisHastings object to construct a Markov Chain of data points in the
+   parameter space.  From this Markov Chain, this class can generate a
+   MCMCInterval as per user specification.
+
+   The interface allows one to pass the model, data, and parameters via a
+   workspace and then specify them with names.
+
+   After configuring the calculator, one only needs to ask GetInterval(), which
+   will return an ConfInterval (MCMCInterval in this case).
+ */
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -63,10 +84,12 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-// default constructor
-MCMCCalculator::MCMCCalculator() : 
-   fPropFunc(0), 
-   fPdf(0), 
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
+MCMCCalculator::MCMCCalculator() :
+   fPropFunc(0),
+   fPdf(0),
    fPriorPdf(0),
    fData(0),
    fAxes(0)
@@ -83,10 +106,12 @@ MCMCCalculator::MCMCCalculator() :
    fDelta = -1;
 }
 
-// constructor from a Model Config with a basic settings package configured
-// by SetupBasicUsage()
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from a Model Config with a basic settings package configured
+/// by SetupBasicUsage()
+
 MCMCCalculator::MCMCCalculator(RooAbsData& data, const ModelConfig & model) :
-   fPropFunc(0), 
+   fPropFunc(0),
    fData(&data),
    fAxes(0)
 {
@@ -94,9 +119,9 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, const ModelConfig & model) :
    SetupBasicUsage();
 }
 
-void MCMCCalculator::SetModel(const ModelConfig & model) { 
+void MCMCCalculator::SetModel(const ModelConfig & model) {
    // set the model
-   fPdf = model.GetPdf();  
+   fPdf = model.GetPdf();
    fPriorPdf = model.GetPriorPdf();
    fPOI.removeAll();
    fNuisParams.removeAll();
@@ -105,15 +130,17 @@ void MCMCCalculator::SetModel(const ModelConfig & model) {
       fPOI.add(*model.GetParametersOfInterest());
    if (model.GetNuisanceParameters())
       fNuisParams.add(*model.GetNuisanceParameters());
-   if (model.GetConditionalObservables()) 
+   if (model.GetConditionalObservables())
       fConditionalObs.add( *(model.GetConditionalObservables() ) );
 
 }
 
-// Constructor for automatic configuration with basic settings.  Uses a
-// UniformProposal, 10,000 iterations, 40 burn in steps, 50 bins for each
-// RooRealVar, determines interval by histogram.  Finds a 95% confidence
-// interval.
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for automatic configuration with basic settings.  Uses a
+/// UniformProposal, 10,000 iterations, 40 burn in steps, 50 bins for each
+/// RooRealVar, determines interval by histogram.  Finds a 95% confidence
+/// interval.
+
 void MCMCCalculator::SetupBasicUsage()
 {
    fPropFunc = 0;
@@ -129,6 +156,8 @@ void MCMCCalculator::SetupBasicUsage()
    fDelta = -1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMCCalculator::SetLeftSideTailFraction(Double_t a)
 {
    if (a < 0 || a > 1) {
@@ -142,9 +171,11 @@ void MCMCCalculator::SetLeftSideTailFraction(Double_t a)
    fIntervalType = MCMCInterval::kTailFraction;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Main interface to get a RooStats::ConfInterval.
+
 MCMCInterval* MCMCCalculator::GetInterval() const
 {
-   // Main interface to get a RooStats::ConfInterval.  
 
    if (!fData || !fPdf   ) return 0;
    if (fPOI.getSize() == 0) return 0;
@@ -155,15 +186,15 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       return NULL;
    }
 
-   // if a proposal funciton has not been specified create a default one
-   bool useDefaultPropFunc = (fPropFunc == 0); 
+   // if a proposal function has not been specified create a default one
+   bool useDefaultPropFunc = (fPropFunc == 0);
    bool usePriorPdf = (fPriorPdf != 0);
-   if (useDefaultPropFunc) fPropFunc = new UniformProposal(); 
+   if (useDefaultPropFunc) fPropFunc = new UniformProposal();
 
-   // if prior is given create product 
+   // if prior is given create product
    RooAbsPdf * prodPdf = fPdf;
-   if (usePriorPdf) { 
-      TString prodName = TString("product_") + TString(fPdf->GetName()) + TString("_") + TString(fPriorPdf->GetName() );   
+   if (usePriorPdf) {
+      TString prodName = TString("product_") + TString(fPdf->GetName()) + TString("_") + TString(fPriorPdf->GetName() );
       prodPdf = new RooProdPdf(prodName,prodName,RooArgList(*fPdf,*fPriorPdf) );
    }
 
@@ -188,13 +219,13 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    mh.SetType(MetropolisHastings::kLog);
    mh.SetSign(MetropolisHastings::kNegative);
    mh.SetParameters(*params);
-   if (fChainParams.getSize() > 0) mh.SetChainParameters(fChainParams); 
+   if (fChainParams.getSize() > 0) mh.SetChainParameters(fChainParams);
    mh.SetProposalFunction(*fPropFunc);
    mh.SetNumIters(fNumIters);
 
    MarkovChain* chain = mh.ConstructChain();
 
-   TString name = TString("MCMCInterval_") + TString(GetName() ); 
+   TString name = TString("MCMCInterval_") + TString(GetName() );
    MCMCInterval* interval = new MCMCInterval(name, fPOI, *chain);
    if (fAxes != NULL)
       interval->SetAxes(*fAxes);
@@ -211,10 +242,10 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       interval->SetDelta(fDelta);
    interval->SetConfidenceLevel(1.0 - fSize);
 
-   if (useDefaultPropFunc) delete fPropFunc; 
-   if (usePriorPdf) delete prodPdf; 
-   delete nll; 
+   if (useDefaultPropFunc) delete fPropFunc;
+   if (usePriorPdf) delete prodPdf;
+   delete nll;
    delete params;
-   
+
    return interval;
 }
