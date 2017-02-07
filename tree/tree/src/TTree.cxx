@@ -4387,7 +4387,7 @@ Int_t TTree::Fill()
       fBranchRef->Clear();
    }
 
-   ROOT::Internal::TBranchIMTHelper imt_helper;
+   ROOT::Internal::TBranchIMTHelper imtHelper;
    #ifdef R__USE_IMT
    if (fIMTEnabled) {
       fIMTFlush = true;
@@ -4402,7 +4402,7 @@ Int_t TTree::Fill()
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imt_helper : nullptr);
+      Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
       if (nwrite < 0)  {
          if (nerror < 2) {
             Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
