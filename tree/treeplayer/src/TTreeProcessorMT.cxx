@@ -32,12 +32,28 @@ objects.
 using namespace ROOT;
 
 ////////////////////////////////////////////////////////////////////////
-/// Regular constructor.
+/// Constructor based on a file name.
 /// \param[in] filename Name of the file containing the tree to process.
 /// \param[in] treename Name of the tree to process. If not provided,
 ///                     the implementation will automatically search for a
 ///                     tree in the file.
 TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view treename) : treeView(filename, treename) {}
+
+////////////////////////////////////////////////////////////////////////
+/// Constructor based on a collection of file names.
+/// \param[in] filenames Collection of the names of the files containing the tree to process.
+/// \param[in] treename Name of the tree to process. If not provided,
+///                     the implementation will automatically search for a
+///                     tree in the collection of files.
+TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename) : treeView(filenames, treename) {}
+
+////////////////////////////////////////////////////////////////////////
+/// Constructor based on a TChain.
+/// \param[in] chain Chain of files containing the tree to process.
+/// \param[in] treename Name of the tree to process. If not provided,
+///                     the implementation will automatically search for a
+///                     tree in the chain of files.
+TTreeProcessorMT::TTreeProcessorMT(TChain& chain, std::string_view treename) : treeView(chain, treename) {}
 
 //////////////////////////////////////////////////////////////////////////////
 /// Process the entries of a TTree in parallel. The user-provided function
@@ -61,21 +77,26 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader&)> func)
    // Enable this IMT use case (activate its locks)
    Internal::TParTreeProcessingRAII ptpRAII;
 
-   auto clusterIter = treeView->GetClusterIterator();
-   Long64_t start = 0, end = 0;
-
    // Create task group - assume number of threads has been initialized via ROOT::EnableImplicitMT
    tbb::task_group g;
 
-   // Iterate over the clusters and generate a task for each of them
-   while ((start = clusterIter()) < treeView->GetEntries()) {
-      end = clusterIter.GetNextEntry();
+   // Iterate over the collection of files
+   for (size_t i = 0; i < treeView->GetNumFiles(); ++i) {
+      treeView->SetCurrent(i);
+      auto clusterIter = treeView->GetClusterIterator();
+      Long64_t start = 0, end = 0;
 
-      g.run([this, &func, start, end]() {
-         auto tr = treeView->GetTreeReader();
-         tr->SetEntriesRange(start, end);
-         func(*tr);
-      });
+      // Iterate over the clusters in the current file and generate a task for each of them
+      while ((start = clusterIter()) < treeView->GetEntries()) {
+         end = clusterIter.GetNextEntry();
+
+         g.run([this, &func, start, end, i]() {
+            treeView->SetCurrent(i);
+            auto tr = treeView->GetTreeReader();
+            tr->SetEntriesRange(start, end);
+            func(*tr);
+         });
+      }
    }
 
    g.wait();

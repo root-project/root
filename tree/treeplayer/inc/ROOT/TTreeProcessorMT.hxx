@@ -12,32 +12,17 @@
 #ifndef ROOT_TTreeProcessorMT
 #define ROOT_TTreeProcessorMT
 
-#ifndef ROOT_TKey
 #include "TKey.h"
-#endif
-
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-
-#ifndef ROOT_TTreeReader
+#include "TChain.h"
 #include "TTreeReader.h"
-#endif
-
-#ifndef ROOT_TThreadedObject
-#include "ROOT/TThreadedObject.hxx"
-#endif
-
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
+#include "ROOT/TThreadedObject.hxx"
 
 #include <string.h>
 #include <functional>
+#include <vector>
 
 
 /** \class TTreeView
@@ -48,6 +33,10 @@ It is used together with TTProcessor and ROOT::TThreadedObject, so that
 in the TTProcessor::Process method each thread can work on its own
 <TFile,TTree> pair.
 
+This class can also be used with a collection of file names or a TChain, in case
+the tree is stored in more than one file. A view will always contain only the
+current (active) tree and file objects.
+
 A copy constructor is defined for TTreeView to work with ROOT::TThreadedObject.
 The latter makes a copy of a model object every time a new thread accesses
 the threaded object.
@@ -57,21 +46,22 @@ namespace ROOT {
    namespace Internal {
       class TTreeView {
       private:
-         std::string_view fFileName;   ///< Name of the file
-         std::string_view fTreeName;   ///< Name of the tree
-         std::unique_ptr<TFile> fFile; ///<! File object of this view.
-         std::unique_ptr<TTree> fTree; ///<! Tree object of this view.
+         std::vector<std::string> fFileNames; ///< Names of the files
+         std::string fTreeName;               ///< Name of the tree
+         std::unique_ptr<TFile> fCurrentFile; ///<! Current file object of this view.
+         std::unique_ptr<TTree> fCurrentTree; ///<! Current tree object of this view.
+         int fCurrentIdx;                     ///<! Index of the current file.
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Initialize the file and the tree for this view, first looking for a tree in
          /// the file if necessary.
          void Init()
          {
-            fFile.reset(TFile::Open(fFileName.data()));
+            fCurrentFile.reset(TFile::Open(fFileNames[fCurrentIdx].data()));
 
             // If the tree name is empty, look for a tree in the file
             if (fTreeName.empty()) {
-               TIter next(fFile->GetListOfKeys());
+               TIter next(fCurrentFile->GetListOfKeys());
                while (TKey *key = (TKey*)next()) {
                   const char *className = key->GetClassName();
                   if (strcmp(className, "TTree") == 0) {
@@ -80,56 +70,116 @@ namespace ROOT {
                   }
                }
                if (fTreeName.empty())
-                  ::Error("TreeView constructor", "Cannot find any tree in file %s", fFileName.data());
+                  ::Error("TreeView constructor", "Cannot find any tree in file %s", fFileNames[fCurrentIdx].data());
             }
 
             // We cannot use here the template method (TFile::GetObject) because the header will finish
             // in the PCH and the specialization will be available. PyROOT will not be able to specialize
             // the method for types other that TTree.
-            TTree *tp = (TTree*)fFile->Get(fTreeName.data());
-            fTree.reset(tp);
+            TTree *tp = (TTree*)fCurrentFile->Get(fTreeName.data());
+            fCurrentTree.reset(tp);
          }
 
       public:
          //////////////////////////////////////////////////////////////////////////
-         /// Regular constructor.
+         /// Constructor based on a file name.
          /// \param[in] fn Name of the file containing the tree to process.
          /// \param[in] tn Name of the tree to process. If not provided,
          ///               the implementation will automatically search for a
-         ///                tree in the file.
-         TTreeView(std::string_view fn, std::string_view tn) : fFileName(fn), fTreeName(tn)
+         ///               tree in the file.
+         TTreeView(std::string_view fn, std::string_view tn) : fTreeName(tn), fCurrentIdx(0)
          {
+            fFileNames.emplace_back(fn);
             Init();
+         }
+
+         //////////////////////////////////////////////////////////////////////////
+         /// Constructor based on a collection of file names.
+         /// \param[in] fns Collection of file names containing the tree to process.
+         /// \param[in] tn Name of the tree to process. If not provided,
+         ///               the implementation will automatically search for a
+         ///               tree in the collection of files.
+         TTreeView(const std::vector<std::string_view>& fns, std::string_view tn) : fTreeName(tn), fCurrentIdx(0)
+         {
+            if (fns.size() > 0) {
+               for (auto& fn : fns)
+                  fFileNames.emplace_back(fn);
+               Init();
+             }
+             else {
+                ::Error("TreeView constructor", "The provided list of file names is empty, cannot process tree %s", fTreeName.data());
+             }
+         }
+
+         //////////////////////////////////////////////////////////////////////////
+         /// Constructor based on a TChain.
+         /// \param[in] chain Chain of files containing the tree to process.
+         /// \param[in] tn Name of the tree to process. If not provided,
+         ///               the implementation will automatically search for a
+         ///               tree in the chain of files.
+         TTreeView(TChain& chain, std::string_view tn) : fTreeName(tn), fCurrentIdx(0)
+         {
+            TObjArray* filelist = chain.GetListOfFiles();
+            if (filelist->GetEntries() > 0) { 
+               for (auto f : *filelist)
+                  fFileNames.emplace_back(f->GetTitle());
+               Init();
+            }
+            else {
+               ::Error("TreeView constructor", "The provided chain of files is empty, cannot process tree %s", fTreeName.data());
+            }
          }
 
          //////////////////////////////////////////////////////////////////////////
          /// Copy constructor.
          /// \param[in] view Object to copy.
-         TTreeView(const TTreeView& view) : fFileName(view.fFileName), fTreeName(view.fTreeName)
+         TTreeView(const TTreeView& view) : fTreeName(view.fTreeName), fCurrentIdx(view.fCurrentIdx) 
          {
+            for (auto& fn : view.fFileNames)
+               fFileNames.emplace_back(fn);
             Init();
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Get the cluster iterator for the tree of this view, starting from
-         /// entry zero.
+         /// Get the cluster iterator for the current tree of this view, starting
+         /// from entry zero.
          TTree::TClusterIterator GetClusterIterator()
          {
-            return fTree->GetClusterIterator(0);
+            return fCurrentTree->GetClusterIterator(0);
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Get a TTreeReader for the tree of this view.
+         /// Get a TTreeReader for the current tree of this view.
          std::unique_ptr<TTreeReader> GetTreeReader() const
          {
-            return std::unique_ptr<TTreeReader>(new TTreeReader(fTree.get()));
+            return std::unique_ptr<TTreeReader>(new TTreeReader(fCurrentTree.get()));
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Get the number of entries of the tree of this view.
+         /// Get the number of entries of the current tree of this view.
          Long64_t GetEntries() const
          {
-            return fTree->GetEntries();
+            return fCurrentTree->GetEntries();
+         }
+
+         //////////////////////////////////////////////////////////////////////////
+         /// Get the number of files of this view.
+         size_t GetNumFiles() const
+         {
+            return fFileNames.size();
+         }
+
+         //////////////////////////////////////////////////////////////////////////
+         /// Set the current file and tree of this view.
+         void SetCurrent(int i)
+         {
+            if (i != fCurrentIdx) {
+               fCurrentIdx = i;
+               TFile *f = TFile::Open(fFileNames[fCurrentIdx].data());
+               TTree *t = (TTree*)f->Get(fTreeName.data());
+               fCurrentTree.reset(t);
+               fCurrentFile.reset(f);
+            }
          }
       };
    } // End of namespace Internal
@@ -141,6 +191,8 @@ namespace ROOT {
 
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
+      TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");
+      TTreeProcessorMT(TChain& chain, std::string_view treename = ""); 
  
       void Process(std::function<void(TTreeReader&)> func);
 
