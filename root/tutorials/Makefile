@@ -93,7 +93,8 @@ ifeq ($(findstring fitsio, $(shell root-config --features)),)
 endif
 
 ifeq ($(findstring mathmore, $(shell root-config --features)),)
-  TUTORIALSTESTS_VETO += math/quasirandom
+  TUTORIALSTESTS_VETO += math/quasirandom math/exampleMultiRoot \
+      math/exampleMultiRoot
 endif
 
 ifeq ($(findstring fftw3, $(shell root-config --features)),)
