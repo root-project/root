@@ -221,7 +221,7 @@ void TBranchClones::Browse(TBrowser* b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all branches and fill Basket buffer.
 
-Int_t TBranchClones::FillImpl(TBranchIMTHelper *imt_helper)
+Int_t TBranchClones::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
    Int_t i = 0;
    Int_t nbytes = 0;
@@ -246,13 +246,13 @@ Int_t TBranchClones::FillImpl(TBranchIMTHelper *imt_helper)
          leaf->SetAddress();
       }
    }
-   nbytes += fBranchCount->FillImpl(imt_helper);
+   nbytes += fBranchCount->FillImpl(imtHelper);
    for (i = 0; i < nbranches; i++)  {
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
       TObjArray* leaves = branch->GetListOfLeaves();
       TLeaf* leaf = (TLeaf*) leaves->UncheckedAt(0);
       leaf->Import(fList, fN);
-      nbytes += branch->FillImpl(imt_helper);
+      nbytes += branch->FillImpl(imtHelper);
    }
    return nbytes;
 }

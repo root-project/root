@@ -40,10 +40,13 @@
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
 
+#include "TBranchIMTHelper.h"
+
 #include <atomic>
 #include <cstddef>
 #include <string.h>
 #include <stdio.h>
+
 
 Int_t TBranch::fgCount = 0;
 
@@ -64,6 +67,8 @@ See also specialized branches:
 */
 
 ClassImp(TBranch)
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.  Used for I/O by default.
@@ -744,7 +749,7 @@ void TBranch::ExpandBasketArrays()
 /// If no data are written, because e.g. the branch is disabled,
 /// the number of bytes returned is 0.
 
-Int_t TBranch::FillImpl(TBranchIMTHelper *imtHelper)
+Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
    if (TestBit(kDoNotProcess)) {
       return 0;
@@ -806,7 +811,7 @@ Int_t TBranch::FillImpl(TBranchIMTHelper *imtHelper)
       if (fTree->TestBit(TTree::kCircular)) {
          return nbytes;
       }
-      Int_t nout = WriteBasketImpl(basket,fWriteBasket, imtHelper);
+      Int_t nout = WriteBasketImpl(basket, fWriteBasket, imtHelper);
       if (nout < 0) Error("TBranch::Fill", "Failed to write out basket.\n");
       return (nout >= 0) ? nbytes : -1;
    }
@@ -2585,7 +2590,7 @@ void TBranch::Streamer(TBuffer& b)
 /// Write the current basket to disk and return the number of bytes
 /// written to the file.
 
-Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *imtHelper)
+Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
    Int_t nevbuf = basket->GetNevBuf();
    if (fEntryOffsetLen > 10 &&  (4*nevbuf) < fEntryOffsetLen ) {
@@ -2647,7 +2652,7 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, TBranchIMTHelper *i
       return nout;
    };
    if (imtHelper) {
-      imtHelper->run(doUpdates);
+      imtHelper->Run(doUpdates);
       return 0;
    } else {
       return doUpdates();

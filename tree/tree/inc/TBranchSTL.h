@@ -45,7 +45,7 @@ class TBranchSTL: public TBranch {
 
    void ReadLeavesImpl( TBuffer& b );
    void FillLeavesImpl( TBuffer& b );
-   virtual Int_t          FillImpl(TBranchIMTHelper *);
+   virtual Int_t          FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
 #ifndef __CINT__
       struct ElementBranchHelper_t

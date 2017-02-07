@@ -57,7 +57,7 @@ public:
    virtual void        UpdateAddress();
 
 private:
-   virtual Int_t       FillImpl(TBranchIMTHelper *);
+   virtual Int_t       FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
    ClassDef(TBranchObject,1);  //Branch in case of an object
 };

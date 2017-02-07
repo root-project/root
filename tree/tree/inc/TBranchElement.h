@@ -251,7 +251,7 @@ public:
    };
 
 private:
-   virtual Int_t            FillImpl(TBranchIMTHelper *);
+   virtual Int_t            FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
    ClassDef(TBranchElement,10)  // Branch in case of an object
 };

@@ -100,9 +100,9 @@ void TBranchRef::Clear(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the branch basket with the referenced objects parent numbers.
 
-Int_t TBranchRef::FillImpl(TBranchIMTHelper *imt_helper)
+Int_t TBranchRef::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
-   Int_t nbytes = TBranch::FillImpl(imt_helper);
+   Int_t nbytes = TBranch::FillImpl(imtHelper);
    return nbytes;
 }
 

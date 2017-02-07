@@ -1183,7 +1183,7 @@ void TBranchElement::BuildTitle(const char* name)
 ///
 /// Note: We not not use any member functions from TLeafElement!
 
-Int_t TBranchElement::FillImpl(TBranchIMTHelper *imt_helper)
+Int_t TBranchElement::FillImpl(ROOT::Internal::TBranchIMTHelper *imt_helper)
 {
    Int_t nbytes = 0;
    Int_t nwrite = 0;

@@ -393,6 +393,8 @@ End_Macro
 #include "TFileMergeInfo.h"
 #include "ROOT/StringConv.hxx"
 
+#include "TBranchIMTHelper.h"
+
 #include <chrono>
 #include <cstddef>
 #include <iostream>
@@ -4385,7 +4387,7 @@ Int_t TTree::Fill()
       fBranchRef->Clear();
    }
 
-   TBranchIMTHelper imt_helper;
+   ROOT::Internal::TBranchIMTHelper imt_helper;
    #ifdef R__USE_IMT
    if (fIMTEnabled) {
       fIMTFlush = true;
