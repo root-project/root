@@ -1,0 +1,87 @@
+language: cpp
+compiler: gcc
+
+# caching of the build dir (which is large, so large timeout (3 minute default))
+cache:
+  timeout: 1000
+  directories:
+  - ../root_build  # the build directory
+  - ../deps        # cmake
+  - files          # testing downloads some files to the git repo dir
+
+# following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - ninja-build
+      - gcc-6
+      - g++-6
+      - libxpm-dev
+      - libgsl0-dev
+      - libfftw3-dev
+      - libafterimage-dev
+      - libftgl-dev
+      - libgl2ps-dev
+      - libglew-dev
+      - liblzma-dev
+
+# following http://stackoverflow.com/a/33203355/1199693 and https://github.com/Microsoft/GSL/blob/master/.travis.yml
+before_install:
+  - |
+    DEPS_DIR="${TRAVIS_BUILD_DIR}/../deps"
+    mkdir -p "${DEPS_DIR}"
+
+install:
+  - |
+    cd "${DEPS_DIR}"
+    if [[ -z "$(ls -A ${DEPS_DIR}/cmake/bin)" ]]; then
+      CMAKE_URL="https://cmake.org/files/v3.4/cmake-3.4.3-Linux-x86_64.tar.gz"
+      mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C cmake
+    fi
+    export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
+  - cd "${TRAVIS_BUILD_DIR}"/.. && git clone --depth=1 --branch=master https://github.com/root-mirror/roottest
+  - mkdir -p "${TRAVIS_BUILD_DIR}"/../root_build
+
+script:
+  - cd "${TRAVIS_BUILD_DIR}"/../root_build
+  - |
+    if [[ -f touch_mtimes.txt ]]; then
+      while read mtime fn; do
+        touch -c -m -d "@$mtime" $fn
+      done < touch_mtimes.txt
+      
+      # touch all git repo files to set mtimes to older than oldest build dir file
+      # to ensure ninja will not rebuild them
+      cut -f 1 -d ' ' touch_mtimes.txt | sort | read OLDEST_MTIME
+      export OLDEST_MTIME=$((OLDEST_MTIME-1))
+      find ${TRAVIS_BUILD_DIR} ${TRAVIS_BUILD_DIR}/../roottest -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
+      
+      # touch changed git files to trigger their rebuild
+      if [[ -f previous_git_commit.txt ]]; then
+        read PREVIOUS_GIT_COMMIT < previous_git_commit.txt
+        export PREVIOUS_GIT_COMMIT
+      else
+        # MANUAL SETTING FOR BOOTSTRAPPING; REMOVE ASAP!
+        export PREVIOUS_GIT_COMMIT="HEAD~1"
+        # REMOVE ASAP!
+      fi
+      changed_files=`git diff --name-only $PREVIOUS_GIT_COMMIT HEAD`
+      echo "Previously cached Travis build based on git commit ${PREVIOUS_GIT_COMMIT}."
+      echo "... changed files since then:"
+      echo $changed_files
+      cd "${TRAVIS_BUILD_DIR}"
+      touch `echo $changed_files`
+      cd "${TRAVIS_BUILD_DIR}"/../root_build
+    else
+      cmake -G Ninja "${TRAVIS_BUILD_DIR}" -DCMAKE_C_COMPILER=gcc-6 -DCMAKE_CXX_COMPILER=g++-6 -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF
+    fi
+  - ninja -j4 # -d explain
+
+# Save the exact timestamps of the files so we can recreate them with touch in the next build.
+# N.B.: just tarring the build files doesn't work, since the git clone will still be newer.
+# The build tools (make at least) only care about order, not about absolute timestamps.
+before_cache:
+  - find . -type f -printf "%.10T@ %p\n" > touch_mtimes.txt
+  - cd "${TRAVIS_BUILD_DIR}" && git rev-parse HEAD > ../root_build/previous_git_commit.txt
