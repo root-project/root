@@ -133,8 +133,8 @@ protected:
 private:
    Int_t FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
    Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
-   TBranch(const TBranch&);             // not implemented
-   TBranch& operator=(const TBranch&);  // not implemented
+   TBranch(const TBranch&) = delete;             // not implemented
+   TBranch& operator=(const TBranch&) = delete;  // not implemented
 
 public:
    TBranch();
