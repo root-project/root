@@ -83,7 +83,7 @@ $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TRE
 $(TREEPLAYER2DS): $(TREEPLAYER2H) $(TREEPLAYER2L) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREEPLAYER) -multiDict -writeEmptyRootPCM $(TREEPLAYER2H) $(TREEPLAYER2L)
+		$(ROOTCLINGSTAGE2) -f $@  -s lib/libTreePlayer.$(SOEXT) -rml libTreePlayer.$(SOEXT) -rmf lib/libTreePlayer.rootmap -multiDict -writeEmptyRootPCM $(TREEPLAYER2H) $(TREEPLAYER2L)
 
 
 $(TREEPLAYERMAP): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)
