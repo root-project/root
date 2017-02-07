@@ -153,6 +153,17 @@ if(cxxmodules)
       # flag.
       set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
     endif(APPLE)
+
+    # Provide our own modulemap for implementations other than libcxx.
+    if (NOT libcxx)
+      # Write a empty overlay file to the output directory that CMake can run its compiler tests.
+      # We will create the actual overlay later in the configuration.
+      file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
+      set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__vfs_overlay}")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__vfs_overlay}")
+    endif()
+
     # These vars are useful when we want to compile things without cxxmodules.
     set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags.")
     set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")

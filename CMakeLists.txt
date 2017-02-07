@@ -218,12 +218,8 @@ if(cxxmodules)
                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap
                     )
     add_dependencies(copymodulemap copystlmodulemap)
-    # Provide our own modulemap for other than libcxx implementations.
-    set (__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
   endif()
 
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__vfs_overlay}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__vfs_overlay}")
 
 endif(cxxmodules)
 
