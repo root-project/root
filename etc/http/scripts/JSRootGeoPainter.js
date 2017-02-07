@@ -779,13 +779,13 @@
       if (! this.options._debug && !this.options._grid ) return;
 
       // FIXME: at the moment THREE.TransformControls is bogus in three.js, should be fixed and check again
-
-      return;
+      //return;
 
       this._tcontrols = new THREE.TransformControls( this._camera, this._renderer.domElement );
       this._scene.add( this._tcontrols );
       this._tcontrols.attach( this._toplevel );
       //this._tcontrols.setSize( 1.1 );
+      var painter = this;
 
       window.addEventListener( 'keydown', function ( event ) {
          switch ( event.keyCode ) {
@@ -932,7 +932,7 @@
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
          var need_worker = (numvis > 10000) || (matrix && (this._clones.ScanVisible() > 1e5));
-         
+
          // worker does not work when starting from file system
          if (need_worker && JSROOT.source_dir.indexOf("file://")==0) {
             console.log('disable worker for jsroot from file system');
@@ -1373,6 +1373,8 @@
 
    JSROOT.TGeoPainter.prototype.adjustCameraPosition = function(first_time) {
 
+      if (!this._toplevel) return;
+
       var extras = this.getExtrasContainer('get');
       if (extras) this._toplevel.remove(extras);
 
@@ -1515,6 +1517,8 @@
       // Interpolate //
 
       function animate() {
+         if (painter._animating === undefined) return;
+
          if (painter._animating) {
             requestAnimationFrame( animate );
          } else {
@@ -1550,9 +1554,9 @@
 
       function animate() {
          if (!painter._renderer || !painter.options) return;
-         
+
          var current = new Date();
-         
+
          if ( painter.options.autoRotate ) requestAnimationFrame( animate );
 
          if (painter._controls) {
@@ -1645,6 +1649,45 @@
       return null;
    }
 
+   JSROOT.TGeoPainter.prototype.MouseOverHierarchy = function(on, itemname, hitem) {
+      // function called when mouse is going over the item in the browser
+
+      if (!this.options) return; // protection for cleaned-up painter
+
+      var painter = this, obj = hitem._obj, mesh = null;
+      if (this.options._debug)
+         console.log('Mouse over', on, itemname, (hitem._obj ? hitem._obj._typename : "---"));
+
+      // let's highlight tracks and hits only for the time being
+      if (!hitem._obj || (hitem._obj._typename !== "TEveTrack" &&
+          hitem._obj._typename !== "TEvePointSet")) return;
+
+      // Be aware, that item name is real name in browser (with potentially cycle number in the name)
+      // One can use object to identify which track should be highlighted
+      painter.getExtrasContainer().children.some(function(node, index) {
+         if (node.geo_object === obj) { mesh = node; return true; }
+         return false;
+      });
+      if (mesh && on) {
+         painter._selected.mesh = mesh;
+         painter._selected.originalColor = mesh.material.color;
+         painter._selected.originalSize = mesh.material.size;
+         painter._selected.originalLineWidth = mesh.material.linewidth;
+         painter._selected.mesh.material.color = new THREE.Color( 0x00ff00 );
+         painter._selected.mesh.material.size *= 2;
+         painter._selected.mesh.material.linewidth *= 2;
+      }
+      else if (painter._selected.mesh) {
+         if (painter._selected.originalColor)
+            painter._selected.mesh.material.color = painter._selected.originalColor;
+         if (painter._selected.originalSize)
+            painter._selected.mesh.material.size = painter._selected.originalSize;
+         if (painter._selected.originalLineWidth)
+            painter._selected.mesh.material.linewidth = painter._selected.originalLineWidth;
+      }
+      painter.Render3D(0);
+   }
+
    JSROOT.TGeoPainter.prototype.addExtra = function(obj, itemname) {
 
       // register extra objects like tracks or hits
@@ -1702,7 +1745,7 @@
          if (!obj.arr) return false;
          for (var n=0;n<obj.arr.length;++n) {
             var sobj = obj.arr[n];
-            var sname = itemname === undefined ? obj.opt[n] : (itemname + "/" + sobj.fName);
+            var sname = (itemname === undefined) ? obj.opt[n] : (itemname + "/[" + n + "]");
             if (this.drawExtras(sobj, sname, add_objects)) isany = true;
          }
       } else
@@ -2071,7 +2114,7 @@
       this.add_3d_canvas(size, this._renderer.domElement);
 
       // set top painter only when first child exists
-      
+
       this.AccessTopPainter(true);
 
       this.CreateToolbar();
@@ -2318,6 +2361,11 @@
 
       var call_ready = false;
 
+      if (!this.options) {
+         console.warn('options object does not exist in completeDraw - something went wrong');
+         return;
+      }
+
       if (this._first_drawing) {
          this.adjustCameraPosition(true);
          this._first_drawing = false;
@@ -2376,9 +2424,9 @@
    JSROOT.TGeoPainter.prototype.Cleanup = function(first_time) {
 
       if (!first_time) {
-         
+
          this.AccessTopPainter(false); // remove as pointer
-         
+
          this.helpText();
 
          JSROOT.Painter.DisposeThreejsObject(this._scene);
@@ -2399,24 +2447,26 @@
          if (obj) delete obj._painter;
 
          if (this._worker) this._worker.terminate();
-         
+
          JSROOT.TObjectPainter.prototype.Cleanup.call(this);
-         
+
          delete this.options;
+
+         delete this._animating;
       }
-      
+
       if (this._renderer) {
-         if (this._renderer.dispose) this._renderer.dispose(); 
-         if (this._renderer.context) delete this._renderer.context; 
+         if (this._renderer.dispose) this._renderer.dispose();
+         if (this._renderer.context) delete this._renderer.context;
       }
-      
+
       delete this._scene;
       this._scene_width = 0;
       this._scene_height = 0;
       this._renderer = null;
       this._toplevel = null;
       this._camera = null;
-      
+
       if (this._clones) this._clones.Cleanup(this._draw_nodes, this._build_shapes);
       delete this._clones;
       delete this._draw_nodes;

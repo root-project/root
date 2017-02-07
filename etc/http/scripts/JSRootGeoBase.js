@@ -2920,7 +2920,7 @@
       }
       return null;
    }
-   
+
    JSROOT.GEO.ClonedNodes.prototype.Cleanup = function(drawnodes, drawshapes) {
       // function to cleanup as much as possible structures
       // drawnodes and drawshapes are arrays created during building of geometry
@@ -2931,23 +2931,23 @@
             drawnodes[n] = undefined;
          }
       }
-   
+
       if (drawshapes) {
          for (var n=0;n<drawshapes.length;++n) {
             delete drawshapes[n].geom;
             drawshapes[n] = undefined;
          }
       }
-      
+
       if (this.nodes)
          for (var n=0;n<this.nodes.length;++n)
             delete this.nodes[n].chlds;
-      
+
       delete this.nodes;
       delete this.origin;
-      
+
       delete this.sortmap;
-      
+
    }
 
    JSROOT.GEO.ClonedNodes.prototype.CreateClones = function(obj, sublevel, kind) {
