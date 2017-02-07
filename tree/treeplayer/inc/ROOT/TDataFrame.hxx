@@ -322,6 +322,8 @@ class TDataFrameImpl;
 
 namespace Experimental {
 
+class TDataFrame;
+
 /**
 * \class ROOT::Experimental::TDataFrameInterface
 * \ingroup dataframe
@@ -330,6 +332,7 @@ namespace Experimental {
 */
 template <typename Proxied>
 class TDataFrameInterface {
+   friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template<typename T> friend class TDataFrameInterface;
 public:
 
@@ -617,35 +620,6 @@ public:
 
 private:
 
-   /// Get the TDataFrameImpl if reachable. If not, throw.
-   std::shared_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrameChecked()
-   {
-      auto df = fProxiedPtr->GetDataFrame().lock();
-      if (!df) {
-         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-      }
-      return df;
-   }
-
-   void GetDefaultBranchName(std::string &theBranchName, const std::string &actionNameForErr)
-   {
-      if (theBranchName.empty()) {
-         // Try the default branch if possible
-         auto df = GetDataFrameChecked();
-         const BranchNames &defBl = df->GetDefaultBranches();
-         if (defBl.size() == 1) {
-            theBranchName = defBl[0];
-         } else {
-            std::string msg("No branch in input to ");
-            msg += actionNameForErr;
-            msg += " and default branch list has size ";
-            msg += std::to_string(defBl.size());
-            msg += ", need 1";
-            throw std::runtime_error(msg);
-         }
-      }
-   }
-
    /// \cond HIDDEN_SYMBOLS
    template <typename BranchType, typename ActionResultType, enum ROOT::Internal::EActionType, typename ThisType, bool isGuessedType = std::is_same<BranchType, ROOT::Detail::TDataFrameGuessedType>::value>
    struct SimpleAction {};
@@ -814,6 +788,34 @@ private:
    }
 
 protected:
+   /// Get the TDataFrameImpl if reachable. If not, throw.
+   std::shared_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrameChecked()
+   {
+      auto df = fProxiedPtr->GetDataFrame().lock();
+      if (!df) {
+         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
+      }
+      return df;
+   }
+
+   void GetDefaultBranchName(std::string &theBranchName, const std::string &actionNameForErr)
+   {
+      if (theBranchName.empty()) {
+         // Try the default branch if possible
+         auto df = GetDataFrameChecked();
+         const BranchNames &defBl = df->GetDefaultBranches();
+         if (defBl.size() == 1) {
+            theBranchName = defBl[0];
+         } else {
+            std::string msg("No branch in input to ");
+            msg += actionNameForErr;
+            msg += " and default branch list has size ";
+            msg += std::to_string(defBl.size());
+            msg += ", need 1";
+            throw std::runtime_error(msg);
+         }
+      }
+   }
    TDataFrameInterface(std::shared_ptr<Proxied> proxied) : fProxiedPtr(proxied) {}
    std::shared_ptr<Proxied> fProxiedPtr;
 };
@@ -1131,6 +1133,37 @@ std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
 
 } // end NS ROOT
 
-// FIXME: need to rethink the printfunction
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TDataFrame at the prompt:
+namespace cling {
+inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
+{
+   auto df = tdf->GetDataFrameChecked();
+   auto treeName = df->GetTreeName();
+   auto defBranches = df->GetDefaultBranches();
+   auto tmpBranches = df->GetTmpBranches();
 
+   std::ostringstream ret;
+   ret << "A data frame built on top of the " << treeName << " dataset.";
+   if (!defBranches.empty()) {
+      if(defBranches.size() == 1) ret << "\nDefault branch: " << defBranches[0];
+      else {
+         ret << "\nDefault branches:\n";
+         for (auto&& branch : defBranches) {
+            ret << " - " << branch << "\n";
+         }
+      }
+   }
+   if (!tmpBranches.empty()) {
+      if(tmpBranches.size() == 1) ret << "\nTemporary branch: " << tmpBranches[0];
+      else {
+         ret << "\nTemporary branches:\n";
+         for (auto&& branch : tmpBranches) {
+            ret << " - " << branch << "\n";
+         }
+      }
+   }
+   return ret.str();
+}
+}
 #endif // ROOT_TDATAFRAME
