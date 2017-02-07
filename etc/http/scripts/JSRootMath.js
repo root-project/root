@@ -577,19 +577,28 @@
    JSROOT.Math.lgamma = function(z) {
       return JSROOT.Math.lgam(z);
    };
-   
+
+   /** @memberOf JSROOT.Math */
+   JSROOT.Math.inc_gamma = function(a,x) {
+      return JSROOT.Math.igam(a,x);
+   };
+
+   JSROOT.Math.lgamma = function(z) {
+      return JSROOT.Math.lgam(z);
+   };
+
    /** @memberOf JSROOT.Math */
    JSROOT.Math.chisquared_cdf_c = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
       return JSROOT.Math.inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
    };
-   
+
    /** @memberOf JSROOT.Math */
    JSROOT.Math.chisquared_cdf = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
       return JSROOT.Math.inc_gamma ( 0.5 * r , 0.5*(x-x0) );
    };
-   
+
    /** @memberOf JSROOT.Math */
    JSROOT.Math.chisquared_pdf = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
@@ -630,6 +639,15 @@
    };
 
    /** @memberOf JSROOT.Math */
+   JSROOT.Math.gausxy = function(f, x, y, i) {
+      // function used when xygaus(0) used in the TFormula
+
+      return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2))
+                                * Math.exp(-0.5 * Math.pow((y-f.GetParValue(i+3)) / f.GetParValue(i+4), 2));
+   };
+
+
+   /** @memberOf JSROOT.Math */
    JSROOT.Math.expo = function(f, x, i) {
       return Math.exp(f.GetParValue(i+0) + f.GetParValue(i+1) * x);
    };
@@ -643,6 +661,41 @@
    JSROOT.Math.landaun = function(f, x, i) {
       return JSROOT.Math.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
    };
+
+   // =========================================================================
+
+   JSROOT.getMoreMethods = function(m,typename, obj) {
+      // different methods which are typically used in TTree::Draw
+
+      if (typename.indexOf("ROOT::Math::LorentzVector")===0) {
+         m.Px = m.X = function() { return this.fCoordinates.Px(); }
+         m.Py = m.Y = function() { return this.fCoordinates.Py(); }
+         m.Pz = m.Z = function() { return this.fCoordinates.Pz(); }
+         m.E = m.T = function() { return this.fCoordinates.E(); }
+         m.M2 = function() { return this.fCoordinates.M2(); }
+         m.M = function() { return this.fCoordinates.M(); }
+         m.R = m.P = function() { return this.fCoordinates.R(); }
+         m.P2 = function() { return this.P() * this.P(); }
+      }
+
+      if (typename.indexOf("ROOT::Math::PxPyPzE4D")===0) {
+         m.Px = m.X = function() { return this.fX; }
+         m.Py = m.Y = function() { return this.fY; }
+         m.Pz = m.Z = function() { return this.fZ; }
+         m.E = m.T = function() { return this.fT; }
+         m.P2 = function() { return this.fX*this.fX + this.fY*this.fY + this.fZ*this.fZ; }
+         m.R = m.P = function() { return Math.sqrt(this.P2()); }
+         m.Mag2 = m.M2 = function() { return this.fT*this.fT - this.fX*this.fX - this.fY*this.fY - this.fZ*this.fZ; }
+         m.Mag = m.M = function() {
+            var mm = this.M2();
+            if (mm >= 0) return Math.sqrt(mm);
+            return -Math.sqrt(-mm);
+         }
+         m.Perp2 = Pt2 = function() { return this.fX*this.fX + this.fY*this.fY;}
+      }
+   }
+
+
 
    return JSROOT;
 
