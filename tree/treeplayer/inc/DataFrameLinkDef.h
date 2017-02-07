@@ -8,8 +8,6 @@
 
 #ifdef __ROOTCLING__
 
-#pragma link C++ class ROOT::Detail::TDataFrameImpl-;
-#pragma link C++ class ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>-;
-#pragma link C++ typedef ROOT::Experimental::TDataFrame;
+#pragma link C++ class ROOT::Experimental::TDataFrame-;
 
 #endif
