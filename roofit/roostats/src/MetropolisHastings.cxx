@@ -9,7 +9,36 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::MetropolisHastings
+    \ingroup Roostats
+
+This class uses the Metropolis-Hastings algorithm to construct a Markov Chain
+of data points using Monte Carlo. In the main algorithm, new points in the
+parameter space are proposed and then visited based on their relative
+likelihoods.  This class can use any implementation of the ProposalFunction,
+including non-symmetric proposal functions, to propose parameter points and
+still maintain detailed balance when constructing the chain.
+
+
+
+The "Likelihood" function that is sampled when deciding what steps to take in
+the chain has been given a very generic implementation.  The user can create
+any RooAbsReal based on the parameters and pass it to a MetropolisHastings
+object with the method SetFunction(RooAbsReal&).  Be sure to tell
+MetropolisHastings whether your RooAbsReal is on a (+/-) regular or log scale,
+so that it knows what logic to use when sampling your RooAbsReal.  For example,
+a common use is to sample from a -log(Likelihood) distribution (NLL), for which
+the appropriate configuration calls are SetType(MetropolisHastings::kLog);
+SetSign(MetropolisHastings::kNegative);
+If you're using a traditional likelihood function:
+SetType(MetropolisHastings::kRegular);  SetSign(MetropolisHastings::kPositive);
+You must set these type and sign flags or MetropolisHastings will not construct
+a MarkovChain.
+
+Also note that in ConstructChain(), the values of the variables are randomized
+uniformly over their intervals before construction of the MarkovChain begins.
+
+*/
 
 #include "RooStats/MetropolisHastings.h"
 
@@ -67,6 +96,8 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+
 MetropolisHastings::MetropolisHastings()
 {
    // default constructor
@@ -77,6 +108,8 @@ MetropolisHastings::MetropolisHastings()
    fSign = kSignUnset;
    fType = kTypeUnset;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 MetropolisHastings::MetropolisHastings(RooAbsReal& function, const RooArgSet& paramsOfInterest,
       ProposalFunction& proposalFunction, Int_t numIters)
@@ -89,6 +122,8 @@ MetropolisHastings::MetropolisHastings(RooAbsReal& function, const RooArgSet& pa
    fSign = kSignUnset;
    fType = kTypeUnset;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 MarkovChain* MetropolisHastings::ConstructChain()
 {
@@ -120,7 +155,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    Int_t weight = 0;
    Double_t xL = 0.0, xPrimeL = 0.0, a = 0.0;
 
-   // ibucur: i think the user should have the possiblity to display all the message
+   // ibucur: i think the user should have the possibility to display all the message
    //    levels should they want to; maybe a setPrintLevel would be appropriate
    //    (maybe for the other classes that use this approach as well)?
    RooFit::MsgLevel oldMsgLevel = RooMsgService::instance().globalKillBelow();
@@ -131,7 +166,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    if (fType == kLog) {
      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
      //N.B: need to clear the count in case of previous errors !
-     // the clear needs also to be done after calling setEvalErrorLoggingMode 
+     // the clear needs also to be done after calling setEvalErrorLoggingMode
      RooAbsReal::clearEvalErrorLog();
    }
 
@@ -143,7 +178,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    // an eval error
    // for fType == kRegular this means fFunction->getVal() != 0
    //
-   // kbelasco: i < 1000 is sort of arbitary, but way higher than the number of
+   // kbelasco: i < 1000 is sort of arbitrary, but way higher than the number of
    // steps we should have to take for any reasonable (log) likelihood function
    while (i < 1000 && hadEvalError) {
       RandomizeCollection(x);
@@ -254,6 +289,8 @@ MarkovChain* MetropolisHastings::ConstructChain()
    return chain;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
 {
    if ((fType == kLog && a <= 0.0) || (fType == kRegular && a >= 1.0)) {
@@ -286,6 +323,8 @@ Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
       return kFALSE;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 Double_t MetropolisHastings::CalcNLL(Double_t xL)
 {
