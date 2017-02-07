@@ -21,7 +21,7 @@ int main() {
    try {
       auto c = d.AddBranch("a", []() { return 42; });
    } catch (const std::runtime_error& e) {
-      std::cout << "Exception catched: " << e.what() << std::endl;
+      std::cout << "Exception caught: " << e.what() << std::endl;
    }
    
    return 0;
