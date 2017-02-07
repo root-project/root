@@ -12,8 +12,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::MCMCIntervalPlot
+    \ingroup Roostats
 
+This class provides simple and straightforward utilities to plot a MCMCInterval
+object.  Basic use only requires a few lines once you have an MCMCInterval*:
+
+~~~ {.cpp}
+      MCMCIntervalPlot plot(*interval);
+      plot.Draw();
+~~~
+
+The standard Draw() function will currently draw the confidence interval
+range with bars if 1-D and a contour if 2-D.  The MCMC posterior will also be
+plotted for the 1-D case.
+
+*/
 
 #ifndef ROOSTATS_MCMCIntervalPlot
 #include "RooStats/MCMCIntervalPlot.h"
@@ -80,6 +94,8 @@ ClassImp(RooStats::MCMCIntervalPlot);
 using namespace std;
 using namespace RooStats;
 
+////////////////////////////////////////////////////////////////////////////////
+
 MCMCIntervalPlot::MCMCIntervalPlot()
 {
    fInterval = NULL;
@@ -104,6 +120,8 @@ MCMCIntervalPlot::MCMCIntervalPlot()
    fPosteriorHistTFCopy = NULL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval& interval)
 {
    SetMCMCInterval(interval);
@@ -126,6 +144,8 @@ MCMCIntervalPlot::MCMCIntervalPlot(MCMCInterval& interval)
    fPosteriorHistTFCopy = NULL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 MCMCIntervalPlot::~MCMCIntervalPlot()
 {
    delete fParameters;
@@ -147,6 +167,8 @@ MCMCIntervalPlot::~MCMCIntervalPlot()
    delete fNLLGraph;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMCIntervalPlot::SetMCMCInterval(MCMCInterval& interval)
 {
    fInterval = &interval;
@@ -154,10 +176,14 @@ void MCMCIntervalPlot::SetMCMCInterval(MCMCInterval& interval)
    fParameters = fInterval->GetParameters();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMCIntervalPlot::Draw(const Option_t* options)
 {
    DrawInterval(options);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCMCIntervalPlot::DrawPosterior(const Option_t* options)
 {
@@ -166,6 +192,8 @@ void MCMCIntervalPlot::DrawPosterior(const Option_t* options)
    else
       DrawPosteriorHist(options);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
       const char* title, Bool_t scale)
@@ -180,7 +208,7 @@ void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
    }
 
    // kbelasco: annoying hack because histogram drawing fails when it sees
-   // an unrecognized option like POSTERIOR_HIST, etc.
+   // an un-recognized option like POSTERIOR_HIST, etc.
    //const Option_t* myOpt = NULL;
 
    //TString tmpOpt(options);
@@ -204,6 +232,8 @@ void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
    return (void*)fPosteriorHist;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
 {
    if (fPosteriorKeysPdf == NULL)
@@ -221,7 +251,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
    if (fDimension == 1) {
       RooRealVar* v = (RooRealVar*)fParameters->first();
       RooPlot* frame = v->frame();
-      if (frame == NULL) { 
+      if (frame == NULL) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysPdf: "
                                << "Invalid parameter" << endl;
          return NULL;
@@ -255,6 +285,8 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
    return NULL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMCIntervalPlot::DrawInterval(const Option_t* options)
 {
    switch (fInterval->GetIntervalType()) {
@@ -271,6 +303,8 @@ void MCMCIntervalPlot::DrawInterval(const Option_t* options)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMCIntervalPlot::DrawShortestInterval(const Option_t* options)
 {
    if (fInterval->GetUseKeys())
@@ -278,6 +312,8 @@ void MCMCIntervalPlot::DrawShortestInterval(const Option_t* options)
    else
       DrawHistInterval(options);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
 {
@@ -321,7 +357,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
                RooFit::Normalization(1, RooAbsReal::Raw));
       }
       if (frame) {
-	frame->Draw(options);
+   frame->Draw(options);
       }
 
       TLine* llLine = new TLine(ll, 0, ll, height);
@@ -374,6 +410,8 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
 {
    TString title(GetTitle());
@@ -418,7 +456,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       copy->SetFillStyle(1001);
       copy->SetFillColor(fShadeColor);
       hist->Draw(options);
-      // to show the interval area 
+      // to show the interval area
       copy->Draw("HIST SAME");
 
       fPosteriorHistHistCopy = copy;
@@ -470,6 +508,8 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
          << " Sorry: " << fDimension << "-D plots not currently supported" << endl;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
 {
@@ -530,6 +570,8 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
 {
    if (fPosteriorKeysProduct == NULL)
@@ -576,6 +618,8 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
    delete axes;
    return NULL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCMCIntervalPlot::DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar)
 {
@@ -657,6 +701,8 @@ void MCMCIntervalPlot::DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar)
    //delete first;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMCIntervalPlot::DrawParameterVsTime(RooRealVar& param)
 {
    const MarkovChain* markovChain = fInterval->GetChain();
@@ -689,10 +735,12 @@ void MCMCIntervalPlot::DrawParameterVsTime(RooRealVar& param)
    paramGraph->GetYaxis()->SetTitle(param.GetName());
    //paramGraph->SetLineColor(fLineColor);
    paramGraph->Draw("A,L,same");
-   delete [] value; 
-   delete [] time; 
+   delete [] value;
+   delete [] time;
    //gPad->Update();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCMCIntervalPlot::DrawNLLVsTime()
 {
@@ -727,9 +775,11 @@ void MCMCIntervalPlot::DrawNLLVsTime()
    //nllGraph->SetLineColor(fLineColor);
    nllGraph->Draw("A,L,same");
    //gPad->Update();
-   delete [] nllValue; 
-   delete [] time; 
+   delete [] nllValue;
+   delete [] time;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCMCIntervalPlot::DrawNLLHist(const Option_t* options)
 {
@@ -754,6 +804,8 @@ void MCMCIntervalPlot::DrawNLLHist(const Option_t* options)
    }
    fNLLHist->Draw(options);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCMCIntervalPlot::DrawWeightHist(const Option_t* options)
 {
@@ -783,7 +835,7 @@ void MCMCIntervalPlot::DrawWeightHist(const Option_t* options)
   TTree& chain =  ((RooTreeDataStore*) markovChainData->store())->tree();
   chain.SetMarkerStyle(6);
   chain.SetMarkerColor(kRed);
-  chain.Draw("s:ratioSigEff:ratioBkgEff","","box"); // 3-d box proporional to posterior
+  chain.Draw("s:ratioSigEff:ratioBkgEff","","box"); // 3-d box proportional to posterior
 
   // the points used in the profile construction
   TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->store())->tree();
