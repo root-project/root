@@ -22,6 +22,8 @@ FOUNDATIONS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 FOUNDATIONTH     += $(MODDIRI)/root_std_complex.h
 FOUNDATIONTH     += $(MODDIRI)/libcpp_string_view.h
 FOUNDATIONTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
+FOUNDATIONTH     += $(MODDIRI)/ROOT/RArrayView.hxx
+FOUNDATIONTH     += $(MODDIRI)/ROOT/rhysd_array_view.hxx
 
 FOUNDATIONO     := $(call stripsrc,$(FOUNDATIONS:.cxx=.o))
 
@@ -30,7 +32,7 @@ FOUNDATIONL     := $(MODDIRI)/LinkDef.h
 FOUNDATIONDEP   := $(FOUNDATIONO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FOUNDATIONH) $(FOUNDATIONTH))
+ALLHDRS     += $(patsubst $(MODDIRI)/%,include/%,$(FOUNDATIONH) $(FOUNDATIONTH))
 
 # include all dependency files
 INCLUDEFILES += $(FOUNDATIONDEP)
@@ -39,6 +41,10 @@ INCLUDEFILES += $(FOUNDATIONDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(FOUNDATIONDIRI)/%.h
+		cp $< $@
+
+include/%.hxx:	$(FOUNDATIONDIRI)/%.hxx
+		mkdir -p include/ROOT
 		cp $< $@
 
 all-$(MODNAME): $(FOUNDATIONO)
