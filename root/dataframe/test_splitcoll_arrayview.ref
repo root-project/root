@@ -1,0 +1,68 @@
+   -----------------------------------------------------------------
+  | Welcome to ROOT 6.09/01                     http://root.cern.ch |
+  |                                    (c) 1995-2016, The ROOT Team |
+  | Built for linuxx8664gcc                                         |
+  | From heads/master@v6-09-01-1351-g5467b33, Feb 07 2017, 13:09:35 |
+  | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'      |
+   -----------------------------------------------------------------
+
+
+Processing test_splitcoll_arrayview.C+...
+Exception caught: Branch v.a hangs from a non-split branch. For this reason, it cannot be accessed via an array_view. Please read the top level branch instead.
+0
+0
+1
+0
+1
+2
+0
+1
+2
+3
+0
+1
+2
+3
+4
+0
+1
+2
+3
+4
+5
+0
+1
+2
+3
+4
+5
+6
+0
+1
+2
+3
+4
+5
+6
+7
+0
+1
+2
+3
+4
+5
+6
+7
+8
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+count 0
+(int) 0

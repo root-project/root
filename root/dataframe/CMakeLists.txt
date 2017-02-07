@@ -7,6 +7,10 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_ADD_TEST(test_splitcoll_arrayview
+                  MACRO test_splitcoll_arrayview.C+
+                  OUTREF test_splitcoll_arrayview.ref)
+
 ROOTTEST_GENERATE_EXECUTABLE(test_readerarray test_readerarray.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_readerarray
                   EXEC test_readerarray
@@ -32,7 +36,7 @@ ROOTTEST_ADD_TEST(functiontraits
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 ROOTTEST_ADD_TEST(ctors
-                  MACRO test_ctors.C
+                  MACRO test_ctors.C+
                   OUTREF test_ctors.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(branchoverwrite test_branchoverwrite.cxx LIBRARIES ${DFLIBRARIES})
