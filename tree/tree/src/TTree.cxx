@@ -4424,12 +4424,12 @@ Int_t TTree::Fill()
    }
    #ifdef R__USE_IMT
    if (fIMTFlush) {
-      imt_helper.Wait();
+      imtHelper.Wait();
       fIMTFlush = false;
       const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
       const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
-      nbytes += imt_helper.GetNbytes();
-      nerror += imt_helper.GetNerrors();
+      nbytes += imtHelper.GetNbytes();
+      nerror += imtHelper.GetNerrors();
    }
    #endif
 
