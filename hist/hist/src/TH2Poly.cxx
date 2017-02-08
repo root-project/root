@@ -200,7 +200,7 @@ Int_t TH2Poly::AddBin(TObject *poly)
    }
 
    fNcells++;
-   Int_t ibin = fNcells-kNOverflow; 
+   Int_t ibin = fNcells-kNOverflow;
    TH2PolyBin *bin = new TH2PolyBin(poly, ibin);
 
    // If the bin lies outside histogram boundaries, then extends the boundaries.
@@ -291,7 +291,7 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
          return kFALSE;
       }
    }
-   
+
 
    // Create Sumw2 if h1p has Sumw2 set
    if (fSumw2.fN == 0 && h1p->GetSumw2N() != 0) Sumw2();
@@ -636,7 +636,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    while ((obj=next())) {
       bin  = (TH2PolyBin*)obj;
       // needs to account offset in array for overflow bins
-      bi = bin->GetBinNumber()-1+kNOverflow; 
+      bi = bin->GetBinNumber()-1+kNOverflow;
       if (bin->IsInside(x,y)) {
          bin->Fill(w);
 
@@ -1188,7 +1188,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
    while((obj = next())){
       th2pBin = (TH2PolyBin*) obj;
       th2pBin->GetPolygon()->SavePrimitive(out,
-                                           Form("th2poly%s",histName.Data()));
+                                           TString::Format("th2poly%s",histName.Data()));
    }
 
    // save bin contents
