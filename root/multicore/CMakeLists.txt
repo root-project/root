@@ -5,6 +5,9 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
+ROOTTEST_ADD_TEST(checkTThreadedObjectCopies
+                  MACRO checkTThreadedObjectCopies.C)
+
 ROOTTEST_GENERATE_EXECUTABLE(processExecutorTreeTest tProcessExecutorTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
 ROOTTEST_ADD_TEST(processExecutorTreeTest
