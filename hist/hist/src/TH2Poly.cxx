@@ -170,7 +170,6 @@ TH2Poly::TH2Poly(const char *name,const char *title,
    SetName(name);
    SetTitle(title);
    SetFloat(kFALSE);
-   fNcells = kNOverflow; // create space for overflows
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1233,9 +1232,10 @@ void TH2Poly::Scale(Double_t c1, Option_t*)
 
 void TH2Poly::SetBinContent(Int_t bin, Double_t content)
 {
-   if (bin > (fNcells) || bin == 0 || bin < -9 ) return;
-   if (bin > 0)
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -9 ) return;
+   if (bin > 0) {
       ((TH2PolyBin*) fBins->At(bin-1))->SetContent(content);
+   }
    else
       fOverflow[-bin - 1] = content;
    SetBinContentChanged(kTRUE);
