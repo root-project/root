@@ -170,6 +170,7 @@ TH2Poly::TH2Poly(const char *name,const char *title,
    SetName(name);
    SetTitle(title);
    SetFloat(kFALSE);
+   fNcells = kNOverflow; // create space for overflows
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +201,8 @@ Int_t TH2Poly::AddBin(TObject *poly)
    }
 
    fNcells++;
-   TH2PolyBin *bin = new TH2PolyBin(poly, fNcells);
+   Int_t ibin = fNcells-kNOverflow; 
+   TH2PolyBin *bin = new TH2PolyBin(poly, ibin);
 
    // If the bin lies outside histogram boundaries, then extends the boundaries.
    // Also changes the partition information accordingly
@@ -233,7 +235,7 @@ Int_t TH2Poly::AddBin(TObject *poly)
    // Adds the bin to the partition matrix
    AddBinToPartition(bin);
 
-   return fNcells;
+   return ibin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +273,7 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
    TH2Poly *h1p = (TH2Poly *)h1;
 
    // Check if number of bins is the same.
-   if (h1p->GetNumberOfBins() != fNcells) {
+   if (h1p->GetNumberOfBins() != GetNumberOfBins()) {
       Error("Add", "Attempt to add histograms with different number of bins");
       return kFALSE;
    }
@@ -279,7 +281,7 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
    // Check if the bins are the same.
    TList *h1pBins = h1p->GetBins();
    TH2PolyBin *thisBin, *h1pBin;
-   for (bin = 1; bin <= fNcells; bin++) {
+   for (bin = 1; bin <= GetNumberOfBins(); bin++) {
       thisBin = (TH2PolyBin *)fBins->At(bin - 1);
       h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
       if (thisBin->GetXMin() != h1pBin->GetXMin() ||
@@ -290,6 +292,7 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
          return kFALSE;
       }
    }
+   
 
    // Create Sumw2 if h1p has Sumw2 set
    if (fSumw2.fN == 0 && h1p->GetSumw2N() != 0) Sumw2();
@@ -310,15 +313,23 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
    Double_t factor = 1;
    if (h1p->GetNormFactor() != 0)
       factor = h1p->GetNormFactor() / h1p->GetSumOfWeights();
-   for (bin = 1; bin <= fNcells; bin++) {
-      thisBin = (TH2PolyBin *)fBins->At(bin - 1);
-      h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
-      thisBin->SetContent(thisBin->GetContent() + c1 * h1pBin->GetContent());
+   for (bin = 0; bin < fNcells; bin++) {
+      Double_t y = h1p->RetrieveBinContent(bin) + c1 * h1p->RetrieveBinContent(bin);
+      UpdateBinContent(bin, y);
       if (fSumw2.fN) {
-         Double_t e1 = factor * h1p->GetBinError(bin);
-         fSumw2.fArray[bin] += c1 * c1 * e1 * e1;
+         Double_t esq = factor * factor * h1p->GetBinErrorSqUnchecked(bin);
+         fSumw2.fArray[bin] += c1 * c1 * factor * factor * esq;
       }
    }
+   // for (bin = 1; bin <= GetNumberOfBins(); bin++) {
+   //    thisBin = (TH2PolyBin *)fBins->At(bin - 1);
+   //    h1pBin  = (TH2PolyBin *)h1pBins->At(bin - 1);
+   //    thisBin->SetContent(thisBin->GetContent() + c1 * h1pBin->GetContent());
+   //    if (fSumw2.fN) {
+   //       Double_t e1 = factor * h1p->GetBinError(bin);
+   //       fSumw2.fArray[bin] += c1 * c1 * e1 * e1;
+   //    }
+   // }
 
    // update statistics (do here to avoid changes by SetBinContent)
    if (resetStats)  {
@@ -588,7 +599,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y)
 
 Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 {
-   if (fNcells==0) return 0;
+   if (fNcells <= kNOverflow) return 0;
    Int_t overflow = 0;
    if      (y > fYaxis.GetXmax()) overflow += -1;
    else if (y > fYaxis.GetXmin()) overflow += -4;
@@ -596,7 +607,8 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    if      (x > fXaxis.GetXmax()) overflow += -2;
    else if(x > fXaxis.GetXmin())  overflow += -1;
    if (overflow != -5) {
-      fOverflow[-overflow - 1]++;
+      fOverflow[-overflow - 1]+= w;
+      if (fSumw2.fN) fSumw2.fArray[-overflow - 1] += w*w;
       return overflow;
    }
 
@@ -611,7 +623,8 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    if (m<0)       m = 0;
 
    if (fIsEmpty[n+fCellX*m]) {
-      fOverflow[4]++;
+      fOverflow[4]+= w;
+      if (fSumw2.fN) fSumw2.fArray[4] += w*w;
       return -5;
    }
 
@@ -623,7 +636,8 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 
    while ((obj=next())) {
       bin  = (TH2PolyBin*)obj;
-      bi = bin->GetBinNumber()-1;
+      // needs to account offset in array for overflow bins
+      bi = bin->GetBinNumber()-1+kNOverflow; 
       if (bin->IsInside(x,y)) {
          bin->Fill(w);
 
@@ -642,7 +656,8 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
       }
    }
 
-   fOverflow[4]++;
+   fOverflow[4]+= w;
+   if (fSumw2.fN) fSumw2.fArray[4] += w*w;
    return -5;
 }
 
@@ -732,7 +747,7 @@ Double_t TH2Poly::Integral(Option_t* option) const
 
 Double_t TH2Poly::GetBinContent(Int_t bin) const
 {
-   if (bin > fNcells || bin == 0 || bin < -9) return 0;
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
    if (bin<0) return fOverflow[-bin - 1];
    return ((TH2PolyBin*) fBins->At(bin-1))->GetContent();
 }
@@ -745,11 +760,11 @@ Double_t TH2Poly::GetBinContent(Int_t bin) const
 
 Double_t TH2Poly::GetBinError(Int_t bin) const
 {
-   if (bin < 0) bin = 0;
-   if (bin > (fNcells)) return 0;
+   if (bin == 0 || bin > GetNumberOfBins() || bin < - kNOverflow) return 0;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
    if (fSumw2.fN) {
-      Double_t err2 = fSumw2.fArray[bin-1];
+      Int_t binIndex = (bin < 0) ? bin+kNOverflow-1 : -(bin+1);
+      Double_t err2 = fSumw2.fArray[binIndex];
       return TMath::Sqrt(err2);
    }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
@@ -761,7 +776,7 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
 
 const char *TH2Poly::GetBinName(Int_t bin) const
 {
-   if (bin > (fNcells))  return "";
+   if (bin > GetNumberOfBins())  return "";
    if (bin < 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetName();
 }
@@ -771,7 +786,7 @@ const char *TH2Poly::GetBinName(Int_t bin) const
 
 const char *TH2Poly::GetBinTitle(Int_t bin) const
 {
-   if (bin > (fNcells))  return "";
+   if (bin > GetNumberOfBins())  return "";
    if (bin < 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetTitle();
 }
@@ -781,7 +796,7 @@ const char *TH2Poly::GetBinTitle(Int_t bin) const
 
 Double_t TH2Poly::GetMaximum() const
 {
-   if (fNcells==0) return 0;
+   if (fNcells <= kNOverflow) return 0;
    if (fMaximum != -1111) return fMaximum;
 
    TH2PolyBin  *b;
@@ -805,7 +820,7 @@ Double_t TH2Poly::GetMaximum() const
 
 Double_t TH2Poly::GetMaximum(Double_t maxval) const
 {
-   if (fNcells==0) return 0;
+   if (fNcells <= kNOverflow) return 0;
    if (fMaximum != -1111) return fMaximum;
 
    TH2PolyBin  *b;
@@ -829,7 +844,7 @@ Double_t TH2Poly::GetMaximum(Double_t maxval) const
 
 Double_t TH2Poly::GetMinimum() const
 {
-   if (fNcells==0) return 0;
+   if (fNcells <= kNOverflow) return 0;
    if (fMinimum != -1111) return fMinimum;
 
    TH2PolyBin  *b;
@@ -853,7 +868,7 @@ Double_t TH2Poly::GetMinimum() const
 
 Double_t TH2Poly::GetMinimum(Double_t minval) const
 {
-   if (fNcells==0) return 0;
+   if (fNcells <= kNOverflow) return 0;
    if (fMinimum != -1111) return fMinimum;
 
    TH2PolyBin  *b;
@@ -930,7 +945,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    fDimension = 2;  //The dimension of the histogram
 
    fBins   = 0;
-   fNcells = 0;
+   fNcells = kNOverflow;
 
    // Sets the boundaries of the histogram
    fXaxis.Set(100, xlow, xup);
@@ -1180,7 +1195,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
    // save bin contents
    out<<"   "<<std::endl;
    Int_t bin;
-   for (bin=1;bin<=fNcells;bin++) {
+   for (bin=1;bin<=GetNumberOfBins();bin++) {
       Double_t bc = GetBinContent(bin);
       if (bc) {
          out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
@@ -1189,7 +1204,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 
    // save bin errors
    if (fSumw2.fN) {
-      for (bin=1;bin<=fNcells;bin++) {
+      for (bin=1;bin<=GetNumberOfBins();bin++) {
          Double_t be = GetBinError(bin);
          if (be) {
             out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
@@ -1207,6 +1222,9 @@ void TH2Poly::Scale(Double_t c1, Option_t*)
    for( int i = 0; i < this->GetNumberOfBins(); i++ ) {
       this->SetBinContent(i+1, c1*this->GetBinContent(i+1));
    }
+   for( int i = 0; i < kNOverflow; i++ ) {
+      this->SetBinContent(-i-1, c1*this->GetBinContent(-i-1) );
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1219,7 +1237,7 @@ void TH2Poly::SetBinContent(Int_t bin, Double_t content)
    if (bin > 0)
       ((TH2PolyBin*) fBins->At(bin-1))->SetContent(content);
    else
-      fOverflow[-bin - 1] += content;
+      fOverflow[-bin - 1] = content;
    SetBinContentChanged(kTRUE);
 }
 
