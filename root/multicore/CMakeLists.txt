@@ -30,10 +30,15 @@ ROOTTEST_ADD_TEST(processExecutor
 
 if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
-  ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist ${TBB_LIBRARIES})
+  ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES Core Thread Hist)
 
-ROOTTEST_ADD_TEST(threadExecutor
+  ROOTTEST_ADD_TEST(threadExecutor
                     EXEC threadExecutor
+                    DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+  ROOTTEST_GENERATE_EXECUTABLE(scheduler testScheduler.cpp LIBRARIES Core Thread ${TBB_LIBRARIES})
+  ROOTTEST_ADD_TEST(scheduler
+                    EXEC scheduler
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
                   

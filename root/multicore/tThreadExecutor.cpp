@@ -4,24 +4,6 @@
 
 int PoolTest() {
 
-   if(ROOT::TThreadExecutor::GetPoolSize()==0){
-       ROOT::TThreadExecutor pool;
-       if(ROOT::TThreadExecutor::GetPoolSize()==0)
-        return 12;
-       if(ROOT::GetImplicitMTPoolSize()!=0 && ROOT::TThreadExecutor::GetPoolSize()!=ROOT::GetImplicitMTPoolSize())
-        return 13;
-
-       auto tmp = ROOT::TThreadExecutor::GetPoolSize();
-       ROOT::TThreadExecutor pool2(5);
-       if(tmp!=ROOT::TThreadExecutor::GetPoolSize())
-        return 14;
-   } else{
-       auto tmp = ROOT::TThreadExecutor::GetPoolSize();
-       ROOT::TThreadExecutor pool2(5);
-       if(tmp != ROOT::TThreadExecutor::GetPoolSize())
-       return 15;
-   }
-
 
    //////////////Tests 1-11///////////////
    ROOT::TThreadExecutor pool;
