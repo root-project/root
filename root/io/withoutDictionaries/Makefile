@@ -16,3 +16,17 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 execRowWiseNoProxyWarning.log: libRowWiseNoProxyWarning_dictrflx.$(DllSuf)
 execIOWithoutDictionaries.log: libIOWithoutDictionaries_dictrflx.$(DllSuf)
+execVectorDMWriteWithoutDictionary.log: libVectorDMWriteWithoutDictionary_dictrflx.$(DllSuf)
+
+libRowWiseNoProxyWarning_dictrflx.$(DllSuf): \
+   GENREFLEXFLAGS += --rootmap=libRowWiseNoProxyWarning_dictrflx.rootmap \
+      --rootmap-lib=libRowWiseNoProxyWarning_dictrflx.$(DllSuf)
+
+
+libIOWithoutDictionaries_dictrflx.$(DllSuf): \
+   GENREFLEXFLAGS += --rootmap=libIOWithoutDictionaries_dictrflx.rootmap \
+       --rootmap-lib=libIOWithoutDictionaries_dictrflx.$(DllSuf)
+
+libVectorDMWriteWithoutDictionary_dictrflx.$(DllSuf): \
+   GENREFLEXFLAGS += --rootmap=libVectorDMWriteWithoutDictionary_dictrflx.rootmap \
+       --rootmap-lib=libVectorDMWriteWithoutDictionary_dictrflx.$(DllSuf)
