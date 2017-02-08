@@ -61,7 +61,11 @@ public:
 
   enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate, 
 		 ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset,
-     SetCpuAffinity} ;
+     SetCpuAffinity,
+     EnableTimingRooAbsTestStatistic, DisableTimingRooAbsTestStatistic,
+     EnableTimingRooRealIntegral, DisableTimingRooRealIntegral,
+     MeasureCommunicationTime
+  };
   
   void initialize() ; 
   void initVars() ;

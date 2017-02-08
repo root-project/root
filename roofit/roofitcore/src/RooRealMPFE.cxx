@@ -442,6 +442,38 @@ void RooRealMPFE::serverLoop() {
         } else {
           std::cout << "CPU affinity set to cpu " << cpu << " in server process " << getpid() << std::endl;
         }
+
+        break;
+      }
+
+
+      case EnableTimingRooAbsTestStatistic: {
+
+        break;
+      }
+
+
+      case DisableTimingRooAbsTestStatistic: {
+
+        break;
+      }
+
+
+      case EnableTimingRooRealIntegral: {
+
+        break;
+      }
+
+
+      case DisableTimingRooRealIntegral: {
+
+        break;
+      }
+
+
+      case MeasureCommunicationTime: {
+
+        break;
       }
 
 
