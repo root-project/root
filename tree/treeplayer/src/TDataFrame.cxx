@@ -123,7 +123,7 @@ d.Filter([](int v) { return v > 2; }).Histo1D();
 </tr>
 </table>
 
-Keep reading to follow a five-minute [crash course](#crash-course) to `TDataFrame`, or jump to an overview of useful [features](#more-features), or a more in-depth explanation of [transformations](#transformations), [actions](#actions) and [parallelism](#multi-thread-execution).
+Keep reading to follow a five-minute [crash course](#crash-course) to `TDataFrame`, or jump to an overview of useful [features](#more-features), or a more in-depth explanation of [transformations](#transformations), [actions](#actions) and [parallelism](#parallel-execution).
 
 ## <a name="crash-course"></a> Crash course
 ### Filling a histogram

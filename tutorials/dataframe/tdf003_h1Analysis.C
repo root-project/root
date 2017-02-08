@@ -23,7 +23,6 @@ auto Select = [](ROOT::Experimental::TDataFrame& dataFrame) {
            {"md0_d"})
    .Filter([](float ptds_d) { return ptds_d > 2.5; }, {"ptds_d"})
    .Filter([](float etads_d) { return TMath::Abs(etads_d) < 1.5; }, {"etads_d"})
-   // Needs TTreeReaderArray support in TDataFrame
    .Filter([](int ik, int ipi, std::array_view<int> nhitrp) { return nhitrp[ik-1] * nhitrp[ipi-1] > 1; },
            {"ik", "ipi", "nhitrp"})
    .Filter([](int ik, std::array_view<float> rstart, std::array_view<float> rend) {
