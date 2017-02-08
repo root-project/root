@@ -1159,15 +1159,7 @@ inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
          }
       }
    }
-   if (!tmpBranches.empty()) {
-      if(tmpBranches.size() == 1) ret << "\nTemporary branch: " << tmpBranches[0];
-      else {
-         ret << "\nTemporary branches:\n";
-         for (auto&& branch : tmpBranches) {
-            ret << " - " << branch << "\n";
-         }
-      }
-   }
+
    return ret.str();
 }
 }
