@@ -162,6 +162,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   The following picture show the old and new version
 - When a 2d histogram was drawn with option `LEGO1` and white colored, the dark side
   of the lego was red instead of gray.
+- New option "0"to draw TH2Poly. When used with any `COL` options, the empty
+  bins are not drawn.
 
 ![New box option for 3D histograms](NewBoxOption.png)
 

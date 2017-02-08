@@ -2238,6 +2238,7 @@ The following options are supported:
 | "SCAT"   | Draw a scatter plot (default).|
 | "COL"    | Draw a color plot. All the none empty bins are painted. Empty bins are not painted.|
 | "COLZ"   | Same as "COL". In addition the color palette is also drawn.|
+| "0"      | When used with any COL options, the empty bins are not drawn.|
 | "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).|
 | "TEXTN"  | Draw bin names as text.|
 | "TEXTnn" | Draw bin contents as text at angle nn (0 < nn < 90).|
@@ -2276,7 +2277,6 @@ Begin_Macro(source)
    h2p->FillN(4, fx, fy, fw);
    gStyle->SetPalette(kBird);
    h2p->Draw("col");
-   return ch2p1;
 }
 End_Macro
 
@@ -2346,12 +2346,30 @@ Begin_Macro(source)
    gStyle->SetOptStat(11);
    gStyle->SetPalette(kBird);
    p->Draw("COLZ L");
-   return ch2p2;
 }
 End_Macro
 
 `TH2Poly` histograms can also be plotted using the GL interface using
 the option "GLLEGO".
+
+\since **ROOT version 6.09/01**
+
+In some cases it can be useful to not draw the empty bins. the option "0"
+combined with the option "COL" et COLZ allows to do that.
+
+Begin_Macro(source)
+{
+   TCanvas *chc = new TCanvas("chc","chc",600,400);
+
+   TH2Poly *hc = new TH2Poly();
+   hc->Honeycomb(0,0,.1,25,25);
+   hc->SetName("hc");
+   hc->SetTitle("Option COLZ 0");
+   TRandom ran;
+   for (int i = 0; i<300; i++) hc->Fill(ran.Gaus(2.,1), ran.Gaus(2.,1));
+   hc->Draw("colz 0");
+}
+End_Macro
 
 ### <a name="HP21"></a> The SPEC option
 
@@ -8917,6 +8935,7 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
       poly  = b->GetPolygon();
 
       z = b->GetContent();
+      if (z==0 && Hoption.Zero) continue;
       if (Hoption.Logz) {
          if (z > 0) z = TMath::Log10(z);
          else       z = zmin;
