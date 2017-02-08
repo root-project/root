@@ -314,14 +314,14 @@ struct Histo<T, true> {
 namespace Detail {
 
 // forward declarations for TDataFrameInterface
+class TDataFrameFilterBase;
 template <typename F, typename PrevData>
 class TDataFrameFilter;
+class TDataFrameBranchBase;
 template <typename F, typename PrevData>
 class TDataFrameBranch;
 class TDataFrameImpl;
-
 class TDataFrameGuessedType{};
-
 }
 
 namespace Experimental {
@@ -358,7 +358,8 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F>
-   TDataFrameInterface<ROOT::Detail::TDataFrameFilter<F, Proxied>> Filter(F f, const BranchNames &bl = {}, const std::string& name = "")
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(F f, const BranchNames &bl = {}, const std::string& name = "")
    {
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
@@ -367,7 +368,7 @@ public:
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (f, actualBl, fProxiedPtr, name);
-      TDataFrameInterface<DFF_t> tdf_f(FilterPtr);
+      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr);
       df->Book(FilterPtr);
       return tdf_f;
    }
@@ -393,7 +394,7 @@ public:
    /// An exception is thrown if the name of the new branch is already in use
    /// for another branch in the TTree.
    template <typename F>
-   TDataFrameInterface<ROOT::Detail::TDataFrameBranch<F, Proxied>>
+   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>
    AddBranch(const std::string &name, F expression, const BranchNames &bl = {})
    {
       auto df = GetDataFrameChecked();
@@ -403,7 +404,7 @@ public:
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, expression, actualBl, fProxiedPtr);
-      TDataFrameInterface<DFB_t> tdf_b(BranchPtr);
+      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr);
       df->Book(BranchPtr);
       return tdf_b;
    }
@@ -935,6 +936,10 @@ public:
    virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void *GetValue(unsigned int slot, Long64_t entry) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
+   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
+   virtual std::weak_ptr<TDataFrameImpl> GetDataFrame() const = 0;
+   virtual void Report() const = 0;
+   virtual void PartialReport() const = 0;
    std::string GetName() const;
    BranchNames GetTmpBranches() const;
 };
@@ -1035,6 +1040,9 @@ public:
    TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches, const std::string& name);
    virtual ~TDataFrameFilterBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
+   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
+   virtual void Report() const = 0;
+   virtual void PartialReport() const = 0;
    std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
    BranchNames GetTmpBranches() const;
    void CreateSlots(unsigned int nSlots);
