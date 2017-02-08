@@ -1113,9 +1113,9 @@ T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, cons
 
 template<typename T>
 std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
-                                    Long64_t entry, const std::string& branch,
-                                    std::weak_ptr<Detail::TDataFrameImpl> df,
-                                    TDFTraitsUtils::TTypeList<std::array_view<T>>)
+                                  Long64_t entry, const std::string& branch,
+                                  std::weak_ptr<Detail::TDataFrameImpl> df,
+                                  TDFTraitsUtils::TTypeList<std::array_view<T>>)
 {
    if(readerValue == nullptr) {
       // temporary branch
@@ -1125,7 +1125,15 @@ std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
    } else {
       // real branch
       auto& tra = *std::static_pointer_cast<TTreeReaderArray<T>>(readerValue);
-      return std::array_view<T>(tra.begin(), tra.end());
+      auto tra_view = std::array_view<T>(tra.begin(), tra.end());
+      if (tra.GetSize() >= 1 &&
+          1 != (&tra[1] - &tra[0])) {
+         std::string exceptionText = "Branch ";
+         exceptionText += branch;
+         exceptionText += " hangs from a non-split branch. For this reason, it cannot be accessed via an array_view. Please read the top level branch instead.";
+         throw std::runtime_error(exceptionText.c_str());
+      }
+      return tra_view;
    }
 }
 
