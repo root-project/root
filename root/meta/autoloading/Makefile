@@ -81,7 +81,7 @@ exectypeDefAutoloading.log: libclasses_dictrflx.$(DllSuf)
 execTriggerTypedefs.log: libTriggerTypeDefs_dictrflx.$(DllSuf)
 
 assertROOT7114.elog: libROOT7114classes_dictrflx.$(DllSuf)
-assertROOT7114.elog: CALLROOTEXE += -e 'gSystem->AddDynamicPath("/opt/build/root_builds/rootcling.cmake/roottest/root/meta/autoloading")'
+assertROOT7114.elog: CALLROOTEXE += -e 'gSystem->AddDynamicPath("$(ROOTTEST_HOME)/root/meta/autoloading")'
 
 
 ROOT7114classes_rflx.cpp: GENREFLEXFLAGS += --rootmap libROOT7114classes_dictrflx.rootmap --library libROOT7114classes_dictrflx.$(DllSuf)
