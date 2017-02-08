@@ -21,24 +21,24 @@
 # endif
 #else
 
-namespace ROOT{
-   namespace Internal{
-     class TScheduler{
-     public:
+namespace ROOT {
+   namespace Internal {
+      class TScheduler {
+      public:
          TScheduler();
          ~TScheduler();
-         static unsigned GetNThreads();
-         static unsigned GetPoolSize();
-         static unsigned GetNSubscribers();
+         static UInt_t GetNThreads();
+         static UInt_t GetPoolSize();
+         static UInt_t GetNSubscribers();
          void Subscribe();
-         void Subscribe(unsigned nThreads);
+         void Subscribe(UInt_t nThreads);
          void Unsubscribe();
-     private:
-         static unsigned fgSubscriptionsCount;
-         static unsigned fgPoolSize;
+      private:
+         static UInt_t fgSubscriptionsCount;
+         static UInt_t fgPoolSize;
          bool fSubscribed = false;
-     };
-  }
+      };
+   }
 }
 
 #endif   // R__USE_IMT
