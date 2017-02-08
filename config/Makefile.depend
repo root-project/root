@@ -61,6 +61,7 @@ TABLELIBDEPM           = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
 MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(GPADLIB) $(TREEPLAYERLIB) $(MATHCORELIB)
 SPECTRUMLIBDEPM        = $(HISTLIB) $(MATRIXLIB)
+UNFOLDLIBDEPM          = $(HISTLIB) $(MATRIXLIB) $(XMLPARSERLIB)
 TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
                          $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
                          $(MINUITLIB) $(MATHCORELIB) $(XMLLIB)
@@ -194,6 +195,7 @@ PYTHIA8LIBDEP          = $(PYTHIA8LIBDEPM)
 TABLELIBDEP            = $(TABLELIBDEPM)
 MLPLIBDEP              = $(MLPLIBDEPM)
 SPECTRUMLIBDEP         = $(SPECTRUMLIBDEPM)
+UNFOLDLIBDEP           = $(UNFOLDLIBDEPM)
 TMVALIBDEP             = $(TMVALIBDEPM)
 TMVAGUILIBDEP          = $(TMVAGUILIBDEPM)
 GENETICLIBDEP          = $(GENETICLIBDEPM)
@@ -331,6 +333,7 @@ MLPLIBEXTRA             = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                           lib/libGraf.lib lib/libGpad.lib \
                           lib/libTreePlayer.lib lib/libMathCore.lib
 SPECTRUMLIBEXTRA        = lib/libHist.lib lib/libMatrix.lib
+UNFOLDLIBEXTRA          = lib/libHist.lib lib/libMatrix.lib lib/libXMLParser.lib
 TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
                           lib/libTreePlayer.lib  lib/libMLP.lib \
@@ -507,6 +510,7 @@ ASIMAGEGSLIBEXTRA       = -Llib -lGraf -lASImage
 MLPLIBEXTRA             = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMathCore
 SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
+UNFOLDLIBEXTRA          = -Llib -lHist -lMatrix -lXMLParser
 TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO
 TMVAGUILIBEXTRA         = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
