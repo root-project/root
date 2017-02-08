@@ -83,6 +83,8 @@ namespace ROOT {
        */
 
       class TCommunicator: public TNullCommunicator {
+      protected:
+         Int_t GetInternalTag() const;
       public:
          TCommunicator(): TNullCommunicator() {}
          TCommunicator(const TCommunicator &comm);
@@ -97,54 +99,17 @@ namespace ROOT {
 
          virtual TCommunicator &Clone() const = 0;
 
-         /**
-          * Method to get the current rank or process id
-          * \return integer with the rank value
-          */
-         inline Int_t GetRank() const
-         {
-            Int_t rank;
-            MPI_Comm_rank(fComm, &rank);
-            return rank;
-         }
+         Int_t GetRank() const;
 
-         /**
-          * Method to get the total number of ranks or processes
-          * \return integer with the number of processes
-          */
-         inline Int_t GetSize() const
-         {
-            Int_t size;
-            MPI_Comm_size(fComm, &size);
-            return size;
-         }
+         Int_t GetSize() const;
 
-         /**
-          * Method to know if the current rank us the main process
-          * \return boolean true if it is the main rank
-          */
-         inline Bool_t IsMainProcess() const
-         {
-            return GetRank() == 0;
-         }
+         Bool_t IsMainProcess() const;
 
-         /**
-          * Method to get the main process id
-          * \return integer with the main rank
-          */
-         inline Int_t GetMainProcess() const
-         {
-            return 0;
-         }
+         Int_t GetMainProcess() const;
 
-         /**
-          * Method to abort  processes
-          * \param error integer with error code
-          */
-         inline void Abort(Int_t error) const
-         {
-            MPI_Abort(fComm, error);
-         }
+         void Abort(Int_t error) const;
+
+         Int_t GetMaxTag() const;
 
          virtual void Barrier() const;
 
@@ -326,7 +291,6 @@ namespace ROOT {
                memmove((void *)&vars[i], vobj_tmp, sizeof(T));
             }
          }
-
          ClassDef(TCommunicator, 2)
       };
 
@@ -691,12 +655,12 @@ namespace ROOT {
             for (auto i = 0 ; i < GetSize(); i++) {
                if (i == root) continue;
                auto stride = outcount * i;
-               Send(&in_vars[stride], outcount, i, MPI_TAG_UB);
+               Send(&in_vars[stride], outcount, i, GetInternalTag());
             }
             auto stride = outcount * root;
             memcpy((void *)out_vars, (void *)&in_vars[stride], sizeof(Type)*outcount);
          } else {
-            Recv(out_vars, outcount, root, MPI_TAG_UB);
+            Recv(out_vars, outcount, root, GetInternalTag());
          }
       }
 
@@ -723,14 +687,14 @@ namespace ROOT {
             for (auto i = 0 ; i < GetSize(); i++) {
                if (i == root) continue;
                auto stride = incount * i;
-               Recv(&out_vars[stride], incount, i, MPI_TAG_UB);
+               Recv(&out_vars[stride], incount, i, GetInternalTag());
             }
             //NOTE: copy memory with memmove because memcpy() with overlapping areas produces undefined behavior
             //In scatter is not same because out_vars have not overlapping, I mean I just need to fill the entire vector not a region
             auto stride = incount * root;
             memmove((void *)&out_vars[stride], (void *)in_vars, sizeof(Type)*incount);
          } else {
-            Send(in_vars, incount, root, MPI_TAG_UB);
+            Send(in_vars, incount, root, GetInternalTag());
          }
       }
 
@@ -779,11 +743,11 @@ namespace ROOT {
 
          for (Int_t i = lastpower; i < size; i++)
             if (GetRank() == i)
-               Send(in_var, count, i - lastpower, MPI_TAG_UB);
+               Send(in_var, count, i - lastpower, GetInternalTag());
          for (Int_t i = 0; i < size - lastpower; i++)
             if (GetRank() == i) {
                Type recvbuffer[count];
-               Recv(recvbuffer, count, i + lastpower, MPI_TAG_UB);
+               Recv(recvbuffer, count, i + lastpower, GetInternalTag());
                for (Int_t j = 0; j < count; j++) out_var[j] = op(in_var[j], recvbuffer[j]);
             }
 
@@ -793,13 +757,13 @@ namespace ROOT {
                auto sender = k + (1 << d);
                if (GetRank() == receiver) {
                   Type recvbuffer[count];
-                  Recv(recvbuffer, count, sender, MPI_TAG_UB);
+                  Recv(recvbuffer, count, sender, GetInternalTag());
                   for (Int_t j = 0; j < count; j++) out_var[j]  = op(out_var[j], recvbuffer[j]);
                } else if (GetRank() == sender)
-                  Send(out_var, count, receiver, MPI_TAG_UB);
+                  Send(out_var, count, receiver, GetInternalTag());
             }
-         if (root != 0 && GetRank() == 0) Send(out_var, count, root, MPI_TAG_UB);
-         if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, MPI_TAG_UB);
+         if (root != 0 && GetRank() == 0) Send(out_var, count, root, GetInternalTag());
+         if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, GetInternalTag());
       }
 
       //______________________________________________________________________________

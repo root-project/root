@@ -71,7 +71,7 @@ namespace ROOT {
       const Int_t CART = MPI_CART;
 
       // environmental inquiry keys
-      const Int_t TAG_UB = MPI_TAG_UB;
+      const Int_t TAG_UB = MPI_TAG_UB - 1;
       const Int_t HOST = MPI_HOST;
       const Int_t IO = MPI_IO;
       const Int_t WTIME_IS_GLOBAL = MPI_WTIME_IS_GLOBAL;

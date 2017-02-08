@@ -92,6 +92,90 @@ TCommunicator::~TCommunicator()
 
 //______________________________________________________________________________
 /**
+* Method to get the current rank or process id
+* \return integer with the rank value
+*/
+Int_t TCommunicator::GetRank() const
+{
+   Int_t rank;
+   MPI_Comm_rank(fComm, &rank);
+   return rank;
+}
+
+//______________________________________________________________________________
+/**
+* Method to get the total number of ranks or processes
+* \return integer with the number of processes
+*/
+Int_t TCommunicator::GetSize() const
+{
+   Int_t size;
+   MPI_Comm_size(fComm, &size);
+   return size;
+}
+
+//______________________________________________________________________________
+/**
+* Method to know if the current rank us the main process
+* \return boolean true if it is the main rank
+*/
+Bool_t TCommunicator::IsMainProcess() const
+{
+   return GetRank() == 0;
+}
+
+//______________________________________________________________________________
+/**
+* Method to get the main process id
+* \return integer with the main rank
+*/
+Int_t TCommunicator::GetMainProcess() const
+{
+   return 0;
+}
+
+//______________________________________________________________________________
+/**
+* Method to abort  processes
+* \param error integer with error code
+*/
+void TCommunicator::Abort(Int_t error) const
+{
+   MPI_Abort(fComm, error);
+}
+
+//______________________________________________________________________________
+/**
+* Method to get the maximun value that can have a tag, less 1 tag for internal use
+* \return integer with maximun tag value
+*/
+Int_t TCommunicator::GetMaxTag() const
+{
+   Int_t *tag;
+   Int_t flag = 0;
+
+#if (2 <= MPI_VERSION)
+   MPI_Comm_get_attr(fComm, MPI_TAG_UB, &tag, &flag);
+#else
+   MPI_Attr_get(fComm, MPI_TAG_UB, &tag, &flag);
+#endif
+   ROOT_MPI_ASSERT(flag != 0, this);
+   return *tag - 1;//one tag is reserved for internal use
+
+}
+
+//______________________________________________________________________________
+/**
+* Method to get the maximun value that can have a tag, but is used for internal purposes.
+* \return integer with maximun tag value
+*/
+Int_t TCommunicator::GetInternalTag() const
+{
+   return GetMaxTag() + 1;
+}
+
+//______________________________________________________________________________
+/**
  * Method for synchronization between MPI processes in a communicator
  */
 void  TCommunicator::Barrier() const

@@ -83,6 +83,12 @@ static const int SEEK_END = rmpi_stdio_seek_end;
       Abort(ERR_COMM);\
    }
 
+#define ROOT_MPI_CHECK_TAG(T)\
+   if (T == GetInternalTag()) {\
+      Error(__FUNCTION__,"Error in tag value, the value can not be greater that %d.",GetMaxTag());\
+      Abort(ERR_COMM);\
+   }
+
 #define ROOT_MPI_DEBUG(fmt, ...)\
    Info(__FUNCTION__,fmt, ##__VA_ARGS__)
 
@@ -243,8 +249,6 @@ namespace ROOT {
          Warning("GetDataType", "Unknown raw datatype <%s>, returning null datatype", ROOT_MPI_TYPE_NAME(T));
          return DATATYPE_NULL;
       }
-
-
    }
 }
 
