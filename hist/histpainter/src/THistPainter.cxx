@@ -2236,7 +2236,7 @@ The following options are supported:
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
 | "SCAT"   | Draw a scatter plot (default).|
-| "COL"    | Draw a color plot. All the none empty bins are painted. Empty bins are not painted.|
+| "COL"    | Draw a color plot. All the bins are painted even the empty bins.|
 | "COLZ"   | Same as "COL". In addition the color palette is also drawn.|
 | "0"      | When used with any COL options, the empty bins are not drawn.|
 | "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).|
