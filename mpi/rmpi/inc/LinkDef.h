@@ -35,14 +35,15 @@
 #pragma link C++ class ROOT::Mpi::TPrequest+;
 #pragma link C++ class ROOT::Mpi::TGrequest;
 #pragma link C++ class ROOT::Mpi::TEnvironment;
+#pragma link C++ class ROOT::Mpi::TNullCommunicator;
 #pragma link C++ class ROOT::Mpi::TCommunicator;
+#pragma link C++ class ROOT::Mpi::TIntraCommunicator;
 #pragma link C++ class ROOT::Mpi::TGroup;
 
 /*
  * Global communicator
  */
-// #pragma link C++ global ROOT::Mpi::COMM_WORLD;
-// #pragma link C++ global gComm;
+#pragma link C++ global ROOT::Mpi::COMM_WORLD;
 
 #ifdef USE_FOR_AUTLOADING
 #pragma link C++ class ROOT::Mpi;

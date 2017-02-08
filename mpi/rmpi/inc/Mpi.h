@@ -7,6 +7,6 @@
 #include<Mpi/TEnvironment.h>
 #include<Mpi/Globals.h>
 #include<Mpi/TMpiMessage.h>
-#include<Mpi/TCommunicator.h>
+#include<Mpi/TIntraCommunicator.h>
 
 #endif

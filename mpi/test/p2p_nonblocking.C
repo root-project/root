@@ -10,10 +10,9 @@ struct particle {
 
 void p2p_nonblocking_scalar()
 {
-   TCommunicator comm;        //Communicator to send/recv messages
 
-   auto size = comm.GetSize();
-   if (comm.GetSize() == 1) return; //need at least 2 process
+   auto size = COMM_WORLD.GetSize();
+   if (COMM_WORLD.GetSize() == 1) return; //need at least 2 process
 
 
    //data to send/recv
@@ -21,7 +20,7 @@ void p2p_nonblocking_scalar()
    TMatrixD mymat(2, 2);                    //ROOT object
    particle  p;                             //custom object
 
-   if (comm.IsMainProcess()) {
+   if (COMM_WORLD.IsMainProcess()) {
       mymap["key"] = "hola";
 
       mymat[0][0] = 0.1;
@@ -34,37 +33,37 @@ void p2p_nonblocking_scalar()
       p.z = 3;
 
       std::cout << "Sending particle = " << Form("p.x = %d p.y = %d p.x = %d", p.x, p.y, p.z) << std::endl;
-      auto req = comm.ISend(p, 1, 0);
+      auto req = COMM_WORLD.ISend(p, 1, 0);
       req.Wait();
       std::cout << "Sending map = " << mymap["key"] << std::endl;
-      req = comm.ISsend(mymap, 1, 1);
+      req = COMM_WORLD.ISsend(mymap, 1, 1);
       req.Wait();
       std::cout << "Sending mat = ";
       mymat.Print();
-      req = comm.IRsend(mymat, 1, 2);
+      req = COMM_WORLD.IRsend(mymat, 1, 2);
       req.Wait();
 
       std::cout << "Sending scalar = " << size << std::endl;
-      req = comm.ISend(size, 1, 3);
+      req = COMM_WORLD.ISend(size, 1, 3);
       req.Wait();
 
 
    } else {
       //you can Received the messages in other order(is nonblocking)
-      auto req = comm.IRecv(mymap, 0, 1);
+      auto req = COMM_WORLD.IRecv(mymap, 0, 1);
       req.Wait();
       std::cout << "Received map = " << mymap["key"] << std::endl;
 
-      req = comm.IRecv(mymat, 0, 2);
+      req = COMM_WORLD.IRecv(mymat, 0, 2);
       req.Wait();
       std::cout << "Received mat = ";
       mymat.Print();
       Int_t scalar;
-      req = comm.IRecv(scalar, 0, 3);
+      req = COMM_WORLD.IRecv(scalar, 0, 3);
       req.Wait();
       std::cout << "Received scalar = " << scalar << std::endl;
 
-      req = comm.IRecv(p, 0, 0);
+      req = COMM_WORLD.IRecv(p, 0, 0);
       req.Wait();
       std::cout << "Received particle = " << Form("p.x = %d p.y = %d p.x = %d", p.x, p.y, p.z) << std::endl;
 
@@ -86,8 +85,8 @@ void p2p_nonblocking_scalar()
 
 void p2p_nonblocking_array(Int_t count = 2)
 {
-   auto size = gComm->GetSize();
-   auto rank = gComm->GetRank();
+   auto size = COMM_WORLD.GetSize();
+   auto rank = COMM_WORLD.GetRank();
 
    if (size == 1) return; //need at least 2 process
 
@@ -116,25 +115,25 @@ void p2p_nonblocking_array(Int_t count = 2)
          msgs[i].WriteObject(p);
       }
       std::cout << "Sending particle = " << Form("p.x = %d p.y = %d p.x = %d", p[0].x, p[0].y, p[0].z) << std::endl;
-      req[0] = gComm->ISend(p, count, 1, 4);
+      req[0] = COMM_WORLD.ISend(p, count, 1, 4);
 
       std::cout << "Sending msgs  \n";
-      req[1] = gComm->ISend(msgs, count, 1, 3);
+      req[1] = COMM_WORLD.ISend(msgs, count, 1, 3);
 
       std::cout << "Sending maps[\"key\"] = " << mymap[0]["key"] << std::endl;
-      req[2] = gComm->ISsend(mymap, count, 1, 2);
+      req[2] = COMM_WORLD.ISsend(mymap, count, 1, 2);
 
       std::cout << "Sending mats = ";
       mymat[0].Print();
-      req[3] = gComm->IRsend(mymat, count, 1, 1);
+      req[3] = COMM_WORLD.IRsend(mymat, count, 1, 1);
 
       TRequest::WaitAll(4, req);
    } else {
       //you can Received the messages in other order(is nonblocking)
-      req[0] = gComm->IRecv(mymap, count, 0, 2);
-      req[1] = gComm->IRecv(msgs, count, 0, 3);
-      req[2] = gComm->IRecv(mymat, count, 0, 1);
-      req[3] = gComm->IRecv(p, count, 0, 4);
+      req[0] = COMM_WORLD.IRecv(mymap, count, 0, 2);
+      req[1] = COMM_WORLD.IRecv(msgs, count, 0, 3);
+      req[2] = COMM_WORLD.IRecv(mymat, count, 0, 1);
+      req[3] = COMM_WORLD.IRecv(p, count, 0, 4);
 
       TRequest::WaitAll(4, req);
       std::cout << "Received mat = ";

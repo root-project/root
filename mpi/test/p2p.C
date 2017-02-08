@@ -2,14 +2,14 @@
 #include <cassert>
 using namespace ROOT::Mpi;
 
-void p2p_scalar(TCommunicator &comm, Int_t size = 10)
+void p2p_scalar(Int_t size = 10)
 {
    //data to send/recv
    std::map<std::string, std::string> mymap; //std oebjct
    TMatrixD mymat(size, size);                    //ROOT object
    Double_t a;                              //default datatype
 
-   if (comm.IsMainProcess()) {
+   if (COMM_WORLD.IsMainProcess()) {
       mymap["key"] = "hola";
 
       mymat[0][0] = 0.1;
@@ -20,18 +20,18 @@ void p2p_scalar(TCommunicator &comm, Int_t size = 10)
       a = 123.0;
 
       std::cout << "Sending scalar = " << a << std::endl;
-      comm.Send(a, 1, 0);
+      COMM_WORLD.Send(a, 1, 0);
       std::cout << "Sending map = " << mymap["key"] << std::endl;
-      comm.Send(mymap, 1, 0);
+      COMM_WORLD.Send(mymap, 1, 0);
       std::cout << "Sending mat = ";
 //       mymat.Print();
-      comm.Send(mymat, 1, 0);
-   } else if (comm.GetRank() == 1) {
-      comm.Recv(a, 0, 0);
+      COMM_WORLD.Send(mymat, 1, 0);
+   } else if (COMM_WORLD.GetRank() == 1) {
+      COMM_WORLD.Recv(a, 0, 0);
       std::cout << "Recieved scalar = " << a << std::endl;
-      comm.Recv(mymap, 0, 0);
+      COMM_WORLD.Recv(mymap, 0, 0);
       std::cout << "Received map = " << mymap["key"] << std::endl;
-      comm.Recv(mymat, 0, 0);
+      COMM_WORLD.Recv(mymat, 0, 0);
       std::cout << "Received mat = ";
 //       mymat.Print();
       TMatrixD req_mat(size, size); //required mat
@@ -47,21 +47,21 @@ void p2p_scalar(TCommunicator &comm, Int_t size = 10)
    }
 }
 
-void p2p_array(TCommunicator &comm, Int_t count = 500)
+void p2p_array(Int_t count = 500)
 {
    TVectorD vecs[count];
    Int_t arr[count];
-   if (comm.IsMainProcess()) {
+   if (COMM_WORLD.IsMainProcess()) {
       for (auto i = 0; i < count; i++) {
          vecs[i].ResizeTo(count);
          vecs[i][0] = 1.0;
          arr[i] = i;
       }
-      comm.Send(vecs, count, 1, 1);
-      comm.Send(arr, count, 1, 1);
-   } else if (comm.GetRank() == 1) {
-      comm.Recv(vecs, count, 0, 1);
-      comm.Recv(arr, count, 0, 1);
+      COMM_WORLD.Send(vecs, count, 1, 1);
+      COMM_WORLD.Send(arr, count, 1, 1);
+   } else if (COMM_WORLD.GetRank() == 1) {
+      COMM_WORLD.Recv(vecs, count, 0, 1);
+      COMM_WORLD.Recv(arr, count, 0, 1);
       for (auto i = 0; i < count; i++) {
 //          vecs[i].Print();
          assert(vecs[i][0] == 1.0);
@@ -74,14 +74,13 @@ void p2p_array(TCommunicator &comm, Int_t count = 500)
 void p2p(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;          //environment to start communication system
-   TCommunicator comm;   //Communicator to send/recv messages
    if (!stressTest) {
-      p2p_scalar(comm);
-      p2p_array(comm);
+      p2p_scalar();
+      p2p_array();
    } else {
-      for (auto i = 0; i < comm.GetSize() * 2; i++) {
-         p2p_scalar(comm, (i + 1) * 100);
-         p2p_array(comm, (i + 1) * 100);
+      for (auto i = 0; i < COMM_WORLD.GetSize() * 2; i++) {
+         p2p_scalar((i + 1) * 100);
+         p2p_array((i + 1) * 100);
       }
    }
 }

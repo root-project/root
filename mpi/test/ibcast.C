@@ -7,7 +7,7 @@ using namespace ROOT::Mpi;
 void bcast_test_scalar(Int_t root = 0, Int_t size = 2, Bool_t req_test = kFALSE)
 {
 
-   auto rank = gComm->GetRank();
+   auto rank = COMM_WORLD.GetRank();
    TRequest req[2];
    //////////////////////////
    //testing TMpiMessage  //
@@ -22,7 +22,7 @@ void bcast_test_scalar(Int_t root = 0, Int_t size = 2, Bool_t req_test = kFALSE)
       msg.WriteObject(mymat);
    }
 
-   req[0] = gComm->IBcast(msg, root); //testing TMpiMessage
+   req[0] = COMM_WORLD.IBcast(msg, root); //testing TMpiMessage
    if (req_test) {
       while (!req[0].Test()) {
          gSystem->Sleep(100);
@@ -49,7 +49,7 @@ void bcast_test_scalar(Int_t root = 0, Int_t size = 2, Bool_t req_test = kFALSE)
    if (rank == root) {
       p.Set(1, 2);//if root process fill the particle
    }
-   req[1] = gComm->IBcast(p, root); //testing custom object
+   req[1] = COMM_WORLD.IBcast(p, root); //testing custom object
 
    if (req_test) {
       while (!req[1].Test()) {
@@ -70,7 +70,7 @@ void bcast_test_scalar(Int_t root = 0, Int_t size = 2, Bool_t req_test = kFALSE)
 void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
 {
    TRequest req[2];
-   auto rank = gComm->GetRank();
+   auto rank = COMM_WORLD.GetRank();
    TVectorD vecs[count];
    Int_t arr[count];
    if (root == rank) {
@@ -80,8 +80,8 @@ void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
          arr[i] = i;
       }
    }
-   req[0] = gComm->IBcast(vecs, count, root);
-   req[1] = gComm->IBcast(arr, count, root);
+   req[0] = COMM_WORLD.IBcast(vecs, count, root);
+   req[1] = COMM_WORLD.IBcast(arr, count, root);
    TRequest::WaitAll(2, req);
    for (auto i = 0; i < count; i++) {
 //       vecs[i].Print();
@@ -96,7 +96,7 @@ void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
 void ibcast(Bool_t stressTest = kFALSE)
 {
    TEnvironment env;
-   if (gComm->GetSize() == 1) return; //needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; //needed at least 2 process
    bcast_test_scalar();
    if (!stressTest) {
       bcast_test_scalar(0, 2, kFALSE);
@@ -104,8 +104,8 @@ void ibcast(Bool_t stressTest = kFALSE)
       bcast_test_array();
    } else {
       //stressTest
-      for (auto i = 0; i < gComm->GetSize(); i++)
-         for (auto j = 1; j < gComm->GetSize() + 1; j++) //count can not be zero
+      for (auto i = 0; i < COMM_WORLD.GetSize(); i++)
+         for (auto j = 1; j < COMM_WORLD.GetSize() + 1; j++) //count can not be zero
             bcast_test_scalar(i, j * 100);
    }
 }

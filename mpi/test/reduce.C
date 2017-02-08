@@ -12,8 +12,8 @@ using namespace ROOT::Mpi;
 
 void reduce_test_scalar(Int_t root = 0)
 {
-   auto rank = gComm->GetRank();
-   auto size = gComm->GetSize();
+   auto rank = COMM_WORLD.GetRank();
+   auto size = COMM_WORLD.GetSize();
 
    /////////////////////////
    //testing custom object//
@@ -28,33 +28,33 @@ void reduce_test_scalar(Int_t root = 0)
 
    Int_t value = 0;
 
-   gComm->Reduce(rank, value, SUM, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(rank, value, SUM, root); //testing custom object
+   COMM_WORLD.Barrier();
 
    TMatrixD recv_mat;
-   gComm->Reduce(send_mat, recv_mat, SUM, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(send_mat, recv_mat, SUM, root); //testing custom object
+   COMM_WORLD.Barrier();
 
    TVectorD recv_vec;
-   gComm->Reduce(send_vec, recv_vec, SUM, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(send_vec, recv_vec, SUM, root); //testing custom object
+   COMM_WORLD.Barrier();
 
    TComplex c_value;
-   gComm->Reduce(send_c, c_value, PROD, root);
-   gComm->Barrier();
+   COMM_WORLD.Reduce(send_c, c_value, PROD, root);
+   COMM_WORLD.Barrier();
 
    Int_t prod_value = 0;
    Int_t prod_send = rank + 1; //if rank==0 Then it does not make sense
-   gComm->Reduce(prod_send, prod_value, PROD, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(prod_send, prod_value, PROD, root); //testing custom object
+   COMM_WORLD.Barrier();
 
    Int_t min_value;
-   gComm->Reduce(rank, min_value, MIN, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(rank, min_value, MIN, root); //testing custom object
+   COMM_WORLD.Barrier();
 
    Int_t max_value;
-   gComm->Reduce(rank, max_value, MAX, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(rank, max_value, MAX, root); //testing custom object
+   COMM_WORLD.Barrier();
 
 
    if (rank == root) {
@@ -96,8 +96,8 @@ void reduce_test_scalar(Int_t root = 0)
 
 void reduce_test_array(Int_t root = 0, Int_t count = 2)
 {
-   auto rank = gComm->GetRank();
-   auto size = gComm->GetSize();
+   auto rank = COMM_WORLD.GetRank();
+   auto size = COMM_WORLD.GetSize();
 
    Int_t vars[count];
    /////////////////////////
@@ -116,16 +116,16 @@ void reduce_test_array(Int_t root = 0, Int_t count = 2)
    }
    Int_t values[count];
 
-   gComm->Reduce(vars, values, count, SUM, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(vars, values, count, SUM, root); //testing custom object
+   COMM_WORLD.Barrier();
 
    TMatrixD recv_mat[count];
-   gComm->Reduce(send_mat, recv_mat, count, SUM, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(send_mat, recv_mat, count, SUM, root); //testing custom object
+   COMM_WORLD.Barrier();
 
    TVectorD recv_vec[count];
-   gComm->Reduce(send_vec, recv_vec, count, SUM, root); //testing custom object
-   gComm->Barrier();
+   COMM_WORLD.Reduce(send_vec, recv_vec, count, SUM, root); //testing custom object
+   COMM_WORLD.Barrier();
 
 
    if (rank == root) {
@@ -156,15 +156,15 @@ void reduce_test_array(Int_t root = 0, Int_t count = 2)
 void reduce(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;
-   if (gComm->GetSize() == 1) return; //needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; //needed at least 2 process
    if (!stressTest) {
       reduce_test_scalar(0);
       reduce_test_array(0);
    } else {
       //stressTest
-      for (auto i = 0; i < gComm->GetSize(); i++) {
+      for (auto i = 0; i < COMM_WORLD.GetSize(); i++) {
          reduce_test_scalar(i);
-         reduce_test_array(i, gComm->GetSize() * 2);
+         reduce_test_array(i, COMM_WORLD.GetSize() * 2);
       }
    }
 }

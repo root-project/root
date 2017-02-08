@@ -22,7 +22,6 @@
 #include<Mpi/TGroup.h>
 #endif
 
-#include<memory>
 
 /**
  * @namespace ROOT::Mpi
@@ -38,6 +37,42 @@ namespace ROOT {
       class TMpiMessage;
 
       /**
+       * \class TNullCommunicator
+       * Class for null communicator, base class to create by default a null communicator in any communicator class.
+       * \ingroup Mpi
+       */
+
+      class TNullCommunicator: public TObject {
+      protected:
+         MPI_Comm fComm;           //! Raw communicator
+      public:
+         TNullCommunicator() : fComm(MPI_COMM_NULL) { }
+
+         TNullCommunicator(const TNullCommunicator &comm) : TObject(comm), fComm(comm.fComm) { }
+
+         TNullCommunicator(const MPI_Comm &comm) : fComm(comm) { }
+
+         virtual inline ~TNullCommunicator() { }
+
+         inline Bool_t operator==(const TNullCommunicator &comm) const
+         {
+            return (Bool_t)(fComm == comm.fComm);
+         }
+
+         inline Bool_t operator!=(const TNullCommunicator &comm) const
+         {
+            return (Bool_t) !(*this == comm);
+         }
+
+         inline operator MPI_Comm() const
+         {
+            return fComm;
+         }
+         ClassDef(TNullCommunicator, 1)
+      };
+
+
+      /**
        * \class TCommunicator
        * Class for communicator, with this class you can to communicate the processes using messages,
        * the messages can be any serializable object supported by ROOT like object from standart c++ libraries or
@@ -47,12 +82,10 @@ namespace ROOT {
        * \ingroup Mpi
        */
 
-      class TCommunicator: public TObject {
-      private:
-         MPI_Comm fComm;           //! Raw communicator
-         Int_t fMainProcess;    // Rank used like a main process
+      class TCommunicator: public TNullCommunicator {
       public:
-         TCommunicator(const TCommunicator &comm = COMM_WORLD);
+         TCommunicator():TNullCommunicator(){}
+         TCommunicator(const TCommunicator &comm);
          TCommunicator(const MPI_Comm &comm);
          ~TCommunicator();
 
@@ -62,6 +95,7 @@ namespace ROOT {
             return *this;
          }
 
+         virtual TCommunicator &Clone() const = 0;
 
          /**
           * Method to get the current rank or process id
@@ -91,16 +125,7 @@ namespace ROOT {
           */
          inline Bool_t IsMainProcess() const
          {
-            return GetRank() == fMainProcess;
-         }
-
-         /**
-          * Method to set the main process rank
-          * \param p Int_t main process rank number
-          */
-         inline void SetMainProcess(Int_t p)
-         {
-            fMainProcess = p;
+            return GetRank() == 0;
          }
 
          /**
@@ -109,7 +134,7 @@ namespace ROOT {
           */
          inline Int_t GetMainProcess() const
          {
-            return fMainProcess;
+            return 0;
          }
 
          /**
@@ -302,7 +327,7 @@ namespace ROOT {
             }
          }
 
-         ClassDef(TCommunicator, 1)
+         ClassDef(TCommunicator, 2)
       };
 
       //______________________________________________________________________________
@@ -813,7 +838,5 @@ namespace ROOT {
       template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root);
    }
 }
-R__EXTERN ROOT::Mpi::TCommunicator *gComm;
-
 
 #endif

@@ -5,7 +5,7 @@ using namespace ROOT::Mpi;
 void info()
 {
    TEnvironment env;          //environment to start communication system
-   TCommunicator comm;   //Communicator to send/recv messages
+   TIntraCommunicator comm(COMM_WORLD);   //Communicator to send/recv messages
 
 
    TInfo info;

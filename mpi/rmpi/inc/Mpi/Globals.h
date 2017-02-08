@@ -56,6 +56,8 @@ static const int SEEK_END = rmpi_stdio_seek_end;
 
 #define ROOT_MPI_TYPE_NAME(T) gROOT->GetClass(typeid(T))->GetName()
 
+//NOTE: the macros to check the errors can be changed by exceptions if is wanted.
+
 #define ROOT_MPI_ASSERT(EXPRESSION,comm)\
    if(!(EXPRESSION)){\
       comm->Error(__FUNCTION__,"Assertion %s ",#EXPRESSION);\
@@ -69,6 +71,17 @@ static const int SEEK_END = rmpi_stdio_seek_end;
       Abort(ERR_TYPE);\
    }
 
+#define ROOT_MPI_CHECK_COMM(T)\
+   if (T == MPI_COMM_NULL) {\
+      Error(__FUNCTION__,"Error in the communicator, object is a null communicator.");\
+      Abort(ERR_COMM);\
+   }
+
+#define ROOT_MPI_CHECK_GROUP(T)\
+   if (T == MPI_GROUP_NULL) {\
+      Error(__FUNCTION__,"Error in the group, object is a null group.");\
+      Abort(ERR_COMM);\
+   }
 
 namespace ROOT {
    namespace Mpi {
@@ -193,17 +206,18 @@ namespace ROOT {
 
       class TGroup;
       class TInfo;
-      class TCommunicator;
+      class TNullCommunicator;
+      class TIntraCommunicator;
       // null handles
       R__EXTERN const TGroup         GROUP_NULL;
       R__EXTERN const TInfo          INFO_NULL;
       R__EXTERN const MPI_Datatype   DATATYPE_NULL;
-      R__EXTERN const TCommunicator  COMM_NULL;
+      R__EXTERN const TNullCommunicator  COMM_NULL;
       // empty group
       R__EXTERN const TGroup         GROUP_EMPTY;
 
 
-      R__EXTERN TCommunicator COMM_WORLD;
+      R__EXTERN TIntraCommunicator   COMM_WORLD;
 
 
       template<class T> MPI_Datatype GetDataType()

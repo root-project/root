@@ -11,7 +11,7 @@ using namespace ROOT::Mpi;
 void serialization(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;          //environment to start communication system
-   TCommunicator comm;   //Communicator to send/recv messages
+   TIntraCommunicator comm(COMM_WORLD);   //Communicator to send/recv messages
 
 
    std::map<std::string, std::string> smap[count]; //std oebjct

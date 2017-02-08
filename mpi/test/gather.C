@@ -6,8 +6,8 @@ using namespace ROOT::Mpi;
 
 void gather_test(Int_t root = 0, Int_t count = 2)
 {
-   auto rank = gComm->GetRank();
-   auto size = gComm->GetSize();
+   auto rank = COMM_WORLD.GetRank();
+   auto size = COMM_WORLD.GetSize();
 
    /////////////////////////
    //testing custom object//
@@ -23,7 +23,7 @@ void gather_test(Int_t root = 0, Int_t count = 2)
       recv_vec = new TVectorD[size * count];
    }
 
-   gComm->Gather(send_vec, count, recv_vec, size * count, root); //testing custom object
+   COMM_WORLD.Gather(send_vec, count, recv_vec, size * count, root); //testing custom object
 
 
    if (rank == root) {
@@ -32,7 +32,7 @@ void gather_test(Int_t root = 0, Int_t count = 2)
          recv_vec[i].Print();
       }
 
-      for (auto i = 0; i < gComm->GetSize(); i++) {
+      for (auto i = 0; i < COMM_WORLD.GetSize(); i++) {
 
          for (auto j = 0; j < count; j++) {
             //assertions
@@ -47,12 +47,12 @@ void gather_test(Int_t root = 0, Int_t count = 2)
 void gather(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;
-   if (gComm->GetSize() == 1) return; //needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; //needed at least 2 process
    if (!stressTest) gather_test();
    else {
       //stressTest
-      for (auto i = 0; i < gComm->GetSize(); i++)
-         for (auto j = 1; j < gComm->GetSize() + 1; j++) //count can not be zero
+      for (auto i = 0; i < COMM_WORLD.GetSize(); i++)
+         for (auto j = 1; j < COMM_WORLD.GetSize() + 1; j++) //count can not be zero
             gather_test(i, j);
    }
 }

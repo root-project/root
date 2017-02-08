@@ -10,6 +10,7 @@ set(libname RMpi)
 set(RMPI_HEADERS Mpi/TEnvironment.h
 		 Mpi/TMpiMessage.h
 		 Mpi/TCommunicator.h
+		 Mpi/TIntraCommunicator.h
 		 Mpi/TStatus.h
 		 Mpi/TRequest.h
          Mpi/Globals.h

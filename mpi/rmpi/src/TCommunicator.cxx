@@ -5,8 +5,6 @@
 #include<TROOT.h>
 using namespace ROOT::Mpi;
 
-ROOT::Mpi::TCommunicator *gComm = new ROOT::Mpi::TCommunicator(MPI_COMM_WORLD);
-
 //______________________________________________________________________________
 template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
 {
@@ -80,14 +78,12 @@ template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t i
  * Copy constructor for communicator
  * \param comm other TCommunicator object
  */
-TCommunicator::TCommunicator(const TCommunicator &comm): TObject(comm)
+TCommunicator::TCommunicator(const TCommunicator &comm): TNullCommunicator(comm)
 {
-   fComm = comm.fComm;
-   fMainProcess = comm.fMainProcess;
 }
 
 //______________________________________________________________________________
-TCommunicator::TCommunicator(const MPI_Comm &comm): fComm(comm), fMainProcess(0) {}
+TCommunicator::TCommunicator(const MPI_Comm &comm): TNullCommunicator(comm) {}
 
 //______________________________________________________________________________
 TCommunicator::~TCommunicator()

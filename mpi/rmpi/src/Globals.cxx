@@ -2,7 +2,7 @@
 #include<TROOT.h>
 #include<Mpi/TGroup.h>
 #include<Mpi/TInfo.h>
-#include<Mpi/TCommunicator.h>
+#include<Mpi/TIntraCommunicator.h>
 
 namespace ROOT {
    namespace Mpi {
@@ -130,7 +130,7 @@ namespace ROOT {
 // null handles
       const TGroup GROUP_NULL = TGroup(MPI_GROUP_NULL);
       const TInfo  INFO_NULL  = TInfo(MPI_INFO_NULL);
-      const TCommunicator  COMM_NULL = TCommunicator(MPI_COMM_NULL);
+      const TNullCommunicator  COMM_NULL = TNullCommunicator(MPI_COMM_NULL);
 
 // empty group
       const TGroup GROUP_EMPTY = MPI_GROUP_NULL;
@@ -139,7 +139,7 @@ namespace ROOT {
 
 //Custom none datatype
       const MPI_Datatype DATATYPE_NULL = MPI_DATATYPE_NULL;
-      TCommunicator COMM_WORLD = TCommunicator(MPI_COMM_WORLD);
+      TIntraCommunicator COMM_WORLD = TIntraCommunicator(MPI_COMM_WORLD);
    }
 
 }
