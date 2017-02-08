@@ -121,9 +121,7 @@ void  TCommunicator::IBarrier(TRequest &req) const
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 {
    Int_t flag;
-   MPI_Status stat;
-   MPI_Iprobe(source, tag, fComm, &flag, &stat);
-   status = stat;
+   MPI_Iprobe(source, tag, fComm, &flag, &status.fStatus);
    return (Bool_t)flag;
 }
 
@@ -137,8 +135,7 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
 {
    Int_t flag;
-   MPI_Status status;
-   MPI_Iprobe(source, tag, fComm, &flag, &status);
+   MPI_Iprobe(source, tag, fComm, &flag, MPI_STATUS_IGNORE);
    return (Bool_t)flag;
 }
 
@@ -152,9 +149,7 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
  */
 void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 {
-   MPI_Status stat;
-   MPI_Probe(source, tag, fComm, &stat);
-   status = stat;
+   MPI_Probe(source, tag, fComm, &status.fStatus);
 }
 
 //______________________________________________________________________________
@@ -166,8 +161,7 @@ void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
  */
 void TCommunicator::Probe(Int_t source, Int_t tag) const
 {
-   MPI_Status stat;
-   MPI_Probe(source, tag, fComm, &stat);
+   MPI_Probe(source, tag, fComm, MPI_STATUS_IGNORE);
 }
 
 

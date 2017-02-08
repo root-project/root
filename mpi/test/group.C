@@ -52,25 +52,27 @@ void group()
 
 
    if (comm.GetRank() % 2 == 0) { //if rank is pair the I can to use the pgroup
-         auto pcomm = comm.Create(pgroup); //Intracomm for pair ranks
-         auto grank = pcomm.GetRank(); //rank must be  0 and 1
-         auto result = 0;
-         pcomm.Reduce(grank, result, SUM, 0);
-         if (grank == 0){ assert(result == 1);}
+      auto pcomm = comm.Create(pgroup); //Intracomm for pair ranks
+      auto grank = pcomm.GetRank(); //rank must be  0 and 1
+      auto result = 0;
+      pcomm.Reduce(grank, result, SUM, 0);
+      if (grank == 0) {
+         assert(result == 1);
+      }
 
-      } else {
-         auto icomm = comm.Create(igroup); //Intracomm for pair ranks
-         auto grank = icomm.GetRank();//rank must be  0 and 1
-         auto result = 0;
-         icomm.Reduce(grank, result, SUM, 0);
+   } else {
+      auto icomm = comm.Create(igroup); //Intracomm for pair ranks
+      auto grank = icomm.GetRank();//rank must be  0 and 1
+      auto result = 0;
+      icomm.Reduce(grank, result, SUM, 0);
 //           std::cout<<"gsize = "<<icomm.GetSize()<<std::endl;
 //           std::cout<<"grank = "<<icomm.GetRank()<<std::endl;
 //           std::cout<<"rsult = "<<result<<std::endl;
-         if (grank == 0) assert(result == 1);
+      if (grank == 0) assert(result == 1);
 
-      }
-  
-  TGroup g;
-  assert(g==GROUP_NULL);      
+   }
+
+   TGroup g;
+   assert(g == GROUP_NULL);
 }
 

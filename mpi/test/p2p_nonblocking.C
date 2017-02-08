@@ -40,7 +40,7 @@ void p2p_nonblocking_scalar()
       req.Wait();
       std::cout << "Sending mat = ";
       mymat.Print();
-      req = COMM_WORLD.IRsend(mymat, 1, 2);
+      req = COMM_WORLD.ISend(mymat, 1, 2);
       req.Wait();
 
       std::cout << "Sending scalar = " << size << std::endl;
@@ -125,7 +125,7 @@ void p2p_nonblocking_array(Int_t count = 2)
 
       std::cout << "Sending mats = ";
       mymat[0].Print();
-      req[3] = COMM_WORLD.IRsend(mymat, count, 1, 1);
+      req[3] = COMM_WORLD.ISend(mymat, count, 1, 1);
 
       TRequest::WaitAll(4, req);
    } else {

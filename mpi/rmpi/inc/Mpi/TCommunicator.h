@@ -84,7 +84,7 @@ namespace ROOT {
 
       class TCommunicator: public TNullCommunicator {
       public:
-         TCommunicator():TNullCommunicator(){}
+         TCommunicator(): TNullCommunicator() {}
          TCommunicator(const TCommunicator &comm);
          TCommunicator(const MPI_Comm &comm);
          ~TCommunicator();

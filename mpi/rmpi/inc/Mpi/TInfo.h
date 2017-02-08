@@ -125,7 +125,7 @@ namespace ROOT {
 
          Bool_t HasKey(TString key);
 
-         Binding &operator[](TString key)
+         Binding &operator[](const Char_t *key)
          {
             fBinder.SetKey(key);
             return fBinder;

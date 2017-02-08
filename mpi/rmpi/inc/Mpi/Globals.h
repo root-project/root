@@ -83,6 +83,9 @@ static const int SEEK_END = rmpi_stdio_seek_end;
       Abort(ERR_COMM);\
    }
 
+#define ROOT_MPI_DEBUG(fmt, ...)\
+   Info(__FUNCTION__,fmt, ##__VA_ARGS__)
+
 namespace ROOT {
    namespace Mpi {
 
@@ -215,7 +218,6 @@ namespace ROOT {
       R__EXTERN const TNullCommunicator  COMM_NULL;
       // empty group
       R__EXTERN const TGroup         GROUP_EMPTY;
-
 
       R__EXTERN TIntraCommunicator   COMM_WORLD;
 

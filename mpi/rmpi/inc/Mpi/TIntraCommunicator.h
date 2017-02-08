@@ -22,8 +22,8 @@ namespace ROOT {
       class TIntraCommunicator: public TCommunicator {
       public:
 
-         TIntraCommunicator():TCommunicator(){}
-          
+         TIntraCommunicator(): TCommunicator() {}
+
          TIntraCommunicator(const TIntraCommunicator &comm);
 
          TIntraCommunicator(const MPI_Comm &comm);
