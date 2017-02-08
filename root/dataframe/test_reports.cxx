@@ -46,7 +46,9 @@ int main(int argc, char** argv) {
 
    {
       // multi-thread cutflow reports with default branch, multiple runs
-      ROOT::EnableImplicitMT(2);
+#ifdef R__USE_IMT
+      ROOT::EnableImplicitMT();
+#endif
       TFile f(fileName);
       ROOT::Experimental::TDataFrame df("reportsTree", &f, {"b"});
       auto f1 = df.Filter(cut1, {}, "mtf");

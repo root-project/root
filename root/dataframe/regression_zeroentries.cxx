@@ -42,7 +42,9 @@ int main() {
    }
 
    {
+#ifdef R__USE_IMT
       ROOT::EnableImplicitMT();
+#endif
       TFile f("regression_zeroentries.root");
       ROOT::Experimental::TDataFrame d("emptyTree", &f, {"a"});
 

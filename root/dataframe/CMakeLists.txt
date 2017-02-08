@@ -58,10 +58,9 @@ ROOTTEST_ADD_TEST(regression_invalidref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 
-if(ROOT_imt_FOUND)
 
-   ROOTTEST_GENERATE_EXECUTABLE(regression_zeroentries regression_zeroentries.cxx LIBRARIES ${DFLIBRARIES})
-   ROOTTEST_ADD_TEST(regression_zeroentries
+ROOTTEST_GENERATE_EXECUTABLE(regression_zeroentries regression_zeroentries.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(regression_zeroentries
                      EXEC regression_zeroentries
                      OUTREF regression_zeroentries.ref
                      DEPENDS ${GENERATE_EXECUTABLE_TEST})
@@ -79,4 +78,3 @@ ROOTTEST_ADD_TEST(reports
                   OUTREF test_reports.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-endif()

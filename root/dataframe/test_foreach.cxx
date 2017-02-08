@@ -44,8 +44,13 @@ int main() {
 
    {
       // multi-thread evaluation of RMS of branch "b" using ForeachSlot
+#ifdef R__USE_IMT
       ROOT::EnableImplicitMT(2);
       unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+#else
+      unsigned int nSlots = 1;
+#endif
+
       std::vector<double> rmss(nSlots, 0.);
       std::vector<unsigned int> counts(nSlots, 0);
       ROOT::Experimental::TDataFrame d("foreachTree", &f, {"b1"});
