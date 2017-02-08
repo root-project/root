@@ -231,7 +231,7 @@ int main() {
    try {
       auto c11 = filteredDF.Count();
    } catch (const std::runtime_error& e) {
-      std::cout << "Exception catched: the dataframe went out of scope when booking an action." << std::endl;
+      std::cout << "Exception caught: the dataframe went out of scope when booking an action." << std::endl;
    }
 
    // TEST 13: an action result pointer goes out of scope and the chain is ran

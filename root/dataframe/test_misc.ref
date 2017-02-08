@@ -83,5 +83,5 @@ Mean dv: 5.13793
 Count for the first run is 18
 Count for the second run after adding a filter is 8
 Count for the first run was 18
-Exception catched: the dataframe went out of scope when booking an action.
+Exception caught: the dataframe went out of scope when booking an action.
 Count with action pointers which went out of scope: 20

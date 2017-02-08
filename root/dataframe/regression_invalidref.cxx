@@ -12,7 +12,7 @@ int main() {
    try {
       f.Filter([]() { return true; });
    } catch (const std::runtime_error& e) {
-      std::cout << "Exception catched: the dataframe went out of scope when booking a filter" << std::endl;
+      std::cout << "Exception caught: the dataframe went out of scope when booking a filter" << std::endl;
    }
 
    return 0;
