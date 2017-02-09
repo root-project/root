@@ -77,7 +77,7 @@ use `fChain->GetTree()->GetEntry(entry);`
 #include "TSystem.h"
 #include "TTree.h"
 #include "TError.h"
-#include "TSelectorCint.h"
+#include "TSelector.h"
 #include "TClass.h"
 #include "TInterpreter.h"
 

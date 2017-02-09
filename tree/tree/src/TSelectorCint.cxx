@@ -18,7 +18,9 @@ This class is a special version of TSelector for user interpreted classes.
 #include "TROOT.h"
 #include "TTree.h"
 #include "THashList.h"
+#define ROOT_TSelectorCint_SRC_FILE
 #include "TSelectorCint.h"
+#undef ROOT_TSelectorCint_SRC_FILE
 #include "TError.h"
 
 ClassImp(TSelectorCint)
