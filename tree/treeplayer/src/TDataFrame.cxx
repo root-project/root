@@ -34,7 +34,7 @@ In a nutshell:
 ~~~{.cpp}
 ROOT::EnableImplicitMT(); // Tell ROOT you want to go parallel
 ROOT::Experimental::TDataFrame d("myTree", file); // Interface to TTree and TChain
-auto myHisto = d.Histo("Branch_A"); // This happens in parallel!
+auto myHisto = d.Histo1D("Branch_A"); // This happens in parallel!
 myHisto->Draw();
 ~~~
 
@@ -114,7 +114,7 @@ t->Draw("var", "var > 2");
    <td>
 ~~~{.cpp}
 ROOT::Experimental::TDataFrame d("myTree", file, "var");
-d.Filter([](int v) { return v > 2; }).Histo();
+d.Filter([](int v) { return v > 2; }).Histo1D();
 ~~~
    </td>
 </tr>
@@ -128,7 +128,7 @@ Let's start with a very common task: filling a histogram
 ~~~{.cpp}
 // Fill a TH1F with the "MET" branch
 ROOT::Experimental::TDataFrame d("myTree", filePtr); // build a TDataFrame like you would build a TTreeReader
-auto h = d.Histo("MET");
+auto h = d.Histo1D("MET");
 h->Draw();
 ~~~
 The first line creates a `TDataFrame` associated to the `TTree` "myTree". This tree has a branch named "MET".
@@ -171,8 +171,8 @@ You should be able to easily understand what's happening:
 // fill two histograms with the results of two opposite cuts
 auto isBig = [](double x) { return x > 10.; };
 ROOT::Experimental::TDataFrame d(treeName, filePtr);
-auto h1 = d.Filter(isBig, {"MET"}).Histo("pt_v");
-auto h2 = d.Histo("pt_v");
+auto h1 = d.Filter(isBig, {"MET"}).Histo1D("pt_v");
+auto h2 = d.Histo1D("pt_v");
 h1->Draw();       // event loop is run once here
 h2->Draw("SAME"); // no need to run the event loop again
 ~~~
@@ -197,7 +197,7 @@ When constructing a `TDataFrame` object, it is possible to specify a **default b
 // use "b1" and "b2" as default branches for `Filter`, `AddBranch` and actions
 ROOT::Experimental::TDataFrame d1(treeName, &file, {"b1","b2"});
 // filter acts on default branch list, no need to specify it
-auto h = d1.Filter([](int b1, int b2) { return b1 > b2; }).Histo("otherVar");
+auto h = d1.Filter([](int b1, int b2) { return b1 > b2; }).Histo1D("otherVar");
 
 // just one default branch this time
 ROOT::Experimental::TDataFrame d2(treeName, &file, {"b1"});
@@ -218,9 +218,9 @@ Certain actions, on the other hand, do not take a function as argument (e.g. `Hi
 
 When the branch type is not a common one such as `int`, `double`, `char` or `float` it is therefore good practice to specify it as a template parameter to the action itself, like this:
 ~~~{.cpp}
-dataFrame.Histo("b1"); // OK if b1 is a "common" type
+dataFrame.Histo1D("b1"); // OK if b1 is a "common" type
 dataFrame.Histo<Object_t>("myObject"); // OK, "myObject" is deduced to be of type `Object_t`
-// dataFrame.Histo("myObject"); // THROWS an exception
+// dataFrame.Histo1D("myObject"); // THROWS an exception
 ~~~
 
 ### Generic actions
@@ -268,17 +268,17 @@ ROOT::Experimental::TDataFrame d(treeName, filePtr, {"var1", "var2", "var3"});
 auto filtered = d.Filter(myBigCut);
 
 // plot branch "var1" at this point of the chain
-auto h1 = filtered.Histo("var1");
+auto h1 = filtered.Histo1D("var1");
 
 // create a new branch "vec" with a vector extracted from a complex object (only for filtered entries)
 // and save the state of the chain
 auto newBranchFiltered = filtered.AddBranch("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
 
 // apply a cut and fill a histogram with "vec"
-auto h2 = newBranchFiltered.Filter(cut1).Histo("vec");
+auto h2 = newBranchFiltered.Filter(cut1).Histo1D("vec");
 
 // apply a different cut and fill a new histogram
-auto h3 = newBranchFiltered.Filter(cut2).Histo("vec");
+auto h3 = newBranchFiltered.Filter(cut2).Histo1D("vec");
 
 // Inspect results
 h2->Draw(); // first access to an action result: run event-loop!

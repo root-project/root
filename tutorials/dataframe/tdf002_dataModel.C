@@ -97,12 +97,23 @@ int tdf002_dataModel() {
       return pts;
       };
 
+   // We do the same for the weights.
+   auto getPtWeights = [](const FourVectors& tracks) {
+      std::vector<double> ptsw;
+      ptsw.reserve(tracks.size());
+      for (auto& t:tracks)
+         ptsw.emplace_back(1./t.Pt());
+      return ptsw;
+      };
+
    auto augmented_d = d.AddBranch("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
                        .Filter([](int tracks_n){return tracks_n > 2;}, {"tracks_n"})
-                       .AddBranch("tracks_pts", getPt);
+                       .AddBranch("tracks_pts", getPt)
+                       .AddBranch("tracks_pts_weights", getPtWeights);
 
-   auto trN = augmented_d.Histo("tracks_n",40,-.5,39.5);
-   auto trPts = augmented_d.Histo("tracks_pts");
+   auto trN = augmented_d.Histo1D("tracks_n",40,-.5,39.5);
+   auto trPts = augmented_d.Histo1D("tracks_pts");
+   auto trWPts = augmented_d.Histo1D<std::vector<double>, std::vector<double>>("tracks_pts", "tracks_pts_weights");
 
    TCanvas c1;
    trN->Draw();
@@ -111,6 +122,10 @@ int tdf002_dataModel() {
    TCanvas c2;
    trPts->Draw();
    c2.Print("tracks_pt.png");
+
+   TCanvas c3;
+   trWPts->Draw();
+   c3.Print("tracks_Wpt.png");
 
    return 0;
 }

@@ -29,6 +29,9 @@ namespace Internal {
 
 namespace Operations {
 
+
+
+
 using namespace Internal::TDFTraitsUtils;
 using Count_t = unsigned long;
 
@@ -61,7 +64,9 @@ class FillOperation {
    using Buf_t = std::vector<BufEl_t>;
 
    std::vector<Buf_t> fBuffers;
+   std::vector<Buf_t> fWBuffers;
    std::shared_ptr<HIST> fResultHist;
+   unsigned int fNSlots;
    unsigned int fBufSize;
    Buf_t fMin;
    Buf_t fMax;
@@ -76,27 +81,32 @@ class FillOperation {
 
 public:
    FillOperation(std::shared_ptr<HIST> h, unsigned int nSlots) : fResultHist(h),
+                                                                 fNSlots(nSlots),
                                                                  fBufSize (fgTotalBufSize / nSlots),
                                                                  fMin(nSlots, std::numeric_limits<BufEl_t>::max()),
                                                                  fMax(nSlots, std::numeric_limits<BufEl_t>::min())
    {
-      fBuffers.reserve(nSlots);
-      for (unsigned int i=0; i<nSlots; ++i) {
+      fBuffers.reserve(fNSlots);
+      fWBuffers.reserve(fNSlots);
+      for (unsigned int i=0; i<fNSlots; ++i) {
          Buf_t v;
          v.reserve(fBufSize);
          fBuffers.emplace_back(v);
+
+         Buf_t w(fBufSize,1);
+         fWBuffers.emplace_back(v);
       }
    }
 
    template <typename T, typename std::enable_if<!TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(T v, unsigned int slot)
+   inline void Exec(T v, unsigned int slot)
    {
       UpdateMinMax(slot, v);
       fBuffers[slot].emplace_back(v);
    }
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(const T &vs, unsigned int slot)
+   inline void Exec(const T &vs, unsigned int slot)
    {
       auto& thisBuf = fBuffers[slot];
       for (auto& v : vs) {
@@ -105,8 +115,39 @@ public:
       }
    }
 
+   template <typename T, typename W,
+             typename std::enable_if<!TIsContainer<T>::fgValue && !TIsContainer<W>::fgValue, int>::type = 0>
+   inline void Exec(T v, W w, unsigned int slot)
+   {
+      UpdateMinMax(slot, v);
+      fBuffers[slot].emplace_back(v);
+      fWBuffers[slot].emplace_back(w);
+   }
+
+   template <typename T, typename W,
+             typename std::enable_if<TIsContainer<T>::fgValue && TIsContainer<W>::fgValue, int>::type = 0>
+   inline void Exec(const T &vs, const W &ws, unsigned int slot)
+   {
+      auto& thisBuf = fBuffers[slot];
+      for (auto& v : vs) {
+         UpdateMinMax(slot, v);
+         thisBuf.emplace_back(v); // TODO: Can be optimised in case T == BufEl_t
+      }
+
+      auto& thisWBuf = fWBuffers[slot];
+      for (auto& w : ws) {
+         thisWBuf.emplace_back(w); // TODO: Can be optimised in case T == BufEl_t
+      }
+   }
+
    ~FillOperation()
    {
+
+      for (unsigned int i=0; i<fNSlots; ++i) {
+         if (fBuffers[i].size() != fBuffers[i].size()) {
+            throw std::runtime_error("Cannot fill weighted histogram with values in containers of different sizes.");
+         }
+      }
 
       BufEl_t globalMin = *std::min_element(fMin.begin(), fMin.end());
       BufEl_t globalMax = *std::max_element(fMax.begin(), fMax.end());
@@ -119,9 +160,8 @@ public:
          fResultHist->ExtendAxis(globalMax, xaxis);
       }
 
-      for (auto& buf : fBuffers) {
-         Buf_t w(buf.size(),1); // A bug in FillN?
-         fResultHist->FillN(buf.size(), buf.data(),  w.data());
+      for (unsigned int i=0; i<fNSlots; ++i) {
+         fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(),  fWBuffers[i].data());
       }
    }
 };
@@ -142,17 +182,40 @@ public:
    }
 
    template <typename T, typename std::enable_if<!TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(T v, unsigned int slot)
+   inline void Exec(T v, unsigned int slot)
    {
       fTo.GetAtSlotUnchecked(slot)->Fill(v);
    }
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(const T &vs, unsigned int slot)
+   inline void Exec(const T &vs, unsigned int slot)
    {
       auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
       for (auto& v : vs) {
          thisSlotH->Fill(v); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+
+   template <typename T, typename W,
+             typename std::enable_if<!TIsContainer<T>::fgValue && !TIsContainer<W>::fgValue, int>::type = 0>
+   inline void Exec(T v, W w, unsigned int slot)
+   {
+      fTo.GetAtSlotUnchecked(slot)->Fill(v,w);
+   }
+
+   template <typename T, typename W,
+             typename std::enable_if<TIsContainer<T>::fgValue && TIsContainer<W>::fgValue, int>::type = 0>
+   inline void Exec(const T &vs, const W &ws, unsigned int slot)
+   {
+      auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
+      if (vs.size() != ws.size()) {
+         throw std::runtime_error("Cannot fill weighted histogram with values in containers of different sizes.");
+      }
+      auto vsIt = std::begin(vs);
+      const auto vsEnd = std::end(vs);
+      auto wsIt = std::begin(ws);
+      for (;vsIt!=vsEnd; vsIt++,wsIt++) {
+         thisSlotH->Fill(*vsIt, *wsIt); // TODO: Can be optimised in case T == vector<double>
       }
    }
 
