@@ -5,72 +5,13 @@
 #include<TROOT.h>
 using namespace ROOT::Mpi;
 
-//______________________________________________________________________________
-template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
-{
-   std::vector<TMpiMessageInfo> msgis(count);
-   for (auto i = 0; i < count; i++) {
-      auto mbuffer = vars[i].Buffer();
-      auto msize   = vars[i].BufferSize();
-      if (mbuffer == NULL) {
-         comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(TMpiMessage));
-         comm->Abort(ERR_BUFFER);
-      }
-      TMpiMessageInfo msgi(mbuffer, msize);
-      msgi.SetSource(comm->GetRank());
-      msgi.SetDestination(dest);
-      msgi.SetSource(source);
-      msgi.SetRoot(root);
-      msgi.SetTag(tag);
-      msgi.SetDataTypeName(ROOT_MPI_TYPE_NAME(TMpiMessage));
-      msgis[i] = msgi;
-   }
-   TMpiMessage msg;
-   msg.WriteObject(msgis);
-   auto ibuffer = msg.Buffer();
-   size = msg.BufferSize();
-   *buffer = new Char_t[size];
-   if (ibuffer == NULL) {
-      comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(msgis));
-      comm->Abort(ERR_BUFFER);
-   }
-   memcpy(*buffer, ibuffer, size);
-
-}
-
 
 //______________________________________________________________________________
-template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
-{
-   TMpiMessage msg(ibuffer, isize);
-   auto cl = gROOT->GetClass(typeid(std::vector<TMpiMessageInfo>));
-   auto msgis = (std::vector<TMpiMessageInfo> *)msg.ReadObjectAny(cl);
-   if (msgis == NULL) {
-      comm->Error(__FUNCTION__, "Error unserializing object type %s \n", cl->GetName());
-      comm->Abort(ERR_BUFFER);
-   }
-
-   if (msgis->data()->GetDataTypeName() != ROOT_MPI_TYPE_NAME(TMpiMessage)) {
-      comm->Error(__FUNCTION__, "Error unserializing objects type %s where objects are %s \n", ROOT_MPI_TYPE_NAME(TMpiMessage), msgis->data()->GetDataTypeName().Data());
-      comm->Abort(ERR_TYPE);
-   }
-
-   ROOT_MPI_ASSERT(msgis->data()->GetDestination() == dest, comm)
-   ROOT_MPI_ASSERT(msgis->data()->GetSource() == source, comm)
-   ROOT_MPI_ASSERT(msgis->data()->GetRoot() == root, comm)
-   ROOT_MPI_ASSERT(msgis->data()->GetTag() == tag, comm)
-
-   for (auto i = 0; i < count; i++) {
-      //passing information from TMpiMessageInfo to TMpiMessage
-      auto size = msgis->data()[i].GetBufferSize();
-      Char_t *buffer = new Char_t[size];//this memory dies when the unserialized object dies
-      memcpy(buffer, msgis->data()[i].GetBuffer(), size);
-      vars[i].SetBuffer(buffer, size, kFALSE);
-      vars[i].SetReadMode();
-      vars[i].Reset();
-   }
-}
-
+/**
+ * Default constructor for communicator that is a null communicator
+ * \param comm other TCommunicator object
+ */
+TCommunicator::TCommunicator(): TNullCommunicator() {}
 
 
 //______________________________________________________________________________
@@ -78,17 +19,13 @@ template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t i
  * Copy constructor for communicator
  * \param comm other TCommunicator object
  */
-TCommunicator::TCommunicator(const TCommunicator &comm): TNullCommunicator(comm)
-{
-}
+TCommunicator::TCommunicator(const TCommunicator &comm): TNullCommunicator(comm) {}
 
 //______________________________________________________________________________
 TCommunicator::TCommunicator(const MPI_Comm &comm): TNullCommunicator(comm) {}
 
 //______________________________________________________________________________
-TCommunicator::~TCommunicator()
-{
-}
+TCommunicator::~TCommunicator() {}
 
 //______________________________________________________________________________
 /**
@@ -154,11 +91,8 @@ Int_t TCommunicator::GetMaxTag() const
    Int_t *tag;
    Int_t flag = 0;
 
-#if (2 <= MPI_VERSION)
    MPI_Comm_get_attr(fComm, MPI_TAG_UB, &tag, &flag);
-#else
-   MPI_Attr_get(fComm, MPI_TAG_UB, &tag, &flag);
-#endif
+
    ROOT_MPI_ASSERT(flag != 0, this);
    return *tag - 1;//one tag is reserved for internal use
 
@@ -317,6 +251,85 @@ Bool_t TCommunicator::IsInter() const
    Int_t t;
    MPI_Comm_test_inter(fComm, &t);
    return Bool_t(t);
+}
+
+//______________________________________________________________________________
+template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
+{
+   std::vector<TMpiMessageInfo> msgis(count);
+   for (auto i = 0; i < count; i++) {
+      auto mbuffer = vars[i].Buffer();
+      auto msize   = vars[i].BufferSize();
+      if (mbuffer == NULL) {
+         comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(TMpiMessage));
+         comm->Abort(ERR_BUFFER);
+      }
+      TMpiMessageInfo msgi(mbuffer, msize);
+      msgi.SetSource(comm->GetRank());
+      msgi.SetDestination(dest);
+      msgi.SetSource(source);
+      msgi.SetRoot(root);
+      msgi.SetTag(tag);
+      msgi.SetDataTypeName(ROOT_MPI_TYPE_NAME(TMpiMessage));
+      msgis[i] = msgi;
+   }
+   TMpiMessage msg;
+   msg.WriteObject(msgis);
+   auto ibuffer = msg.Buffer();
+   size = msg.BufferSize();
+   *buffer = new Char_t[size];
+   if (ibuffer == NULL) {
+      comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(msgis));
+      comm->Abort(ERR_BUFFER);
+   }
+   memcpy(*buffer, ibuffer, size);
+
+}
+
+
+//______________________________________________________________________________
+template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
+{
+   TMpiMessage msg(ibuffer, isize);
+   auto cl = gROOT->GetClass(typeid(std::vector<TMpiMessageInfo>));
+   auto msgis = (std::vector<TMpiMessageInfo> *)msg.ReadObjectAny(cl);
+   if (msgis == NULL) {
+      comm->Error(__FUNCTION__, "Error unserializing object type %s \n", cl->GetName());
+      comm->Abort(ERR_BUFFER);
+   }
+
+   if (msgis->data()->GetDataTypeName() != ROOT_MPI_TYPE_NAME(TMpiMessage)) {
+      comm->Error(__FUNCTION__, "Error unserializing objects type %s where objects are %s \n", ROOT_MPI_TYPE_NAME(TMpiMessage), msgis->data()->GetDataTypeName().Data());
+      comm->Abort(ERR_TYPE);
+   }
+
+   ROOT_MPI_ASSERT(msgis->data()->GetDestination() == dest, comm)
+   ROOT_MPI_ASSERT(msgis->data()->GetSource() == source, comm)
+   ROOT_MPI_ASSERT(msgis->data()->GetRoot() == root, comm)
+   ROOT_MPI_ASSERT(msgis->data()->GetTag() == tag, comm)
+
+   for (auto i = 0; i < count; i++) {
+      //passing information from TMpiMessageInfo to TMpiMessage
+      auto size = msgis->data()[i].GetBufferSize();
+      Char_t *buffer = new Char_t[size];//this memory dies when the unserialized object dies
+      memcpy(buffer, msgis->data()[i].GetBuffer(), size);
+      vars[i].SetBuffer(buffer, size, kFALSE);
+      vars[i].SetReadMode();
+      vars[i].Reset();
+   }
+}
+
+TString TCommunicator::GetCommName() const
+{
+   Char_t name[MPI_MAX_PROCESSOR_NAME];
+   Int_t size;
+   MPI_Comm_get_name(fComm, name, &size);
+   return TString(name, size);
+}
+
+void TCommunicator::SetCommName(const TString name)
+{
+   MPI_Comm_set_name(fComm, name.Data());
 }
 
 

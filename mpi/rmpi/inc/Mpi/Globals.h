@@ -37,6 +37,8 @@
 #include <typeinfo>
 #include<mpi.h>
 
+#include<string>
+
 #if defined(SEEK_SET) || defined(SEEK_CUR) || defined(SEEK_END)
 static const int rmpi_stdio_seek_set = SEEK_SET;
 static const int rmpi_stdio_seek_cur = SEEK_CUR;
@@ -54,43 +56,45 @@ static const int SEEK_END = rmpi_stdio_seek_end;
 #undef RMPI_SEEK
 #endif
 
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
 #define ROOT_MPI_TYPE_NAME(T) gROOT->GetClass(typeid(T))->GetName()
 
 //NOTE: the macros to check the errors can be changed by exceptions if is wanted.
 
 #define ROOT_MPI_ASSERT(EXPRESSION,comm)\
    if(!(EXPRESSION)){\
-      comm->Error(__FUNCTION__,"Assertion %s ",#EXPRESSION);\
+      comm->Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Assertion %s ",#EXPRESSION);\
       comm->Abort(ERR_UNKNOWN);\
    }
 
 #define ROOT_MPI_CHECK_DATATYPE(T)\
    if (GetDataType<T>() == DATATYPE_NULL) {\
       int err;\
-      Error(__FUNCTION__,"Unknown datatype, returned null datatype   GetDataType<%s>()",TClassEdit::DemangleName(typeid(T).name(),err));\
+      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Unknown datatype, returned null datatype   GetDataType<%s>()",TClassEdit::DemangleName(typeid(T).name(),err));\
       Abort(ERR_TYPE);\
    }
 
 #define ROOT_MPI_CHECK_COMM(T)\
    if (T == MPI_COMM_NULL) {\
-      Error(__FUNCTION__,"Error in the communicator, object is a null communicator.");\
+      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Communicator is a null object.");\
       Abort(ERR_COMM);\
    }
 
 #define ROOT_MPI_CHECK_GROUP(T)\
    if (T == MPI_GROUP_NULL) {\
-      Error(__FUNCTION__,"Error in the group, object is a null group.");\
+      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Group is a null group.");\
       Abort(ERR_COMM);\
    }
 
 #define ROOT_MPI_CHECK_TAG(T)\
    if (T == GetInternalTag()) {\
-      Error(__FUNCTION__,"Error in tag value, the value can not be greater that %d.",GetMaxTag());\
+      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"The TAG value can not be greater that %d.",GetMaxTag());\
       Abort(ERR_COMM);\
    }
 
 #define ROOT_MPI_DEBUG(fmt, ...)\
-   Info(__FUNCTION__,fmt, ##__VA_ARGS__)
+   Info(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),fmt, ##__VA_ARGS__)
 
 namespace ROOT {
    namespace Mpi {

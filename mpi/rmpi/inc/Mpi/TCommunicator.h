@@ -86,7 +86,7 @@ namespace ROOT {
       protected:
          Int_t GetInternalTag() const;
       public:
-         TCommunicator(): TNullCommunicator() {}
+         TCommunicator();
          TCommunicator(const TCommunicator &comm);
          TCommunicator(const MPI_Comm &comm);
          ~TCommunicator();
@@ -110,6 +110,11 @@ namespace ROOT {
          void Abort(Int_t error) const;
 
          Int_t GetMaxTag() const;
+
+         virtual TString GetCommName() const;
+
+         virtual void SetCommName(const TString name);
+
 
          virtual void Barrier() const;
 
@@ -474,14 +479,10 @@ namespace ROOT {
       {
          TRequest req;
          if (std::is_class<Type>::value) {
-            Char_t *buffer;
-            Int_t size;
-            Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
-            MPI_Irsend(buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest);
-            req.fCallback = [buffer]()mutable { //use to clean memory after wait
-               if (buffer) delete buffer;
-               buffer = NULL;
-            };
+             //TODO: objects is not sopported for ready mode, 
+             // because you need to call firts the IRecv method and the size of serialized buffer is unknow then
+             // ADDED A GOOD ERROR HANDLING HERE!
+             // 
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Irsend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);

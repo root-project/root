@@ -19,7 +19,7 @@ void communicators()
 
    comm = gcomm;
    assert(comm == COMM_WORLD);
-   assert(comm.IsInter() == kFALSE); //is an intra comm not and inter comm
+   assert(comm.IsInter() == kFALSE); //is an intra comm not an inter comm
 
    TGroup group = comm.GetGroup();
 
@@ -35,16 +35,16 @@ void communicators()
    assert(igroup != GROUP_NULL);
 
 
-   auto pcomm = comm.Create(pgroup);
-   auto icomm = comm.Create(igroup);
+   if (comm.GetRank() % 2 == 0) {
+      auto pcomm = comm.Create(pgroup);
 
-   assert(pcomm != icomm);
-
-   assert(pcomm != COMM_NULL);
-   assert(icomm != COMM_NULL);
-
-
-//    assert(pcomm.IsInter()==kFALSE); //is an intra comm not and inter comm
+      assert(pcomm != COMM_NULL);
+      assert(pcomm.IsInter() == kFALSE); //is an intra comm not and inter comm
+   } else {
+      auto icomm = comm.Create(igroup);
+      assert(icomm != COMM_NULL);
+      assert(icomm.IsInter() == kFALSE); //is an intra comm not and inter comm
+   }
 
 }
 

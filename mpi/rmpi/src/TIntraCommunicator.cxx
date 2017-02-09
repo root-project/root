@@ -32,9 +32,9 @@ TIntraCommunicator &TIntraCommunicator::Clone() const
 //______________________________________________________________________________
 TIntraCommunicator TIntraCommunicator::Create(const TGroup &group) const
 {
-   MPI_Comm ncomm = (MPI_Comm)Dup();
+   MPI_Comm ncomm;
    ROOT_MPI_CHECK_GROUP(group);
-   MPI_Comm_create(fComm, (MPI_Group)group, &ncomm);
+   MPI_Comm_create(fComm, group, &ncomm);
    ROOT_MPI_CHECK_COMM(ncomm);
    return  ncomm;
 }

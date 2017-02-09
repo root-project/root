@@ -1,5 +1,5 @@
 #include<Mpi/TEnvironment.h>
-
+#include<Mpi/TIntraCommunicator.h>
 using namespace ROOT::Mpi;
 //TODO: enable thread level and thread-safe for ROOT
 
@@ -7,12 +7,27 @@ using namespace ROOT::Mpi;
 TEnvironment::TEnvironment()
 {
    MPI_Init(NULL, NULL);
+
+   if (IsInitialized()) {
+      Int_t result;
+      MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
+      if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
+   } else {
+      //TODO: added error handling here
+   }
 }
 
 //______________________________________________________________________________
 TEnvironment::TEnvironment(Int_t &argc, Char_t ** &argv)
 {
    MPI_Init(&argc, &argv);
+   if (IsInitialized()) {
+      Int_t result;
+      MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
+      if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
+   } else {
+      //TODO: added error handling here
+   }
 }
 
 //______________________________________________________________________________
