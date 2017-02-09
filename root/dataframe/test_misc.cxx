@@ -126,11 +126,11 @@ int main() {
 
    // TEST 6: Create a histogram
    ROOT::Experimental::TDataFrame d5(treeName, &f, {"b2"});
-   auto h1 = d5.Histo();
-   auto h2 = d5.Histo("b1");
+   auto h1 = d5.Histo1D();
+   auto h2 = d5.Histo1D("b1");
    TH1F dvHisto("dvHisto","The DV histo", 64, -8, 8);
-   auto h3 = d5.Histo("dv",std::move(dvHisto));
-   auto h4 = d5.Histo<std::list<int>>("sl");
+   auto h3 = d5.Histo1D(std::move(dvHisto),"dv");
+   auto h4 = d5.Histo1D<std::list<int>>("sl");
    std::cout << "Histo1: nEntries " << h1->GetEntries() << std::endl;
    std::cout << "Histo2: nEntries " << h2->GetEntries() << std::endl;
    std::cout << "Histo3: nEntries " << h3->GetEntries() << std::endl;
@@ -154,7 +154,7 @@ int main() {
                        sum += track.Pt();
                     return sum; });
    auto c7 = dd7.Count();
-   auto h7 = dd7.Histo("ptsum");
+   auto h7 = dd7.Histo1D("ptsum");
    auto c7v = *c7;
    CheckRes(c7v, 10U, "AddBranch complicated");
    std::cout << "AddBranch Histo entries: " << h7->GetEntries() << std::endl;
@@ -250,6 +250,15 @@ int main() {
       auto d11c11 = d.Count();
    }
    std::cout << "Count with action pointers which went out of scope: " << *d11c << std::endl;
+
+   // TEST14: fill histograms
+   ROOT::Experimental::TDataFrame d12(treeName, &f, {"b1","b2"});
+   auto wh1 = d12.Histo1D<double, int>();
+   auto wh2 = d12.Histo1D<std::vector<double>, std::list<int>>("dv","sl");
+   std::cout << "Wh1 Histo entries: " << wh1->GetEntries() << std::endl;
+   std::cout << "Wh1 Histo mean: " << wh1->GetMean() << std::endl;
+   std::cout << "Wh2 Histo entries: " << wh2->GetEntries() << std::endl;
+   std::cout << "Wh2 Histo mean: " << wh2->GetMean() << std::endl;
 
    return 0;
 }

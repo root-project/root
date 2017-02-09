@@ -85,3 +85,7 @@ Count for the second run after adding a filter is 8
 Count for the first run was 18
 Exception caught: the dataframe went out of scope when booking an action.
 Count with action pointers which went out of scope: 20
+Wh1 Histo entries: 20
+Wh1 Histo mean: 14.6154
+Wh2 Histo entries: 290
+Wh2 Histo mean: 9.05882

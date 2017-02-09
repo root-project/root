@@ -31,7 +31,7 @@ int main() {
    auto max = d.Filter([](int i) { return i % 2 == 1; }).Max();
    auto min = d.Min();
    auto mean = d.Mean();
-   auto h = d.Histo();
+   auto h = d.Histo1D();
    std::cout << std::setprecision(10) << "max " << *max << std::endl;
    std::cout << std::setprecision(10) << "min " << *min << std::endl;
    std::cout << std::setprecision(10) << "mean " << *mean << std::endl;

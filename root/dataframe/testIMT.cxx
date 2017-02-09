@@ -145,16 +145,16 @@ void tests(int argc = 1, char** argv = nullptr) {
       std::cout << "After filter, max of b1 " << *max << std::endl;
    }
 
-   std::cout << "\nHisto" << std::endl;
+   std::cout << "\.Histo1D" << std::endl;
    {
       ROOT::Experimental::TDataFrame d(treeName, &f);
 
-      auto h = d.Histo("b1");
+      auto h = d.Histo1D("b1");
 
-      std::cout << "Histo b1 entries and mean " << h->GetEntries() << " " << h->GetMean() << std::endl;
+      std::cout << .Histo1D b1 entries and mean " << h->GetEntries() << " " << h->GetMean() << std::endl;
    }
 
-   std::cout << "\nHisto with filter and new branch" << std::endl;
+   std::cout << "\.Histo1D with filter and new branch" << std::endl;
    {
 
       auto getPt = [](const FourVectors& tracks) {
@@ -170,12 +170,12 @@ void tests(int argc = 1, char** argv = nullptr) {
       auto ad = d.AddBranch("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
                  .Filter([](int tracks_n){return tracks_n > 2;}, {"tracks_n"})
                  .AddBranch("tracks_pts", getPt);
-      auto trN = ad.Histo("tracks_n", 100 , -.5, 99.5);
-      auto trPts = ad.Histo("tracks_pts");
+      auto trN = ad.Histo1D("tracks_n", 100 , -.5, 99.5);
+      auto trPts = ad.Histo1D("tracks_pts");
 
-      std::cout << "Histo tracks number entries and mean " << trN->GetEntries()
+      std::cout << .Histo1D tracks number entries and mean " << trN->GetEntries()
                 << " " << trN->GetMean() << std::endl;
-      std::cout << "Histo track Pts entries and mean " << trN->GetEntries()
+      std::cout << .Histo1D track Pts entries and mean " << trN->GetEntries()
                 << " " << trPts->GetMean() << std::endl;
    }
 

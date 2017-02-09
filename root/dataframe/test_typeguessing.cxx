@@ -20,11 +20,11 @@ int main() {
    TFile f("testtypeguessing.root");
    ROOT::Experimental::TDataFrame d("myTree", &f);
    // TTreeReader should cause a runtime error (type mismatch) when the event-loop is run
-   auto hb = d.Histo<double>("b");
+   auto hb = d.Histo1D<double>("b");
 
    // this should throw an exception because TString is not a guessable type
    try {
-      auto hs = d.Histo("s");
+      auto hs = d.Histo1D("s");
    } catch (const std::runtime_error& error) {
       std::cout << error.what() << std::endl;
    }

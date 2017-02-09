@@ -26,7 +26,7 @@ int main() {
       auto min = d.Min();
       auto max = d.Max();
       auto mean = d.Mean();
-      auto h = d.Histo();
+      auto h = d.Histo1D();
       auto c = d.Count();
       auto g = d.Take<int>();
       int fc = 0;
@@ -52,7 +52,7 @@ int main() {
       auto min = d.Min();
       auto max = d.Max();
       auto mean = d.Mean();
-      auto h = d.Histo();
+      auto h = d.Histo1D();
       auto c = d.Count();
       auto g = d.Take<int>();
       std::atomic_int fc(0);
