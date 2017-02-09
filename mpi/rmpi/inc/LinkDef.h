@@ -38,6 +38,7 @@
 #pragma link C++ class ROOT::Mpi::TNullCommunicator;
 #pragma link C++ class ROOT::Mpi::TCommunicator;
 #pragma link C++ class ROOT::Mpi::TIntraCommunicator;
+#pragma link C++ class ROOT::Mpi::TInterCommunicator;
 #pragma link C++ class ROOT::Mpi::TGroup;
 
 /*

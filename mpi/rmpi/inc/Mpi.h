@@ -8,5 +8,6 @@
 #include<Mpi/Globals.h>
 #include<Mpi/TMpiMessage.h>
 #include<Mpi/TIntraCommunicator.h>
+#include<Mpi/TInterCommunicator.h>
 
 #endif

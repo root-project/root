@@ -133,10 +133,11 @@ namespace ROOT {
 
          virtual void Print();
 
-         operator MPI_Info()
+         operator MPI_Info() const
          {
             return fInfo;
          }
+
          ClassDef(TInfo, 1)
 
       };

@@ -479,10 +479,10 @@ namespace ROOT {
       {
          TRequest req;
          if (std::is_class<Type>::value) {
-             //TODO: objects is not sopported for ready mode, 
-             // because you need to call firts the IRecv method and the size of serialized buffer is unknow then
-             // ADDED A GOOD ERROR HANDLING HERE!
-             // 
+            //TODO: objects is not sopported for ready mode,
+            // because you need to call firts the IRecv method and the size of serialized buffer is unknow then
+            // ADDED A GOOD ERROR HANDLING HERE!
+            //
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type);
             MPI_Irsend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);

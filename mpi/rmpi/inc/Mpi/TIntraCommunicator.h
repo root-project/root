@@ -10,6 +10,7 @@ namespace ROOT {
 
    namespace Mpi {
       class TInfo;
+      class TInterCommunicator;
 
       /**
        * \class TIntraCommunicator
@@ -54,7 +55,29 @@ namespace ROOT {
 
          virtual TIntraCommunicator Create(const TGroup &group) const;
 
-         virtual TIntraCommunicator Split(int color, int key) const;
+         virtual TIntraCommunicator Split(Int_t color, Int_t key) const;
+
+         virtual TInterCommunicator CreateIntercomm(Int_t local_leader, const TIntraCommunicator &peer_comm, Int_t remote_leader, Int_t tag) const;
+
+         //
+         // Process Creation and Management
+         //
+
+         virtual TInterCommunicator Accept(const Char_t *port_name, const TInfo &info, Int_t root)const;
+
+         virtual TInterCommunicator Connect(const Char_t *port_name, const TInfo &info, Int_t root)const;
+
+         virtual TInterCommunicator Spawn(const Char_t *command, const Char_t *argv[], Int_t maxprocs, const TInfo &info, Int_t root) const;
+
+         virtual TInterCommunicator Spawn(const Char_t *command, const Char_t *argv[], Int_t maxprocs, const TInfo &info,
+                                          Int_t root, Int_t array_of_errcodes[]) const;
+
+         virtual TInterCommunicator SpawnMultiple(Int_t count, const Char_t *array_of_commands[], const Char_t **array_of_argv[],
+               const Int_t array_of_maxprocs[], const TInfo array_of_info[], Int_t root);
+
+         virtual TInterCommunicator SpawnMultiple(Int_t count, const Char_t *array_of_commands[], const Char_t **array_of_argv[],
+               const Int_t array_of_maxprocs[], const TInfo array_of_info[], Int_t root,
+               Int_t array_of_errcodes[]);
 
          ClassDef(TIntraCommunicator, 3) //
       };
