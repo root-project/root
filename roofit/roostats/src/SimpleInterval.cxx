@@ -10,23 +10,20 @@
 
 /*****************************************************************************
  * Project: RooStats
- * Package: RooFit/RooStats  
+ * Package: RooFit/RooStats
  * @(#)root/roofit/roostats:$Id$
- * Authors:                     
+ * Authors:
  *   Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
  *
  *****************************************************************************/
 
+/** \class RooStats::SimpleInterval
+    \ingroup Roostats
 
-/**
-   \class SimpleInterval
-   \ingroup Roostats
-
-   SimpleInterval is a concrete implementation of the ConfInterval interface.  
-   It implements simple 1-dimensional intervals in a range [a,b].
-   In addition, you can ask it for the upper- or lower-bound.
+SimpleInterval is a concrete implementation of the ConfInterval interface.
+It implements simple 1-dimensional intervals in a range [a,b].
+In addition, you can ask it for the upper- or lower-bound.
 */
-
 
 #ifndef RooStats_SimpleInterval
 #include "RooStats/SimpleInterval.h"
@@ -55,7 +52,7 @@ SimpleInterval::SimpleInterval(const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 ///fParameters.add( other.fParameters );
 
-SimpleInterval::SimpleInterval(const SimpleInterval& other, const char* name) 
+SimpleInterval::SimpleInterval(const SimpleInterval& other, const char* name)
  : ConfInterval(name)
  , fParameters(other.fParameters)
  , fLowerLimit(other.fLowerLimit)
@@ -63,16 +60,16 @@ SimpleInterval::SimpleInterval(const SimpleInterval& other, const char* name)
  , fConfidenceLevel(other.fConfidenceLevel)
 {
 }
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SimpleInterval& 
-SimpleInterval::operator=(const SimpleInterval& other) 
+SimpleInterval&
+SimpleInterval::operator=(const SimpleInterval& other)
 {
   if (&other==this) {
     return *this ;
-  } 
+  }
 
   ConfInterval::operator = (other);
 
@@ -83,9 +80,8 @@ SimpleInterval::operator=(const SimpleInterval& other)
   fUpperLimit      = other.fUpperLimit;
   fConfidenceLevel = other.fConfidenceLevel;
 
-  return *this ;  
+  return *this ;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
@@ -95,8 +91,6 @@ SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, Double_
 {
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -104,14 +98,13 @@ SimpleInterval::~SimpleInterval()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Method to determine if a parameter point is in the interval
 
-Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const 
-{  
-   // Method to determine if a parameter point is in the interval
+Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
+{
    if( !this->CheckParameters(parameterPoint) )
-      return false; 
+      return false;
 
    if(parameterPoint.getSize() != 1 )
       return false;
@@ -131,14 +124,14 @@ Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
 /// return cloned list of parameters
 
 RooArgSet* SimpleInterval::GetParameters() const
-{  
+{
    return new RooArgSet(fParameters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
-{  
+{
    if (parameterPoint.getSize() != fParameters.getSize() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;
       return false;
