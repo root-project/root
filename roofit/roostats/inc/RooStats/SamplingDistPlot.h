@@ -31,16 +31,6 @@
 
 namespace RooStats {
 
-   /**
-
-      \ingroup Roostats
-
-
-      This class provides simple and straightforward utilities to plot SamplingDistribution
-      objects.
-   */
-
-
  class SamplingDistPlot : public TNamed, public RooPrintable {
 
    public:
@@ -66,7 +56,7 @@ namespace RooStats {
     void AddTF1(TF1* f, const char* title = NULL, Option_t *drawOptions="SAME");
     /// set legend
     void SetLegend(TLegend* l){ fLegend = l; }
-    
+
     void Draw(Option_t *options=0);
 
     /// Applies a predefined style if fApplyStyle is kTRUE (default).
