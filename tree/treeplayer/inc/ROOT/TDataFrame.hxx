@@ -677,14 +677,14 @@ private:
 
    // Two overloaded template methods which allow to avoid branches in the Histo1D method.
    template<typename X, typename W>
-   TActionResultProxy<::TH1F> Histo1DImpl(ROOT::Detail::TDataFrameGuessedType *overloadSignal,
+   TActionResultProxy<::TH1F> Histo1DImpl(ROOT::Detail::TDataFrameGuessedType * /* overloadSignal */,
                                           BranchNames& bl,
                                           std::shared_ptr<::TH1F> h) {
       return CreateAction<X, ROOT::Internal::EActionType::kHisto1D>(bl, h);
    }
 
    template<typename X, typename W>
-   TActionResultProxy<::TH1F> Histo1DImpl(void *overloadSignal,
+   TActionResultProxy<::TH1F> Histo1DImpl(void * /* overloadSignal */,
                                           BranchNames& bl,
                                           std::shared_ptr<::TH1F> h) {
       auto df = GetDataFrameChecked();
