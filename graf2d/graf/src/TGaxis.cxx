@@ -1129,7 +1129,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       phi  = 0.5*kPI;
       phil = phi;
    } else {
-            phi = TMath::ATan2((y1-y0),(x1-x0));
+      phi = TMath::ATan2((y1-y0),(x1-x0));
       Int_t px0 = gPad->UtoPixel(x0);
       Int_t py0 = gPad->VtoPixel(y0);
       Int_t px1 = gPad->UtoPixel(x1);
@@ -1210,38 +1210,32 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
       Double_t axispos;
       if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
-      else                       axispos = axis_length;
+      else                              axispos = axis_length;
       if (TestBit(TAxis::kRotateTitle)) {
          if (x1 >= x0) {
             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
             else                              textaxis->SetTextAlign(12);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
          } else {
             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-         else                                 textaxis->SetTextAlign(32);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
+            else                              textaxis->SetTextAlign(32);
          }
-         textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
-                              gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
-                              phil=(kPI+phil)*180/kPI,
-                              GetTitleSize(),
-                              GetTitle());
+         phil+=kPI;
       } else {
          if (x1 >= x0) {
             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
             else                              textaxis->SetTextAlign(32);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
          } else {
             if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-         else                                 textaxis->SetTextAlign(12);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
+            else                              textaxis->SetTextAlign(12);
          }
-         textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
-                              gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
-                              phil*180/kPI,
-                              GetTitleSize(),
-                              GetTitle());
       }
+      Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
+      textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
+                           gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
+                           phil*180/kPI,
+                           GetTitleSize(),
+                           GetTitle());
+
    }
 
 // No bining
