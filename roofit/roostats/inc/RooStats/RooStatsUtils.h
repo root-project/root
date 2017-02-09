@@ -33,16 +33,15 @@
 #include "RooDataSet.h"
 
 
-/**
+/** \namespace RooStats
+    \ingroup Roostats
 
-\namespace RooStats Namespace for the RooStats classes
+Namespace for the RooStats classes
 
 All the classes of the %RooStats package are in the RooStats namespace.
 In addition the namespace contain a set of utility functions.
 
-\ingroup Roostats
-
- */
+*/
 
 namespace RooStats {
 
@@ -105,7 +104,7 @@ namespace RooStats {
     RooLinkedListIter it = set.iterator();
     RooRealVar* var;
 
-    // repeat loop tpo avoid calling isConstant for nothing
+    // repeat loop to avoid calling isConstant for nothing
     if (randomizeConstants) {
        while ((var = (RooRealVar*)it.Next()) != NULL)
          var->randomize();
