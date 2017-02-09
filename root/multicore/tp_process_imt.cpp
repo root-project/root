@@ -2,7 +2,7 @@
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "TLorentzVector.h"
 #include "Math/Vector4D.h"
-
+#include "TChain.h"
 #include <iostream>
 
 
@@ -10,18 +10,20 @@ static constexpr float kiloBytesToMegaBytes = 1./1024;
 
 void printHelp(const char* iName, int iDefaultNThreads)
 {
-  std::cout << iName <<" [number of threads] [filename] [treename] [gDebug value]\n\n"
+  std::cout << iName <<" [number of threads] [filename] [treename] [constructor] [gDebug value]\n\n"
             <<"[number of threads] number of threads to use in test\n"
             <<"[filename] name of file to read\n"
             <<"[treename] name of the tree to process\n"
+            <<"[constructor] TTreeProcessorMT constructor to test\n"
             <<"[gDebug value] value of gDebug to pass to ROOT (gDebug=1 is useful)\n"
             <<"If no arguments are given "<<iDefaultNThreads<<" threads will be used, and a default file name and tree name will be used."<<std::endl;
 }
 
 const std::string kDefaultFileName("tp_process_imt.root");
 const std::string kDefaultTreeName("events");
+const std::string kDefaultConstructor("filename");
 
-std::tuple<int,std::string,std::string,int> parseOptions(int argc, char** argv)
+std::tuple<int,std::string,std::string,std::string,int> parseOptions(int argc, char** argv)
 {
   constexpr int kDefaultNThreads = 4;
   int kDefaultgDebug = gDebug;
@@ -29,6 +31,7 @@ std::tuple<int,std::string,std::string,int> parseOptions(int argc, char** argv)
   int newGDebug = kDefaultgDebug;
   std::string fileName(kDefaultFileName);
   std::string treeName(kDefaultTreeName);
+  std::string constructor(kDefaultConstructor);
   if( argc >= 2 ) {
     if(strcmp("-h",argv[1]) ==0) {
       printHelp(argv[0], kDefaultNThreads);
@@ -42,14 +45,17 @@ std::tuple<int,std::string,std::string,int> parseOptions(int argc, char** argv)
   if(argc >=4) {
     treeName = argv[3];
   }
-  if(argc == 5) {
-    newGDebug = atoi(argv[4]);
+  if(argc >=5) {
+    constructor = argv[4];
   }
-  if( argc > 5) {
+  if(argc == 6) {
+    newGDebug = atoi(argv[5]);
+  }
+  if( argc > 6) {
     printHelp(argv[0],kDefaultNThreads);
     exit(1);
   }
-  return std::make_tuple(nThreads, fileName, treeName, newGDebug) ;
+  return std::make_tuple(nThreads, fileName, treeName, constructor, newGDebug) ;
 }
 
 
@@ -59,7 +65,8 @@ int main(int argc, char** argv) {
   const int kNThreads = std::get<0>(options);
   auto const kFileName = std::get<1>(options);
   auto const kTreeName = std::get<2>(options);
-  gDebug = std::get<3>(options);
+  auto const kConstructor = std::get<3>(options);
+  gDebug = std::get<4>(options);
 
   std::mutex mutex;
   double globalMaxPt = -1.;
@@ -69,11 +76,26 @@ int main(int argc, char** argv) {
   // Tell ROOT we want to use implicit multi-threading
   ROOT::EnableImplicitMT(kNThreads);
 
-  // Create TTreeProcessorMT
-  ROOT::TTreeProcessorMT tp(kFileName, kTreeName);
-
+  // Create TTreeProcessorMT depending on constructor option
+  std::unique_ptr<ROOT::TTreeProcessorMT> tp;
+  if (kConstructor == "filename") {
+     tp.reset(new ROOT::TTreeProcessorMT(kFileName, kTreeName));
+  }
+  else if (kConstructor == "collection") {
+     tp.reset(new ROOT::TTreeProcessorMT({kFileName, kFileName}, kTreeName));
+  }
+  else if (kConstructor == "chain") {
+     TChain chain(kTreeName.c_str());
+     chain.Add(kFileName.c_str());
+     chain.Add(kFileName.c_str());
+     tp.reset(new ROOT::TTreeProcessorMT(chain, kTreeName));
+  }
+  else {
+     std::cerr << "Error: " << kConstructor << " is not a valid constructor name. Please choose filename, collection or chain" << std::endl;
+  }
+  
   // Request the processing of the tree
-  tp.Process([&](TTreeReader &myReader) {
+  tp->Process([&](TTreeReader &myReader) {
      TTreeReaderValue<std::vector<ROOT::Math::PxPyPzEVector>> tracksRV(myReader, "tracks");
      TTreeReaderValue<int> eventNumRV(myReader, "evtNum");
 
