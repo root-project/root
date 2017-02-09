@@ -8851,12 +8851,15 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
    if (opt.Contains("p")) mark = kTRUE;
 
    TH2PolyBin  *b;
+   Double_t z;
 
    TIter next(((TH2Poly*)fH)->GetBins());
    TObject *obj, *poly;
 
    while ((obj=next())) {
-      b     = (TH2PolyBin*)obj;
+      b = (TH2PolyBin*)obj;
+      z = b->GetContent();
+      if (z==0 && Hoption.Zero) continue; // Do not draw empty bins in case of option "COL0 L"
       poly  = b->GetPolygon();
 
       // Paint the TGraph bins.
@@ -8865,7 +8868,15 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
          g->TAttLine::Modify();
          g->TAttMarker::Modify();
          g->TAttFill::Modify();
-         if (line) g->Paint("L");
+         if (line) {
+            Int_t fs = g->GetFillStyle();
+            Int_t fc = g->GetFillColor();
+            g->SetFillStyle(0);
+            g->SetFillColor(g->GetLineColor());
+            g->Paint("F");
+            g->SetFillStyle(fs);
+            g->SetFillColor(fc);
+         }
          if (fill) g->Paint("F");
          if (mark) g->Paint("P");
       }
@@ -8881,7 +8892,15 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
             g->TAttLine::Modify();
             g->TAttMarker::Modify();
             g->TAttFill::Modify();
-            if (line) g->Paint("L");
+            if (line) {
+               Int_t fs = g->GetFillStyle();
+               Int_t fc = g->GetFillColor();
+               g->SetFillStyle(0);
+               g->SetFillColor(g->GetLineColor());
+               g->Paint("F");
+               g->SetFillStyle(fs);
+               g->SetFillColor(fc);
+            }
             if (fill) g->Paint("F");
             if (mark) g->Paint("P");
          }
