@@ -227,7 +227,7 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
    fMap->SetOwner();
 
    TCollectDataMembers cdm(*this);
-   if (!sel->IsA()->CallShowMembers(sel, cdm, parent)) {
+   if (!sel->IsA()->CallShowMembers(sel, cdm)) {
       // failed to map
       PDB(kOutput,1) Warning("Init","Failed to determine mapping!");
       return kFALSE;
@@ -272,10 +272,9 @@ Bool_t TOutputListSelectorDataMap::SetDataMembers(TSelector* sel) const
    TList* output = sel->GetOutputList();
    if (!output || output->IsEmpty()) return kTRUE;
 
-   Bool_t res = kFALSE;
    // Set fSelector's data members
    TSetSelDataMembers ssdm(*this, fMap, output);
-   Bool_t res = sel->IsA()->CallShowMembers(sel, ssdm, parent);
+   Bool_t res = sel->IsA()->CallShowMembers(sel, ssdm);
    PDB(kOutput,1) Info("SetDataMembers()","%s, set %d data members.",
                        (res ? "success" : "failure"), ssdm.GetNumSet());
    return res;
