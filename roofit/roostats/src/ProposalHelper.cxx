@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-END_HTML
+/** \class RooStats::ProposalHelper
+    \ingroup Roostats
 */
-//_________________________________________________
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -85,6 +81,8 @@ static const Double_t SIGMA_RANGE_DIVISOR = 5;
 //static const Int_t DEFAULT_CACHE_SIZE = 100;
 //static const Option_t* CLUES_OPTIONS = "a";
 
+////////////////////////////////////////////////////////////////////////////////
+
 ProposalHelper::ProposalHelper()
 {
    fPdfProp = new PdfProposal();
@@ -105,6 +103,8 @@ ProposalHelper::ProposalHelper()
    fCacheSize = -1;
    fCluesOptions = NULL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 ProposalFunction* ProposalHelper::GetProposalFunction()
 {
@@ -140,6 +140,8 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
    return fPdfProp;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void ProposalHelper::CreatePdf()
 {
    // kbelasco: check here for memory leaks:
@@ -172,6 +174,8 @@ void ProposalHelper::CreatePdf()
    delete it;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
 {
    Int_t size = xVec.getSize();
@@ -184,6 +188,8 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void ProposalHelper::CreateCluesPdf()
 {
    if (fClues != NULL) {
@@ -194,6 +200,8 @@ void ProposalHelper::CreateCluesPdf()
                fCluesOptions);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void ProposalHelper::CreateUniformPdf()
 {

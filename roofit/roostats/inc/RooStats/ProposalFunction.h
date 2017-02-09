@@ -35,17 +35,18 @@
 
 namespace RooStats {
 
-   /**
-
-      ProposalFunction is an interface for all proposal functions that would be used with a Markov Chain Monte Carlo algorithm.  
-      Given a current point in the parameter space it proposes a new point.  
-      Proposal functions may or may not be symmetric, in the sense that the probability to propose X1 given we are at X2 
-      need not be the same as the probability to propose X2 given that we are at X1.  In this case, the IsSymmetric method
-      should return false, and the Metropolis algorithm will need to take into account the proposal density to maintain detailed balance.
-      
-      \ingroup Roostats
-      
-   */
+/** \class ProposalFunction
+    \ingroup Roostats
+ProposalFunction is an interface for all proposal functions that would be used
+with a Markov Chain Monte Carlo algorithm.
+Given a current point in the parameter space it proposes a new point.
+Proposal functions may or may not be symmetric, in the sense that the
+probability to propose X1 given we are at X2
+need not be the same as the probability to propose X2 given that we are at X1.
+In this case, the IsSymmetric method
+should return false, and the Metropolis algorithm will need to take into account
+the proposal density to maintain detailed balance.
+*/
 
 
    class ProposalFunction : public TObject {
@@ -59,9 +60,9 @@ namespace RooStats {
       /// Populate xPrime with the new proposed point,
       /// possibly based on the current point x
       virtual void Propose(RooArgSet& xPrime, RooArgSet& x) = 0;
-      
+
       /// Determine whether or not the proposal density is symmetric for
-      /// points x1 and x2 - that is, whether the probabilty of reaching x2
+      /// points x1 and x2 - that is, whether the probability of reaching x2
       /// from x1 is equal to the probability of reaching x1 from x2
       virtual Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2) = 0;
 
