@@ -43,7 +43,7 @@ class TGLRect;
 class TVirtualViewer3D : public TObject
 {
 public:
-   virtual ~TVirtualViewer3D() {};
+   virtual ~TVirtualViewer3D();
 
    // Viewers must always handle master (absolute) positions - and
    // buffer producers must be able to supply them. Some viewers may
