@@ -2,7 +2,6 @@
 #
 # Makefile containing library dependencies
 
-TCLINGLIBDEPM          = $(IOLIB)
 IOLIBDEPM              = $(THREADLIB)
 NETLIBDEPM             = $(IOLIB) $(MATHCORELIB)
 MATRIXLIBDEPM          = $(MATHCORELIB)
@@ -150,7 +149,6 @@ HTTPLIBDEPM            = $(THREADLIB) $(TREELIB) $(HISTLIB) $(GPADLIB) \
 
 ifeq ($(EXPLICITLINK),yes)
 
-TCLINGLIBDEP           = $(TLCLINGDEPM)
 IOLIBDEP               = $(IOLIBDEPM)
 NETLIBDEP              = $(NETLIBDEPM)
 MATRIXLIBDEP           = $(MATRIXLIBDEPM)
@@ -258,7 +256,6 @@ HTTPLIBDEP             = $(HTTPLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
-TCLINGLIBEXTRA          = lib/libRIO.lib
 IOLIBEXTRA              = lib/libThread.lib
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
@@ -447,7 +444,6 @@ endif
 
 else
 
-TCLINGLIBEXTRA          = -Llib -lRIO 
 IOLIBEXTRA              = -Llib -lThread
 NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore

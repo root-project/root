@@ -1909,6 +1909,15 @@ void TROOT::InitInterpreter()
                "after the call to TROOT::InitInterpreter()!");
       }
 
+      char *libRIO = gSystem->DynamicPathName("libRIO");
+      void *libRIOHandle = dlopen(libRIO, RTLD_NOW|RTLD_GLOBAL);
+      delete [] libRIO;
+      if (!libRIOHandle) {
+         TString err = dlerror();
+         fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
+         exit(1);
+      }
+
       char *libcling = gSystem->DynamicPathName("libCling");
       gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
       delete [] libcling;

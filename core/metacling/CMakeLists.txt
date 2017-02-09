@@ -33,5 +33,10 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:ClingUtils>
         $<TARGET_OBJECTS:Dictgen>
         $<TARGET_OBJECTS:MetaCling>
-        LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
-        DEPENDENCIES Core RIO)
+        LIBRARIES ${CLING_LIBRARIES})
+
+if(APPLE)
+target_link_libraries(Cling -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup)
+else()
+target_link_libraries(Cling -Wl,--unresolved-symbols=ignore-in-object-files)
+endif()
