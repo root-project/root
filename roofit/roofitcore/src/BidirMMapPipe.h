@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cstring>
 #include <unistd.h>
+#include <chrono>
 
 #define BEGIN_NAMESPACE_ROOFIT namespace RooFit {
 #define END_NAMESPACE_ROOFIT }
@@ -851,6 +852,23 @@ class BidirMMapPipe {
          */
         BidirMMapPipe& operator>>(BidirMMapPipe& (*manip)(BidirMMapPipe&))
         { return manip(*this); }
+
+
+        using WallClock = std::chrono::system_clock;
+        using TimePoint = WallClock::time_point;
+        /** @brief write a std::chrono::system_clock::time_point object
+         *
+         * @param wall time_point to write
+         * @returns pipe written to
+         */
+        BidirMMapPipe &operator<<(const TimePoint &wall);
+
+        /** @brief read a std::chrono::system_clock::time_point object
+         *
+         * @param wall string to be read
+         * @returns pipe read from
+         */
+        BidirMMapPipe &operator>>(TimePoint &wall);
 
         /// for usage a la "pipe << flush;"
         static BidirMMapPipe& flush(BidirMMapPipe& pipe) { pipe.flush(); return pipe; }

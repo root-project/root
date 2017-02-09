@@ -77,6 +77,7 @@ RooMPSentinel RooRealMPFE::_sentinel ;
 
 // EGP: for gROOT, which contains timing_flag
 #include "TROOT.h"
+#include "../../../graf3d/ftgl/inc/FTGL.h"
 
 using namespace std;
 using namespace RooFit;
@@ -239,6 +240,35 @@ void RooRealMPFE::setCpuAffinity(int cpu) {
   *_pipe << msg << cpu;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pipe stream operators for timing type.
+namespace RooFit {
+  using WallClock = std::chrono::system_clock;
+  using TimePoint = WallClock::time_point;
+  using Duration = WallClock::duration;
+
+//  template<> BidirMMapPipe& BidirMMapPipe::operator>> (TimePoint * &);
+//  template<> BidirMMapPipe& BidirMMapPipe::operator<< (const TimePoint *);
+
+  BidirMMapPipe& BidirMMapPipe::operator<< (const TimePoint& wall) {
+    Duration::rep const ns = wall.time_since_epoch().count();
+    write(&ns, sizeof(ns));
+    return *this;
+  }
+
+  BidirMMapPipe& BidirMMapPipe::operator>> (TimePoint& wall) {
+    Duration::rep ns;
+    read(&ns, sizeof(ns));
+
+    Duration const d(ns);
+    wall = TimePoint(d);
+
+    return *this;
+  }
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Server loop of remote processes. This function will return
 /// only when an incoming TERMINATE message is received.
@@ -246,7 +276,7 @@ void RooRealMPFE::setCpuAffinity(int cpu) {
 void RooRealMPFE::serverLoop() {
 #ifndef _WIN32
   ofstream timing_outfile;
-  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
+  TimePoint timing_begin, timing_end;
 
   if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
     stringstream filename_ss;
@@ -258,7 +288,7 @@ void RooRealMPFE::serverLoop() {
     stringstream filename_ss;
     filename_ss << "timing_RRMPFE_serverloop_p" << getpid() << ".json";
     timing_outfile.open(filename_ss.str().c_str(), ios::app);
-    timing_begin = std::chrono::high_resolution_clock::now();
+    timing_begin = WallClock::now();
   }
 
   int msg;
@@ -271,7 +301,7 @@ void RooRealMPFE::serverLoop() {
 
   while (*_pipe && !_pipe->eof()) {
     if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
-      timing_begin = std::chrono::high_resolution_clock::now();
+      timing_begin = WallClock::now();
     }
     *_pipe >> msg;
     if (Terminate == msg) {
@@ -448,30 +478,57 @@ void RooRealMPFE::serverLoop() {
 
 
       case EnableTimingRooAbsTestStatistic: {
+        std::string name;
+        *_pipe >> name;
 
         break;
       }
 
 
       case DisableTimingRooAbsTestStatistic: {
+        std::string name;
+        *_pipe >> name;
 
         break;
       }
 
 
       case EnableTimingRooRealIntegral: {
+        std::string name;
+        *_pipe >> name;
 
         break;
       }
 
 
       case DisableTimingRooRealIntegral: {
+        std::string name;
+        *_pipe >> name;
 
         break;
       }
 
 
       case MeasureCommunicationTime: {
+        // Measure end time asap, since time of arrival at this case block is what we need to measure
+        // communication overhead, i.e. time between sending message and corresponding action taken.
+        // Defining the end time variable can reasonably be called overhead too, since many other
+        // messages also define a piped-message-receiving variable.
+        TimePoint comm_wallclock_begin, comm_wallclock_end;
+        comm_wallclock_end = WallClock::now();
+
+        *_pipe >> comm_wallclock_begin;
+
+        std::cout << "client to server communication overhead timing:" << std::endl;
+        std::cout << "comm_wallclock_begin: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_begin.time_since_epoch()).count() << std::endl;
+        std::cout << "comm_wallclock_end: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end.time_since_epoch()).count() << std::endl;
+
+        double comm_wallclock_s = std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end - comm_wallclock_begin).count() / 1.e9;
+
+        std::cout << "comm_wallclock (seconds): " << comm_wallclock_s << std::endl;
+
+        comm_wallclock_begin = WallClock::now();
+        *_pipe << comm_wallclock_begin << BidirMMapPipe::flush;
 
         break;
       }
@@ -486,7 +543,7 @@ void RooRealMPFE::serverLoop() {
 
     // end timing
     if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
-      timing_end = std::chrono::high_resolution_clock::now();
+      timing_end = WallClock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
@@ -501,7 +558,7 @@ void RooRealMPFE::serverLoop() {
 
   // end timing
   if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 8) {
-    timing_end = std::chrono::high_resolution_clock::now();
+    timing_end = WallClock::now();
 
     double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
@@ -538,13 +595,13 @@ void RooRealMPFE::calculate() const
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << endl ;
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_initialize.json", ios::app);
-      timing_begin = std::chrono::high_resolution_clock::now();
+      timing_begin = WallClock::now();
     }
 
     const_cast<RooRealMPFE*>(this)->initialize() ;
 
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
-      timing_end = std::chrono::high_resolution_clock::now();
+      timing_end = WallClock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
@@ -561,14 +618,14 @@ void RooRealMPFE::calculate() const
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_inline.json", ios::app);
-      timing_begin = std::chrono::high_resolution_clock::now();
+      timing_begin = WallClock::now();
     }
 
     _value = _arg ;
     clearValueDirty() ;
 
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
-      timing_end = std::chrono::high_resolution_clock::now();
+      timing_end = WallClock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
 
@@ -586,8 +643,25 @@ void RooRealMPFE::calculate() const
     // timing stuff
     if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_client.json", ios::app);
-      timing_begin = std::chrono::high_resolution_clock::now();
+      timing_begin = WallClock::now();
     }
+
+    // test communication overhead timing
+    TimePoint comm_wallclock_begin_c2s, comm_wallclock_begin_s2c, comm_wallclock_end_s2c;
+    // ... from client to server
+    comm_wallclock_begin_c2s = WallClock::now();
+    *_pipe << MeasureCommunicationTime << comm_wallclock_begin_c2s << BidirMMapPipe::flush;
+    // ... and from server to client
+    *_pipe >> comm_wallclock_begin_s2c;
+    comm_wallclock_end_s2c = WallClock::now();
+
+    std::cout << "server to client communication overhead timing:" << std::endl;
+    std::cout << "comm_wallclock_begin: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_begin_s2c.time_since_epoch()).count() << std::endl;
+    std::cout << "comm_wallclock_end: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end_s2c.time_since_epoch()).count() << std::endl;
+
+    double comm_wallclock_s = std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end_s2c - comm_wallclock_begin_s2c).count() / 1.e9;
+
+    std::cout << "comm_wallclock (seconds): " << comm_wallclock_s << std::endl;
 
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << endl ;
     Int_t i(0) ;
