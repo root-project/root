@@ -12,27 +12,11 @@
 #ifndef ROOSTATS_ToyMCImportanceSampler
 #define ROOSTATS_ToyMCImportanceSampler
 
-
 #include "RooStats/ToyMCSampler.h"
-
-
 
 namespace RooStats {
 
-
 enum toysStrategies { EQUALTOYSPERDENSITY, EXPONENTIALTOYDISTRIBUTION };
-
-
-/**
-
-ToyMCImportanceSampler is an extension of the ToyMCSampler for Importance Sampling.
-
-Implementation based on a work by   Cranmer, Kreiss, Read (in Preparation)
-
-\ingroup Roostats
-
-*/
-   
 
 class ToyMCImportanceSampler: public ToyMCSampler {
 
@@ -42,7 +26,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       {
          // Proof constructor. Do not use.
 
-         fIndexGenDensity = 0;         
+         fIndexGenDensity = 0;
          fGenerateFromNull = true;
          fApplyVeto = true;
          fReuseNLL = true;
@@ -51,26 +35,19 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       ToyMCImportanceSampler(TestStatistic &ts, Int_t ntoys) :
          ToyMCSampler(ts, ntoys)
       {
-         fIndexGenDensity = 0;         
+         fIndexGenDensity = 0;
          fGenerateFromNull = true;
          fApplyVeto = true;
          fReuseNLL = true;
          fToysStrategy = EQUALTOYSPERDENSITY;
       }
 
-
       virtual ~ToyMCImportanceSampler();
-
 
       // overwrite GetSamplingDistributionsSingleWorker(paramPoint) with a version that loops
       // over nulls and importance densities, but calls the parent
       // ToyMCSampler::GetSamplingDistributionsSingleWorker(paramPoint).
       virtual RooDataSet* GetSamplingDistributionsSingleWorker(RooArgSet& paramPoint);
-
-
-
-
-
 
       using ToyMCSampler::GenerateToyData;
       virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight) const;
@@ -88,14 +65,14 @@ class ToyMCImportanceSampler: public ToyMCSampler {
                " , but null densities: "<<fNullDensities.size()<<
                " and importance densities: "<<fImportanceDensities.size() << std::endl;
          }
-         
+
          fIndexGenDensity = i;
          fGenerateFromNull = fromNull;
-         
+
          ClearCache();
       }
-      
-      // For importance sampling with multiple desnities/snapshots:
+
+      // For importance sampling with multiple densities/snapshots:
       // This is used to check the current Likelihood against Likelihoods from
       // other importance densities apart from the one given as importance snapshot.
       // The pdf can be NULL in which case the density from SetImportanceDensity()
@@ -109,7 +86,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
             oocoutE((TObject*)0,InputArguments) << "No density given, but snapshot is there. Aborting." << std::endl;
             return;
          }
-         
+
          if( p == NULL ) p = fPdf;
 
          if( s ) s = (const RooArgSet*)s->snapshot();
@@ -117,8 +94,8 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          fImportanceDensities.push_back( p );
          fImportanceSnapshots.push_back( s );
          fImpNLLs.push_back( NULL );
-      }      
-      
+      }
+
       // The pdf can be NULL in which case the density from SetPdf()
       // is used. The snapshot and TestStatistic is also optional.
       void AddNullDensity(RooAbsPdf* p, const RooArgSet* s = NULL) {
@@ -126,11 +103,11 @@ class ToyMCImportanceSampler: public ToyMCSampler {
             oocoutI((TObject*)0,InputArguments) << "Neither density nor snapshot nor test statistic given. Doing nothing." << std::endl;
             return;
          }
-         
+
          if( p == NULL && fNullDensities.size() >= 1 ) p = fNullDensities[0];
          if( s == NULL ) s = fParametersForTestStat;
          if( s ) s = (const RooArgSet*)s->snapshot();
-         
+
          fNullDensities.push_back( p );
          fNullSnapshots.push_back( s );
          fNullNLLs.push_back( NULL );
@@ -139,7 +116,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       // overwrite from ToyMCSampler
       virtual void SetPdf(RooAbsPdf& pdf) {
          ToyMCSampler::SetPdf(pdf);
-         
+
          if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf; }
          else if( fNullDensities.size() == 0) AddNullDensity( &pdf );
          else{
@@ -159,7 +136,6 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          }
       }
 
-      
       // When set to true, this sets the weight of all toys to zero that
       // do not have the largest likelihood under the density it was generated
       // compared to the other densities.
@@ -167,26 +143,24 @@ class ToyMCImportanceSampler: public ToyMCSampler {
 
       void SetReuseNLL(bool r = true) { fReuseNLL = r; }
 
-
      // set the conditional observables which will be used when creating the NLL
-     // so the pdf's will not be normalized on the conditional observables when computing the NLL 
-     // Since the class use a NLL we need to set the ocnditional onservables if they exist in the model
+     // so the pdf's will not be normalized on the conditional observables when computing the NLL
+     // Since the class use a NLL we need to set the conditional observables if they exist in the model
      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
-
       int CreateNImpDensitiesForOnePOI(
-         RooAbsPdf& pdf, 
-         const RooArgSet& allPOI,
-         RooRealVar& poi, 
-         int n, 
-         double poiValueForBackground = 0.0 
-      );
-      int CreateImpDensitiesForOnePOIAdaptively(
-         RooAbsPdf& pdf, 
+         RooAbsPdf& pdf,
          const RooArgSet& allPOI,
          RooRealVar& poi,
-         double nStdDevOverlap = 0.5, 
-         double poiValueForBackground = 0.0 
+         int n,
+         double poiValueForBackground = 0.0
+      );
+      int CreateImpDensitiesForOnePOIAdaptively(
+         RooAbsPdf& pdf,
+         const RooArgSet& allPOI,
+         RooRealVar& poi,
+         double nStdDevOverlap = 0.5,
+         double poiValueForBackground = 0.0
       );
 
       void SetEqualNumToysPerDensity( void ) { fToysStrategy = EQUALTOYSPERDENSITY; }
@@ -207,22 +181,20 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       std::vector<RooAbsPdf*> fNullDensities;
       mutable std::vector<const RooArgSet*> fNullSnapshots;
 
-      // densities and snapshots to generate from      
+      // densities and snapshots to generate from
       std::vector<RooAbsPdf*> fImportanceDensities;
       std::vector<const RooArgSet*> fImportanceSnapshots;
-      
+
       bool fReuseNLL;
-      
+
       toysStrategies fToysStrategy;
 
       mutable std::vector<RooAbsReal*> fNullNLLs;    //!
       mutable std::vector<RooAbsReal*> fImpNLLs;     //!
 
-
    protected:
    ClassDef(ToyMCImportanceSampler,2) // An implementation of importance sampling
 };
 }
-
 
 #endif
