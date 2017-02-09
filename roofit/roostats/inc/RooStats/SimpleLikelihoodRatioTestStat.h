@@ -11,9 +11,6 @@
 #ifndef ROOSTATS_SimpleLikelihoodRatioTestStat
 #define ROOSTATS_SimpleLikelihoodRatioTestStat
 
-
-
-
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
@@ -30,19 +27,7 @@
 #include "RooStats/TestStatistic.h"
 #endif
 
-
 namespace RooStats {
-
-   /**
-
- TestStatistic class that returns -log(L[null] / L[alt]) where
- L is the likelihood.
- It is often called as the LEP Test statistic.
-
- \ingroup Roostats
-
- */
-
 
    class SimpleLikelihoodRatioTestStat : public TestStatistic {
 
@@ -54,13 +39,13 @@ namespace RooStats {
       {
          // Constructor for proof. Do not use.
          fFirstEval = true;
-	     fDetailedOutputEnabled = false;
+        fDetailedOutputEnabled = false;
         fDetailedOutput = NULL;
          fNullParameters = NULL;
          fAltParameters = NULL;
-	 fReuseNll=kFALSE ;
-	 fNllNull=NULL ;
-	 fNllAlt=NULL ;
+    fReuseNll=kFALSE ;
+    fNllNull=NULL ;
+    fNllAlt=NULL ;
       }
 
       //__________________________________
@@ -77,7 +62,7 @@ namespace RooStats {
 
          RooArgSet * allNullVars = fNullPdf->getVariables();
          fNullParameters = (RooArgSet*) allNullVars->snapshot();
-         delete allNullVars; 
+         delete allNullVars;
 
          RooArgSet * allAltVars = fAltPdf->getVariables();
          fAltParameters = (RooArgSet*) allAltVars->snapshot();
@@ -86,9 +71,9 @@ namespace RooStats {
          fDetailedOutputEnabled = false;
          fDetailedOutput = NULL;
 
-	 fReuseNll=kFALSE ;
-	 fNllNull=NULL ;
-	 fNllAlt=NULL ;
+    fReuseNll=kFALSE ;
+    fNllNull=NULL ;
+    fNllAlt=NULL ;
       }
       //__________________________________
       SimpleLikelihoodRatioTestStat(
@@ -110,18 +95,18 @@ namespace RooStats {
          fDetailedOutputEnabled = false;
          fDetailedOutput = NULL;
 
-	 fReuseNll=kFALSE ;
-	 fNllNull=NULL ;
-	 fNllAlt=NULL ;
+    fReuseNll=kFALSE ;
+    fNllNull=NULL ;
+    fNllAlt=NULL ;
       }
 
       //______________________________
       virtual ~SimpleLikelihoodRatioTestStat() {
          if (fNullParameters) delete fNullParameters;
          if (fAltParameters) delete fAltParameters;
-	 if (fNllNull) delete fNllNull ;
-	 if (fNllAlt) delete fNllAlt ;
-	 if (fDetailedOutput) delete fDetailedOutput;
+    if (fNllNull) delete fNllNull ;
+    if (fNllAlt) delete fNllAlt ;
+    if (fDetailedOutput) delete fDetailedOutput;
       }
 
       static void SetAlwaysReuseNLL(Bool_t flag);
@@ -165,7 +150,7 @@ namespace RooStats {
 
 
       // set the conditional observables which will be used when creating the NLL
-      // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+      // so the pdf's will not be normalized on the conditional observables when computing the NLL
       virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
       //______________________________
@@ -186,7 +171,7 @@ namespace RooStats {
       RooArgSet* fAltParameters;
       RooArgSet fConditionalObs;
       bool fFirstEval;
-      
+
       bool fDetailedOutputEnabled;
       RooArgSet* fDetailedOutput; //!
 
