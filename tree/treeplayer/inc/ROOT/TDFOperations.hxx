@@ -161,6 +161,10 @@ public:
       }
 
       for (unsigned int i=0; i<fNSlots; ++i) {
+         // TODO: Here one really needs to fix FillN!
+         if (fWBuffers[i].empty()) {
+            fWBuffers[i].resize(fBuffers[i].size(), 1.);
+         }
          fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(),  fWBuffers[i].data());
       }
    }
