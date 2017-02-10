@@ -791,6 +791,14 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
    rname += mname;
    Long_t offset = Long_t(((Long_t) add) - ((Long_t) fRealDataObject));
 
+   if (TClassEdit::IsStdArray(dm->GetTypeName())){ // We tackle the std array case
+      TString rdName;
+      TRealData::GetName(rdName,dm);
+      TRealData* rd = new TRealData(rdName.Data(), offset, dm);
+      fRealDataClass->GetListOfRealData()->Add(rd);
+      return;
+   }
+
    if (dm->IsaPointer()) {
       // Data member is a pointer.
       TRealData* rd = new TRealData(rname, offset, dm);

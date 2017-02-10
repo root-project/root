@@ -2121,6 +2121,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
+   if (TClassEdit::IsStdArray(cl->GetName())) {
+      // We treat std arrays as C arrays
+      return;
+   }
+
    const char* cobj = (const char*) obj; // for ptr arithmetics
 
    // Treat the case of std::complex in a special manner. We want to enforce
