@@ -3710,7 +3710,7 @@ int CheckForUnsupportedClasses(const RScanner::ClassColl_t &annotatedRcds)
       }
       if (!NeedsSelection(clName)){
          std::cerr << "Error: It is not necessary to explicitly select class "
-                   << clName << ". I/O is supported for it transparently.\n".
+                   << clName << ". I/O is supported for it transparently.\n";
          nerrors++;
       }
    }
