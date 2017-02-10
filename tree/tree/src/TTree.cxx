@@ -5340,7 +5340,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   if (fIMTEnabled) {
+   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled)
       if (fSortedBranches.empty()) InitializeSortedBranches();
 
       // Enable this IMT use case (activate its locks)
