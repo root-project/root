@@ -1,5 +1,10 @@
 ROOTTEST_ADD_TESTDIRS()
 
+
+ROOTTEST_ADD_TEST(checkRealData
+                  MACRO checkRealData.C
+                  OUTREF checkRealData.ref)
+
 ROOTTEST_ADD_TEST(namesAnalysis
                   MACRO namesAnalysis.C
                   OUTREF namesAnalysis.ref)
@@ -33,6 +38,10 @@ ROOTTEST_ADD_TEST(modelReadNoDictTFile
                   MACRO  modelReadNoDict.C
                   MACROARG "\"model.root\""
                   OUTREF modelReadNoDict.ref
+                  DEPENDS aclicModelWrite)
+
+ROOTTEST_ADD_TEST(modelCheckValues
+                  MACRO modelCheckValues.C
                   DEPENDS aclicModelWrite)
 
 # ROOTTEST_ADD_TEST(modelReadNoDictTXMLFile

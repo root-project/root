@@ -1,3 +1,6 @@
+#ifndef ROOTTEST_INFODUMPER
+#define ROOTTEST_INFODUMPER
+
 #include "TClass.h"
 #include "TList.h"
 #include "TObjArray.h"
@@ -83,3 +86,4 @@ void dumpInfo(const char* className) {
    auto c = TClass::GetClass(className);
    dumpInfo(c);
 }
+#endif

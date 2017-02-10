@@ -7,7 +7,7 @@ namespace edm2 {
    class B{};
 
    class A{
-   private:
+      public:
       std::array<int,3> a0 {{3,6,9}};
       int a1[3] = {3,6,9};
 
