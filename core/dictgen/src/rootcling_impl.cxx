@@ -3677,10 +3677,8 @@ bool NeedsSelection(const char* name)
 bool IsSupportedClassName(const char* name)
 {
    static const std::vector<std::string> uclNamePrfxes {
-      "array<",
       "chrono:",
       "ratio<",
-      "unique_ptr<",
       "shared_ptr<"};
    static const std::set<std::string> unsupportedClassesNormNames{
       "regex",
