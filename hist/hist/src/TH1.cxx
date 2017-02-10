@@ -4822,6 +4822,10 @@ void TH1::LabelsDeflate(Option_t *ax)
       if (ibin > nbins) nbins = ibin;
    }
    if (nbins < 1) nbins = 1;
+
+   // Do nothing in case it was the last bin
+   if (nbins==axis->GetNbins()) return;
+
    TH1 *hold = (TH1*)IsA()->New();
    R__ASSERT(hold);
    hold->SetDirectory(0);
