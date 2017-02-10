@@ -2538,7 +2538,7 @@ Double_t TF1::IntegralFast(Int_t num, Double_t * /* x */, Double_t * /* w */, Do
 Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsrel, Double_t &relerr)
 {
    Int_t nfnevl,ifail;
-   Int_t maxpts = TMath::Min( Int_t( 20*TMath::Power(fNpx,GetNdim())), 10000000);
+   UInt_t maxpts = TMath::Max( UInt_t( 20*TMath::Power(fNpx,GetNdim())), ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls());
    Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel,relerr,nfnevl,ifail);
    if (ifail > 0) {
       Warning("IntegralMultiple","failed code=%d, ",ifail);

@@ -54,6 +54,7 @@ namespace Math {
           1 maxpts is too small for the specified accuracy eps.
             The result and relerr contain the values obtainable for the
             specified value of maxpts.
+          2 size is too small for the specified number MAXPTS of function evaluations.
           3 n<2 or n>15
 
    Method:
@@ -141,6 +142,14 @@ public:
    double RelError() const { return fRelError; }
 
    /// return status of integration
+   /// status = 0  successfull integration 
+   /// status = 1
+   ///    MAXPTS is too small for the specified accuracy EPS.
+   //    The resul contain the values    ///     obtainable for the specified value of MAXPTS.
+   /// status = 2
+   ///     size is too small for the specified number MAXPTS of function evaluations.
+   ///  status = 3
+   ///    wrong dimension , N<2 or N > 15. Returned result and error are zero
    int Status() const { return fStatus; }
 
    /// return number of function evaluations in calculating the integral
