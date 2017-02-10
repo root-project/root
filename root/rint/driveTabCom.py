@@ -36,7 +36,7 @@ sys.stderr.write(err.decode('utf-8'))
 
 # No need to wait; the subprocess is dead.
 while select.select([master],[],[],0.0)[0]:
-  sys.stdout.write(os.read(master, 1))
+  sys.stdout.write(os.read(master, 1).decode('utf-8'))
 
 exit(proc.returncode)
 
