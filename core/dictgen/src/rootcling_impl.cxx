@@ -3661,6 +3661,18 @@ bool IsCorrectClingArgument(const std::string& argument)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+bool NeedsSelection(const char* name)
+{
+   static const std::vector<std::string> namePrfxes {
+      "array<",
+      "unique_ptr<"};
+   auto pos = find_if(namePrfxes.begin(),
+                      namePrfxes.end(),
+                      [&](const std::string& str){return ROOT::TMetaUtils::BeginsWith(name,str);});
+   return namePrfxes.end() == pos;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool IsSupportedClassName(const char* name)
 {
@@ -3694,6 +3706,11 @@ int CheckForUnsupportedClasses(const RScanner::ClassColl_t &annotatedRcds)
                << "currently the support for its I/O is not yet available. Note that "
                << clName << ", even if not selected, will be available for "
                << "interpreted code.\n";
+         nerrors++;
+      }
+      if (!NeedsSelection(clName)){
+         std::cerr << "Error: It is not necessary to explicitly select class "
+                   << clName << ". I/O is supported for it transparently.\n".
          nerrors++;
       }
    }
