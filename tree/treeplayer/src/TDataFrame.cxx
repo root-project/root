@@ -637,8 +637,13 @@ void TDataFrameImpl::Report() const {
       fPtr->PrintReport();
 }
 
-
 } // end NS Detail
+
+namespace Experimental {
+
+template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
+
+} // end NS Experimental
 
 } // end NS ROOT
 

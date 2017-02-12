@@ -157,11 +157,14 @@ ReaderValueOrArray(TTreeReader& r, const std::string& branch, TDFTraitsUtils::TT
    return std::make_shared<TTreeReaderValue<BranchType>>(r, branch.c_str());
 }
 
+
 template<typename BranchType>
 std::shared_ptr<ROOT::Internal::TTreeReaderValueBase>
 ReaderValueOrArray(TTreeReader& r, const std::string& branch, TDFTraitsUtils::TTypeList<std::array_view<BranchType>>) {
    return std::make_shared<TTreeReaderArray<BranchType>>(r, branch.c_str());
 }
+
+
 
 template <int... S, typename... BranchTypes>
 TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNames &tmpbl,
@@ -186,6 +189,37 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
 
    return tvb;
 }
+
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<short int>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<unsigned short int>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<int>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<unsigned int>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<long int>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<unsigned long int>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<Long64_t>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<ULong64_t>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<float>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
+extern template TVBVec_t BuildReaderValues(TTreeReader&, const BranchNames&, const BranchNames&,
+                                           TDFTraitsUtils::TTypeList<double>,
+                                           TDFTraitsUtils::TStaticSeq<0>);
 
 template <typename Filter>
 void CheckFilter(Filter)
@@ -691,12 +725,12 @@ private:
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
       auto nSlots = df->GetNSlots();
       if (hasAxisLimits) {
-         auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH1F>>(h, nSlots);
+         auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation>(h, nSlots);
          auto fillLambda = [fillTOOp](unsigned int slot, const X &v, const W &w) mutable { fillTOOp->Exec(v,w,slot); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
          df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
       } else {
-         auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation<::TH1F>>(h, nSlots);
+         auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
          auto fillLambda = [fillOp](unsigned int slot, const X &v, const W &w) mutable { fillOp->Exec(v,w,slot); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
          df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
@@ -732,12 +766,12 @@ private:
          auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
 
          if (hasAxisLimits) {
-            auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH1F>>(h, nSlots);
+            auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation>(h, nSlots);
             auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(v, slot); };
             using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
             df->Book(std::make_shared<DFA_t>(fillLambda, bl, thisFrame->fProxiedPtr));
          } else {
-            auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation<::TH1F>>(h, nSlots);
+            auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
             auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(v, slot); };
             using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
             df->Book(std::make_shared<DFA_t>(fillLambda, bl, thisFrame->fProxiedPtr));
@@ -901,12 +935,24 @@ protected:
    std::shared_ptr<Proxied> fProxiedPtr;
 };
 
+extern template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
+
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
    void Init();
 public:
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames &defaultBranches = {});
 };
+
+extern template TActionResultProxy<::TH1F>
+  TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::Histo1D<ROOT::Detail::TDataFrameGuessedType, ROOT::Detail::TDataFrameGuessedType>(::TH1F &&, const std::string&, const std::string&);
+
+extern template TActionResultProxy<::TH1F>
+  TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::Histo1D<ROOT::Detail::TDataFrameGuessedType, ROOT::Detail::TDataFrameGuessedType>(const std::string &valBranchName, int nBins, double minVal, double maxVal, const std::string&);
+
+extern template TActionResultProxy<::TH1F>
+  TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::Histo1D<double, ROOT::Detail::TDataFrameGuessedType>(const std::string &valBranchName, int nBins, double minVal, double maxVal, const std::string&);
+
 
 } // end NS Experimental
 
@@ -1189,6 +1235,27 @@ T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, cons
    }
 }
 
+extern template short int& GetBranchValue<short int>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<short int>);
+extern template unsigned short int& GetBranchValue<unsigned short int>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<unsigned short int>);
+extern template int& GetBranchValue<int>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<int>);
+extern template unsigned int& GetBranchValue<unsigned int>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<unsigned int>);
+extern template long int& GetBranchValue<long int>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<long int>);
+extern template unsigned long int& GetBranchValue<unsigned long int>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<unsigned long int>);
+extern template Long64_t& GetBranchValue<Long64_t>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<Long64_t>);
+extern template ULong64_t& GetBranchValue<ULong64_t>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<ULong64_t>);
+extern template float& GetBranchValue<float>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<float>);
+extern template double& GetBranchValue<double>(TVBPtr_t&, unsigned int, Long64_t, const std::string &,
+                                          std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<double>);
+
 template<typename T>
 std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
                                   Long64_t entry, const std::string& branch,
@@ -1213,6 +1280,28 @@ std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
       return std::array_view<T>(tra.begin(), tra.end());
    }
 }
+
+extern std::array_view<short int> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<short int>>);
+extern std::array_view<unsigned short int> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<unsigned short int>>);
+extern std::array_view<int> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<int>>);
+extern std::array_view<unsigned int> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<unsigned int>>);
+extern std::array_view<long int> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<long int>>);
+extern std::array_view<unsigned long int> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<unsigned long int>>);
+extern std::array_view<Long64_t> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<Long64_t>>);
+extern std::array_view<ULong64_t> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<ULong64_t>>);
+extern std::array_view<float> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<float>>);
+extern std::array_view<double> GetBranchValue(TVBPtr_t&, unsigned int, Long64_t, const std::string&,
+                                             std::weak_ptr<Detail::TDataFrameImpl>, TDFTraitsUtils::TTypeList<std::array_view<double>>);
+
 
 } // end NS Internal
 

@@ -15,13 +15,13 @@
 #include "ROOT/TThreadedObject.hxx"
 
 #include <algorithm>
-#include <memory>
 #include <limits>
+#include <memory>
 #include <vector>
 
-/// \cond HIDDEN_SYMBOLS
+#include "TH1F.h"
 
-class TH1F;
+/// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
 
@@ -29,34 +29,21 @@ namespace Internal {
 
 namespace Operations {
 
-
-
-
 using namespace Internal::TDFTraitsUtils;
 using Count_t = unsigned long;
+using Hist_t = ::TH1F;
 
 class CountOperation {
    unsigned int *fResultCount;
    std::vector<Count_t> fCounts;
 
 public:
-   CountOperation(unsigned int *resultCount, unsigned int nSlots) : fResultCount(resultCount), fCounts(nSlots, 0) {}
-
-   void Exec(unsigned int slot)
-   {
-      fCounts[slot]++;
-   }
-
-   ~CountOperation()
-   {
-      *fResultCount = 0;
-      for (auto &c : fCounts) {
-         *fResultCount += c;
-      }
-   }
+   CountOperation(unsigned int *resultCount, unsigned int nSlots);
+   void Exec(unsigned int slot);
+   void Finalize();
+   ~CountOperation();
 };
 
-template<typename HIST>
 class FillOperation {
    // this sets a total initial size of 16 MB for the buffers (can increase)
    static constexpr unsigned int fgTotalBufSize = 2097152;
@@ -65,48 +52,21 @@ class FillOperation {
 
    std::vector<Buf_t> fBuffers;
    std::vector<Buf_t> fWBuffers;
-   std::shared_ptr<HIST> fResultHist;
+   std::shared_ptr<Hist_t> fResultHist;
    unsigned int fNSlots;
    unsigned int fBufSize;
    Buf_t fMin;
    Buf_t fMax;
 
-   template <typename T>
-   void UpdateMinMax(unsigned int slot, T v) {
-      auto& thisMin = fMin[slot];
-      auto& thisMax = fMax[slot];
-      thisMin = std::min(thisMin, (BufEl_t)v);
-      thisMax = std::max(thisMax, (BufEl_t)v);
-   }
+   void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillOperation(std::shared_ptr<HIST> h, unsigned int nSlots) : fResultHist(h),
-                                                                 fNSlots(nSlots),
-                                                                 fBufSize (fgTotalBufSize / nSlots),
-                                                                 fMin(nSlots, std::numeric_limits<BufEl_t>::max()),
-                                                                 fMax(nSlots, std::numeric_limits<BufEl_t>::min())
-   {
-      fBuffers.reserve(fNSlots);
-      fWBuffers.reserve(fNSlots);
-      for (unsigned int i=0; i<fNSlots; ++i) {
-         Buf_t v;
-         v.reserve(fBufSize);
-         fBuffers.emplace_back(v);
-
-         Buf_t w(fBufSize,1);
-         fWBuffers.emplace_back(v);
-      }
-   }
-
-   template <typename T, typename std::enable_if<!TIsContainer<T>::fgValue, int>::type = 0>
-   inline void Exec(T v, unsigned int slot)
-   {
-      UpdateMinMax(slot, v);
-      fBuffers[slot].emplace_back(v);
-   }
+   FillOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots);
+   void Exec(double v, unsigned int slot);
+   void Exec(double v, double w, unsigned int slot);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   inline void Exec(const T &vs, unsigned int slot)
+   void Exec(const T &vs, unsigned int slot)
    {
       auto& thisBuf = fBuffers[slot];
       for (auto& v : vs) {
@@ -115,18 +75,8 @@ public:
       }
    }
 
-   template <typename T, typename W,
-             typename std::enable_if<!TIsContainer<T>::fgValue && !TIsContainer<W>::fgValue, int>::type = 0>
-   inline void Exec(T v, W w, unsigned int slot)
-   {
-      UpdateMinMax(slot, v);
-      fBuffers[slot].emplace_back(v);
-      fWBuffers[slot].emplace_back(w);
-   }
-
-   template <typename T, typename W,
-             typename std::enable_if<TIsContainer<T>::fgValue && TIsContainer<W>::fgValue, int>::type = 0>
-   inline void Exec(const T &vs, const W &ws, unsigned int slot)
+   template <typename T, typename W, typename std::enable_if<TIsContainer<T>::fgValue && TIsContainer<W>::fgValue, int>::type = 0>
+   void Exec(const T &vs, const W &ws, unsigned int slot)
    {
       auto& thisBuf = fBuffers[slot];
       for (auto& v : vs) {
@@ -140,59 +90,31 @@ public:
       }
    }
 
-   ~FillOperation()
-   {
-
-      for (unsigned int i=0; i<fNSlots; ++i) {
-         if (fBuffers[i].size() != fBuffers[i].size()) {
-            throw std::runtime_error("Cannot fill weighted histogram with values in containers of different sizes.");
-         }
-      }
-
-      BufEl_t globalMin = *std::min_element(fMin.begin(), fMin.end());
-      BufEl_t globalMax = *std::max_element(fMax.begin(), fMax.end());
-
-      if (fResultHist->CanExtendAllAxes() &&
-          globalMin != std::numeric_limits<BufEl_t>::max() &&
-          globalMax != std::numeric_limits<BufEl_t>::min()) {
-         auto xaxis = fResultHist->GetXaxis();
-         fResultHist->ExtendAxis(globalMin, xaxis);
-         fResultHist->ExtendAxis(globalMax, xaxis);
-      }
-
-      for (unsigned int i=0; i<fNSlots; ++i) {
-         // TODO: Here one really needs to fix FillN!
-         if (fWBuffers[i].empty()) {
-            fWBuffers[i].resize(fBuffers[i].size(), 1.);
-         }
-         fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(),  fWBuffers[i].data());
-      }
-   }
+   void Finalize();
+   ~FillOperation();
 };
 
-template<typename HIST>
+extern template void FillOperation::Exec(const std::vector<float>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<double>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<char>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<int>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<float>&, const std::vector<float>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<double>&, const std::vector<double>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<char>&, const std::vector<char>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
+extern template void FillOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
+
 class FillTOOperation {
-   TThreadedObject<HIST> fTo;
+   TThreadedObject<Hist_t> fTo;
 
 public:
-
-   FillTOOperation(std::shared_ptr<HIST> h, unsigned int nSlots) : fTo(*h)
-   {
-      fTo.SetAtSlot(0, h);
-      // Initialise all other slots
-      for (unsigned int i = 0 ; i < nSlots; ++i) {
-         fTo.GetAtSlot(i);
-      }
-   }
-
-   template <typename T, typename std::enable_if<!TIsContainer<T>::fgValue, int>::type = 0>
-   inline void Exec(T v, unsigned int slot)
-   {
-      fTo.GetAtSlotUnchecked(slot)->Fill(v);
-   }
+   FillTOOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots);
+   void Exec(double v, unsigned int slot);
+   void Exec(double v, double w, unsigned int slot);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   inline void Exec(const T &vs, unsigned int slot)
+   void Exec(const T &vs, unsigned int slot)
    {
       auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
       for (auto& v : vs) {
@@ -201,15 +123,8 @@ public:
    }
 
    template <typename T, typename W,
-             typename std::enable_if<!TIsContainer<T>::fgValue && !TIsContainer<W>::fgValue, int>::type = 0>
-   inline void Exec(T v, W w, unsigned int slot)
-   {
-      fTo.GetAtSlotUnchecked(slot)->Fill(v,w);
-   }
-
-   template <typename T, typename W,
              typename std::enable_if<TIsContainer<T>::fgValue && TIsContainer<W>::fgValue, int>::type = 0>
-   inline void Exec(const T &vs, const W &ws, unsigned int slot)
+   void Exec(const T &vs, const W &ws, unsigned int slot)
    {
       auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
       if (vs.size() != ws.size()) {
@@ -223,12 +138,20 @@ public:
       }
    }
 
-   ~FillTOOperation()
-   {
-      fTo.Merge();
-   }
-
+   void Finalize();
+   ~FillTOOperation();
 };
+
+extern template void FillTOOperation::Exec(const std::vector<float>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<double>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<char>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<int>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<float>&, const std::vector<float>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<double>&, const std::vector<double>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<char>&, const std::vector<char>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
+extern template void FillTOOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
 
 // note: changes to this class should probably be replicated in its partial
 // specialization below
@@ -256,7 +179,7 @@ public:
       thisColl.insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
    }
 
-   ~TakeOperation()
+   void Finalize()
    {
       auto rColl = fColls[0];
       for (unsigned int i = 1; i < fColls.size(); ++i) {
@@ -265,6 +188,10 @@ public:
             rColl->emplace_back(v);
          }
       }
+   }
+   ~TakeOperation()
+   {
+      Finalize();
    }
 };
 
@@ -297,7 +224,7 @@ public:
       thisColl->insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
    }
 
-   ~TakeOperation()
+   void Finalize()
    {
       ULong64_t totSize = 0;
       for (auto& coll : fColls) totSize += coll->size();
@@ -308,6 +235,11 @@ public:
          rColl->insert(rColl->end(), coll->begin(), coll->end());
       }
    }
+
+   ~TakeOperation()
+   {
+      Finalize();
+   }
 };
 
 class MinOperation {
@@ -315,37 +247,32 @@ class MinOperation {
    std::vector<double> fMins;
 
 public:
-   MinOperation(double *minVPtr, unsigned int nSlots)
-      : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max()) { }
-   template <typename T, typename std::enable_if<!TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(T v, unsigned int slot)
-   {
-      fMins[slot] = std::min((double)v, fMins[slot]);
-   }
+   MinOperation(double *minVPtr, unsigned int nSlots);
+   void Exec(double v, unsigned int slot);
+
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
    void Exec(const T &vs, unsigned int slot)
    {
       for (auto &&v : vs) fMins[slot] = std::min((double)v, fMins[slot]);
    }
-   ~MinOperation()
-   {
-      *fResultMin = std::numeric_limits<double>::max();
-      for (auto &m : fMins) *fResultMin = std::min(m, *fResultMin);
-   }
+
+   void Finalize();
+   ~MinOperation();
 };
+
+extern template void MinOperation::Exec(const std::vector<float>&, unsigned int);
+extern template void MinOperation::Exec(const std::vector<double>&, unsigned int);
+extern template void MinOperation::Exec(const std::vector<char>&, unsigned int);
+extern template void MinOperation::Exec(const std::vector<int>&, unsigned int);
+extern template void MinOperation::Exec(const std::vector<unsigned int>&, unsigned int);
 
 class MaxOperation {
    double *fResultMax;
    std::vector<double> fMaxs;
 
 public:
-   MaxOperation(double *maxVPtr, unsigned int nSlots)
-      : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::min()) { }
-   template <typename T, typename std::enable_if<!TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(T v, unsigned int slot)
-   {
-      fMaxs[slot] = std::max((double)v, fMaxs[slot]);
-   }
+   MaxOperation(double *maxVPtr, unsigned int nSlots);
+   void Exec(double v, unsigned int slot);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
    void Exec(const T &vs, unsigned int slot)
@@ -353,14 +280,16 @@ public:
       for (auto &&v : vs) fMaxs[slot] = std::max((double)v, fMaxs[slot]);
    }
 
-   ~MaxOperation()
-   {
-      *fResultMax = std::numeric_limits<double>::min();
-      for (auto &m : fMaxs) {
-         *fResultMax = std::max(m, *fResultMax);
-      }
-   }
+   void Finalize();
+   ~MaxOperation();
 };
+
+extern template void MaxOperation::Exec(const std::vector<float>&, unsigned int);
+extern template void MaxOperation::Exec(const std::vector<double>&, unsigned int);
+extern template void MaxOperation::Exec(const std::vector<char>&, unsigned int);
+extern template void MaxOperation::Exec(const std::vector<int>&, unsigned int);
+extern template void MaxOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+
 
 class MeanOperation {
    double *fResultMean;
@@ -368,13 +297,8 @@ class MeanOperation {
    std::vector<double> fSums;
 
 public:
-   MeanOperation(double *meanVPtr, unsigned int nSlots) : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0) {}
-   template <typename T, typename std::enable_if<!TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(T v, unsigned int slot)
-   {
-      fSums[slot] += v;
-      fCounts[slot] ++;
-   }
+   MeanOperation(double *meanVPtr, unsigned int nSlots);
+   void Exec(double v, unsigned int slot);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
    void Exec(const T &vs, unsigned int slot)
@@ -385,15 +309,16 @@ public:
       }
    }
 
-   ~MeanOperation()
-   {
-      double sumOfSums = 0;
-      for (auto &s : fSums) sumOfSums += s;
-      Count_t sumOfCounts = 0;
-      for (auto &c : fCounts) sumOfCounts += c;
-      *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
-   }
+   void Finalize();
+   ~MeanOperation();
 };
+
+extern template void MeanOperation::Exec(const std::vector<float>&, unsigned int);
+extern template void MeanOperation::Exec(const std::vector<double>&, unsigned int);
+extern template void MeanOperation::Exec(const std::vector<char>&, unsigned int);
+extern template void MeanOperation::Exec(const std::vector<int>&, unsigned int);
+extern template void MeanOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+
 
 } // end of NS Operations
 
