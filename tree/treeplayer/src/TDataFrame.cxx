@@ -41,6 +41,7 @@ myHisto->Draw();
 Calculations are expressed in terms of a type-safe *functional chain of actions and transformations*, `TDataFrame` takes care of their execution. The implementation automatically puts in place several low level optimisations such as multi-thread parallelisation and caching.
 The namespace containing the TDataFrame is ROOT::Experimental. This signals the fact that the interfaces may evolve in time.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.260230.svg)](https://doi.org/10.5281/zenodo.260230)
 
 ## Table of Contents
 - [Introduction](#introduction)
