@@ -91,7 +91,7 @@ Int_t TCommunicator::GetMaxTag() const
    Int_t *tag;
    Int_t flag = 0;
 
-   MPI_Comm_get_attr(fComm, MPI_TAG_UB, &tag, &flag);
+   MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &tag, &flag);
 
    ROOT_MPI_ASSERT(flag != 0, this);
    return *tag - 1;//one tag is reserved for internal use

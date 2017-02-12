@@ -36,13 +36,6 @@ namespace ROOT {
             return *this;
          }
 
-
-         TIntraCommunicator &operator=(const TNullCommunicator &comm)
-         {
-            fComm = comm;
-            return *this;
-         }
-
          TIntraCommunicator &operator=(const MPI_Comm &comm)
          {
             fComm = comm;

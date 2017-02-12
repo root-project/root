@@ -9,7 +9,7 @@
 namespace ROOT {
 
    namespace Mpi {
-      class TInterCommunicator;
+
       class TInterCommunicator: public TCommunicator {
       public:
 
@@ -39,7 +39,7 @@ namespace ROOT {
 
          virtual TInterCommunicator &Clone() const;
 
-         virtual TIntraCommunicator Merge(Bool_t high);
+         virtual TIntraCommunicator Merge(Int_t high);
 
          virtual TInterCommunicator Create(const TGroup &group) const;
 

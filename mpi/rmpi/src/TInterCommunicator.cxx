@@ -1,6 +1,5 @@
-
-#include<Mpi/TInterCommunicator.h>
 #include<Mpi/TIntraCommunicator.h>
+#include<Mpi/TInterCommunicator.h>
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
@@ -22,10 +21,10 @@ TInterCommunicator &TInterCommunicator::Clone() const
 }
 
 //______________________________________________________________________________
-TIntraCommunicator TInterCommunicator::Merge(bool high)
+TIntraCommunicator TInterCommunicator::Merge(Int_t high)
 {
    MPI_Comm ncomm;
-   MPI_Intercomm_merge(fComm, (Int_t)high, &ncomm);
+   MPI_Intercomm_merge(fComm, high, &ncomm);
    return ncomm;
 }
 

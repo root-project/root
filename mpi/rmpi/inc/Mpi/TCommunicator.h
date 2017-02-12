@@ -778,7 +778,7 @@ namespace ROOT {
       template<class Type> void TCommunicator::AllReduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)()) const
       {
          Reduce(in_vars, out_vars, count, opf, GetMainProcess());
-         if (IsMainProcess()) Bcast(out_vars, count, GetMainProcess());
+         Bcast(out_vars, count, GetMainProcess());
       }
       //______________________________________________________________________________
       /**
@@ -794,7 +794,7 @@ namespace ROOT {
       template<class Type> void TCommunicator::AllGather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount) const
       {
          Gather(in_vars, incount, out_vars, outcount, GetMainProcess());
-         if (IsMainProcess()) Bcast(out_vars, outcount, GetMainProcess());
+         Bcast(out_vars, outcount, GetMainProcess());
       }
       //______________________________________________________________________________
       template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root);
