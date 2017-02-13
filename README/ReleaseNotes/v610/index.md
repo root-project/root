@@ -48,6 +48,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 - See "Build, Configuration and Testing Infrastructure" below for changes in the directory structure.
 - libCling now exports only a minimal set of symbols.
+- Add support for std::array_view also for C++11 builds. The implementation has been modified to work before C++14.
 
 ## Histogram Libraries
 
@@ -82,6 +83,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `TTreeReader::SetLastEntry()` has been deprecated. Its name is misleading; please use `TTreePlayer::SetEntriesRange()` instead.
 - `TTree::Branch()` now complains for wrong leaf list strings, e.g. "value/F[4]" (which should really be spelled as "value[4]/F").
 - Allow reading of older version of TTreePerfStats (ROOT-8520)
+- Introduce TDataFrame which offers a new and highly efficient way to analyse data stored in TTrees
 
 ## 2D Graphics Libraries
 - If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
@@ -178,10 +180,12 @@ The following interfaces have been removed, after deprecation in v6.08.
 ## Dictionaries
 - Stop dictionary generation early, during AST scanning, if a union is selected for I/O as this is not supported (triggered by [ROOT-8492](https://sft.its.cern.ch/jira/browse/ROOT-8492))
 - Allow inclusion of headers in linkdef files [ROOT-7765](https://sft.its.cern.ch/jira/browse/ROOT-7765)
+- More expressive error messages when trying to directly select std::arrays
 
 ## I/O Libraries
 - [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
 - TDavixFile: Added support for bucket name in path
+- Fix error sometimes prompted when trying to write std::array column-wise
 
 ## Database Libraries
 
