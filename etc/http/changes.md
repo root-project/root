@@ -1,14 +1,21 @@
 # JSROOT changelog
 
+## Changes in 5.0.3
+1. Fix - prevent exception when discover HTML element position (#121)
+2. Fix - prevent I/O failure when server automatically gzip response (#119)
+3. Fix - lego drawing for stacked TH1 histograms
+4. Fix - when change global tooltips settings, also change for each sub-pad
+
+
 ## Changes in 5.0.2
-1. Fix - read branch entries as arrays 
+1. Fix - read branch entries as arrays
 2. Fix - command submission to THttpServer
-3. Fix - let refill statbox also for empty histogram  
-4. Fix - propblem with online TTree::Draw and ROOT6 
+3. Fix - let refill statbox also for empty histogram
+4. Fix - problem with online TTree::Draw and ROOT6 
 
 
 ## Changes in 5.0.1
-1. Support older ROOT files, created before 2010 
+1. Support older ROOT files, created before 2010
 2. Support TBranchObject - appears in old files
 3. Correctly set TBasket buffer position for the entry
 4. Fix - problem with empty STL containers

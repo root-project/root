@@ -147,6 +147,11 @@
 
       function getCode(o) { return arr.getUint8(o); }
 
+      if (RawInflate === undefined) {
+         if (!noalert) alert("R__unzip: rawinflate.min.js script is not loaded");
+         return null;
+      }
+
       while (fullres < tgtsize) {
 
          var fmt = "uncknown", off = 0, HDRSIZE = 9;
@@ -173,7 +178,7 @@
          //  place for unpacking
          if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
 
-         var reslen = window.RawInflate.arr_inflate(uint8arr, new Uint8Array(tgtbuf, fullres));
+         var reslen = RawInflate.arr_inflate(uint8arr, new Uint8Array(tgtbuf, fullres));
          if (reslen<=0) break;
 
          fullres += reslen;
@@ -992,11 +997,11 @@
          }
          if (last-first>2) totalsz += (last-first)*60; // for multi-range ~100 bytes/per request
 
-         var xhr = JSROOT.NewHttpRequest(fullurl, ((JSROOT.IO.Mode == "array") ? "buf" : "bin"), read_callback);
+         var xhr = JSROOT.NewHttpRequest(fullurl, "buf", read_callback);
 
          if (file.fAcceptRanges) {
             xhr.setRequestHeader("Range", ranges);
-            xhr.expected_size = totalsz;
+            xhr.expected_size = Math.min(1.1*totalsz, totalsz+200); // 200 if offset for the potential gzip
          }
 
          if (progress_callback && (typeof xhr.addEventListener === 'function')) {
@@ -1053,11 +1058,9 @@
             return result_callback(null);
          }
 
-         var isstr = (typeof res == 'string');
-
          // if only single segment requested, return result as is
          if (last - first === 2) {
-            var b = isstr ? res : new DataView(res);
+            var b = new DataView(res);
             if (place.length===2) return result_callback(b);
             blobs.push(b);
             return send_new_request(true);
@@ -1066,8 +1069,7 @@
          // object to access response data
          var hdr = this.getResponseHeader('Content-Type'),
              ismulti = (typeof hdr === 'string') && (hdr.indexOf('multipart')>=0),
-             view = isstr ? { getUint8: function(pos) { return res.charCodeAt(pos);  }, byteLength: res.length }
-                       : new DataView(res);
+             view = new DataView(res);
 
          if (!ismulti) {
             // server may returns simple buffer, which combines all segments together
@@ -1092,7 +1094,7 @@
 
             if (canbe_single_segment) {
                for (var n=first;n<last;n+=2)
-                  blobs.push(isstr ? res.substr(place[n]-segm_start, place[n+1]) : new DataView(res, place[n]-segm_start, place[n+1]));
+                  blobs.push(new DataView(res, place[n]-segm_start, place[n+1]));
                return send_new_request(true);
             }
 
@@ -1159,13 +1161,12 @@
 
             if (segm_start > segm_last) {
                // fall-back solution, believe that segments same as requested
-               blobs.push(isstr ? res.substr(o, place[n+1]) : new DataView(res, o, place[n+1]));
+               blobs.push(new DataView(res, o, place[n+1]));
                o += place[n+1];
                n += 2;
             } else {
                while ((n<last) && (place[n] >= segm_start) && (place[n] + place[n+1] - 1 <= segm_last)) {
-                  blobs.push(isstr ? res.substr(o + place[n] - segm_start, place[n+1]) :
-                                   new DataView(res, o + place[n] - segm_start, place[n+1]));
+                  blobs.push(new DataView(res, o + place[n] - segm_start, place[n+1]));
                   n += 2;
                }
 
@@ -1240,7 +1241,7 @@
 
       this.ReadBuffer([key.fSeekKey + key.fKeylen, key.fNbytes - key.fKeylen], function(blob1) {
 
-         if (blob1==null) callback(null);
+         if (blob1==null) return callback(null);
 
          var buf = null;
 
@@ -2806,9 +2807,13 @@
       return res;
    }
 
-   var iomode = JSROOT.GetUrlOption("iomode");
-   if ((iomode=="str") || (iomode=="string")) JSROOT.IO.Mode = "string"; else
-   if ((iomode=="bin") || (iomode=="arr") || (iomode=="array")) JSROOT.IO.Mode = "array";
+   JSROOT.OpenFile = function(filename, callback) {
+      if (typeof filename === 'object'  && filename.size && filename.name)
+         return new JSROOT.TLocalFile(filename, callback);
+
+      return new JSROOT.TFile(filename, callback);
+   }
+
    JSROOT.IO.NativeArray = ('Float64Array' in window);
 
    JSROOT.IO.ProduceCustomStreamers();
