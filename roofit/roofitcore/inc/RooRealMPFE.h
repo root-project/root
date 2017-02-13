@@ -62,8 +62,8 @@ public:
   enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate, 
 		 ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset,
      SetCpuAffinity,
-     EnableTimingRooAbsTestStatistic, DisableTimingRooAbsTestStatistic,
-     EnableTimingRooRealIntegral, DisableTimingRooRealIntegral,
+     EnableTimingRATS, DisableTimingRATS,
+     EnableTimingNamedAbsArg, DisableTimingNamedAbsArg,
      MeasureCommunicationTime
   };
   
@@ -94,6 +94,14 @@ public:
   static RooMPSentinel _sentinel ;
 
   void setCpuAffinity(int cpu);
+
+private:
+  RooArgSet* _components = 0;
+  RooAbsArg* _findComponent(std::string name);
+
+  RooArgSet _numIntSet;
+
+  void _initNumIntSet(const RooArgSet& obs);
 
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function 
 };

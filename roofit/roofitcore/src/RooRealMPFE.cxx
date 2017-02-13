@@ -147,6 +147,8 @@ RooRealMPFE::~RooRealMPFE()
 {
   if (_state==Client) standby();
   _sentinel.remove(*this);
+
+  delete _components;
 }
 
 
@@ -268,6 +270,21 @@ namespace RooFit {
   }
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convenience function to find a named component of the PDF.
+RooAbsArg* RooRealMPFE::_findComponent(std::string name) {
+  if (!_components) {
+    const RooAbsReal& true_arg = _arg.arg();
+    _components = true_arg.getComponents();
+  }
+
+  RooAbsArg* component = _components->find(name.c_str());
+
+  return component;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Server loop of remote processes. This function will return
@@ -477,33 +494,35 @@ void RooRealMPFE::serverLoop() {
       }
 
 
-      case EnableTimingRooAbsTestStatistic: {
-        std::string name;
-        *_pipe >> name;
+      case EnableTimingRATS: {
+        setAttribute("timing_on");
 
         break;
       }
 
 
-      case DisableTimingRooAbsTestStatistic: {
-        std::string name;
-        *_pipe >> name;
+      case DisableTimingRATS: {
+        setAttribute("timing_on", kFALSE);
 
         break;
       }
 
 
-      case EnableTimingRooRealIntegral: {
+      case EnableTimingNamedAbsArg: {
         std::string name;
         *_pipe >> name;
+
+        _findComponent(name)->setAttribute("timing_on");
 
         break;
       }
 
 
-      case DisableTimingRooRealIntegral: {
+      case DisableTimingNamedAbsArg: {
         std::string name;
         *_pipe >> name;
+
+        _findComponent(name)->setAttribute("timing_on", kFALSE);
 
         break;
       }
@@ -577,6 +596,50 @@ void RooRealMPFE::serverLoop() {
 #endif // _WIN32
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find all numerical integrals in pdf given a set of observables
+
+void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
+  // Get list of branch nodes in expression
+  RooArgSet blist;
+  _arg.arg().branchNodeServerList(&blist);
+
+  // Iterator over branch nodes
+  RooFIter iter = blist.fwdIterator();
+  RooAbsArg* node;
+  while(node = iter.next()) {
+    RooAbsPdf* pdfNode = dynamic_cast<RooAbsPdf*>(node);
+    if (!pdfNode) continue;
+    // Skip self-normalized nodes
+    if (pdfNode->selfNormalized()) continue;
+
+    // Retrieve normalization integral object for branch nodes that are pdfs
+    const RooAbsReal* normint = pdfNode->getNormIntegral(obs);
+
+    // Integral expressions can be composite objects (in case of disjoint normalization ranges)
+    // Therefore: retrieve list of branch nodes of integral expression
+    if (!normint) continue;
+
+    RooArgList bi;
+    normint->branchNodeServerList(&bi);
+    RooFIter ibiter = bi.fwdIterator();
+    RooAbsArg* inode;
+    while(inode = ibiter.next()) {
+      // If a RooRealIntegal component is found...
+      if (inode->IsA()==RooRealIntegral::Class()) {
+        // Retrieve the number of real dimensions that is integrated numerically,
+        RooRealIntegral* rri = (RooRealIntegral*)inode;
+        Int_t numIntDim = rri->numIntRealVars().getSize();
+        // .. and add to list if numeric integration occurs
+        if (numIntDim>0) {
+          _numIntSet.add(*rri);
+        }
+      }
+    }
+  }
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
