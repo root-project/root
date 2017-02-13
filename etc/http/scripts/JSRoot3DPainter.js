@@ -257,7 +257,7 @@
       control.ProcessDblClick = function(evnt) {
          var intersect = this.DetectZoomMesh(evnt);
          if (intersect && this.painter) {
-            this.painter.Unzoom(intersect.object.zoom);
+            this.painter.Unzoom(intersect.object.use_y_for_z ? "y" : intersect.object.zoom);
          } else {
             this.reset();
          }
@@ -410,6 +410,8 @@
 
             control.painter.AnalyzeMouseWheelEvent(evnt, item, position, false);
 
+            if ((kind==="z") && intersect.object.use_y_for_z) kind="y";
+
             control.painter.Zoom(kind, item.min, item.max);
          }
       }
@@ -459,6 +461,8 @@
                pos1 = min + pos1*(max-min);
                pos2 = min + pos2*(max-min);
             }
+
+            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
 
             // try to zoom
             if (pos1 < pos2)
@@ -753,8 +757,9 @@
       }
 
       if (opts.use_y_for_z) {
+         this.zmin = this.ymin; this.zmax = this.ymax;
          zmin = ymin; zmax = ymax; z_zoomed = y_zoomed;
-         if (!z_zoomed) { zmin = this.hmin; zmax = this.hmax; }
+         // if (!z_zoomed && (this.hmin!==this.hmax)) { zmin = this.hmin; zmax = this.hmax; }
          ymin = 0; ymax = 1;
       }
 
@@ -902,7 +907,7 @@
       var ticksgeom = new THREE.BufferGeometry();
       ticksgeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array(ticks), 3 ) );
 
-      function CreateZoomMesh(kind, size_3d) {
+      function CreateZoomMesh(kind, size_3d, use_y_for_z) {
          var geom = new THREE.Geometry();
 
          if (kind==="z")
@@ -930,6 +935,7 @@
          var mesh = new THREE.Mesh(geom, material);
          mesh.zoom = kind;
          mesh.size_3d = size_3d;
+         mesh.use_y_for_z = use_y_for_z;
          if (kind=="y") mesh.rotateZ(Math.PI/2).rotateX(Math.PI);
 
          mesh.GlobalIntersect = function(raycaster) {
@@ -1276,7 +1282,7 @@
          });
 
          zcont[n].add(new THREE.LineSegments(ticksgeom, lineMaterial));
-         if (opts.zoom) zcont[n].add(CreateZoomMesh("z", this.size_z3d));
+         if (opts.zoom) zcont[n].add(CreateZoomMesh("z", this.size_z3d, opts.use_y_for_z));
 
          zcont[n].zid = n + 2;
          top.add(zcont[n]);
@@ -2711,7 +2717,7 @@
 
          if (main === this) {
             this.Create3DScene();
-            this.DrawXYZ(this.toplevel, { use_y_for_z: false, zmult: zmult, zoom: JSROOT.gStyle.Zooming });
+            this.DrawXYZ(this.toplevel, { zmult: zmult, zoom: JSROOT.gStyle.Zooming });
          }
 
          this.Draw3DBins();

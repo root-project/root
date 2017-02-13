@@ -93,7 +93,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "5.0.2 7/02/2017";
+   JSROOT.version = "5.0.3 13/02/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -703,6 +703,7 @@
             if (!isNaN(len) && (len>xhr.expected_size)) {
                xhr.did_abort = true;
                xhr.abort();
+               console.warn('Server response size ' + len + ' larger than expected ' + xhr.expected_size + ' Abort I/O operation');
                return callback(null);
             }
          }

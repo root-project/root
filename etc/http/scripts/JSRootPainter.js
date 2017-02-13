@@ -1712,8 +1712,12 @@
          // canvas element offset relative to first parent with absolute position
          // workaround - TR is not handled correctly, wherefore ignored
          var offx = 0, offy = 0;
-         while (prnt /*&& !offx && !offy*/) {
-            if (getComputedStyle(prnt).position !== 'static') break;
+         while (prnt && (prnt !== document)) {
+            try {
+               if (getComputedStyle(prnt).position !== 'static') break;
+            } catch(err) {
+               break;
+            }
             if (prnt.nodeName!=='TR') {
                offx += prnt.offsetLeft;
                offy += prnt.offsetTop;
@@ -1968,7 +1972,7 @@
       // Iterate over all known painters
 
       // special case of the painter set as pointer of first child of main element
-      var painter = this.AccessTopPainter();;
+      var painter = this.AccessTopPainter();
       if (painter) return userfunc(painter);
 
       // iterate over all painters from pad list
@@ -4016,6 +4020,7 @@
          }
 
          svg = this.select_main()
+             .html("")
              .append("svg")
              .attr("class", "jsroot root_canvas")
              .property('pad_painter', this) // this is custom property
@@ -4265,9 +4270,12 @@
       else
          menu.add("header: Canvas");
 
-      if (this.iscan)
-         menu.addchk((JSROOT.gStyle.Tooltip > 0), "Show tooltips", function() {
+      if (this.iscan || !this.has_canvas)
+         menu.addchk((JSROOT.gStyle.Tooltip > 0), "Enable tooltips (global)", function() {
             JSROOT.gStyle.Tooltip = (JSROOT.gStyle.Tooltip === 0) ? 1 : -JSROOT.gStyle.Tooltip;
+            this.ForEachPainterInPad(function(fp) {
+               if (fp.tooltip_allowed!==undefined) fp.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
+            });
          });
 
       if (!this._websocket) {
@@ -9652,7 +9660,7 @@
 
       if ((options.length == 1) && (options[0] == "iotest")) {
          h.clear();
-         d3.select("#" + h.disp_frameid).html("<h2>Start I/O test "+ ('IO' in JSROOT ? "Mode=" + JSROOT.IO.Mode : "") +  "</h2>")
+         d3.select("#" + h.disp_frameid).html("<h2>Start I/O test</h2>")
 
          var tm0 = new Date();
          return h.get(items[0], function(item, obj) {
