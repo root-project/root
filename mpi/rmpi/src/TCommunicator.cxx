@@ -1,4 +1,5 @@
 #include<Mpi/TCommunicator.h>
+#include<Mpi/TInterCommunicator.h>
 #include <Mpi/TMpiMessage.h>
 #include<iostream>
 #include<TSystem.h>
@@ -251,6 +252,34 @@ Bool_t TCommunicator::IsInter() const
    Int_t t;
    MPI_Comm_test_inter(fComm, &t);
    return Bool_t(t);
+}
+
+//
+// Process Creation and Managemnt
+//
+
+//______________________________________________________________________________
+void TCommunicator::Disconnect()
+{
+   MPI_Comm_disconnect(&fComm);
+}
+
+
+//______________________________________________________________________________
+TInterCommunicator TCommunicator::GetParent()
+{
+   MPI_Comm parent;
+   MPI_Comm_get_parent(&parent);
+   return parent;
+}
+
+
+//______________________________________________________________________________
+TInterCommunicator TCommunicator::Join(const Int_t fd)
+{
+   MPI_Comm ncomm;
+   MPI_Comm_join(fd, &ncomm);
+   return ncomm;
 }
 
 //______________________________________________________________________________

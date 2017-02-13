@@ -35,7 +35,7 @@ namespace ROOT {
    namespace Mpi {
 
       class TMpiMessage;
-
+      class TInterCommunicator;
       /**
        * \class TNullCommunicator
        * Class for null communicator, base class to create by default a null communicator in any communicator class.
@@ -203,6 +203,15 @@ namespace ROOT {
 
          virtual Bool_t IsInter() const;
 
+         //////////////////////
+         // Process Creation //
+         //////////////////////
+
+         virtual void Disconnect();
+
+         static TInterCommunicator GetParent();
+
+         static TInterCommunicator Join(const Int_t fd);
 
          /**
           * static method to serialize objects. used in the multiple communication schemas.

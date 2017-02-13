@@ -138,19 +138,15 @@ void communicators()
    } else {
       assert(intracomm.GetRank() == 0 || intracomm.GetRank() == 1);
    }
-   
+
    //clening the objects
    icomm.Free();
    pgroup.Free();
    ogroup.Free();
 
-   assert(icomm==COMM_NULL);
-   assert(pgroup==GROUP_NULL);
-   assert(ogroup==GROUP_NULL);
-   
-//TODO:
-/* test remote group
- * test Spawn after new design
- */
+   assert(icomm == COMM_NULL);
+   assert(pgroup == GROUP_NULL);
+   assert(ogroup == GROUP_NULL);
+
 }
 
