@@ -162,12 +162,15 @@ The following interfaces have been removed, after deprecation in v6.08.
   anti-aliasing for filled area for the Cocoa backend. Default is `no`.
 - The "BOX" option, to draw 3D histograms, has been reimplemented by Evgueni Tcherniaev
   The following picture show the old and new version
-- When a 2d histogram was drawn with option `LEGO1` and white colored, the dark side
-  of the lego was red instead of gray.
-- New option "0"to draw TH2Poly. When used with any `COL` options, the empty
-  bins are not drawn.
 
 ![New box option for 3D histograms](NewBoxOption.png)
+
+- When a 2d histogram was drawn with option `LEGO1` and white colored, the dark side
+  of the lego was red instead of gray.
+- New option "0" to draw TH2Poly. When used with any `COL` options, the empty
+  bins are not drawn.
+- Fix a long pending problem with Z axis drawing when a lego or a surface was drawn
+  upside-down.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.

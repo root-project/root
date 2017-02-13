@@ -7403,7 +7403,8 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    else               strlcpy(chopax, "SDH=-",8);
    if (y1[0] > y2[0]) strlcpy(chopay, "SDH=+",8);
    else               strlcpy(chopay, "SDH=-",8);
-   strlcpy(chopaz, "SDH+=",8);
+   if (z2[1] > z1[1]) strlcpy(chopaz, "SDH=+",8);
+   else               strlcpy(chopaz, "SDH=-",8);
 
    // Option LOG is required ?
    if (Hoption.Logx) strlcat(chopax,"G",8);

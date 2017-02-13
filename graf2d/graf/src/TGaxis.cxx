@@ -1126,7 +1126,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
 
    if (x0 == x1) {
-      phi  = 0.5*kPI;
+      if (y1>=y0) phi  = 0.5*kPI;
+      else        phi  = 1.5*kPI;
       phil = phi;
    } else {
       phi = TMath::ATan2((y1-y0),(x1-x0));
