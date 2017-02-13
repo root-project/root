@@ -225,11 +225,20 @@ template <class T>
       }
    };
 
+
+class TCDGIILIBase {
+public:
+   // All implemented in TGenericClassInfo.cxx.
+   static void SetInstance(::ROOT::TGenericClassInfo& R__instance,
+                    NewFunc_t, NewArrFunc_t, DelFunc_t, DelArrFunc_t, DesFunc_t);
+   static void SetName(const std::string& name, std::string& nameMember);
+};
+
 template <typename T>
-   class ClassDefGenerateInitInstanceLocalInjector {
+class ClassDefGenerateInitInstanceLocalInjector:
+   public TCDGIILIBase {
       static atomic_TClass_ptr fgIsA;
       static std::string fgName;
-      static std::mutex fgMutex;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
       static void *NewArray(Long_t nElements, void *p) {
@@ -244,24 +253,14 @@ template <typename T>
                         T::DeclFileName(), T::DeclFileLine(),
                         typeid(T), ROOT::Internal::DefineBehavior((T*)0, (T*)0),
                         &T::Dictionary, isa_proxy, 0, sizeof(T) );
-         std::lock_guard<std::mutex> guard(fgMutex);
-         R__instance.SetNew(&New);
-         R__instance.SetNewArray(&NewArray);
-         R__instance.SetDelete(&Delete);
-         R__instance.SetDeleteArray(&DeleteArray);
-         R__instance.SetDestructor(&Destruct);
+         SetInstance(R__instance, &New, &NewArray, &Delete, &DeleteArray, &Destruct);
          return &R__instance;
       }
       static void Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); }
       static TClass *Class() { if (!fgIsA) Dictionary(); return fgIsA; }
       static const char* Name() {
-         if (fgName.empty()) {
-            std::lock_guard<std::mutex> guard(fgMutex);
-            if (fgName.empty()) {
-               TClassEdit::GetNormalizedName(fgName,
-                                             TypeNameExtraction<T>::get());
-            }
-         }
+         if (fgName.empty())
+            SetName(TypeNameExtraction<T>::get(), fgName);
          return fgName.c_str();
       }
    };
