@@ -63,6 +63,7 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooNLLVar.h"
 #include "RooTrace.h"
 #include "RooConstVar.h"
+#include "RooRealIntegral.h"
 
 #include "TSystem.h"
 
