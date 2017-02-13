@@ -590,3 +590,4 @@ Changes will be part of the future 6.08/06
 
 *   [[ROOT-8516](https://sft.its.cern.ch/jira/browse/ROOT-8516)] - Possible I/O corruption in writing when using a cache, typically on remote servers, e.g. XRootD
 
+*   Fix column wise write of std::arrays which was failing with cryptic error message under certain circumstances.
