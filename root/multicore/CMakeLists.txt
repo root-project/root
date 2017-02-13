@@ -36,9 +36,9 @@ if(ROOT_imt_FOUND)
                     EXEC threadExecutor
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-  ROOTTEST_GENERATE_EXECUTABLE(scheduler testScheduler.cpp LIBRARIES Core Thread ${TBB_LIBRARIES})
-  ROOTTEST_ADD_TEST(scheduler
-                    EXEC scheduler
+  ROOTTEST_GENERATE_EXECUTABLE(poolManager testPoolManager.cpp LIBRARIES Core Thread ${TBB_LIBRARIES})
+  ROOTTEST_ADD_TEST(poolManager
+                    EXEC poolManager
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
                   
