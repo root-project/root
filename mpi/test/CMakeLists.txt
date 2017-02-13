@@ -8,7 +8,13 @@ find_package(ROOT REQUIRED)
 find_package(MPI REQUIRED)
 
 #ROOTMpi binary to execute processes
-set(ROOTMPIEXEC ${ROOT_BINARY_DIR}/rootmpi)
+#Standalone Build
+if(CMAKE_PROJECT_NAME STREQUAL ROOTMpi)
+    set(ROOTMPIEXEC ${CMAKE_BINARY_DIR}/rootmpi/rootmpi)
+    execute_process(COMMAND source ${CMAKE_BINARY_DIR}/thisroot.sh)
+else()
+    set(ROOTMPIEXEC ${ROOT_BINARY_DIR}/rootmpi)
+endif()
 
 function(ROOT_ADD_TEST_MPI name nprocs)
   set(test_parameters -np ${nprocs} "${CMAKE_CURRENT_SOURCE_DIR}/${name}.C")

@@ -6,6 +6,7 @@
 # http://oproject.org
 
 set(libname RMpi)
+include_directories(inc/)
 
 set(RMPI_HEADERS Mpi/TEnvironment.h
 		 Mpi/TMpiMessage.h

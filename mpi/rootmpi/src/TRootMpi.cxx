@@ -10,7 +10,7 @@ using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
 {
-   fMpirun = "mpirun";
+   fMpirun = ROOT_MPI_EXEC;
    fMpirunParams = " ";
    fArgc = argc;
    fArgv = argv;
