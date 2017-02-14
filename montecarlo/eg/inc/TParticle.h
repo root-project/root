@@ -86,6 +86,7 @@ public:
 //   virtual TString* Name   () const { return fName.Data(); }
 //   virtual char*  GetName()   const { return fName.Data(); }
 
+   Double_t       Ek              ()            const { return fE-fCalcMass;                                    }
    Int_t          GetStatusCode   ()            const { return fStatusCode;                                     }
    Int_t          GetPdgCode      ()            const { return fPdgCode;                                        }
    Int_t          GetFirstMother  ()            const { return fMother[0];                                      }
@@ -104,8 +105,28 @@ public:
    Int_t          Beauty          ()            const;
    Int_t          Charm           ()            const;
    Int_t          Strangeness     ()            const;
+   Double_t       PhiX            ()            const { return TMath::Pi()+TMath::ATan2(-fPz,-fPy);             } // note that PhiX() returns an angle between 0 and 2pi
+   Double_t       PhiY            ()            const { return TMath::Pi()+TMath::ATan2(-fPx,-fPz);             } // note that PhiY() returns an angle between 0 and 2pi
+   Double_t       PhiZ            ()            const { return TMath::Pi()+TMath::ATan2(-fPy,-fPx);             } // note that PhiZ() returns an angle between 0 and 2pi
+   Double_t       ThetaX          ()            const { return (fPx==0)?TMath::PiOver2():TMath::ACos(fPx/P());  }
+   Double_t       ThetaY          ()            const { return (fPy==0)?TMath::PiOver2():TMath::ACos(fPy/P());  }
+   Double_t       ThetaZ          ()            const { return (fPz==0)?TMath::PiOver2():TMath::ACos(fPz/P());  }
+   Double_t       GetPolarTheta   ()            const { return fPolarTheta;                                     }
+   Double_t       GetPolarPhi     ()            const { return fPolarPhi;                                       }
+   void           GetPolarisation (Double_t &theta, Double_t &phi) const { theta = fPolarTheta; phi = fPolarPhi; }
+   void           SetPolarTheta   (Double_t theta) { fPolarTheta = theta; }
+   void           SetPolarPhi     (Double_t phi) { fPolarPhi = phi; }
+   void           SetPolarisation (Double_t theta, Double_t phi) { fPolarTheta = theta; fPolarPhi = phi; }
    void           Momentum(TLorentzVector &v)   const { v.SetPxPyPzE(fPx,fPy,fPz,fE);                           }
    void           ProductionVertex(TLorentzVector &v) const { v.SetXYZT(fVx,fVy,fVz,fVt);                       }
+
+   Double_t       Theta(const TParticle &p) // Returns the angle between momenta of particles
+   {
+      Double_t v = P()*p.P();
+      if (v == 0) v = 1; else v = (fPx*p.Px()+fPy*p.Py()+fPz*p.Pz())/v;
+      if (v > 1) v = 1; else if (v < -1) v = -1; // just a precaution
+      return TMath::ACos(v);
+   }
 
 // ****** redefine several most oftenly used methods of LORENTZ_VECTOR
 
