@@ -44,4 +44,14 @@ if(PY_SKLEARN_FOUND)
    ROOT_EXECUTABLE(testPyRandomForestMulticlass testPyRandomForestMulticlass.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-RandomForest-Multiclass COMMAND testPyRandomForestMulticlass)
+
+   # Test PyGTB: Classification
+   ROOT_EXECUTABLE(testPyGTBClassification testPyGTBClassification.C
+      LIBRARIES ${Libraries})
+   ROOT_ADD_TEST(PyMVA-GTB-Classification COMMAND testPyGTBClassification)
+
+   # Test PyGTB: Multi-class classification
+   ROOT_EXECUTABLE(testPyGTBMulticlass testPyGTBMulticlass.C
+      LIBRARIES ${Libraries})
+   ROOT_ADD_TEST(PyMVA-GTB-Multiclass COMMAND testPyGTBMulticlass)
 endif(PY_SKLEARN_FOUND)
