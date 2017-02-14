@@ -269,15 +269,15 @@ static int DeclFileLine() { return __LINE__; }
 #define __ROOTCLING__ 1
 #undef ClassDef
 #define ClassDef(name,id) \
-_ClassDef_(name,id,virtual,) \
+_ClassDefOutline_(name,id,virtual,) \
 static int DeclFileLine() { return __LINE__; }
 #undef ClassDefNV
 #define ClassDefNV(name, id)\
-_ClassDef_(name,id,,)\
+_ClassDefOutline_(name,id,,)\
 static int DeclFileLine() { return __LINE__; }
 #undef ClassDefOverride
 #define ClassDefOverride(name, id)\
-_ClassDef_(name,id,,override)\
+_ClassDefOutline_(name,id,,override)\
 static int DeclFileLine() { return __LINE__; }
 )ICF";
 
