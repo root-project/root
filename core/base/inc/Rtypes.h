@@ -200,10 +200,6 @@ typedef std::atomic<TClass*> atomic_TClass_ptr;
 // Hide the following declaration (that is only needed by ClassDefInline) for
 // these cases by #defining R__NO_INLINE_CLASSDEF:
 #ifndef R__NO_INLINE_CLASSDEF
-#include "RStringView.h"
-namespace TClassEdit {
-   void GetNormalizedName(std::string &norm_name,std::string_view name);
-}
 
 namespace ROOT { namespace Internal {
 struct TTypeNameExtractionBase {

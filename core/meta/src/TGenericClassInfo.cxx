@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
