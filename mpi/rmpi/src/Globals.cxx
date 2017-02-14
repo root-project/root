@@ -70,6 +70,14 @@ namespace ROOT {
       const Int_t GRAPH = MPI_GRAPH;
       const Int_t CART = MPI_CART;
 
+      // maximum sizes for strings
+      const int MAX_PROCESSOR_NAME = MPI_MAX_PROCESSOR_NAME;
+      const int MAX_ERROR_STRING = MPI_MAX_ERROR_STRING;
+      const int MAX_INFO_KEY = MPI_MAX_INFO_KEY;
+      const int MAX_INFO_VAL = MPI_MAX_INFO_VAL;
+      const int MAX_PORT_NAME = MPI_MAX_PORT_NAME;
+      const int MAX_OBJECT_NAME = MPI_MAX_OBJECT_NAME;
+
       // environmental inquiry keys
       const Int_t TAG_UB = MPI_TAG_UB - 1;
       const Int_t HOST = MPI_HOST;
@@ -82,7 +90,7 @@ namespace ROOT {
       const Int_t WIN_SIZE = MPI_WIN_SIZE;
       const Int_t WIN_DISP_UNIT = MPI_WIN_DISP_UNIT;
 
-// assorted constants
+      // assorted constants
       const void  *BOTTOM = MPI_BOTTOM;
       const void  *IN_PLACE = MPI_IN_PLACE;
       const Int_t PROC_NULL = MPI_PROC_NULL;
@@ -99,7 +107,7 @@ namespace ROOT {
       const Int_t DISTRIBUTE_NONE = MPI_DISTRIBUTE_NONE;
       const Int_t DISTRIBUTE_DFLT_DARG = MPI_DISTRIBUTE_DFLT_DARG;
 
-// MPI-2 IO
+      // MPI-2 IO
       const Int_t MODE_CREATE = MPI_MODE_CREATE;
       const Int_t MODE_RDONLY = MPI_MODE_RDONLY;
       const Int_t MODE_WRONLY = MPI_MODE_WRONLY;
@@ -115,29 +123,27 @@ namespace ROOT {
       const Int_t SEEK_END = MPI_SEEK_END;
       const Int_t MAX_DATAREP_STRING = MPI_MAX_DATAREP_STRING;
 
-// thread constants
+      // thread constants
       const Int_t THREAD_SINGLE = MPI_THREAD_SINGLE;
       const Int_t THREAD_FUNNELED = MPI_THREAD_FUNNELED;
       const Int_t THREAD_SERIALIZED = MPI_THREAD_SERIALIZED;
       const Int_t THREAD_MULTIPLE = MPI_THREAD_MULTIPLE;
 
-// results of communicator and group comparisons
+      // results of communicator and group comparisons
       const Int_t IDENT = MPI_IDENT;
       const Int_t CONGRUENT = MPI_CONGRUENT;
       const Int_t SIMILAR = MPI_SIMILAR;
       const Int_t UNEQUAL = MPI_UNEQUAL;
 
-// null handles
+      // null handles
       const TGroup GROUP_NULL = TGroup(MPI_GROUP_NULL);
       const TInfo  INFO_NULL  = TInfo(MPI_INFO_NULL);
       const TNullCommunicator  COMM_NULL = TNullCommunicator(MPI_COMM_NULL);
 
-// empty group
+      // empty group
       const TGroup GROUP_EMPTY = MPI_GROUP_NULL;
 
-
-
-//Custom none datatype
+      //Custom none datatype
       const MPI_Datatype DATATYPE_NULL = MPI_DATATYPE_NULL;
       TIntraCommunicator COMM_WORLD = TIntraCommunicator(MPI_COMM_WORLD);
    }

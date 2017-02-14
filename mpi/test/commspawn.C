@@ -4,7 +4,7 @@ using namespace ROOT::Mpi;
 #define debug  std::cout<<__LINE__<<std::endl;
 
 
-void commspawn(const Char_t *macropath="./commspawnproc.C")
+void commspawn(const Char_t *macropath = "./commspawnproc.C")
 {
    TEnvironment env;          //environment to start communication system
 
@@ -51,7 +51,7 @@ void commspawn(const Char_t *macropath="./commspawnproc.C")
       assert(pcomm.IsInter() == kFALSE); //is an intra comm not an inter comm
 
       TInfo info;
-      const Char_t *argv[] = {"-l", "-q", macropath , NULL}; //running an extarnal MPI macro
+      const Char_t *argv[] = {"-l", "-q", macropath, NULL};  //running an extarnal MPI macro
       auto icomm = pcomm.Spawn("root", argv, 2, info, root);
       Int_t value = 0;
       icomm.Recv(value, icomm.GetRank(), 0);
@@ -62,7 +62,7 @@ void commspawn(const Char_t *macropath="./commspawnproc.C")
       assert(ocomm.IsInter() == kFALSE); //is an intra comm not an inter comm
 
       TInfo info;
-      const Char_t *argv[] = {"-l", "-q", macropath , NULL}; //running an extarnal MPI macro
+      const Char_t *argv[] = {"-l", "-q", macropath, NULL};  //running an extarnal MPI macro
       auto icomm = ocomm.Spawn("root", argv, 2, info, root);
       Int_t value = 0;
       icomm.Recv(value, ocomm.GetRank(), 0);

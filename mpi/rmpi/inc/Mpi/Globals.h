@@ -40,9 +40,9 @@
 #include<string>
 
 #if defined(SEEK_SET) || defined(SEEK_CUR) || defined(SEEK_END)
-static const int rmpi_stdio_seek_set = SEEK_SET;
-static const int rmpi_stdio_seek_cur = SEEK_CUR;
-static const int rmpi_stdio_seek_end = SEEK_END;
+static const Int_t rmpi_stdio_seek_set = SEEK_SET;
+static const Int_t rmpi_stdio_seek_cur = SEEK_CUR;
+static const Int_t rmpi_stdio_seek_end = SEEK_END;
 #undef SEEK_SET
 #undef SEEK_CUR
 #undef SEEK_END
@@ -50,9 +50,9 @@ static const int rmpi_stdio_seek_end = SEEK_END;
 #endif
 
 #if defined(RMPI_SEEK)
-static const int SEEK_SET = rmpi_stdio_seek_set;
-static const int SEEK_CUR = rmpi_stdio_seek_cur;
-static const int SEEK_END = rmpi_stdio_seek_end;
+static const Int_t SEEK_SET = rmpi_stdio_seek_set;
+static const Int_t SEEK_CUR = rmpi_stdio_seek_cur;
+static const Int_t SEEK_END = rmpi_stdio_seek_end;
 #undef RMPI_SEEK
 #endif
 
@@ -70,7 +70,7 @@ static const int SEEK_END = rmpi_stdio_seek_end;
 
 #define ROOT_MPI_CHECK_DATATYPE(T)\
    if (GetDataType<T>() == DATATYPE_NULL) {\
-      int err;\
+      Int_t err;\
       Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Unknown datatype, returned null datatype   GetDataType<%s>()",TClassEdit::DemangleName(typeid(T).name(),err));\
       Abort(ERR_TYPE);\
    }
@@ -159,6 +159,14 @@ namespace ROOT {
       // topologies
       R__EXTERN const Int_t GRAPH;
       R__EXTERN const Int_t CART;
+
+      // maximum sizes for strings
+      R__EXTERN const Int_t MAX_PROCESSOR_NAME;
+      R__EXTERN const Int_t MAX_ERROR_STRING;
+      R__EXTERN const Int_t MAX_INFO_KEY;
+      R__EXTERN const Int_t MAX_INFO_VAL;
+      R__EXTERN const Int_t MAX_PORT_NAME;
+      R__EXTERN const Int_t MAX_OBJECT_NAME;
 
       // environmental inquiry keys
       R__EXTERN const Int_t TAG_UB;
