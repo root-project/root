@@ -249,6 +249,9 @@ class StreamCapture(object):
 
         self.asyncCapturer = handlers.Runner(self.syncCapture)
 
+        self.isFirstPreExecute = True
+        self.isFirstPostExecute = True
+
     def syncCapture(self, defout = ''):
         self.outString = defout
         self.errString = defout
@@ -263,6 +266,9 @@ class StreamCapture(object):
             time.sleep(waitTime)
 
     def pre_execute(self):
+        if self.isFirstPreExecute:
+            self.isFirstPreExecute = False
+            return 0
         # Unify C++ and Python outputs
         self.nbOutStream = sys.stdout
         sys.stdout = sys.__stdout__
@@ -275,6 +281,10 @@ class StreamCapture(object):
         self.asyncCapturer.AsyncRun('')
 
     def post_execute(self):
+        if self.isFirstPostExecute:
+            self.isFirstPostExecute = False
+            self.isFirstPreExecute = False
+            return 0
         self.flag = False
         self.asyncCapturer.Wait()
         self.ioHandler.Poll()
