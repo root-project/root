@@ -356,11 +356,6 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 
 */
 
-void TDataFrame::Init()
-{
-   fProxiedPtr->SetFirstData(fProxiedPtr);
-}
-
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
 /// \param[in] treeName Name of the tree contained in the directory
@@ -371,10 +366,11 @@ void TDataFrame::Init()
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches) : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(treeName, dirPtr, defaultBranches))
-{
-   Init();
-}
+TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches) 
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+         std::make_shared<ROOT::Detail::TDataFrameImpl>(
+            treeName, dirPtr, defaultBranches))
+{ }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
@@ -385,10 +381,10 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(TTree &tree, const BranchNames &defaultBranches) : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(tree, defaultBranches))
-{
-   Init();
-}
+TDataFrame::TDataFrame(TTree &tree, const BranchNames &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+         std::make_shared<ROOT::Detail::TDataFrameImpl>(tree, defaultBranches))
+{ }
 
 }
 
@@ -562,9 +558,9 @@ void TDataFrameImpl::CreateSlots(unsigned int nSlots)
    for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
 }
 
-std::weak_ptr<ROOT::Detail::TDataFrameImpl> TDataFrameImpl::GetDataFrame() const
+std::weak_ptr<ROOT::Detail::TDataFrameImpl> TDataFrameImpl::GetDataFrame()
 {
-   return fFirstData;
+   return std::weak_ptr<ROOT::Detail::TDataFrameImpl>(shared_from_this());
 }
 
 const BranchNames &TDataFrameImpl::GetDefaultBranches() const
@@ -600,11 +596,6 @@ TDirectory *TDataFrameImpl::GetDirectory() const
 std::string TDataFrameImpl::GetTreeName() const
 {
    return fTreeName;
-}
-
-void TDataFrameImpl::SetFirstData(const std::shared_ptr<TDataFrameImpl> &sp)
-{
-   fFirstData = sp;
 }
 
 void TDataFrameImpl::Book(Internal::ActionBasePtr_t actionPtr)

@@ -906,7 +906,6 @@ protected:
 };
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
-   void Init();
 public:
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames &defaultBranches = {});
@@ -1102,7 +1101,7 @@ public:
    }
 };
 
-class TDataFrameImpl {
+class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
 
    ROOT::Internal::ActionBaseVec_t fBookedActions;
    ROOT::Detail::FilterBaseVec_t fBookedFilters;
@@ -1113,10 +1112,6 @@ class TDataFrameImpl {
    TTree *fTree = nullptr;
    const BranchNames fDefaultBranches;
    const unsigned int fNSlots;
-   // TDataFrameInterface<TDataFrameImpl> calls SetFirstData to set this to a
-   // weak pointer to the TDataFrameImpl object itself
-   // so subsequent objects in the chain can call GetDataFrame on TDataFrameImpl
-   std::weak_ptr<TDataFrameImpl> fFirstData;
    bool fHasRunAtLeastOnce = false;
 
 public:
@@ -1127,7 +1122,7 @@ public:
    void Run();
    void BuildAllReaderValues(TTreeReader &r, unsigned int slot);
    void CreateSlots(unsigned int nSlots);
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrame() const;
+   std::weak_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrame();
    const BranchNames &GetDefaultBranches() const;
    const BranchNames GetTmpBranches() const { return {}; };
    TTree* GetTree() const;
@@ -1135,7 +1130,6 @@ public:
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
    ::TDirectory *GetDirectory() const;
    std::string GetTreeName() const;
-   void SetFirstData(const std::shared_ptr<TDataFrameImpl>& sp);
    void Book(Internal::ActionBasePtr_t actionPtr);
    void Book(ROOT::Detail::FilterBasePtr_t filterPtr);
    void Book(TmpBranchBasePtr_t branchPtr);
@@ -1145,8 +1139,7 @@ public:
    Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T>& r)
    {
       auto readiness = std::make_shared<bool>(false);
-      // since fFirstData is a weak_ptr to `this`, we are sure the lock succeeds
-      auto df = fFirstData.lock();
+      const auto& df = shared_from_this();
       auto resPtr = Experimental::TActionResultProxy<T>::MakeActionResultProxy(r, readiness, df);
       fResProxyReadiness.emplace_back(readiness);
       return resPtr;
