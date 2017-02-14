@@ -30,6 +30,7 @@
 #pragma link C++ class ROOT::Mpi::TMpiMessage+;
 #pragma link C++ class ROOT::Mpi::TMpiMessageInfo+;
 #pragma link C++ class ROOT::Mpi::TInfo+;
+#pragma link C++ class ROOT::Mpi::TTimer;
 #pragma link C++ class ROOT::Mpi::TStatus+;
 #pragma link C++ class ROOT::Mpi::TRequest+;
 #pragma link C++ class ROOT::Mpi::TPrequest+;
