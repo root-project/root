@@ -7,6 +7,12 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_GENERATE_EXECUTABLE(testIMT testIMT.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(testIMT
+                  EXEC testIMT
+                  OUTREF testIMT.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_ADD_TEST(test_splitcoll_arrayview
                   MACRO test_splitcoll_arrayview.C+
                   OUTREF test_splitcoll_arrayview.ref)
