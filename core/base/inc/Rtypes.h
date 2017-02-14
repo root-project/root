@@ -206,22 +206,23 @@ namespace TClassEdit {
 }
 
 namespace ROOT { namespace Internal {
+struct TTypeNameExtractionBase {
+   // Implemented in TGenericClassInfo.cxx
+   static std::string get_impl(const char* derived_funcname);
+};
 /// \class TypeNameExtraction
 /// Extracts the fully qualified type name by checking for the name of a
 /// member function as determined by the __PRETTY_FUNCTION__ macro.
 template <class T>
-   struct TypeNameExtraction {
+   struct TTypeNameExtraction: TTypeNameExtractionBase {
       static std::string get() {
 #ifdef _MSC_VER // Visual Studio
-# define  __PRETTY_FUNCTION__ __FUNCTION__
+# define R__TNE_PRETTY_FUNCTION __FUNCTION__
+#else
+# define R__TNE_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
-         constexpr static const char* funcname = __PRETTY_FUNCTION__;
-         const char* start = strstr(funcname, "TypeNameExtraction<");
-         const char* end = strstr(funcname, ">::get(");
-         if (!start || !end)
-            return "";
-         start += 19; // len of "TypeNameExtraction<"
-         return std::string(start, end - start);
+         return get_impl(R__TNE_PRETTY_FUNCTION);
+#undef R__TNE_PRETTY_FUNCTION
       }
    };
 
@@ -232,7 +233,7 @@ public:
    static void SetInstance(::ROOT::TGenericClassInfo& R__instance,
                     NewFunc_t, NewArrFunc_t, DelFunc_t, DelArrFunc_t, DesFunc_t);
    static void SetName(const std::string& name, std::string& nameMember);
-   static void SetfgIsA(atomic_TClass_ptr& isA, void(*dictfun)());
+   static void SetfgIsA(atomic_TClass_ptr& isA, TClass*(*dictfun)());
 };
 
 template <typename T>
@@ -257,11 +258,11 @@ class ClassDefGenerateInitInstanceLocalInjector:
          SetInstance(R__instance, &New, &NewArray, &Delete, &DeleteArray, &Destruct);
          return &R__instance;
       }
-      static void Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); }
+      static TClass *Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); return fgIsA; }
       static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
       static const char* Name() {
          if (fgName.empty())
-            SetName(TypeNameExtraction<T>::get(), fgName);
+            SetName(TTypeNameExtraction<T>::get(), fgName);
          return fgName.c_str();
       }
    };
@@ -304,9 +305,9 @@ public: \
 public: \
    static int ImplFileLine() { return -1; }     \
    static const char *ImplFileName() { return 0; }      \
-   static const char *Class_Name() { return ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Name(); } \
-   static void Dictionary() { ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Dictionary(); } \
-   static TClass *Class() { return ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Class(); } \
+   static const char *Class_Name() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Name(); } \
+   static TClass *Dictionary() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Dictionary(); } \
+   static TClass *Class() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Class(); } \
    virtual_keyword void Streamer(TBuffer& R__b) overrd {                \
       if (R__b.IsReading()) R__b.ReadClassBuffer(name::Class(),this);   \
       else R__b.WriteClassBuffer(name::Class(),this);}

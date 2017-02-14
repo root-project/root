@@ -25,6 +25,20 @@
 
 namespace ROOT {
 namespace Internal {
+   std::string TTypeNameExtractionBase::get_impl(const char* derived_funcname) {
+      constexpr static const char tag[] = "TypeNameExtraction<";
+      const char* start = strstr(derived_funcname, tag);
+      if (!start)
+         return "";
+      start += sizeof(tag) - 1;
+      const char* end = strstr(start, ">::get(");
+      if (!end)
+         return "";
+      std::string unnorm = std::string(start, end - start);
+      std::string ret;
+      TClassEdit::GetNormalizedName(ret, unnorm);
+      return ret;
+   }
 
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/)
@@ -57,7 +71,7 @@ namespace Internal {
       }
    }
 
-   void TCDGIILIBase::SetfgIsA(atomic_TClass_ptr& isA, void(*dictfun)()) {
+   void TCDGIILIBase::SetfgIsA(atomic_TClass_ptr& isA, TClass*(*dictfun)()) {
       if (!isA.load()) {
          R__LOCKGUARD2(gInterpreterMutex);
          dictfun();
