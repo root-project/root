@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGDimension
 #include "TGDimension.h"
-#endif
 
 class TGPicture;
 class TImage;

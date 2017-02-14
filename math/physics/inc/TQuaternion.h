@@ -4,12 +4,8 @@
 #ifndef ROOT_TQuaternion
 #define ROOT_TQuaternion
 
-#ifndef ROOT_TVector3
 #include "TVector3.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 
 class TQuaternion : public TObject {

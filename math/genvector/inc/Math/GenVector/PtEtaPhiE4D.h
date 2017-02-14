@@ -19,17 +19,11 @@
 #ifndef ROOT_Math_GenVector_PtEtaPhiE4D
 #define ROOT_Math_GenVector_PtEtaPhiE4D  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_etaMax
 #include "Math/GenVector/etaMax.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
 
 
 
@@ -371,13 +365,9 @@ private:
 
 
 // move implementations here to avoid circle dependencies
-#ifndef ROOT_Math_GenVector_PxPyPzE4D
 #include "Math/GenVector/PxPyPzE4D.h"
-#endif
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-#ifndef ROOT_Math_GenVector_PtEtaPhiM4D
 #include "Math/GenVector/PtEtaPhiM4D.h"
-#endif
 #endif
 
 namespace ROOT {

@@ -29,18 +29,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGPicture
 #include "TGPicture.h"
-#endif
-#ifndef ROOT_TImage
 #include "TImage.h"
-#endif
 
 
 class TGSpeedo : public TGFrame, public TGWidget {

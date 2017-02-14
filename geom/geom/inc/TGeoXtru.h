@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoXtru
 #define ROOT_TGeoXtru
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
 
 class TGeoPolygon;
 

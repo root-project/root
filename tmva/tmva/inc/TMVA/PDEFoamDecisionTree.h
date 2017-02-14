@@ -30,12 +30,8 @@
 #ifndef ROOT_TMVA_PDEFoamDecisionTree
 #define ROOT_TMVA_PDEFoamDecisionTree
 
-#ifndef ROOT_TMVA_PDEFoamDiscriminant
 #include "TMVA/PDEFoamDiscriminant.h"
-#endif
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
 namespace TMVA
 {

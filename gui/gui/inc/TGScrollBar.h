@@ -32,9 +32,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
 
 
 //--- scrollbar types

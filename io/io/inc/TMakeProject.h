@@ -13,9 +13,7 @@
 #define ROOT_TMakeProject
 
 #include <stdio.h>
-#ifndef ROOT_TOBJECT_H
 #include "TString.h"
-#endif
 
 class TList;
 class TVirtualStreamerInfo;

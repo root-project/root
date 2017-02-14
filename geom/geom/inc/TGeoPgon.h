@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoPgon
 #define ROOT_TGeoPgon
 
-#ifndef ROOT_TGeoPcon
 #include "TGeoPcon.h"
-#endif
 
 class TGeoPgon : public TGeoPcon
 {

@@ -11,9 +11,7 @@
 #ifndef ROOT_TVirtualGeoConverter
 #define ROOT_TVirtualGeoConverter
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TGeoManager;
 

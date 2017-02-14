@@ -19,9 +19,7 @@ Implementation based on a work by   Cranmer, Kreiss, Read (in Preparation)
 
 #include "RooStats/ToyMCImportanceSampler.h"
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include "RooCategory.h"
 #include "TMath.h"

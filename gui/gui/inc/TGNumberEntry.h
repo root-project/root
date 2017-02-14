@@ -23,15 +23,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGTextEntry
 #include "TGTextEntry.h"
-#endif
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
 
 
 class TGNumberFormat {

@@ -12,12 +12,8 @@
 #ifndef ROOT_TColor
 #define ROOT_TColor
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
 
 
 class TColor : public TNamed {

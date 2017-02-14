@@ -25,12 +25,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TCollection
 #include "TCollection.h"
-#endif
-#ifndef ROOT_THashTable
 #include "THashTable.h"
-#endif
 
 #include <iterator>
 

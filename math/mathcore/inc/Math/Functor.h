@@ -14,9 +14,7 @@
 #ifndef ROOT_Math_Functor
 #define ROOT_Math_Functor
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
 // #ifndef Root_Math_StaticCheck
 // #include "Math/StaticCheck.h"

@@ -11,9 +11,7 @@
 
 #ifndef ROOT_TRefArrayProxy
 #define ROOT_TRefArrayProxy
-#ifndef ROOT_TRefProxy
 #include "TRefProxy.h"
-#endif
 
 //______________________________________________________________________________
 //

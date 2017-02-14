@@ -22,13 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
 
-#ifndef ROOT_R_TRInterface
-#include<TRInterface.h>
-#endif
+#include <TRInterface.h>
 
 class TGraph;
 class TTree;

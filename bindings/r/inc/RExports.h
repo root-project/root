@@ -12,33 +12,19 @@
 #ifndef ROOT_R_RExports
 #define ROOT_R_RExports
 //ROOT headers
-#ifndef ROOT_Rtypes
-#include<Rtypes.h>
-#endif
+#include <Rtypes.h>
 
-#ifndef ROOT_TString
-#include<TString.h>
-#endif
+#include <TString.h>
 
-#ifndef ROOT_TVector
-#include<TVector.h>
-#endif
+#include <TVector.h>
 
-#ifndef ROOT_TMatrixT
-#include<TMatrixT.h>
-#endif
+#include <TMatrixT.h>
 
-#ifndef ROOT_TArrayD
-#include<TArrayD.h>
-#endif
+#include <TArrayD.h>
 
-#ifndef ROOT_TArrayF
-#include<TArrayF.h>
-#endif
+#include <TArrayF.h>
 
-#ifndef ROOT_TArrayI
-#include<TArrayI.h>
-#endif
+#include <TArrayI.h>
 
 //std headers
 #include<string>

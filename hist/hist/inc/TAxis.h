@@ -21,15 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttAxis
 #include "TAttAxis.h"
-#endif
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
 
 class THashList;
 

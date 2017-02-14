@@ -20,13 +20,9 @@
 #ifndef ROOT_TMinuit
 #define ROOT_TMinuit
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
-#endif
 
 class TMinuit : public TNamed {
 

@@ -6,44 +6,22 @@
 #define ROOT_TMVA_HyperParameterOptimisation
 
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMultiGraph
 #include "TMultiGraph.h"
-#endif
 
-#ifndef ROOT_TMVA_IMethod
 #include "TMVA/IMethod.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_Results
-#include<TMVA/Results.h>
-#endif
+#include <TMVA/Results.h>
 
-#ifndef ROOT_TMVA_Factory
-#include<TMVA/Factory.h>
-#endif
+#include <TMVA/Factory.h>
 
-#ifndef ROOT_TMVA_DataLoader
-#include<TMVA/DataLoader.h>
-#endif
+#include <TMVA/DataLoader.h>
 
-#ifndef ROOT_TMVA_Envelope
-#include<TMVA/Envelope.h>
-#endif
+#include <TMVA/Envelope.h>
 
 namespace TMVA {
 

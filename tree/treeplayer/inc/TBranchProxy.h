@@ -12,30 +12,14 @@
 #ifndef ROOT_TBranchProxy
 #define ROOT_TBranchProxy
 
-#ifndef ROOT_TBranchProxyDirector
 #include "TBranchProxyDirector.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
-#ifndef ROOT_TClonesArray
 #include "TClonesArray.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_Riostream
 #include "Riostream.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
-#endif
 
 #include <list>
 #include <algorithm>

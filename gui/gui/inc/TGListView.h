@@ -31,15 +31,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGSplitter
 #include "TGSplitter.h"
-#endif
 
 
 enum EListViewMode {

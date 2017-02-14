@@ -35,17 +35,13 @@
 //
 ********************************************************************/
 
-#ifndef ROOT_Math_MnConfig
 #include "Math/MConfig.h"
-#endif
 
 #include <iosfwd>
 
 // expression engine
 
-#ifndef ROOT_Math_Expression
 #include "Math/Expression.h"
-#endif
 
 
 
@@ -355,20 +351,12 @@ std::ostream& operator<<(std::ostream& os, const ROOT::Math::SVector<T,D>& rhs);
 #ifndef __CINT__
 
 // include implementation file
-#ifndef ROOT_Math_SVector_icc
 #include "Math/SVector.icc"
-#endif
 
 // include operators and functions
-#ifndef ROOT_Math_UnaryOperators
 #include "Math/UnaryOperators.h"
-#endif
-#ifndef ROOT_Math_BinaryOperators
 #include "Math/BinaryOperators.h"
-#endif
-#ifndef ROOT_Math_MatrixFunctions
 #include "Math/Functions.h"
-#endif
 
 #endif // __CINT__
 

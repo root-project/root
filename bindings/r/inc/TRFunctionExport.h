@@ -12,9 +12,7 @@
 #ifndef ROOT_R_TRFunctionExport
 #define ROOT_R_TRFunctionExport
 
-#ifndef ROOT_R_TRInternalFunction
-#include<TRInternalFunction.h>
-#endif
+#include <TRInternalFunction.h>
 
 
 namespace ROOT {

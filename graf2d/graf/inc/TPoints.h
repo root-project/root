@@ -13,9 +13,7 @@
 #define ROOT_TPoints
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TPoints {

@@ -28,22 +28,14 @@
 #ifndef ROOT_Math_GSLMinimizer
 #define ROOT_Math_GSLMinimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_BasicMinimizer
 #include "Math/BasicMinimizer.h"
-#endif
 
 
 #include <vector>

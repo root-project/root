@@ -13,9 +13,7 @@
 #define ROOT_TMLPAnalyzer
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TTree;
 class TNeuron;

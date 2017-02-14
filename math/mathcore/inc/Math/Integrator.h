@@ -14,21 +14,13 @@
 #ifndef ROOT_Math_Integrator
 #define ROOT_Math_Integrator
 
-#ifndef ROOT_Math_AllIntegrationTypes
 #include "Math/AllIntegrationTypes.h"
-#endif
 
-#ifndef ROOT_Math_IntegratorOptions
 #include "Math/IntegratorOptions.h"
-#endif
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
 
 #include <memory>
@@ -491,9 +483,7 @@ private:
 #ifndef __CINT__
 
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 template<class Function>
 void ROOT::Math::IntegratorOneDim::SetFunction( Function & f) {

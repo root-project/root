@@ -13,17 +13,11 @@
 #ifndef ROOT_Minuit2_Minuit2Minimizer
 #define ROOT_Minuit2_Minuit2Minimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
-#ifndef ROOT_Minuit2_MnUserParameterState
 #include "Minuit2/MnUserParameterState.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 

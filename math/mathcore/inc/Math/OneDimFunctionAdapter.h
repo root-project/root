@@ -13,12 +13,8 @@
 #ifndef ROOT_Math_OneDimFunctionAdapter
 #define ROOT_Math_OneDimFunctionAdapter
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
 #include <cassert>
 

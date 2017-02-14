@@ -12,34 +12,16 @@
 #ifndef ROOSTATS_MCMCCalculator
 #define ROOSTATS_MCMCCalculator
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
-#ifndef ROO_ABS_DATA
 #include "RooAbsData.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
-#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
-#endif
 
 
 namespace RooStats {

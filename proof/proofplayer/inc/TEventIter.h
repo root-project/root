@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TDSet;
 class TDSetElement;

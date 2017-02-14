@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include <atomic>
 #include <type_traits>

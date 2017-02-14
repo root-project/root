@@ -12,17 +12,11 @@
 #ifndef ROOSTATS_RooStatsUtils
 #define ROOSTATS_RooStatsUtils
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
-#ifndef ROOT_Math_DistFuncMathCore
-#include"Math/DistFuncMathCore.h"
-#endif
+#include "Math/DistFuncMathCore.h"
 
 #include "RooArgSet.h"
 #include "RooRealVar.h"

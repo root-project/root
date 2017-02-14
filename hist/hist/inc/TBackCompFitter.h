@@ -10,24 +10,16 @@
 #ifndef ROOT_TBackCompFitter_H_
 #define ROOT_TBackCompFitter_H_
 
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
 
 #include "Fit/BasicFCN.h"
 #include "Fit/FitResult.h"
 
-#ifndef ROOT_Fit_Fitter
 #include "Fit/Fitter.h"
-#endif
 
-#ifndef ROOT_Fit_DataVector
 #include "Fit/DataVector.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 

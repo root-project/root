@@ -12,15 +12,9 @@
 #ifndef ROOT_TBufferJSON
 #define ROOT_TBufferJSON
 
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include <map>
 

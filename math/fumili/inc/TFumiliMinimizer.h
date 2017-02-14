@@ -13,17 +13,11 @@
 #ifndef ROOT_TFumiliMinimizer
 #define ROOT_TFumiliMinimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
-#ifndef ROOT_Math_FitMethodFunction
 #include "Math/FitMethodFunction.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TFumili;
 

@@ -18,13 +18,9 @@
 #ifndef ROOT_Math_GenVector_PxPyPzM4D
 #define ROOT_Math_GenVector_PxPyPzM4D  1
 
-#ifndef ROOT_Math_GenVector_eta
 #include "Math/GenVector/eta.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
 
 
 #include <cmath>
@@ -387,12 +383,8 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_PxPyPzE4D
 #include "Math/GenVector/PxPyPzE4D.h"
-#endif
-#ifndef ROOT_Math_GenVector_PtEtaPhiM4D
 #include "Math/GenVector/PtEtaPhiM4D.h"
-#endif
 
 namespace ROOT {
 

@@ -13,9 +13,7 @@
 #define ROOT_TFrame
 
 
-#ifndef ROOT_TWbox
 #include "TWbox.h"
-#endif
 
 
 class TFrame : public TWbox {

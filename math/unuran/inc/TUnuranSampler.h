@@ -13,9 +13,7 @@
 #define ROOT_TUnuranSampler
 
 
-#ifndef ROOT_Math_DistSampler
 #include "Math/DistSampler.h"
-#endif
 
 
 namespace ROOT {

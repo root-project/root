@@ -43,18 +43,10 @@
 
 #include <iosfwd>
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
-#ifndef ROOT_TMVA_KDEKernel
 #include "TMVA/KDEKernel.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
 
 class TSpline;
 class TGraph;

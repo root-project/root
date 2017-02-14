@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoToStep
 #define ROOT_TGeoToStep
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TGeoManager;
 class TOCCToStep;

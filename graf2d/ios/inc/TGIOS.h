@@ -12,9 +12,7 @@
 #ifndef ROOT_TGIOS
 #define ROOT_TGIOS
 
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

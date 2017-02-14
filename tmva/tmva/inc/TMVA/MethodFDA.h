@@ -46,12 +46,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_IFitterTarget
 #include "TMVA/IFitterTarget.h"
-#endif
 
 class TFormula;
 

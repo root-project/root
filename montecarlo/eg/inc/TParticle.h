@@ -16,18 +16,10 @@
 #ifndef ROOT_TParticle
 #define ROOT_TParticle
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
-#ifndef ROOT_TLorentzVector
 #include "TLorentzVector.h"
-#endif
 
 class TParticlePDG;
 

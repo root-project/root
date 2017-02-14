@@ -8,9 +8,7 @@
 #include<TRFunctionImport.h>
 #include <TRObject.h>
 
-#ifndef Rcpp_Function_h
-#include<Rcpp/Function.h>
-#endif
+#include <Rcpp/Function.h>
 
 //______________________________________________________________________________
 /* Begin_Html

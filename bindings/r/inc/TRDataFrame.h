@@ -12,17 +12,11 @@
 #ifndef ROOT_R_TRDataFrame
 #define ROOT_R_TRDataFrame
 
-#ifndef ROOT_R_RExports
-#include<RExports.h>
-#endif
+#include <RExports.h>
 
-#ifndef ROOT_R_TRObject
-#include<TRObject.h>
-#endif
+#include <TRObject.h>
 
-#ifndef ROOT_R_TRFunctionImport
-#include<TRFunctionImport.h>
-#endif
+#include <TRFunctionImport.h>
 
 
 namespace ROOT {

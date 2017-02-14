@@ -19,9 +19,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 #include <vector>
 #include <forward_list>
 

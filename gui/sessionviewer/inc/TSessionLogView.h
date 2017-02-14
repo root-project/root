@@ -12,17 +12,11 @@
 #ifndef ROOT_TSessionLogView
 #define ROOT_TSessionLogView
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
 
-#ifndef ROOT_TTextView
 #include "TGTextView.h"
-#endif
 
 class TSessionViewer;
 

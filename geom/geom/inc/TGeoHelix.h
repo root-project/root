@@ -13,9 +13,7 @@
 #define ROOT_TGeoHelix
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TGeoHMatrix;
 

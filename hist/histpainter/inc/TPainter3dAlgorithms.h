@@ -12,17 +12,11 @@
 #ifndef ROOT_TPainter3dAlgorithms
 #define ROOT_TPainter3dAlgorithms
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
 const Int_t kCARTESIAN   = 1;
 const Int_t kPOLAR       = 2;

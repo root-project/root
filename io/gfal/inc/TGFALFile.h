@@ -12,12 +12,8 @@
 #ifndef ROOT_TGFALFile
 #define ROOT_TGFALFile
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 
 class TGFALFile : public TFile {

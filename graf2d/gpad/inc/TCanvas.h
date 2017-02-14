@@ -14,25 +14,15 @@
 
 
 
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
 
-#ifndef ROOT_TAttCanvas
 #include "TAttCanvas.h"
-#endif
 
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TCanvasImp
 #include "TCanvasImp.h"
-#endif
 
 class TContextMenu;
 class TControlBar;

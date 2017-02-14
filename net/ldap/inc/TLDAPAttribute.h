@@ -9,15 +9,9 @@
 #ifndef ROOT_TLDAPAttribute
 #define ROOT_TLDAPAttribute
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_CintLDAP
 #include "CintLDAP.h"
-#endif
 
 class TLDAPEntry;
 

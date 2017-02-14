@@ -12,9 +12,7 @@
 #define ROOSTATS_BernsteinCorrection
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include "TH1F.h"
 #include "RooWorkspace.h"

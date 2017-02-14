@@ -11,9 +11,7 @@
 #ifndef ROOT_R_TRObject
 #define ROOT_R_TRObject
 
-#ifndef ROOT_R_RExports
-#include<RExports.h>
-#endif
+#include <RExports.h>
 
 
 namespace ROOT {

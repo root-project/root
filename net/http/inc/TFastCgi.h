@@ -4,9 +4,7 @@
 #ifndef ROOT_TFastCgi
 #define ROOT_TFastCgi
 
-#ifndef ROOT_THttpEngine
 #include "THttpEngine.h"
-#endif
 
 class TThread;
 

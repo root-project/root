@@ -32,13 +32,9 @@ For the future, perhaps this factory should be extended to include the efficienc
 
 */
 
-#ifndef RooStats_NumberCountingPdfFactory
 #include "RooStats/NumberCountingPdfFactory.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
 #include "RooRealVar.h"
 #include "RooAddition.h"

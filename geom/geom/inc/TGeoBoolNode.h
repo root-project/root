@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoBoolNode
 #define ROOT_TGeoBoolNode
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 // forward declarations
 class TGeoShape;

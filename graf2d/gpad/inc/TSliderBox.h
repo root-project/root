@@ -13,9 +13,7 @@
 #define ROOT_TSliderBox
 
 
-#ifndef ROOT_TWbox
 #include "TWbox.h"
-#endif
 
 class TSlider;
 

@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMutexImp
 #include "TMutexImp.h"
-#endif
 
 #ifndef __CINT__
 #include <pthread.h>

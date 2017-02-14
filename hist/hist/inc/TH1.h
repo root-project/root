@@ -21,49 +21,25 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TAxis
 #include "TAxis.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
-#ifndef ROOT_TArrayC
 #include "TArrayC.h"
-#endif
-#ifndef ROOT_TArrayS
 #include "TArrayS.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
-#ifndef ROOT_TArrayF
 #include "TArrayF.h"
-#endif
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
 #include "Foption.h"
 
-#ifndef ROOT_TVectorFfwd
 #include "TVectorFfwd.h"
-#endif
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
 
-#ifndef ROOT_TFitResultPtr
 #include "TFitResultPtr.h"
-#endif
 
 #include <float.h>
 

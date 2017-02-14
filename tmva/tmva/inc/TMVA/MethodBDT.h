@@ -40,21 +40,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#ifndef ROOT_TH2
 #include "TH2.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 #include "TMVA/LossFunction.h"
 
 namespace TMVA {

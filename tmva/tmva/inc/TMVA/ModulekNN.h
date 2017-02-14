@@ -42,18 +42,10 @@
 #include <vector>
 
 // ROOT
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TRandom
 #include "TRandom3.h"
-#endif
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
-#ifndef ROOT_TMVA_NodekNN
 #include "TMVA/NodekNN.h"
-#endif
 
 namespace TMVA {
 

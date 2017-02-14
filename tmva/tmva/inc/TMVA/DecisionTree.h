@@ -40,28 +40,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH2
 #include "TH2.h"
-#endif
 
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DecisionTreeNode
 #include "TMVA/DecisionTreeNode.h"
-#endif
-#ifndef ROOT_TMVA_BinaryTree
 #include "TMVA/BinaryTree.h"
-#endif
-#ifndef ROOT_TMVA_BinarySearchTree
 #include "TMVA/BinarySearchTree.h"
-#endif
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
-#ifndef ROOT_TMVA_RegressionVariance
 #include "TMVA/RegressionVariance.h"
-#endif
 #include "TMVA/DataSetInfo.h"
 
 class TRandom3;

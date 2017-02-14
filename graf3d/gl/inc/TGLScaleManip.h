@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLScaleManip
 #define ROOT_TGLScaleManip
 
-#ifndef ROOT_TGLManip
 #include "TGLManip.h"
-#endif
 
 
 //////////////////////////////////////////////////////////////////////////

@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
 
 #include <set>
 #include <string>

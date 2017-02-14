@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TSQLResult;

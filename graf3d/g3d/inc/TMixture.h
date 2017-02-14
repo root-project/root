@@ -22,9 +22,7 @@
 #ifndef ROOT_TMixture
 #define ROOT_TMixture
 
-#ifndef ROOT_TMaterial
 #include "TMaterial.h"
-#endif
 
 class TMixture  : public TMaterial {
 protected:

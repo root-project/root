@@ -13,13 +13,9 @@
 #define ROOT_TControlBarButton
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 
 class TControlBarButton : public TNamed {

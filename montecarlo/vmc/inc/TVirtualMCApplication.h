@@ -18,12 +18,8 @@
 // Interface to a user Monte Carlo application.
 //
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 #include "TMCtls.h"
 

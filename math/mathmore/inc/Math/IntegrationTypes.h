@@ -32,9 +32,7 @@
 #define ROOT_Math_IntegrationTypes
 
 
-#ifndef ROOT_Math_AllIntegrationTypes
 #include "Math/AllIntegrationTypes.h"
-#endif
 
 namespace ROOT {
 namespace Math {

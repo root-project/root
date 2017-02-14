@@ -25,9 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSQLResult
 #include "TSQLResult.h"
-#endif
 
 class TString;
 class TObjArray;

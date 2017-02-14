@@ -14,13 +14,9 @@
 #define ROOT_TView
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 class TList;
 class TSeqCollection;

@@ -24,9 +24,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 #include <string>
 #include <vector>

@@ -11,12 +11,8 @@
 #ifndef RooStats_SimpleInterval
 #define RooStats_SimpleInterval
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
 
 class RooRealVar; 
 

@@ -12,9 +12,7 @@
 #ifndef ROOT_TBranchProxyDescriptor
 #define ROOT_TBranchProxyDescriptor
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 
 namespace ROOT {

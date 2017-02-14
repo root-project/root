@@ -4,9 +4,7 @@
 #ifndef ROOT_TCivetweb
 #define ROOT_TCivetweb
 
-#ifndef ROOT_THttpEngine
 #include "THttpEngine.h"
-#endif
 #include "TString.h"
 
 class TCivetweb : public THttpEngine {

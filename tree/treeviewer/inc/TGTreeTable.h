@@ -11,9 +11,7 @@
 #ifndef ROOT_TGTreeTable
 #define ROOT_TGTreeTable
 
-#ifndef ROOT_TGTable
 #include "TGTable.h"
-#endif
 
 class TTreeTableInterface;
 class TTree;

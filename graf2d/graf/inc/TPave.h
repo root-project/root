@@ -13,12 +13,8 @@
 #define ROOT_TPave
 
 
-#ifndef ROOT_TBox
 #include "TBox.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TPave : public TBox {
 

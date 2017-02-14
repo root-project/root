@@ -23,18 +23,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TVirtualPadEditor
 #include "TVirtualPadEditor.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 class TCanvas;
 class TGCanvas;

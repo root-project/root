@@ -20,15 +20,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 // ROOT
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TMutex
 #include "TMutex.h"
-#endif
-#ifndef ROOT_TCondition
 #include "TCondition.h"
-#endif
 #include "TThread.h"
 // STD
 #include <queue>

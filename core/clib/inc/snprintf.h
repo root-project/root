@@ -10,9 +10,7 @@
 #ifndef ROOT_snprintf
 #define ROOT_snprintf
 
-#ifndef ROOT_RConfig
 #include "RConfig.h"
-#endif
 
 #ifndef __CINT__
 

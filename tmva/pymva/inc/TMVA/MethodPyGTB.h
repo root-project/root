@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_PyMethodBase
 #include "TMVA/PyMethodBase.h"
-#endif
 
 namespace TMVA {
 

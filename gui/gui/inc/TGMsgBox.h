@@ -21,18 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGString
 #include "TGString.h"
-#endif
-#ifndef ROOT_TGPicture
 #include "TGPicture.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
 
 
 //--- Icon types

@@ -4,21 +4,13 @@
 #ifndef ROOT_THttpServer
 #define ROOT_THttpServer
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_THttpCallArg
 #include "THttpCallArg.h"
-#endif
 
 #include <mutex>
 

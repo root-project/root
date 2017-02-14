@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
 class THbookBranch : public TBranch {
 

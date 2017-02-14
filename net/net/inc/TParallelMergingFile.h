@@ -27,15 +27,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMemFile
 #include "TMemFile.h"
-#endif
-#ifndef ROOT_TMessage
 #include "TMessage.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
 
 
 class TSocket;

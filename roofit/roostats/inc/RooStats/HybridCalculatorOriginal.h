@@ -16,20 +16,14 @@
 #ifndef ROOSTATS_HybridCalculatorOriginal
 #define ROOSTATS_HybridCalculatorOriginal
 
-#ifndef ROOSTATS_HypoTestCalculator
 #include "RooStats/HypoTestCalculator.h"
-#endif
 
 #include <vector>
 
 
-#ifndef ROOSTATS_HybridResult
 #include "RooStats/HybridResult.h"
-#endif
 
-#ifndef ROOSTATS_ModelConfig
 #include "RooStats/ModelConfig.h"
-#endif
 
 class TH1;
 

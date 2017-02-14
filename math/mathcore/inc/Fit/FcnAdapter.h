@@ -10,9 +10,7 @@
 #ifndef ROOT_Fit_FcnAdapter_H_
 #define ROOT_Fit_FcnAdapter_H_
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
 
 //___________________________________________________________

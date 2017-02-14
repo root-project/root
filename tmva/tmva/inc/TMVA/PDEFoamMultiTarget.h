@@ -32,9 +32,7 @@
 #ifndef ROOT_TMVA_PDEFoamMultiTarget
 #define ROOT_TMVA_PDEFoamMultiTarget
 
-#ifndef ROOT_TMVA_PDEFoamEvent
 #include "TMVA/PDEFoamEvent.h"
-#endif
 
 namespace TMVA
 {

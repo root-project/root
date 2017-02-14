@@ -16,25 +16,15 @@
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
 
-#ifndef ROOT_TGTextEntry
 #include "TGTextEntry.h"
-#endif
 
-#ifndef ROOT_TGListBox
 #include <TGListBox.h>
-#endif
 
-#ifndef ROOT_TGTab
 #include <TGTab.h>
-#endif
 
 class SettingsDialog : public TGTransientFrame {
 

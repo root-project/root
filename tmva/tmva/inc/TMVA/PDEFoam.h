@@ -31,33 +31,15 @@
 #include <iosfwd>
 #include <cassert>
 
-#ifndef ROOT_TH2D
 #include "TH2D.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TObjString
 #include "TObjString.h"
-#endif
-#ifndef ROOT_TVectorT
 #include "TVectorT.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TMVA_VariableInfo
 #include "TMVA/VariableInfo.h"
-#endif
-#ifndef ROOT_TMVA_Timer
 #include "TMVA/Timer.h"
-#endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TRandom3
 #include "TRandom3.h"
-#endif
 
 namespace TMVA {
    class PDEFoamCell;
@@ -86,15 +68,9 @@ namespace TMVA {
                      kRms, kRmsOvMean, kCellVolume };
 }
 
-#ifndef ROOT_TMVA_PDEFoamDensityBase
 #include "TMVA/PDEFoamDensityBase.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamVect
 #include "TMVA/PDEFoamVect.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamCell
 #include "TMVA/PDEFoamCell.h"
-#endif
 
 namespace TMVA {
 

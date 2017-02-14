@@ -11,9 +11,7 @@
 #ifndef ROOT_TGTableHeader
 #define ROOT_TGTableHeader
 
-#ifndef ROOT_TGTableCell
 #include "TGTableCell.h"
-#endif
 
 enum EHeaderType {
    kColumnHeader,

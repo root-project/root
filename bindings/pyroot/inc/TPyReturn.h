@@ -14,9 +14,7 @@
 
 
 // ROOT
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 // Python
 struct _object;

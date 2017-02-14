@@ -3,9 +3,7 @@
 
 #include <map>
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
 
 //
 //TGLManager is a legacy interface (gl-context/window management):

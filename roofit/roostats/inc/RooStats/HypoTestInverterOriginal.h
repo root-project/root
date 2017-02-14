@@ -13,17 +13,11 @@
 
 
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
-#ifndef ROOSTATS_HypoTestCalculator
 #include "RooStats/HypoTestCalculator.h"
-#endif
 
-#ifndef  ROOSTATS_HypoTestInverterResult
 #include "RooStats/HypoTestInverterResult.h"
-#endif
 
 class RooRealVar;
 

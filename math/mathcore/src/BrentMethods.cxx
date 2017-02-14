@@ -15,9 +15,7 @@
 #include <cmath>
 #include <algorithm>
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
 #include <iostream>
 

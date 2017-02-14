@@ -25,15 +25,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDirectory
 #include "TDirectory.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 #include <atomic>
 

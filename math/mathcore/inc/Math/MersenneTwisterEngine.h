@@ -13,9 +13,7 @@
 #ifndef ROOT_Math_MersenneTwisterEngine
 #define ROOT_Math_MersenneTwisterEngine
 
-#ifndef ROOT_Math_TRandomEngine
 #include "Math/TRandomEngine.h"
-#endif
 
 #include <cstdint>
 #include <vector>

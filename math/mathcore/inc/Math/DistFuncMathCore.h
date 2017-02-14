@@ -14,19 +14,13 @@
 
 
 // pdf functions from Mathcore
-#ifndef ROOT_Math_PdfFuncMathCore
 #include "Math/PdfFuncMathCore.h"
-#endif
 
 // cdf from mathcore
-#ifndef ROOT_Math_ProbFuncMathCore
 #include "Math/ProbFuncMathCore.h"
-#endif
 
 // quantile functions from mathcore
-#ifndef ROOT_Math_QuantFuncMathCore
 #include "Math/QuantFuncMathCore.h"
-#endif
 
 
 #endif  // ROOT_Math_DistFunc

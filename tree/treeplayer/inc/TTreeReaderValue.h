@@ -22,15 +22,9 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
-#ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
-#endif
 
 #include <type_traits>
 

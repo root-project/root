@@ -22,13 +22,9 @@
 
 #ifdef ROOT_FIT_PARALLEL
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Fit_DataVectorfwd
 #include "Fit/DataVectorfwd.h"
-#endif
 
 
 namespace ROOT {

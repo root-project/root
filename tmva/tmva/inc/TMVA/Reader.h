@@ -43,21 +43,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
-#ifndef ROOT_TMVA_DataInputHandler
 #include "TMVA/DataInputHandler.h"
-#endif
-#ifndef ROOT_TMVA_DataSetManager
 #include "TMVA/DataSetManager.h"
-#endif
 
 #include <vector>
 #include <map>

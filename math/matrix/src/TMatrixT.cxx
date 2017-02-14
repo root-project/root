@@ -3209,12 +3209,8 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
 
 template class TMatrixT<Float_t>;
 
-#ifndef ROOT_TMatrixFfwd
 #include "TMatrixFfwd.h"
-#endif
-#ifndef ROOT_TMatrixFSymfwd
 #include "TMatrixFSymfwd.h"
-#endif
 
 template TMatrixF  operator+  <Float_t>(const TMatrixF    &source1,const TMatrixF    &source2);
 template TMatrixF  operator+  <Float_t>(const TMatrixF    &source1,const TMatrixFSym &source2);
@@ -3268,12 +3264,8 @@ template void AtMultB<Float_t>(const Float_t * const ap,Int_t ncolsa,
 template void AMultBt<Float_t>(const Float_t * const ap,Int_t na,Int_t ncolsa,
                                const Float_t * const bp,Int_t nb,Int_t ncolsb,Float_t *cp);
 
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TMatrixDSymfwd
 #include "TMatrixDSymfwd.h"
-#endif
 
 template class TMatrixT<Double_t>;
 

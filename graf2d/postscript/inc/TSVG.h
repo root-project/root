@@ -13,9 +13,7 @@
 #define ROOT_TSVG
 
 
-#ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
-#endif
 
 class TPoints;
 

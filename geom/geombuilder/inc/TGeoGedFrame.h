@@ -12,9 +12,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
 class TGTab;
 class TGeoTabManager;

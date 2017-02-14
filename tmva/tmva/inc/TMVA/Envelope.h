@@ -15,33 +15,19 @@
 #include<iostream>
 #include <memory>
 
-#ifndef ROOT_TROOT
-#include<TROOT.h>
-#endif
+#include <TROOT.h>
 
-#ifndef ROOT_TStopwatch
-#include<TStopwatch.h>
-#endif
+#include <TStopwatch.h>
 
-#ifndef ROOT_TMVA_OptionMap
-#include<TMVA/OptionMap.h>
-#endif
+#include <TMVA/OptionMap.h>
 
-#ifndef ROOT_TMVA_Config
 #include "TMVA/Config.h"
-#endif
 
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
 
-#ifndef ROOT_TMVA_DataLoader
 #include "TMVA/DataLoader.h"
-#endif
 
-#ifndef ROOT_TMVA_ROCCurve
 #include "TMVA/DataLoader.h"
-#endif
 
 
 namespace TMVA {

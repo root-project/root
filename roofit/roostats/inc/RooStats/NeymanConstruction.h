@@ -12,13 +12,9 @@
 #define ROOSTATS_NeymanConstruction
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
 #include "RooStats/TestStatSampler.h"
 #include "RooStats/ModelConfig.h"

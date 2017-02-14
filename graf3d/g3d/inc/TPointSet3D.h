@@ -13,12 +13,8 @@
 #ifndef ROOT_TPointSet3D
 #define ROOT_TPointSet3D
 
-#ifndef ROOT_TPolyMarker3D
 #include "TPolyMarker3D.h"
-#endif
-#ifndef ROOT_TAttBBox
 #include "TAttBBox.h"
-#endif
 
 #include "TRefArray.h"
 

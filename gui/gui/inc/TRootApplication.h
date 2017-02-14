@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TApplicationImp
 #include "TApplicationImp.h"
-#endif
 
 
 class TGClient;

@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLTransManip
 #define ROOT_TGLTransManip
 
-#ifndef ROOT_TGLManip
 #include "TGLManip.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

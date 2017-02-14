@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGClient
 #include "TGClient.h"
-#endif
-#ifndef ROOT_TGPicture
 #include "TGPicture.h"
-#endif
 
 class TOrdCollection;
 class TRegexp;

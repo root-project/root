@@ -21,12 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
-#ifndef ROOT_TRefTable
 #include "TRefTable.h"
-#endif
 
 class TTree;
 

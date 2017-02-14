@@ -24,21 +24,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
 
-#ifndef ROOT_TGWindow
 #include "TGWindow.h"
-#endif
 
 
 class TGDockableFrame;

@@ -11,15 +11,9 @@
 #ifndef RooStats_SequentialProposal
 #define RooStats_SequentialProposal
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
 namespace RooStats {
 

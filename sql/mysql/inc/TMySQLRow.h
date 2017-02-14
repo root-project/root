@@ -12,9 +12,7 @@
 #ifndef ROOT_TMySQLRow
 #define ROOT_TMySQLRow
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
 #include <mysql.h>
 

@@ -39,9 +39,7 @@
 
 #include <deque>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 namespace TMVA {
    

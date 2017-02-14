@@ -283,9 +283,7 @@ static int DeclFileLine() { return __LINE__; }
 
 // The macros below use ::Error, so let's ensure it is included
   static const std::string gClassDefInterpMacro = R"ICF(
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #define _ClassDefInterp_(name,id,virtual_keyword, overrd) \
 private: \

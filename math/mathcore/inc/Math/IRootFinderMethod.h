@@ -16,13 +16,9 @@
 #ifndef ROOT_Math_IRootFinderMethod
 #define ROOT_Math_IRootFinderMethod
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 namespace ROOT {
 namespace Math {

@@ -14,9 +14,7 @@
 #define ROOT_TTF
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 /// @cond DOXYGEN_IGNORE
 // Forward declare for the headers:

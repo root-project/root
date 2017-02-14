@@ -22,9 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TSessionViewer
 #include "TSessionViewer.h"
-#endif
 
 class TList;
 class TSeqCollection;

@@ -18,13 +18,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
 
 class TQConnection;
 

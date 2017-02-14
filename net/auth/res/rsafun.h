@@ -36,9 +36,7 @@ MA  02110-1301  USA
 #ifndef ROOT_rsafun
 #define ROOT_rsafun
 
-#ifndef _RSADEF_H
 #include "rsadef.h"
-#endif
 
 
 typedef  rsa_NUMBER (*RSA_genprim_t)(int, int);

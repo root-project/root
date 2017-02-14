@@ -12,13 +12,9 @@
 #ifndef ROOT_TGLAxis
 #define ROOT_TGLAxis
 
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 class TString;
 class TGLText;

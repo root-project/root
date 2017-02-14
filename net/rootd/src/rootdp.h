@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_rpdp
 #include "rpdp.h"
-#endif
 
 void  RootdClose();
 int   RootdIsOpen();

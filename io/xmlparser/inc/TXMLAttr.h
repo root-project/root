@@ -12,9 +12,7 @@
 #ifndef ROOT_TXMLAttr
 #define ROOT_TXMLAttr
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 
 class TXMLAttr : public TObject {

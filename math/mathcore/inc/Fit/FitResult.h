@@ -13,12 +13,8 @@
 #ifndef ROOT_Fit_FitResult
 #define ROOT_Fit_FitResult
 
-#ifndef ROOT_Fit_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
-#ifndef ROOT_Fit_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
 #include <vector>
 #include <map>

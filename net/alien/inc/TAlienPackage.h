@@ -12,15 +12,9 @@
 #ifndef ROOT_TAlienPackage
 #define ROOT_TAlienPackage
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TGrid
 #include "TGrid.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

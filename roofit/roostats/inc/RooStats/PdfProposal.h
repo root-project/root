@@ -12,29 +12,15 @@
 #ifndef ROOSTATS_PdfProposal
 #define ROOSTATS_PdfProposal
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
 
 #include <map>
 

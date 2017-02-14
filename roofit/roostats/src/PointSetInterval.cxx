@@ -31,9 +31,7 @@ store the interval.
 */
 
 
-#ifndef RooStats_PointSetInterval
 #include "RooStats/PointSetInterval.h"
-#endif
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

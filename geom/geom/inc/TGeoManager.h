@@ -12,12 +12,8 @@
 #ifndef ROOT_TGeoManager
 #define ROOT_TGeoManager
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TGeoNavigator
 #include "TGeoNavigator.h"
-#endif
 
 // forward declarations
 class TVirtualGeoTrack;

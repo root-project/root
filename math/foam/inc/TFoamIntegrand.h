@@ -9,9 +9,7 @@
 // =====================
 // Abstract class representing n-dimensional real positive integrand function
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TFoamIntegrand : public TObject  {
 public:

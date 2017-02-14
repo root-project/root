@@ -21,18 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TObjString
 #include "TObjString.h"
-#endif
 
 #include <map>
 #include <string>
@@ -41,9 +33,7 @@
 #include <vector>
 
 #include <atomic>
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
 class TBaseClass;
 class TBrowser;
 class TDataMember;

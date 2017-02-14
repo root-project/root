@@ -18,17 +18,11 @@
 #ifndef ROOT_Math_GenVector_LorentzVector
 #define ROOT_Math_GenVector_LorentzVector  1
 
-#ifndef ROOT_Math_GenVector_PxPyPzE4D
 #include "Math/GenVector/PxPyPzE4D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3D
 #include "Math/GenVector/DisplacementVector3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVectorIO
 #include "Math/GenVector/GenVectorIO.h"
-#endif
 
 
 

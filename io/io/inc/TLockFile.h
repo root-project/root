@@ -12,12 +12,8 @@
 #ifndef ROOT_TLockFile
 #define ROOT_TLockFile
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TLockFile : public TObject {

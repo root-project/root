@@ -12,17 +12,11 @@
 #define ROOSTATS_FrequentistCalculator
 
 
-#ifndef ROOSTATS_HypoTestCalculatorGeneric
 #include "RooStats/HypoTestCalculatorGeneric.h"
-#endif
 
-#ifndef ROOSTATS_ToyMCSampler
 #include "RooStats/ToyMCSampler.h"
-#endif
 
-#ifndef ROOSTATS_DetailedOutputAggregator
 #include "RooStats/DetailedOutputAggregator.h"
-#endif
 
 #include "RooFitResult.h"
 

@@ -28,9 +28,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBRIK
 #include "TBRIK.h"
-#endif
 
 class TTRAP : public TBRIK {
 protected:

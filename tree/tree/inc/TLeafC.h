@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
 
 class TLeafC : public TLeaf {
 

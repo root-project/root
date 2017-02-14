@@ -4,18 +4,10 @@
 #include <utility>
 #include <vector>
 
-#ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
-#endif
-#ifndef ROOT_TGLQuadric
 #include "TGLQuadric.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
 
 class TGLOrthoCamera;
 class TH1;

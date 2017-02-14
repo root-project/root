@@ -22,15 +22,9 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THashTable
 #include "THashTable.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TTreeReaderUtils
 #include "TTreeReaderUtils.h"
-#endif
 
 #include <deque>
 #include <iterator>

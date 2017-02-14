@@ -13,17 +13,11 @@
 #ifndef ROOT_Math_IParamFunction
 #define ROOT_Math_IParamFunction
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_Util
 #include "Math/Util.h"
-#endif
 
 
 #include <cassert>

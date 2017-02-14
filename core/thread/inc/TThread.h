@@ -24,21 +24,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TCondition
 #include "TCondition.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
-#ifndef ROOT_TTimer
 #include "TTimer.h"
-#endif
-#ifndef ROOT_Varargs
 #include "Varargs.h"
-#endif
 
 class TMutex;
 class TThreadImp;

@@ -13,15 +13,9 @@
 #define ROOT_TDiamond
 
 
-#ifndef ROOT_TPaveText
 #include "TPaveText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
 
 class TDiamond :  public TPaveText {

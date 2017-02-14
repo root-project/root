@@ -13,12 +13,8 @@
 #define ROOT_TPaveLabel
 
 
-#ifndef ROOT_TPave
 #include "TPave.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
 
 class TPaveLabel : public TPave, public TAttText {

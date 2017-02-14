@@ -24,21 +24,11 @@
 #ifndef ROOT_TMVA_CCTreeWrapper
 #define ROOT_TMVA_CCTreeWrapper
 
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
 
 
 namespace TMVA {

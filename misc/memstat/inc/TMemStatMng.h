@@ -14,19 +14,11 @@
 // STD
 #include <map>
 // ROOT
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TTimeStamp
 #include "TTimeStamp.h"
-#endif
 // Memstat
-#ifndef ROOT_TMemStatHook
 #include "TMemStatHook.h"
-#endif
-#ifndef ROOT_TMemStatDef
 #include "TMemStatDef.h"
-#endif
 
 class TTree;
 class TFile;

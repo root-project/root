@@ -25,22 +25,12 @@
 
 #include "RConfigure.h"
 
-#ifndef ROOT_TFormula
 #include "TFormula.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
-#ifndef ROOT_Math_ParamFunctor
 #include "Math/ParamFunctor.h"
-#endif
 
 class TF1;
 class TH1;

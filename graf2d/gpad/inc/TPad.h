@@ -13,18 +13,10 @@
 #define ROOT_TPad
 
 
-#ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 class TVirtualViewer3D;
 class TVirtualPadPainter;

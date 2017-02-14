@@ -45,17 +45,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
 
 /* #ifndef ROOT_TMVA_DecisionTreeNode */
 /* #include "TMVA/DecisionTreeNode.h" */
 /* #endif */
 
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
 namespace TMVA {
    class DataSet;

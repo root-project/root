@@ -32,16 +32,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFormula
 #include "TFormula.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
-#endif
 
 namespace TMVA {
   

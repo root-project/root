@@ -18,9 +18,7 @@
  *                                                                       *
  *************************************************************************/
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 //--- globals
 const Double_t kNullVector[3]       =       {0.0,  0.0,  0.0};

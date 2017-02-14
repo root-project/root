@@ -11,12 +11,8 @@
 #ifndef ROOT_TLatex
 #define ROOT_TLatex
 
-#ifndef ROOT_TText
 #include "TText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 
 class TLatex : public TText, public TAttLine {

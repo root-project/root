@@ -12,9 +12,7 @@
 #ifndef ROOT_TFumili
 #define ROOT_TFumili
 
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
 
 class TF1;
 

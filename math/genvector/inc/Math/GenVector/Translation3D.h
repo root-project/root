@@ -17,17 +17,11 @@
 #define ROOT_Math_GenVector_Translation3D  1
 
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3D
 #include "Math/GenVector/DisplacementVector3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_PositionVector3Dfwd
 #include "Math/GenVector/PositionVector3Dfwd.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_LorentzVectorfwd
 #include "Math/GenVector/LorentzVectorfwd.h"
-#endif
 
 #include <iostream>
 

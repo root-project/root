@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
 #include "TGSlider.h"
 

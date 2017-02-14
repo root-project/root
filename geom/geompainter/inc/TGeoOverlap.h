@@ -12,25 +12,15 @@
 #ifndef ROOT_TGeoOverlap
 #define ROOT_TGeoOverlap
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
-#ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //

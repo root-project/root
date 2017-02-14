@@ -12,9 +12,7 @@
 #ifndef ROOT_TFileCacheWrite
 #define ROOT_TFileCacheWrite
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TFile;
 

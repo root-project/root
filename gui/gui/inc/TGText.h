@@ -23,13 +23,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TGDimension
 #include "TGDimension.h"
-#endif
 
 
 class TGTextLine {

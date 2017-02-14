@@ -24,9 +24,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
 class TClonesArray;
 class TBrowser;

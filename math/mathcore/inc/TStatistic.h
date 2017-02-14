@@ -22,25 +22,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TCollection
 #include "TCollection.h"
-#endif
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif
 
 class TStatistic : public TObject {
 

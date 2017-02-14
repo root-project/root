@@ -45,9 +45,7 @@
 */
 
 
-#ifndef RooStats_LikelihoodInterval
 #include "RooStats/LikelihoodInterval.h"
-#endif
 #include "RooStats/RooStatsUtils.h"
 
 #include "RooAbsReal.h"

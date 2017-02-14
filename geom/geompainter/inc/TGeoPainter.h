@@ -20,13 +20,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TVirtualGeoPainter
 #include "TVirtualGeoPainter.h"
-#endif
 
-#ifndef ROOT_TGeoManager
 #include "TGeoManager.h"
-#endif
 
 class TString;
 class TGeoHMatrix;

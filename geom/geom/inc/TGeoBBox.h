@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoBBox
 #define ROOT_TGeoBBox
 
-#ifndef ROOT_TGeoShape
 #include "TGeoShape.h"
-#endif
 
 class TGeoBBox : public TGeoShape
 {

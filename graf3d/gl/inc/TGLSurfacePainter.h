@@ -15,15 +15,9 @@
 #include <vector>
 #include <list>
 
-#ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
 
 class TRandom;
 

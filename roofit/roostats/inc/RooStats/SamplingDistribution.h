@@ -16,9 +16,7 @@
 #ifndef ROOSTATS_SamplingDistribution
 #define ROOSTATS_SamplingDistribution
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 #include "Rtypes.h"
 #include "RooDataSet.h"

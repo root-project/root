@@ -30,12 +30,8 @@
 //////////////////////////////////////////////////////////////////////////////
 
 // ROOT
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 // Standard
 #include <exception>

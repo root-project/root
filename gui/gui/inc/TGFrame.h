@@ -22,30 +22,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGWindow
 #include "TGWindow.h"
-#endif
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
-#ifndef ROOT_TGDimension
 #include "TGDimension.h"
-#endif
-#ifndef ROOT_TGGC
 #include "TGGC.h"
-#endif
-#ifndef ROOT_TGFont
 #include "TGFont.h"
-#endif
-#ifndef ROOT_TGLayout
 #include "TGLayout.h"
-#endif
-#ifndef ROOT_TGString
 #include "TGString.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class TGResourcePool;
 class TGTextButton;

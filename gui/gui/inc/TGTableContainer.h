@@ -11,12 +11,8 @@
 #ifndef ROOT_TGTableFrame
 #define ROOT_TGTableFrame
 
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
-#ifndef ROOT_TGTableHeader
 #include "TGTableHeader.h"
-#endif
 
 class TGTableFrame : public TQObject {
 

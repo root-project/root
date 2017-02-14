@@ -26,49 +26,27 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
 
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
 
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
 
-#ifndef ROOT_TDataType
 #include "TDataType.h"
-#endif
 
-#ifndef ROOT_TClass
 #include "TClass.h"
-#endif
 
-#ifndef ROOT_TVirtualTreePlayer
 #include "TVirtualTreePlayer.h"
-#endif
 
 #include <atomic>
 

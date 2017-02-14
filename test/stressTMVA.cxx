@@ -823,9 +823,7 @@ void utDataSet::testMethods()
 
 #include <vector>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 

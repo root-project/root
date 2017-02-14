@@ -7,21 +7,11 @@
 #ifndef RooStats_Heaviside
 #define RooStats_Heaviside
 
-#ifndef ROO_ABS_REAL
 #include "RooAbsReal.h"
-#endif
-#ifndef ROO_REAL_PROXY
 #include "RooRealProxy.h"
-#endif
-#ifndef ROO_CATEGORY_PROXY
 #include "RooCategoryProxy.h"
-#endif
-#ifndef ROO_ABS_REAL
 #include "RooAbsReal.h"
-#endif
-#ifndef ROO_ABS_CATEGORY
 #include "RooAbsCategory.h"
-#endif
 
 namespace RooStats {
 

@@ -21,21 +21,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
 class TVirtualPS : public TNamed, public TAttLine, public TAttFill, public TAttMarker, public TAttText {
 

@@ -12,12 +12,8 @@
 #ifndef ROOT_TGLSAFrame
 #define ROOT_TGLSAFrame
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGLSAViewer;
 
