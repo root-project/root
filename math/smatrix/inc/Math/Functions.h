@@ -33,9 +33,7 @@
 // ********************************************************************
 #include <cmath>
 
-#ifndef ROOT_Math_Expression
 #include "Math/Expression.h"
-#endif
 
 /**
    @defgroup TempFunction Generic Template Functions

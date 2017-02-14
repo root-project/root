@@ -39,24 +39,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TRandom3
 #include "TRandom3.h"
-#endif
-#ifndef ROOT_TH1F
 #include "TH1F.h"
-#endif
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef TMVA_NEURAL_NET
 #include "TMVA/NeuralNet.h"
-#endif
 
 #include "TMVA/Tools.h"
 

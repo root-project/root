@@ -25,24 +25,14 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 // #ifndef ROOT_Fit_DataVectorfwd
 // #include "Fit/DataVectorfwd.h"
 // #endif
-#ifndef ROOT_Fit_BinData
 #include "Fit/BinData.h"
-#endif
-#ifndef ROOT_Fit_UnBinData
 #include "Fit/UnBinData.h"
-#endif
 
-#ifndef ROOT_Fit_FitConfig
 #include "Fit/FitConfig.h"
-#endif
 
-#ifndef ROOT_Fit_FitResult
 #include "Fit/FitResult.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
 #include <memory>
 
@@ -530,9 +520,7 @@ bool Fitter::GetDataFromFCN()  {
 #ifndef __CINT__
 
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 template<class Function>
 bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {

@@ -13,9 +13,7 @@
 #define ROOT_TAttText
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TAttText {
 

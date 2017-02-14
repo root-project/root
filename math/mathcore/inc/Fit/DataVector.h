@@ -26,14 +26,10 @@ Classes for describing the input data for fitting
 // #include "Fit/DataVectorfwd.h"
 // #endif
 
-#ifndef ROOT_Fit_DataOptions
 #include "Fit/DataOptions.h"
-#endif
 
 
-#ifndef ROOT_Fit_DataRange
 #include "Fit/DataRange.h"
-#endif
 
 
 #include <vector>

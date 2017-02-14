@@ -14,13 +14,9 @@
 
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROO_NLL_VAR
 #include "RooNLLVar.h"
-#endif
 
 #include "RooFitResult.h"
 #include "RooStats/TestStatistic.h"

@@ -25,21 +25,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TChain
 #include <TChain.h>
-#endif
-#ifndef ROOT_TFile
 #include <TFile.h>
-#endif
-#ifndef ROOT_TSelector
 #include <TSelector.h>
-#endif
-#ifndef ROOT_TRef
 #include <TRef.h>
-#endif
-#ifndef ROOT_Event
 #include <Event.h>
-#endif
 
 class TROOT;
 class TH1F;

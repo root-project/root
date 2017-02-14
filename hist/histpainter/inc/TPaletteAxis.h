@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TPave
 #include "TPave.h"
-#endif
-#ifndef ROOT_TGaxis
 #include "TGaxis.h"
-#endif
 
 class TH1;
 

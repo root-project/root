@@ -25,21 +25,13 @@
 
 #include <memory>
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TDataType
 #include "TDataType.h"
-#endif
 
 class TTree;
 class TBasket;

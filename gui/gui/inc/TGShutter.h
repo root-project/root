@@ -24,15 +24,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
 
 
 class TGButton;

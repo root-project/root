@@ -12,9 +12,7 @@
 #ifndef ROOT_TFormLeafInfoReference
 #define ROOT_TFormLeafInfoReference
 
-#ifndef ROOT_TFormLeafInfo
 #include "TFormLeafInfo.h"
-#endif
 
 #include <string>
 

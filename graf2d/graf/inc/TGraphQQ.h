@@ -13,9 +13,7 @@
 #define ROOT_TGraphQQ
 
 
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 class TGraphQQ : public TGraph{
 protected:

@@ -12,12 +12,8 @@
 #ifndef ROOT_TFriendProxyDescriptor
 #define ROOT_TFriendProxyDescriptor
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 
 namespace ROOT {

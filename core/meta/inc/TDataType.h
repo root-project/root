@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
 
 enum EDataType {

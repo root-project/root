@@ -20,18 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Tlist
 #include "TList.h"
-#endif
-#ifndef ROOT_TBrowser
 #include "TBrowser.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 
 class TAlienDirectoryEntry : public TNamed {

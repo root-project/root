@@ -69,17 +69,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 #include <limits>
 

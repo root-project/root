@@ -13,21 +13,11 @@
 #define ROOT_TLine
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 
 class TLine : public TObject, public TAttLine, public TAttBBox2D {

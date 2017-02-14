@@ -23,15 +23,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TBits
 #include "TBits.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 namespace ROOT {
 

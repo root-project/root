@@ -13,9 +13,7 @@
 #define ROOT_TImageDump
 
 
-#ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
-#endif
 
 class TImage;
 class TColor;

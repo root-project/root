@@ -17,9 +17,7 @@
 # error "Please regenerate this file using TTree::MakeProxy()!"
 #endif
 
-#ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
-#endif
 
 #define InjecTBranchProxyInterface()                     \
    ROOT::Detail::TBranchProxy *GetProxy() { return obj.GetProxy(); }   \

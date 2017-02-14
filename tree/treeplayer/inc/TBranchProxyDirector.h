@@ -12,9 +12,7 @@
 #ifndef ROOT_TBranchProxyDirector
 #define ROOT_TBranchProxyDirector
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <list>
 

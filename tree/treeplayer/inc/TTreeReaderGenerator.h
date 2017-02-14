@@ -23,9 +23,7 @@
 
 #include "TTreeGeneratorBase.h"
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TBranch;
 class TBranchElement;

@@ -30,11 +30,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTUtils
 #include "TMatrixTUtils.h"
-#endif
-#ifndef ROOT_TMatrixDUtilsfwd
 #include "TMatrixDUtilsfwd.h"
-#endif
 
 #endif

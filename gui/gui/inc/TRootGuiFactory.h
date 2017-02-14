@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGuiFactory
 #include "TGuiFactory.h"
-#endif
 
 class TApplicationImp;
 class TCanvasImp;

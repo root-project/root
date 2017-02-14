@@ -12,9 +12,7 @@
 #ifndef ROOT_TGWin32ProxyBase
 #define ROOT_TGWin32ProxyBase
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 typedef void (*TGWin32CallBack)(void*);
 class TList;

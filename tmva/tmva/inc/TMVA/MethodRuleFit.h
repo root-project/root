@@ -34,21 +34,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_RuleFit
 #include "TMVA/RuleFit.h"
-#endif
 
 namespace TMVA {
 

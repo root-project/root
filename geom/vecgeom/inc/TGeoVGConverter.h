@@ -19,13 +19,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualGeoConverter
 #include "TVirtualGeoConverter.h"
-#endif
 
-#ifndef ROOT_TGeoManager
 #include "TGeoManager.h"
-#endif
 
 class TGeoVGConverter : public TVirtualGeoConverter {
 public:

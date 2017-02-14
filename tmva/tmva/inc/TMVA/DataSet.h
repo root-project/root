@@ -41,18 +41,10 @@
 #include <map>
 #include <string>
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 //#ifndef ROOT_TCut
 //#include "TCut.h"
 //#endif
@@ -62,16 +54,10 @@
 //#ifndef ROOT_TPrincipal
 //#include "TPrincipal.h"
 //#endif
-#ifndef ROOT_TRandom3
 #include "TRandom3.h"
-#endif
 
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_VariableInfo
 #include "TMVA/VariableInfo.h"
-#endif
 
 namespace TMVA {
 

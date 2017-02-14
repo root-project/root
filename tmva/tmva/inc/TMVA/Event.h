@@ -34,19 +34,11 @@
 #include <iosfwd>
 #include <vector>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 
 class TCut;

@@ -14,9 +14,7 @@
 
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include "RooWorkspace.h"
 #include "RooStudyManager.h"

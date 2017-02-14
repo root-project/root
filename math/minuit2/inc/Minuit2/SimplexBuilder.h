@@ -10,9 +10,7 @@
 #ifndef ROOT_Minuit2_SimplexBuilder
 #define ROOT_Minuit2_SimplexBuilder
 
-#ifndef ROOT_Minuit2_MinimumBuilder
 #include "Minuit2/MinimumBuilder.h"
-#endif
 
 namespace ROOT {
 

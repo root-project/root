@@ -12,9 +12,7 @@
 #ifndef ROOT_TSQLFile
 #define ROOT_TSQLFile
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 #include <stdlib.h>
 
 class TList;

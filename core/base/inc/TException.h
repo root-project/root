@@ -29,12 +29,8 @@ struct sigjmp_buf;
 struct jmp_buf;
 #endif
 
-#ifndef ROOT_RConfig
 #include "RConfig.h"
-#endif
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
 
 struct ExceptionContext_t {
 #ifdef NEED_SIGJMP

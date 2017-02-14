@@ -29,54 +29,24 @@ plotted for the 1-D case.
 
 */
 
-#ifndef ROOSTATS_MCMCIntervalPlot
 #include "RooStats/MCMCIntervalPlot.h"
-#endif
 #include "RooStats/MCMCInterval.h"
 #include "RooStats/MarkovChain.h"
 
-#ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
-#ifndef ROOT_TLine
 #include "TLine.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROO_PLOT
 #include "RooPlot.h"
-#endif
-#ifndef ROOT_TH2
 #include "TH2.h"
-#endif
-#ifndef ROOT_TH1F
 #include "TH1F.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROOT_TAxis
 #include "TAxis.h"
-#endif
-#ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
-#endif
 
 #include <iostream>
 

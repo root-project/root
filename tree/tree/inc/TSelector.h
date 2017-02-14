@@ -22,15 +22,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TSelectorList
 #include "TSelectorList.h"
-#endif
 
 
 class TTree;

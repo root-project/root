@@ -11,9 +11,7 @@
 #ifndef ROOT_TSpectrum3
 #define ROOT_TSpectrum3
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TH1;
 

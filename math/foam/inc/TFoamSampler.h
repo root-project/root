@@ -13,9 +13,7 @@
 #define ROOT_TFoamSampler
 
 
-#ifndef ROOT_Math_DistSampler
 #include "Math/DistSampler.h"
-#endif
 
 
 namespace ROOT {

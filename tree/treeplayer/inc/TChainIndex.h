@@ -28,9 +28,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TVirtualIndex
 #include "TVirtualIndex.h"
-#endif
 
 #include <vector>
 

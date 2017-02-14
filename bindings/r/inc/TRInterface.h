@@ -12,25 +12,15 @@
 #ifndef ROOT_R_TRInterface
 #define ROOT_R_TRInterface
 
-#ifndef ROOT_R_TRObject
-#include<TRObject.h>
-#endif
+#include <TRObject.h>
 
-#ifndef ROOT_R_TRDataFrame
-#include<TRDataFrame.h>
-#endif
+#include <TRDataFrame.h>
 
-#ifndef ROOT_R_TFunctionExport
-#include<TRFunctionExport.h>
-#endif
+#include <TRFunctionExport.h>
 
-#ifndef ROOT_R_TFunctionImport
-#include<TRFunctionImport.h>
-#endif
+#include <TRFunctionImport.h>
 
-#ifndef ROOT_TThread
-#include<TThread.h>
-#endif
+#include <TThread.h>
 
 /**
  @namespace ROOT::R

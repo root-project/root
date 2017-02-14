@@ -39,16 +39,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
 
 namespace TMVA {
 

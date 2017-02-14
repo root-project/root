@@ -20,15 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TSortedList
 #include "TSortedList.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TFile;
 class TH1F;

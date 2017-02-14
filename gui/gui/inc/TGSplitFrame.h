@@ -12,13 +12,9 @@
 #ifndef ROOT_TGSplitFrame
 #define ROOT_TGSplitFrame
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 class TGSplitter;
 class TContextMenu;

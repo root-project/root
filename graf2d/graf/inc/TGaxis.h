@@ -13,15 +13,9 @@
 #define ROOT_TGaxis
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TLine
 #include "TLine.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
 class TF1;
 class TAxis;

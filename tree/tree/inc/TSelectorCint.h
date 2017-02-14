@@ -25,12 +25,8 @@
 #warning "TSelectorCint.h is deprecated. It will be removed in ROOT v6.12. Please use #include \"TSelector.h\", instead."
 #endif
 
-#ifndef ROOT_TSelector
 #include "TSelector.h"
-#endif
-#ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif
 
 class TSelectorCint : public TSelector {
 

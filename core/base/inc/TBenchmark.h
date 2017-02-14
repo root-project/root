@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
-#endif
 
 class TBenchmark : public TNamed {
 

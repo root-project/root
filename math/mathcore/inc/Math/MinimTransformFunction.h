@@ -15,9 +15,7 @@
 #define ROOT_Math_MinimTransformFunction
 
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
 #ifndef ROOT_Math_MinimTransformVariable
 #include "Math/MinimTransformVariable.h"

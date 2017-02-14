@@ -54,21 +54,11 @@ A simple Binary search tree including a volume search method.
 #include "TObjString.h"
 #include "TTree.h"
 
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_BinarySearchTree
 #include "TMVA/BinarySearchTree.h"
-#endif
 
 #include "TMVA/BinaryTree.h"
 #include "TMVA/Types.h"

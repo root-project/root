@@ -13,16 +13,10 @@
 #ifndef ROOT_Math_MultiDimParamFunctionAdapter
 #define ROOT_Math_MultiDimParamFunctionAdapter
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 #include <cassert>
 

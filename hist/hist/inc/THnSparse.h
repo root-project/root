@@ -20,32 +20,16 @@
 *************************************************************************/
 
 
-#ifndef ROOT_THnBase
 #include "THnBase.h"
-#endif
-#ifndef ROOT_TExMap
 #include "TExMap.h"
-#endif
-#ifndef ROOT_THnSparse_Internal
 #include "THnSparse_Internal.h"
-#endif
 
 // needed only for template instantiations of THnSparseT:
-#ifndef ROOT_TArrayF
 #include "TArrayF.h"
-#endif
-#ifndef ROOT_TArrayL
 #include "TArrayL.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
-#ifndef ROOT_TArrayS
 #include "TArrayS.h"
-#endif
-#ifndef ROOT_TArrayC
 #include "TArrayC.h"
-#endif
 
 class THnSparseCompactBinCoord;
 

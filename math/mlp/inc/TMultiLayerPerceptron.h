@@ -12,21 +12,11 @@
 #ifndef ROOT_TMultiLayerPerceptron
 #define ROOT_TMultiLayerPerceptron
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TNeuron
 #include "TNeuron.h"
-#endif
 
 class TTree;
 class TEventList;

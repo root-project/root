@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TF1
 #include "TF1.h"
-#endif
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
 
 class TF2 : public TF1 {
 

@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TThreadImp
 #include "TThreadImp.h"
-#endif
 
 #ifndef __CINT__
 #include <pthread.h>

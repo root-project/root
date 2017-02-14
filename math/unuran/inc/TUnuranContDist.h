@@ -14,13 +14,9 @@
 #ifndef ROOT_Math_TUnuranContDist
 #define ROOT_Math_TUnuranContDist
 
-#ifndef ROOT_Math_TUnuranBaseDist
 #include "TUnuranBaseDist.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 class TF1;
 

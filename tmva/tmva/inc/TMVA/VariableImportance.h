@@ -6,33 +6,19 @@
 #define ROOT_TMVA_VariableImportance
 
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
-#ifndef ROOT_TMVA_Factory
-#include<TMVA/Factory.h>
-#endif
+#include <TMVA/Factory.h>
 
-#ifndef ROOT_TMVA_DataLoader
-#include<TMVA/DataLoader.h>
-#endif
+#include <TMVA/DataLoader.h>
 
-#ifndef ROOT_TMVA_OptionMap
-#include<TMVA/OptionMap.h>
-#endif
+#include <TMVA/OptionMap.h>
 
-#ifndef ROOT_TMVA_Envelope
-#include<TMVA/Envelope.h>
-#endif
+#include <TMVA/Envelope.h>
 
 namespace TMVA {
 

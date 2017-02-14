@@ -12,9 +12,7 @@
 #ifndef ROOT_TRandom
 #define ROOT_TRandom
 
-#ifndef ROOT_Math_TRandomEngine
 #include "Math/TRandomEngine.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -24,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TRandom : public ROOT::Math::TRandomEngine, public TNamed {
 

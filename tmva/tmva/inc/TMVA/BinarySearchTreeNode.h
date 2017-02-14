@@ -39,13 +39,9 @@
 
 #include <iosfwd>
 #include <vector>
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"
-#endif
 
 namespace TMVA {
 

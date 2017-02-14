@@ -12,9 +12,7 @@
 #define ROOSTATS_TestStatSampler
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class RooAbsArg;
 class RooAbsData;

@@ -42,9 +42,7 @@
 #include <iosfwd>
 #include <vector>
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
 
 namespace TMVA {
    class IMethod;

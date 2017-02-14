@@ -13,9 +13,7 @@
 #define ROOT_TButton
 
 
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
 #include "TAttText.h"
 
 class TButton : public TPad, public TAttText {

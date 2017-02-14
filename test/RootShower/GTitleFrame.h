@@ -19,9 +19,7 @@
 #ifndef GTITLEFRAME_H
 #define GTITLEFRAME_H
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGLabel;
 class TGButton;

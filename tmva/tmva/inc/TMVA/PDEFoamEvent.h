@@ -30,9 +30,7 @@
 #ifndef ROOT_TMVA_PDEFoamEvent
 #define ROOT_TMVA_PDEFoamEvent
 
-#ifndef ROOT_TMVA_PDEFoam
 #include "TMVA/PDEFoam.h"
-#endif
 
 namespace TMVA
 {

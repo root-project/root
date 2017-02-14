@@ -28,18 +28,10 @@ Neuron class used by TMVA artificial neural network methods
 
 #include "TMVA/TNeuron.h"
 
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
-#endif
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"
-#endif
 #include "TMVA/Types.h"
 
 #include "TH1D.h"

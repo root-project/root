@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGTextView;
 class TGTextButton;

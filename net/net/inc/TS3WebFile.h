@@ -56,21 +56,13 @@
 //  http://docs.amazonwebservices.com/AmazonS3/latest/API/APIRest.html  //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TWebFile
 #include "TWebFile.h"
-#endif
 
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TS3HTTPRequest
 #include "TS3HTTPRequest.h"
-#endif
 
 
 class TS3WebFile: public TWebFile {

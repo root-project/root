@@ -20,11 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTBase
 #include "TMatrixTBase.h"
-#endif
-#ifndef ROOT_TMatrixFBase
 #include "TMatrixFBase.h"
-#endif
 
 #endif

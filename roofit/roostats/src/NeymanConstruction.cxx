@@ -48,17 +48,11 @@ construction by:
 
 */
 
-#ifndef RooStats_NeymanConstruction
 #include "RooStats/NeymanConstruction.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
-#ifndef RooStats_PointSetInterval
 #include "RooStats/PointSetInterval.h"
-#endif
 
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/ToyMCSampler.h"

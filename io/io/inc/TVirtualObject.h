@@ -20,9 +20,7 @@ Wrapper around an object and giving indirect access to its content
 even if the object is not of a class in the Cint/Reflex dictionary.
 */
 
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
 
 class TVirtualObject {

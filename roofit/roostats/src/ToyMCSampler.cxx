@@ -32,17 +32,11 @@ ToyMCStudy with the RooStudyManager.
 
 #include "RooStats/ToyMCSampler.h"
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
-#ifndef ROO_DATA_HIST
 #include "RooDataHist.h"
-#endif
 
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
 
 #include "TCanvas.h"
 #include "RooPlot.h"

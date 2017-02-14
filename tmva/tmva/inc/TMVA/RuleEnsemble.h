@@ -34,23 +34,13 @@
 // #include "TMathBase.h"
 // #endif
 // #else
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 // #endif
 
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_Rule
 #include "TMVA/Rule.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
 class TH1F;
 

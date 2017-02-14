@@ -22,18 +22,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
-#endif
 
 
 class TSocket;

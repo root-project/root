@@ -55,71 +55,29 @@
 */
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
-#ifndef RooStats_Heaviside
 #include "RooStats/Heaviside.h"
-#endif
-#ifndef ROO_DATA_HIST
 #include "RooDataHist.h"
-#endif
-#ifndef ROO_KEYS_PDF
 #include "RooNDKeysPdf.h"
-#endif
-#ifndef ROO_PRODUCT
 #include "RooProduct.h"
-#endif
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_TH1F
 #include "TH1F.h"
-#endif
-#ifndef ROOT_TH2F
 #include "TH2F.h"
-#endif
-#ifndef ROOT_TH3F
 #include "TH3F.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
-#endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_THnSparse
 #include "THnSparse.h"
-#endif
-#ifndef ROO_NUMBER
 #include "RooNumber.h"
-#endif
 //#ifndef ROOT_TFile
 //#include "TFile.h"
 //#endif

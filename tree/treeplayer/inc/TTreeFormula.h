@@ -23,17 +23,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_v5_TFormula
 #include "v5/TFormula.h"
-#endif
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include <string>
 #include <vector>

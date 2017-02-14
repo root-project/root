@@ -14,17 +14,11 @@
 #define ROOT_Fit_FitConfig
 
 
-#ifndef ROOT_Fit_ParameterSettings
 #include "Fit/ParameterSettings.h"
-#endif
 
-#ifndef ROOT_Math_MinimizerOptions
 #include "Math/MinimizerOptions.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
 
 #include <vector>

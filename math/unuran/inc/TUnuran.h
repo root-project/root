@@ -15,9 +15,7 @@
 
 #include <string>
 
-#ifndef ROOT_Math_TUnuranBaseDist
 #include "TUnuranBaseDist.h"
-#endif
 
 
 class TUnuranContDist;

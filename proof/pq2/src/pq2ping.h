@@ -12,9 +12,7 @@
 #ifndef PQ2_ping
 #define PQ2_ping
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

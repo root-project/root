@@ -14,9 +14,7 @@
 #ifndef ROOT_TGLSphere
 #define ROOT_TGLSphere
 
-#ifndef ROOT_TGLLogicalShape
 #include "TGLLogicalShape.h"
-#endif
 
 class TBuffer3DSphere;
 

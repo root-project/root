@@ -21,9 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TImage
 #include "TImage.h"
-#endif
 
 struct ASImage;
 struct ASVisual;

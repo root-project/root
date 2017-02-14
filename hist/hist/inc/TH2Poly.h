@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH2
 #include "TH2.h"
-#endif
 
 class TH2PolyBin: public TObject{
 

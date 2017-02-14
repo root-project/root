@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TRandom
 #include "TRandom.h"
-#endif
 
 class TRandom1 : public TRandom {
 

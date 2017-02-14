@@ -25,13 +25,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TParameter
 #include "TParameter.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TCollection;

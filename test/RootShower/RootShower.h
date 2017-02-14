@@ -16,15 +16,9 @@
 #ifndef ROOTSHOWER_H
 #define ROOTSHOWER_H
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
-#ifndef ROOT_TCanvas
 #include "TCanvas.h"
-#endif
 
 class TGMenuBar;
 class TGPopupMenu;

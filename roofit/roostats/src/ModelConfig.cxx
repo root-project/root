@@ -21,13 +21,9 @@ ModelConfig requires a workspace to be set.
 
 #include "TROOT.h"
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
 #include <sstream>
 

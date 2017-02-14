@@ -11,13 +11,9 @@
 #ifndef ROOT_TGeoGlobalMagField
 #define ROOT_TGeoGlobalMagField
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TVirtualMagField
 #include "TVirtualMagField.h"
-#endif
 
 class TGeoGlobalMagField : public TObject
 {

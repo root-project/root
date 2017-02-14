@@ -42,53 +42,23 @@ uniformly over their intervals before construction of the MarkovChain begins.
 
 #include "RooStats/MetropolisHastings.h"
 
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
-#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
-#endif
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 #include "RooStats/ProposalFunction.h"
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROO_NLL_VAR
 #include "RooNLLVar.h"
-#endif
-#ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_RANDOM
 #include "RooRandom.h"
-#endif
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
 ClassImp(RooStats::MetropolisHastings);
 

@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
 class TFunctionTemplate : public TDictionary {
 protected:

@@ -32,19 +32,11 @@
 #include <string>
 #include <vector>
 #include <map>
-#ifndef ROOT_TCut
 #include "TCut.h"
-#endif
 
-#ifndef ROOT_TMVA_Factory
 #include "TMVA/Factory.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
 
 class TFile;
 class TTree;

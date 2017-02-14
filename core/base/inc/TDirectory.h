@@ -21,21 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
-#ifndef ROOT_TUUID
 #include "TUUID.h"
-#endif
 
 class TBrowser;
 class TKey;

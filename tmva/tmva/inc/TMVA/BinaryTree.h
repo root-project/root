@@ -30,9 +30,7 @@
 #ifndef ROOT_TMVA_BinaryTree
 #define ROOT_TMVA_BinaryTree
 
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -43,13 +41,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <iosfwd>
-#ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif
 
-#ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"
-#endif
 
 // -----------------------------------------------------------------------------
 

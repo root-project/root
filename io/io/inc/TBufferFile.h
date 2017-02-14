@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
-#ifndef ROOT_Bytes
 #include "Bytes.h"
-#endif
 
 #include <vector>
 

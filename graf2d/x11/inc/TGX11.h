@@ -12,9 +12,7 @@
 #ifndef ROOT_TGX11
 #define ROOT_TGX11
 
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
 #if !defined(__CINT__)
 

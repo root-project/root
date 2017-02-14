@@ -12,9 +12,7 @@
 #ifndef ROOT_TOracleResult
 #define ROOT_TOracleResult
 
-#ifndef ROOT_TSQLResult
 #include "TSQLResult.h"
-#endif
 
 #include <vector>
 

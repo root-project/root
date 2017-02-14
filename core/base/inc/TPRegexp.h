@@ -26,15 +26,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
 
 struct PCREPriv_t;
 

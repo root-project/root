@@ -12,9 +12,7 @@
 #ifndef ROOT_TGTableLayout
 #define ROOT_TGTableLayout
 
-#ifndef ROOT_TGLayout
 #include "TGLayout.h"
-#endif
 
 
 // extension of ELayoutHints

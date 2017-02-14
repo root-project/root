@@ -11,9 +11,7 @@
 #ifndef ROOT_TContainerConverters
 #define ROOT_TContainerConverters
 
-#ifndef ROOT_TMemberStreamer
 #include "TMemberStreamer.h"
-#endif
 
 class TVirtualCollectionProxy;
 class TGenCollectionStreamer;

@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TChain
 #include "TChain.h"
-#endif
 
 class TDSet;
 class TList;

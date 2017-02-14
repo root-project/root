@@ -6,9 +6,7 @@
 
 #if !defined(__CINT__)
 
-#ifndef ROOT_Krb5Auth
 #include "Krb5Auth.h"
-#endif
 
 #else
 
@@ -20,9 +18,7 @@ typedef void* krb5_principal;
 
 #endif
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 
 class TSocket;

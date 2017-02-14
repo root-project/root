@@ -36,17 +36,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
 
-#ifndef ROOT_TMatrixDSymfwd
 #include "TMatrixDSymfwd.h"
-#endif
 
-#ifndef ROOT_TMVA_VariableTransformBase
 #include "TMVA/VariableTransformBase.h"
-#endif
 
 namespace TMVA {
 

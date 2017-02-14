@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDataSetManager
 #include "TDataSetManager.h"
-#endif
 
 const char* const kDataSet_LocalCache   = "dataset.cache"; // default cache subdirectory
 const char* const kDataSet_DataSetList  = "dataset.list";  // file with info about all datasets

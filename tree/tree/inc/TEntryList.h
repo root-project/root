@@ -12,9 +12,7 @@
 #ifndef ROOT_TEntryList
 #define ROOT_TEntryList
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TTree;
 class TDirectory;

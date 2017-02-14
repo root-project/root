@@ -19,9 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TImagePlugin
 #include "TImagePlugin.h"
-#endif
 
 struct ASImage;
 

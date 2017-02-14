@@ -12,22 +12,12 @@
 #ifndef RooStats_MCMCInterval
 #define RooStats_MCMCInterval
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
 
 class RooNDKeysPdf;
 class RooProduct;

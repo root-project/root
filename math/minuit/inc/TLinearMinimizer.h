@@ -13,13 +13,9 @@
 #ifndef ROOT_TLinearMinimizer
 #define ROOT_TLinearMinimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <vector>
 

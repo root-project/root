@@ -44,12 +44,8 @@
 #define ROOT_TQpProbSparse
 
 #include "TQpProbBase.h"
-#ifndef ROOT_TQpDataSparse
 #include "TQpDataSparse.h"
-#endif
-#ifndef ROOT_TQpVars
 #include "TQpVar.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

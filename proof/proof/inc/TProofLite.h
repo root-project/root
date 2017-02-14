@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProof
 #include "TProof.h"
-#endif
 
 class TDSet;
 class TList;

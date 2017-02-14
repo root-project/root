@@ -34,18 +34,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
-#endif
-#ifndef ROOT_TMethod
 #include "TMethod.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 
 class TToggle: public TNamed {

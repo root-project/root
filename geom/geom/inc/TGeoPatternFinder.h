@@ -12,13 +12,9 @@
 #ifndef ROOT_TGeoPatternFinder
 #define ROOT_TGeoPatternFinder
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TGeoVolume
 #include "TGeoVolume.h"
-#endif
 
 
 class TGeoMatrix;

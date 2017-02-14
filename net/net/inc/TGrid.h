@@ -29,17 +29,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TGridJob
 #include "TGridJob.h"
-#endif
 
 class TGridResult;
 class TGridJDL;

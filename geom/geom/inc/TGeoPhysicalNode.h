@@ -12,17 +12,11 @@
 #ifndef ROOT_TGeoPhysicalNode
 #define ROOT_TGeoPhysicalNode
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 // forward declarations
 class TGeoHMatrix;

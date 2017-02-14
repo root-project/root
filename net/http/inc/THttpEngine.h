@@ -4,9 +4,7 @@
 #ifndef ROOT_THttpEngine
 #define ROOT_THttpEngine
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class THttpServer;
 class THttpCallArg;

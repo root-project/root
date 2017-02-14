@@ -13,13 +13,9 @@
 #ifndef ROOT_TGeoCache
 #define ROOT_TGeoCache
 
-#ifndef ROOT_TGeoNode
 #include "TGeoNode.h"
-#endif
 
-#ifndef ROOT_TGeoStateInfo
 #include "TGeoStateInfo.h"
-#endif
 
 // forward declarations
 class TGeoManager;

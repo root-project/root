@@ -23,13 +23,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TMatrixTSym
 #include "TMatrixTSym.h"
-#endif
 
 namespace TMatrixTSymCramerInv {
 

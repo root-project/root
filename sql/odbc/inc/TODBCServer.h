@@ -12,9 +12,7 @@
 #ifndef ROOT_TODBCServer
 #define ROOT_TODBCServer
 
-#ifndef ROOT_TSQLServer
 #include "TSQLServer.h"
-#endif
 
 #ifdef __CLING__
 typedef void * SQLHENV;

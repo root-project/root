@@ -22,12 +22,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTreeReaderValue
 #include "TTreeReaderValue.h"
-#endif
-#ifndef ROOT_TTreeReaderUtils
 #include "TTreeReaderUtils.h"
-#endif
 
 namespace ROOT {
 namespace Internal {

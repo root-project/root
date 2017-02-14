@@ -16,13 +16,9 @@
 #ifndef ROOT_Math_GenVector_Cartesian2D
 #define ROOT_Math_GenVector_Cartesian2D  1
 
-#ifndef ROOT_Math_GenVector_Polar2Dfwd
 #include "Math/GenVector/Polar2Dfwd.h"
-#endif
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
 
 namespace ROOT {
@@ -218,12 +214,8 @@ private:
 // I need to include other coordinate systems only when Cartesian is already defined
 // since they depend on it
 
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
-#ifndef ROOT_Math_GenVector_Polar2D
 #include "Math/GenVector/Polar2D.h"
-#endif
 
 // ====== Set member functions for coordinates in other systems =======
 

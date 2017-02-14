@@ -21,12 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TVirtualPerfStats
 #include "TVirtualPerfStats.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TBrowser;

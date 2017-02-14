@@ -21,21 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TVirtualHistPainter
 #include "TVirtualHistPainter.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
 class TAxis;
 class TList;

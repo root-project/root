@@ -12,12 +12,8 @@
 #ifndef ROOT_TIsAProxy
 #define ROOT_TIsAProxy
 
-#ifndef ROOT_TVirtualIsAProxy
 #include "TVirtualIsAProxy.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 #include <atomic>
 
 class TClass;

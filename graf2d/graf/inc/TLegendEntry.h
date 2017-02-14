@@ -14,24 +14,12 @@
 #define ROOT_TLegendEntry
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TLegendEntry : public TObject, public TAttText, public TAttLine,
                      public TAttFill, public TAttMarker {

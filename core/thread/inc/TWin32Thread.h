@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TThreadImp
 #include "TThreadImp.h"
-#endif
 
 #include "Windows4Root.h"
 

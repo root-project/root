@@ -22,12 +22,8 @@
 #ifndef ROOT_TMaterial
 #define ROOT_TMaterial
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
 class TMaterial  : public TNamed, public TAttFill {
 protected:

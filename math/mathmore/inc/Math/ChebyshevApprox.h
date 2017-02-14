@@ -42,13 +42,9 @@
  */
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_GSLFunctionAdapter
 #include "Math/GSLFunctionAdapter.h"
-#endif
 
 #include <memory>
 #include <cstddef>

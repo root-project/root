@@ -44,18 +44,10 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
 
 class TFileIter : public TListIter {

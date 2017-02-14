@@ -11,9 +11,7 @@
 #ifndef ROOSTATS_ProfileLikelihoodCalculator
 #define ROOSTATS_ProfileLikelihoodCalculator
 
-#ifndef ROOSTATS_CombinedCalculator
 #include "RooStats/CombinedCalculator.h"
-#endif
 
 #include "RooStats/LikelihoodInterval.h"
 

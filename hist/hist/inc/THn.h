@@ -12,29 +12,17 @@
 #ifndef ROOT_THN
 #define ROOT_THN
 
-#ifndef ROOT_THnBase
 #include "THnBase.h"
-#endif
 
-#ifndef ROOT_TNDArray
 #include "TNDArray.h"
-#endif
 
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAxis
 #include "TAxis.h"
-#endif
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 class TH1;
 class TH1D;

@@ -45,12 +45,8 @@ PDEFoamDecisionTreeDensity density estimator, which returns the
 events in a cell without sampling.
 */
 
-#ifndef ROOT_TMVA_PDEFoamDecisionTree
 #include "TMVA/PDEFoamDecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamDecisionTreeDensity
 #include "TMVA/PDEFoamDecisionTreeDensity.h"
-#endif
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/PDEFoamCell.h"

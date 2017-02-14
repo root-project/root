@@ -14,33 +14,19 @@
 #define ROOT_TGeoVolume
 
 
-#ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TGeoMedium
 #include "TGeoMedium.h"
-#endif
 
-#ifndef ROOT_TGeoShape
 #include "TGeoShape.h"
-#endif
 
 // forward declarations
 class TH2F;

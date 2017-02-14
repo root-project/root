@@ -18,12 +18,8 @@
 
 class TGLContextIdentity;
 
-#ifndef ROOT_TGLFormat
 #include "TGLFormat.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TGLContextPrivate;
 class TGLPaintDevice;

@@ -13,9 +13,7 @@
 #define ROOT_TPavesText
 
 
-#ifndef ROOT_TPaveText
 #include "TPaveText.h"
-#endif
 
 class TPavesText : public TPaveText {
 

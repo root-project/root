@@ -12,17 +12,11 @@
 #ifndef ROOT_TAxisModLab
 #define ROOT_TAxisModLab
 
-#ifndef ROOT_TAttText
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TAxisModLab : public TObject, public TAttText {
 

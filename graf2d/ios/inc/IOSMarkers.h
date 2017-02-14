@@ -24,13 +24,9 @@
 
 #include <CoreGraphics/CGContext.h>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
 
 namespace ROOT {
 namespace iOS {

@@ -29,9 +29,7 @@
 
 
 
-#ifndef ROOT_Math_GSLMultiRootFinder
 #include "Math/GSLMultiRootFinder.h"
-#endif
 
 namespace ROOT {
 namespace Math {

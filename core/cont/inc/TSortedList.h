@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 
 class TSortedList : public TList {

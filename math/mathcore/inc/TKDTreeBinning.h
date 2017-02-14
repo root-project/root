@@ -18,9 +18,7 @@
 #include <map>
 #include <utility>
 
-#ifndef ROOT_TKDTree
 #include "TKDTree.h"
-#endif
 
 namespace ROOT {
    namespace Fit {

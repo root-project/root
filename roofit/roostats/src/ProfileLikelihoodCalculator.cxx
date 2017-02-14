@@ -51,13 +51,9 @@ p-value using an Asimov data set.
 
 */
 
-#ifndef RooStats_ProfileLikelihoodCalculator
 #include "RooStats/ProfileLikelihoodCalculator.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
 #include "RooStats/LikelihoodInterval.h"
 #include "RooStats/HypoTestResult.h"

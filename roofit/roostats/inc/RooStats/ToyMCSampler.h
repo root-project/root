@@ -14,9 +14,7 @@
 #define ROOSTATS_ToyMCSampler
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <vector>
 #include <sstream>

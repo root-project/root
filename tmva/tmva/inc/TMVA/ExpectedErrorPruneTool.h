@@ -44,13 +44,9 @@
 #include <vector>
 #include <map>
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef ROOT_TMVA_IPruneTool
 #include "TMVA/IPruneTool.h"
-#endif
 
 namespace TMVA {
 

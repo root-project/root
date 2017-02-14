@@ -14,17 +14,11 @@
 #ifndef ROOT_Math_VirtualIntegrator
 #define ROOT_Math_VirtualIntegrator
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
-#ifndef ROOT_Math_IntegratorOptions
 #include "Math/IntegratorOptions.h"
-#endif
 
 
 #include <vector>

@@ -29,21 +29,13 @@
 
 #include <CoreGraphics/CGContext.h>
 
-#ifndef ROOT_TLine
 #include "TList.h"
-#endif
 
-#ifndef ROOT_IOSTextOperations
 #include "IOSTextOperations.h"
-#endif
 
-#ifndef ROOT_IOSPainter
 #include "IOSPainter.h"
-#endif
 
-#ifndef ROOT_IOSPadStub
 #include "IOSPadStub.h"
-#endif
 
 namespace ROOT {
 namespace iOS {

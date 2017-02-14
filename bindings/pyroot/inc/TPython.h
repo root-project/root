@@ -17,9 +17,7 @@
 #include "TPyReturn.h"
 
 // ROOT
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 
 class TPython {

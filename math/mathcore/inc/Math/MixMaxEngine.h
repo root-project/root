@@ -17,9 +17,7 @@
 #include <vector>
 #include <string>
 
-#ifndef ROOT_Math_TRandomEngine
 #include "Math/TRandomEngine.h"
-#endif
 
 
 // struct rng_state_st;    /// forward declare generator state

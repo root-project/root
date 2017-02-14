@@ -17,9 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 template<class Element> class TMatrixTSym;
 typedef TMatrixTSym<Double_t> TMatrixDSym;

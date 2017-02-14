@@ -11,69 +11,37 @@
 
 #include "TRatioPlot.h"
 
-#ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif
 
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
-#ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
-#endif
 
-#ifndef ROOT_TBrowser
 #include "TBrowser.h"
-#endif
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
 
-#ifndef ROOT_TF1
 #include "TF1.h"
-#endif
 
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef ROOT_TGraphAsymmErrors
 #include "TGraphAsymmErrors.h"
-#endif
 
-#ifndef ROOT_TGraphErrors
 #include "TGraphErrors.h"
-#endif
 
-#ifndef ROOT_TGaxis
 #include "TGaxis.h"
-#endif
 
-#ifndef ROOT_TLine
 #include "TLine.h"
-#endif
 
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
 
-#ifndef ROOT_TFitResult
 #include "TFitResult.h"
-#endif
 
-#ifndef ROOT_THStack
 #include "THStack.h"
-#endif
 
 #include <iostream>
 

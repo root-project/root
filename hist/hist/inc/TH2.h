@@ -21,15 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_TMatrixFBasefwd
 #include "TMatrixFBasefwd.h"
-#endif
-#ifndef ROOT_TMatrixDBasefwd
 #include "TMatrixDBasefwd.h"
-#endif
 
 class TProfile;
 

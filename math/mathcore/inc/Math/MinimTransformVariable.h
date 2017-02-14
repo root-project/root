@@ -12,9 +12,7 @@
 #ifndef ROOT_Math_MinimizerVariable
 #define ROOT_Math_MinimizerVariable
 
-#ifndef ROOT_Math_MinimizerVariableTransformation
 #include "MinimizerVariableTransformation.h"
-#endif
 
 #include <memory>
 

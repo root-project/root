@@ -17,9 +17,7 @@
 #ifndef ROOT_Math_GenVector_eta
 #define ROOT_Math_GenVector_eta  1
 
-#ifndef ROOT_Math_GenVector_etaMax
 #include "Math/GenVector/etaMax.h"
-#endif
 
 
 #include <limits>

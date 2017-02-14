@@ -17,12 +17,8 @@
 #ifndef ROOT_TDecayChannel
 #define ROOT_TDecayChannel
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
 
 
 class TDecayChannel: public TObject{

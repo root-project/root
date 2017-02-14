@@ -15,13 +15,9 @@
 #include <map>
 #include <string>
 
-#ifndef ROOT_TVirtualRefProxy
 #include "TVirtualRefProxy.h"
-#endif
 
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
 // Forward declarations
 class TFormLeafInfoReference;

@@ -20,15 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
-#endif
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
 
 class TMatrixDSymEigen
 {

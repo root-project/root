@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTBase
 #include "TMatrixTBase.h"
-#endif
 
 template<class Element> class TVectorT;
 template<class Element> class TMatrixTBase;

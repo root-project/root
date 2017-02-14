@@ -12,9 +12,7 @@
 #define ROOT_TPaveStats
 
 
-#ifndef ROOT_TPaveText
 #include "TPaveText.h"
-#endif
 
 
 class TPaveStats : public TPaveText {

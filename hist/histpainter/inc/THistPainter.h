@@ -21,12 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TVirtualHistPainter
 #include "TVirtualHistPainter.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 #include <vector>
 #include <utility>

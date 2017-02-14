@@ -33,9 +33,7 @@
 #include <iostream>
 
 // ROOT
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 /*! \class TMVA::kNN:Node
 \ingroup TMVA

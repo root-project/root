@@ -12,21 +12,13 @@
 #ifndef ROOT_TVirtualGeoTrack
 #define ROOT_TVirtualGeoTrack
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
 class TVirtualGeoTrack : public TObject,
                          public TGeoAtt,

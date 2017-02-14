@@ -12,9 +12,7 @@
 #ifndef ROOT_TArcBall
 #define ROOT_TArcBall
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TPoint;
 

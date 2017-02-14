@@ -43,16 +43,10 @@
 #ifndef ROOT_TQpDataSparse
 #define ROOT_TQpDataSparse
 
-#ifndef ROOT_TQpDataBase
 #include "TQpDataBase.h"
-#endif
-#ifndef ROOT_TQpVar
 #include "TQpVar.h"
-#endif
 
-#ifndef ROOT_TMatrixDSparse
 #include "TMatrixDSparse.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

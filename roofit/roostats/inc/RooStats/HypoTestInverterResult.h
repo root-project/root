@@ -13,9 +13,7 @@
 
 
 
-#ifndef ROOSTATS_SimpleInterval
 #include "RooStats/SimpleInterval.h"
-#endif
 
 #include "RooStats/HypoTestResult.h"
 

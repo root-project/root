@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGraph2D
 #include "TGraph2D.h"
-#endif
 
 class TGraph2DErrors : public TGraph2D {
 

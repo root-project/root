@@ -45,24 +45,12 @@ Class that contains all the data information.
 #include "TROOT.h"
 #include "TObjString.h"
 
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
-#ifndef ROOT_TMVA_DataSetManager
 #include "TMVA/DataSetManager.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"

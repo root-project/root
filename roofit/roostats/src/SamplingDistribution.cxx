@@ -22,9 +22,7 @@ a weighted set of points (eg. for the FFT method).
 The class supports merging.
 */
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include "RooStats/SamplingDistribution.h"
 #include "RooNumber.h"

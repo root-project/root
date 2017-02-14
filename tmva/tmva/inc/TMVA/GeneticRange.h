@@ -33,9 +33,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_Interval
 #include "TMVA/Interval.h"
-#endif
 
 class TRandom3;
 

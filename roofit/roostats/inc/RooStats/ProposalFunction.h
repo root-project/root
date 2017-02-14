@@ -15,22 +15,12 @@
 #ifndef ROOSTATS_ProposalFunction
 #define ROOSTATS_ProposalFunction
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
 
 
 namespace RooStats {
