@@ -9,7 +9,7 @@ void FillTree(const char* filename, const char* treeName) {
    TTree t(treeName, treeName);
    int i;
    t.Branch("i", &i);
-   for(i=0; i<100000000; ++i)
+   for(i=0; i<1000000; ++i)
       t.Fill();
    t.Write();
    f.Close();
@@ -17,9 +17,10 @@ void FillTree(const char* filename, const char* treeName) {
 
 
 int main() {
-   // TODO add a section without EnableImplicitMT enabled
-
-   ROOT::EnableImplicitMT(4);
+   // reference output must be the same for parallel and sequential execution
+#ifdef R__USE_IMT
+   ROOT::EnableImplicitMT();
+#endif
 
    // Prepare an input tree to run on
    auto fileName = "test_par.root";
@@ -28,13 +29,16 @@ int main() {
    TFile f(fileName);
 
    ROOT::Experimental::TDataFrame d(treeName, &f, {"i"});
-   auto max = d.Filter([](int i) { return i % 2 == 1; }).Max();
-   auto min = d.Min();
-   auto mean = d.Mean();
-   auto h = d.Histo1D();
-   std::cout << std::setprecision(10) << "max " << *max << std::endl;
-   std::cout << std::setprecision(10) << "min " << *min << std::endl;
-   std::cout << std::setprecision(10) << "mean " << *mean << std::endl;
-   std::cout << std::setprecision(10) << "h entries " << h->GetEntries() << std::endl;
+   auto count = d.Count();
+   auto max = d.Filter([](int i) { return i % 2 == 1; }).Max<int>();
+   auto min = d.Min<int>();
+   auto mean = d.Mean<int>();
+   auto h = d.Histo1D<int>();
+   std::cout << std::setprecision(10)
+      << "count " << *count << "\n"
+      << "max " << *max << "\n"
+      << "min " << *min << "\n"
+      << "mean " << *mean << "\n"
+      << "h entries " << h->GetEntries() << std::endl;
    return 0;
 }
