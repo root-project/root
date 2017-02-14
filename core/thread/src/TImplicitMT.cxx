@@ -25,8 +25,8 @@
 
 static std::shared_ptr<ROOT::TPoolManager> &GetPoolManagerMT()
 {
-  static std::shared_ptr<ROOT::TPoolManager> schedMT;
-  return schedMT;
+   static std::shared_ptr<ROOT::TPoolManager> schedMT;
+   return schedMT;
 }
 
 static bool &GetImplicitMTFlag()
@@ -50,13 +50,12 @@ static std::atomic_int &GetParTreeProcessingCount()
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
    if (!GetImplicitMTFlag()) {
-      if(ROOT::TPoolManager::GetNThreads() ==0) {
+      if (ROOT::TPoolManager::GetPoolSize() == 0) {
          TThread::Initialize();
       }
-      (GetPoolManagerMT()) = GetPoolManager(numthreads);
+      (GetPoolManagerMT()) = ROOT::GetPoolManager(numthreads);
       GetImplicitMTFlag() = true;
-   }
-   else {
+   } else {
       ::Warning("ROOT_TImplicitMT_EnableImplicitMT", "Implicit multi-threading is already enabled");
    }
 };
@@ -66,8 +65,7 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
    if (GetImplicitMTFlag()) {
       GetImplicitMTFlag() = false;
       GetPoolManagerMT().reset();
-   }
-   else {
+   } else {
       ::Warning("ROOT_TImplicitMT_DisableImplicitMT", "Implicit multi-threading is already disabled");
    }
 };
@@ -79,7 +77,7 @@ extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
 
 extern "C" UInt_t ROOT_TImplicitMT_GetImplicitMTPoolSize()
 {
-   return ROOT::TPoolManager::GetNThreads();
+   return ROOT::TPoolManager::GetPoolSize();
 };
 
 
