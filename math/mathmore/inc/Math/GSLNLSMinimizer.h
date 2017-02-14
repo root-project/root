@@ -38,9 +38,7 @@
 
 #include "Math/FitMethodFunction.h"
 
-#ifndef ROOT_Math_MinimTransformVariable
 #include "Math/MinimTransformVariable.h"
-#endif
 
 
 #include <vector>

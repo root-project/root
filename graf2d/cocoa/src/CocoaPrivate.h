@@ -21,9 +21,7 @@
 #include "X11Events.h"
 #include "X11Buffer.h"
 #include "GuiTypes.h"
-#ifndef ROOT_GuiFonts
 #include "FontCache.h"
-#endif
 
 @protocol X11Drawable;
 @protocol X11Window;

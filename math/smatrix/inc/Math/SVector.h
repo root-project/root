@@ -356,9 +356,7 @@ std::ostream& operator<<(std::ostream& os, const ROOT::Math::SVector<T,D>& rhs);
 // include operators and functions
 #include "Math/UnaryOperators.h"
 #include "Math/BinaryOperators.h"
-#ifndef ROOT_Math_MatrixFunctions
 #include "Math/Functions.h"
-#endif
 
 #endif // __CINT__
 
