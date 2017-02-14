@@ -920,6 +920,9 @@ public:
    TDataFrame(TTree &tree, const BranchNames &defaultBranches = {});
 };
 
+extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
+extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
+
 } // end NS Experimental
 
 namespace Detail {

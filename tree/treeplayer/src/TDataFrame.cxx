@@ -635,6 +635,8 @@ void TDataFrameImpl::Report() const {
 namespace Experimental {
 
 template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
+template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
+template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 } // end NS Experimental
 
