@@ -13,54 +13,22 @@
     \ingroup Roostats
 */
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef RooStats_ProposalHelper
 #include "RooStats/ProposalHelper.h"
-#endif
-#ifndef ROOSTATS_PdfProposal
 #include "RooStats/PdfProposal.h"
-#endif
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
-#ifndef ROO_ADD_PDF
 #include "RooAddPdf.h"
-#endif
-#ifndef ROO_KEYS_PDF
 #include "RooNDKeysPdf.h"
-#endif
-#ifndef ROO_UNIFORM
 #include "RooUniform.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
-#ifndef ROO_MULTI_VAR_GAUSSIAN
 #include "RooMultiVarGaussian.h"
-#endif
-#ifndef ROO_CONST_VAR
 #include "RooConstVar.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 #include <map>
 

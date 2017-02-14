@@ -12,13 +12,9 @@
 #ifndef ROOT_TGeoNavigator
 #define ROOT_TGeoNavigator
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TGeoNodeCache
 #include "TGeoCache.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -208,9 +204,7 @@ public :
    ClassDef(TGeoNavigator, 0)          // geometry navigator class
 };
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //

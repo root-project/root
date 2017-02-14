@@ -21,21 +21,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #include <vector>
 

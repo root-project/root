@@ -21,13 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_ESTLType
 #include "ESTLType.h"
-#endif
 
 class TFile;
 class TClass;

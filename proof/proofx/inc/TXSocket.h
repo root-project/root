@@ -22,30 +22,16 @@
 
 #define DFLT_CONNECTMAXTRY           10
 
-#ifndef ROOT_TSemaphore
 #include "TSemaphore.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TMessage
 #include "TMessage.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
-#ifndef ROOT_TSocket
 #include "TSocket.h"
-#endif
 #ifndef __XPTYPES_H
 #include "XProtocol/XPtypes.hh"
 #endif
-#ifndef XRC_UNSOLMSG_H
 #include "XrdClient/XrdClientUnsolMsg.hh"
-#endif
 
 #include <list>
 #include <mutex>

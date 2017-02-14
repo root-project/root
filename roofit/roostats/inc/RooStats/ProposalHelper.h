@@ -12,30 +12,14 @@
 #ifndef RooStats_ProposalHelper
 #define RooStats_ProposalHelper
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
-#ifndef ROOSTATS_UniformProposal
 #include "RooStats/UniformProposal.h"
-#endif
-#ifndef ROOSTATS_PdfProposal
 #include "RooStats/PdfProposal.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 
 

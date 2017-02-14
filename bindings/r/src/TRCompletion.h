@@ -4,9 +4,7 @@
 #ifndef ROOT_R_TRCompletion
 #define ROOT_R_TRCompletion
 
-#ifndef ROOT_R_RExports
-#include<RExports.h>
-#endif
+#include <RExports.h>
 
 #if !defined(_READLINE_H_)
 

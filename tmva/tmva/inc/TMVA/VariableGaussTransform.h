@@ -29,9 +29,7 @@
 #ifndef ROOT_TMVA_VariableGaussTransform
 #define ROOT_TMVA_VariableGaussTransform
 
-#ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -43,25 +41,13 @@
 
 #include <vector>
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
-#ifndef ROOT_TSpline
 #include "TSpline.h"
-#endif
-#ifndef ROOT_TDirectory
 #include "TDirectory.h"
-#endif
-#ifndef ROOT_Event
 #include "Event.h"
-#endif
 
-#ifndef ROOT_TMVA_VariableTransformBase
 #include "TMVA/VariableTransformBase.h"
-#endif
 
 namespace TMVA {
 

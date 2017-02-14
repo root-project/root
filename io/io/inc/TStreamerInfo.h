@@ -14,13 +14,9 @@
 
 #include <atomic>
 
-#ifndef ROOT_TVirtualStreamerInfo
 #include "TVirtualStreamerInfo.h"
-#endif
 
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
 
 #include "TVirtualCollectionProxy.h"
 

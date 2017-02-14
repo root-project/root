@@ -13,13 +13,9 @@
 #ifndef ROOT_Fit_UnBinData
 #define ROOT_Fit_UnBinData
 
-#ifndef ROOT_Fit_DataVector
 #include "Fit/DataVector.h"
-#endif
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
 
 

@@ -21,21 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TTString
 #include "TString.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
 
 class TPolyLine3D : public TObject, public TAttLine, public TAtt3D

@@ -18,21 +18,13 @@
 
 
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3D
 #include "Math/GenVector/DisplacementVector3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_PositionVector3D
 #include "Math/GenVector/PositionVector3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_Rotation3D
 #include "Math/GenVector/Rotation3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_Translation3D
 #include "Math/GenVector/Translation3D.h"
-#endif
 
 
 #include "Math/GenVector/AxisAnglefwd.h"

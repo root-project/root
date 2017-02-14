@@ -13,13 +13,9 @@
 #define ROOT_TGWin32
 
 
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
-#ifndef ROOT_TTF
 #include "TTF.h"
-#endif
 
 
 #if !defined(__CINT__)

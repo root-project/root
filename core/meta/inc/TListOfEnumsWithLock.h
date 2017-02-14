@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TListOfEnums
 #include "TListOfEnums.h"
-#endif
 
 class TExMap;
 class TEnum;

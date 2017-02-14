@@ -13,9 +13,7 @@
 #ifndef ROOT_TIndexTable
 #define ROOT_TIndexTable
 
-#ifndef ROOT_TTable
 #include "TTable.h"
-#endif
 
 //////////////////////////////////////////////////////
 //

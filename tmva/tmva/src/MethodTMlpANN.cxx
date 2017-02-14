@@ -56,9 +56,7 @@ for details on this ANN.
 #include "TMVA/VariableInfo.h"
 
 #include "TMVA/ClassifierFactory.h"
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
 
 #include "Riostream.h"
 #include "TLeaf.h"

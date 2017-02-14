@@ -20,15 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixT
 #include "TMatrixT.h"
-#endif
-#ifndef ROOT_TMatrixTSym
 #include "TMatrixTSym.h"
-#endif
-#ifndef ROOT_TMatrixTSparse
 #include "TMatrixTSparse.h"
-#endif
 
 template<class Element> class TVectorT : public TObject {
 

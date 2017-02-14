@@ -46,35 +46,17 @@
 #include <map>
 #include "assert.h"
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMVA_IMethod
 #include "TMVA/IMethod.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_TransformationHandler
 #include "TMVA/TransformationHandler.h"
-#endif
-#ifndef ROOT_TMVA_Results
-#include<TMVA/Results.h>
-#endif
+#include <TMVA/Results.h>
 
-#ifndef ROOT_TFile
-#include<TFile.h>
-#endif
+#include <TFile.h>
 
 class TGraph;
 class TTree;

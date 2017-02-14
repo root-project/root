@@ -12,9 +12,7 @@
 #define ROOT_TCreatePrimitives
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include "TLatex.h"
 #include "TCurlyArc.h"

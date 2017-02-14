@@ -58,9 +58,7 @@
 #include <TPluginManager.h>
 #include <TVirtualGL.h>
 
-#ifndef _CONSTANTS_H_
 #include "constants.h"
-#endif
 
 enum RootShowerMessageTypes {
    M_FILE_OPEN,

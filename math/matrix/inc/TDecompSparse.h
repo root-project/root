@@ -18,18 +18,10 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDecompBase
 #include "TDecompBase.h"
-#endif
-#ifndef ROOT_TMatrixDSparse
 #include "TMatrixDSparse.h"
-#endif
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
 
 // globals
 const Double_t kInitTreatAsZero         = 1.0e-12;

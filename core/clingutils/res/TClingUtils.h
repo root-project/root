@@ -73,9 +73,7 @@ namespace cling {
 // for TClassEdit::TInterpreterLookupHelper
 #include "TClassEdit.h"
 
-#ifndef ROOT_Varargs
 #include "Varargs.h"
-#endif
 
 namespace ROOT {
    namespace TMetaUtils {

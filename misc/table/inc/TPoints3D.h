@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TPoints3DABC
 #include "TPoints3DABC.h"
-#endif
 
 
 class TPoints3D : public TPoints3DABC {

@@ -52,9 +52,7 @@
 //        GiniLaplace(Sample) = 2(s*b+s+b+1)/(s+b+2)^2                  //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
 namespace TMVA {
 

@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoHype
 #define ROOT_TGeoHype
 
-#ifndef ROOT_TGeoTube
 #include "TGeoTube.h"
-#endif
 
 class TGeoHype : public TGeoTube
 {

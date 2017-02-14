@@ -43,17 +43,11 @@
 #ifndef ROOT_TQpDataBase
 #define ROOT_TQpDataBase
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
-#ifndef ROOT_TQpVar
 #include "TQpVar.h"
-#endif
 
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

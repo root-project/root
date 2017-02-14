@@ -19,9 +19,7 @@
 
 #ifndef ROOT_TTextEditor
 #define ROOT_TTextEditor
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
 class TText;
 class TGTextEntry;

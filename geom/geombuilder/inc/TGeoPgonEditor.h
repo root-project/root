@@ -19,12 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoPconEditor
 #include "TGeoPconEditor.h"
-#endif
 
 class TGNumberEntry;
 class TGTab;

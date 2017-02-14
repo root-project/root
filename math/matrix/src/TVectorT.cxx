@@ -2359,15 +2359,9 @@ void TVectorT<Element>::Streamer(TBuffer &R__b)
    }
 }
 
-#ifndef ROOT_TMatrixFfwd
 #include "TMatrixFfwd.h"
-#endif
-#ifndef ROOT_TMatrixFSymfwd
 #include "TMatrixFSymfwd.h"
-#endif
-#ifndef ROOT_TMatrixFSparsefwd
 #include "TMatrixFSparsefwd.h"
-#endif
 
 template class TVectorT<Float_t>;
 
@@ -2417,15 +2411,9 @@ template void      Compare             <Float_t>         (const TVectorF &v1,con
 template Bool_t    VerifyVectorValue   <Float_t>         (const TVectorF &m,       Float_t   val,Int_t verbose,Float_t maxDevAllow);
 template Bool_t    VerifyVectorIdentity<Float_t>         (const TVectorF &m1,const TVectorF &m2, Int_t verbose,Float_t maxDevAllow);
 
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TMatrixDSymfwd
 #include "TMatrixDSymfwd.h"
-#endif
-#ifndef ROOT_TMatrixDSparsefwd
 #include "TMatrixDSparsefwd.h"
-#endif
 
 template class TVectorT<Double_t>;
 

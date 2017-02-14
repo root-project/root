@@ -34,9 +34,7 @@ MA  02110-1301  USA
 #ifndef   _RSALIB_H
 #define   _RSALIB_H
 
-#ifndef _RSADEF_H
 #include "rsadef.h"
-#endif
 
 #include <stdio.h>
 

@@ -56,9 +56,7 @@
 //     Gini(Sample) = 2s*b/(s+b)^2                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
 namespace TMVA {
 

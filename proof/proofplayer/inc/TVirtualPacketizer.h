@@ -33,18 +33,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TSlave
 #include "TSlave.h"
-#endif
-#ifndef ROOT_TProofProgressStatus
 #include "TProofProgressStatus.h"
-#endif
-#ifndef ROOT_TTime
 #include "TTime.h"
-#endif
 
 
 class TDSet;

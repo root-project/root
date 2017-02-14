@@ -11,17 +11,11 @@
 #ifndef ROOSTATS_HypoTestPlot
 #define ROOSTATS_HypoTestPlot
 
-#ifndef ROOSTATS_SamplingDistPlot
 #include "RooStats/SamplingDistPlot.h"
-#endif
 
-#ifndef ROOSTATS_SamplingDistribution
 #include "RooStats/SamplingDistribution.h"
-#endif
 
-#ifndef ROOSTATS_HypoTestResult
 #include "RooStats/HypoTestResult.h"
-#endif
 
 namespace RooStats {
 

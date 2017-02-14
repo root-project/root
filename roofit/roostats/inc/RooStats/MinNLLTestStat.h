@@ -15,9 +15,7 @@
 
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <vector>
 

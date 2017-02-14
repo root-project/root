@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGObject
 #include "TGObject.h"
-#endif
-#ifndef ROOT_TRefCnt
 #include "TRefCnt.h"
-#endif
 
 class THashTable;
 

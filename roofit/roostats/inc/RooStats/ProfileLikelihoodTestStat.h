@@ -13,30 +13,18 @@
 #define ROOSTATS_ProfileLikelihoodTestStat
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#endif
 
 
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
 
-#ifndef ROO_NLL_VAR
 #include "RooNLLVar.h"
-#endif
 
-#ifndef ROOTT_Math_MinimizerOptions
 #include "Math/MinimizerOptions.h"
-#endif
 
-#ifndef ROOSTATS_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
 
 namespace RooStats {

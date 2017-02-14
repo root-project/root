@@ -12,9 +12,7 @@
 #ifndef ROOT_TKeyMapFile
 #define ROOT_TKeyMapFile
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TBrowser;
 class TMapFile;

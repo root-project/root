@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGListView
 #include "TGListView.h"
-#endif
 
 
 class TGLabel;

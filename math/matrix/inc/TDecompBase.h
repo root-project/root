@@ -23,16 +23,10 @@
 
 #include "Rtypes.h"
 
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TMatrixDUtils
 #include "TMatrixDUtils.h"
-#endif
 #include "TObject.h"
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
 
 #include <limits>
 

@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSeqCollection
 #include "TSeqCollection.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 #include <iterator>
 

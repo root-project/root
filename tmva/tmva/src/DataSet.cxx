@@ -37,30 +37,14 @@ Class that contains all the data information
 #include <stdexcept>
 #include <algorithm>
 
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_ResultsRegression
 #include "TMVA/ResultsRegression.h"
-#endif
-#ifndef ROOT_TMVA_ResultsClassification
 #include "TMVA/ResultsClassification.h"
-#endif
-#ifndef ROOT_TMVA_ResultsMulticlass
 #include "TMVA/ResultsMulticlass.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
 
 #include "TMVA/Types.h"
 #include "TMVA/Results.h"

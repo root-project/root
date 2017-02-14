@@ -14,17 +14,11 @@
 #ifndef ROOSTATS_HypoTestResult
 #define ROOSTATS_HypoTestResult
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOSTATS_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
-#ifndef ROOSTATS_SamplingDistribution
 #include "RooStats/SamplingDistribution.h"
-#endif
 
 namespace RooStats {
 

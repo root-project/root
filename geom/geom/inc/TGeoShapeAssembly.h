@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoShapeAssembly
 #define ROOT_TGeoShapeAssembly
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
 
 class TGeoVolumeAssembly;
 

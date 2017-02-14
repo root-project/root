@@ -33,12 +33,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_FitterBase
 #include "TMVA/FitterBase.h"
-#endif
-#ifndef ROOT_TMVA_IFitterTarget
 #include "TMVA/IFitterTarget.h"
-#endif
 
 class TFitter;
 

@@ -12,18 +12,10 @@
 #ifndef ROOT_TCandle
 #define ROOT_TCandle
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarket
 #include "TAttMarker.h"
-#endif
 
 #include "TH1D.h"
 #include "TMath.h"

@@ -57,33 +57,15 @@ Class that contains all the data information
 #include "TMath.h"
 #include "TROOT.h"
 
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_VariableIdentityTransform
 #include "TMVA/VariableIdentityTransform.h"
-#endif
-#ifndef ROOT_TMVA_VariableDecorrTransform
 #include "TMVA/VariableDecorrTransform.h"
-#endif
-#ifndef ROOT_TMVA_VariablePCATransform
 #include "TMVA/VariablePCATransform.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
-#ifndef ROOT_TMVA_DataInputHandler
 #include "TMVA/DataInputHandler.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"

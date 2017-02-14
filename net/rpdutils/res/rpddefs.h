@@ -19,9 +19,7 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_AuthConst
 #include "AuthConst.h"
-#endif
 
 //
 // Typedefs

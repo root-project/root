@@ -21,21 +21,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSelector
 #include "TSelector.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TTreeDrawArgsParser
 #include "TTreeDrawArgsParser.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 #include <vector>
 

@@ -13,9 +13,7 @@
 #ifndef ROOT_TKeySQL
 #define ROOT_TKeySQL
 
-#ifndef ROOT_TKey
 #include "TKey.h"
-#endif
 
 class TSQLFile;
 

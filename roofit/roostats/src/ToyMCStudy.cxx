@@ -21,9 +21,7 @@ This is also its intended use case.
 #include "RooStats/ToyMCSampler.h"
 
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include "RooRandom.h"
 #include "TRandom2.h"

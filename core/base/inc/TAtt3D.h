@@ -13,9 +13,7 @@
 #define ROOT_TAtt3D
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TAtt3D {

@@ -11,18 +11,10 @@
 #ifndef ROOT_TVector3
 #define ROOT_TVector3
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TVector2
 #include "TVector2.h"
-#endif
-#ifndef ROOT_TMatrix
 #include "TMatrix.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 class TRotation;
 

@@ -11,9 +11,7 @@
 #ifndef ROOT_TTreeTableInterface
 #define ROOT_TTreeTableInterface
 
-#ifndef ROOT_TVirtualTableInterface
 #include "TVirtualTableInterface.h"
-#endif
 
 class TTree;
 class TObjArray;

@@ -28,15 +28,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_GLConstants
 #include "GLConstants.h"
-#endif
 
 class TVirtualViewer3D;
 class TPoints3DABC;

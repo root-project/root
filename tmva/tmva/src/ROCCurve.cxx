@@ -24,24 +24,12 @@
 \ingroup TMVA
 
 */
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_ROCCurve
 #include "TMVA/ROCCurve.h"
-#endif
-#ifndef ROOT_TMVA_Config
 #include "TMVA/Config.h"
-#endif
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 #include<vector>
 #include <cassert>

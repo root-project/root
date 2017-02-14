@@ -963,9 +963,7 @@ Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
    return kTRUE;
 }
 
-#ifndef ROOT_TMatrixFfwd
 #include "TMatrixFfwd.h"
-#endif
 
 template Bool_t TMatrixTCramerInv::Inv2x2<Float_t>(TMatrixF&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv3x3<Float_t>(TMatrixF&,Double_t*);
@@ -973,9 +971,7 @@ template Bool_t TMatrixTCramerInv::Inv4x4<Float_t>(TMatrixF&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv5x5<Float_t>(TMatrixF&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv6x6<Float_t>(TMatrixF&,Double_t*);
 
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
 
 template Bool_t TMatrixTCramerInv::Inv2x2<Double_t>(TMatrixD&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv3x3<Double_t>(TMatrixD&,Double_t*);

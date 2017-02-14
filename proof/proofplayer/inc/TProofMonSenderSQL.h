@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofMonSender
 #include "TProofMonSender.h"
-#endif
 
 class TDSet;
 class TList;

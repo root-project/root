@@ -21,9 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
 class TBranchObject : public TBranch {
 

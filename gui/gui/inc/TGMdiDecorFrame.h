@@ -22,30 +22,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGMenu
 #include "TGMenu.h"
-#endif
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
-#ifndef ROOT_TGIcon
 #include "TGIcon.h"
-#endif
-#ifndef ROOT_TGLabel
 #include "TGLabel.h"
-#endif
-#ifndef ROOT_TGFont
 #include "TGFont.h"
-#endif
-#ifndef ROOT_TGMdiMainFrame
 #include "TGMdiMainFrame.h"
-#endif
-#ifndef ROOT_TGMdiFrame
 #include "TGMdiFrame.h"
-#endif
 
 
 // placement of window resizers

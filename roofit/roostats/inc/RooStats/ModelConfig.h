@@ -12,25 +12,15 @@
 #define ROOSTATS_ModelConfig
 
 
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
 
-#ifndef ROO_ABS_DATA
 #include "RooAbsData.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
-#ifndef ROO_WORKSPACE
 #include "RooWorkspace.h"
-#endif
 
-#ifndef ROOT_TRef
 #include "TRef.h"
-#endif
 
 #include <string>
 

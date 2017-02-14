@@ -27,17 +27,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSystemDirectory
 #include "TSystemDirectory.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 class TRemoteObject : public TNamed {
 

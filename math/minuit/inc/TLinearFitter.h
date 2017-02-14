@@ -142,18 +142,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TFormula
 #include "TFormula.h"
-#endif
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
 
 
 class TLinearFitter: public TVirtualFitter {

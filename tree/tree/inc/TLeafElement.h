@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
-#ifndef ROOT_TBranchElement
 #include "TBranchElement.h"
-#endif
 
 class TMethodCall;
 

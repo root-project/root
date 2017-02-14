@@ -13,9 +13,7 @@
 #define ROOT_TCrown
 
 
-#ifndef ROOT_TEllipse
 #include "TEllipse.h"
-#endif
 
 
 class TCrown : public TEllipse {

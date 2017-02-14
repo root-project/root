@@ -12,9 +12,7 @@
 #define ROOT_TVirtualRefProxy
 
 // Framework include files
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif  // ROOT_Rtypes
+#include "Rtypes.h"  // ROOT_Rtypes
 
 // Forward declarations
 class TClass;

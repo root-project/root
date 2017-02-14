@@ -13,12 +13,8 @@
 #define ROOT_TLegend
 
 
-#ifndef ROOT_TPave
 #include "TPave.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
 class TObject;
 class TList;

@@ -14,15 +14,9 @@
 
 #include <vector>
 
-#ifndef ROOT_TGCocoa
 #include "TGCocoa.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_TTF
 #include "TTF.h"
-#endif
 
 /** \class TGQuartz
 \ingroup cocoa

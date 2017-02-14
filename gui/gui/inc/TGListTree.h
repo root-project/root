@@ -30,15 +30,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TDNDManager
 #include "TGDNDManager.h"
-#endif
 
 class TGPicture;
 class TGToolTip;

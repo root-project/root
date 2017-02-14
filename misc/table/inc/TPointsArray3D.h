@@ -21,9 +21,7 @@
 
 #include "TPoints3DABC.h"
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TPointsArray3D : public TPoints3DABC {

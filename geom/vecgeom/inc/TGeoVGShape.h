@@ -11,9 +11,7 @@
 #ifndef ROOT_TGeoVGShape
 #define ROOT_TGeoVGShape
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //

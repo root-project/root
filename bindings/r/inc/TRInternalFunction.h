@@ -12,9 +12,7 @@
 #ifndef ROOT_R_TRInternalFunction
 #define ROOT_R_TRInternalFunction
 
-#ifndef ROOT_R_RExports
-#include<RExports.h>
-#endif
+#include <RExports.h>
 
 #ifndef Rcpp_hpp
 #include <Rcpp.h>

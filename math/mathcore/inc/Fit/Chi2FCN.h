@@ -13,32 +13,22 @@
 #ifndef ROOT_Fit_Chi2FCN
 #define ROOT_Fit_Chi2FCN
 
-#ifndef ROOT_Fit_BasicFCN
 #include "Fit/BasicFCN.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
 #include "Math/IFunction.h"
 #include "Math/IFunctionfwd.h"
 
-#ifndef ROOT_Fit_BinData
 #include "Fit/BinData.h"
-#endif
 
 
-#ifndef ROOT_Fit_FitUtil
 #include "Fit/FitUtil.h"
-#endif
 
 //#define ROOT_FIT_PARALLEL
 
 #ifdef ROOT_FIT_PARALLEL
-#ifndef ROOT_Fit_FitUtilParallel
 #include "Fit/FitUtilParallel.h"
-#endif
 #endif
 
 #include <memory>

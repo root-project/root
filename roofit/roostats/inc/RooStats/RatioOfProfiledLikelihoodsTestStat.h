@@ -12,21 +12,13 @@
 #define ROOSTATS_RatioOfProfiledLikelihoodsTestStat
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROO_NLL_VAR
 #include "RooNLLVar.h"
-#endif
 
-#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#endif
 
-#ifndef ROOSTATS_ProfileLikelihoodTestStat
 #include "RooStats/ProfileLikelihoodTestStat.h"
-#endif
 
 
 namespace RooStats {

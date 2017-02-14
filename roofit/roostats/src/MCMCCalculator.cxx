@@ -32,51 +32,21 @@
    will return an ConfInterval (MCMCInterval in this case).
  */
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
-#endif
-#ifndef ROO_ABS_REAL
 #include "RooAbsReal.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROOSTATS_ModelConfig
 #include "RooStats/ModelConfig.h"
-#endif
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROOSTATS_MCMCCalculator
 #include "RooStats/MCMCCalculator.h"
-#endif
-#ifndef ROOSTATS_MetropolisHastings
 #include "RooStats/MetropolisHastings.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
-#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
-#ifndef ROOSTATS_UniformProposal
 #include "RooStats/UniformProposal.h"
-#endif
-#ifndef ROOSTATS_PdfProposal
 #include "RooStats/PdfProposal.h"
-#endif
-#ifndef ROO_PROD_PDF
 #include "RooProdPdf.h"
-#endif
 
 ClassImp(RooStats::MCMCCalculator);
 

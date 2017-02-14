@@ -2065,9 +2065,7 @@ void TMatrixTSym<Element>::Streamer(TBuffer &R__b)
    }
 }
 
-#ifndef ROOT_TMatrixFSymfwd
 #include "TMatrixFSymfwd.h"
-#endif
 
 template class TMatrixTSym<Float_t>;
 
@@ -2091,9 +2089,7 @@ template TMatrixFSym &Add        <Float_t>(TMatrixFSym &target,      Float_t    
 template TMatrixFSym &ElementMult<Float_t>(TMatrixFSym &target,const TMatrixFSym &source);
 template TMatrixFSym &ElementDiv <Float_t>(TMatrixFSym &target,const TMatrixFSym &source);
 
-#ifndef ROOT_TMatrixDSymfwd
 #include "TMatrixDSymfwd.h"
-#endif
 
 template class TMatrixTSym<Double_t>;
 

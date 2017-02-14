@@ -12,15 +12,9 @@
 #ifndef ROOT_TGLScenePad
 #define ROOT_TGLScenePad
 
-#ifndef ROOT_TGLScene
 #include "TGLScene.h"
-#endif
-#ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
-#endif
-#ifndef ROOT_CsgOps
 #include "CsgOps.h"
-#endif
 
 
 class TGLViewer;

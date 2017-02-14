@@ -20,15 +20,9 @@
 // Please, see TFITS.cxx for info about implementation                  //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
 
 class TArrayI;
 class TArrayD;

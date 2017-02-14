@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TClass
 #include "TClass.h"
-#endif
-#ifndef ROOT_TRef
 #include "TRef.h"
-#endif
 
 #include <string>
 

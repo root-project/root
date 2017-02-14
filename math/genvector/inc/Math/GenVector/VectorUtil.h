@@ -18,9 +18,7 @@
 #ifndef ROOT_Math_GenVector_VectorUtil
 #define ROOT_Math_GenVector_VectorUtil  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
 
 #include "Math/GenVector/Boost.h"

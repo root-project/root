@@ -12,9 +12,7 @@
 #ifndef ROOT_TFPBlock
 #define ROOT_TFPBlock
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 /**
 \class TFPBlock

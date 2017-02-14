@@ -4,13 +4,9 @@
 #ifndef ROOT_TRootSnifferStore
 #define ROOT_TRootSnifferStore
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TDataMember;
 class TFolder;

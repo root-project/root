@@ -11,21 +11,13 @@
 #ifndef RooStats_LikelihoodInterval
 #define RooStats_LikelihoodInterval
 
-#ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
-#ifndef ROO_ABS_REAL
 #include "RooAbsReal.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 #include <map>
 #include <memory>

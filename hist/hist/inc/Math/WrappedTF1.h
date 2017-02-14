@@ -14,13 +14,9 @@
 #define ROOT_Math_WrappedTF1
 
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
-#ifndef ROOT_TF1
 #include "TF1.h"
-#endif
 
 namespace ROOT {
 

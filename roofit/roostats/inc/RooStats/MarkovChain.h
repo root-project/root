@@ -12,26 +12,14 @@
 #ifndef ROOSTATS_MarkovChain
 #define ROOSTATS_MarkovChain
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_DATA_HIST
 #include "RooDataHist.h"
-#endif
-#ifndef ROOT_THnSparse
 #include "THnSparse.h"
-#endif
 //#include "RooArgSet.h"
 //#include "RooMsgService.h"
 //#include "RooRealVar.h"

@@ -13,9 +13,7 @@
 #define ROOT_TColorWheel
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TCanvas;
 class TArc;

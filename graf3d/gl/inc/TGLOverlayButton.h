@@ -12,18 +12,10 @@
 #ifndef ROOT_TGLOverlayButton
 #define ROOT_TGLOverlayButton
 
-#ifndef ROOT_TGLOverlay
 #include "TGLOverlay.h"
-#endif
-#ifndef ROOT_TGLFontManager
 #include "TGLFontManager.h"
-#endif
-#ifndef ROOT_TGLViewerBase
 #include "TGLViewerBase.h"
-#endif
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
 
 class TString;
 

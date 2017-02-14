@@ -38,13 +38,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"
-#endif
 
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
 
 #include <iostream>
 #include <vector>

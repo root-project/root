@@ -12,21 +12,13 @@
 #ifndef ROOT_TGShapedFrame
 #define ROOT_TGShapedFrame
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TImage
 #include "TImage.h"
-#endif
 
-#ifndef ROOT_TGPicture
 #include "TGPicture.h"
-#endif
 
 class TGShapedFrame : public TGCompositeFrame {
 

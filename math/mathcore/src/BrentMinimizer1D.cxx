@@ -32,9 +32,7 @@
 #include "Math/IFunction.h"
 #include "Math/IFunctionfwd.h"
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
 namespace ROOT {
 namespace Math {

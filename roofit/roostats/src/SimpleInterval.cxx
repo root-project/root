@@ -25,9 +25,7 @@ It implements simple 1-dimensional intervals in a range [a,b].
 In addition, you can ask it for the upper- or lower-bound.
 */
 
-#ifndef RooStats_SimpleInterval
 #include "RooStats/SimpleInterval.h"
-#endif
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include <string>

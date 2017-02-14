@@ -13,9 +13,7 @@
 #ifndef ROOT_Math_IParamFunctionfwd
 #define ROOT_Math_IParamFunctionfwd
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 namespace ROOT {
 

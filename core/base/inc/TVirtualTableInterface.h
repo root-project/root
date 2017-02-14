@@ -11,9 +11,7 @@
 #ifndef ROOT_TVirtualTableInterface
 #define ROOT_TVirtualTableInterface
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TVirtualTableInterface {

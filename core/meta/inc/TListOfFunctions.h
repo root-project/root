@@ -22,17 +22,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THastList
 #include "THashList.h"
-#endif
 
-#ifndef ROOT_THastTable
 #include "THashTable.h"
-#endif
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
 class TExMap;
 class TFunction;

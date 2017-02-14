@@ -17,9 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 template<class Element> class TMatrixTSparse;
 typedef TMatrixTSparse<Double_t> TMatrixDSparse;

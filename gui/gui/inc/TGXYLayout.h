@@ -89,9 +89,7 @@
 #ifndef ROOT_TGXYLayout
 #define ROOT_TGXYLayout
 
-#ifndef ROOT_TGLayout
 #include "TGLayout.h"
-#endif
 
 
 class TGXYLayoutHints : public TGLayoutHints {

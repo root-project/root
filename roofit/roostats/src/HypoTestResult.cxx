@@ -60,9 +60,7 @@ be larger than one.
 #include "RooStats/SamplingDistribution.h"
 #include "RooAbsReal.h"
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
 #include <limits>
 #define NaN numeric_limits<float>::quiet_NaN()

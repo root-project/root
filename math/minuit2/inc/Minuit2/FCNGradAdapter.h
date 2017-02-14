@@ -10,9 +10,7 @@
 #ifndef ROOT_Minuit2_FCNGradAdapter
 #define ROOT_Minuit2_FCNGradAdapter
 
-#ifndef ROOT_Minuit2_FCNGradientBase
 #include "Minuit2/FCNGradientBase.h"
-#endif
 
 //#define DEBUG
 #ifdef DEBUG

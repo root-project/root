@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TAuthenticate
 #include "TAuthenticate.h"
-#endif
-#ifndef ROOT_TSecContext
 #include "TSecContext.h"
-#endif
 
 class TRootSecContext : public TSecContext {
 

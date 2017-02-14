@@ -8,18 +8,10 @@
 #include <memory>
 #include <vector>
 
-#ifndef ROOT_TGLHistPainter
 #include "TGLHistPainter.h"
-#endif
-#ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
-#endif
-#ifndef ROOT_TGLQuadric
 #include "TGLQuadric.h"
-#endif
-#ifndef ROOT_TH3
 #include "TH3.h"
-#endif
 
 //
 //Composition of TH3 objects. All TH3 must have the same axis range

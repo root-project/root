@@ -15,21 +15,13 @@
 #include<iostream>
 #include<map>
 
-#ifndef ROOT_TNamed
-#include<TNamed.h>
-#endif
+#include <TNamed.h>
 
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
 
-#ifndef ROOT_TObjString
 #include "TObjString.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 
 namespace TMVA {

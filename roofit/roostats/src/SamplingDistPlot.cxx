@@ -30,9 +30,7 @@ objects.
 #include <iostream>
 
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include <limits>
 #define NaN std::numeric_limits<float>::quiet_NaN()

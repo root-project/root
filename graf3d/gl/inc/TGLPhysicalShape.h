@@ -16,9 +16,7 @@
 //#ifndef ROOT_TGLLogicalShape
 //#include "TGLLogicalShape.h"
 //#endif
-#ifndef ROOT_TGLBoundingBox
 #include "TGLBoundingBox.h"
-#endif
 #ifndef ROOT_TGLUtil
 #include "TGLUtil.h" // For TGLMatrix
 #endif

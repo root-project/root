@@ -40,12 +40,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
-#ifndef ROOT_TGToolTip
 #include "TGToolTip.h"
-#endif
 
 
 class TGedPopup : public TGCompositeFrame {

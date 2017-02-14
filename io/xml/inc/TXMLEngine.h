@@ -12,9 +12,7 @@
 #ifndef ROOT_TXMLEngine
 #define ROOT_TXMLEngine
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 typedef void* XMLNodePointer_t;
 typedef void* XMLNsPointer_t;

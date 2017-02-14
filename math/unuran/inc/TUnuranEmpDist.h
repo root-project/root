@@ -15,9 +15,7 @@
 #define ROOT_Math_TUnuranEmpDist
 
 
-#ifndef ROOT_Math_TUnuranBaseDist
 #include "TUnuranBaseDist.h"
-#endif
 
 #include <vector>
 

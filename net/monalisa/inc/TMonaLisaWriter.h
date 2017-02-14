@@ -12,12 +12,8 @@
 #ifndef ROOT_TMonaLisaWriter
 #define ROOT_TMonaLisaWriter
 
-#ifndef ROOT_TVirtualMonitoring
 #include "TVirtualMonitoring.h"
-#endif
-#ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
-#endif
 
 #ifndef __CINT__
 #include <ApMon.h>

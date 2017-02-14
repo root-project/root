@@ -11,9 +11,7 @@
 #ifndef ROOSTATS_ToyMCStudy
 #define ROOSTATS_ToyMCStudy
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include "RooAbsStudy.h"
 

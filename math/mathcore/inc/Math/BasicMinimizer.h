@@ -14,18 +14,12 @@
 #ifndef ROOT_Math_BasicMinimizer
 #define ROOT_Math_BasicMinimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
 #ifndef ROOT_Math_MinimTransformVariable
 #include "Math/MinimTransformVariable.h"

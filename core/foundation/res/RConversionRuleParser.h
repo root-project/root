@@ -10,9 +10,7 @@
 #include <ostream>
 #include <utility>
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 #include "TSchemaType.h"
 

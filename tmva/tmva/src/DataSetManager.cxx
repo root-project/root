@@ -35,21 +35,11 @@ Class that contains all the data information.
 #include <iostream>
 using std::endl;
 
-#ifndef ROOT_TMVA_DataSetManager
 #include "TMVA/DataSetManager.h"
-#endif
-#ifndef ROOT_TMVA_DataSetFactory
 #include "TMVA/DataSetFactory.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
 
 #include "TMVA/Types.h"
 

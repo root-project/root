@@ -23,15 +23,9 @@
 // mantained for backward compatibility and TTree usage                 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TBits
 #include "TBits.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 
 const Int_t kMAXFOUND = 500;

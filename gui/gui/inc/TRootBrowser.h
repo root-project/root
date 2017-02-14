@@ -12,13 +12,9 @@
 #ifndef ROOT_TRootBrowser
 #define ROOT_TRootBrowser
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TBrowserImp
 #include "TBrowserImp.h"
-#endif
 
 class TGLayoutHints;
 class TGTab;

@@ -20,11 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVectorT
 #include "TVectorT.h"
-#endif
-#ifndef ROOT_TVectorfwd
 #include "TVectorfwd.h"
-#endif
 
 #endif

@@ -22,25 +22,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TAttPad
 #include "TAttPad.h"
-#endif
 
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_Buttons
 #include "Buttons.h"
-#endif
 
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
 
 // forward declarations
 class TAxis;

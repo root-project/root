@@ -20,13 +20,9 @@
 #include "TF1.h"
 #include "TLegend.h"
 
-#ifndef ROOSTATS_SamplingDistribution
 #include "RooStats/SamplingDistribution.h"
-#endif
 
-#ifndef ROO_PLOT
 #include "RooPlot.h"
-#endif
 
 
 namespace RooStats {

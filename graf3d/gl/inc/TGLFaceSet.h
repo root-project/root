@@ -14,12 +14,8 @@
 #ifndef ROOT_TGLFaceSet
 #define ROOT_TGLFaceSet
 
-#ifndef ROOT_TGLLogicalShape
 #include "TGLLogicalShape.h"
-#endif
-#ifndef ROOT_CsgOps
 #include "CsgOps.h"
-#endif
 
 ///////////////////////////////////////////////////////////////////////
 class TGLFaceSet : public TGLLogicalShape

@@ -14,9 +14,7 @@
 #ifndef ROOT_Math_AdaptiveIntegratorMultiDim
 #define ROOT_Math_AdaptiveIntegratorMultiDim
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 #include "Math/VirtualIntegrator.h"
 

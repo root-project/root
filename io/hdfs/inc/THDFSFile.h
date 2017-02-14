@@ -12,13 +12,9 @@
 #ifndef ROOT_THDFSFile
 #define ROOT_THDFSFile
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 class THDFSFile : public TFile {
 

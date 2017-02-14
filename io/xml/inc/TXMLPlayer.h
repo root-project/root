@@ -12,17 +12,11 @@
 #ifndef ROOT_TXMLPlayer
 #define ROOT_TXMLPlayer
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
-#ifndef ROOT_TXMLSetup
 #include "TXMLSetup.h"
-#endif
 
 class TStreamerInfo;
 class TStreamerElement;

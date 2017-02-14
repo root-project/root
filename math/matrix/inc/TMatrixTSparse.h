@@ -12,12 +12,8 @@
 #ifndef ROOT_TMatrixTSparse
 #define ROOT_TMatrixTSparse
 
-#ifndef ROOT_TMatrixTBase
 #include "TMatrixTBase.h"
-#endif
-#ifndef ROOT_TMatrixTUtils
 #include "TMatrixTUtils.h"
-#endif
 
 
 #ifdef CBLAS

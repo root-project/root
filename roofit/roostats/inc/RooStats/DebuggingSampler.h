@@ -20,9 +20,7 @@ for true statistical tests, but it is useful for debugging.
 
 */
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <vector>
 

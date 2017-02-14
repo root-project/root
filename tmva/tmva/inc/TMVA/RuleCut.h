@@ -24,9 +24,7 @@
 #ifndef ROOT_TMVA_RuleCut
 #define ROOT_TMVA_RuleCut
 
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
 namespace TMVA {
 

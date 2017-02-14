@@ -29,31 +29,19 @@
 #ifndef ROOT_Math_GSLMCIntegrator
 #define ROOT_Math_GSLMCIntegrator
 
-#ifndef ROOT_Math_MCIntegrationTypes
 #include "Math/MCIntegrationTypes.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
 
-#ifndef ROOT_Math_MCIntegrationTypes
 #include "Math/MCIntegrationTypes.h"
-#endif
 
 
-#ifndef ROOT_Math_MCParameters
 #include "Math/MCParameters.h"
-#endif
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
 #include <iostream>
 

@@ -11,9 +11,7 @@
 #ifndef ROOT_TVirtualMagField
 #define ROOT_TVirtualMagField
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TVirtualMagField : public TNamed
 {

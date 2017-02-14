@@ -12,9 +12,7 @@
 #ifndef ROOT_TSapDBResult
 #define ROOT_TSapDBResult
 
-#ifndef ROOT_TSQLResult
 #include "TSQLResult.h"
-#endif
 
 #if !defined(__CINT__)
 #include <sys/time.h>

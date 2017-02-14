@@ -42,35 +42,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 #include <vector>
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TRandom3
 #include "TRandom3.h"
-#endif
-#ifndef ROOT_TMatrix
 #include "TMatrix.h"
-#endif
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
-#endif
-#ifndef ROOT_TMVA_TNeuron
 #include "TMVA/TNeuron.h"
-#endif
-#ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"
-#endif
 
 class TH1;
 class TH1F;

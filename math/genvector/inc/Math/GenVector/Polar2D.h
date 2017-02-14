@@ -19,13 +19,9 @@
 #ifndef ROOT_Math_GenVector_Polar2D
 #define ROOT_Math_GenVector_Polar2D  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_etaMax
 #include "Math/GenVector/etaMax.h"
-#endif
 
 
 
@@ -226,14 +222,10 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_Cartesian2D
 #include "Math/GenVector/Cartesian2D.h"
-#endif
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
 #endif
 
 namespace ROOT {

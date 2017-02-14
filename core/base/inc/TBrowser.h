@@ -26,12 +26,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TBrowserImp
 #include "TBrowserImp.h"
-#endif
 
 
 class TContextMenu;

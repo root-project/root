@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TConditionImp
 #include "TConditionImp.h"
-#endif
 
 #ifndef __CINT__
 #include <pthread.h>

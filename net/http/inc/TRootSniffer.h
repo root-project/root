@@ -4,13 +4,9 @@
 #ifndef ROOT_TRootSniffer
 #define ROOT_TRootSniffer
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class TFolder;
 class TMemFile;

@@ -46,25 +46,11 @@
 #include <vector>
 #include <map>
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_BinarySearchTree
 #include "TMVA/BinarySearchTree.h"
-#endif
-#ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
-#endif
-#ifndef ROOT_TMVA_TMatrixDfwd
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#endif
-#ifndef ROOT_TMVA_IFitterTarget
-#ifndef ROOT_IFitterTarget
 #include "IFitterTarget.h"
-#endif
-#endif
 
 class TRandom;
 

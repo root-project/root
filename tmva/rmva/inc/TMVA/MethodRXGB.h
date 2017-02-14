@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_RMethodBase
 #include "TMVA/RMethodBase.h"
-#endif
 
 namespace TMVA {
 

@@ -14,15 +14,9 @@
 #ifndef ROOT_TDCacheFile
 #define ROOT_TDCacheFile
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 #include <sys/stat.h>
 

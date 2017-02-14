@@ -32,9 +32,7 @@
 */
 
 //typedefs and tags definitions
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 namespace ROOT {

@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMathBase
 #include "TMathBase.h"
-#endif
 
 #include "RStringView.h"
 

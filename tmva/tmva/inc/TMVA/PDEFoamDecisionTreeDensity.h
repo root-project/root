@@ -34,16 +34,10 @@
 
 #include <vector>
 
-#ifndef ROOT_TH2
 #include "TH2.h"
-#endif
 
-#ifndef ROOT_TMVA_PDEFoamDensityBase
 #include "TMVA/PDEFoamDensityBase.h"
-#endif
-#ifndef ROOT_TMVA_Volume
 #include "TMVA/Volume.h"
-#endif
 
 namespace TMVA
 {

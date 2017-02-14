@@ -10,13 +10,9 @@
  *************************************************************************/
 
 
-#ifndef RooStats_NumberCountingUtils
 #include "RooStats/NumberCountingUtils.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
 // // Without this macro the THtml doc  can not be generated
 // #if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)

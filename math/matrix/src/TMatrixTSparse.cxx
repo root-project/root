@@ -2790,12 +2790,8 @@ void TMatrixTSparse<Element>::Streamer(TBuffer &R__b)
 
 template class TMatrixTSparse<Float_t>;
 
-#ifndef ROOT_TMatrixFSparsefwd
 #include "TMatrixFSparsefwd.h"
-#endif
-#ifndef ROOT_TMatrixFfwd
 #include "TMatrixFfwd.h"
-#endif
 
 template TMatrixFSparse  operator+    <Float_t>(const TMatrixFSparse &source1,const TMatrixFSparse &source2);
 template TMatrixFSparse  operator+    <Float_t>(const TMatrixFSparse &source1,const TMatrixF       &source2);
@@ -2819,12 +2815,8 @@ template TMatrixFSparse &ElementDiv   <Float_t>(TMatrixFSparse &target,const TMa
 
 template Bool_t          AreCompatible<Float_t>(const TMatrixFSparse &m1,const TMatrixFSparse &m2,Int_t verbose);
 
-#ifndef ROOT_TMatrixDSparsefwd
 #include "TMatrixDSparsefwd.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
 
 template class TMatrixTSparse<Double_t>;
 

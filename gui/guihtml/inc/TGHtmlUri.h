@@ -34,9 +34,7 @@
 #ifndef ROOT_TGHtmlUri
 #define ROOT_TGHtmlUri
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 #define URI_SCHEME_MASK     (1<<0)
 #define URI_AUTH_MASK       (1<<1)

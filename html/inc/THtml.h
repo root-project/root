@@ -22,17 +22,11 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
 
-#ifndef ROOT_THashTable
 #include "THashTable.h"
-#endif
 
-#ifndef ROOT_TExMap
 #include "TExMap.h"
-#endif
 
 #include <map>
 

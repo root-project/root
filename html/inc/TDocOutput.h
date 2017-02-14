@@ -21,12 +21,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TDocParser
 #include "TDocParser.h"
-#endif
 
 class TClass;
 class TDataMember;

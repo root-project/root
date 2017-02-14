@@ -5,9 +5,7 @@
 #include <vector>
 #include <map>
 
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 namespace ROOT {
 namespace MacOSX {

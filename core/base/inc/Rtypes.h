@@ -20,12 +20,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_RtypesCore
 #include "RtypesCore.h"
-#endif
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
 
 #include "snprintf.h"   // part of stdio.h on systems that have it
 #include "strlcpy.h"    // part of string.h on systems that have it
@@ -185,9 +181,7 @@ namespace ROOT {
 } // namespace ROOT
 
 // The macros below use TGenericClassInfo, so let's ensure it is included
-#ifndef ROOT_TGenericClassInfo
 #include "TGenericClassInfo.h"
-#endif
 
 typedef std::atomic<TClass*> atomic_TClass_ptr;
 

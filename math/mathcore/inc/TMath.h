@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TMathBase
 #include "TMathBase.h"
-#endif
 
 #include "TError.h"
 #include <algorithm>

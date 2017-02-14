@@ -18,34 +18,16 @@ MarkovChain.
 
 */
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROO_DATA_HIST
 #include "RooDataHist.h"
-#endif
-#ifndef ROOT_THnSparse
 #include "THnSparse.h"
-#endif
 
 using namespace std;
 

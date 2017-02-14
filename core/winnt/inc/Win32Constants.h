@@ -10,9 +10,7 @@
 #ifndef ROOT_Win32Constants
 #define ROOT_Win32Constants
 
-#ifndef ROOT_Windows4Root
 #include "Windows4Root.h"
-#endif
 
 #if 0
   #define ColorOffset 10

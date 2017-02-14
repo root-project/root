@@ -24,12 +24,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TCollection
 #include "TCollection.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TList;
 class TListIter;

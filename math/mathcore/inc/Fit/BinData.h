@@ -13,16 +13,12 @@
 #ifndef ROOT_Fit_BinData
 #define ROOT_Fit_BinData
 
-#ifndef ROOT_Fit_DataVector
 #include "Fit/DataVector.h"
-#endif
 
 
 #ifdef USE_BINPOINT_CLASS
 
-#ifndef ROOT_Fit_BinPoint
 #include "Fit/BinPoint.h"
-#endif
 
 #endif
 

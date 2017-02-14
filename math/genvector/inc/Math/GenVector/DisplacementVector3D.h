@@ -20,25 +20,15 @@
 #ifndef ROOT_Math_GenVector_DisplacementVector3D
 #define ROOT_Math_GenVector_DisplacementVector3D  1
 
-#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_PositionVector3Dfwd
 #include "Math/GenVector/PositionVector3Dfwd.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVectorIO
 #include "Math/GenVector/GenVectorIO.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_BitReproducible
 #include "Math/GenVector/BitReproducible.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #include "Math/GenVector/CoordinateSystemTags.h"
-#endif
 
 #include <cassert>
 

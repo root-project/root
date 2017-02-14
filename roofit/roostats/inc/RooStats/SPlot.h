@@ -19,9 +19,7 @@ class RooRealVar;
 class RooSimultaneous;
 
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include "RooFitResult.h"
 #include "RooRealVar.h"

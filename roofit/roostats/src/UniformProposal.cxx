@@ -21,28 +21,14 @@ converge as quickly as other proposal functions.
 
 */
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROOSTATS_UniformProposal
 #include "RooStats/UniformProposal.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
 
 using namespace std;
 

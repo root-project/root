@@ -17,9 +17,7 @@
 #ifndef ROOT_TXTRU
 #define ROOT_TXTRU
 
-#ifndef ROOT_TShape
 #include "TShape.h"
-#endif
 
 class TXTRU : public TShape {
 public:

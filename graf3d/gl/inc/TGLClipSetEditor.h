@@ -12,12 +12,8 @@
 #ifndef ROOT_TGLClipSetEditor
 #define ROOT_TGLClipSetEditor
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
 
 #include "TGLClip.h"
 

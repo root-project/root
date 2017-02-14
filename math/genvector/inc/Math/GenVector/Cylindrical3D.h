@@ -16,13 +16,9 @@
 #ifndef ROOT_Math_GenVector_Cylindrical3D
 #define ROOT_Math_GenVector_Cylindrical3D  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_eta
 #include "Math/GenVector/eta.h"
-#endif
 
 #include <limits>
 
@@ -253,20 +249,12 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
-#endif
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
-#ifndef ROOT_Math_GenVector_CylindricalEta3D
 #include "Math/GenVector/CylindricalEta3D.h"
-#endif
-#ifndef ROOT_Math_GenVector_Polar3D
 #include "Math/GenVector/Polar3D.h"
-#endif
 #endif
 
 namespace ROOT {

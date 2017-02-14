@@ -12,13 +12,9 @@
 #ifndef ROOT_TDOMParser
 #define ROOT_TDOMParser
 
-#ifndef ROOT_TXMLParser
 #include "TXMLParser.h"
-#endif
 
-#ifndef ROOT_TXMLDocument
 #include "TXMLDocument.h"
-#endif
 
 
 class TDOMParser : public TXMLParser {

@@ -22,13 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THastList
 #include "THashList.h"
-#endif
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
 class TExMap;
 class TDataMember;

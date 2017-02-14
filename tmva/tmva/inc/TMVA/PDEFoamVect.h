@@ -29,9 +29,7 @@
 #ifndef ROOT_TMVA_PDEFoamVect
 #define ROOT_TMVA_PDEFoamVect
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 namespace TMVA {
 

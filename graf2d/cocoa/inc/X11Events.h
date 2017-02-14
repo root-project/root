@@ -14,9 +14,7 @@
 
 #include <deque>
 
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 #include <Foundation/Foundation.h>
 

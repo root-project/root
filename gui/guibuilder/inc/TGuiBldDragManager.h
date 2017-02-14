@@ -19,13 +19,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TVirtualDragManager
 #include "TVirtualDragManager.h"
-#endif
 
 class TTimer;
 class TGuiBldDragManagerPimpl;

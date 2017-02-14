@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
-#endif
 
 namespace ROOT {
 namespace iOS {
