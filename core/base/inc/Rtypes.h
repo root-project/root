@@ -232,6 +232,7 @@ public:
    static void SetInstance(::ROOT::TGenericClassInfo& R__instance,
                     NewFunc_t, NewArrFunc_t, DelFunc_t, DelArrFunc_t, DesFunc_t);
    static void SetName(const std::string& name, std::string& nameMember);
+   static void SetfgIsA(atomic_TClass_ptr& isA, void(*dictfun)());
 };
 
 template <typename T>
@@ -257,7 +258,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
          return &R__instance;
       }
       static void Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); }
-      static TClass *Class() { if (!fgIsA) Dictionary(); return fgIsA; }
+      static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
       static const char* Name() {
          if (fgName.empty())
             SetName(TypeNameExtraction<T>::get(), fgName);

@@ -56,6 +56,13 @@ namespace Internal {
          TClassEdit::GetNormalizedName(nameMember, name);
       }
    }
+
+   void TCDGIILIBase::SetfgIsA(atomic_TClass_ptr& isA, void(*dictfun)()) {
+      if (!isA.load()) {
+         R__LOCKGUARD2(gInterpreterMutex);
+         dictfun();
+      }
+   }
 } // Internal
 
 
