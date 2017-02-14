@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Object
 #include "TVirtualGraphPainter.h"
-#endif
 
 class TGraph;
 class TF1;
