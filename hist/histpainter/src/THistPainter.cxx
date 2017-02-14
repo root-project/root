@@ -6410,7 +6410,11 @@ void THistPainter::PaintH3(Option_t *option)
    Int_t irep;
 
    if (fH->GetDrawOption() && (strstr(opt,"box") ||  strstr(opt,"lego"))) {
-      PaintH3Box();
+      if (strstr(opt,"1")) {
+         PaintH3Box();
+      } else {
+         PaintH3BoxRaster();
+      }
       return;
    } else if (fH->GetDrawOption() && strstr(opt,"iso")) {
       PaintH3Iso();
@@ -6997,6 +7001,151 @@ void THistPainter::PaintH3Box()
       fLego->InitMoveScreen(-1.1,1.1);
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       fLego->FrontBox(90);
+   }
+
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+
+   PaintTitle();
+
+   delete axis;
+   delete fLego; fLego = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// [Control function to draw a 3D histogram with boxes.](#HP25)
+
+void THistPainter::PaintH3BoxRaster()
+{
+   //       Predefined box structure
+   Double_t wxyz[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,1,-1}, {-1,1,-1},
+                           {-1,-1, 1}, {1,-1, 1}, {1,1, 1}, {-1,1, 1} };
+   Double_t normal[6][3] = { {0,0,-1}, {0,0,1},                      // Z-, Z+
+                             {0,-1,0}, {1,0,0}, {0,1,0}, {-1,0,0} }; // Y-, X+, Y+, X-
+   Int_t iface[6][4] = { {0,3,2,1}, {4,5,6,7},
+                         {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7} };
+
+   //       Define dimensions of world space
+   TGaxis *axis = new TGaxis();
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+
+   fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
+   fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
+   fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
+   fYbuf[1] = yaxis->GetBinUpEdge(yaxis->GetLast());
+   fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
+   fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+
+   //       Set view
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTF3", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   Int_t irep;
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   Int_t backcolor = gPad->GetFrameFillColor();
+   view->PadRange(backcolor);
+
+   //       Draw front surfaces of frame box
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+
+   //       Initialize raster screen (hidden line removal algorithm)
+   fLego->InitRaster(-1.1,-1.1,1.1,1.1,1000,800);
+
+   //       Define order of drawing
+   Double_t *tnorm = view->GetTnorm();
+   if (!tnorm) return;
+   Int_t incrx = (tnorm[ 8] < 0.) ? +1 : -1;
+   Int_t incry = (tnorm[ 9] < 0.) ? +1 : -1;
+   Int_t incrz = (tnorm[10] < 0.) ? +1 : -1;
+   Int_t ix1 = (incrx == +1) ? xaxis->GetFirst() : xaxis->GetLast();
+   Int_t iy1 = (incry == +1) ? yaxis->GetFirst() : yaxis->GetLast();
+   Int_t iz1 = (incrz == +1) ? zaxis->GetFirst() : zaxis->GetLast();
+   Int_t ix2 = (incrx == +1) ? xaxis->GetLast()  : xaxis->GetFirst();
+   Int_t iy2 = (incry == +1) ? yaxis->GetLast()  : yaxis->GetFirst();
+   Int_t iz2 = (incrz == +1) ? zaxis->GetLast()  : zaxis->GetFirst();
+
+   //       Set line attributes (colour, style, etc.)
+   fH->TAttLine::Modify();
+
+   //       Create bin boxes and draw
+   const Int_t NTMAX = 100;
+   Double_t tt[NTMAX][2];
+   Double_t wmin = fH->GetMinimum();
+   Double_t wmax = fH->GetMaximum();
+   Double_t pmin[3], pmax[3], sxyz[8][3], pp[4][2];
+   for (Int_t ix = ix1; ix !=ix2+incrx; ix += incrx) {
+      pmin[0] = xaxis->GetBinLowEdge(ix);
+      pmax[0] = xaxis->GetBinUpEdge(ix);
+      for (Int_t iy = iy1; iy != iy2+incry; iy += incry) {
+         pmin[1] = yaxis->GetBinLowEdge(iy);
+         pmax[1] = yaxis->GetBinUpEdge(iy);
+         for (Int_t iz = iz1; iz != iz2+incrz; iz += incrz) {
+            pmin[2] = zaxis->GetBinLowEdge(iz);
+            pmax[2] = zaxis->GetBinUpEdge(iz);
+            Double_t w = fH->GetBinContent(fH->GetBin(ix,iy,iz));
+            if (w < wmin) continue;
+            if (w > wmax) w = wmax;
+            Double_t scale = (TMath::Power((w-wmin)/(wmax-wmin),1./3.))/2.;
+            if (scale == 0) continue;
+            for (Int_t i=0; i<3; ++i) {
+               Double_t c = (pmax[i] + pmin[i])*0.5;
+               Double_t d = (pmax[i] - pmin[i])*scale;
+               for (Int_t k=0; k<8; ++k) { // set bin box vertices
+                  sxyz[k][i] = wxyz[k][i]*d + c;
+               }
+            }
+            for (Int_t k=0; k<8; ++k) { // transform to normalized space
+               view->WCtoNDC(&sxyz[k][0],&sxyz[k][0]);
+            }
+            for (Int_t k=0; k<6; ++k) { // draw box faces
+               Double_t zn;
+               view->FindNormal(normal[k][0], normal[k][1], normal[k][2], zn);
+               if (zn <= 0) continue;
+               for (Int_t i=0; i<4; ++i) {
+                  Int_t ip = iface[k][i];
+                  pp[i][0] = sxyz[ip][0];
+                  pp[i][1] = sxyz[ip][1];
+               }
+               for (Int_t i=0; i<4; ++i) {
+                  Int_t i1 = i;
+                  Int_t i2 = (i == 3) ? 0 : i + 1;
+                  Int_t nt;
+                  fLego->FindVisibleLine(&pp[i1][0], &pp[i2][0], NTMAX, nt, &tt[0][0]);
+                  Double_t xdel = pp[i2][0] - pp[i1][0];
+                  Double_t ydel = pp[i2][1] - pp[i1][1];
+                  Double_t x[2], y[2];
+                  for (Int_t it = 0; it < nt; ++it) {
+                     x[0] = pp[i1][0] + xdel*tt[it][0];
+                     y[0] = pp[i1][1] + ydel*tt[it][0];
+                     x[1] = pp[i1][0] + xdel*tt[it][1];
+                     y[1] = pp[i1][1] + ydel*tt[it][1];
+                     gPad->PaintPolyLine(2, x, y);
+                  }
+               }
+               fLego->FillPolygonBorder(4, &pp[0][0]); // update raster screen
+            }
+         }
+      }
+   }
+
+   //       Draw back surfaces of frame box
+   if (Hoption.BackBox) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster1);
+      fLego->BackBox(90);
    }
 
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
