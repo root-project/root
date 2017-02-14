@@ -107,7 +107,7 @@ public:
    virtual void       PaintFunction(Option_t *option);
    virtual void       PaintHist(Option_t *option);
    virtual void       PaintH3(Option_t *option="");
-   virtual void       PaintH3Box();
+   virtual void       PaintH3Box(Int_t iopt);
    virtual void       PaintH3BoxRaster();
    virtual void       PaintH3Iso();
    virtual Int_t      PaintInit();
