@@ -32,30 +32,21 @@ namespace tbb {
 namespace ROOT {
    class TPoolManager {
    public:
-      TPoolManager(UInt_t nThreads = 0);
+      friend std::shared_ptr<ROOT::TPoolManager> GetPoolManager(UInt_t nThreads);
+      static UInt_t GetPoolSize();
       ~TPoolManager();
-      static UInt_t GetNThreads();
    private:
+      TPoolManager(UInt_t nThreads = 0);
       static UInt_t fgPoolSize;
       bool mustDelete = true;
       tbb::task_scheduler_init *fSched = nullptr;
    };
+
+   std::shared_ptr<ROOT::TPoolManager> GetPoolManager(UInt_t nThreads = 0);
 }
 
 
-std::weak_ptr<ROOT::TPoolManager> &GetWP();
 
-
-inline std::shared_ptr<ROOT::TPoolManager> GetPoolManager(UInt_t nThreads = 0)
-{
-
-   if (GetWP().lock() == nullptr) {
-      auto shared = std::make_shared<ROOT::TPoolManager>(nThreads);
-      GetWP() = shared;
-      return GetWP().lock();
-   }
-   return GetWP().lock();
-}
 
 
 #endif   // R__USE_IMT

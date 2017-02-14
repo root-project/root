@@ -8,6 +8,12 @@
 namespace ROOT {
 
 
+   std::weak_ptr<ROOT::TPoolManager> &GetWP()
+   {
+      static std::weak_ptr<ROOT::TPoolManager> weak_sched;
+      return weak_sched;
+   }
+
    UInt_t TPoolManager::fgPoolSize = 0;
 
    TPoolManager::TPoolManager(UInt_t nThreads): fSched(new tbb::task_scheduler_init(tbb::task_scheduler_init::deferred))
@@ -31,15 +37,21 @@ namespace ROOT {
    }
 
    //Size of the task pool the PoolManager has been initialized with. Can be greater than number of threads.
-   UInt_t TPoolManager::GetNThreads()
+   UInt_t TPoolManager::GetPoolSize()
    {
       return fgPoolSize;
    }
 
-}
 
-std::weak_ptr<ROOT::TPoolManager> &GetWP()
-{
-   static std::weak_ptr<ROOT::TPoolManager> weak_sched;
-   return weak_sched;
+   std::shared_ptr<ROOT::TPoolManager> GetPoolManager(UInt_t nThreads)
+   {
+
+      if (GetWP().lock() == nullptr) {
+         std::shared_ptr<ROOT::TPoolManager> shared(new ROOT::TPoolManager(nThreads));
+         GetWP() = shared;
+         return GetWP().lock();
+      }
+      return GetWP().lock();
+   }
+
 }
