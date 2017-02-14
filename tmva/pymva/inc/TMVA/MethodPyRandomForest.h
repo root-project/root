@@ -50,7 +50,7 @@ namespace TMVA {
       void ProcessOptions();
 
       // create ranking
-      const Ranking *CreateRanking(){ return NULL; /* = 0;*/ }
+      const Ranking *CreateRanking();
 
       Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets);
 
