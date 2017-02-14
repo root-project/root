@@ -31,38 +31,25 @@ int main() {
 
    TFile f(fileName);
 
-   {
-      // single-thread evaluation of RMS of branch "b" using Foreach
-      double rms = 0.;
-      unsigned int count = 0;
-      ROOT::Experimental::TDataFrame d("foreachTree", &f, {"b1"});
-      auto rmsLambda = [&rms, &count](double b) { ++count; rms += b*b; };
-      d.Foreach(rmsLambda);
-      std::cout << "rms single-thread: " << std::sqrt(rms / count) << std::endl;
-   }
-
-
-   {
-      // multi-thread evaluation of RMS of branch "b" using ForeachSlot
+   // evaluation of RMS of branch "b" using ForeachSlot
 #ifdef R__USE_IMT
-      ROOT::EnableImplicitMT(2);
-      unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+   ROOT::EnableImplicitMT(2);
+   unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
 #else
-      unsigned int nSlots = 1;
+   unsigned int nSlots = 1;
 #endif
 
-      std::vector<double> rmss(nSlots, 0.);
-      std::vector<unsigned int> counts(nSlots, 0);
-      ROOT::Experimental::TDataFrame d("foreachTree", &f, {"b1"});
-      auto rmsLambda = [&rmss, &counts](unsigned int slot, double b) {
-         rmss[slot] += b*b;
-         counts[slot] += 1;
-      };
-      d.ForeachSlot(rmsLambda);
-      double rms = std::accumulate(rmss.begin(), rmss.end(), 0.); // sum all squares
-      unsigned int count = std::accumulate(counts.begin(), counts.end(), 0); // sum all counts
-      std::cout << "rms multi-thread: " << std::sqrt(rms / count) << std::endl;
-   }
+   std::vector<double> rmss(nSlots, 0.);
+   std::vector<unsigned int> counts(nSlots, 0);
+   ROOT::Experimental::TDataFrame d("foreachTree", &f, {"b1"});
+   auto rmsLambda = [&rmss, &counts](unsigned int slot, double b) {
+      rmss[slot] += b*b;
+      counts[slot] += 1;
+   };
+   d.ForeachSlot(rmsLambda);
+   double rms = std::accumulate(rmss.begin(), rmss.end(), 0.); // sum all squares
+   unsigned int count = std::accumulate(counts.begin(), counts.end(), 0); // sum all counts
+   std::cout << "rms: " << std::sqrt(rms / count) << std::endl;
 
    return 0;
 }

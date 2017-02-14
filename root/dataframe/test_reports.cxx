@@ -26,47 +26,30 @@ int main(int argc, char** argv) {
 
    auto cut1 = [](double b) { return b < 0.001; };
    auto cut2 = [](double b) { return b > 0.05; };
-   auto noop = []() { return true; };
    auto noopb = [](double b) { return true; };
 
-   {
-      // single-thread cutflow reports
-      TFile f(fileName);
-      ROOT::Experimental::TDataFrame df("reportsTree", &f);
-      auto f1 = df.Filter(noop, {}, "stnoop");
-      auto m1 = f1.Filter(cut1, {"b"})
-                  .AddBranch("foo", []() { return 42; })
-                  .Max("b");
-      auto m2 = f1.Filter(cut2, {"b"}, "stf")
-                  .Mean("b");
-      df.Report(); // warning, filters have not run
-      *m1;
-      df.Report(); // cutflow reports for "stnoop", "stf"
-   }
-
-   {
-      // multi-thread cutflow reports with default branch, multiple runs
+   // multi-thread cutflow reports with default branch, multiple runs
 #ifdef R__USE_IMT
-      ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT();
 #endif
-      TFile f(fileName);
-      ROOT::Experimental::TDataFrame df("reportsTree", &f, {"b"});
-      auto f1 = df.Filter(cut1, {}, "mtf");
-      auto m1 = f1.Filter(noopb, {}, "mtnoop")
-                  .Mean();
-      f1.Report(); // warning, filters have not run
-      *m1;
-      df.Report(); // cutflow reports for "mtf", "mtnoop"
-      auto f2 = df.AddBranch("foo", []() { return 42; })
-                  .Filter(cut2, {}, "mtf2");
-      auto m2 = f2.Min();
-      *m2;
-      df.Report(); // report all filters, only mtf2 prints non-zero values
-      f2.Report(); // report only mtf2
-   }
-
+   TFile f(fileName);
+   ROOT::Experimental::TDataFrame df("reportsTree", &f, {"b"});
+   auto f1 = df.Filter(cut1, {}, "mtf");
+   auto m1 = f1.Filter(noopb, {}, "mtnoop")
+               .Mean<double>();
+   f1.Report(); // warning, filters have not run
+   *m1;
+   df.Report(); // cutflow reports for "mtf", "mtnoop"
+   auto f2 = df.AddBranch("foo", []() { return 42; })
+               .Filter(cut2, {}, "mtf2");
+   auto m2 = f2.Min<double>();
+   *m2;
+   df.Report(); // report all filters, only mtf2 prints non-zero values
+   f2.Report(); // report only mtf2
 
    return 0;
 }
 
-void test_reports(int argc = 1, char** argv = nullptr) { main(argc, argv); }
+void test_reports(int argc = 1, char** argv = nullptr) {
+   main(argc, argv);
+}

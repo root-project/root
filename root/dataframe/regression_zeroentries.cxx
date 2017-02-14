@@ -18,54 +18,29 @@ int main() {
       t.Write();
    }
 
-   {
-      TFile f("regression_zeroentries.root");
-      ROOT::Experimental::TDataFrame d("emptyTree", &f, {"a"});
-
-      // apply all actions to an empty tree, single-threaded case
-      auto min = d.Min();
-      auto max = d.Max();
-      auto mean = d.Mean();
-      auto h = d.Histo1D();
-      auto c = d.Count();
-      auto g = d.Take<int>();
-      int fc = 0;
-      d.Foreach([&fc]() { ++fc; });
-
-      assert(*min == std::numeric_limits<double>::max());
-      assert(*max == std::numeric_limits<double>::min());
-      assert(*mean == 0);
-      assert(h->GetEntries() == 0);
-      assert(*c == 0);
-      assert(g->size() == 0);
-      assert(fc == 0);
-   }
-
-   {
 #ifdef R__USE_IMT
-      ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT();
 #endif
-      TFile f("regression_zeroentries.root");
-      ROOT::Experimental::TDataFrame d("emptyTree", &f, {"a"});
+   TFile f("regression_zeroentries.root");
+   ROOT::Experimental::TDataFrame d("emptyTree", &f, {"a"});
 
-      // apply all actions to an empty tree, multi-thread case
-      auto min = d.Min();
-      auto max = d.Max();
-      auto mean = d.Mean();
-      auto h = d.Histo1D();
-      auto c = d.Count();
-      auto g = d.Take<int>();
-      std::atomic_int fc(0);
-      d.Foreach([&fc]() { ++fc; });
+   // apply all actions to an empty tree, multi-thread case
+   auto min = d.Min<int>();
+   auto max = d.Max<int>();
+   auto mean = d.Mean<int>();
+   auto h = d.Histo1D<int>();
+   auto c = d.Count();
+   auto g = d.Take<int>();
+   std::atomic_int fc(0);
+   d.Foreach([&fc]() { ++fc; });
 
-      assert(*min == std::numeric_limits<double>::max());
-      assert(*max == std::numeric_limits<double>::min());
-      assert(*mean == 0);
-      assert(h->GetEntries() == 0);
-      assert(*c == 0);
-      assert(g->size() == 0);
-      assert(fc == 0);
-   }
+   assert(*min == std::numeric_limits<double>::max());
+   assert(*max == std::numeric_limits<double>::min());
+   assert(*mean == 0);
+   assert(h->GetEntries() == 0);
+   assert(*c == 0);
+   assert(g->size() == 0);
+   assert(fc == 0);
 
    return 0;
 }
