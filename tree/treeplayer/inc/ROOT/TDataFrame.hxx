@@ -585,7 +585,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
       auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
-      return CreateAction<T, ROOT::Internal::EActionType::kMin>(bl, minV);
+      return CreateAction<ROOT::Internal::EActionType::kMin>(bl, minV, (T*)(nullptr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -602,7 +602,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
       auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
-      return CreateAction<T, ROOT::Internal::EActionType::kMax>(bl, maxV);
+      return CreateAction<ROOT::Internal::EActionType::kMax>(bl, maxV, (T*)(nullptr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -619,7 +619,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
       auto meanV = std::make_shared<double>(0);
-      return CreateAction<T, ROOT::Internal::EActionType::kMean>(bl, meanV);
+      return CreateAction<ROOT::Internal::EActionType::kMean>(bl, meanV, (T*)(nullptr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -683,7 +683,7 @@ private:
    TActionResultProxy<::TH1F> Histo1DImpl(ROOT::Detail::TDataFrameGuessedType * /* overloadSignal */,
                                           BranchNames& bl,
                                           const std::shared_ptr<::TH1F>& h) {
-      return CreateAction<X, ROOT::Internal::EActionType::kHisto1D>(bl, h);
+      return CreateAction<ROOT::Internal::EActionType::kHisto1D>(bl, h, (X*)(nullptr));
    }
 
    template<typename X, typename W>
@@ -796,9 +796,22 @@ private:
 
    /// \endcond
 
-   template <typename BranchType, ROOT::Internal::EActionType ActionType, typename ActionResultType>
-   TActionResultProxy<ActionResultType> CreateAction(const BranchNames & bl,
-                                                   const std::shared_ptr<ActionResultType>& r)
+   // In this case the type is specified by the user. We do not need to guess it.
+   template <ROOT::Internal::EActionType ActionType, typename ActionResultType, typename BranchType>
+   TActionResultProxy<ActionResultType>
+   CreateAction(const BranchNames& bl, const std::shared_ptr<ActionResultType>& r,
+                BranchType* /*dummy*/)
+   {
+      auto df = GetDataFrameChecked();
+      unsigned int nSlots = df->GetNSlots();
+      return SimpleAction<BranchType, ActionResultType, ActionType, decltype(this)>::BuildAndBook(this, bl, r, nSlots);
+   }
+
+   // Do type guessing
+   template <ROOT::Internal::EActionType ActionType, typename ActionResultType>
+   TActionResultProxy<ActionResultType>
+   CreateAction(const BranchNames & bl, const std::shared_ptr<ActionResultType>& r,
+                ROOT::Detail::TDataFrameGuessedType* /*dummy*/)
    {
       // More types can be added at will at the cost of some compilation time and size of binaries.
       using ART_t = ActionResultType;
@@ -807,11 +820,6 @@ private:
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
 
-      // In this case the type is specified by the user. We do not need to guess it.
-      // Given that the boolean is known at compile time, the rest of the method will not be compiled.
-      // All this would be perfectly expressed by a constexpr if.
-      constexpr bool isGuessedType = std::is_same<BranchType, ROOT::Detail::TDataFrameGuessedType>::value;
-      if (!isGuessedType) return SimpleAction<BranchType, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
 
       auto tree = static_cast<TTree*>(df->GetDirectory()->Get(df->GetTreeName().c_str()));
       auto theBranchName = bl[0];
