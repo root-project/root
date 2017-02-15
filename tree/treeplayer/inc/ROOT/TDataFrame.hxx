@@ -278,7 +278,12 @@ public:
    }
 };
 
-enum class EActionType : short { kHisto1D, kMin, kMax, kMean };
+namespace ActionTypes {
+   struct Histo1D {};
+   struct Min {};
+   struct Max {};
+   struct Mean {};
+}
 
 // Utilities to accommodate v7
 namespace TDFV7Utils {
@@ -511,7 +516,7 @@ public:
    /// booked but not executed. See TActionResultProxy documentation.
    /// The user renounces to the ownership of the model. The value to be used is the
    /// returned one.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = void>
    TActionResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &valBranchName = "", const std::string &weightBranchName ="")
    {
       auto bl = GetBranchNames<T,W>({valBranchName, weightBranchName},"fill the histogram");
@@ -537,7 +542,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = void>
    TActionResultProxy<::TH1F> Histo1D(const std::string &valBranchName = "", int nBins = 128, double minVal = 0., double maxVal = 0., const std::string &weightBranchName ="")
    {
       auto bl = GetBranchNames<T,W>({valBranchName, weightBranchName},"fill the histogram");
@@ -566,7 +571,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = void>
    TActionResultProxy<::TH1F> Histo1D(const std::string &valBranchName, const std::string &weightBranchName)
    {
       return Histo1D<T,W>(valBranchName, 128, 0., 0., weightBranchName);
@@ -586,7 +591,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
       auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
-      return CreateAction<ROOT::Internal::EActionType::kMin>(bl, minV, (T*)(nullptr));
+      return CreateAction<ROOT::Internal::ActionTypes::Min>(bl, minV, (T*)(nullptr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -603,7 +608,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
       auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
-      return CreateAction<ROOT::Internal::EActionType::kMax>(bl, maxV, (T*)(nullptr));
+      return CreateAction<ROOT::Internal::ActionTypes::Max>(bl, maxV, (T*)(nullptr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -620,7 +625,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
       auto meanV = std::make_shared<double>(0);
-      return CreateAction<ROOT::Internal::EActionType::kMean>(bl, meanV, (T*)(nullptr));
+      return CreateAction<ROOT::Internal::ActionTypes::Mean>(bl, meanV, (T*)(nullptr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -643,13 +648,13 @@ public:
 private:
 
    /// Returns the default branches if needed, takes care of the error handling.
-   template<typename T1, typename T2 = ROOT::Detail::TDataFrameGuessedType>
+   template<typename T1, typename T2 = void>
    BranchNames GetBranchNames(BranchNames bl, const std::string &actionNameForErr)
    {
       // For the moment stops at two parameters, it's possible to extend to 3 and 4 parameters.
 
       constexpr auto isT1Guessed = std::is_same<T1, ROOT::Detail::TDataFrameGuessedType>::value;
-      constexpr auto isT2Guessed = std::is_same<T2, ROOT::Detail::TDataFrameGuessedType>::value;
+      constexpr auto isT2Guessed = std::is_same<T2, void>::value;
 
       const auto neededBranches = isT2Guessed ? 1 : 2;
 
@@ -679,18 +684,21 @@ private:
       return bl;
    }
 
-   // Two overloaded template methods which allow to avoid branches in the Histo1D method.
+   // Two overloaded template methods which allow to avoid branching in the Histo1D method.
+   // W == void: histogram w/o weights
    template<typename X, typename W>
-   TActionResultProxy<::TH1F> Histo1DImpl(ROOT::Detail::TDataFrameGuessedType * /* overloadSignal */,
-                                          BranchNames& bl,
-                                          const std::shared_ptr<::TH1F>& h) {
-      return CreateAction<ROOT::Internal::EActionType::kHisto1D>(bl, h, (X*)(nullptr));
+   TActionResultProxy<::TH1F>
+   Histo1DImpl(void* /* overloadSignal */, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
+   {
+      return CreateAction<ROOT::Internal::ActionTypes::Histo1D>(bl, h, (X*)(nullptr));
    }
 
+   // W != void: histogram w/ weights
    template<typename X, typename W>
-   TActionResultProxy<::TH1F> Histo1DImpl(void * /* overloadSignal */,
-                                          BranchNames& bl,
-                                          const std::shared_ptr<::TH1F>& h) {
+   TActionResultProxy<::TH1F>
+   Histo1DImpl(W* /* overloadSignal */, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
+   {
+      // TODO call BuildAndBook directly? (need a different ActionType)
       auto df = GetDataFrameChecked();
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
       auto nSlots = df->GetNSlots();
@@ -709,118 +717,97 @@ private:
    }
 
    /// \cond HIDDEN_SYMBOLS
-   template <typename BranchType, typename ActionResultType, enum ROOT::Internal::EActionType, typename ThisType, bool isGuessedType = std::is_same<BranchType, ROOT::Detail::TDataFrameGuessedType>::value>
-   struct SimpleAction {};
+   template <typename BranchType>
+   TActionResultProxy<::TH1F>
+   BuildAndBook(const BranchNames &bl, const std::shared_ptr<::TH1F>& h,
+                unsigned int nSlots, ROOT::Internal::ActionTypes::Histo1D*)
+   {
+      // we use a shared_ptr so that the operation has the same scope of the lambda
+      // and therefore of the TDataFrameAction that contains it: merging of results
+      // from different threads is performed in the operation's destructor, at the
+      // moment when the TDataFrameAction is deleted by TDataFrameImpl
+      auto df = GetDataFrameChecked();
+      auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
 
-   template <typename BranchType, typename ActionResultType, enum ROOT::Internal::EActionType ART, typename ThisType>
-   struct SimpleAction<BranchType, ActionResultType, ART, ThisType, true> {
-      static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const BranchNames &,
-                                                               const std::shared_ptr<ActionResultType>& r, unsigned int)
-      {
-         // This code will never be executed!
-         auto df = thisFrame->GetDataFrameChecked();
-         return df->MakeActionResultProxy(r);
+      if (hasAxisLimits) {
+         auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation>(h, nSlots);
+         auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(v, slot); };
+         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+         df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
+      } else {
+         auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
+         auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(v, slot); };
+         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+         df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
       }
-   };
+      return df->MakeActionResultProxy(h);
+   }
 
-   template <typename BranchType, typename ThisType>
-   struct SimpleAction<BranchType, ::TH1F, ROOT::Internal::EActionType::kHisto1D, ThisType, false> {
-      static TActionResultProxy<::TH1F> BuildAndBook(ThisType thisFrame, const BranchNames &bl,
-                                                 const std::shared_ptr<::TH1F>& h, unsigned int nSlots)
-      {
-         // we use a shared_ptr so that the operation has the same scope of the lambda
-         // and therefore of the TDataFrameAction that contains it: merging of results
-         // from different threads is performed in the operation's destructor, at the
-         // moment when the TDataFrameAction is deleted by TDataFrameImpl
-         auto df = thisFrame->GetDataFrameChecked();
-         auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
+   template <typename BranchType>
+   TActionResultProxy<double>
+   BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& minV,
+                unsigned int nSlots, ROOT::Internal::ActionTypes::Min*)
+   {
+      // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
+      auto minOp = std::make_shared<ROOT::Internal::Operations::MinOperation>(minV.get(), nSlots);
+      auto minOpLambda = [minOp](unsigned int slot, const BranchType &v) mutable { minOp->Exec(v, slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
+      auto df = GetDataFrameChecked();
+      df->Book(std::make_shared<DFA_t>(minOpLambda, bl, fProxiedPtr));
+      return df->MakeActionResultProxy(minV);
+   }
 
-         if (hasAxisLimits) {
-            auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation>(h, nSlots);
-            auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(v, slot); };
-            using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-            df->Book(std::make_shared<DFA_t>(fillLambda, bl, thisFrame->fProxiedPtr));
-         } else {
-            auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
-            auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(v, slot); };
-            using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-            df->Book(std::make_shared<DFA_t>(fillLambda, bl, thisFrame->fProxiedPtr));
-         }
-         return df->MakeActionResultProxy(h);
-      }
-   };
+   template <typename BranchType>
+   TActionResultProxy<double>
+   BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& maxV,
+                unsigned int nSlots, ROOT::Internal::ActionTypes::Max*)
+   {
+      // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
+      auto maxOp = std::make_shared<ROOT::Internal::Operations::MaxOperation>(maxV.get(), nSlots);
+      auto maxOpLambda = [maxOp](unsigned int slot, const BranchType &v) mutable { maxOp->Exec(v, slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
+      auto df = GetDataFrameChecked();
+      df->Book(std::make_shared<DFA_t>(maxOpLambda, bl, fProxiedPtr));
+      return df->MakeActionResultProxy(maxV);
+   }
 
-   template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMin, ThisType, false> {
-      static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const BranchNames &bl,
-                                                             const std::shared_ptr<ActionResultType>& minV, unsigned int nSlots)
-      {
-         // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
-         auto minOp = std::make_shared<ROOT::Internal::Operations::MinOperation>(minV.get(), nSlots);
-         auto minOpLambda = [minOp](unsigned int slot, const BranchType &v) mutable { minOp->Exec(v, slot); };
-         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
-         auto df = thisFrame->GetDataFrameChecked();
-         df->Book(std::make_shared<DFA_t>(minOpLambda, bl, thisFrame->fProxiedPtr));
-         return df->MakeActionResultProxy(minV);
-      }
-   };
 
-   template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMax, ThisType, false> {
-      static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const BranchNames &bl,
-                                                             const std::shared_ptr<ActionResultType>& maxV, unsigned int nSlots)
-      {
-         // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
-         auto maxOp = std::make_shared<ROOT::Internal::Operations::MaxOperation>(maxV.get(), nSlots);
-         auto maxOpLambda = [maxOp](unsigned int slot, const BranchType &v) mutable { maxOp->Exec(v, slot); };
-         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
-         auto df = thisFrame->GetDataFrameChecked();
-         df->Book(std::make_shared<DFA_t>(maxOpLambda, bl, thisFrame->fProxiedPtr));
-         return df->MakeActionResultProxy(maxV);
-      }
-   };
-
-   template <typename BranchType, typename ThisType, typename ActionResultType>
-   struct SimpleAction<BranchType, ActionResultType, ROOT::Internal::EActionType::kMean, ThisType, false> {
-      static TActionResultProxy<ActionResultType> BuildAndBook(ThisType thisFrame, const BranchNames &bl,
-                                                             const std::shared_ptr<ActionResultType>& meanV, unsigned int nSlots)
-      {
-         // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
-         auto meanOp = std::make_shared<ROOT::Internal::Operations::MeanOperation>(meanV.get(), nSlots);
-         auto meanOpLambda = [meanOp](unsigned int slot, const BranchType &v) mutable { meanOp->Exec(v, slot); };
-         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
-         auto df = thisFrame->GetDataFrameChecked();
-         df->Book(std::make_shared<DFA_t>(meanOpLambda, bl, thisFrame->fProxiedPtr));
-         return df->MakeActionResultProxy(meanV);
-      }
-   };
-
+   template <typename BranchType>
+   TActionResultProxy<double>
+   BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& meanV,
+                unsigned int nSlots, ROOT::Internal::ActionTypes::Mean*)
+   {
+      // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
+      auto meanOp = std::make_shared<ROOT::Internal::Operations::MeanOperation>(meanV.get(), nSlots);
+      auto meanOpLambda = [meanOp](unsigned int slot, const BranchType &v) mutable { meanOp->Exec(v, slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
+      auto df = GetDataFrameChecked();
+      df->Book(std::make_shared<DFA_t>(meanOpLambda, bl, fProxiedPtr));
+      return df->MakeActionResultProxy(meanV);
+   }
    /// \endcond
 
-   // In this case the type is specified by the user. We do not need to guess it.
-   template <ROOT::Internal::EActionType ActionType, typename ActionResultType, typename BranchType>
+   // Type was specified by the user, no need to guess it
+   template <typename ActionType, typename BranchType, typename ActionResultType>
    TActionResultProxy<ActionResultType>
    CreateAction(const BranchNames& bl, const std::shared_ptr<ActionResultType>& r,
-                BranchType* /*dummy*/)
+                BranchType*)
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      return SimpleAction<BranchType, ActionResultType, ActionType, decltype(this)>::BuildAndBook(this, bl, r, nSlots);
+      return BuildAndBook<BranchType>(bl, r, nSlots, (ActionType*)nullptr);
    }
 
-   // Do type guessing
-   template <ROOT::Internal::EActionType ActionType, typename ActionResultType>
+   // User did not specify type, do type guessing
+   template <typename ActionType, typename ActionResultType>
    TActionResultProxy<ActionResultType>
-   CreateAction(const BranchNames & bl, const std::shared_ptr<ActionResultType>& r,
+   CreateAction(const BranchNames& bl, const std::shared_ptr<ActionResultType>& r,
                 ROOT::Detail::TDataFrameGuessedType* /*dummy*/)
    {
       // More types can be added at will at the cost of some compilation time and size of binaries.
-      using ART_t = ActionResultType;
-      using TT_t = decltype(this);
-      const auto at = ActionType;
+      using AT_t = ActionType;
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-
 
       auto tree = static_cast<TTree*>(df->GetDirectory()->Get(df->GetTreeName().c_str()));
       auto theBranchName = bl[0];
@@ -829,49 +816,32 @@ private:
       if (!branch) {
          // temporary branch
          const auto &type_id = df->GetBookedBranch(theBranchName).GetTypeId();
-         if (type_id == typeid(char)) {
-            return SimpleAction<char, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         } else if (type_id == typeid(int)) {
-            return SimpleAction<int, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         } else if (type_id == typeid(double)) {
-            return SimpleAction<double, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         } else if (type_id == typeid(std::vector<double>)) {
-            return SimpleAction<std::vector<double>, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         } else if (type_id == typeid(std::vector<float>)) {
-            return SimpleAction<std::vector<float>, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         }
+         if (type_id == typeid(char)) { return BuildAndBook<char>(bl, r, nSlots, (AT_t*)nullptr); }
+         else if (type_id == typeid(int)) { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
+         else if (type_id == typeid(double)) { return BuildAndBook<double>(bl, r, nSlots, (AT_t*)nullptr); }
+         else if (type_id == typeid(std::vector<double>)) { return BuildAndBook<std::vector<double>>(bl, r, nSlots, (AT_t*)nullptr); }
+         else if (type_id == typeid(std::vector<float>)) { return BuildAndBook<std::vector<float>>(bl, r, nSlots, (AT_t*)nullptr); }
       }
       // real branch
       auto branchEl = dynamic_cast<TBranchElement *>(branch);
       if (!branchEl) { // This is a fundamental type
-         auto title    = branch->GetTitle();
+         auto title = branch->GetTitle();
          auto typeCode = title[strlen(title) - 1];
-         if (typeCode == 'B') {
-            return SimpleAction<char, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         }
-         // else if (typeCode == 'b') { return SimpleAction<Uchar, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots); }
-         // else if (typeCode == 'S') { return SimpleAction<Short_t, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots); }
-         // else if (typeCode == 's') { return SimpleAction<UShort_t, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots); }
-         else if (typeCode == 'I') {
-            return SimpleAction<int, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         }
-         // else if (typeCode == 'i') { return SimpleAction<unsigned int , ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots); }
-         // else if (typeCode == 'F') { return SimpleAction<float, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots); }
-         else if (typeCode == 'D') {
-            return SimpleAction<double, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         }
-         // else if (typeCode == 'L') { return SimpleAction<Long64_t, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots); }
-         // else if (typeCode == 'l') { return SimpleAction<ULong64_t, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots); }
-         else if (typeCode == 'O') {
-            return SimpleAction<bool, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         }
+         if (typeCode == 'B') { return BuildAndBook<char>(bl, r, nSlots, (AT_t*)nullptr); }
+         else if (typeCode == 'I') { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
+         else if (typeCode == 'D') { return BuildAndBook<double>(bl, r, nSlots, (AT_t*)nullptr); }
+         // else if (typeCode == 'b') { return BuildAndBook<UChar_t>(bl, r, nSlots); }
+         // else if (typeCode == 'S') { return BuildAndBook<Short_t>(bl, r, nSlots, (AT_t*)nullptr); }
+         // else if (typeCode == 's') { return BuildAndBook<UShort_t>(bl, r, nSlots, (AT_t*)nullptr); }
+         // else if (typeCode == 'i') { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
+         // else if (typeCode == 'F') { return BuildAndBook<float>(bl, r, nSlots, (AT_t*)nullptr); }
+         // else if (typeCode == 'L') { return BuildAndBook<Long64_t>(bl, r, nSlots, (AT_t*)nullptr); }
+         // else if (typeCode == 'l') { return BuildAndBook<ULong64_t>(bl, r, nSlots, (AT_t*)nullptr); }
+         // else if (typeCode == 'O') { return BuildAndBook<bool>(bl, r, nSlots, (AT_t*)nullptr); }
       } else {
          std::string typeName = branchEl->GetTypeName();
-         if (typeName == "vector<double>") {
-            return SimpleAction<std::vector<double>, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         } else if (typeName == "vector<float>") {
-            return SimpleAction<std::vector<float>, ART_t, at, TT_t>::BuildAndBook(this, bl, r, nSlots);
-         }
+         if (typeName == "vector<double>") { return BuildAndBook<std::vector<double>>(bl, r, nSlots, (AT_t*)nullptr); }
+         else if (typeName == "vector<float>") { return BuildAndBook<std::vector<float>>(bl, r, nSlots, (AT_t*)nullptr); }
       }
 
       std::string exceptionText = "The type of branch ";
