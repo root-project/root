@@ -315,7 +315,7 @@ using `TH1::GetOption`:
 | " "      | Default (scatter plot).|
 | "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`.|
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
-| "BOX1"   | Same as BOX but nn hidden surface removal algorithm is used|
+| "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
 | "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 | "LEGO"   | Same as `BOX`.|
@@ -2538,7 +2538,7 @@ The following example shows a 3D histogram plotted with the option `BOX2`.
 
 Begin_Macro(source)
 {
-   TCanvas *c36 = new TCanvas("c36","c36",600,400);
+   TCanvas *c56 = new TCanvas("c56","c56",600,400);
    gStyle->SetOptStat(kFALSE);
    TH3F *h3box = new TH3F("h3box","Option BOX1",10,-2,2,10,-2,2,10,0,4);
    Double_t x, y, z;
