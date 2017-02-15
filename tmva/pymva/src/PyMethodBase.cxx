@@ -216,6 +216,7 @@ int  PyMethodBase::PyIsInitialized()
    return kTRUE;
 }
 
+//_______________________________________________________________________
 void PyMethodBase::Serialize(TString path,PyObject *obj)
 {
    if(!PyIsInitialized()) PyInitialize();
@@ -230,6 +231,7 @@ void PyMethodBase::Serialize(TString path,PyObject *obj)
    Py_DECREF(model_data);
 }
 
+//_______________________________________________________________________
 Int_t PyMethodBase::UnSerialize(TString path,PyObject **obj)
 {
    // Load file
@@ -247,73 +249,6 @@ Int_t PyMethodBase::UnSerialize(TString path,PyObject **obj)
    Py_DECREF(model_arg);
 
    return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// get all the MVA values for the events of the current Data type
-std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
-{
-
-   if (!fClassifier) ReadModelFromFile();
-
-   Long64_t nEvents = Data()->GetNEvents();
-   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
-   if (firstEvt < 0) firstEvt = 0;
-   std::vector<Double_t> values(lastEvt-firstEvt);
-
-   nEvents = values.size();
-
-   UInt_t nvars = Data()->GetNVariables();
-
-   int dims[2];
-   dims[0] = nEvents;
-   dims[1] = nvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
-   float *pValue = (float *)(PyArray_DATA(pEvent));
-
-//    int dims2[2];
-//    dims2[0] = 1;
-//    dims2[1] = nvars;
-
-   // use timer
-   Timer timer( nEvents, GetName(), kTRUE );
-   if (logProgress)
-      Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
-            << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
-
-
-   // fill numpy array with events data
-   for (Int_t ievt=0; ievt<nEvents; ievt++) {
-     Data()->SetCurrentEvent(ievt);
-      const TMVA::Event *e = Data()->GetEvent();
-      assert(nvars == e->GetNVariables());
-      for (UInt_t i = 0; i < nvars; i++) {
-         pValue[ievt * nvars + i] = e->GetValue(i);
-      }
-      // if (ievt%100 == 0)
-      //    std::cout << "Event " << ievt << "  type" << DataInfo().IsSignal(e) << " : " << pValue[ievt*nvars] << "  " << pValue[ievt*nvars+1] << "  " << pValue[ievt*nvars+2] << std::endl;
-   }
-
-   // pass all the events to Scikit and evaluate the probabilities
-   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
-   double *proba = (double *)(PyArray_DATA(result));
-
-   // the return probabilities is a vector of pairs of (p_sig,p_backg)
-   // we ar einterested only in the signal probability
-   std::vector<double> mvaValues(nEvents);
-   for (int i = 0; i < nEvents; ++i)
-      mvaValues[i] = proba[2*i];
-
-   if (logProgress) {
-      Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
-            << timer.GetElapsedTime() << "       " << Endl;
-   }
-
-   Py_DECREF(result);
-   Py_DECREF(pEvent);
-
-   return mvaValues;
 }
 
 //_______________________________________________________________________
