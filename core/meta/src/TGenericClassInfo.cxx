@@ -26,7 +26,7 @@
 
 namespace ROOT {
 namespace Internal {
-   std::string TTypeNameExtractionBase::get_impl(const char* derived_funcname) {
+   std::string TTypeNameExtractionBase::GetImpl(const char* derived_funcname) {
       constexpr static const char tag[] = "TypeNameExtraction<";
       const char* start = strstr(derived_funcname, tag);
       if (!start)

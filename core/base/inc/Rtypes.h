@@ -195,20 +195,20 @@ typedef std::atomic<TClass*> atomic_TClass_ptr;
 namespace ROOT { namespace Internal {
 struct TTypeNameExtractionBase {
    // Implemented in TGenericClassInfo.cxx
-   static std::string get_impl(const char* derived_funcname);
+   static std::string GetImpl(const char* derived_funcname);
 };
 /// \class TypeNameExtraction
 /// Extracts the fully qualified type name by checking for the name of a
 /// member function as determined by the __PRETTY_FUNCTION__ macro.
 template <class T>
    struct TTypeNameExtraction: TTypeNameExtractionBase {
-      static std::string get() {
+      static std::string Get() {
 #ifdef _MSC_VER // Visual Studio
 # define R__TNE_PRETTY_FUNCTION __FUNCTION__
 #else
 # define R__TNE_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
-         return get_impl(R__TNE_PRETTY_FUNCTION);
+         return GetImpl(R__TNE_PRETTY_FUNCTION);
 #undef R__TNE_PRETTY_FUNCTION
       }
    };
@@ -249,7 +249,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
       static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
       static const char* Name() {
          if (fgName.empty())
-            SetName(TTypeNameExtraction<T>::get(), fgName);
+            SetName(TTypeNameExtraction<T>::Get(), fgName);
          return fgName.c_str();
       }
    };
