@@ -165,7 +165,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ![New box option for 3D histograms](NewBoxOption.png)
 
-- Implement options "BOX1" and "BOX3" for TH3 equivalent of "LEGO1" and "LEGO3"for TH2.
+- Implement options "BOX1", "BOX2" and "BOX3" for TH3 equivalent of "LEGO1", "LEGO2" and "LEGO3"for TH2.
 - When a 2d histogram was drawn with option `LEGO1` and white colored, the dark side
   of the lego was red instead of gray.
 - New option "0" to draw TH2Poly. When used with any `COL` options, the empty

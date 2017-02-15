@@ -314,7 +314,10 @@ using `TH1::GetOption`:
 |----------|-------------------------------------------------------------------|
 | " "      | Default (scatter plot).|
 | "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`.|
-| "BOX"    | Draw a for each cell with volume proportional to the content's absolute value.|
+| "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
+| "BOX1"   | Same as BOX but nn hidden surface removal algorithm is used|
+| "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
+| "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 | "LEGO"   | Same as `BOX`.|
 
 
@@ -2471,7 +2474,8 @@ End_Macro
 |----------|-------------------------------------------------------------------|
 | "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`|
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
-| "BOX1"   | Same as BOX but nn hidden surface removal algorithm is used|
+| "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
+| "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 
 Note that instead of `BOX` one can also use `LEGO`.
@@ -2518,14 +2522,32 @@ Begin_Macro(source)
 {
    TCanvas *c36 = new TCanvas("c36","c36",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3box = new TH3F("h3box","Option BOX1",15,-2,2,15,-2,2,15,0,4);
+   TH3F *h3box = new TH3F("h3box","Option BOX1",10,-2,2,10,-2,2,10,0,4);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
-      z = x*x + y*y;
+      z = abs(sin(x)/x + cos(y)*y);
       h3box->Fill(x,y,z);
    }
+   h3box->SetFillColor(9);
    h3box->Draw("BOX1");
+}
+End_Macro
+
+The following example shows a 3D histogram plotted with the option `BOX2`.
+
+Begin_Macro(source)
+{
+   TCanvas *c36 = new TCanvas("c36","c36",600,400);
+   gStyle->SetOptStat(kFALSE);
+   TH3F *h3box = new TH3F("h3box","Option BOX1",10,-2,2,10,-2,2,10,0,4);
+   Double_t x, y, z;
+   for (Int_t i=0;i<10000;i++) {
+      gRandom->Rannor(x, y);
+      z = abs(sin(x)/x + cos(y)*y);
+      h3box->Fill(x,y,z);
+   }
+   h3box->Draw("BOX2");
 }
 End_Macro
 
@@ -6446,6 +6468,8 @@ void THistPainter::PaintH3(Option_t *option)
    if (fH->GetDrawOption() && (strstr(opt,"box") ||  strstr(opt,"lego"))) {
       if (strstr(opt,"1")) {
          PaintH3Box(1);
+      } else if (strstr(opt,"2")) {
+         PaintH3Box(2);
       } else if (strstr(opt,"3")) {
          PaintH3Box(3);
       } else {
@@ -6987,9 +7011,13 @@ void THistPainter::PaintH3Box(Int_t iopt)
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
    Style_t coldark   = TColor::GetColorDark(colsav);
+      Style_t colbright   = TColor::GetColorBright(colsav);
+
    fH->SetFillStyle(1001);
    fH->TAttFill::Modify();
    fH->TAttLine::Modify();
+   Int_t ncolors  = gStyle->GetNumberOfColors();
+   Int_t theColor;
 
    //       Create bin boxes and draw
    Double_t wmin = fH->GetMinimum();
@@ -7023,13 +7051,24 @@ void THistPainter::PaintH3Box(Int_t iopt)
             for (Int_t k=0; k<6; ++k) {
                for (Int_t i=0; i<4; ++i) {
                   Int_t iv = iface[k][i];
-                  x[i] = sxyz[iv][0];
-                  y[i] = sxyz[iv][1];
+                  x[i]     = sxyz[iv][0];
+                  y[i]     = sxyz[iv][1];
                }
                x[4] = x[0]; y[4] = y[0];
                Double_t z = (x[2]-x[0])*(y[3]-y[1]) - (y[2]-y[0])*(x[3]-x[1]);
                if (z <= 0.) continue;
-               fH->SetFillColor((k == 3 || k == 5) ? coldark : colsav);
+               if (iopt == 2) {
+                  theColor = ncolors*((w-wmin)/(wmax-wmin)) -1;
+                  fH->SetFillColor(gStyle->GetColorPalette(theColor));
+               } else {
+                  if (k == 3 || k == 5) {
+                     fH->SetFillColor(coldark);
+                  } else if (k == 0 || k == 1) {
+                     fH->SetFillColor(colbright);
+                  } else {
+                     fH->SetFillColor(colsav);
+                  }
+               }
                fH->TAttFill::Modify();
                gPad->PaintFillArea(4, x, y);
                if (iopt != 3)gPad->PaintPolyLine(5, x, y);
@@ -7039,7 +7078,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
    }
 
    //       Draw front surfaces of frame box
-   fLego->FrontBox(90);
+   if (Hoption.FrontBox) fLego->FrontBox(90);
 
    //       Draw axis and title
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
@@ -7194,7 +7233,8 @@ void THistPainter::PaintH3BoxRaster()
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster1);
       fLego->BackBox(90);
    }
-   fLego->FrontBox(90);
+
+   if (Hoption.FrontBox) fLego->FrontBox(90);
 
    //       Draw axis and title
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
