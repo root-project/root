@@ -2,9 +2,7 @@
 #ifndef ROOT_Mpi_TEnvironment
 #define ROOT_Mpi_TEnvironment
 
-#ifndef ROOT_Mpi_Globals
 #include<Mpi/Globals.h>
-#endif
 
 namespace ROOT {
 

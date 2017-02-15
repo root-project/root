@@ -2,13 +2,7 @@
 #ifndef ROOT_Mpi_TRequest
 #define ROOT_Mpi_TRequest
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-
-#include<functional>
-#include<TObject.h>
-#include<mpi.h>
+#include<Mpi/Globals.h>
 
 namespace ROOT {
    namespace Mpi {

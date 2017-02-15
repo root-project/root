@@ -2,9 +2,7 @@
 #ifndef ROOT_Mpi_TGroup
 #define ROOT_Mpi_TGroup
 
-#ifndef ROOT_Mpi_Globals
 #include<Mpi/Globals.h>
-#endif
 
 namespace ROOT {
 

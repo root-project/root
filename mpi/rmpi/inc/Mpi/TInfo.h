@@ -2,9 +2,7 @@
 #ifndef ROOT_Mpi_TInfo
 #define ROOT_Mpi_TInfo
 
-#ifndef ROOT_Mpi_Globals
 #include<Mpi/Globals.h>
-#endif
 
 #include <sstream>
 

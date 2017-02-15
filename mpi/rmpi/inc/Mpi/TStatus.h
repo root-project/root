@@ -2,11 +2,7 @@
 #ifndef ROOT_Mpi_TStatus
 #define ROOT_Mpi_TStatus
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-#include<TObject.h>
-#include<mpi.h>
+#include<Mpi/Globals.h>
 
 namespace ROOT {
    namespace Mpi {

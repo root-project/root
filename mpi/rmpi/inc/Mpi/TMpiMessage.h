@@ -2,12 +2,8 @@
 #ifndef ROOT_Mpi_TMpiMessage
 #define ROOT_Mpi_TMpiMessage
 
-#ifndef ROOT_Mpi_Globals
 #include<Mpi/Globals.h>
-#endif
-
 #include<TMessage.h>
-#include<TROOT.h>
 
 namespace ROOT {
    namespace Mpi {

@@ -2,9 +2,7 @@
 #ifndef ROOT_Mpi_TInterCommunicator
 #define ROOT_Mpi_TInterCommunicator
 
-#ifndef ROOT_Mpi_TCommunicator
 #include<Mpi/TCommunicator.h>
-#endif
 
 namespace ROOT {
 

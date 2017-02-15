@@ -2,25 +2,11 @@
 #ifndef ROOT_Mpi_TCommunicator
 #define ROOT_Mpi_TCommunicator
 
-#ifndef ROOT_Mpi_Globals
 #include<Mpi/Globals.h>
-#endif
-
-#ifndef ROOT_Mpi_TMpiMessage
-#include <Mpi/TMpiMessage.h>
-#endif
-
-#ifndef ROOT_Mpi_TStatus
-#include <Mpi/TStatus.h>
-#endif
-
-#ifndef ROOT_Mpi_TRequest
+#include<Mpi/TMpiMessage.h>
+#include<Mpi/TStatus.h>
 #include<Mpi/TRequest.h>
-#endif
-
-#ifndef ROOT_Mpi_TGroup
 #include<Mpi/TGroup.h>
-#endif
 
 
 /**

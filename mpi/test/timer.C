@@ -19,6 +19,7 @@ void timer()
       TCanvas *c = new TCanvas("times");
       hist->Draw();
       c->SaveAs("times.png");
+      timer.Sleep(30000);
    }
 }
 

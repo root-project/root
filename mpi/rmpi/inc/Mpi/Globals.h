@@ -2,42 +2,21 @@
 #ifndef ROOT_Mpi_Globals
 #define ROOT_Mpi_Globals
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-
-#ifndef ROOT_TError
+#include<Rtypes.h>
 #include<TError.h>
-#endif
-
-#ifndef ROOT_TObject
 #include<TObject.h>
-#endif
-
-#ifndef ROOT_TClass
 #include<TClass.h>
-#endif
-
-#ifndef ROOT_TClassEdit
 #include<TClassEdit.h>
-#endif
-
-#ifndef ROOT_TROOT
 #include<TROOT.h>
-#endif
-
-#ifndef ROOT_TSystem
 #include<TSystem.h>
-#endif
 
-#ifndef ROOT_Mpi_TOp
 #include<Mpi/TOp.h>
-#endif
 
-#include <typeinfo>
+#include<typeinfo>
 #include<mpi.h>
-
 #include<string>
+#include<functional>
+#include<memory>
 
 #if defined(SEEK_SET) || defined(SEEK_CUR) || defined(SEEK_END)
 static const Int_t rmpi_stdio_seek_set = SEEK_SET;
