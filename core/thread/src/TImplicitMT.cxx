@@ -23,7 +23,7 @@
 #include "ROOT/TPoolManager.hxx"
 #include <atomic>
 
-static std::shared_ptr<ROOT::TPoolManager> &GetPoolManagerMT()
+static std::shared_ptr<ROOT::TPoolManager> &R__GetPoolManagerMT()
 {
    static std::shared_ptr<ROOT::TPoolManager> schedMT;
    return schedMT;
@@ -53,7 +53,7 @@ extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
       if (ROOT::TPoolManager::GetPoolSize() == 0) {
          TThread::Initialize();
       }
-      (GetPoolManagerMT()) = ROOT::GetPoolManager(numthreads);
+      R__GetPoolManagerMT() = ROOT::GetPoolManager(numthreads);
       GetImplicitMTFlag() = true;
    } else {
       ::Warning("ROOT_TImplicitMT_EnableImplicitMT", "Implicit multi-threading is already enabled");
@@ -64,7 +64,7 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
 {
    if (GetImplicitMTFlag()) {
       GetImplicitMTFlag() = false;
-      GetPoolManagerMT().reset();
+      R__GetPoolManagerMT().reset();
    } else {
       ::Warning("ROOT_TImplicitMT_DisableImplicitMT", "Implicit multi-threading is already disabled");
    }
