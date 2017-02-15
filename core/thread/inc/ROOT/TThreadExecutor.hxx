@@ -91,7 +91,7 @@ namespace ROOT {
       template<class T, class R>
       auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-      std::shared_ptr<ROOT::TPoolManager> fSched = nullptr;
+      std::shared_ptr<ROOT::Internal::TPoolManager> fSched = nullptr;
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
