@@ -433,9 +433,12 @@ namespace Detail {
 
 TDataFrameBranchBase::TDataFrameBranchBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches, const std::string &name)
    : fFirstData(df), fTmpBranches(branches), fName(name) {};
+
 BranchNames TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
+
 std::string TDataFrameBranchBase::GetName() const { return fName; }
 
+std::weak_ptr<TDataFrameImpl> TDataFrameBranchBase::GetDataFrame() const { return fFirstData; }
 
 TDataFrameFilterBase::TDataFrameFilterBase(std::weak_ptr<TDataFrameImpl> df, BranchNames branches, const std::string& name)
    : fFirstData(df), fTmpBranches(branches), fName(name) {};
