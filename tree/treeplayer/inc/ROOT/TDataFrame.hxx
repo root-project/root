@@ -688,17 +688,19 @@ private:
    // W == void: histogram w/o weights
    template<typename X, typename W>
    TActionResultProxy<::TH1F>
-   Histo1DImpl(void* /* overloadSignal */, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
+   Histo1DImpl(void*, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
    {
+      // perform type guessing if needed and build the action
       return CreateAction<ROOT::Internal::ActionTypes::Histo1D>(bl, h, (X*)(nullptr));
    }
 
    // W != void: histogram w/ weights
    template<typename X, typename W>
    TActionResultProxy<::TH1F>
-   Histo1DImpl(W* /* overloadSignal */, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
+   Histo1DImpl(W*, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
    {
-      // TODO call BuildAndBook directly? (need a different ActionType)
+      // weighted histograms never need to do type guessing, we can build
+      // the action here
       auto df = GetDataFrameChecked();
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
       auto nSlots = df->GetNSlots();
@@ -802,7 +804,7 @@ private:
    template <typename ActionType, typename ActionResultType>
    TActionResultProxy<ActionResultType>
    CreateAction(const BranchNames& bl, const std::shared_ptr<ActionResultType>& r,
-                ROOT::Detail::TDataFrameGuessedType* /*dummy*/)
+                ROOT::Detail::TDataFrameGuessedType*)
    {
       // More types can be added at will at the cost of some compilation time and size of binaries.
       using AT_t = ActionType;
@@ -976,9 +978,10 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   std::shared_ptr<Ret_t> GetValueHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
-                                             ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
-                                             unsigned int slot, Long64_t entry)
+   std::shared_ptr<Ret_t>
+   GetValueHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
+                  ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
+                  unsigned int slot, Long64_t entry)
    {
       auto valuePtr = std::make_shared<Ret_t>(fExpression(
          Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
