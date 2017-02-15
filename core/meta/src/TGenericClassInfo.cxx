@@ -35,9 +35,8 @@ namespace Internal {
       const char* end = strstr(start, ">::get(");
       if (!end)
          return "";
-      std::string unnorm = std::string(start, end - start);
       std::string ret;
-      TClassEdit::GetNormalizedName(ret, unnorm);
+      TClassEdit::GetNormalizedName(ret, std::string_view(start, end - start));
       return ret;
    }
 
