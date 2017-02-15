@@ -36,6 +36,7 @@ namespace ROOT {
 
       class TMpiMessage;
       class TInterCommunicator;
+      class TIntraCommunicator;
       /**
        * \class TNullCommunicator
        * Class for null communicator, base class to create by default a null communicator in any communicator class.
@@ -68,6 +69,7 @@ namespace ROOT {
          {
             return fComm;
          }
+
          ClassDef(TNullCommunicator, 1)
       };
 
@@ -96,6 +98,10 @@ namespace ROOT {
             fComm = comm;
             return *this;
          }
+
+         MPI_Comm &operator=(const TCommunicator &comm) const;
+         MPI_Comm &operator=(const TInterCommunicator &comm) const;
+         MPI_Comm &operator=(const TIntraCommunicator &comm) const;
 
          virtual TCommunicator &Clone() const = 0;
 

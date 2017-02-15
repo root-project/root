@@ -47,7 +47,7 @@ namespace ROOT {
               */
          static Bool_t IsInitialized();
 
-//          static TString GetProcessorName();
+         static TString GetProcessorName();
 //          static Int_t GetThreadLevel();
 //          static Bool_t IsMainThread();
          ClassDef(TEnvironment, 1)

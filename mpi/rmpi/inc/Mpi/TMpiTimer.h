@@ -1,23 +1,26 @@
 // @(#)root/mpi / Author: Omar.Zapata@cern.ch 2017 http://oproject.org
-#ifndef ROOT_Mpi_TTimer
-#define ROOT_Mpi_TTimer
+#ifndef ROOT_Mpi_TMpiTimer
+#define ROOT_Mpi_TMpiTimer
 
-#include<Mpi/Globals.h>
+#include<Mpi/TIntraCommunicator.h>
+#include<TH1F.h>
 
 namespace ROOT {
    namespace Mpi {
-      class TTimer: public TObject {
+      class TMpiTimer: public TObject {
          Double_t fStarTime;
-         MPI_Comm  fComm;
+         TIntraCommunicator  fComm;
       public:
-         TTimer() {};
+         TMpiTimer(MPI_Comm  comm);
          void Start();
          void ReStart();
          Double_t GetElapsed() const;
+         static Double_t GetTick();
          static void Sleep(Double_t msec);
          Bool_t IsGlobal() const;
          void Print() const;
-         ClassDef(TTimer, 0)
+         TH1F *GetElapsedHist(Int_t root) const;
+         ClassDef(TMpiTimer, 0)
       };
    }//end namespace Mpi
 }//end namespace ROOT

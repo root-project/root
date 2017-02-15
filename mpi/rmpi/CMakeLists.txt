@@ -19,12 +19,12 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
          Mpi/TOp.h
          Mpi/TGroup.h
          Mpi/TInfo.h
-         Mpi/TTimer.h
+         Mpi/TMpiTimer.h
 		 Mpi.h
 		 )
 
 ROOT_GENERATE_DICTIONARY(G__RMpi ${RMPI_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)
-ROOT_LINKER_LIBRARY(RMpi *.cxx G__RMpi.cxx LIBRARIES ${MPI_CXX_LIBRARIES} DEPENDENCIES Core Thread RIO Net)
+ROOT_LINKER_LIBRARY(RMpi *.cxx G__RMpi.cxx LIBRARIES ${MPI_CXX_LIBRARIES} DEPENDENCIES Core Thread RIO Net Hist)
 
 ROOT_INSTALL_HEADERS()
 

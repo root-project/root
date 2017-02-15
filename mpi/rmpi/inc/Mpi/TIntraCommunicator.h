@@ -42,6 +42,11 @@ namespace ROOT {
             return *this;
          }
 
+         inline operator MPI_Comm() const
+         {
+            return fComm;
+         }
+
          TIntraCommunicator Dup() const;
 
          virtual TIntraCommunicator &Clone() const;

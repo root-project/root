@@ -67,3 +67,12 @@ void TEnvironment::Finalize()
    //Finalize the mpi's environment
    MPI_Finalize();
 }
+
+//______________________________________________________________________________
+TString TEnvironment::GetProcessorName()
+{
+   Char_t name[MAX_PROCESSOR_NAME];
+   Int_t size;
+   MPI_Get_processor_name(name, &size);
+   return TString(name, size);
+}

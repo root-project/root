@@ -31,6 +31,11 @@ namespace ROOT {
             return *this;
          }
 
+         inline operator MPI_Comm() const
+         {
+            return fComm;
+         }
+
          virtual Int_t GetRemoteSize() const;
 
          virtual TGroup GetRemoteGroup() const;
