@@ -373,8 +373,8 @@ public:
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (f, actualBl, fProxiedPtr, name);
-      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr);
       df->Book(FilterPtr);
+      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(std::move(FilterPtr));
       return tdf_f;
    }
 
@@ -409,8 +409,8 @@ public:
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, expression, actualBl, fProxiedPtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr);
       df->Book(BranchPtr);
+      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(std::move(BranchPtr));
       return tdf_b;
    }
 
@@ -881,8 +881,7 @@ protected:
       }
       return defaultBranches;
    }
-   // TODO could this be an r-value reference instead of a const ref?
-   TDataFrameInterface(const std::shared_ptr<Proxied>& proxied) : fProxiedPtr(proxied) {}
+   TDataFrameInterface(std::shared_ptr<Proxied>&& proxied) : fProxiedPtr(proxied) {}
    std::shared_ptr<Proxied> fProxiedPtr;
 };
 
