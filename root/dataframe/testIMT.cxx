@@ -208,13 +208,14 @@ int main(int argc, char** argv) {
       tests(argc, argv);
    }
 
+#ifdef R__USE_IMT
    unsigned int ncores = 4;
    if (argc > 1 )
       ncores = std::atoi(argv[1]);
    if (ncores == 0) return 0;
    std::cout << "\b\b***** Parallelism enabled. Running with " << ncores << "!" << std::endl;
    ROOT::EnableImplicitMT(ncores);
-
+#endif
    {
 //       TimerRAII a;
       tests(argc, argv);
