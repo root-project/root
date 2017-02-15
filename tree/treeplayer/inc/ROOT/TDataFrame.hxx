@@ -911,7 +911,7 @@ public:
    virtual void *GetValue(unsigned int slot, Long64_t entry) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual std::weak_ptr<TDataFrameImpl> GetDataFrame() const = 0;
+   virtual std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    std::string GetName() const;
@@ -942,8 +942,6 @@ public:
    }
 
    TDataFrameBranch(const TDataFrameBranch &) = delete;
-
-   std::weak_ptr<TDataFrameImpl> GetDataFrame() const { return fFirstData; }
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot)
    {
