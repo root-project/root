@@ -6948,7 +6948,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
    //       Set view
    TView *view = gPad->GetView();
    if (!view) {
-      Error("PaintTF3", "no TView in current pad");
+      Error("PaintH3", "no TView in current pad");
       return;
    }
    Double_t thedeg =  90 - gPad->GetTheta();
@@ -6960,7 +6960,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
    Int_t backcolor = gPad->GetFrameFillColor();
    view->PadRange(backcolor);
 
-   //       Draw back surfaces of axis box
+   //       Draw back surfaces of frame box
    fLego->InitMoveScreen(-1.1,1.1);
    if (Hoption.BackBox) {
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
@@ -6988,7 +6988,6 @@ void THistPainter::PaintH3Box(Int_t iopt)
    Style_t colsav    = fH->GetFillColor();
    Style_t coldark   = TColor::GetColorDark(colsav);
    fH->SetFillStyle(1001);
-   fH->TAttFill::Modify();
    fH->TAttFill::Modify();
    fH->TAttLine::Modify();
 
@@ -7030,8 +7029,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
                x[4] = x[0]; y[4] = y[0];
                Double_t z = (x[2]-x[0])*(y[3]-y[1]) - (y[2]-y[0])*(x[3]-x[1]);
                if (z <= 0.) continue;
-               if (k==5 || k == 3) fH->SetFillColor(coldark);
-               else fH->SetFillColor(colsav);
+               fH->SetFillColor((k == 3 || k == 5) ? coldark : colsav);
                fH->TAttFill::Modify();
                gPad->PaintFillArea(4, x, y);
                if (iopt != 3)gPad->PaintPolyLine(5, x, y);
@@ -7040,15 +7038,11 @@ void THistPainter::PaintH3Box(Int_t iopt)
       }
    }
 
-   //       Draw front surfaces of axis box
-   if (Hoption.FrontBox) {
-      fLego->InitMoveScreen(-1.1,1.1);
-      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
-      fLego->FrontBox(90);
-   }
+   //       Draw front surfaces of frame box
+   fLego->FrontBox(90);
 
+   //       Draw axis and title
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
-
    PaintTitle();
 
    delete axis;
@@ -7065,12 +7059,18 @@ void THistPainter::PaintH3Box(Int_t iopt)
 void THistPainter::PaintH3BoxRaster()
 {
    //       Predefined box structure
-   Double_t wxyz[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,1,-1}, {-1,1,-1},
-                           {-1,-1, 1}, {1,-1, 1}, {1,1, 1}, {-1,1, 1} };
-   Double_t normal[6][3] = { {0,0,-1}, {0,0,1},                      // Z-, Z+
-                             {0,-1,0}, {1,0,0}, {0,1,0}, {-1,0,0} }; // Y-, X+, Y+, X-
-   Int_t iface[6][4] = { {0,3,2,1}, {4,5,6,7},
-                         {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7} };
+   Double_t wxyz[8][3] = {
+      {-1,-1,-1}, {1,-1,-1}, {1,1,-1}, {-1,1,-1}, // bottom vertices
+      {-1,-1, 1}, {1,-1, 1}, {1,1, 1}, {-1,1, 1}  // top vertices
+   };
+   Int_t iface[6][4] = {
+      {0,3,2,1}, {4,5,6,7},                       // bottom and top faces
+      {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7}  // side faces
+   };
+   Double_t normal[6][3] = {
+      {0,0,-1}, {0,0,1},                          // Z-, Z+
+      {0,-1,0}, {1,0,0}, {0,1,0}, {-1,0,0}        // Y-, X+, Y+, X-
+   };
 
    //       Define dimensions of world space
    TGaxis *axis = new TGaxis();
@@ -7090,7 +7090,7 @@ void THistPainter::PaintH3BoxRaster()
    //       Set view
    TView *view = gPad->GetView();
    if (!view) {
-      Error("PaintTF3", "no TView in current pad");
+      Error("PaintH3", "no TView in current pad");
       return;
    }
    Double_t thedeg =  90 - gPad->GetTheta();
@@ -7106,10 +7106,9 @@ void THistPainter::PaintH3BoxRaster()
    if (Hoption.FrontBox) {
       fLego->InitMoveScreen(-1.1,1.1);
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
-      fLego->FrontBox(90);
    }
 
-   //       Initialize raster screen (hidden line removal algorithm)
+   //       Initialize hidden line removal algorithm "raster screen"
    fLego->InitRaster(-1.1,-1.1,1.1,1.1,1000,800);
 
    //       Define order of drawing
@@ -7189,15 +7188,16 @@ void THistPainter::PaintH3BoxRaster()
       }
    }
 
-   //       Draw back surfaces of frame box
+   //       Draw frame box
    if (Hoption.BackBox) {
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster1);
       fLego->BackBox(90);
    }
+   fLego->FrontBox(90);
 
+   //       Draw axis and title
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
-
    PaintTitle();
 
    delete axis;

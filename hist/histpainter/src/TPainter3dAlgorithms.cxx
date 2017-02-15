@@ -319,7 +319,7 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
    }
 
    //          Get corners of surrounding box
-   Double_t r[3*8], av[3*8];
+   Double_t r[3*8], av[3*8], x[4], y[4];
    Int_t ix1, ix2, iy1, iy2, iz1, iz2;
    Double_t cosa = TMath::Cos(kRad*ang);
    Double_t sina = TMath::Sin(kRad*ang);
@@ -328,13 +328,26 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
       r[i*3 + 0] = av[i*3 + 0] + av[i*3 + 1]*cosa;
       r[i*3 + 1] = av[i*3 + 1]*sina;
       r[i*3 + 2] = av[i*3 + 2];
+      view->WCtoNDC(&r[i*3],&r[i*3]);
    }
-
-   //          Draw front faces
-   Int_t icodes[3] = { 0, 0, 0 };
-   Double_t *fdummy = 0;
-   (this->*fDrawFace)(icodes, r, 4, iface1, fdummy);
-   (this->*fDrawFace)(icodes, r, 4, iface2, fdummy);
+ 
+   //          Draw frame
+   SetLineColor(1);
+   SetLineStyle(1);
+   SetLineWidth(1);
+   TAttLine::Modify();
+   for (Int_t i = 0; i < 4; ++i) {
+      Int_t k = iface1[i] - 1;
+      x[i] = r[k*3 + 0];
+      y[i] = r[k*3 + 1];
+   }
+   gPad->PaintPolyLine(4, x, y);
+   for (Int_t i = 0; i < 4; ++i) {
+      Int_t k = iface2[i] - 1;
+      x[i] = r[k*3 + 0];
+      y[i] = r[k*3 + 1];
+   }
+   gPad->PaintPolyLine(4, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
