@@ -7,7 +7,7 @@ namespace ROOT {
 
    TThreadExecutor::TThreadExecutor(UInt_t nThreads)
    {
-      fSched = ROOT::GetPoolManager(nThreads);
+      fSched = ROOT::Internal::GetPoolManager(nThreads);
    }
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
