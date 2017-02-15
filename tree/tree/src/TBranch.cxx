@@ -298,13 +298,14 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 
    char* nameBegin = const_cast<char*>(leaflist);
    Int_t offset = 0;
+   auto len = strlen(leaflist);
    // FIXME: Make these string streams instead.
-   char* leafname = new char[640];
+   char* leafname = new char[len + 1];
    char* leaftype = new char[320];
    // Note: The default leaf type is a float.
    strlcpy(leaftype, "F",320);
    char* pos = const_cast<char*>(leaflist);
-   const char* leaflistEnd = leaflist + strlen(leaflist);
+   const char* leaflistEnd = leaflist + len;
    for (; pos <= leaflistEnd; ++pos) {
       // -- Scan leaf specification and create leaves.
       if ((*pos == ':') || (*pos == 0)) {
