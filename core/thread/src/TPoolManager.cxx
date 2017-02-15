@@ -1,13 +1,13 @@
-#include "TError.h"
 #include "ROOT/TPoolManager.hxx"
+#include "TError.h"
 #include "TROOT.h"
 #include <algorithm>
 #include "tbb/task_scheduler_init.h"
 
-
 namespace ROOT {
 
-
+   //Returns the weak_ptr reflecting a shared_ptr to the only instance of the Pool Manager.
+   //This will allow to check if the shared_ptr is still alive. 
    std::weak_ptr<ROOT::TPoolManager> &GetWP()
    {
       static std::weak_ptr<ROOT::TPoolManager> weak_sched;
@@ -18,6 +18,7 @@ namespace ROOT {
 
    TPoolManager::TPoolManager(UInt_t nThreads): fSched(new tbb::task_scheduler_init(tbb::task_scheduler_init::deferred))
    {
+      //Is it there another instance of the tbb scheduler running?
       if (fSched->is_active()) {
          mustDelete = false;
       }
@@ -29,6 +30,8 @@ namespace ROOT {
 
    TPoolManager::~TPoolManager()
    {
+      //Only terminate the tbb scheduler if there was not another instance already
+      // running when the constructor was called.
       if (mustDelete) {
          fSched->terminate();
          fgPoolSize = 0;
@@ -36,16 +39,15 @@ namespace ROOT {
       GetWP().reset();
    }
 
-   //Size of the task pool the PoolManager has been initialized with. Can be greater than number of threads.
+   //Number of threads the PoolManager has been initialized with.
    UInt_t TPoolManager::GetPoolSize()
    {
       return fgPoolSize;
    }
 
-
+   //Factory function returning a shared pointer to the only instance of the PoolManager.
    std::shared_ptr<ROOT::TPoolManager> GetPoolManager(UInt_t nThreads)
    {
-
       if (GetWP().lock() == nullptr) {
          std::shared_ptr<ROOT::TPoolManager> shared(new ROOT::TPoolManager(nThreads));
          GetWP() = shared;
@@ -53,5 +55,4 @@ namespace ROOT {
       }
       return GetWP().lock();
    }
-
 }
