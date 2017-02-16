@@ -2522,7 +2522,7 @@ Begin_Macro(source)
 {
    TCanvas *c36 = new TCanvas("c36","c36",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3box = new TH3F("h3box","Option BOX1",10,-2,2,10,-2,2,10,0,4);
+   TH3F *h3box = new TH3F("h3box","Option BOX1",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -2540,7 +2540,7 @@ Begin_Macro(source)
 {
    TCanvas *c56 = new TCanvas("c56","c56",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3box = new TH3F("h3box","Option BOX1",10,-2,2,10,-2,2,10,0,4);
+   TH3F *h3box = new TH3F("h3box","Option BOX2",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
