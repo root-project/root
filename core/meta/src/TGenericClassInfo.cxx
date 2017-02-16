@@ -32,7 +32,7 @@ namespace Internal {
       if (!start)
          return "";
       start += sizeof(tag) - 1;
-      const char* end = strstr(start, ">::get(");
+      const char* end = strstr(start, ">::Get(");
       if (!end)
          return "";
       std::string ret;
