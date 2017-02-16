@@ -2486,7 +2486,7 @@ The following example shows a 3D histogram plotted as a scatter plot.
 
 Begin_Macro(source)
 {
-   TCanvas *c06 = new TCanvas("c06","c06",600,400);
+   auto c06 = new TCanvas("c06","c06",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3scat = new TH3F("h3scat","Option SCAT (default) ",15,-2,2,15,-2,2,15,0,4);
    Double_t x, y, z;
@@ -2503,7 +2503,7 @@ The following example shows a 3D histogram plotted with the option `BOX`.
 
 Begin_Macro(source)
 {
-   TCanvas *c16 = new TCanvas("c16","c16",600,400);
+   auto c16 = new TCanvas("c16","c16",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX",15,-2,2,15,-2,2,15,0,4);
    Double_t x, y, z;
@@ -2520,7 +2520,7 @@ The following example shows a 3D histogram plotted with the option `BOX1`.
 
 Begin_Macro(source)
 {
-   TCanvas *c36 = new TCanvas("c36","c36",600,400);
+   auto c36 = new TCanvas("c36","c36",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX1",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
    Double_t x, y, z;
@@ -2538,7 +2538,7 @@ The following example shows a 3D histogram plotted with the option `BOX2`.
 
 Begin_Macro(source)
 {
-   TCanvas *c56 = new TCanvas("c56","c56",600,400);
+   auto c56 = new TCanvas("c56","c56",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX2",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
    Double_t x, y, z;
@@ -2555,7 +2555,7 @@ The following example shows a 3D histogram plotted with the option `BOX3`.
 
 Begin_Macro(source)
 {
-   TCanvas *c46 = new TCanvas("c46","c46",600,400);
+   auto c46 = new TCanvas("c46","c46",600,400);
    c46->SetFillColor(38);
    gStyle->SetOptStat(kFALSE);
    auto h3box = new TH3F("h3box","Option BOX3",15,-2,2,15,-2,2,15,0,4);
@@ -2573,7 +2573,7 @@ The following example shows a 3D histogram plotted with the option `ISO`.
 
 Begin_Macro(source)
 {
-   TCanvas *c26 = new TCanvas("c26","c26",600,400);
+   auto c26 = new TCanvas("c26","c26",600,400);
    gStyle->SetOptStat(kFALSE);
    auto h3iso = new TH3F("h3iso","Option ISO",15,-2,2,15,-2,2,15,0,4);
    Double_t x, y, z;
