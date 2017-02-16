@@ -764,21 +764,8 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
    if (gPad) view = gPad->GetView();
    if (!view) return;
 
-   //          Copy points to array
-   Double_t p3[3*12];
-   for (Int_t i = 0; i < np; ++i) {
-      Int_t k = iface[i];
-      p3[i*3 + 0] = xyz[(k-1)*3 + 0];
-      p3[i*3 + 1] = xyz[(k-1)*3 + 1];
-      p3[i*3 + 2] = xyz[(k-1)*3 + 2];
-   }
-
-   //          Find level lines
-   FindLevelLines(np, p3, tt);
-
-   //          Draw level lines
-   Double_t p1[3], p2[3], x[2], y[2];
-   if (icodes[2] == 0) {  // front and back boxes
+   //          Set graphics attributes
+   if (icodes[2] == 0) {  // frame
       SetLineColor(1);
       SetLineStyle(1);
       SetLineWidth(1);
@@ -788,25 +775,59 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
       SetLineWidth(fEdgeWidth[fEdgeIdx]);
    }
    TAttLine::Modify();
-   for (Int_t il = 0; il < fNlines; ++il) {
-      FindVisibleDraw(&fPlines[6*il + 0], &fPlines[6*il + 3]);
-      view->WCtoNDC(&fPlines[6*il + 0], p1);
-      view->WCtoNDC(&fPlines[6*il + 3], p2);
-      Double_t xdel = p2[0] - p1[0];
-      Double_t ydel = p2[1] - p1[1];
-      for (Int_t it = 0; it < fNT; ++it) {
-         x[0] = p1[0] + xdel*fT[2*it + 0];
-         y[0] = p1[1] + ydel*fT[2*it + 0];
-         x[1] = p1[0] + xdel*fT[2*it + 1];
-         y[1] = p1[1] + ydel*fT[2*it + 1];
-         gPad->PaintPolyLine(2, x, y);
+
+   //          Copy points to array
+   Double_t p3[3*12], ttt[12];
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t k = iface[i];
+      p3[i*3 + 0] = xyz[(k-1)*3 + 0];
+      p3[i*3 + 1] = xyz[(k-1)*3 + 1];
+      p3[i*3 + 2] = xyz[(k-1)*3 + 2];
+      ttt[i] = tt[i];
+   }
+
+   //          Subdivide quadrilateral in two triangles
+   Int_t npol[2] = { np, 0 }; // number of vertices in subpolygons
+   Int_t ipol[2] = {  0, 0 }; // first vertices in subpolygons
+   if (np == 4 && icodes[2] != 0) {
+      p3[4*3 + 0] = p3[0];
+      p3[4*3 + 1] = p3[1];
+      p3[4*3 + 2] = p3[2];
+      ttt[4] = tt[0];
+      npol[0] = 3;  npol[1] = 3;
+      ipol[0] = 0;  ipol[1] = 2;
+   }
+
+   Double_t p1[3], p2[3], x[2], y[2];
+   for (Int_t kpol=0; kpol<2; ++kpol) { 
+      if (npol[kpol] == 0) continue;
+      Int_t nv = npol[kpol];
+      Int_t iv = ipol[kpol];
+
+      //          Find level lines
+      FindLevelLines(nv, &p3[3*iv], &ttt[iv]);
+
+      //          Draw level lines
+      for (Int_t il = 0; il < fNlines; ++il) {
+         FindVisibleDraw(&fPlines[6*il + 0], &fPlines[6*il + 3]);
+         view->WCtoNDC(&fPlines[6*il + 0], p1);
+         view->WCtoNDC(&fPlines[6*il + 3], p2);
+         Double_t xdel = p2[0] - p1[0];
+         Double_t ydel = p2[1] - p1[1];
+         for (Int_t it = 0; it < fNT; ++it) {
+            x[0] = p1[0] + xdel*fT[2*it + 0];
+            y[0] = p1[1] + ydel*fT[2*it + 0];
+            x[1] = p1[0] + xdel*fT[2*it + 1];
+            y[1] = p1[1] + ydel*fT[2*it + 1];
+            gPad->PaintPolyLine(2, x, y);
+         }
       }
    }
 
    //          Modify screen
    for (Int_t i = 0; i < np; ++i) {
       Int_t i1 = i;
-      Int_t i2 = (i == np-1) ? 0 : i + 1;
+      Int_t i2 = (i == np - 1) ? 0 : i1 + 1;
       ModifyScreen(&p3[i1*3], &p3[i2*3]);
    }
 }
@@ -1952,13 +1973,14 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
 
 void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
 {
+   const Double_t VERY_BIG = 9e+99;
    fX0 = xmin;
-   fDX = (xmax - xmin) / 1000;
-   for (Int_t i = 1; i <= 1000; ++i) {
-      fU[2*i - 2] = (float)-999;
-      fU[2*i - 1] = (float)-999;
-      fD[2*i - 2] = (float)999;
-      fD[2*i - 1] = (float)999;
+   fDX = (xmax - xmin) / 2000;
+   for (Int_t i = 0; i < 2000; ++i) {
+      fU[2*i + 0] = -VERY_BIG;
+      fU[2*i + 1] = -VERY_BIG;
+      fD[2*i + 0] =  VERY_BIG;
+      fD[2*i + 1] =  VERY_BIG;
    }
 }
 

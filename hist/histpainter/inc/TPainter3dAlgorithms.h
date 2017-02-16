@@ -33,8 +33,8 @@ private:
    Double_t     fDX;               ///
    Double_t     fRmin[3];          /// Lower limits of lego
    Double_t     fRmax[3];          /// Upper limits of lego
-   Double_t     fU[2000];          ///
-   Double_t     fD[2000];          ///
+   Double_t     fU[4000];          ///
+   Double_t     fD[4000];          ///
    Double_t     fT[200];           ///
    Double_t     fFunLevel[257];    /// Function levels corresponding to colors
    Double_t     fPlines[1200];     ///
