@@ -10,9 +10,9 @@ INPUTFILE=ttree_read_imt.root
 if [ !resp=$(ROOTDEBUG=1 ./$TESTNAME $NTHREADS $NENTRIES $INPUTFILE 1>${TESTNAME}.out 2>${TESTNAME}.err) ]; then
    echo "A problem was detected running the test"
    echo ""
-   echo "*** Standard Output ***"
+   echo "*** Standard Output (last 100 lines) ***"
    echo ""
-   cat ${TESTNAME}.out
+   tail -n 100 ${TESTNAME}.out
    echo ""
    echo "*** Standard Error ***"
    echo ""
