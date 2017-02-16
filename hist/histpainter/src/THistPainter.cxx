@@ -2488,7 +2488,7 @@ Begin_Macro(source)
 {
    TCanvas *c06 = new TCanvas("c06","c06",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3scat = new TH3F("h3scat","Option SCAT (default) ",15,-2,2,15,-2,2,15,0,4);
+   auto h3scat = new TH3F("h3scat","Option SCAT (default) ",15,-2,2,15,-2,2,15,0,4);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -2505,7 +2505,7 @@ Begin_Macro(source)
 {
    TCanvas *c16 = new TCanvas("c16","c16",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3box = new TH3F("h3box","Option BOX",15,-2,2,15,-2,2,15,0,4);
+   auto h3box = new TH3F("h3box","Option BOX",15,-2,2,15,-2,2,15,0,4);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -2522,7 +2522,7 @@ Begin_Macro(source)
 {
    TCanvas *c36 = new TCanvas("c36","c36",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3box = new TH3F("h3box","Option BOX1",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
+   auto h3box = new TH3F("h3box","Option BOX1",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -2540,7 +2540,7 @@ Begin_Macro(source)
 {
    TCanvas *c56 = new TCanvas("c56","c56",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3box = new TH3F("h3box","Option BOX2",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
+   auto h3box = new TH3F("h3box","Option BOX2",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -2558,7 +2558,7 @@ Begin_Macro(source)
    TCanvas *c46 = new TCanvas("c46","c46",600,400);
    c46->SetFillColor(38);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3box = new TH3F("h3box","Option BOX3",15,-2,2,15,-2,2,15,0,4);
+   auto h3box = new TH3F("h3box","Option BOX3",15,-2,2,15,-2,2,15,0,4);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -2575,7 +2575,7 @@ Begin_Macro(source)
 {
    TCanvas *c26 = new TCanvas("c26","c26",600,400);
    gStyle->SetOptStat(kFALSE);
-   TH3F *h3iso = new TH3F("h3iso","Option ISO",15,-2,2,15,-2,2,15,0,4);
+   auto h3iso = new TH3F("h3iso","Option ISO",15,-2,2,15,-2,2,15,0,4);
    Double_t x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
