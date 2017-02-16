@@ -495,10 +495,10 @@ public:
       auto bl = GetBranchNames<T>({branchName}, "get the values of the branch");
       auto valuesPtr = std::make_shared<COLL>();
       auto values = df->MakeActionResultProxy(valuesPtr);
-      auto getOp = std::make_shared<ROOT::Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
-      auto getAction = [getOp] (unsigned int slot , const T &v) mutable { getOp->Exec(v, slot); };
-      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(getAction), Proxied>;
-      df->Book(std::make_shared<DFA_t>(std::move(getAction), bl, fProxiedPtr));
+      auto takeOp = std::make_shared<ROOT::Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
+      auto takeAction = [takeOp] (unsigned int slot , const T &v) mutable { takeOp->Exec(v, slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(takeAction), Proxied>;
+      df->Book(std::make_shared<DFA_t>(std::move(takeAction), bl, fProxiedPtr));
       return values;
    }
 
