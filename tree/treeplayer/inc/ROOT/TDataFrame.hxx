@@ -191,7 +191,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
 }
 
 template <typename Filter>
-void CheckFilter(Filter)
+void CheckFilter(Filter&)
 {
    using FilterRet_t = typename TDFTraitsUtils::TFunctionTraits<Filter>::Ret_t;
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
@@ -237,7 +237,7 @@ class TDataFrameAction final : public TDataFrameActionBase {
    std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
 
 public:
-   TDataFrameAction(F f, const BranchNames &bl, const std::shared_ptr<PrevDataFrame>& pd)
+   TDataFrameAction(F&& f, const BranchNames &bl, const std::shared_ptr<PrevDataFrame>& pd)
       : fAction(f), fBranches(bl), fTmpBranches(pd->GetTmpBranches()), fPrevData(*pd),
         fFirstData(pd->GetDataFrame()) { }
 
@@ -372,7 +372,7 @@ public:
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<DFF_t> (f, actualBl, fProxiedPtr, name);
+      auto FilterPtr = std::make_shared<DFF_t> (std::move(f), actualBl, fProxiedPtr, name);
       df->Book(FilterPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(std::move(FilterPtr));
       return tdf_f;
@@ -408,7 +408,7 @@ public:
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
-      auto BranchPtr = std::make_shared<DFB_t>(name, expression, actualBl, fProxiedPtr);
+      auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, fProxiedPtr);
       df->Book(BranchPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(std::move(BranchPtr));
       return tdf_b;
@@ -430,8 +430,7 @@ public:
       namespace IU = ROOT::Internal::TDFTraitsUtils;
       using Args_t = typename IU::TFunctionTraits<decltype(f)>::ArgsNoDecay_t;
       using Ret_t = typename IU::TFunctionTraits<decltype(f)>::Ret_t;
-      auto fWithSlot = IU::AddSlotParameter<Ret_t>(f, Args_t());
-      ForeachSlot(fWithSlot, bl);
+      ForeachSlot(IU::AddSlotParameter<Ret_t>(std::move(f), Args_t()), bl);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -456,7 +455,7 @@ public:
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs-1, bl, defBl);
       using DFA_t  = ROOT::Internal::TDataFrameAction<decltype(f), Proxied>;
-      df->Book(std::make_shared<DFA_t>(f, actualBl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(std::move(f), actualBl, fProxiedPtr));
       df->Run();
    }
 
@@ -476,7 +475,7 @@ public:
       auto countAction = [cOp](unsigned int slot) mutable { cOp->Exec(slot); };
       BranchNames bl = {};
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(countAction), Proxied>;
-      df->Book(std::make_shared<DFA_t>(countAction, bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(std::move(countAction), bl, fProxiedPtr));
       return c;
    }
 
@@ -499,7 +498,7 @@ public:
       auto getOp = std::make_shared<ROOT::Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
       auto getAction = [getOp] (unsigned int slot , const T &v) mutable { getOp->Exec(v, slot); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(getAction), Proxied>;
-      df->Book(std::make_shared<DFA_t>(getAction, bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(std::move(getAction), bl, fProxiedPtr));
       return values;
    }
 
@@ -708,12 +707,12 @@ private:
          auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation>(h, nSlots);
          auto fillLambda = [fillTOOp](unsigned int slot, const X &v, const W &w) mutable { fillTOOp->Exec(v,w,slot); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       } else {
          auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
          auto fillLambda = [fillOp](unsigned int slot, const X &v, const W &w) mutable { fillOp->Exec(v,w,slot); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       }
       return df->MakeActionResultProxy(h);
    }
@@ -735,12 +734,12 @@ private:
          auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation>(h, nSlots);
          auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(v, slot); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       } else {
          auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
          auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(v, slot); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(fillLambda, bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       }
       return df->MakeActionResultProxy(h);
    }
@@ -755,7 +754,7 @@ private:
       auto minOpLambda = [minOp](unsigned int slot, const BranchType &v) mutable { minOp->Exec(v, slot); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(minOpLambda, bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(std::move(minOpLambda), bl, fProxiedPtr));
       return df->MakeActionResultProxy(minV);
    }
 
@@ -769,7 +768,7 @@ private:
       auto maxOpLambda = [maxOp](unsigned int slot, const BranchType &v) mutable { maxOp->Exec(v, slot); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(maxOpLambda, bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(std::move(maxOpLambda), bl, fProxiedPtr));
       return df->MakeActionResultProxy(maxV);
    }
 
@@ -784,7 +783,7 @@ private:
       auto meanOpLambda = [meanOp](unsigned int slot, const BranchType &v) mutable { meanOp->Exec(v, slot); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(meanOpLambda, bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(std::move(meanOpLambda), bl, fProxiedPtr));
       return df->MakeActionResultProxy(meanV);
    }
    /// \endcond
@@ -935,7 +934,7 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
 public:
-   TDataFrameBranch(const std::string &name, F expression, const BranchNames &bl, const std::shared_ptr<PrevData>& pd)
+   TDataFrameBranch(const std::string &name, F&& expression, const BranchNames &bl, const std::shared_ptr<PrevData>& pd)
       : TDataFrameBranchBase(pd->GetDataFrame(), pd->GetTmpBranches(), name), fExpression(expression), fBranches(bl), fPrevData(*pd)
    {
       fTmpBranches.emplace_back(name);
@@ -1034,7 +1033,7 @@ class TDataFrameFilter final : public TDataFrameFilterBase {
    PrevDataFrame &fPrevData;
 
 public:
-   TDataFrameFilter(FilterF f, const BranchNames &bl,
+   TDataFrameFilter(FilterF&& f, const BranchNames &bl,
                     const std::shared_ptr<PrevDataFrame>& pd, const std::string& name = "")
       : TDataFrameFilterBase(pd->GetDataFrame(), pd->GetTmpBranches(), name),
         fFilter(f), fBranches(bl), fPrevData(*pd) { }
