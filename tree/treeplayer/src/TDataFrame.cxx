@@ -81,9 +81,9 @@ common operations: building blocks to trigger custom calculations are available 
    <td>
 ~~~{.cpp}
 TTreeReader reader("myTree", file);
-TTreeReaderValue&lt;A_t&gt; a(reader, "A");
-TTreeReaderValue&lt;B_t&gt; b(reader, "B");
-TTreeReaderValue&lt;C_t&gt; c(reader, "C");
+TTreeReaderValue<A_t> a(reader, "A");
+TTreeReaderValue<B_t> b(reader, "B");
+TTreeReaderValue<C_t> c(reader, "C");
 while(reader.Next()) {
    if(IsGoodEvent(a, b, c))
       DoStuff(a, b, c);
@@ -108,7 +108,7 @@ d.Filter(IsGoodEvent).Foreach(DoStuff);
 <tr>
    <td>
 ~~~{.cpp}
-TTree *t = static_cast&lt;TTree*&gt;(
+TTree *t = static_cast<TTree*>(
    file->Get("myTree")
 );
 t->Draw("var", "var > 2");
