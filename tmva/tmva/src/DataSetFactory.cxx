@@ -790,10 +790,10 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                Bool_t contains_NaN_or_inf = kFALSE;
 
                auto checkNanInf = [&](std::map<TString, int> &msgMap, Float_t value, const char *what, const char *formulaTitle) {
-                  if (std::isnan(value)) {
+                  if (TMath::IsNaN(value)) {
                      contains_NaN_or_inf = kTRUE;
                      ++msgMap[TString::Format("Dataset[%s] : %s expression resolves to indeterminate value (NaN): %s", dsi.GetName(), what, formulaTitle)];
-                  } else if (std::isinf(value)) {
+                  } else if (!TMath::Finite(value)) {
                      contains_NaN_or_inf = kTRUE;
                      ++msgMap[TString::Format("Dataset[%s] : %s expression resolves to infinite value (+inf or -inf): %s", dsi.GetName(), what, formulaTitle)];
                   }
