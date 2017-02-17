@@ -289,8 +289,8 @@ void portfolio()
 
    const char *fname = "stock.root";
    TFile *f = 0;
-   if (!gSystem->AccessPathName(fname)) {
-      f = TFile::Open(fname);
+   if (!gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(__FILE__), fname))) {
+      f = TFile::Open(Form("%s/%s", gSystem->DirName(__FILE__), fname));
    } else {
       printf("accessing %s file from http://root.cern.ch/files\n",fname);
       f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
@@ -314,7 +314,7 @@ void portfolio()
       for (Int_t j = 0; j <= i; j++) {
          Double_t sum = 0.;
          for (Int_t k = 0; k < nrData; k++)
-         sum += (data[i][k]-r[i])*(data[j][k]-r[j]);
+            sum += (data[i][k]-r[i])*(data[j][k]-r[j]);
          Covar(i,j) = Covar(j,i) = sum/nrData;
       }
    }

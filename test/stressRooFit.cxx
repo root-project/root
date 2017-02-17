@@ -78,10 +78,11 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
          cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
          return 1;
       }
-      fref = new TWebFile(refFile) ;
+      TFile::SetCacheFileDir(".");
+      fref = TFile::Open(refFile,"CACHEREAD") ;
       //std::cout << "using WEB file " << refFile << std::endl;
     } else {
-      fref = new TFile(refFile,writeRef?"RECREATE":"") ;
+      fref = TFile::Open(refFile,writeRef?"RECREATE":"") ;
       //std::cout << "using file " << refFile << std::endl;
     }
     if (fref->IsZombie()) {

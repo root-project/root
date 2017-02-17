@@ -16,8 +16,8 @@
 void mlpHiggs(Int_t ntrain=100) {
    const char *fname = "mlpHiggs.root";
    TFile *input = 0;
-   if (!gSystem->AccessPathName(fname)) {
-      input = TFile::Open(fname);
+   if (!gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(__FILE__), fname))) {
+      input = TFile::Open(Form("%s/%s", gSystem->DirName(__FILE__), fname));
    } else {
       printf("accessing %s file from http://root.cern.ch/files\n",fname);
       input = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
