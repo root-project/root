@@ -555,6 +555,10 @@ void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
       if (ibin > nbins) nbins = ibin;
    }
    if (nbins < 1) nbins = 1;
+
+   // do nothing in case it was the last bin
+   if (nbins==axis->GetNbins()) return;
+
    T *hold = (T*)p->IsA()->New();;
    hold->SetDirectory(0);
    p->Copy(*hold);
