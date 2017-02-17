@@ -71,12 +71,13 @@ namespace ROOT {
       const Int_t CART = MPI_CART;
 
       // maximum sizes for strings
-      const int MAX_PROCESSOR_NAME = MPI_MAX_PROCESSOR_NAME;
-      const int MAX_ERROR_STRING = MPI_MAX_ERROR_STRING;
-      const int MAX_INFO_KEY = MPI_MAX_INFO_KEY;
-      const int MAX_INFO_VAL = MPI_MAX_INFO_VAL;
-      const int MAX_PORT_NAME = MPI_MAX_PORT_NAME;
-      const int MAX_OBJECT_NAME = MPI_MAX_OBJECT_NAME;
+      const Int_t MAX_PROCESSOR_NAME = MPI_MAX_PROCESSOR_NAME;
+      const Int_t MAX_ERROR_STRING = MPI_MAX_ERROR_STRING;
+      const Int_t MAX_INFO_KEY = MPI_MAX_INFO_KEY;
+      const Int_t MAX_INFO_VAL = MPI_MAX_INFO_VAL;
+      const Int_t MAX_PORT_NAME = MPI_MAX_PORT_NAME;
+      const Int_t MAX_OBJECT_NAME = MPI_MAX_OBJECT_NAME;
+      const Int_t MAX_IO_BUFFER = 1024;
 
       // environmental inquiry keys
       const Int_t TAG_UB = MPI_TAG_UB - 1;

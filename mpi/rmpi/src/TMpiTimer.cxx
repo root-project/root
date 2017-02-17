@@ -43,6 +43,7 @@ Bool_t TMpiTimer::IsGlobal() const
 {
    Int_t *global;
    Int_t flag = 0;
+   //TODO: not suppoted by OpenMPI, needs error handling here
    MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_WTIME_IS_GLOBAL, &global, &flag);
    return flag == false ? kFALSE : *global != 0;
 }

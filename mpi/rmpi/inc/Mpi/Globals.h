@@ -146,6 +146,7 @@ namespace ROOT {
       R__EXTERN const Int_t MAX_INFO_VAL;
       R__EXTERN const Int_t MAX_PORT_NAME;
       R__EXTERN const Int_t MAX_OBJECT_NAME;
+      R__EXTERN const Int_t MAX_IO_BUFFER; //used for sync output in TEnvironment
 
       // environmental inquiry keys
       R__EXTERN const Int_t TAG_UB;

@@ -15,6 +15,20 @@ namespace ROOT {
        */
 
       class TEnvironment: public TObject {
+      private:
+         TString fStdOut;
+         TString fStdErr;
+         Bool_t  fSyncOutput;
+         std::shared_ptr<Char_t> fBuffer;
+         Int_t   fStdOutPipe[2];
+         Int_t   fStdErrPipe[2];
+         Int_t   fSavedStdErr;
+         Int_t   fSavedStdOut;
+      protected:
+         void InitCapture();
+         void EndCapture();
+         void Flush();
+         void ClearBuffers();
       public:
          /**
          Default constructor to start the environment
@@ -25,6 +39,12 @@ namespace ROOT {
               */
          TEnvironment(Int_t &argc, Char_t ** &argv);
          ~TEnvironment();
+
+         /**
+         Method to synchronize stdout/stderr output.
+              */
+         void SyncOutput(Bool_t status = kTRUE);
+
          /**
          Method to init the environment.
               */
