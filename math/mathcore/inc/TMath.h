@@ -168,7 +168,9 @@ namespace TMath {
           Double_t Log2(Double_t x);
    inline Double_t Log10(Double_t x);
    inline Int_t    Finite(Double_t x);
+   inline Int_t    Finite(Float_t x);
    inline Int_t    IsNaN(Double_t x);
+   inline Int_t    IsNaN(Float_t x);
 
    inline Double_t QuietNaN();
    inline Double_t SignalingNaN();
@@ -553,13 +555,28 @@ inline Int_t TMath::Finite(Double_t x)
 #  endif
 #endif
 
-#if defined (R__FAST_MATH)
+inline Int_t TMath::Finite(Float_t x)
+#if defined(R__FAST_MATH)
+/* Check if it is finite with a mask in order to be consistent in presence of
+ * fast math.
+ * Inspired from the CMSSW FWCore/Utilities package
+ */
+{
+   const unsigned int mask =  0x7f800000;
+   union { unsigned int l; float d;} v;
+   v.d =x;
+   return (v.l&mask)!=mask;
+}
+#else
+{ return std::isfinite(x); }
+#endif
+
 /* This namespace provides all the routines necessary for checking if a number
  * is a NaN also in presence of optimisations affecting the behaviour of the
  * floating point calculations.
  * Inspired from the CMSSW FWCore/Utilities package
  */
-namespace detailsForFastMath {
+#if defined (R__FAST_MATH)
 // abridged from GNU libc 2.6.1 - in detail from
 //   math/math_private.h
 //   sysdeps/ieee754/ldbl-96/math_ldbl.h
@@ -578,7 +595,7 @@ namespace detailsForFastMath {
 
    // A union which permits us to convert between a double and two 32 bit ints.
    typedef union {
-      double value;
+      Double_t value;
       struct {
          UInt_t lsw;
          UInt_t msw;
@@ -593,7 +610,7 @@ namespace detailsForFastMath {
       (ix1) = ew_u.parts.lsw;                                       \
    } while (0)
 
-   inline int IsNaN(double x)
+   inline Int_t IsNaN(Double_t x)
    {
       UInt_t hx, lx;
       
@@ -603,16 +620,31 @@ namespace detailsForFastMath {
       hx &= 0x7ff00000;
       return (hx == 0x7ff00000) && (lx != 0);
    }
-}
+
+   typedef union {
+      Float_t value;
+      UInt_t word;
+   } ieee_float_shape_type;
+
+#define GET_FLOAT_WORD(i,d)                                         \
+    do {                                                            \
+      ieee_float_shape_type gf_u;                                   \
+      gf_u.value = (d);                                             \
+      (i) = gf_u.word;                                              \
+    } while (0)
+
+   inline Int_t IsNaN(Float_t x)
+   {
+      UInt_t wx;
+      GET_FLOAT_WORD (wx, x);
+      wx &= 0x7fffffff;
+      return (Bool_t)(wx > 0x7f800000);
+   }
+#else
+   inline Int_t TMath::IsNaN(Double_t x) { return std::isnan(x); }
+   inline Int_t TMath::IsNaN(Float_t x) { return std::isnan(x); }
 #endif
 
-inline Int_t TMath::IsNaN(Double_t x)
-#if defined(R__FAST_MATH)
-   {return detailsForFastMath::IsNaN(x);}
-#else
-      // from cmath
-   { return std::isnan(x); }
-#endif
 //--------wrapper to numeric_limits
 //____________________________________________________________________________
 inline Double_t TMath::QuietNaN() {
