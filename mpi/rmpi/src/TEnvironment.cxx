@@ -33,20 +33,23 @@ TEnvironment::TEnvironment(Int_t &argc, Char_t ** &argv)
 //______________________________________________________________________________
 TEnvironment::~TEnvironment()
 {
+    COMM_WORLD.Barrier();
+    EndCapture();
+    printf("-------  Rank %d OutPut  -------\n",COMM_WORLD.GetRank());
+    Flush();
+    
    //if mpi's environment is initialized then finalize it
-   MPI_Barrier(MPI_COMM_WORLD);
    if (!IsFinalized()) {
       Finalize();
    }
-   EndCapture();
-   Flush();
+   
    fBuffer = nullptr;
 }
 
 //______________________________________________________________________________
 void TEnvironment::InitCapture()
 {
-   if (!fSyncOutput) {
+   if (fSyncOutput) {
       /* save stdout/stderr for display later */
       fSavedStdOut = dup(STDOUT_FILENO);
       fSavedStdErr = dup(STDERR_FILENO);
@@ -70,8 +73,6 @@ void TEnvironment::InitCapture()
 
       dup2(fStdErrPipe[1], STDERR_FILENO);   /* redirect stderr to the pipe */
       close(fStdErrPipe[1]);
-
-      fSyncOutput = true;
    }
 }
 
