@@ -125,6 +125,7 @@ protected:
    static Bool_t IsFunctionNameChar(const char c);
    static Bool_t IsScientificNotation(const TString & formula, int ipos);
    static Bool_t IsHexadecimal(const TString & formula, int ipos);
+   static Bool_t IsAParameterName(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
    void   PreProcessFormula(TString &formula);
    void   ProcessFormula(TString &formula);

@@ -205,6 +205,29 @@ Bool_t TFormula::IsHexadecimal(const TString & formula, int i)
    // }
    return false;
 }
+////////////////////////////////////////////////////////////////////////////
+// check is given position is in a parameter name i.e. within "[ ]"
+////
+Bool_t TFormula::IsAParameterName(const TString & formula, int pos) {
+
+   Bool_t foundOpenParenthesis = false;
+   if (pos == 0 || pos == formula.Length()-1) return false; 
+   for (int i = pos-1; i >=0; i--) {
+      if (formula[i] == ']' ) return false;
+      if (formula[i] == '[' ) {
+         foundOpenParenthesis = true;
+         break;
+      }
+   }
+   if (!foundOpenParenthesis ) return false; 
+
+   // search after the position
+   for (int i = pos+1; i < formula.Length(); i++) {
+      if (formula[i] == ']' ) return true;
+   }
+   return false; 
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
@@ -802,7 +825,7 @@ void TFormula::FillDefaults()
 void TFormula::HandlePolN(TString &formula)
 {
    Int_t polPos = formula.Index("pol");
-   while(polPos != kNPOS)
+   while(polPos != kNPOS  && !IsAParameterName(formula,polPos) )
    {
 
       Bool_t defaultVariable = false;
@@ -968,7 +991,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
 
       //std::cout << formula << " ---- " << funName << "  " << funPos << std::endl;
-      while(funPos != kNPOS)
+      while(funPos != kNPOS && !IsAParameterName(formula,funPos))
       {
 
          // should also check that function is not something else (e.g. exponential - parse the expo)
@@ -1173,7 +1196,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 void TFormula::HandleExponentiation(TString &formula)
 {
    Int_t caretPos = formula.Last('^');
-   while(caretPos != kNPOS)
+   while(caretPos != kNPOS  && !IsAParameterName(formula,caretPos) )
    {
 
       TString right,left;
@@ -1272,12 +1295,12 @@ void TFormula::HandleLinear(TString &formula)
    // Handle Linear functions identified with "@" operator
    Int_t linPos = formula.Index("@");
    if (linPos == kNPOS ) return;  // function is not linear
-   Int_t NofLinParts = formula.CountChar((int)'@');
-   assert(NofLinParts > 0);
-   fLinearParts.reserve(NofLinParts + 1);
+   Int_t nofLinParts = formula.CountChar((int)'@');
+   assert(nofLinParts > 0);
+   fLinearParts.reserve(nofLinParts + 1);
    Int_t Nlinear = 0;
    bool first = true;
-   while(linPos != kNPOS)
+   while(linPos != kNPOS && !IsAParameterName(formula,linPos))
    {
       SetBit(kLinear,1);
       // analyze left part only the first time
