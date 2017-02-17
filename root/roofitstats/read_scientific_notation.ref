@@ -1,0 +1,9 @@
+
+                Copyright (C) 2000-2013 NIKHEF, University of California & Stanford University
+                All rights reserved, please read http://roofit.sourceforge.net/license.txt
+
+[#1] INFO:ObjectHandling -- RooWorkspace::import(ws) importing RooRealVar::x
+x before reading
+RooRealVar::x = 10  L(1 - 100) 
+x after reading
+RooRealVar::x = 1e+06  L(10000 - 1e+06)
