@@ -9,6 +9,7 @@
 ///
 /// \author Olivier Couet
 
+void annotation3d()
 {
    TCanvas *c = new TCanvas("c", "c", 600, 600);
    c->SetTheta(30);
