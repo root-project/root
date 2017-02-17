@@ -234,7 +234,8 @@ int coordinates4D (bool testAll = false) {
   // test cases with zero mass
 
   // tick should be p /sqrt(eps) ~ 4 /sqrt(eps)
-  ret |= test4D (PxPyPzMVector ( 1., 2., 3., 0.)  ,  4./std::sqrt(std::numeric_limits<double>::epsilon()) );
+  // take a factor 1.5 in ticks to be conservative
+  ret |= test4D (PxPyPzMVector ( 1., 2., 3., 0.)  ,  1.5 * 4./std::sqrt(std::numeric_limits<double>::epsilon()) );
 
   // this test fails in some machines (skip by default)
   if (!testAll) return ret;
