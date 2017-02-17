@@ -503,11 +503,7 @@ inline LongDouble_t TMath::Power(LongDouble_t x, Long64_t y)
    { return std::pow(x,(LongDouble_t)y); }
 
 inline LongDouble_t TMath::Power(Long64_t x, Long64_t y)
-#if __cplusplus >= 201103 /*C++11*/
    { return std::pow(x,y); }
-#else
-   { return std::pow((LongDouble_t)x,(LongDouble_t)y); }
-#endif
 
 inline Double_t TMath::Power(Double_t x, Double_t y)
    { return pow(x, y); }
