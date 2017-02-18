@@ -2,7 +2,7 @@
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include_directories(inc/)
-add_definitions(-w "-DROOT_MPI_EXEC=\"${MPIEXEC}\"")
+add_definitions(-w "-DROOT_MPI_EXEC=\"${MPIEXEC}\"" "-DROOT_MPI_CXX=\"${CXX}\"" "-DROOT_MPI_CFLAGS=\"${CXX}\"")
 
 SET(ROOTMPI_SOURCES src/main.cxx src/TRootMpi.cxx)
 add_executable(rootmpi ${ROOTMPI_SOURCES})

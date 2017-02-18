@@ -4,9 +4,18 @@ using namespace ROOT::Mpi;
 //TODO: enable thread level and thread-safe for ROOT
 
 //______________________________________________________________________________
-TEnvironment::TEnvironment(): fBuffer(new Char_t[MAX_IO_BUFFER + 1])
+/**
+Default constructor to start the environment, initializes the MPI execution environment
+THREAD_SINGLE: Only one thread will execute.
+THREAD_FUNNELED: The process may be multi-threaded, but only the main thread will make MPI calls (all MPI calls are ``funneled'' to the main thread).
+THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads may make MPI calls, but only one at a time: MPI calls are not made concurrently from two distinct threads (all MPI calls are ``serialized'').
+THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
+\param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
+*/
+TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE), fBuffer(new Char_t[MAX_IO_BUFFER + 1])
 {
-   MPI_Init(NULL, NULL);
+   Int_t provided;
+   MPI_Init_thread(NULL, NULL, level, &provided);
 
    if (IsInitialized()) {
       Int_t result;
@@ -18,9 +27,20 @@ TEnvironment::TEnvironment(): fBuffer(new Char_t[MAX_IO_BUFFER + 1])
 }
 
 //______________________________________________________________________________
-TEnvironment::TEnvironment(Int_t &argc, Char_t ** &argv)
+/**
+Default constructor to start the environment, initializes the MPI execution environment
+THREAD_SINGLE: Only one thread will execute.
+THREAD_FUNNELED: The process may be multi-threaded, but only the main thread will make MPI calls (all MPI calls are ``funneled'' to the main thread).
+THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads may make MPI calls, but only one at a time: MPI calls are not made concurrently from two distinct threads (all MPI calls are ``serialized'').
+THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
+\param argc integer with num of command line arguments
+\param argv list of command line arguments
+\param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
+*/
+TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(kFALSE), fBuffer(new Char_t[MAX_IO_BUFFER + 1])
 {
-   MPI_Init(&argc, &argv);
+   Int_t provided;
+   MPI_Init_thread(&argc, &argv, level, &provided);
    if (IsInitialized()) {
       Int_t result;
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
@@ -33,17 +53,19 @@ TEnvironment::TEnvironment(Int_t &argc, Char_t ** &argv)
 //______________________________________________________________________________
 TEnvironment::~TEnvironment()
 {
-    COMM_WORLD.Barrier();
-    EndCapture();
-    printf("-------  Rank %d OutPut  -------\n",COMM_WORLD.GetRank());
-    Flush();
-    
+   auto rank = -1;
+
    //if mpi's environment is initialized then finalize it
    if (!IsFinalized()) {
+      rank = COMM_WORLD.GetRank();
       Finalize();
    }
-   
-   fBuffer = nullptr;
+   if (fSyncOutput) {
+      EndCapture();
+      printf("-------  Rank %d OutPut  -------\n", rank);
+      Flush();
+      fBuffer = nullptr;
+   }
 }
 
 //______________________________________________________________________________
@@ -100,7 +122,6 @@ void TEnvironment::EndCapture()
 
       dup2(fSavedStdOut, STDOUT_FILENO);  /* reconnect stdout*/
       dup2(fSavedStdErr, STDERR_FILENO);  /* reconnect stderr*/
-      fSyncOutput = false;
    }
 }
 
@@ -117,7 +138,7 @@ void TEnvironment::Flush()
       fprintf(stderr, "%s", fStdErr.Data());
       fflush(stdout);
       fflush(stderr);
-    }
+   }
    ClearBuffers();
 }
 
@@ -136,12 +157,6 @@ void TEnvironment::SyncOutput(Bool_t status)
 }
 
 //______________________________________________________________________________
-void TEnvironment::Init()
-{
-   MPI_Init(NULL, NULL);
-}
-
-//______________________________________________________________________________
 Bool_t TEnvironment::IsFinalized()
 {
    Int_t t;
@@ -149,7 +164,7 @@ Bool_t TEnvironment::IsFinalized()
    return Bool_t(t);
 }
 
-//______________________________________________________________________________
+//______________________________________________________________
 Bool_t TEnvironment::IsInitialized()
 {
    Int_t t;
@@ -172,4 +187,20 @@ TString TEnvironment::GetProcessorName()
    Int_t size;
    MPI_Get_processor_name(name, &size);
    return TString(name, size);
+}
+
+//______________________________________________________________________________
+Int_t TEnvironment::GetThreadLevel()
+{
+   Int_t level;
+   MPI_Query_thread(&level);
+   return level;
+}
+
+//______________________________________________________________________________
+Bool_t TEnvironment::IsMainThread()
+{
+   Int_t status;
+   MPI_Is_thread_main(&status);
+   return Bool_t(status);
 }

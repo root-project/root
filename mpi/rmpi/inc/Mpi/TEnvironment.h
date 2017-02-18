@@ -14,6 +14,7 @@ namespace ROOT {
          \ingroup Mpi
        */
 
+      //TODO: added error handing callback to flush stderr/stdout in case premature exit by signals o Abort call
       class TEnvironment: public TObject {
       private:
          TString fStdOut;
@@ -30,14 +31,11 @@ namespace ROOT {
          void Flush();
          void ClearBuffers();
       public:
-         /**
-         Default constructor to start the environment
-              */
-         TEnvironment();
+         TEnvironment(Int_t level = ROOT::Mpi::THREAD_SINGLE);
          /**
          Constructor thar reciev command line arguments
               */
-         TEnvironment(Int_t &argc, Char_t ** &argv);
+         TEnvironment(Int_t argc, Char_t **argv, Int_t level = ROOT::Mpi::THREAD_SINGLE);
          ~TEnvironment();
 
          /**
@@ -46,14 +44,9 @@ namespace ROOT {
          void SyncOutput(Bool_t status = kTRUE);
 
          /**
-         Method to init the environment.
-              */
-         static void Init();
-
-         /**
          Method to finalize the environment.
               */
-         static void Finalize();
+         void Finalize();
 
          // static public functions TODO
          /**
@@ -66,8 +59,9 @@ namespace ROOT {
          static Bool_t IsInitialized();
 
          static TString GetProcessorName();
-//          static Int_t GetThreadLevel();
-//          static Bool_t IsMainThread();
+
+         static Int_t GetThreadLevel();
+         static Bool_t IsMainThread();
          ClassDef(TEnvironment, 1)
       };
    }

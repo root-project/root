@@ -14,7 +14,7 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
    fMpirunParams = " ";
    fArgc = argc;
    fArgv = argv;
-   fCompiler = "mpic++";
+   fCompiler = ROOT_MPI_CXX;
    InitHelp();
 }
 
