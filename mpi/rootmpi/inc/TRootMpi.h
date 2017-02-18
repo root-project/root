@@ -15,13 +15,13 @@ namespace ROOT {
    namespace Mpi {
       class TRootMpi {
       private:
-         Int_t fArgc;               //command line number of arguements
-         Char_t **fArgv;            //command line arguments
-         TString fMpirun;           //path to mpirun command
-         TString fMpirunParams;     //mpirun params like -np 2 etc..
-         TString fCompiler;         //compiler for mpi ex. mpic++
-         TString fCompilerParams;   //Compile Flags/Linking flags for mpic++
-         TString fHelpMsg;          //help message
+         Int_t fArgc;                 //command line number of arguements
+         Char_t **fArgv;              //command line arguments
+         TString fMpirun;             //path to mpirun command
+         TString fMpirunParams;       //mpirun params like -np 2 etc..
+         TString fCompiler;           //compiler for mpi ex. mpic++
+         TString fCompilerParams;     //Compile Flags/Linking flags for mpic++
+         TString fHelpMsg;            //help message
 
       protected:
          Int_t ProcessArgs();

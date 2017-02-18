@@ -53,18 +53,9 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(
 //______________________________________________________________________________
 TEnvironment::~TEnvironment()
 {
-   auto rank = -1;
-
    //if mpi's environment is initialized then finalize it
    if (!IsFinalized()) {
-      rank = COMM_WORLD.GetRank();
       Finalize();
-   }
-   if (fSyncOutput) {
-      EndCapture();
-      printf("-------  Rank %d OutPut  -------\n", rank);
-      Flush();
-      fBuffer = nullptr;
    }
 }
 
@@ -176,8 +167,18 @@ Bool_t TEnvironment::IsInitialized()
 //______________________________________________________________________________
 void TEnvironment::Finalize()
 {
-   //Finalize the mpi's environment
-   MPI_Finalize();
+   auto rank = -1;
+   if (!IsFinalized()) {
+      rank = COMM_WORLD.GetRank();
+      //Finalize the mpi's environment
+      MPI_Finalize();
+   }
+   if (fSyncOutput) {
+      EndCapture();
+      printf("-------  Rank %d OutPut  -------\n", rank);
+      Flush();
+      fBuffer = nullptr;
+   }
 }
 
 //______________________________________________________________________________

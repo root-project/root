@@ -26,6 +26,7 @@ function(ROOT_ADD_TEST_MPI_ARG name nprocs arg)
 endfunction(ROOT_ADD_TEST_MPI_ARG)
 
 
+ROOT_ADD_TEST_MPI(env 2)
 ROOT_ADD_TEST_MPI(info 2)
 ROOT_ADD_TEST_MPI(serialization 2)
 ROOT_ADD_TEST_MPI(p2p 2)

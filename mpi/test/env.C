@@ -3,13 +3,13 @@
 using namespace ROOT::Mpi;
 
 
-void env()
+void env(Int_t level = THREAD_SINGLE)
 {
-   TEnvironment env;          //environment to start communication system
+   TEnvironment env(level);          //environment to start communication system
 
    assert(env.IsFinalized() == kFALSE);
    assert(env.IsInitialized() == kTRUE);
-   assert(env.GetThreadLevel() == THREAD_SINGLE);
+   assert(env.GetThreadLevel() == level);
 
    assert(env.IsMainThread() == kTRUE);
 

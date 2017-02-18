@@ -11,10 +11,10 @@ using namespace ROOT::Mpi;
 TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
 {
    fMpirun = ROOT_MPI_EXEC;
+   fCompiler = ROOT_MPI_CXX;
    fMpirunParams = " ";
    fArgc = argc;
    fArgv = argv;
-   fCompiler = ROOT_MPI_CXX;
    InitHelp();
 }
 
@@ -63,12 +63,14 @@ Int_t TRootMpi::ProcessArgs()
          arg.ReplaceAll(" ", "");
          fCompilerParams += " " + arg;
       }
+      fCompilerParams += ROOT_MPI_CFLAGS;
       fCompilerParams += " ";
       fCompilerParams += gSystem->GetIncludePath();
       fCompilerParams += " ";
       fCompilerParams += gSystem->GetLinkedLibs();
       fCompilerParams += " -std=c++11 ";
-      fCompilerParams += " -lRMpi -lNet -lRIO ";
+      fCompilerParams += ROOT_MPI_LDFLAGS;
+      fCompilerParams += " -lRMpi -lNet -lRIO -lCore -lThread -lHist ";
       return Compile();
    } else if (TString(fArgv[1]) == "-R") {
       for (int i = 2; i < fArgc; i++) {
@@ -105,6 +107,7 @@ Int_t TRootMpi::ProcessArgs()
 Int_t TRootMpi::Compile()
 {
    auto cmd = fCompiler + " " + fCompilerParams;
+   std::cout << cmd << std::endl;
    return gSystem->Exec(cmd.Data());
 }
 

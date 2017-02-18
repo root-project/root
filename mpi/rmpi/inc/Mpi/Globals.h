@@ -12,8 +12,8 @@
 
 #include<Mpi/TOp.h>
 
-#include<typeinfo>
 #include<mpi.h>
+#include<typeinfo>
 #include<string>
 #include<functional>
 #include<memory>
