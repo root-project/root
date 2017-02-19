@@ -28,6 +28,7 @@ endfunction(ROOT_ADD_TEST_MPI_ARG)
 
 ROOT_ADD_TEST_MPI(env 2)
 ROOT_ADD_TEST_MPI(info 2)
+ROOT_ADD_TEST_MPI(port 2)
 ROOT_ADD_TEST_MPI(serialization 2)
 ROOT_ADD_TEST_MPI(p2p 2)
 ROOT_ADD_TEST_MPI(p2p_nonblocking 2)

@@ -78,13 +78,11 @@ namespace ROOT {
                   fStringStream >> value;
                }
             }
-
-
          };
 
       protected:
-         MPI_Info fInfo;
-         Binding fBinder;
+         MPI_Info fInfo;  //!
+         Binding fBinder; //!
       public:
          TInfo(): fInfo(Create()), fBinder(fInfo, "") {}
          TInfo(const TInfo &info): TObject(info), fInfo(info.fInfo), fBinder(fInfo, "") {}

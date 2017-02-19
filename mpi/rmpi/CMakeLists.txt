@@ -19,6 +19,7 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
          Mpi/TOp.h
          Mpi/TGroup.h
          Mpi/TInfo.h
+         Mpi/TPort.h
          Mpi/TMpiTimer.h
 		 Mpi.h
 		 )

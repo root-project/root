@@ -8,6 +8,7 @@ namespace ROOT {
 
    namespace Mpi {
       class TInfo;
+      class TPort;
       class TInterCommunicator;
 
       /**
@@ -59,9 +60,9 @@ namespace ROOT {
          // Process Creation and Management
          //
 
-         virtual TInterCommunicator Accept(const Char_t *port_name, const TInfo &info, Int_t root)const;
+         virtual TInterCommunicator Accept(const TPort &port, Int_t root)const;
 
-         virtual TInterCommunicator Connect(const Char_t *port_name, const TInfo &info, Int_t root)const;
+         virtual TInterCommunicator Connect(const TPort &port, Int_t root)const;
 
          virtual TInterCommunicator Spawn(const Char_t *command, const Char_t *argv[], Int_t maxprocs, const TInfo &info, Int_t root) const;
 

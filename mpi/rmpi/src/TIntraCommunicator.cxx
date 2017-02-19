@@ -1,6 +1,7 @@
 #include<Mpi/TIntraCommunicator.h>
 #include<Mpi/TInterCommunicator.h>
 #include<Mpi/TInfo.h>
+#include<Mpi/TPort.h>
 
 using namespace ROOT::Mpi;
 
@@ -60,19 +61,19 @@ TInterCommunicator TIntraCommunicator::CreateIntercomm(Int_t local_leader, const
 }
 
 //______________________________________________________________________________
-TInterCommunicator TIntraCommunicator::Accept(const Char_t *port_name, const TInfo &info, Int_t root) const
+TInterCommunicator TIntraCommunicator::Accept(const TPort &port, Int_t root) const
 {
    MPI_Comm ncomm;
-   MPI_Comm_accept(port_name, info, root, fComm, &ncomm);
+   MPI_Comm_accept(port.GetPortName(), port.GetInfo(), root, fComm, &ncomm);
    ROOT_MPI_CHECK_COMM(ncomm);
    return ncomm;
 }
 
 //______________________________________________________________________________
-TInterCommunicator TIntraCommunicator::Connect(const Char_t *port_name, const TInfo &info, Int_t root) const
+TInterCommunicator TIntraCommunicator::Connect(const TPort &port, Int_t root) const
 {
    MPI_Comm ncomm;
-   MPI_Comm_connect(port_name, info, root, fComm, &ncomm);
+   MPI_Comm_connect(port.GetPortName(), port.GetInfo(), root, fComm, &ncomm);
    ROOT_MPI_CHECK_COMM(ncomm);
    return ncomm;
 }

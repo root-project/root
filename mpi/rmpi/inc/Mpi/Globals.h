@@ -222,7 +222,7 @@ namespace ROOT {
 
       //Functions
 
-      
+
       template<class T> MPI_Datatype GetDataType()
       {
          if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI_INT;
