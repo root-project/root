@@ -1,3 +1,4 @@
+#include "ROOT/TThreadExecutor.hxx"
 #include "TBranch.h"
 #include "TFile.h"
 #include "TROOT.h"
@@ -76,6 +77,9 @@ int main(int argc, char** argv) {
 
   // First enable implicit multi-threading globally, specifying the number of threads to use 
   ROOT::EnableImplicitMT(nthreads);
+
+  // Dummy pool which prevents the counter of subscribers to the pool to go to zero.
+  ROOT::TThreadExecutor pool(nthreads);
 
   // Create the tree (local IMT is initialised to global, i.e. true)
   TTree *tree = (TTree*)file->GetObjectChecked("TreeIMT", "TTree");
