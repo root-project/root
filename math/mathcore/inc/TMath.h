@@ -573,6 +573,9 @@ inline Int_t TMath::Finite(Float_t x)
  * Inspired from the CMSSW FWCore/Utilities package
  */
 #if defined (R__FAST_MATH)
+namespace ROOT {
+namespace Internal {
+namespace Math {
 // abridged from GNU libc 2.6.1 - in detail from
 //   math/math_private.h
 //   sysdeps/ieee754/ldbl-96/math_ldbl.h
@@ -636,6 +639,12 @@ inline Int_t TMath::Finite(Float_t x)
       wx &= 0x7fffffff;
       return (Bool_t)(wx > 0x7f800000);
    }
+} } } // end NS ROOT::Internal::Math
+#endif // End R__FAST_MATH
+
+#if defined(R__FAST_MATH)
+   inline Int_t TMath::IsNaN(Double_t x) { return ROOT::Internal::Math::IsNaN(x); }
+   inline Int_t TMath::IsNaN(Float_t x) { return ROOT::Internal::Math::IsNaN(x); }
 #else
    inline Int_t TMath::IsNaN(Double_t x) { return std::isnan(x); }
    inline Int_t TMath::IsNaN(Float_t x) { return std::isnan(x); }
