@@ -48,5 +48,26 @@ void info()
    assert(dvalue == (Double_t)1.1);
    assert(str == "hostname");
 
+   TInfo info1, info2;
+   //testing overloaded operators == and !=
+   assert(info1 == info2); //both empty the true
+   info1["test1"] = "1";
+   info1["test2"] = "2";
+   info1["test3"] = "3";
+
+   assert(info1 != info2);
+   info2["test1"] = "1";
+   info2["test2"] = "2";
+   info2["test3"] = "3";
+
+   assert(info1 == info2);
+   info2["test4"] = "4";
+   assert(info1 != info2);
+
+   TInfo ninfo(INFO_NULL);
+   assert(ninfo != info1);
+   assert(ninfo.IsNull() == kTRUE);
+   assert(ninfo.IsEmpty() == kTRUE);
+
 }
 

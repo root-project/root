@@ -89,14 +89,22 @@ TString TInfo::GetValue(const TString key) const
 }
 
 //______________________________________________________________________________
-Bool_t TInfo::IsEmpty()
+Bool_t TInfo::IsEmpty() const
 {
-   return GetNKeys() == 0 ? kTRUE : kFALSE;
+   if (IsNull()) return kTRUE;
+   else return GetNKeys() == 0 ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TInfo::IsNull() const
+{
+   return fInfo == MPI_INFO_NULL;
 }
 
 //______________________________________________________________________________
 Bool_t TInfo::HasKey(TString key)
 {
+   if (IsNull()) return kFALSE;
    if (IsEmpty()) return kFALSE;
    Bool_t status = kFALSE;
    auto i = 0;
@@ -111,11 +119,40 @@ Bool_t TInfo::HasKey(TString key)
 }
 
 //______________________________________________________________________________
-void TInfo::Print()
+void TInfo::Print() const
 {
-
+//TODO: if is null print something
    for (auto i = 0; i < GetNKeys(); i++) {
       std::cout << std::setw(MPI_MAX_INFO_KEY) << std::left << Form("[\"%s\"]", GetNthKey(i).Data()) << " = " << GetValue(GetNthKey(i)) << std::endl;
       std::cout.flush();
    }
 }
+
+//______________________________________________________________________________
+Bool_t TInfo::operator==(const TInfo &info) const
+{
+   if (IsNull() && info.IsNull()) return kTRUE;
+   if (IsNull() != info.IsNull()) return kFALSE;
+
+   if (GetNKeys() != info.GetNKeys()) return kFALSE;
+   if (IsEmpty() == info.IsEmpty()) return kTRUE;
+   if (IsEmpty() != info.IsEmpty()) return kFALSE;
+
+   Bool_t status = kTRUE;
+   Int_t i = 0;
+   while (i < GetNKeys()) {
+      if (GetNthKey(i) != info.GetNthKey(i)) {
+         status = kFALSE;
+         break;
+      }
+      i++;
+   }
+   return status;
+}
+
+//______________________________________________________________________________
+Bool_t TInfo::operator!=(const TInfo &info) const
+{
+   return *this == info ? kFALSE : kTRUE ;
+}
+

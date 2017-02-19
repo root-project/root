@@ -28,24 +28,29 @@ namespace ROOT {
          void Close();
          Bool_t IsOpen();
 
-         static TPort LookupName(TString service_name, const TInfo &info = INFO_NULL);
-         void PublishName(TString service_name);
-         void UnpublishName(TString service_name);
+         static TPort LookupName(const TString service_name, const TInfo &info = INFO_NULL);
+         void PublishName(const TString service_name);
+         void UnpublishName(const TString service_name);
 
-         TPort &operator=(const TPort &data)
+         TPort &operator=(const TPort &port)
          {
-            fPort = data.fPort;
-            fPublishName = data.fPublishName;
-            fInfo = data.fInfo;
+            fPort = port.fPort;
+            fPublishName = port.fPublishName;
+            fInfo = port.fInfo;
             return *this;
          }
 
-         const Bool_t &operator==(const TPort &data) const
+         const Bool_t &operator==(const TPort &port) const
          {
-            if (fPort == data.fPort && fPublishName == data.fPublishName) return kTRUE;
+            if (fPort == port.fPort && fPublishName == port.fPublishName && fInfo == port.fInfo) return kTRUE;
             else return kFALSE;
-//             fInfo = data.fInfo;//TODO:comparison operator for TInfo?
          }
+
+         const Bool_t &operator!=(const TPort &port) const
+         {
+            return *this == port ? kFALSE :  kTRUE;
+         }
+
          void Print();
 
 

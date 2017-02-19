@@ -16,18 +16,10 @@ void port()
    port.Open();
    assert(port.IsOpen() == kTRUE);
    port.Print();
-   if (COMM_WORLD.GetRank() == 0) {
-      port.PublishName("test");
-      assert(port.GetPublishName() == "test");
-      COMM_WORLD.Send(port.GetPortName(), 1, 0); //sending port to compare with port from LookupName
+   TPort pp1, pp2;
+   assert(pp1 != pp2);
 
-   } else if (COMM_WORLD.GetRank() == 1) {
-      auto ptest = TPort::LookupName("test");
-      TString pname;
-      COMM_WORLD.Recv(pname, 0, 0);
-      assert(pname == ptest.GetPortName());
-   }
-   //TODO: test Connect/Accept/Disconnect and COMM_SELF
+   //TODO: test Connect/Accept/Disconnect and COMM_SELF Publish/UnPublish/LookupName
 }
 
 Int_t main()

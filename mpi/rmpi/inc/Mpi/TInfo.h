@@ -117,7 +117,9 @@ namespace ROOT {
 
          virtual Bool_t GetValueLength(const TString key, Int_t &valuelen) const;
 
-         Bool_t IsEmpty();
+         Bool_t IsEmpty() const;
+
+         Bool_t IsNull() const;
 
          Bool_t HasKey(TString key);
 
@@ -127,7 +129,10 @@ namespace ROOT {
             return fBinder;
          }
 
-         virtual void Print();
+         Bool_t operator==(const TInfo &info) const;
+         Bool_t operator!=(const TInfo &info) const;
+
+         virtual void Print() const;
 
          operator MPI_Info() const
          {
