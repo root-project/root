@@ -7,7 +7,9 @@ INPUTFILE=ttree_read_imt.root
 
 #ROOTDEBUG=1 ./$TESTNAME $NTHREADS $NENTRIES $INPUTFILE 1>${TESTNAME}.out 2>${TESTNAME}.err
 
-if [ !resp=$(ROOTDEBUG=1 ./$TESTNAME $NTHREADS $NENTRIES $INPUTFILE 1>${TESTNAME}.out 2>${TESTNAME}.err) ]; then
+if ROOTDEBUG=1 ./$TESTNAME $NTHREADS $NENTRIES $INPUTFILE 1>${TESTNAME}.out 2>${TESTNAME}.err ; then
+   :
+else
    echo "A problem was detected running the test"
    echo ""
    echo "*** Standard Output (last 100 lines) ***"
@@ -17,8 +19,6 @@ if [ !resp=$(ROOTDEBUG=1 ./$TESTNAME $NTHREADS $NENTRIES $INPUTFILE 1>${TESTNAME
    echo "*** Standard Error ***"
    echo ""
    cat ${TESTNAME}.err
-else
-   echo "Everything ok"
 fi
 
 # Print IMT messages from the application
