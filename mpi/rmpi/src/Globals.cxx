@@ -147,6 +147,7 @@ namespace ROOT {
       //Custom none datatype
       const MPI_Datatype DATATYPE_NULL = MPI_DATATYPE_NULL;
       TIntraCommunicator COMM_WORLD = TIntraCommunicator(MPI_COMM_WORLD);
+      TIntraCommunicator COMM_SELF = TIntraCommunicator(MPI_COMM_SELF);
    }
 
 }
