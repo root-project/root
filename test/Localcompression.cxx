@@ -24,6 +24,16 @@ TDummy::TDummy(Int_t size)
       Dummy_t dummy;
       for(int offset = 0; offset < 4; ++offset) {
          Float_t tmp = Float_t(gRandom->Rndm(1));
+         if(tmp < 0.4) {
+            dummy.ch[offset] = 'a';
+         } else if(tmp < 0.65) {
+            dummy.ch[offset] = 'b';
+         } else if(tmp < 0.9) {
+            dummy.ch[offset] = 'c';
+         } else {
+            dummy.ch[offset] = 'd';
+         }
+/*
          if(tmp < 0.08167) {
             dummy.ch[offset] = 'a';
          } else if(tmp < 0.09659) {
@@ -77,6 +87,7 @@ TDummy::TDummy(Int_t size)
          } else {
             dummy.ch[offset] = 'z';
          }
+*/
 //         std::cout << "dummy.ch[" << offset << "]=" << dummy.ch[offset] << ", ";//##
       }
       fDummy[i] = dummy.fp;
@@ -120,6 +131,17 @@ void TDummy::Build()
    for(int i=0;i<fSize;++i) {
       Dummy_t dummy;
       for(int offset = 0; offset < 4; ++offset) {
+         Float_t tmp = Float_t(gRandom->Rndm(1));
+         if(tmp < 0.4) {
+            dummy.ch[offset] = 'a';
+         } else if(tmp < 0.65) {
+            dummy.ch[offset] = 'b';
+         } else if(tmp < 0.9) {
+            dummy.ch[offset] = 'c';
+         } else {
+            dummy.ch[offset] = 'd';
+         }
+/*
          Float_t tmp = Float_t(gRandom->Rndm(1));
          if(tmp < 0.08167) {
             dummy.ch[offset] = 'a';
@@ -174,6 +196,7 @@ void TDummy::Build()
          } else {
             dummy.ch[offset] = 'z';
          }
+*/
 //         std::cout << "dummy.ch[" << offset << "]=" << dummy.ch[offset] << ", ";//##
       }
       fDummy[i] = dummy.fp;

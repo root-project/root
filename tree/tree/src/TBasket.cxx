@@ -570,7 +570,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 
    oldCase = OLD_CASE_EXPRESSION;
 
-   startDuration = std::chrono::steady_clock::now();//##
+//   startDuration = std::chrono::steady_clock::now();//##
    // Case where ROOT thinks the buffer is compressed.  Copy over the key and uncompress the object
    if (fObjlen > fNbytes-fKeylen || oldCase) {
       if (R__unlikely(TestBit(TBufferFile::kNotDecompressed) && (fNevBuf==1))) {
@@ -599,12 +599,17 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          if (R__unlikely(oldCase && (nin > fObjlen || nbuf > fObjlen))) {
             //buffer was very likely not compressed in an old version
             memcpy(rawUncompressedBuffer+fKeylen, rawCompressedObjectBuffer+fKeylen, fObjlen);
-            endDuration = std::chrono::steady_clock::now();//##
-            globalDuration += endDuration - startDuration;//##
+//            endDuration = std::chrono::steady_clock::now();//##
+//            globalDuration += endDuration - startDuration;//##
             goto AfterBuffer;
          }
 
+         startDuration = std::chrono::steady_clock::now();//##
          R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
+         endDuration = std::chrono::steady_clock::now();//##
+         globalDuration += endDuration - startDuration;//##
+         std::cout << globalDuration.count() << std::endl;//##
+//         printf("fNbytes = %d, fKeylen = %d, fObjlen = %d, noutot = %d, nout=%d, nin=%d, nbuf=%d", fNbytes,fKeylen,fObjlen, noutot,nout,nin,nbuf);//##
          if (!nout) break;
          noutot += nout;
          nintot += nin;
@@ -630,12 +635,11 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       // Nothing is compressed - copy over wholesale.
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, len);
    }
-   endDuration = std::chrono::steady_clock::now();//##
-   globalDuration += endDuration - startDuration;//##
+//   endDuration = std::chrono::steady_clock::now();//##
+//   globalDuration += endDuration - startDuration;//##
 
 AfterBuffer:
 
-   std::cout << globalDuration.count() << std::endl;//##
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
    // Read offsets table if needed.
@@ -1022,10 +1026,29 @@ Int_t TBasket::WriteBuffer()
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else bufmax = kMAXZIPBUF;
          //compress the buffer
+/*
+         TString tmpname(fBranch->GetName());//##
+         if(tmpname == "fDummy"){
+            for(int index = 0; index < bufmax; ++index) {
+               printf("0x%x ", objbuf[index]);//##
+            }
+            printf("\n");//##
+         }
+*/
+         startDuration = std::chrono::steady_clock::now();//##
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
-//         std::cout << lbuf << ", " << fObjlen << ", " << fKeylen << ", " << nbuffers << ", " << bufmax << ", " << nout << std::endl;//##
-//         std::cout << fObjlen << std::endl;//##
-
+         endDuration = std::chrono::steady_clock::now();//##
+         globalDuration += endDuration - startDuration;//##
+         std::cout << globalDuration.count() << std::endl;//##
+/*
+         if(tmpname == "fDummy"){
+            printf("fKeylen = %d, fObjlen = %d, cxlevel = %d, bufmax = %d, nout = %d, cxAlgorithm = %d\n", fKeylen, fObjlen, cxlevel, bufmax, nout, cxAlgorithm);//##
+            for(int index = 0; index < nout; ++index) {
+               printf("0x%x ", bufcur[index]);//##
+            }
+            printf("\n");//##
+         }
+*/
          // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed
          // buffer is larger than the input. In this case, we write the original uncompressed buffer

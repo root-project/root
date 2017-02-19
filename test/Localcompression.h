@@ -17,7 +17,7 @@
 #include "TBits.h"
 #include "TMath.h"
 
-#define DUMMYSIZE 10
+#define DUMMYSIZE 1000000
 #define LARGESIZE 1000000
 #define SMALLSIZE 1000
 #define FLOATSIZE 6

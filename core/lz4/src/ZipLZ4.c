@@ -45,11 +45,13 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    }
 
    int returnStatus;
-   unsigned char cxByte = cxlevel >= 4;
-   if (cxByte) {
-      returnStatus = LZ4_compressHC_limitedOutput(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize);
+   if (cxlevel > 9) {
+      cxlevel = 9;
+   }
+   if (cxlevel >= 4) {
+      returnStatus = LZ4_compress_HC(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize, cxlevel);
    } else {
-      returnStatus = LZ4_compress_limitedOutput(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize);
+      returnStatus = LZ4_compress_default(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize);
    }
 
    if (R__unlikely(returnStatus == 0)) { /* LZ4 compression failed */
