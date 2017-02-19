@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 sys.argv.append( '-b-' )
@@ -13,10 +14,10 @@ def LoadFile():
     x = r.RooRealVar('x','x',10,1,100)
     ws = r.RooWorkspace('ws')
     ws.__getattribute__('import')(x)
-    print 'x before reading'
+    print('x before reading')
     x.Print()
     ws.allVars().readFromFile('test.txt')
-    print 'x after reading'
+    print('x after reading')
     ws.var('x').Print()
     return
 
