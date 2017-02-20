@@ -14,10 +14,8 @@ def LoadFile():
     x = r.RooRealVar('x','x',10,1,100)
     ws = r.RooWorkspace('ws')
     ws.__getattribute__('import')(x)
-    print('x before reading')
     x.Print()
     ws.allVars().readFromFile('test.txt')
-    print('x after reading')
     ws.var('x').Print()
     return
 
