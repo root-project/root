@@ -1019,12 +1019,16 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
       ::Error("TApplication::ExecuteFile", "macro %s not found in path %s", fname.Data(),
               TROOT::GetMacroPath());
       delete [] exnam;
+      if (error)
+         *error = (Int_t)TInterpreter::kRecoverable;
       return 0;
    }
 
    ::std::ifstream macro(exnam, std::ios::in);
    if (!macro.good()) {
       ::Error("TApplication::ExecuteFile", "%s no such file", exnam);
+      if (error)
+         *error = (Int_t)TInterpreter::kRecoverable;
       delete [] exnam;
       return 0;
    }
