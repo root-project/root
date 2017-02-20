@@ -330,7 +330,7 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
       r[i*3 + 2] = av[i*3 + 2];
       view->WCtoNDC(&r[i*3],&r[i*3]);
    }
- 
+
    //          Draw frame
    SetLineColor(1);
    SetLineStyle(1);
@@ -799,7 +799,7 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
    }
 
    Double_t p1[3], p2[3], x[2], y[2];
-   for (Int_t kpol=0; kpol<2; ++kpol) { 
+   for (Int_t kpol=0; kpol<2; ++kpol) {
       if (npol[kpol] == 0) continue;
       Int_t nv = npol[kpol];
       Int_t iv = ipol[kpol];
@@ -1294,68 +1294,50 @@ L500:
 
 void TPainter3dAlgorithms::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
 {
-   Int_t i, k, i1, i2, il, nl;
-   Double_t tmin, tmax, d1, d2;
-
-   /* Parameter adjustments */
-   --t;
-   f -= 4;
-
-   /* Function Body */
    fNlines = 0;
    if (fNlevel == 0) return;
-   nl = fNlevel;
-   if (nl < 0) nl = -nl;
+   Int_t nl = TMath::Abs(fNlevel);
 
    // Find Tmin and Tmax
-   tmin = t[1];
-   tmax = t[1];
-   for (i = 2; i <= np; ++i) {
+   Double_t tmin = t[0];
+   Double_t tmax = t[0];
+   for (Int_t i = 1; i < np; ++i) {
       if (t[i] < tmin) tmin = t[i];
       if (t[i] > tmax) tmax = t[i];
    }
    if (tmin >= fFunLevel[nl - 1]) return;
    if (tmax <= fFunLevel[0])      return;
 
-   //          F I N D   L E V E L S   L I N E S
-   for (il = 1; il <= nl; ++il) {
+   //          Find level lines
+   for (Int_t il = 1; il <= nl; ++il) {
       if (tmin >= fFunLevel[il - 1]) continue;
-      if (tmax <= fFunLevel[il - 1]) return;
+      if (tmax <  fFunLevel[il - 1]) return;
       if (fNlines >= 200)            return;
-      ++fNlines;
+      fNlines++;
       fLevelLine[fNlines - 1] = il;
-      k = 0;
-      for (i = 1; i <= np; ++i) {
-         i1 = i;
-         i2 = i + 1;
-         if (i == np) i2 = 1;
-         d1 = t[i1] - fFunLevel[il - 1];
-         d2 = t[i2] - fFunLevel[il - 1];
-         if (d1) {
-            if (d1*d2 < 0) goto L320;
-            continue;
-         }
-         ++k;
-         fPlines[(k + 2*fNlines)*3 - 9] = f[i1*3 + 1];
-         fPlines[(k + 2*fNlines)*3 - 8] = f[i1*3 + 2];
-         fPlines[(k + 2*fNlines)*3 - 7] = f[i1*3 + 3];
-         if (k == 1) continue;
-         goto L340;
-L320:
-         ++k;
+      Int_t kp = 0;
+      for (Int_t i = 0; i < np; ++i) {
+         Int_t i1 = i;
+         Int_t i2 = (i == np-1) ? 0 : i+1;
+         Double_t d1 = t[i1] - fFunLevel[il - 1];
+         Double_t d2 = t[i2] - fFunLevel[il - 1];
+         if (d1 == 0) d1 = 1e-99;
+         if (d2 == 0) d2 = 1e-99;
+         if (d1*d2 > 0) continue;
+
+         //          find point
+         kp++;
          d1 /= t[i2] - t[i1];
          d2 /= t[i2] - t[i1];
-         fPlines[(k + 2*fNlines)*3 - 9] = d2*f[i1*3 + 1] - d1*f[i2*3 + 1];
-         fPlines[(k + 2*fNlines)*3 - 8] = d2*f[i1*3 + 2] - d1*f[i2*3 + 2];
-         fPlines[(k + 2*fNlines)*3 - 7] = d2*f[i1*3 + 3] - d1*f[i2*3 + 3];
-         if (k != 1) goto L340;
+         fPlines[(kp + 2*fNlines)*3 - 9] = d2*f[i1*3 + 0] - d1*f[i2*3 + 0];
+         fPlines[(kp + 2*fNlines)*3 - 8] = d2*f[i1*3 + 1] - d1*f[i2*3 + 1];
+         fPlines[(kp + 2*fNlines)*3 - 7] = d2*f[i1*3 + 2] - d1*f[i2*3 + 2];
+         if (kp == 2) break;
       }
-      if (k != 2) {
+      if (kp != 2) {
          Error("FindLevelLines", "number of points for line not equal 2");
-         --fNlines;
+         fNlines--;
       }
-L340:
-      if (il < 0) return;
    }
 }
 
