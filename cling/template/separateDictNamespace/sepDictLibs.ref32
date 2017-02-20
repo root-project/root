@@ -63,3 +63,4 @@ filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: static const char *ImplFileName();
 (compiled)     (NA):(NA) 0 public: static int DeclFileLine();
 (compiled)     (NA):(NA) 0 public: template <class T> T &func(T *t);
+
