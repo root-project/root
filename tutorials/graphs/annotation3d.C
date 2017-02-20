@@ -3,11 +3,12 @@
 /// \notebook
 /// This example show how to put some annotation on a 3D plot using 3D
 /// polylines. It also demonstrates how the axis labels can be modified.
-///
+/// It was created for the book:
+/// [Statistical Methods for Data Analysis in Particle Physics](http://www.springer.com/la/book/9783319201757)
 /// \macro_image
 /// \macro_code
 ///
-/// \author Olivier Couet
+/// \author Luca Lista
 
 void annotation3d()
 {
