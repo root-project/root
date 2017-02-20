@@ -10,3 +10,6 @@ ROOTTEST_ADD_TEST(assertROOT7244
                   MACRO assertROOT7244
                   COPY_TO_BUILDDIR subdir_ROOT7244/TheFile.h 
                   )
+ROOTTEST_ADD_TEST(assertROOT8542
+                  MACRO assertROOT8542.C
+                  )
