@@ -731,7 +731,7 @@ private:
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
 
       if (hasAxisLimits) {
-         auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation>(h, nSlots);
+         auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH1F>>(h, nSlots);
          auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(v, slot); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
          df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));

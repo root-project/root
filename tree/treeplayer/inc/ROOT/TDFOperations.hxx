@@ -105,53 +105,103 @@ extern template void FillOperation::Exec(const std::vector<char>&, const std::ve
 extern template void FillOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
 extern template void FillOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
 
+template<typename HIST=Hist_t>
 class FillTOOperation {
-   TThreadedObject<Hist_t> fTo;
+   TThreadedObject<HIST> fTo;
 
 public:
-   FillTOOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots);
-   void Exec(double v, unsigned int slot);
-   void Exec(double v, double w, unsigned int slot);
-
-   template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(const T &vs, unsigned int slot)
+   FillTOOperation(std::shared_ptr<HIST> h, unsigned int nSlots) : fTo(*h)
+   {
+      fTo.SetAtSlot(0, h);
+      // Initialise all other slots
+      for (unsigned int i = 0 ; i < nSlots; ++i) {
+         fTo.GetAtSlot(i);
+      }
+   }
+   void Exec(double x0, unsigned int slot) // 1D histos
+   {
+      fTo.GetAtSlotUnchecked(slot)->Fill(x0);
+   }
+   void Exec(double x0, double x1, unsigned int slot) // 1D weighted and 2D histos
+   {
+      fTo.GetAtSlotUnchecked(slot)->Fill(x0, x1);
+   }
+   void Exec(double x0, double x1, double x2, unsigned int slot) // 2D weighted and 3D histos
+   {
+      fTo.GetAtSlotUnchecked(slot)->Fill(x0, x1, x2);
+   }
+   void Exec(double x0, double x1, double x2, double x3, unsigned int slot) // 3D weighted histos
+   {
+      fTo.GetAtSlotUnchecked(slot)->Fill(x0, x1, x2, x3);
+   }
+   template <typename X0, typename std::enable_if<TIsContainer<X0>::fgValue, int>::type = 0>
+   void Exec(const X0 &x0s, unsigned int slot)
    {
       auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
-      for (auto& v : vs) {
-         thisSlotH->Fill(v); // TODO: Can be optimised in case T == vector<double>
+      for (auto& x0 : x0s) {
+         thisSlotH->Fill(x0); // TODO: Can be optimised in case T == vector<double>
       }
    }
 
-   template <typename T, typename W,
-             typename std::enable_if<TIsContainer<T>::fgValue && TIsContainer<W>::fgValue, int>::type = 0>
-   void Exec(const T &vs, const W &ws, unsigned int slot)
+   template <typename X0, typename X1,
+             typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue, int>::type = 0>
+   void Exec(const X0 &x0s, const X1 &x1s, unsigned int slot)
    {
       auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
-      if (vs.size() != ws.size()) {
-         throw std::runtime_error("Cannot fill weighted histogram with values in containers of different sizes.");
+      if (x0s.size() != x1s.size()) {
+         throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
-      auto vsIt = std::begin(vs);
-      const auto vsEnd = std::end(vs);
-      auto wsIt = std::begin(ws);
-      for (;vsIt!=vsEnd; vsIt++,wsIt++) {
-         thisSlotH->Fill(*vsIt, *wsIt); // TODO: Can be optimised in case T == vector<double>
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      for (;x0sIt!=x0sEnd; x0sIt++, x1sIt++) {
+         thisSlotH->Fill(*x0sIt, *x1sIt); // TODO: Can be optimised in case T == vector<double>
       }
    }
 
-   void Finalize();
-   ~FillTOOperation();
+
+   template <typename X0, typename X1, typename X2,
+             typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue && TIsContainer<X2>::fgValue, int>::type = 0>
+   void Exec(const X0 &x0s, const X1 &x1s, const X2 &x2s, unsigned int slot)
+   {
+      auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
+      if (!(x0s.size() == x1s.size() == x2s.size())) {
+         throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
+      }
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      auto x2sIt = std::begin(x2s);
+      for (;x0sIt!=x0sEnd; x0sIt++, x1sIt++, x2sIt++) {
+         thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+   template <typename X0, typename X1, typename X2, typename X3,
+             typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue && TIsContainer<X2>::fgValue && TIsContainer<X2>::fgValue, int>::type = 0>
+   void Exec(const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s, unsigned int slot)
+   {
+      auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
+      if (!(x0s.size() == x1s.size() == x2s.size() == x3s.size())) {
+         throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
+      }
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      auto x2sIt = std::begin(x2s);
+      auto x3sIt = std::begin(x3s);
+      for (;x0sIt!=x0sEnd; x0sIt++, x1sIt++, x2sIt++, x3sIt++) {
+         thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt, *x3sIt); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+   void Finalize()
+   {
+      fTo.Merge();
+   }
+   ~FillTOOperation()
+   {
+      Finalize();
+   }
 };
-
-extern template void FillTOOperation::Exec(const std::vector<float>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<double>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<char>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<int>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<unsigned int>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<float>&, const std::vector<float>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<double>&, const std::vector<double>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<char>&, const std::vector<char>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
-extern template void FillTOOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
 
 // note: changes to this class should probably be replicated in its partial
 // specialization below

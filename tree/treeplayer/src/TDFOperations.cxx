@@ -119,49 +119,6 @@ template void FillOperation::Exec(const std::vector<char>&, const std::vector<ch
 template void FillOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
 template void FillOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
 
-
-
-FillTOOperation::FillTOOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots) : fTo(*h)
-{
-   fTo.SetAtSlot(0, h);
-   // Initialise all other slots
-   for (unsigned int i = 0 ; i < nSlots; ++i) {
-      fTo.GetAtSlot(i);
-   }
-}
-
-void FillTOOperation::Exec(double v, unsigned int slot)
-{
-   fTo.GetAtSlotUnchecked(slot)->Fill(v);
-}
-
-void FillTOOperation::Exec(double v, double w, unsigned int slot)
-{
-   fTo.GetAtSlotUnchecked(slot)->Fill(v,w);
-}
-
-void FillTOOperation::Finalize()
-{
-   fTo.Merge();
-}
-
-FillTOOperation::~FillTOOperation()
-{
-   Finalize();
-}
-
-template void FillTOOperation::Exec(const std::vector<float>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<double>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<char>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<int>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<unsigned int>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<float>&, const std::vector<float>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<double>&, const std::vector<double>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<char>&, const std::vector<char>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
-template void FillTOOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
-
-
 MinOperation::MinOperation(double *minVPtr, unsigned int nSlots)
    : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max()) { }
 
