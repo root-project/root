@@ -260,56 +260,54 @@ std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Lon
                   std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
 
 
-template <typename F, typename PrevDataFrame>
+template <typename Helper, typename PrevDataFrame,
+          typename BranchTypes_t = typename Helper::BranchTypes_t>
 class TDataFrameAction final : public TDataFrameActionBase {
-   using BranchTypes_t = typename TDFTraitsUtils::TRemoveFirst<typename TDFTraitsUtils::TFunctionTraits<F>::Args_t>::Types_t;
    using TypeInd_t = typename TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
-   F fAction;
+   Helper fHelper;
    const BranchNames fBranches;
    const BranchNames fTmpBranches;
    PrevDataFrame &fPrevData;
    std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
 
 public:
-   TDataFrameAction(F&& f, const BranchNames &bl, const std::shared_ptr<PrevDataFrame>& pd)
-      : fAction(std::move(f)), fBranches(bl), fTmpBranches(pd->GetTmpBranches()), fPrevData(*pd),
+   TDataFrameAction(Helper&& h, const BranchNames &bl, const std::shared_ptr<PrevDataFrame>& pd)
+      : fHelper(std::move(h)), fBranches(bl), fTmpBranches(pd->GetTmpBranches()), fPrevData(*pd),
         fFirstData(pd->GetDataFrame()) { }
 
    TDataFrameAction(const TDataFrameAction &) = delete;
-
-   void Run(unsigned int slot, Long64_t entry)
-   {
-      // check if entry passes all filters
-      if (CheckFilters(slot, entry)) ExecuteAction(slot, entry);
-   }
-
-   bool CheckFilters(unsigned int slot, Long64_t entry)
-   {
-      // start the recursive chain of CheckFilters calls
-      return fPrevData.CheckFilters(slot, entry);
-   }
-
-   void ExecuteAction(unsigned int slot, Long64_t entry) { ExecuteActionHelper(slot, entry, TypeInd_t(), BranchTypes_t()); }
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot)
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   template <int... S, typename... BranchTypes>
-   void ExecuteActionHelper(unsigned int slot, Long64_t entry,
-                            TDFTraitsUtils::TStaticSeq<S...>,
-                            TDFTraitsUtils::TTypeList<BranchTypes...>)
+   void Run(unsigned int slot, Long64_t entry)
    {
+      // check if entry passes all filters
+      if (fPrevData.CheckFilters(slot, entry))
+         Exec(slot, entry, TypeInd_t(), BranchTypes_t());
+   }
+
+   template <int... S, typename... BranchTypes>
+   void Exec(unsigned int slot, Long64_t entry,
+             TDFTraitsUtils::TStaticSeq<S...>,
+             TDFTraitsUtils::TTypeList<BranchTypes...>)
+   {
+      (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
       // Take each pointer in tvb, cast it to a pointer to the
       // correct specialization of TTreeReaderValue, and get its content.
       // S expands to a sequence of integers 0 to sizeof...(types)-1
-      // S and types are expanded simultaneously by "..."
-      (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
-      fAction(slot, GetBranchValue(fReaderValues[slot][S], slot, entry,
-                                   fBranches[S], fFirstData.lock(), TDFTraitsUtils::TTypeList<BranchTypes>())
-              ...);
+      // S and BranchTypes are expanded simultaneously by "..."
+      fHelper.Exec(slot, GetBranchValue(fReaderValues[slot][S], slot, entry,
+                                        fBranches[S], fFirstData.lock(),
+                                        TDFTraitsUtils::TTypeList<BranchTypes>())
+                   ...);
+   }
+
+   ~TDataFrameAction() {
+      fHelper.Finalize();
    }
 };
 
@@ -484,13 +482,15 @@ public:
    /// `ForeachSlot` works just as well with single-thread execution: in that
    /// case `slot` will always be `0`.
    template<typename F>
-   void ForeachSlot(F f, const BranchNames &bl = {}) {
+   void ForeachSlot(F f, const BranchNames &bl = {})
+   {
       auto df = GetDataFrameChecked();
       const BranchNames &defBl= df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs-1, bl, defBl);
-      using DFA_t  = ROOT::Internal::TDataFrameAction<decltype(f), Proxied>;
-      df->Book(std::make_shared<DFA_t>(std::move(f), actualBl, fProxiedPtr));
+      using Op_t = ROOT::Internal::Operations::ForeachSlotOperation<F>;
+      using DFA_t  = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, fProxiedPtr));
       df->Run();
    }
 
@@ -538,12 +538,10 @@ public:
       unsigned int nSlots = df->GetNSlots();
       auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
       auto redObjPtr = std::make_shared<T>(initValue);
-      auto redObj = df->MakeActionResultProxy(redObjPtr);
-      auto redOp = std::make_shared<ROOT::Internal::Operations::ReduceOperation<F,T>>(std::move(f), redObjPtr.get(), nSlots);
-      auto redAction = [redOp] (unsigned int slot, const T& v) mutable { redOp->Exec(slot, v); };
-      using DFA_t = typename ROOT::Internal::TDataFrameAction<decltype(redAction), Proxied>;
-      df->Book(std::make_shared<DFA_t>(std::move(redAction), bl, fProxiedPtr));
-      return redObj;
+      using Op_t = ROOT::Internal::Operations::ReduceOperation<F,T>;
+      using DFA_t = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr.get(), nSlots), bl, fProxiedPtr));
+      return df->MakeActionResultProxy(redObjPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -555,15 +553,11 @@ public:
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      auto cShared = std::make_shared<unsigned int>(0);
-      auto c = df->MakeActionResultProxy(cShared);
-      auto cPtr = cShared.get();
-      auto cOp = std::make_shared<ROOT::Internal::Operations::CountOperation>(cPtr, nSlots);
-      auto countAction = [cOp](unsigned int slot) mutable { cOp->Exec(slot); };
-      BranchNames bl = {};
-      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(countAction), Proxied>;
-      df->Book(std::make_shared<DFA_t>(std::move(countAction), bl, fProxiedPtr));
-      return c;
+      auto cSPtr = std::make_shared<unsigned int>(0);
+      using Op_t = ROOT::Internal::Operations::CountOperation;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr.get(), nSlots), BranchNames({}), fProxiedPtr));
+      return df->MakeActionResultProxy(cSPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -575,18 +569,17 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TActionResultProxy<COLL> Take(const std::string &branchName = "")
+   TActionResultProxy<COLL>
+   Take(const std::string &branchName = "")
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       auto bl = GetBranchNames<T>({branchName}, "get the values of the branch");
       auto valuesPtr = std::make_shared<COLL>();
-      auto values = df->MakeActionResultProxy(valuesPtr);
-      auto takeOp = std::make_shared<ROOT::Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
-      auto takeAction = [takeOp] (unsigned int slot , const T &v) mutable { takeOp->Exec(slot, v); };
-      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(takeAction), Proxied>;
-      df->Book(std::make_shared<DFA_t>(std::move(takeAction), bl, fProxiedPtr));
-      return values;
+      using Op_t = ROOT::Internal::Operations::TakeOperation<T,COLL>;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, fProxiedPtr));
+      return df->MakeActionResultProxy(valuesPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -910,15 +903,13 @@ private:
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
       auto nSlots = df->GetNSlots();
       if (hasAxisLimits) {
-         auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH1F>>(h, nSlots);
-         auto fillLambda = [fillTOOp](unsigned int slot, const X &v, const W &w) mutable { fillTOOp->Exec(slot,v,w); };
-         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+         using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
+         using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X,W>>;
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
       } else {
-         auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
-         auto fillLambda = [fillOp](unsigned int slot, const X &v, const W &w) mutable { fillOp->Exec(slot,v,w); };
-         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+         using Op_t = ROOT::Internal::Operations::FillOperation;
+         using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X,W>>;
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
       }
       return df->MakeActionResultProxy(h);
    }
@@ -929,23 +920,17 @@ private:
    BuildAndBook(const BranchNames &bl, const std::shared_ptr<::TH1F>& h,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Histo1D*)
    {
-      // we use a shared_ptr so that the operation has the same scope of the lambda
-      // and therefore of the TDataFrameAction that contains it: merging of results
-      // from different threads is performed in the operation's destructor, at the
-      // moment when the TDataFrameAction is deleted by TDataFrameImpl
       auto df = GetDataFrameChecked();
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
 
       if (hasAxisLimits) {
-         auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH1F>>(h, nSlots);
-         auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(slot, v); };
-         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+         using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
+         using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
       } else {
-         auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
-         auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(slot, v); };
-         using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
-         df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+         using Op_t = ROOT::Internal::Operations::FillOperation;
+         using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
       }
       return df->MakeActionResultProxy(h);
    }
@@ -955,12 +940,10 @@ private:
    BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& minV,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Min*)
    {
-      // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
-      auto minOp = std::make_shared<ROOT::Internal::Operations::MinOperation>(minV.get(), nSlots);
-      auto minOpLambda = [minOp](unsigned int slot, const BranchType &v) mutable { minOp->Exec(slot, v); };
-      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
+      using Op_t = ROOT::Internal::Operations::MinOperation;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(std::move(minOpLambda), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(minV.get(), nSlots), bl, fProxiedPtr));
       return df->MakeActionResultProxy(minV);
    }
 
@@ -969,12 +952,10 @@ private:
    BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& maxV,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Max*)
    {
-      // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
-      auto maxOp = std::make_shared<ROOT::Internal::Operations::MaxOperation>(maxV.get(), nSlots);
-      auto maxOpLambda = [maxOp](unsigned int slot, const BranchType &v) mutable { maxOp->Exec(slot, v); };
-      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
+      using Op_t = ROOT::Internal::Operations::MaxOperation;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(std::move(maxOpLambda), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(maxV.get(), nSlots), bl, fProxiedPtr));
       return df->MakeActionResultProxy(maxV);
    }
 
@@ -984,12 +965,10 @@ private:
    BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& meanV,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Mean*)
    {
-      // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
-      auto meanOp = std::make_shared<ROOT::Internal::Operations::MeanOperation>(meanV.get(), nSlots);
-      auto meanOpLambda = [meanOp](unsigned int slot, const BranchType &v) mutable { meanOp->Exec(slot, v); };
-      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
+      using Op_t = ROOT::Internal::Operations::MeanOperation;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(std::move(meanOpLambda), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(meanV.get(), nSlots), bl, fProxiedPtr));
       return df->MakeActionResultProxy(meanV);
    }
    /// \endcond
