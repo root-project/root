@@ -1955,7 +1955,6 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
 
    switch (type) {
       // Read basic types.
-      case /* kBOOL_t = */ 21:
       case TStreamerInfo::kBool:    return TConfiguredAction( Looper::ReadCollectionBool, conf );    break;
       case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template ReadCollectionBasicType<Char_t>, conf );    break;
       case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template ReadCollectionBasicType<Short_t>,conf );   break;

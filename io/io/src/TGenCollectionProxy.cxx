@@ -450,9 +450,6 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                   fKind = kInt_t;
                } else {
                   fKind = (EDataType)fundType->GetType();
-                  if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
-                     fKind = (EDataType)kBOOL_t;
-                  }
                   fSize = gCint->TypeInfo_Size(ti);
                   R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
                }
@@ -697,7 +694,7 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
          return new TGenBitsetProxy(*this);
       }
       case TClassEdit::kVector: {
-         if ((*fValue).fKind == (EDataType)kBOOL_t) {
+         if ((*fValue).fKind == kBool_t) {
             return new TGenVectorBoolProxy(*this);
          } else {
             return new TGenVectorProxy(*this);
