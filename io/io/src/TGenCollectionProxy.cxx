@@ -390,9 +390,6 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
          TDataType *fundType = (TDataType *)typeTable->THashTable::FindObject( intype.c_str() );
          if (fundType && fundType->GetType() < 0x17 && fundType->GetType() > 0) {
             fKind = (EDataType)fundType->GetType();
-            if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
-               fKind = (EDataType)kBOOL_t;
-            }
             // R__ASSERT((fKind>0 && fKind<0x17) || (fKind==-1&&(prop&kIsPointer)) );
 
             fCase |= kIsFundamental;
@@ -476,9 +473,6 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                      fKind = kInt_t;
                   } else {
                      fKind = (EDataType)fundType->GetType();
-                     if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
-                        fKind = (EDataType)kBOOL_t;
-                     }
                      fSize = gCling->TypeInfo_Size(ti);
                      R__ASSERT((fKind>0 && fKind<0x17) || (fKind==-1&&(prop&kIsPointer)) );
                   }
@@ -746,7 +740,7 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
          return new TGenBitsetProxy(*this);
       }
       case ROOT::kSTLvector: {
-         if ((*fValue).fKind == (EDataType)kBOOL_t) {
+         if ((*fValue).fKind == kBool_t) {
             return new TGenVectorBoolProxy(*this);
          } else {
             return new TGenVectorProxy(*this);
