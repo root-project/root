@@ -540,7 +540,7 @@ public:
       auto redObjPtr = std::make_shared<T>(initValue);
       auto redObj = df->MakeActionResultProxy(redObjPtr);
       auto redOp = std::make_shared<ROOT::Internal::Operations::ReduceOperation<F,T>>(std::move(f), redObjPtr.get(), nSlots);
-      auto redAction = [redOp] (unsigned int slot, const T& v) mutable { redOp->Exec(v, slot); };
+      auto redAction = [redOp] (unsigned int slot, const T& v) mutable { redOp->Exec(slot, v); };
       using DFA_t = typename ROOT::Internal::TDataFrameAction<decltype(redAction), Proxied>;
       df->Book(std::make_shared<DFA_t>(std::move(redAction), bl, fProxiedPtr));
       return redObj;
@@ -583,7 +583,7 @@ public:
       auto valuesPtr = std::make_shared<COLL>();
       auto values = df->MakeActionResultProxy(valuesPtr);
       auto takeOp = std::make_shared<ROOT::Internal::Operations::TakeOperation<T,COLL>>(valuesPtr, nSlots);
-      auto takeAction = [takeOp] (unsigned int slot , const T &v) mutable { takeOp->Exec(v, slot); };
+      auto takeAction = [takeOp] (unsigned int slot , const T &v) mutable { takeOp->Exec(slot, v); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(takeAction), Proxied>;
       df->Book(std::make_shared<DFA_t>(std::move(takeAction), bl, fProxiedPtr));
       return values;
@@ -911,12 +911,12 @@ private:
       auto nSlots = df->GetNSlots();
       if (hasAxisLimits) {
          auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH1F>>(h, nSlots);
-         auto fillLambda = [fillTOOp](unsigned int slot, const X &v, const W &w) mutable { fillTOOp->Exec(v,w,slot); };
+         auto fillLambda = [fillTOOp](unsigned int slot, const X &v, const W &w) mutable { fillTOOp->Exec(slot,v,w); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
          df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       } else {
          auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
-         auto fillLambda = [fillOp](unsigned int slot, const X &v, const W &w) mutable { fillOp->Exec(v,w,slot); };
+         auto fillLambda = [fillOp](unsigned int slot, const X &v, const W &w) mutable { fillOp->Exec(slot,v,w); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
          df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       }
@@ -938,12 +938,12 @@ private:
 
       if (hasAxisLimits) {
          auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH1F>>(h, nSlots);
-         auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(v, slot); };
+         auto fillLambda = [fillTOOp](unsigned int slot, const BranchType &v) mutable { fillTOOp->Exec(slot, v); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
          df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       } else {
          auto fillOp = std::make_shared<ROOT::Internal::Operations::FillOperation>(h, nSlots);
-         auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(v, slot); };
+         auto fillLambda = [fillOp](unsigned int slot, const BranchType &v) mutable { fillOp->Exec(slot, v); };
          using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
          df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
       }
@@ -957,7 +957,7 @@ private:
    {
       // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
       auto minOp = std::make_shared<ROOT::Internal::Operations::MinOperation>(minV.get(), nSlots);
-      auto minOpLambda = [minOp](unsigned int slot, const BranchType &v) mutable { minOp->Exec(v, slot); };
+      auto minOpLambda = [minOp](unsigned int slot, const BranchType &v) mutable { minOp->Exec(slot, v); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(minOpLambda), Proxied>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(std::move(minOpLambda), bl, fProxiedPtr));
@@ -971,7 +971,7 @@ private:
    {
       // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
       auto maxOp = std::make_shared<ROOT::Internal::Operations::MaxOperation>(maxV.get(), nSlots);
-      auto maxOpLambda = [maxOp](unsigned int slot, const BranchType &v) mutable { maxOp->Exec(v, slot); };
+      auto maxOpLambda = [maxOp](unsigned int slot, const BranchType &v) mutable { maxOp->Exec(slot, v); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(maxOpLambda), Proxied>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(std::move(maxOpLambda), bl, fProxiedPtr));
@@ -986,7 +986,7 @@ private:
    {
       // see "TActionResultProxy<::TH1F> BuildAndBook" for why this is a shared_ptr
       auto meanOp = std::make_shared<ROOT::Internal::Operations::MeanOperation>(meanV.get(), nSlots);
-      auto meanOpLambda = [meanOp](unsigned int slot, const BranchType &v) mutable { meanOp->Exec(v, slot); };
+      auto meanOpLambda = [meanOp](unsigned int slot, const BranchType &v) mutable { meanOp->Exec(slot, v); };
       using DFA_t = ROOT::Internal::TDataFrameAction<decltype(meanOpLambda), Proxied>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(std::move(meanOpLambda), bl, fProxiedPtr));
