@@ -653,7 +653,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \brief Fill and return a two-dimensional histogram with the values of a branch (*lazy action*)
    /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
    /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
    /// \param[in] model The model to be considered to build the new return value.
@@ -683,7 +683,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \brief Fill and return a two-dimensional histogram with the values of a branch (*lazy action*)
    /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
    /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
    /// \tparam W The type of the branch the weights of which are used to fill the histogram.
@@ -718,7 +718,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \brief Fill and return a three-dimensional histogram with the values of a branch (*lazy action*)
    /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
    /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
    /// \tparam B2 The type of the branch the values of which are used to fill the histogram.
@@ -753,7 +753,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \brief Fill and return a three-dimensional histogram with the values of a branch (*lazy action*)
    /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
    /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
    /// \tparam B2 The type of the branch the values of which are used to fill the histogram.
@@ -876,31 +876,6 @@ private:
       if (neededBranches == providedBranches) return bl;
 
       return GetDefaultBranchNames(neededBranches, actionNameForErr);
-
-//       // FIXME To be expressed w/o repetitions!!!
-//       if (isT1Guessed && isT2Void && !bl[0].empty() && !bl[1].empty()) {
-//          throw std::runtime_error("The guessing of types when treating two branches is not supported yet. Please specify both types.");
-//       }
-//
-//       if (isT1Guessed && isT2Void && isT3Void &&
-//          !bl[0].empty() && !bl[1].empty() && !bl[2].empty()) {
-//          throw std::runtime_error("The guessing of types when treating three branches is not supported yet. Please specify both types.");
-//       }
-//
-//       if (isT1Guessed && isT2Void && isT3Void && isT4Void &&
-//          !bl[0].empty() && !bl[1].empty() && !bl[2].empty() && !bl[3].empty()) {
-//          throw std::runtime_error("The guessing of types when treating four branches is not supported yet. Please specify both types.");
-//       }
-
-//       // Two are needed
-//       if (bl[0].empty()) {
-//          return GetDefaultBranchNames(neededBranches, "fill the histogram");
-//       } else {
-//          if (neededBranches == 1) return BranchNames( {bl[0]} );
-//          if (neededBranches == 2) return BranchNames( {bl[0], bl[1]} );
-//       }
-//       throw std::runtime_error("Cannot treat the branches for this action.");
-//       return bl;
    }
 
    // Two overloaded template methods which allow to avoid branching in the Histo1D method.
