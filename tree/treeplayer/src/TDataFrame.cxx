@@ -336,6 +336,7 @@ In the following, whenever we say an action "returns" something, we always mean 
 | Max | Return the maximum of processed branch values. |
 | Mean | Return the mean of processed branch values. |
 | Min | Return the minimum of processed branch values. |
+| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
 
 | **Instant actions** | **Description** |
 |---------------------|-----------------|
