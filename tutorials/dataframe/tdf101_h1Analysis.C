@@ -112,7 +112,7 @@ void FitAndPlotH2(TH2& h2) {
    line->Draw();
 }
 
-void tdf003_h1Analysis() {
+void tdf101_h1Analysis() {
    TChain chain("h42");
    chain.Add("http://root.cern.ch/files/h1/dstarmb.root");
    chain.Add("http://root.cern.ch/files/h1/dstarp1a.root");
@@ -122,14 +122,13 @@ void tdf003_h1Analysis() {
    ROOT::Experimental::TDataFrame dataFrame(chain);
    auto selected = Select(dataFrame);
 
-   TH1F* hdmd = new TH1F("hdmd", "Dm_d",40,0.13,0.17);
-   TH2F* h2 = new TH2F("h2","ptD0 vs Dm_d",30,0.135,0.165,30,-3,6);
-   selected.Foreach([hdmd, h2](float dm_d, float rpd0_t, float ptd0_d) {
-                       hdmd->Fill(dm_d);
-                       h2->Fill(dm_d, rpd0_t/0.029979*1.8646/ptd0_d); },
-                    {"dm_d", "rpd0_t", "ptd0_d"});
+   auto hdmdARP = selected.Histo1D<float>(TH1F("hdmd", "Dm_d",40,0.13,0.17), "dm_d");
+   auto selectedAddedBranch = selected.AddBranch("h2_y",
+                              [](float rpd0_t, float ptd0_d){return rpd0_t/0.029979f*1.8646f/ptd0_d;},
+                              {"rpd0_t", "ptd0_d"});
+   auto h2ARP = selectedAddedBranch.Histo2D<float, float>(TH2F("h2","ptD0 vs Dm_d",30,0.135,0.165,30,-3,6), "dm_d", "h2_y");
 
-   FitAndPlotHdmd(*hdmd);
-   FitAndPlotH2(*h2);
+   FitAndPlotHdmd(*hdmdARP);
+   FitAndPlotH2(*h2ARP);
 }
 
