@@ -85,7 +85,7 @@ void FillTree(const char* filename, const char* treeName) {
 auto fileName = "testIMT.root";
 auto treeName = "myTree";
 
-void tests(int argc = 1, char** argv = nullptr) {
+void tests() {
 
    TFile f(fileName);
 
@@ -205,7 +205,7 @@ int main(int argc, char** argv) {
    std::cout << "Running sequentially." << std::endl;
    {
 //       TimerRAII a;
-      tests(argc, argv);
+      tests();
    }
 
    unsigned int ncores = 4;
@@ -218,7 +218,7 @@ int main(int argc, char** argv) {
 #endif
    {
 //       TimerRAII a;
-      tests(argc, argv);
+      tests();
    }
 
    return 0;
