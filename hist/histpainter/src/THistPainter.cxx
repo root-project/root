@@ -859,7 +859,7 @@ End_Macro
 
 For each cell (i,j) a box is drawn. The size (surface) of the box is
 proportional to the absolute value of the cell content.
-The cells with a negative content draw with a `X` on top of the boxes.
+The cells with a negative content are drawn with a `X` on top of the box.
 
 Begin_Macro(source)
 {
@@ -2566,6 +2566,25 @@ Begin_Macro(source)
       h3box->Fill(x,y,z);
    }
    h3box->Draw("BOX3");
+}
+End_Macro
+
+For all the `BOX` options each bin is drawn as a 3D box with a volume proportional
+to the absolute value of the bin content. The bins with a negative content are
+drawn with a X on each face of the box as shown in the following example:
+
+Begin_Macro(source)
+{
+   auto c = new TCanvas("c","c",600,400);
+   gStyle->SetOptStat(kFALSE);
+   auto h3box = new TH3F("h3box","Option BOX",3, 0., 4., 3, 0.,4., 3, 0., 4.);
+   h3box->Fill(0., 2., 2.,  10.);
+   h3box->Fill(2., 2., 2.,   5.);
+   h3box->Fill(2., 2., .5,   2.);
+   h3box->Fill(2., 2., 3.,   -1.);
+   h3box->Fill(3., 2., 2., -10.);
+   h3box->SetFillColor(8);
+   h3box->Draw("box1");
 }
 End_Macro
 
@@ -7011,7 +7030,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
    Style_t coldark   = TColor::GetColorDark(colsav);
-      Style_t colbright   = TColor::GetColorBright(colsav);
+   Style_t colbright = TColor::GetColorBright(colsav);
 
    fH->SetFillStyle(1001);
    fH->TAttFill::Modify();
@@ -7020,8 +7039,10 @@ void THistPainter::PaintH3Box(Int_t iopt)
    Int_t theColor;
 
    //       Create bin boxes and draw
-   Double_t wmin = fH->GetMinimum();
-   Double_t wmax = fH->GetMaximum();
+   Double_t wmin = TMath::Max(fH->GetMinimum(),0.);
+   Double_t wmax = TMath::Max(TMath::Abs(fH->GetMaximum()),
+                              TMath::Abs(fH->GetMinimum()));
+
    Double_t pmin[3], pmax[3], sxyz[8][3];
    for (Int_t ix = ix1; ix !=ix2+incrx; ix += incrx) {
       pmin[0] = xaxis->GetBinLowEdge(ix);
@@ -7030,9 +7051,15 @@ void THistPainter::PaintH3Box(Int_t iopt)
          pmin[1] = yaxis->GetBinLowEdge(iy);
          pmax[1] = yaxis->GetBinUpEdge(iy);
          for (Int_t iz = iz1; iz != iz2+incrz; iz += incrz) {
-            pmin[2] = zaxis->GetBinLowEdge(iz);
-            pmax[2] = zaxis->GetBinUpEdge(iz);
+            pmin[2]    = zaxis->GetBinLowEdge(iz);
+            pmax[2]    = zaxis->GetBinUpEdge(iz);
             Double_t w = fH->GetBinContent(fH->GetBin(ix,iy,iz));
+            Bool_t neg = kFALSE;
+            Int_t n = 5;
+            if (w<0) {
+               w   = -w;
+               neg = kTRUE;
+            }
             if (w < wmin) continue;
             if (w > wmax) w = wmax;
             Double_t scale = (TMath::Power((w-wmin)/(wmax-wmin),1./3.))/2.;
@@ -7047,14 +7074,22 @@ void THistPainter::PaintH3Box(Int_t iopt)
             for (Int_t k=0; k<8; ++k) { // transform to normalized space
                view->WCtoNDC(&sxyz[k][0],&sxyz[k][0]);
             }
-            Double_t x[5], y[5]; // draw bin box faces
+            Double_t x[8], y[8]; // draw bin box faces
             for (Int_t k=0; k<6; ++k) {
                for (Int_t i=0; i<4; ++i) {
                   Int_t iv = iface[k][i];
                   x[i]     = sxyz[iv][0];
                   y[i]     = sxyz[iv][1];
                }
-               x[4] = x[0]; y[4] = y[0];
+               x[4] = x[0] ; y[4] = y[0];
+               if (neg) {
+                  x[5] = x[2] ; y[5] = y[2];
+                  x[6] = x[3] ; y[6] = y[3];
+                  x[7] = x[1] ; y[7] = y[1];
+                  n = 8;
+               } else {
+                  n = 5;
+               }
                Double_t z = (x[2]-x[0])*(y[3]-y[1]) - (y[2]-y[0])*(x[3]-x[1]);
                if (z <= 0.) continue;
                if (iopt == 2) {
@@ -7071,7 +7106,7 @@ void THistPainter::PaintH3Box(Int_t iopt)
                }
                fH->TAttFill::Modify();
                gPad->PaintFillArea(4, x, y);
-               if (iopt != 3)gPad->PaintPolyLine(5, x, y);
+               if (iopt != 3)gPad->PaintPolyLine(n, x, y);
             }
          }
       }
@@ -7169,8 +7204,9 @@ void THistPainter::PaintH3BoxRaster()
    //       Create bin boxes and draw
    const Int_t NTMAX = 100;
    Double_t tt[NTMAX][2];
-   Double_t wmin = fH->GetMinimum();
-   Double_t wmax = fH->GetMaximum();
+   Double_t wmin = TMath::Max(fH->GetMinimum(),0.);
+   Double_t wmax = TMath::Max(TMath::Abs(fH->GetMaximum()),
+                              TMath::Abs(fH->GetMinimum()));
    Double_t pmin[3], pmax[3], sxyz[8][3], pp[4][2];
    for (Int_t ix = ix1; ix !=ix2+incrx; ix += incrx) {
       pmin[0] = xaxis->GetBinLowEdge(ix);
@@ -7182,6 +7218,11 @@ void THistPainter::PaintH3BoxRaster()
             pmin[2] = zaxis->GetBinLowEdge(iz);
             pmax[2] = zaxis->GetBinUpEdge(iz);
             Double_t w = fH->GetBinContent(fH->GetBin(ix,iy,iz));
+            Bool_t neg = kFALSE;
+            if (w<0) {
+               w   = -w;
+               neg = kTRUE;
+            }
             if (w < wmin) continue;
             if (w > wmax) w = wmax;
             Double_t scale = (TMath::Power((w-wmin)/(wmax-wmin),1./3.))/2.;
@@ -7213,6 +7254,34 @@ void THistPainter::PaintH3BoxRaster()
                   Double_t xdel = pp[i2][0] - pp[i1][0];
                   Double_t ydel = pp[i2][1] - pp[i1][1];
                   Double_t x[2], y[2];
+                  for (Int_t it = 0; it < nt; ++it) {
+                     x[0] = pp[i1][0] + xdel*tt[it][0];
+                     y[0] = pp[i1][1] + ydel*tt[it][0];
+                     x[1] = pp[i1][0] + xdel*tt[it][1];
+                     y[1] = pp[i1][1] + ydel*tt[it][1];
+                     gPad->PaintPolyLine(2, x, y);
+                  }
+               }
+               if (neg) {
+                  Int_t i1 = 0;
+                  Int_t i2 = 2;
+                  Int_t nt;
+                  fLego->FindVisibleLine(&pp[i1][0], &pp[i2][0], NTMAX, nt, &tt[0][0]);
+                  Double_t xdel = pp[i2][0] - pp[i1][0];
+                  Double_t ydel = pp[i2][1] - pp[i1][1];
+                  Double_t x[2], y[2];
+                  for (Int_t it = 0; it < nt; ++it) {
+                     x[0] = pp[i1][0] + xdel*tt[it][0];
+                     y[0] = pp[i1][1] + ydel*tt[it][0];
+                     x[1] = pp[i1][0] + xdel*tt[it][1];
+                     y[1] = pp[i1][1] + ydel*tt[it][1];
+                     gPad->PaintPolyLine(2, x, y);
+                  }
+                  i1 = 1;
+                  i2 = 3;
+                  fLego->FindVisibleLine(&pp[i1][0], &pp[i2][0], NTMAX, nt, &tt[0][0]);
+                  xdel = pp[i2][0] - pp[i1][0];
+                  ydel = pp[i2][1] - pp[i1][1];
                   for (Int_t it = 0; it < nt; ++it) {
                      x[0] = pp[i1][0] + xdel*tt[it][0];
                      y[0] = pp[i1][1] + ydel*tt[it][0];
