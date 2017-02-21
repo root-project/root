@@ -165,7 +165,7 @@ public:
    void Exec(const X0 &x0s, const X1 &x1s, const X2 &x2s, unsigned int slot)
    {
       auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
-      if (!(x0s.size() == x1s.size() == x2s.size())) {
+      if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
       auto x0sIt = std::begin(x0s);
@@ -177,11 +177,11 @@ public:
       }
    }
    template <typename X0, typename X1, typename X2, typename X3,
-             typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue && TIsContainer<X2>::fgValue && TIsContainer<X2>::fgValue, int>::type = 0>
+             typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue && TIsContainer<X2>::fgValue && TIsContainer<X3>::fgValue, int>::type = 0>
    void Exec(const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s, unsigned int slot)
    {
       auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
-      if (!(x0s.size() == x1s.size() == x2s.size() == x3s.size())) {
+      if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size() && x1s.size() == x3s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
       auto x0sIt = std::begin(x0s);

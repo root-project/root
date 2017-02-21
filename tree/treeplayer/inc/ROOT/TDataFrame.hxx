@@ -19,6 +19,8 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 
 #include "TBranchElement.h"
 #include "TH1F.h" // For Histo actions
+#include "TH2F.h" // For Histo actions
+#include "TH3F.h" // For Histo actions
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFTraitsUtils.hxx"
@@ -651,6 +653,144 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
+   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
+   ///
+   /// The returned histogram is independent of the input one.
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TActionResultProxy documentation.
+   /// The user renounces to the ownership of the model. The value to be used is the
+   /// returned one.
+   template <typename B0, typename B1>
+   TActionResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &b0BranchName = "", const std::string &b1BranchName = "")
+   {
+      auto h = std::make_shared<::TH2F>(model);
+      if (!ROOT::Internal::TDFV7Utils::Histo<::TH2F>::HasAxisLimits(*h)) {
+         throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
+      }
+      auto bl = GetBranchNames<B0,B1>({b0BranchName, b1BranchName},"fill the histogram");
+      auto df = GetDataFrameChecked();
+      auto nSlots = df->GetNSlots();
+      auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH2F>>(h, nSlots);
+      auto fillLambda = [fillTOOp](unsigned int slot, const B0 &b0, const B1 &b1) mutable { fillTOOp->Exec(b0,b1,slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+      df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+      return df->MakeActionResultProxy(h);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam W The type of the branch the weights of which are used to fill the histogram.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
+   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
+   /// \param[in] wBranchName The name of the branch of which the weight values are to be collected.
+   ///
+   /// The returned histogram is independent of the input one.
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TActionResultProxy documentation.
+   /// The user renounces to the ownership of the model. The value to be used is the
+   /// returned one.
+   template <typename B0, typename B1, typename W>
+   TActionResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &b0BranchName = "", const std::string &b1BranchName = "", const std::string &wBranchName = "")
+   {
+      auto h = std::make_shared<::TH2F>(model);
+      if (!ROOT::Internal::TDFV7Utils::Histo<::TH2F>::HasAxisLimits(*h)) {
+         throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
+      }
+      auto bl = GetBranchNames<B0,B1,W>({b0BranchName, b1BranchName, wBranchName},"fill the histogram");
+      auto df = GetDataFrameChecked();
+      auto nSlots = df->GetNSlots();
+      auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH2F>>(h, nSlots);
+      auto fillLambda = [fillTOOp](unsigned int slot,
+                                   const B0 &b0,
+                                   const B1 &b1,
+                                   const W &w) mutable { fillTOOp->Exec(b0,b1,w,slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+      df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+      return df->MakeActionResultProxy(h);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam B2 The type of the branch the values of which are used to fill the histogram.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
+   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
+   /// \param[in] b2BranchName The name of the branch of which the z values are to be collected.
+   ///
+   /// The returned histogram is independent of the input one.
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TActionResultProxy documentation.
+   /// The user renounces to the ownership of the model. The value to be used is the
+   /// returned one.
+   template <typename B0, typename B1, typename B2>
+   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &b0BranchName = "", const std::string &b1BranchName = "", const std::string &b2BranchName = "", const std::string &wBranchName = "")
+   {
+      auto h = std::make_shared<::TH3F>(model);
+      if (!ROOT::Internal::TDFV7Utils::Histo<::TH3F>::HasAxisLimits(*h)) {
+         throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
+      }
+      auto bl = GetBranchNames<B0,B1,B2>({b0BranchName, b1BranchName, b2BranchName, wBranchName},"fill the histogram");
+      auto df = GetDataFrameChecked();
+      auto nSlots = df->GetNSlots();
+      auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH3F>>(h, nSlots);
+      auto fillLambda = [fillTOOp](unsigned int slot,
+                                   const B0 &b0,
+                                   const B1 &b1,
+                                   const B2 &b2) mutable { fillTOOp->Exec(b0,b1,b2,slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+      df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+      return df->MakeActionResultProxy(h);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
+   /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam B2 The type of the branch the values of which are used to fill the histogram.
+   /// \tparam W The type of the branch the weights of which are used to fill the histogram.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
+   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
+   /// \param[in] b2BranchName The name of the branch of which the z values are to be collected.
+   /// \param[in] wBranchName The name of the branch of which the weight values are to be collected.
+   ///
+   /// The returned histogram is independent of the input one.
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TActionResultProxy documentation.
+   /// The user renounces to the ownership of the model. The value to be used is the
+   /// returned one.
+   template <typename B0, typename B1, typename B2, typename W>
+   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &b0BranchName = "", const std::string &b1BranchName = "", const std::string &b2BranchName = "", const std::string &wBranchName = "")
+   {
+      auto h = std::make_shared<::TH3F>(model);
+      if (!ROOT::Internal::TDFV7Utils::Histo<::TH3F>::HasAxisLimits(*h)) {
+         throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
+      }
+      auto bl = GetBranchNames<B0,B1,B2,W>({b0BranchName, b1BranchName, b2BranchName, wBranchName},"fill the histogram");
+      auto df = GetDataFrameChecked();
+      auto nSlots = df->GetNSlots();
+      auto fillTOOp = std::make_shared<ROOT::Internal::Operations::FillTOOperation<::TH3F>>(h, nSlots);
+      auto fillLambda = [fillTOOp](unsigned int slot,
+                                   const B0 &b0,
+                                   const B1 &b1,
+                                   const B2 &b2,
+                                   const W &w) mutable { fillTOOp->Exec(b0,b1,b2,w,slot); };
+      using DFA_t = ROOT::Internal::TDataFrameAction<decltype(fillLambda), Proxied>;
+      df->Book(std::make_shared<DFA_t>(std::move(fillLambda), bl, fProxiedPtr));
+      return df->MakeActionResultProxy(h);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the minimum of processed branch values (*lazy action*)
    /// \tparam T The type of the branch.
    /// \param[in] branchName The name of the branch to be treated.
@@ -721,40 +861,46 @@ public:
 private:
 
    /// Returns the default branches if needed, takes care of the error handling.
-   template<typename T1, typename T2 = void>
+   template<typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
    BranchNames GetBranchNames(BranchNames bl, const std::string &actionNameForErr)
    {
-      // For the moment stops at two parameters, it's possible to extend to 3 and 4 parameters.
+      constexpr auto isT2Void = std::is_same<T2, void>::value;
+      constexpr auto isT3Void = std::is_same<T3, void>::value;
+      constexpr auto isT4Void = std::is_same<T4, void>::value;
 
-      constexpr auto isT1Guessed = std::is_same<T1, ROOT::Detail::TDataFrameGuessedType>::value;
-      constexpr auto isT2Guessed = std::is_same<T2, void>::value;
-
-      const auto neededBranches = isT2Guessed ? 1 : 2;
+      unsigned int neededBranches = 1 + !isT2Void + !isT3Void + !isT4Void;
 
       unsigned int providedBranches = 0;
       std::for_each(bl.begin(), bl.end(), [&providedBranches](const std::string& s) {if (!s.empty()) providedBranches++;} );
 
       if (neededBranches == providedBranches) return bl;
 
-      // One branch only is needed
-      if (1 == providedBranches) return GetDefaultBranchNames(1, actionNameForErr);
+      return GetDefaultBranchNames(neededBranches, actionNameForErr);
 
-      // Two are needed
+//       // FIXME To be expressed w/o repetitions!!!
+//       if (isT1Guessed && isT2Void && !bl[0].empty() && !bl[1].empty()) {
+//          throw std::runtime_error("The guessing of types when treating two branches is not supported yet. Please specify both types.");
+//       }
+//
+//       if (isT1Guessed && isT2Void && isT3Void &&
+//          !bl[0].empty() && !bl[1].empty() && !bl[2].empty()) {
+//          throw std::runtime_error("The guessing of types when treating three branches is not supported yet. Please specify both types.");
+//       }
+//
+//       if (isT1Guessed && isT2Void && isT3Void && isT4Void &&
+//          !bl[0].empty() && !bl[1].empty() && !bl[2].empty() && !bl[3].empty()) {
+//          throw std::runtime_error("The guessing of types when treating four branches is not supported yet. Please specify both types.");
+//       }
 
-      // Two types to be deduced: this cannot work.
-      if (isT1Guessed && isT2Guessed && !bl[0].empty() && !bl[1].empty()) {
-         throw std::runtime_error("The guessing of types when treating two branches is not supported yet. Please specify both types.");
-      }
-
-      auto defBranchesNeeded = isT2Guessed ? 1 : 2;
-      if (bl[0].empty()) {
-         return GetDefaultBranchNames(defBranchesNeeded, "fill the histogram");
-      } else {
-         if (defBranchesNeeded == 1) return BranchNames( {bl[0]} );
-         if (defBranchesNeeded == 2) return BranchNames( {bl[0], bl[1]} );
-      }
-      throw std::runtime_error("Cannot treat the branches for this action.");
-      return bl;
+//       // Two are needed
+//       if (bl[0].empty()) {
+//          return GetDefaultBranchNames(neededBranches, "fill the histogram");
+//       } else {
+//          if (neededBranches == 1) return BranchNames( {bl[0]} );
+//          if (neededBranches == 2) return BranchNames( {bl[0], bl[1]} );
+//       }
+//       throw std::runtime_error("Cannot treat the branches for this action.");
+//       return bl;
    }
 
    // Two overloaded template methods which allow to avoid branching in the Histo1D method.
@@ -936,23 +1082,24 @@ protected:
       return df;
    }
 
-   const BranchNames& GetDefaultBranchNames(unsigned int nExpectedBranches, const std::string &actionNameForErr)
+   const BranchNames GetDefaultBranchNames(unsigned int nExpectedBranches, const std::string &actionNameForErr)
    {
       auto df = GetDataFrameChecked();
       const BranchNames &defaultBranches = df->GetDefaultBranches();
       const auto dBSize = defaultBranches.size();
-      if (nExpectedBranches != dBSize) {
+      if (nExpectedBranches > dBSize) {
          std::string msg("Trying to deduce the branches from the default list in order to ");
          msg += actionNameForErr;
          msg += ". A set of branches of size ";
          msg += std::to_string(dBSize);
-         msg += " was found. Only ";
+         msg += " was found. ";
          msg += std::to_string(nExpectedBranches);
          msg += 1 != nExpectedBranches ? " are" : " is";
          msg += " needed. Please specify the branches explicitly.";
          throw std::runtime_error(msg);
       }
-      return defaultBranches;
+      auto bnBegin = defaultBranches.begin();
+      return BranchNames(bnBegin, bnBegin + nExpectedBranches);
    }
    TDataFrameInterface(std::shared_ptr<Proxied>&& proxied) : fProxiedPtr(proxied) {}
    std::shared_ptr<Proxied> fProxiedPtr;
