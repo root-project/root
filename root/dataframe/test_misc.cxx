@@ -41,21 +41,30 @@ void FillTree(const char* filename, const char* treeName) {
    TTree t(treeName,treeName);
    double b1;
    int b2;
+   float b3;
+   float b4;
    std::vector<FourVector> tracks;
    std::vector<double> dv {-1,2,3,4};
+   std::vector<float> sv {-1,2,3,4};
    std::list<int> sl {1,2,3,4};
    t.Branch("b1", &b1);
    t.Branch("b2", &b2);
+   t.Branch("b3", &b3);
+   t.Branch("b4", &b4);
    t.Branch("tracks", &tracks);
    t.Branch("dv", &dv);
    t.Branch("sl", &sl);
+   t.Branch("sv", &sv);
 
    for(int i = 0; i < 20; ++i) {
       b1 = i;
       b2 = i*i;
+      b3 = sqrt(i*i*i);
+      b4 = i;
       getTracks(tracks);
       dv.emplace_back(i);
       sl.emplace_back(i);
+      sv.emplace_back(i * 0.5);
       t.Fill();
    }
    t.Write();
@@ -251,7 +260,7 @@ int main() {
    }
    std::cout << "Count with action pointers which went out of scope: " << *d11c << std::endl;
 
-   // TEST14: fill histograms
+   // TEST 14: fill 1D histograms
    ROOT::Experimental::TDataFrame d12(treeName, &f, {"b1","b2"});
    auto wh1 = d12.Histo1D<double, int>();
    auto wh2 = d12.Histo1D<std::vector<double>, std::list<int>>("dv","sl");
@@ -260,6 +269,25 @@ int main() {
    std::cout << "Wh2 Histo entries: " << wh2->GetEntries() << std::endl;
    std::cout << "Wh2 Histo mean: " << wh2->GetMean() << std::endl;
 
+   // TEST 15: fill 2D histograms
+   ROOT::Experimental::TDataFrame d13(treeName, &f, {"b1","b2","b3"});
+   auto h12d = d13.Histo2D<double, int>(TH2F("h1","",64,0,1024,64,0,1024));
+   auto h22d = d13.Histo2D<std::vector<double>, std::list<int>>(TH2F("h2","",64,0,1024,64,0,1024),"dv","sl");
+   auto h32d = d13.Histo2D<double, int, float>(TH2F("h3","",64,0,1024,64,0,1024));
+   std::cout << "h12d Histo entries: " << h12d->GetEntries() << std::endl;
+   std::cout << "h22d Histo entries: " << h22d->GetEntries() << std::endl;
+   std::cout << "h32d Histo entries: " << h32d->GetEntries() << " sum of weights: " << h32d->GetSumOfWeights() << std::endl;
+
+   // TEST 15: fill 3D histograms
+   ROOT::Experimental::TDataFrame d14(treeName, &f, {"b1","b2","b3","b4"});
+   auto h13d = d14.Histo3D<double, int, float>(TH3F("h4","",64,0,1024,64,0,1024,64,0,1024));
+   auto h23d = d14.Histo3D<std::vector<double>,
+                           std::list<int>,
+                           std::vector<float>>(TH3F("h5","",64,0,1024,64,0,1024,64,0,1024),"dv","sl","sv");
+   auto h33d = d14.Histo3D<double, int, float, float>(TH3F("h6","",64,0,1024,64,0,1024,64,0,1024));
+   std::cout << "h13d Histo entries: " << h13d->GetEntries() << std::endl;
+   std::cout << "h23d Histo entries: " << h23d->GetEntries() << std::endl;
+   std::cout << "h33d Histo entries: " << h33d->GetEntries() << " sum of weights: " << h33d->GetSumOfWeights() << std::endl;
    return 0;
 }
 
