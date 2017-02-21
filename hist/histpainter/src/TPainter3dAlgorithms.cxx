@@ -2321,7 +2321,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
          if (Hoption.Zero) {
             Double_t total_content = 0;
             for (Int_t iv = 1; iv < nv; ++iv) { total_content += v[iv]; }
-            if (total_content == 0) continue;
+            if (total_content <= Hparam.zmin) continue;
          }
          icodes[0] = ix;
          icodes[1] = iy;
