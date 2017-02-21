@@ -185,7 +185,8 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 
    if (!err->resourceid) return 0;
 
-   TObject *w = (TObject *)gROOT->ProcessLineFast(Form("gClient->GetWindowById(%lu)", (ULong_t)err->resourceid));
+   TObject *w = (TObject *)gROOT->ProcessLineFast(Form("gClient ? gClient->GetWindowById(%lu) : 0",
+                                                       (ULong_t)err->resourceid));
 
    if (!w) {
       ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
