@@ -121,7 +121,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    for (i=0;i<258;i++)     { fColorLevel[i] = 0; }
    for (i=0;i<1200;i++)    { fPlines[i] = 0.; }
    for (i=0;i<200;i++)     { fT[i] = 0.; }
-   for (i=0;i<2000;i++)    { fU[i] = 0.; fD[i] = 0.; }
+   for (i=0;i<2*NumOfSlices;i++)  { fU[i] = 0.; fD[i] = 0.; }
    for (i=0;i<12;i++)      { fVls[i] = 0.; }
    for (i=0;i<257;i++)     { fFunLevel[i] = 0.; }
    for (i=0;i<183;i++)     { fAphi[i] = 0.; }
@@ -204,7 +204,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    for (i=0;i<258;i++)     { fColorLevel[i] = 0; }
    for (i=0;i<1200;i++)    { fPlines[i] = 0.; }
    for (i=0;i<200;i++)     { fT[i] = 0.; }
-   for (i=0;i<2000;i++)    { fU[i] = 0.; fD[i] = 0.; }
+   for (i=0;i<2*NumOfSlices;i++)  { fU[i] = 0.; fD[i] = 0.; }
    for (i=0;i<12;i++)      { fVls[i] = 0.; }
    for (i=0;i<257;i++)     { fFunLevel[i] = 0.; }
    for (i=0;i<183;i++)     { fAphi[i] = 0.; }
@@ -330,7 +330,7 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
       r[i*3 + 2] = av[i*3 + 2];
       view->WCtoNDC(&r[i*3],&r[i*3]);
    }
-
+ 
    //          Draw frame
    SetLineColor(1);
    SetLineStyle(1);
@@ -799,7 +799,7 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
    }
 
    Double_t p1[3], p2[3], x[2], y[2];
-   for (Int_t kpol=0; kpol<2; ++kpol) {
+   for (Int_t kpol = 0; kpol < 2; ++kpol) { 
       if (npol[kpol] == 0) continue;
       Int_t nv = npol[kpol];
       Int_t iv = ipol[kpol];
@@ -829,6 +829,76 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
       Int_t i1 = i;
       Int_t i2 = (i == np - 1) ? 0 : i1 + 1;
       ModifyScreen(&p3[i1*3], &p3[i2*3]);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw level lines without hidden line removal
+///
+/// \param[in] icodes   set of codes for the line
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] tt   additional function defined on this face
+
+void TPainter3dAlgorithms::DrawLevelLines(Int_t *icodes, Double_t *xyz, Int_t np,
+                                          Int_t *iface, Double_t *tt)
+{
+   TView *view = 0;
+   if (gPad) view = gPad->GetView();
+   if (!view) return;
+
+   //          Set graphics attributes
+   if (icodes[2] == 0) {  // frame
+      SetLineColor(1);
+      SetLineStyle(1);
+      SetLineWidth(1);
+   } else {
+      SetLineColor(fEdgeColor[fEdgeIdx]);
+      SetLineStyle(fEdgeStyle[fEdgeIdx]);
+      SetLineWidth(fEdgeWidth[fEdgeIdx]);
+   }
+   TAttLine::Modify();
+
+   //          Copy points to array
+   Double_t p3[3*12], ttt[12];
+   for (Int_t i = 0; i < np; ++i) {
+      Int_t k = iface[i];
+      p3[i*3 + 0] = xyz[(k-1)*3 + 0];
+      p3[i*3 + 1] = xyz[(k-1)*3 + 1];
+      p3[i*3 + 2] = xyz[(k-1)*3 + 2];
+      ttt[i] = tt[i];
+   }
+
+   //          Subdivide quadrilateral in two triangles
+   Int_t npol[2] = { np, 0 }; // number of vertices in subpolygons
+   Int_t ipol[2] = {  0, 0 }; // first vertices in subpolygons
+   if (np == 4 && icodes[2] != 0) {
+      p3[4*3 + 0] = p3[0];
+      p3[4*3 + 1] = p3[1];
+      p3[4*3 + 2] = p3[2];
+      ttt[4] = tt[0];
+      npol[0] = 3;  npol[1] = 3;
+      ipol[0] = 0;  ipol[1] = 2;
+   }
+
+   Double_t p1[3], p2[3], x[2], y[2];
+   for (Int_t kpol = 0; kpol < 2; ++kpol) { 
+      if (npol[kpol] == 0) continue;
+      Int_t nv = npol[kpol];
+      Int_t iv = ipol[kpol];
+
+      //          Find level lines
+      FindLevelLines(nv, &p3[3*iv], &ttt[iv]);
+
+      //          Draw level lines
+      for (Int_t il = 0; il < fNlines; ++il) {
+         view->WCtoNDC(&fPlines[6*il + 0], p1);
+         view->WCtoNDC(&fPlines[6*il + 3], p2);
+         x[0] = p1[0]; y[0] = p1[1];
+	 x[1] = p2[0]; y[1] = p2[1];
+         gPad->PaintPolyLine(2, x, y);
+      }
    }
 }
 
@@ -1957,8 +2027,8 @@ void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
 {
    const Double_t VERY_BIG = 9e+99;
    fX0 = xmin;
-   fDX = (xmax - xmin) / 2000;
-   for (Int_t i = 0; i < 2000; ++i) {
+   fDX = (xmax - xmin) / NumOfSlices;
+   for (Int_t i = 0; i < NumOfSlices; ++i) {
       fU[2*i + 0] = -VERY_BIG;
       fU[2*i + 1] = -VERY_BIG;
       fD[2*i + 0] =  VERY_BIG;

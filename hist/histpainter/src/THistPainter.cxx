@@ -8827,7 +8827,7 @@ void THistPainter::PaintSurface(Option_t *)
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       Hoption.Surf = 23;
       fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
-      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove3);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawLevelLines);
       if (Hoption.System == kPOLAR)       fLego->SurfacePolar(1,nx,ny,"FB");
       if (Hoption.System == kCYLINDRICAL) fLego->SurfaceCylindrical(1,nx,ny,"FB");
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"FB");
