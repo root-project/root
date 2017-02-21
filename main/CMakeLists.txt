@@ -50,7 +50,7 @@ endif()
 
 
 if(NOT MSVC)
-  add_definitions(${CLING_CXXFLAGS} -Wno-unused-parameter)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS} -Wno-unused-parameter")
 else()
   set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
 endif()

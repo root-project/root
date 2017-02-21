@@ -11,7 +11,7 @@ include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res
         ${CMAKE_CURRENT_SOURCE_DIR}/../clingutils/res
         ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
-add_definitions(${CLING_CXXFLAGS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
