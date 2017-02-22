@@ -223,7 +223,6 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, const 
       PyErr_Clear();
       return kFALSE;
    }
-      return kFALSE;
 
    Bool_t isOk = PyObject_SetAttrString( pyclass, const_cast< char* >( label ), pyfunc ) == 0;
 
