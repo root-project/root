@@ -2084,8 +2084,9 @@ void TStreamerInfo::BuildOld()
       TClassRef newClass;
 
       if (dm && dm->IsPersistent()) {
-         if (dm->GetDataType()) {
-            Bool_t isArray = element->GetArrayLength() >= 1;
+         auto theType = isStdArray ? dt : dm->GetDataType();
+         if (theType) {
+            Bool_t isArray = isStdArray || element->GetArrayLength() >= 1;
             Bool_t hasCount = element->HasCounter();
             // data member is a basic type
             if ((fClass == TObject::Class()) && !strcmp(dm->GetName(), "fBits")) {
@@ -2093,7 +2094,7 @@ void TStreamerInfo::BuildOld()
                newType = kBits;
             } else {
                // All the values of EDataType have the same semantic in EReadWrite
-               newType = (EReadWrite)dm->GetDataType()->GetType();
+               newType = (EReadWrite)theType->GetType();
             }
             if ((newType == ::kChar_t) && dmIsPtr && !isArray && !hasCount) {
                newType = ::kCharStar;
