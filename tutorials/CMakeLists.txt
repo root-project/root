@@ -266,8 +266,8 @@ set(tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
                StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
-               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
-  set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
+               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands StandardProfileLikelihoodDemo)
+  set(roostats-${tname}-depends tutorial-histfactory-makeExample)
 endforeach()
 
 #--dependency for TMVA tutorials
