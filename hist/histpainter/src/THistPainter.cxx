@@ -2577,7 +2577,7 @@ Begin_Macro(source)
 {
    auto c = new TCanvas("c","c",600,400);
    gStyle->SetOptStat(kFALSE);
-   auto h3box = new TH3F("h3box","Option BOX",3, 0., 4., 3, 0.,4., 3, 0., 4.);
+   auto h3box = new TH3F("h3box","Option BOX1 with negative bins",3, 0., 4., 3, 0.,4., 3, 0., 4.);
    h3box->Fill(0., 2., 2.,  10.);
    h3box->Fill(2., 2., 2.,   5.);
    h3box->Fill(2., 2., .5,   2.);
