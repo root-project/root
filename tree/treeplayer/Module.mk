@@ -40,8 +40,8 @@ TREEPLAYERMAP := $(TREEPLAYERLIB:.$(SOEXT)=.rootmap)
 TREEPLAYER2MAP := $(TREEPLAYERLIB:libTreePlayer.$(SOEXT)=libDataFrame.rootmap.rootmap)
 
 # used in the main Makefile
-TREEPLAYERH_REL := $(patsubst $(MODDIRI)/%,include/%,$(TREEPLAYERH) $(TREEPLAYER2H))
-ALLHDRS       += $(TREEPLAYERH_REL) $(MODDIRI)/TBranchProxyTemplate.h
+TREEPLAYERH_REL := $(MODDIRI)/TBranchProxyTemplate.h $(TREEPLAYERH)
+ALLHDRS       += $(patsubst $(MODDIRI)/%,include/%,$(TREEPLAYERH_REL) $(TREEPLAYER2H))
 ALLLIBS       += $(TREEPLAYERLIB)
 ALLMAPS       += $(TREEPLAYERMAP) $(TREEPLAYER2MAP)
 ifeq ($(CXXMODULES),yes)
