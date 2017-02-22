@@ -499,7 +499,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultPtr documentation.
-   template<typename F, typename T = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
+   template<typename F, typename T = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
    TActionResultProxy<T>
    Reduce(F f, const std::string& branchName = {})
    {
@@ -517,11 +517,11 @@ public:
    /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
    ///
    /// See the description of the other Reduce overload for more information.
-   template<typename F, typename T = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
+   template<typename F, typename T = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
    TActionResultProxy<T>
    Reduce(F f, const std::string& branchName, const T& initValue)
    {
-      using Args_t = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
+      using Args_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
       Internal::CheckReduce(f, Args_t());
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
