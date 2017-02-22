@@ -123,7 +123,7 @@ namespace ROOT {
 
       using retType = decltype(func());
       std::vector<retType> reslist(nChunks);
-      unsigned step = nChunks == 0 ? 1 : (nTimes + nChunks - 1) / nChunks;
+      unsigned step = (nTimes + nChunks - 1) / nChunks;
       auto lambda = [&](unsigned int i)
       {
          std::vector<retType> partialResults(step);
@@ -162,7 +162,7 @@ namespace ROOT {
 
       unsigned start = *args.begin();
       unsigned end = *args.end();
-      unsigned step = nChunks == 0 ? 1 : (end - start + nChunks - 1) / nChunks; //ceiling the division
+      unsigned step = (end - start + nChunks - 1) / nChunks; //ceiling the division
 
       using retType = decltype(func(start));
       std::vector<retType> reslist(nChunks);
