@@ -1,5 +1,48 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(colWiseWrite_1
+                  MACRO colWiseWrite_1.C+)
+
+ROOTTEST_ADD_TEST(colWiseRead_11
+                  MACRO colWiseRead_11.C+
+                  DEPENDS colWiseWrite_1)
+
+ROOTTEST_ADD_TEST(colWiseRead_12
+                  MACRO colWiseRead_12.C+
+                  DEPENDS colWiseWrite_1)
+
+ROOTTEST_ADD_TEST(colWiseWrite_2
+                  MACRO colWiseWrite_2.C+)
+
+ROOTTEST_ADD_TEST(colWiseRead_21
+                  MACRO colWiseRead_21.C+
+                  DEPENDS colWiseWrite_2)
+
+ROOTTEST_ADD_TEST(colWiseRead_22
+                  MACRO colWiseRead_22.C+
+                  DEPENDS colWiseWrite_2)
+
+ROOTTEST_ADD_TEST(colWiseWrite_3
+                  MACRO colWiseWrite_3.C+)
+
+ROOTTEST_ADD_TEST(colWiseRead_31
+                  MACRO colWiseRead_31.C+
+                  DEPENDS colWiseWrite_3)
+
+ROOTTEST_ADD_TEST(colWiseRead_32
+                  MACRO colWiseRead_32.C+
+                  DEPENDS colWiseWrite_3)
+
+ROOTTEST_ADD_TEST(colWiseWrite_4
+                  MACRO colWiseWrite_4.C+)
+
+ROOTTEST_ADD_TEST(colWiseRead_41
+                  MACRO colWiseRead_41.C+
+                  DEPENDS colWiseWrite_4)
+
+ROOTTEST_ADD_TEST(colWiseRead_42
+                  MACRO colWiseRead_42.C+
+                  DEPENDS colWiseWrite_4)
 
 ROOTTEST_ADD_TEST(checkRealData
                   MACRO checkRealData.C
