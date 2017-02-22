@@ -1180,6 +1180,11 @@ endif
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -f etc/gitinfo.txt
+	@(mv -f etc/dictpch/makepch.py etc/makepch.py- >/dev/null 2>&1;true)
+	@(mv -f etc/dictpch/makepch.sh etc/makepch.sh- >/dev/null 2>&1;true)
+	@rm -rf etc/dictpch/*
+	@(mv -f etc/makepch.py- etc/dictpch/makepch.py >/dev/null 2>&1;true)
+	@(mv -f etc/makepch.sh- etc/dictpch/makepch.sh >/dev/null 2>&1;true)
 	@(find README/ReleaseNotes -name *.html -exec rm -f {} \; >/dev/null 2>&1;true)
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -path '*/interpreter/llvm/src' -prune -o -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
