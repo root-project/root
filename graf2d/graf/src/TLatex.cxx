@@ -589,6 +589,10 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
    // make a copy of the current processed chain of characters
    // removing leading and trailing blanks
    length -= nBlancFin+nBlancDeb; // length of string without blanks
+   if (length <=0) {
+      Error("Analyse", "It seems there is a syntax error in the TLatex string");
+      return TLatexFormSize(0,0,0);
+   }
    Char_t* text = new Char_t[length+1];
    strncpy(text,t+nBlancDeb,length);
    text[length] = 0;

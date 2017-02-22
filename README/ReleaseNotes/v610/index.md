@@ -172,6 +172,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   bins are not drawn.
 - Fix a long pending problem with Z axis drawing when a lego or a surface was drawn
   upside-down.
+- Add a protection in TLatex when a string has a syntax error. It was reported
+  [here](https://sft.its.cern.ch/jira/browse/ROOT-7424).
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
