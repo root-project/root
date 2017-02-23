@@ -522,7 +522,7 @@ public:
    Reduce(F f, const std::string& branchName, const T& initValue)
    {
       using Args_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
-      Internal::CheckReduce(f, Args_t());
+      ROOT::Internal::CheckReduce(f, Args_t());
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
@@ -530,7 +530,7 @@ public:
       auto redObj = df->MakeActionResultProxy(redObjPtr);
       auto redOp = std::make_shared<ROOT::Internal::Operations::ReduceOperation<F,T>>(std::move(f), redObjPtr.get(), nSlots);
       auto redAction = [redOp] (unsigned int slot, const T& v) mutable { redOp->Exec(v, slot); };
-      using DFA_t = typename Internal::TDataFrameAction<decltype(redAction), Proxied>;
+      using DFA_t = typename ROOT::Internal::TDataFrameAction<decltype(redAction), Proxied>;
       df->Book(std::make_shared<DFA_t>(std::move(redAction), bl, fProxiedPtr));
       return redObj;
    }
