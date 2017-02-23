@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
      TChain chain(kTreeName.c_str());
      chain.Add(kFileName.c_str());
      chain.Add(kFileName.c_str());
-     tp.reset(new ROOT::TTreeProcessorMT(chain, kTreeName));
+     tp.reset(new ROOT::TTreeProcessorMT(chain));
   }
   else {
      std::cerr << "Error: " << kConstructor << " is not a valid constructor name. Please choose filename, collection or chain" << std::endl;
