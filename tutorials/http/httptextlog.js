@@ -32,10 +32,10 @@
          return;
       }
       // ignore all other classes
-      if (obj['_typename'] != 'TList') return;
+      if (obj._typename != 'TList') return;
 
       // change class name - it is only important for drawing
-      obj['_typename'] = "TMsgList";
+      obj._typename = "TMsgList";
 
       if (obj.arr.length>0) {
          item['last-id'] = obj.arr[0].fString;
@@ -72,7 +72,7 @@
             old.select(function(d,i) { return i < newsize - 1000 ? this : null; }).remove();
 
          for (var i=lst.arr.length-1;i>0;i--)
-            main.append("pre").html(lst.arr[i].fString);
+            main.append("pre").style('margin','2px').html(lst.arr[i].fString);
 
          // (re) set painter to first child element
          this.SetDivId(this.divid);
