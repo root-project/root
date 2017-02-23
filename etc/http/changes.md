@@ -1,5 +1,31 @@
 # JSROOT changelog
 
+## Changes in 5.1.0
+1. New 'float' browser kind overlays with objects drawing
+2. Browser can be enabled after drawing with 'nobrowser' mode
+3. One can hide browser or switch browser kind at any time
+4. New 'horizontal' and 'vertical' layouts for object display.
+   One could configure several frames, each divided on sub-frames.
+   Like display=horiz231 will create three horizontal frames, 
+   divided on 2,3 and 1 sub-frames.  
+5. One could enable status line where current tooltip info will be shown  
+6. Improve enlarge functionality - now works with all layouts
+7. Do not display all canvas tool buttons by default - provide toggle button instead 
+8. Let move TAxis title, its position now similar to ROOT graphics
+9. Support 'col0' option for TH2Poly class to suppress empty bins
+10. Implement for TH3 'box2', 'box3', 'glbox2', 'glcol' draw options
+11. Support more superscript/subscript letters in normal text output
+12. Correctly handle unzoom with logx/logy scales
+13. Let disable stamp parameter in file url with "-" sign at the end of file name
+14. Let use quotes in the URL parameters to protect complex arguments with special symbols
+15. Introduce direct streamers - like TBasket or TRef
+    Benefit - one can add custom streamers of such kind or reuse existing
+16. Handle TMatrixTSym classes in I/O  
+17. Correctly count TH3 statistic in TTree::Draw
+18. Recognize bower installation when "bower_components/jsroot/scripts" string
+    appears in the script path (#120)  
+
+
 ## Changes in 5.0.3
 1. Fix - prevent exception when discover HTML element position (#121)
 2. Fix - prevent I/O failure when server automatically gzip response (#119)
@@ -41,19 +67,19 @@
     - special handling of TBits
     - arbitrary math function from JavaScript Math class, some TMath:: function from ROOT
     - if branch is object, one could use methods "TMath::Abs(lep1_p4.X()+lep1_p4.Y())"
-    - interactive player to configure and execute draw expression  
+    - interactive player to configure and execute draw expression
 3. Full support of Float16_t and Double32_t types in I/O
-4. Drawing of RooPlot objects, I/O support for RooFit classes   
+4. Drawing of RooPlot objects, I/O support for RooFit classes
 5. Many improvements in object inspector
     - support of large lists; only first part is shown
     - support of large arrays; values group in decades
     - allow to call draw function for sub-elements in inspector
 6. Canvas or selected sub-pad can be enlarged when double-clicked outside frame (#116)
    Complete drawing will be expanded to the visible space.
-   Not available for flex, tabs and collapsible layouts.  
+   Not available for flex, tabs and collapsible layouts.
 7. Support reading of local ROOT files with HTML5 FileReader.
    Files can be selected only with interactive dialog.
-8. Combine "Ctrl" and "Shift" keys with mouse click on the items: 
+8. Combine "Ctrl" and "Shift" keys with mouse click on the items:
      - with Shift key typically object inspector will be activated
      - with Ctrl key alternative draw options will be used (like colz for TH2)
 9. Update libraries
@@ -77,19 +103,19 @@
 1. Support new JSON format, produced with newest TBufferJSON
    - object references stored as {"$ref":12}
    - pair objects for std::map marked with "$pair" : "pair<type1,type2>" data member
-   - old JSON format will be recognized automatically and supported as well 
+   - old JSON format will be recognized automatically and supported as well
 2. Fix - better selection of Y range for log scale
 3. Provide JSROOT.parse_multi function to correctly parse response of multi.json request,
-   support it in the JSROOT.NewHttpRequest method as well.  
+   support it in the JSROOT.NewHttpRequest method as well.
 4. Fix - correctly calculate integral for TH1
-5. Partially support new TFormula with complex C code inside 
+5. Partially support new TFormula with complex C code inside
 
 
 ## Changes in 4.8.0
 1. Many improvements in the I/O part 
    - support most of STL containers
    - support TMap and TClonesArray containers
-   - all kind of multidimensional arrays 
+   - all kind of multidimensional arrays
    - correct treatment of foreign classes
    - supports different versions of class in the same file
    - support members like ClassName* fField; //[fCnt]

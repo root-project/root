@@ -25,7 +25,6 @@
             'threejs_all'          : dir+'three.extra.min',
             'JSRootCore'           : dir+'JSRootCore'+ext,
             'JSRootMath'           : dir+'JSRootMath'+ext,
-            'JSRootInterface'      : dir+'JSRootInterface'+ext,
             'JSRootIOEvolution'    : dir+'JSRootIOEvolution'+ext,
             'JSRootTree'           : dir+'JSRootTree'+ext,
             'JSRootPainter'        : dir+'JSRootPainter'+ext,
@@ -93,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "5.0.3 13/02/2017";
+   JSROOT.version = "5.1.0 23/02/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -101,6 +100,8 @@
    JSROOT.bower_dir = ""; // when specified, use standard libs from bower location
 
    JSROOT.id_counter = 0;
+
+   // JSROOT.use_full_libs = true;
 
    JSROOT.touches = false;
    JSROOT.browser = { isOpera:false, isFirefox:true, isSafari:false, isChrome:false, isIE:false, isWin:false };
@@ -147,7 +148,7 @@
          ZoomTouch : true,  // Zooming with the touch devices
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
          DragAndDrop : true,  // enables drag and drop functionality
-         ToolBar : true,    // show additional tool buttons on the canvas
+         ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
          CanEnlarge : true,  // if drawing inside particular div can be enrlarged on full window
          OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
          AutoStat : true,
@@ -511,42 +512,33 @@
 
       var pos = url.indexOf("?"), nquotes;
       if (pos<0) return dflt;
-      url = url.slice(pos+1);
+      url = decodeURI(url.slice(pos+1));
 
       while (url.length>0) {
 
          if (url==opt) return "";
 
-         pos = url.indexOf("&");
-         if (pos < 0) pos = url.length;
-
-         /*
-         // try to correctly handle quotes in the URL - keep %symbol
+         // try to correctly handle quotes in the URL
          pos = 0; nquotes = 0;
          while ((pos < url.length) && ((nquotes!==0) || (url[pos]!=="&"))) {
-            if (url[pos]=="%") {
-               var repl = "";
-               if ((nquotes===0) && parseInt("0x" + url.substr(pos+1,2))) repl = decodeURI(url.substr(pos,3)); else
-               if ((nquotes>0) && (url.substr(pos,3) == "%27")) repl = "'"; else
-               if ((nquotes<0) && (url.substr(pos,3) == "%22")) repl = '"';
-               if (repl.length)  url = url.substr(0,pos) + repl + url.substr(pos+3);
-            }
             switch (url[pos]) {
                case "'": if (nquotes>=0) nquotes = (nquotes+1)%2; break;
                case '"': if (nquotes<=0) nquotes = (nquotes-1)%2; break;
             }
             pos++;
          }
-         */
 
          if (url.indexOf(opt) == 0) {
-            if (url.charAt(opt.length)=="&") return "";
+            if (url[opt.length]=="&") return "";
 
-            if (url.charAt(opt.length)=="=")
-               return decodeURI(url.slice(opt.length+1, pos));
+            if (url[opt.length]==="=") {
+               url = url.slice(opt.length+1, pos);
+               if (((url[0]==="'") || (url[0]==='"')) && (url[0]===url[url.length-1])) url = url.substr(1, url.length-2);
+               return url;
+            }
          }
 
-         url = url.slice(pos+1);
+         url = url.substr(pos+1);
       }
       return dflt;
    }
@@ -770,7 +762,7 @@
          else
             JSROOT.progress();
 
-         if ((urllist!=null) && (urllist.length>0))
+         if (urllist)
             return JSROOT.loadScript(urllist, callback, debugout);
 
          JSROOT.CallBack(callback);
@@ -779,8 +771,9 @@
       if ((urllist==null) || (urllist.length==0))
          return completeLoad();
 
-      var filename = urllist;
-      var separ = filename.indexOf(";");
+      var filename = urllist, separ = filename.indexOf(";"),
+          isrootjs = false, isbower = false;
+
       if (separ>0) {
          filename = filename.substr(0, separ);
          urllist = urllist.slice(separ+1);
@@ -788,7 +781,11 @@
          urllist = "";
       }
 
-      var isrootjs = false, isbower = false;
+      if (filename.indexOf('&&&scripts/')===0) {
+         isrootjs = true;
+         filename = filename.slice(3);
+         if (JSROOT.use_full_libs) filename = "libs/" + filename.slice(8, filename.length-7) + ".js";
+      } else
       if (filename.indexOf("$$$")===0) {
          isrootjs = true;
          filename = filename.slice(3);
@@ -827,32 +824,26 @@
       if (isstyle) {
          var styles = document.getElementsByTagName('link');
          for (var n = 0; n < styles.length; ++n) {
-            if ((styles[n].type != 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
+            if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
 
-            var href = styles[n].href;
-            if ((href == null) || (href.length == 0)) continue;
-
-            if (href.indexOf(filename)>=0) return completeLoad();
+            if (styles[n].href.indexOf(filename)>=0) return completeLoad();
          }
 
       } else {
          var scripts = document.getElementsByTagName('script');
 
          for (var n = 0; n < scripts.length; ++n) {
-            // if (scripts[n].type != 'text/javascript') continue;
-
             var src = scripts[n].src;
-            if ((src == null) || (src.length == 0)) continue;
+            if (!src) continue;
 
-            if ((src.indexOf(filename)>=0) && (src.indexOf("load=")<0)) {
+            if ((src.indexOf(filename)>=0) && (src.indexOf("load=")<0))
                // avoid wrong decision when script name is specified as more argument
                return completeLoad();
-            }
          }
       }
 
-      if (isrootjs && (JSROOT.source_dir!=null)) filename = JSROOT.source_dir + filename; else
-      if (isbower && (JSROOT.bower_dir.length>0)) filename = JSROOT.bower_dir + filename;
+      if (isrootjs && JSROOT.source_dir) filename = JSROOT.source_dir + filename; else
+      if (isbower && JSROOT.bower_dir) filename = JSROOT.bower_dir + filename;
 
       var element = null;
 
@@ -925,7 +916,7 @@
 
       jsroot.doing_assert[0].running = true;
 
-      if (kind.charAt(kind.length-1)!=";") kind+=";";
+      if (kind[kind.length-1]!=";") kind+=";";
 
       var ext = jsroot.source_min ? ".min" : "",
           need_jquery = false,
@@ -935,9 +926,9 @@
           modules = [];  // modules used for require.js
 
       if ((kind.indexOf('io;')>=0) || (kind.indexOf('tree;')>=0)) {
-         mainfiles += "$$$scripts/rawinflate.min.js;" +
+         mainfiles += "&&&scripts/rawinflate.min.js;" +
                       "$$$scripts/JSRootIOEvolution" + ext + ".js;";
-         modules.push('JSRootIOEvolution');
+         modules.push('rawinflate','JSRootIOEvolution');
       }
 
       if ((kind.indexOf('math;')>=0) || (kind.indexOf('tree;')>=0) || (kind.indexOf('more2d;')>=0)) {
@@ -965,7 +956,7 @@
 
                jsroot._test_d3_ = 3;
             } else {
-               mainfiles += use_bower ? '###d3/d3.min.js;' : '$$$scripts/d3.min.js;';
+               mainfiles += use_bower ? '###d3/d3.min.js;' : '&&&scripts/d3.min.js;';
                jsroot._test_d3_ = 4;
             }
          }
@@ -976,12 +967,12 @@
 
       if (kind.indexOf('savepng;')>=0) {
          modules.push('saveSvgAsPng');
-         mainfiles += '$$$scripts/saveSvgAsPng.min.js;';
+         mainfiles += '&&&scripts/saveSvgAsPng.min.js;';
       }
 
       if (kind.indexOf('jq;')>=0) need_jquery = true;
 
-      if (kind.indexOf('more2d;')>=0) {
+      if ((kind.indexOf('more2d;')>=0) || (kind.indexOf("3d;")>=0)) {
          mainfiles += '$$$scripts/JSRootPainter.more' + ext + ".js;";
          modules.push('JSRootPainter.more');
       }
@@ -1007,8 +998,8 @@
                         "###threejs/examples/js/shaders/SSAOShader.js;"
            extrafiles += "###threejs/examples/fonts/helvetiker_regular.typeface.json;";
          } else {
-            mainfiles += "$$$scripts/three.min.js;" +
-                         "$$$scripts/three.extra.min.js;";
+            mainfiles += "&&&scripts/three.min.js;" +
+                         "&&&scripts/three.extra.min.js;";
          }
          modules.push("threejs", "threejs_all");
          mainfiles += "$$$scripts/JSRoot3DPainter" + ext + ".js;";
@@ -1035,9 +1026,6 @@
 
       if (kind.indexOf("simple;")>=0) {
          need_jquery = true;
-         mainfiles += '$$$scripts/JSRootInterface' + ext + ".js;";
-         extrafiles += '$$$style/JSRootInterface' + ext + '.css;';
-         modules.push('JSRootInterface');
       }
 
       if (need_jquery && !jsroot.load_jquery) {
@@ -1046,11 +1034,11 @@
          if (has_jq)
             jsroot.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 3.1.1", debugout);
          else
-            lst_jq += (use_bower ? "###jquery/dist" : "$$$scripts") + "/jquery.min.js;";
+            lst_jq += (use_bower ? "###jquery/dist" : "&&&scripts") + "/jquery.min.js;";
          if (has_jq && typeof $.ui != 'undefined')
             jsroot.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.12.1", debugout);
          else {
-            lst_jq += (use_bower ? "###jquery-ui" : "$$$scripts") + '/jquery-ui.min.js;';
+            lst_jq += (use_bower ? "###jquery-ui" : "&&&scripts") + '/jquery-ui.min.js;';
             extrafiles += '$$$style/jquery-ui' + ext + '.css;';
          }
 
@@ -1100,10 +1088,7 @@
    // function can be used to open ROOT file, I/O functionality will be loaded when missing
    JSROOT.OpenFile = function(filename, callback) {
       JSROOT.AssertPrerequisites("io", function() {
-         if (typeof filename === 'string')
-            new JSROOT.TFile(filename, callback);
-         else
-            new JSROOT.TLocalFile(filename, callback);
+         JSROOT.OpenFile(filename, callback);
       });
    }
 
@@ -1158,7 +1143,7 @@
          requirements += "load:" + user_scripts + ";";
 
       JSROOT.AssertPrerequisites(requirements, function() {
-         JSROOT.CallBack(JSROOT.findFunction(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'BuildSimpleGUI'));
+         JSROOT.CallBack(JSROOT.findFunction(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildGUI'));
          JSROOT.CallBack(andThen);
       }, debugout);
    };
@@ -1272,7 +1257,7 @@
             break;
          case 'TH2':
             JSROOT.Create("TH1", obj);
-            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy : 0});
+            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0});
             break;
          case 'TH2I':
          case 'TH2F':
@@ -1284,6 +1269,7 @@
             break;
          case 'TH3':
             JSROOT.Create("TH1", obj);
+            JSROOT.extend(obj, { fTsumwy: 0.,  fTsumwy2: 0, fTsumwz: 0.,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
             break;
          case 'TH3I':
          case 'TH3F':
@@ -1809,7 +1795,7 @@
       fmt = fmt.trim();
       var len = fmt.length;
       if (len<2) return value.toFixed(4);
-      var last = fmt.charAt(len-1);
+      var last = fmt[len-1];
       fmt = fmt.slice(0,len-1);
       var isexp = null;
       var prec = fmt.indexOf(".");
@@ -1822,9 +1808,9 @@
       if ((last=='f') || (last=='F')) { isexp = false; } else
       if (last=='W') { isexp = false; significance = true; } else
       if ((last=='g') || (last=='G')) {
-         var se = JSROOT.FFormat(value, fmt+'Q');
-         var _fmt = JSROOT.lastFFormat;
-         var sg = JSROOT.FFormat(value, fmt+'W');
+         var se = JSROOT.FFormat(value, fmt+'Q'),
+             _fmt = JSROOT.lastFFormat,
+             sg = JSROOT.FFormat(value, fmt+'W');
 
          if (se.length < sg.length) {
             JSROOT.lastFFormat = _fmt;
@@ -1856,7 +1842,7 @@
          }
 
          var l = 0;
-         while ((l<sg.length) && (sg.charAt(l) == '0' || sg.charAt(l) == '-' || sg.charAt(l) == '.')) l++;
+         while ((l<sg.length) && (sg[l] == '0' || sg[l] == '-' || sg[l] == '.')) l++;
 
          var diff = sg.length - l - prec;
          if (sg.indexOf(".")>l) diff--;
@@ -1878,7 +1864,7 @@
    }
 
    // dummy function, will be redefined when JSRootPainter is loaded
-   JSROOT.progress = function(msg) {
+   JSROOT.progress = function(msg, tmout) {
       if ((msg !== undefined) && (typeof msg=="string")) JSROOT.console(msg);
    }
 
@@ -1904,6 +1890,8 @@
       if ( typeof define === "function" && define.amd )
          return window_on_load( function() { JSROOT.BuildSimpleGUI('check_existing_elements'); } );
 
+      if (JSROOT.GetUrlOption('libs')!=null) JSROOT.use_full_libs = true;
+
       var prereq = "";
       if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
       if (JSROOT.GetUrlOption('tree', src)!=null) prereq += "tree;";
@@ -1914,10 +1902,12 @@
       if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
       if (JSROOT.GetUrlOption('math', src)!=null) prereq += "math;";
       if (JSROOT.GetUrlOption('mathjax', src)!=null) prereq += "mathjax;";
-      var user = JSROOT.GetUrlOption('load', src);
-      if ((user!=null) && (user.length>0)) prereq += "io;2d;load:" + user;
-      var onload = JSROOT.GetUrlOption('onload', src);
-      var bower = JSROOT.GetUrlOption('bower', src);
+      var user = JSROOT.GetUrlOption('load', src),
+          onload = JSROOT.GetUrlOption('onload', src),
+          bower = JSROOT.GetUrlOption('bower', src);
+
+      if (user) prereq += "io;2d;load:" + user;
+      if ((bower===null) && (JSROOT.source_dir.indexOf("bower_components/jsroot/")>=0)) bower = "";
       if (bower!==null) {
          if (bower.length>0) JSROOT.bower_dir = bower; else
             if (JSROOT.source_dir.indexOf("jsroot/") == JSROOT.source_dir.length - 7)

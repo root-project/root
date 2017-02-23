@@ -52,6 +52,12 @@
    display: block;
 }
 
+.jsroot .h_button {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
 .jsroot .h_item {
     cursor: pointer;
 }
@@ -342,14 +348,15 @@
   tooltip style for 3d drawings
   --------------------------------------------------*/
 
-.jsroot .tt3d_border {
+.jsroot_tt3d_main {
+    opacity: 1;
+    filter: alpha(opacity=1);
+    position: absolute;
     display: block;
-    height: 5px;
-    margin-left: 5px;
     overflow: hidden;
+    z-index: 101;
 }
-
-.jsroot .tt3d_cont {
+.jsroot_tt3d_cont {
     display: block;
     padding: 2px 12px 3px 7px;
     margin-left: 5px;
@@ -405,7 +412,7 @@
     border: 1px solid #999;
     background: #F8F8F8;
     box-shadow: 2px 2px 2px #AAA;
-    z-index: 11;
+    z-index: 101;
     overflow: visible;
     line-height: 14px;
 }
@@ -417,10 +424,11 @@
 }
 
 .jsroot .fast_command {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     margin-left: 3px;
     margin-top: 3px;
+    padding: 0px;
 }
 
 .jsroot .fast_command img {
@@ -476,7 +484,7 @@
     min-width: 100px;
     height: auto;
     overflow: visible;
-    z-index: 11;
+    z-index: 101;
     border: 1px solid #999;
     background: #F8F8F8;
     left: 10px;
@@ -582,4 +590,145 @@
 
 .jsroot .svg_toolbar_btn:hover {
     opacity: 1.0;
+}
+
+.jsroot_noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+/* stylesheet for enlarged canvas */
+#jsroot_enlarge_div {
+     position: absolute;
+     margin: 0px;
+     border: 0px;
+     padding: 0px;
+     left: 1px;
+     right: 1px;
+     top: 1px;
+     bottom: 1px;
+     background: white;
+     opacity: 0.95;
+     z-index: 100;
+     overflow: hidden;
+}
+
+/* stylesheet for browser */
+
+.jsroot_browser {
+	pointer-events: none;
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	right:0;
+   margin: 0;
+   border: 0;
+   overflow: hidden;
+}
+
+.jsroot_browser_area {
+   background-color: #E6E6FA;
+   overflow: hidden;
+   font-size: 12px;
+   font-family: Verdana;
+   pointer-events: all;
+}
+
+.jsroot_browser_btns {
+   pointer-events: all;
+	opacity: 0;
+	display:flex;
+	flex-direction: column;
+}
+
+.jsroot_browser_btns:hover {
+   opacity: 0.3;
+}
+
+.jsroot_browser_hierarchy {
+	overflow:auto;
+	flex:1;
+	margin-top:5px;
+}
+
+.jsroot_status_area {
+   background-color: #E6E6FA;
+   overflow: hidden;
+   font-size: 12px;
+   font-family: Verdana;
+   pointer-events: all;
+}
+
+.jsroot_browser_area p { 
+   margin-top: 5px; 
+   margin-bottom: 5px;
+   white-space: nowrap;
+}
+
+.jsroot_browser_title {
+   font-family: Verdana;
+   font-size: 20px;
+}
+
+.jsroot_float_browser {
+	border: solid 3px white;
+}
+
+.jsroot_draw_area {
+   background-color: #E6E6FA;
+   overflow: hidden;
+   margin: 0;
+   border: 0;
+}
+
+/* separator style, used for browser and new grid layout 
+*/
+
+
+.jsroot_separator {
+   pointer-events: all;
+   border: 0;
+   margin: 0;
+   padding: 0;
+}
+
+.jsroot_vline:after {
+    content:"";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-left: 1px dotted #ff0000;
+}
+
+.jsroot_hline:after {
+    content:"";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 1px dotted #ff0000;
+}
+
+.jsroot_h_separator {
+	cursor: ns-resize;
+   background-color: azure;
+} 
+
+.jsroot_v_separator {
+	cursor: ew-resize;
+   background-color: azure;
+}
+
+.jsroot_status_label {
+   margin: 3px;
+   margin-left: 5px;
+   font-size: 14px;
+   vertical-align: middle;
+   white-space: nowrap;
 }
