@@ -270,6 +270,19 @@ foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBay
   set(roostats-${tname}-depends tutorial-histfactory-makeExample)
 endforeach()
 
+#--ensure that roostats tests accesses test file sequentially
+set(roostats-ModelInspector-depends "${roostats-ModelInspector-depends} roostats-OneSidedFrequentistUpperLimitWithBands")
+set(roostats-OneSidedFrequentistUpperLimitWithBands-depends "${roostats-OneSidedFrequentistUpperLimitWithBands-depends} roostats-StandardBayesianMCMCDemo")
+set(roostats-StandardBayesianMCMCDemo-depends "${roostats-StandardBayesianMCMCDemo-depends} roostats-StandardBayesianNumericalDemo")
+set(roostats-StandardBayesianNumericalDemo-depends "${roostats-StandardBayesianNumericalDemo-depends} roostats-StandardFeldmanCousinsDemo")
+set(roostats-StandardFeldmanCousinsDemo-depends "${roostats-StandardFeldmanCousinsDemo-depends} roostats-StandardHistFactoryPlotsWithCategories")
+set(roostats-StandardHistFactoryPlotsWithCategories-depends "${roostats-StandardHistFactoryPlotsWithCategories-depends} roostats-StandardHypoTestDemo")
+set(roostats-StandardHypoTestDemo-depends "${roostats-StandardHypoTestDemo-depends} roostats-StandardHypoTestInvDemo")
+set(roostats-StandardHypoTestInvDemo-depends "${roostats-StandardHypoTestInvDemo-depends} roostats-StandardProfileInspectorDemo")
+set(roostats-StandardProfileInspectorDemo-depends "${roostats-StandardProfileInspectorDemo-depends} roostats-StandardProfileLikelihoodDemo")
+set(roostats-StandardProfileLikelihoodDemo-depends "${roostats-StandardProfileLikelihoodDemo-depends} roostats-StandardTestStatDistributionDemo")
+set(roostats-StandardTestStatDistributionDemo-depends "${roostats-StandardTestStatDistributionDemo-depends} roostats-TwoSidedFrequentistUpperLimitWithBands")
+
 #--dependency for TMVA tutorials
 set (tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
 set (tmva-TMVAClassificationCategory-depends tutorial-tmva-TMVAClassification)
