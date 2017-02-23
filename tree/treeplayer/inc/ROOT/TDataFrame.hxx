@@ -217,9 +217,9 @@ void CheckTmpBranch(const std::string& branchName, TTree *treePtr);
 /// - takes exactly two arguments of the same type
 /// - has a return value of the same type as the arguments
 template<typename F, typename T>
-void CheckReduce(F&, Internal::TDFTraitsUtils::TTypeList<T,T>)
+void CheckReduce(F&, ROOT::Internal::TDFTraitsUtils::TTypeList<T,T>)
 {
-   using Ret_t = typename Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
+   using Ret_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
    static_assert(std::is_same<Ret_t, T>::value,
       "reduce function must have return type equal to argument type");
    return;
@@ -254,10 +254,10 @@ using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 // Forward declarations
 template<typename T>
 T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
-                  std::shared_ptr<Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>);
+                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>);
 template<typename T>
 std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
-                  std::shared_ptr<Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
+                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
 
 
 template <typename F, typename PrevDataFrame>
@@ -1128,8 +1128,7 @@ using TmpBranchBasePtr_t = std::shared_ptr<TDataFrameBranchBase>;
 
 template <typename F, typename PrevData>
 class TDataFrameBranch final : public TDataFrameBranchBase {
-   using BranchTypes_t = typename Internal
-   ::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
+   using BranchTypes_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
    using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
    using Ret_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
 
@@ -1184,13 +1183,13 @@ public:
 
    template <int... S, typename... BranchTypes>
    std::shared_ptr<Ret_t>
-   GetValueHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
+   GetValueHelper(ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
                   ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
                   unsigned int slot, Long64_t entry)
    {
       auto valuePtr = std::make_shared<Ret_t>(fExpression(
-         Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
-                                  fFirstData.lock(), Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
+         ROOT::Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
+                                  fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
       return valuePtr;
    }
 
@@ -1267,7 +1266,7 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   bool CheckFilterHelper(Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
+   bool CheckFilterHelper(ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
                           ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
                           unsigned int slot, Long64_t entry)
    {
@@ -1277,8 +1276,8 @@ public:
       // S and types are expanded simultaneously by "..."
       (void) slot; // avoid bogus unused-but-set-parameter warning by gcc
       (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
-      return fFilter(Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
-                     fFirstData.lock(), Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
+      return fFilter(ROOT::Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
+                     fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
    }
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot)
@@ -1327,7 +1326,7 @@ public:
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
    ::TDirectory *GetDirectory() const;
    std::string GetTreeName() const;
-   void Book(Internal::ActionBasePtr_t actionPtr);
+   void Book(ROOT::Internal::ActionBasePtr_t actionPtr);
    void Book(ROOT::Detail::FilterBasePtr_t filterPtr);
    void Book(TmpBranchBasePtr_t branchPtr);
    bool CheckFilters(int, unsigned int);
@@ -1371,7 +1370,7 @@ void Experimental::TActionResultProxy<T>::TriggerRun()
 namespace Internal {
 template <typename T>
 T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, const std::string &branch,
-                  std::shared_ptr<Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>)
+                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>)
 {
    if (readerValue == nullptr) {
       // temporary branch
@@ -1386,7 +1385,7 @@ T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, cons
 template<typename T>
 std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
                                   Long64_t entry, const std::string& branch,
-                                  std::shared_ptr<Detail::TDataFrameImpl> df,
+                                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df,
                                   TDFTraitsUtils::TTypeList<std::array_view<T>>)
 {
    if(readerValue == nullptr) {

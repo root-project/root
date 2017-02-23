@@ -602,7 +602,7 @@ std::string TDataFrameImpl::GetTreeName() const
    return fTreeName;
 }
 
-void TDataFrameImpl::Book(Internal::ActionBasePtr_t actionPtr)
+void TDataFrameImpl::Book(ROOT::Internal::ActionBasePtr_t actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
 }
