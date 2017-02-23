@@ -30,16 +30,86 @@
    if (typeof JSROOT.GEO !== 'object')
       console.error('JSROOT.GEO namespace is not defined')
 
+   JSROOT.Toolbar = function(container, buttons) {
+      if ((container !== undefined) && (typeof container.append == 'function'))  {
+         this.element = container.append("div").attr('class','jsroot');
+         this.addButtons(buttons);
+      }
+   }
+
+   JSROOT.Toolbar.prototype.addButtons = function(buttons) {
+      var pthis = this;
+
+      this.buttonsNames = [];
+      buttons.forEach(function(buttonGroup) {
+         var group = pthis.element.append('div').attr('class', 'toolbar-group');
+
+         buttonGroup.forEach(function(buttonConfig) {
+            var buttonName = buttonConfig.name;
+            if (!buttonName) {
+               throw new Error('must provide button \'name\' in button config');
+            }
+            if (pthis.buttonsNames.indexOf(buttonName) !== -1) {
+               throw new Error('button name \'' + buttonName + '\' is taken');
+            }
+            pthis.buttonsNames.push(buttonName);
+
+            pthis.createButton(group, buttonConfig);
+         });
+      });
+   };
+
+   JSROOT.Toolbar.prototype.createButton = function(group, config) {
+
+      var title = config.title;
+      if (title === undefined) title = config.name;
+
+      if (typeof config.click !== 'function')
+         throw new Error('must provide button \'click\' function in button config');
+
+      var button = group.append('a')
+                        .attr('class','toolbar-btn')
+                        .attr('rel', 'tooltip')
+                        .attr('data-title', title)
+                        .on('click', config.click);
+
+      this.createIcon(button, config.icon || JSROOT.ToolbarIcons.question);
+   };
+
+   JSROOT.Toolbar.prototype.createIcon = function(button, thisIcon) {
+      var size = thisIcon.size || 512,
+          scale = thisIcon.scale || 1,
+          svg = button.append("svg:svg")
+                      .attr('height', '1em')
+                      .attr('width', '1em')
+                      .attr('viewBox', [0, 0, size, size].join(' '));
+
+      if ('recs' in thisIcon) {
+          var rec = {};
+          for (var n=0;n<thisIcon.recs.length;++n) {
+             JSROOT.extend(rec, thisIcon.recs[n]);
+             svg.append('rect').attr("x", rec.x).attr("y", rec.y)
+                               .attr("width", rec.w).attr("height", rec.h)
+                               .attr("fill", rec.f);
+          }
+       } else {
+          var elem = svg.append('svg:path').attr('d',thisIcon.path);
+          if (scale !== 1)
+             elem.attr('transform', 'scale(' + scale + ' ' + scale +')');
+       }
+   };
+
+   JSROOT.Toolbar.prototype.removeAllButtons = function() {
+      this.element.remove();
+   };
+
    /**
     * @class JSROOT.TGeoPainter Holder of different functions and classes for drawing geometries
     */
 
-   // ======= Geometry painter================================================
-
-
    JSROOT.TGeoPainter = function( obj, is_manager ) {
       if (obj && (obj._typename.indexOf('TGeoVolume') === 0))
-         obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, _geoh: obj._geoh, _proxy: true };
+         obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
       JSROOT.TObjectPainter.call(this, obj);
 
@@ -74,17 +144,6 @@
          }
       }];
 
-      if (JSROOT.hpainter && JSROOT.hpainter.nobrowser)
-         buttonList.push({
-            name: 'browser',
-            title: 'Show hierarchy browser',
-            icon: JSROOT.ToolbarIcons.arrow_right,
-            click: function() {
-               if (JSROOT.hpainter)
-                  JSROOT.hpainter.ToggleFloatBrowser();
-            }
-         });
-
       if (JSROOT.gStyle.ContextMenu)
       buttonList.push({
          name: 'menu',
@@ -97,9 +156,8 @@
             d3.event.preventDefault();
             d3.event.stopPropagation();
 
-            JSROOT.Painter.createMenu(function(menu) {
-               menu.painter = painter; // set as this in callbacks
-               painter.FillContextMenu(menu);
+            JSROOT.Painter.createMenu(painter, function(menu) {
+               menu.painter.FillContextMenu(menu);
                menu.show(evnt);
             });
          }
@@ -107,7 +165,6 @@
 
       this._toolbar = new JSROOT.Toolbar( this.select_main(), [buttonList] );
    }
-
 
    JSROOT.TGeoPainter.prototype.ModifyVisisbility = function(name, sign) {
       if (JSROOT.GEO.NodeKind(this.GetObject()) !== 0) return;
@@ -188,7 +245,7 @@
          if (indx<0) return dflt;
          opt = opt.substr(0, indx) + opt.substr(indx+name.length);
          var indx2 = indx;
-         while ((indx2<opt.length) && (opt.charAt(indx2).match(/[0-9]/))) indx2++;
+         while ((indx2<opt.length) && (opt[indx2].match(/[0-9]/))) indx2++;
          if (indx2>indx) dflt = parseInt(opt.substr(indx, indx2-indx));
          opt = opt.substr(0,indx) + opt.substr(indx2);
          return dflt;
@@ -246,9 +303,6 @@
 
       if (JSROOT.hpainter) {
          // show browser if it not visible
-         if (JSROOT.hpainter.nobrowser && force)
-            JSROOT.hpainter.ToggleFloatBrowser(true);
-
          JSROOT.hpainter.actiavte(names, force);
 
          // if highlight in the browser disabled, suppress in few seconds
@@ -503,11 +557,7 @@
 
    JSROOT.TGeoPainter.prototype.OrbitContext = function(evnt, intersects) {
 
-      var painter = this;
-
-      JSROOT.Painter.createMenu(function(menu) {
-         menu.painter = painter; // set as this in callbacks
-
+      JSROOT.Painter.createMenu(this, function(menu) {
          var numitems = 0, numnodes = 0, cnt = 0;
          if (intersects)
             for (var n=0;n<intersects.length;++n) {
@@ -516,7 +566,7 @@
             }
 
          if (numnodes + numitems === 0) {
-            painter.FillContextMenu(menu);
+            menu.painter.FillContextMenu(menu);
          } else {
             var many = (numnodes + numitems) > 1;
 
@@ -533,9 +583,9 @@
                   hdr = name;
                } else
                if (obj.stack) {
-                  name = painter._clones.ResolveStack(obj.stack).name;
-                  itemname = painter.GetStackFullName(obj.stack);
-                  hdr = painter.GetItemName();
+                  name = menu.painter._clones.ResolveStack(obj.stack).name;
+                  itemname = menu.painter.GetStackFullName(obj.stack);
+                  hdr = menu.painter.GetItemName();
                   if (name.indexOf("Nodes/") === 0) hdr = name.substr(6); else
                   if (name.length > 0) hdr = name; else
                   if (!hdr) hdr = "header";
@@ -553,7 +603,7 @@
                      var mesh = intersects[indx].object;
                      mesh.visible = false; // just disable mesh
                      if (mesh.geo_object) mesh.geo_object._hidden_via_menu = true; // and hide object for further redraw
-                     painter.Render3D();
+                     menu.painter.Render3D();
                   });
 
                   if (many) menu.add("endsub:");
@@ -561,7 +611,7 @@
                   continue;
                }
 
-               var wireframe = painter.accessObjectWireFrame(obj);
+               var wireframe = menu.painter.accessObjectWireFrame(obj);
 
                if (wireframe!==undefined)
                   menu.addchk(wireframe, "Wireframe", n, function(indx) {
@@ -599,7 +649,7 @@
                });
 
                menu.add("Hide", n, function(indx) {
-                  var resolve = painter._clones.ResolveStack(intersects[indx].object.stack);
+                  var resolve = menu.painter._clones.ResolveStack(intersects[indx].object.stack);
 
                   if (resolve.obj && (resolve.node.kind === 0) && resolve.obj.fVolume) {
                      JSROOT.GEO.SetBit(resolve.obj.fVolume, JSROOT.GEO.BITS.kVisThis, false);
@@ -680,12 +730,16 @@
          this.startDrawGeometry();
    }
 
+   JSROOT.TGeoPainter.prototype.ResolveStack = function(stack) {
+      return this._clones && stack ? this._clones.ResolveStack(stack) : null;
+   }
+
    JSROOT.TGeoPainter.prototype.GetStackFullName = function(stack) {
-      var mainitemname = this.GetItemName();
-      if (!stack || !this._clones) return mainitemname;
-      var sub = this._clones.ResolveStack(stack).name;
-      if (mainitemname) sub = mainitemname + (sub ? ("/" + sub) : "");
-      return sub;
+      var mainitemname = this.GetItemName(),
+          sub = this.ResolveStack(stack);
+
+      if (!sub || !sub.name) return mainitemname;
+      return mainitemname ? (mainitemname + "/" + sub.name) : sub.name;
    }
 
    JSROOT.TGeoPainter.prototype.addOrbitControls = function() {
@@ -700,7 +754,7 @@
 
       this._controls.ProcessMouseMove = function(intersects) {
 
-         var tooltip = null;
+         var tooltip = null, resolve = null;
 
          if (painter.options.highlight) {
 
@@ -722,8 +776,10 @@
                   painter._selected.mesh.material.size = painter._selected.mesh.highlightMarkerSize;
                painter.Render3D(0);
 
-               if (intersects[0].object.stack)
+               if (intersects[0].object.stack) {
                   tooltip = painter.GetStackFullName(intersects[0].object.stack);
+                  if (tooltip) resolve = painter.ResolveStack(intersects[0].object.stack);
+               }
                else if (intersects[0].object.geo_name)
                   tooltip = intersects[0].object.geo_name;
             }
@@ -751,7 +807,9 @@
             painter.ActiavteInBrowser(names);
          }
 
-         return tooltip;
+         if (!resolve || !resolve.obj) return tooltip;
+
+        return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, line: tooltip };
       }
 
       this._controls.ProcessMouseLeave = function() {
@@ -2656,7 +2714,7 @@
       }
 
       JSROOT.GEO.SetBit(vol, JSROOT.GEO.BITS.kVisDaughters, true);
-      vol._geoh = true; // workaround, let know browser that we are in volumes hierarchy
+      vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
       vol.fName = "";
 
       var node1 = JSROOT.Create("TGeoNodeMatrix");
@@ -2697,7 +2755,7 @@
 
    JSROOT.GEO.getBrowserItem = function(item, itemname, callback) {
       // mark object as belong to the hierarchy, require to
-      if (item._geoobj) item._geoobj._geoh = true;
+      if (item._geoobj) item._geoobj.$geoh = true;
 
       JSROOT.CallBack(callback, item, item._geoobj);
    }
