@@ -92,8 +92,10 @@ class TActionResultProxy {
    ShrdPtrBool_t fReadiness = std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
    WPTDFI_t fFirstData;                                      ///< Original TDataFrame
    SPT_t fObjPtr;                                            ///< Shared pointer encapsulating the wrapped result
+
    /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fFirstData
    void TriggerRun();
+
    /// Get the pointer to the encapsulated result.
    /// Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
@@ -104,6 +106,7 @@ class TActionResultProxy {
    }
    TActionResultProxy(SPT_t objPtr, ShrdPtrBool_t readiness, SPTDFI_t firstData)
       : fReadiness(readiness), fFirstData(firstData), fObjPtr(objPtr) { }
+
    /// Factory to allow to keep the constructor private
    static TActionResultProxy<T> MakeActionResultProxy(SPT_t objPtr, ShrdPtrBool_t readiness, SPTDFI_t firstData)
    {
@@ -111,23 +114,29 @@ class TActionResultProxy {
    }
 public:
    TActionResultProxy() = delete;
+
    /// Get a reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
    T &operator*() { return *Get(); }
+
    /// Get a pointer to the encapsulated object.
    /// Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
    T *operator->() { return Get(); }
+
    /// Return an iterator to the beginning of the contained object if this makes
    /// sense, throw a compilation error otherwise
-   typename TIterationHelper<T>::Iterator_t begin()
+   typename TIterationHelper<T>::Iterator_t
+   begin()
    {
       if (!*fReadiness) TriggerRun();
       return TIterationHelper<T>::GetBegin(*fObjPtr);
    }
+
    /// Return an iterator to the end of the contained object if this makes
    /// sense, throw a compilation error otherwise
-   typename TIterationHelper<T>::Iterator_t end()
+   typename TIterationHelper<T>::Iterator_t
+   end()
    {
       if (!*fReadiness) TriggerRun();
       return TIterationHelper<T>::GetEnd(*fObjPtr);
@@ -262,7 +271,7 @@ class TDataFrameAction final : public TDataFrameActionBase {
 
 public:
    TDataFrameAction(F&& f, const BranchNames &bl, const std::shared_ptr<PrevDataFrame>& pd)
-      : fAction(f), fBranches(bl), fTmpBranches(pd->GetTmpBranches()), fPrevData(*pd),
+      : fAction(std::move(f)), fBranches(bl), fTmpBranches(pd->GetTmpBranches()), fPrevData(*pd),
         fFirstData(pd->GetDataFrame()) { }
 
    TDataFrameAction(const TDataFrameAction &) = delete;
@@ -454,7 +463,7 @@ public:
       namespace IU = ROOT::Internal::TDFTraitsUtils;
       using Args_t = typename IU::TFunctionTraits<decltype(f)>::ArgsNoDecay_t;
       using Ret_t = typename IU::TFunctionTraits<decltype(f)>::Ret_t;
-      ForeachSlot(IU::AddSlotParameter<Ret_t>(std::move(f), Args_t()), bl);
+      ForeachSlot(IU::AddSlotParameter<Ret_t>(f, Args_t()), bl);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1076,7 +1085,8 @@ protected:
       auto bnBegin = defaultBranches.begin();
       return BranchNames(bnBegin, bnBegin + nExpectedBranches);
    }
-   TDataFrameInterface(std::shared_ptr<Proxied>&& proxied) : fProxiedPtr(proxied) {}
+
+   TDataFrameInterface(std::shared_ptr<Proxied>&& proxied) : fProxiedPtr(std::move(proxied)) {}
    std::shared_ptr<Proxied> fProxiedPtr;
 };
 
@@ -1131,7 +1141,8 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
 
 public:
    TDataFrameBranch(const std::string &name, F&& expression, const BranchNames &bl, const std::shared_ptr<PrevData>& pd)
-      : TDataFrameBranchBase(pd->GetDataFrame(), pd->GetTmpBranches(), name), fExpression(expression), fBranches(bl), fPrevData(*pd)
+      : TDataFrameBranchBase(pd->GetDataFrame(), pd->GetTmpBranches(), name),
+        fExpression(std::move(expression)), fBranches(bl), fPrevData(*pd)
    {
       fTmpBranches.emplace_back(name);
    }
@@ -1232,7 +1243,7 @@ public:
    TDataFrameFilter(FilterF&& f, const BranchNames &bl,
                     const std::shared_ptr<PrevDataFrame>& pd, const std::string& name = "")
       : TDataFrameFilterBase(pd->GetDataFrame(), pd->GetTmpBranches(), name),
-        fFilter(f), fBranches(bl), fPrevData(*pd) { }
+        fFilter(std::move(f)), fBranches(bl), fPrevData(*pd) { }
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
 

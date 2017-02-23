@@ -298,8 +298,8 @@ class ReduceOperation {
    T* fReduceRes;
    std::vector<T> fReduceObjs;
 public:
-   ReduceOperation(F&& f, T* reduceRes, unsigned int nSlots) : fReduceFun(f),
-      fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
+   ReduceOperation(F&& f, T* reduceRes, unsigned int nSlots)
+      : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
    { }
 
    void Exec(const T& value, unsigned int slot)
