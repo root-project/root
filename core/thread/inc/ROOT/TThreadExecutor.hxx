@@ -190,15 +190,15 @@ namespace ROOT {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
 
-      unsigned int fNToProcess = args.size();
-      std::vector<retType> reslist(fNToProcess);
+      unsigned int nToProcess = args.size();
+      std::vector<retType> reslist(nToProcess);
 
       auto lambda = [&](unsigned int i)
       {
          reslist[i] = func(args[i]);
       };
 
-      ParallelFor(0U, fNToProcess, 1, lambda);
+      ParallelFor(0U, nToProcess, 1, lambda);
 
       return reslist;
    }
@@ -212,20 +212,20 @@ namespace ROOT {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
 
-      unsigned int fNToProcess = args.size();
+      unsigned int nToProcess = args.size();
       std::vector<retType> reslist(nChunks);
-      unsigned step = (fNToProcess + nChunks - 1) / nChunks; //ceiling the division
+      unsigned step = (nToProcess + nChunks - 1) / nChunks; //ceiling the division
 
       auto lambda = [&](unsigned int i)
       {
          std::vector<T> partialResults(step);
-         for (unsigned j = 0; j < step && (i + j) < fNToProcess; j++) {
+         for (unsigned j = 0; j < step && (i + j) < nToProcess; j++) {
             partialResults[j] = func(args[i + j]);
          }
          reslist[i / step] = redfunc(partialResults);
       };
 
-      ParallelFor(0U, fNToProcess, step, lambda);
+      ParallelFor(0U, nToProcess, step, lambda);
 
       return reslist;
    }
