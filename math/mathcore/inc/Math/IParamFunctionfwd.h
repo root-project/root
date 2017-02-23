@@ -36,7 +36,7 @@ namespace ROOT {
       typedef IParametricGradFunctionOneDim        IParamGradFunction;
       typedef IParametricGradFunctionMultiDim      IParamMultiGradFunction;
       template<class T>
-      using IParamMultiGradFunctionTempl =IParametricGradFunctionMultiDimTempl<T>;
+      using IParamMultiGradFunctionTempl = IParametricGradFunctionMultiDimTempl<T>;
 
 
    } // end namespace Math
