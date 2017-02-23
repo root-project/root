@@ -841,15 +841,16 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Define new text attributes for the label number "labNum". It allows to do a
-/// fine tuning of the labels. All the attributes can be changed and even the
+/// fine tuning of the labels. All the attributes can be changed, even the
 /// label text itself.
 ///
-/// \param[in] labNum           Number of the label to be changed, negative numbers start from the end
-/// \param[in] labAngle         New angle value
-/// \param[in] labSize          New size (0 erase the label)
-/// \param[in] labAlign         New alignment value
-/// \param[in] labColor         New label color
-/// \param[in] labText          New label text
+/// \param[in] labNum    Number of the label to be changed, negative numbers start from the end
+/// \param[in] labAngle  New angle value
+/// \param[in] labSize   New size (0 erase the label)
+/// \param[in] labAlign  New alignment value
+/// \param[in] labColor  New label color
+/// \param[in] labFont   New label font
+/// \param[in] labText   New label text
 ///
 /// If an attribute should not be changed just give the value "-1".
 ///
