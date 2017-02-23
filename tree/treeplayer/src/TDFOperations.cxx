@@ -44,11 +44,11 @@ void FillOperation::UpdateMinMax(unsigned int slot, double v) {
 }
 
 
-FillOperation::FillOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots) : fResultHist(h),
-                                                                               fNSlots(nSlots),
-                                                                               fBufSize (fgTotalBufSize / nSlots),
-                                                                               fMin(nSlots, std::numeric_limits<BufEl_t>::max()),
-                                                                               fMax(nSlots, std::numeric_limits<BufEl_t>::min())
+FillOperation::FillOperation(const std::shared_ptr<Hist_t>& h, unsigned int nSlots)
+: fResultHist(h), fNSlots(nSlots),
+  fBufSize (fgTotalBufSize / nSlots),
+  fMin(nSlots, std::numeric_limits<BufEl_t>::max()),
+  fMax(nSlots, std::numeric_limits<BufEl_t>::min())
 {
    fBuffers.reserve(fNSlots);
    fWBuffers.reserve(fNSlots);

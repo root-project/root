@@ -61,7 +61,7 @@ class FillOperation {
    void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots);
+   FillOperation(const std::shared_ptr<Hist_t>& h, unsigned int nSlots);
    void Exec(double v, unsigned int slot);
    void Exec(double v, double w, unsigned int slot);
 
@@ -110,7 +110,7 @@ class FillTOOperation {
    TThreadedObject<HIST> fTo;
 
 public:
-   FillTOOperation(std::shared_ptr<HIST> h, unsigned int nSlots) : fTo(*h)
+   FillTOOperation(const std::shared_ptr<HIST>& h, unsigned int nSlots) : fTo(*h)
    {
       fTo.SetAtSlot(0, h);
       // Initialise all other slots
@@ -209,7 +209,7 @@ template<typename T, typename COLL>
 class TakeOperation {
    std::vector<std::shared_ptr<COLL>> fColls;
 public:
-   TakeOperation(std::shared_ptr<COLL> resultColl, unsigned int nSlots)
+   TakeOperation(const std::shared_ptr<COLL>& resultColl, unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i)
@@ -251,7 +251,7 @@ template<typename T>
 class TakeOperation<T, std::vector<T>> {
    std::vector<std::shared_ptr<std::vector<T>>> fColls;
 public:
-   TakeOperation(std::shared_ptr<std::vector<T>> resultColl, unsigned int nSlots)
+   TakeOperation(const std::shared_ptr<std::vector<T>>& resultColl, unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) {
