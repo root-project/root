@@ -48,12 +48,9 @@ TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view t
 TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename) : treeView(filenames, treename) {}
 
 ////////////////////////////////////////////////////////////////////////
-/// Constructor based on a TChain.
-/// \param[in] chain Chain of files containing the tree to process.
-/// \param[in] treename Name of the tree to process. If not provided,
-///                     the implementation will automatically search for a
-///                     tree in the chain of files.
-TTreeProcessorMT::TTreeProcessorMT(TChain& chain, std::string_view treename) : treeView(chain, treename) {}
+/// Constructor based on a TTree.
+/// \param[in] tree Tree or chain of files containing the tree to process.
+TTreeProcessorMT::TTreeProcessorMT(TTree& tree) : treeView(tree) {}
 
 //////////////////////////////////////////////////////////////////////////////
 /// Process the entries of a TTree in parallel. The user-provided function
