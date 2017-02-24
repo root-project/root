@@ -21,9 +21,16 @@ namespace ROOT {
 
    namespace Math {
 
-// static value for epsilon used in derivative calculations
-      double WrappedTF1::fgEps      = 0.001;
 
+      namespace Internal {
+         double DerivPrecision(double eps)
+         {
+            static double gEPs = 0.001; // static value for epsilon used in derivative calculations
+            if (eps > 0)
+               gEPs = eps;
+            return gEPs;
+         }
+      }
 
       WrappedTF1::WrappedTF1(TF1 &f)  :
          fLinear(false),
@@ -86,7 +93,7 @@ namespace ROOT {
             // need to set parameter values
             fFunc->SetParameters(par);
             // no need to call InitArgs (it is called in TF1::GradientPar)
-            fFunc->GradientPar(&x, grad, fgEps);
+            fFunc->GradientPar(&x, grad, GetDerivPrecision());
          } else {
             unsigned int np = NPar();
             for (unsigned int i = 0; i < np; ++i)
@@ -100,7 +107,7 @@ namespace ROOT {
 
          // parameter are passed as non-const in Derivative
          //double * p =  (fParams.size() > 0) ? const_cast<double *>( &fParams.front()) : 0;
-         return  fFunc->Derivative(x, (double *) 0, fgEps);
+         return  fFunc->Derivative(x, (double *) 0, GetDerivPrecision());
       }
 
       double WrappedTF1::DoParameterDerivative(double x, const double *p, unsigned int ipar) const
@@ -112,7 +119,7 @@ namespace ROOT {
 
          if (! fLinear) {
             fFunc->SetParameters(p);
-            return fFunc->GradientPar(ipar, &x, fgEps);
+            return fFunc->GradientPar(ipar, &x, GetDerivPrecision());
          } else if (fPolynomial) {
             // case of polynomial function (no parameter dependency)
             return std::pow(x, static_cast<int>(ipar));
@@ -128,16 +135,15 @@ namespace ROOT {
 
       void WrappedTF1::SetDerivPrecision(double eps)
       {
-         fgEps = eps;
+         ::ROOT::Math::Internal::DerivPrecision(eps);
       }
 
       double WrappedTF1::GetDerivPrecision()
       {
-         return fgEps;
+         return ::ROOT::Math::Internal::DerivPrecision(-1);
       }
 
-
-   } // end namespace Fit
+   } // end namespace Math
 
 } // end namespace ROOT
 
