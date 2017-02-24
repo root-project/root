@@ -83,7 +83,10 @@ endif()
 if(WIN32)
   set(histfactory_veto histfactory/*.C
                        roostats/StandardFrequentistDiscovery.C) # histfactory doesn't work on Windows
+else()
+  set(histfactory_veto histfactory/makeExample.C)
 endif()
+
 
 if(NOT ROOT_fitsio_FOUND)
   set(fitsio_veto  fitsio/*.C)
@@ -238,7 +241,7 @@ set(unfold-testUnfold7c-depends tutorial-unfold-testUnfold7b)
 set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
-set(histfactory-example-depends tutorial-histfactory-makeExample)
+set(histfactory-example-depends tutorial-roostats-CreateExampleFile)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(fit-myfit-depends tutorial-fit-fitslicesy)
@@ -262,26 +265,13 @@ set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
 set(tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
 
-#--many roostats tutorials depending on having creating the file first with histfactory
+#--many roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
                StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
                OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands StandardProfileLikelihoodDemo)
-  set(roostats-${tname}-depends tutorial-histfactory-makeExample)
+  set(roostats-${tname}-depends tutorial-roostats-CreateExampleFile)
 endforeach()
-
-#--ensure that roostats tests accesses test file sequentially
-set(roostats-ModelInspector-depends "${roostats-ModelInspector-depends} roostats-OneSidedFrequentistUpperLimitWithBands")
-set(roostats-OneSidedFrequentistUpperLimitWithBands-depends "${roostats-OneSidedFrequentistUpperLimitWithBands-depends} roostats-StandardBayesianMCMCDemo")
-set(roostats-StandardBayesianMCMCDemo-depends "${roostats-StandardBayesianMCMCDemo-depends} roostats-StandardBayesianNumericalDemo")
-set(roostats-StandardBayesianNumericalDemo-depends "${roostats-StandardBayesianNumericalDemo-depends} roostats-StandardFeldmanCousinsDemo")
-set(roostats-StandardFeldmanCousinsDemo-depends "${roostats-StandardFeldmanCousinsDemo-depends} roostats-StandardHistFactoryPlotsWithCategories")
-set(roostats-StandardHistFactoryPlotsWithCategories-depends "${roostats-StandardHistFactoryPlotsWithCategories-depends} roostats-StandardHypoTestDemo")
-set(roostats-StandardHypoTestDemo-depends "${roostats-StandardHypoTestDemo-depends} roostats-StandardHypoTestInvDemo")
-set(roostats-StandardHypoTestInvDemo-depends "${roostats-StandardHypoTestInvDemo-depends} roostats-StandardProfileInspectorDemo")
-set(roostats-StandardProfileInspectorDemo-depends "${roostats-StandardProfileInspectorDemo-depends} roostats-StandardProfileLikelihoodDemo")
-set(roostats-StandardProfileLikelihoodDemo-depends "${roostats-StandardProfileLikelihoodDemo-depends} roostats-StandardTestStatDistributionDemo")
-set(roostats-StandardTestStatDistributionDemo-depends "${roostats-StandardTestStatDistributionDemo-depends} roostats-TwoSidedFrequentistUpperLimitWithBands")
 
 #--dependency for TMVA tutorials
 set (tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
