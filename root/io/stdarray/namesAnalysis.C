@@ -6,8 +6,7 @@ void namesAnalysis() {
                  "array<array<T,4>,3>",
                  "array<array<array<L,16>,4>,3>",
                  "array<array<array<array<double,13>,16>,4>,3>",
-                 "array<array<array<array<array<c,18>,13>,16>,4>,3>",
-                 "array<int,3>"};
+                 "array<array<array<array<array<c,18>,13>,16>,4>,3>"};
    for (auto& name : names) {
       if(! TClassEdit::GetStdArrayProperties(name,typenamebuf,maxi,ndim)){
          cerr << "ERROR: class \"" << name << "\" is not an STL array\n";
