@@ -2855,7 +2855,7 @@ void TPad::HighLight(Color_t color, Bool_t set)
 
    // We do not want to have active(executable) buttons, etc highlighted
    // in this manner, unless we want to edit'em
-   if (GetBorderMode()>0 && GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
+   if (GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
       //When doing a DrawClone from the GUI you would do
       //  - select an empty pad -
       //  - right click on object -
@@ -2868,10 +2868,10 @@ void TPad::HighLight(Color_t color, Bool_t set)
       // momentarily such that when DrawClone is called, it is
       // not the right value (for DrawClone). Should be FIXED.
       gROOT->SetSelectedPad(this);
-      if (set)
-         PaintBorder(-color, kFALSE);
-      else
-         PaintBorder(-GetFillColor(), kFALSE);
+      if (GetBorderMode()>0) {
+         if (set) PaintBorder(-color, kFALSE);
+         else     PaintBorder(-GetFillColor(), kFALSE);
+      }
    }
 
    AbsCoordinates(kFALSE);
