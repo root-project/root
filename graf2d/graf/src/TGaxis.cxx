@@ -2321,6 +2321,12 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the label attributes of label number i. If needed.
+///
+/// \param[in] i        Current label number to be changed if needed
+/// \param[in] nlabels  Totals number of labels on for this axis (useful when i is counted from the end)
+/// \param[in] t        Original TLatex string holding the label to be changed
+/// \param[in] c        Text string to be drawn
+
 static Double_t SavedTextAngle;
 static Double_t SavedTextSize;
 static Int_t    SavedTextAlign;
