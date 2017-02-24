@@ -49,7 +49,7 @@ void candlehisto()
    char myopt[6][16] = {"1000000","2000000","3000000","1112111","112111","112111"};
    for (int i = 0; i < 6; i++) {
       c3->cd(i+1);
-      char str[16];
+      char str[17];
       sprintf(str, "candlex(%s)",myopt[i]);
       TH2I * myhist = (TH2I*)h1->DrawCopy(str);
       myhist->SetFillColor(kYellow);
