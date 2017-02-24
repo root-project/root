@@ -21,7 +21,6 @@ namespace ROOT {
 
    namespace Math {
 
-
       namespace Internal {
          double DerivPrecision(double eps)
          {
@@ -29,6 +28,13 @@ namespace ROOT {
             if (eps > 0)
                gEPs = eps;
             return gEPs;
+         }
+
+         TF1 *CopyTF1Ptr(const TF1 *funcToCopy)
+         {
+            TF1 *fnew = (TF1 *) funcToCopy->IsA()->New();
+            funcToCopy->Copy(*fnew);
+            return fnew;
          }
       }
 

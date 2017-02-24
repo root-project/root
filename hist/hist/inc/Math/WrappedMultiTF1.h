@@ -18,14 +18,13 @@
 
 #include "TF1.h"
 
-#include "TClass.h"   // needed to copy the TF1 pointer
-
 namespace ROOT {
 
    namespace Math {
 
       namespace Internal {
          double DerivPrecision(double eps);
+         TF1 *CopyTF1Ptr(const TF1 *funcToCopy);
       };
       /**
          Class to Wrap a ROOT Function class (like TF1)  in a IParamMultiFunction interface
@@ -292,9 +291,7 @@ namespace ROOT {
       void WrappedMultiTF1Templ<BackendType>::SetAndCopyFunction(const TF1 *f)
       {
          const TF1 *funcToCopy = (f) ? f : fFunc;
-         TF1 *fnew = (TF1 *) funcToCopy->IsA()->New();
-         funcToCopy->Copy(*fnew);
-         fFunc = fnew;
+         fFunc = ::ROOT::Math::Internal::CopyTF1Ptr(funcToCopy);
          fOwnFunc = true;
       }
 
