@@ -581,6 +581,9 @@ Changes will be part of the future 6.08/06
 
 - Resolved an issue that lead to missing information the TClass of an STL collections that had more than one dictionary (including one with a rootpcm).
 
+### I/O
+
+- Resolve several issues with Collection proxy for std::bitset and std::vector<bool>
 
 ### TTree
 
