@@ -14,7 +14,6 @@
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
-//#include "Fit/BinPoint.h"
 
 #include "Math/IFunctionfwd.h"
 #include "Math/IParamFunction.h"
@@ -368,9 +367,9 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
 
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval( func, 0, useBinIntegral); 
+   IntegralEvaluator<> igEval( func, 0, useBinIntegral);
 #else
-   IntegralEvaluator<> igEval( func, p, useBinIntegral); 
+   IntegralEvaluator<> igEval( func, p, useBinIntegral);
 #endif
    double maxResValue = std::numeric_limits<double>::max() /n;
    double wrefVolume = 1.0;
@@ -424,7 +423,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
          // we need first to check if a weight factor needs to be applied
          // weight = sumw2/sumw = error**2/content
          double invWeight = y * invError * invError;
-         if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+        //  if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
          // compute expected error  as f(x) / weight
          double invError2 = (fval > 0) ? invWeight / fval : 0.0;
          invError = std::sqrt(invError2);
@@ -647,7 +646,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
       // we need first to check if a weight factor needs to be applied
       // weight = sumw2/sumw = error**2/content
       double invWeight = y * invError * invError;
-      if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+      // if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
       // compute expected error  as f(x) / weight
       double invError2 = (fval > 0) ? invWeight / fval : 0.0;
       invError = std::sqrt(invError2);
@@ -909,17 +908,17 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
    (const_cast<IModelFunction &>(func)).SetParameters(p);
 #endif
 
-   // this is needed if function must be normalized 
-   bool normalizeFunc = false; 
+   // this is needed if function must be normalized
+   bool normalizeFunc = false;
    double norm = 1.0;
    if (normalizeFunc) {
       // compute integral of the function
       std::vector<double> xmin(data.NDim());
       std::vector<double> xmax(data.NDim());
       IntegralEvaluator<> igEval( func, p, true);
-      // compute integral in the ranges where is defined 
+      // compute integral in the ranges where is defined
       if (data.Range().Size() > 0 ) {
-         norm = 0; 
+         norm = 0;
          for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
             data.Range().GetRange(&xmin[0],&xmax[0],ir);
             norm += igEval.Integral(xmin.data(),xmax.data());
@@ -930,7 +929,7 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
          // check if funcition is zero at +- inf
          if (func(xmin.data()) != 0 || func(xmax.data()) != 0) {
             MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
-            return 0; 
+            return 0;
          }
          norm = igEval.Integral(&xmin[0],&xmax[0]);
       }
@@ -950,7 +949,7 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
       if (normalizeFunc) fval = fval / norm;
 
 #ifdef DEBUG
-      if (i == 0) { 
+      if (i == 0) {
          std::cout << "x [ " << data.NDim() << " ] = ";
          for (unsigned int j = 0; j < data.NDim(); ++j)
             std::cout << x[j] << "\t";
@@ -981,7 +980,7 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
 
 #ifdef DEBUG
    std::cout << std::endl;
-#endif  
+#endif
 
    if (extended) {
       // add Poisson extended term
@@ -994,15 +993,15 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
          std::vector<double> xmin(data.NDim());
          std::vector<double> xmax(data.NDim());
 
-         // compute integral in the ranges where is defined 
+         // compute integral in the ranges where is defined
          if (data.Range().Size() > 0 ) {
-            nuTot = 0; 
+            nuTot = 0;
             for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
                data.Range().GetRange(&xmin[0],&xmax[0],ir);
                nuTot += igEval.Integral(xmin.data(),xmax.data());
 #ifdef DEBUG
          std::cout << "After Integral bewteen " << xmin[0] << " and " << xmax[0] << " nexp is  " << nuTot << std::endl;
-#endif 
+#endif
             }
          } else {
             // use (-inf +inf)
@@ -1010,12 +1009,12 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
             // check if funcition is zero at +- inf
             if (func(xmin.data()) != 0 || func(xmax.data()) != 0) {
                MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
-               return 0; 
+               return 0;
             }
             nuTot = igEval.Integral(&xmin[0],&xmax[0]);
 #ifdef DEBUG
          std::cout << "Range not existig - integral bewteen " << xmin[0] << " and " << xmax[0] << "  is  " << nuTot << std::endl;
-#endif 
+#endif
          }
 
          // force to be last parameter value
@@ -1230,8 +1229,8 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunction &>(func)).SetParameters(p);
 #endif
-   
-   double nloglike = 0;  // negative loglikelihood 
+
+   double nloglike = 0;  // negative loglikelihood
    nPoints = 0;  // npoints
 
 
@@ -1240,7 +1239,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
    bool useW2 = (iWeight == 2);
-   
+
    // normalize if needed by a reference volume value
    double wrefVolume = 1.0;
    std::vector<double> xc;
@@ -1257,9 +1256,9 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 #endif
 
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval( func, 0, useBinIntegral); 
+   IntegralEvaluator<> igEval( func, 0, useBinIntegral);
 #else
-   IntegralEvaluator<> igEval( func, p, useBinIntegral); 
+   IntegralEvaluator<> igEval( func, p, useBinIntegral);
 #endif
    // double nuTot = 0; // total number of expected events (needed for non-extended fits)
    // double wTot = 0; // sum of all weights
