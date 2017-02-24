@@ -211,7 +211,10 @@ namespace ROOT {
       void*               fObject;
       void*               fStart;
       void*               fTemp;
-      Bool_t              fUseTemp;
+      union {
+         Bool_t fUseTemp;
+         Bool_t fLastValueVecBool;
+      };
       int                 fRefCount;
       size_t              fSpace;      
    };
@@ -723,14 +726,14 @@ namespace ROOT {
          e->fIterator.first = 0;
          e->fIterator.second = c->size() > 0 ? c->test(e->fIterator.first) : false ;  // Iterator actually hold the value.
          e->fSize  = c->size();
-         return 0;
+         return &(e->fIterator.second);
       }
       static void* next(void* env)  {
          PEnv_t  e = PEnv_t(env);
          PCont_t c = PCont_t(e->fObject);
          for (; e->fIdx > 0 && e->fIterator.first != c->size(); ++(e->fIterator.first), --e->fIdx){ }
          e->fIterator.second = (e->fIterator.first != c->size()) ? c->test(e->fIterator.first) : false;
-         return 0;
+         return &(e->fIterator.second);
       }
       static void* construct(void*,size_t)  {
          // Nothing to construct.

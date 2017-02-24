@@ -120,21 +120,9 @@ public:
       
       // However we can 'take' the address of the content of vector<bool>.
       if ( fEnv && fEnv->fObject ) {
-         switch( idx ) {
-            case 0:
-               fEnv->fStart = fFirst.invoke(fEnv);
-               fEnv->fIdx = idx;
-               break;
-            default:
-               fEnv->fIdx = idx - fEnv->fIdx;
-               if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
-               fNext.invoke(fEnv);
-               fEnv->fIdx = idx;
-               break;
-         }
-         typedef ROOT::TCollectionProxyInfo::Type<std::vector<Bool_t> >::Env_t EnvType_t;
-         EnvType_t *e = (EnvType_t*)fEnv;
-         fLastValue = *(e->iter());
+         std::vector<bool> *vec = (std::vector<bool> *)(fEnv->fObject);
+         fLastValue = (*vec)[idx];
+         fEnv->fIdx = idx;
          return &fLastValue;
       }
       Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
@@ -939,6 +927,12 @@ void* TGenCollectionProxy::At(UInt_t idx)
    if ( fEnv && fEnv->fObject ) {
       switch (fSTL_type) {
       case TClassEdit::kVector:
+         if ((*fValue).fKind == kBool_t) {
+            std::vector<bool> *vec = (std::vector<bool> *)(fEnv->fObject);
+            fEnv->fLastValueVecBool = (*vec)[idx];
+            fEnv->fIdx = idx;
+            return &(fEnv->fLastValueVecBool);
+         }
          fEnv->fIdx = idx;
          switch( idx ) {
          case 0:
@@ -947,6 +941,23 @@ void* TGenCollectionProxy::At(UInt_t idx)
             if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
             return ((char*)fEnv->fStart) + fValDiff*idx;
          }
+      case TClassEdit::kBitSet: {
+         switch (idx) {
+         case 0:
+            fEnv->fStart = fFirst.invoke(fEnv);
+            fEnv->fIdx = idx;
+            break;
+         default:
+            fEnv->fIdx = idx - fEnv->fIdx;
+            if (!fEnv->fStart) fEnv->fStart = fFirst.invoke(fEnv);
+            fNext.invoke(fEnv);
+            fEnv->fIdx = idx;
+            break;
+         }
+         typedef ROOT::TCollectionProxyInfo::Environ <std::pair<size_t, Bool_t> > EnvType_t;
+         EnvType_t *e = (EnvType_t *) fEnv;
+         return &(e->fIterator.second);
+      }
       case TClassEdit::kSet:
       case TClassEdit::kMultiSet:
       case TClassEdit::kMap:
