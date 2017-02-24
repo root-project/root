@@ -159,10 +159,11 @@ namespace TMVA {
       Double_t GetROCIntegral(DataLoader *loader,TString theMethodName);
       Double_t GetROCIntegral(TString  datasetname,TString theMethodName);
 
-      //methods to get TGraph for a indicate method in dataset
-      //optional tiitle and axis added with fLegend=kTRUE
-      TGraph* GetROCCurve(DataLoader *loader,TString theMethodName,Bool_t fLegend=kTRUE);
-      TGraph* GetROCCurve(TString  datasetname,TString theMethodName,Bool_t fLegend=kTRUE);
+      // Methods to get a TGraph for an indicated method in dataset.
+      // Optional title and axis added with fLegend=kTRUE.
+      // Argument iClass used in multiclass settings, otherwise ignored.
+      TGraph* GetROCCurve(DataLoader *loader,TString theMethodName, Bool_t fLegend=kTRUE, UInt_t iClass=0);
+      TGraph* GetROCCurve(TString datasetname, TString theMethodName, Bool_t fLegend=kTRUE, UInt_t iClass=0);
       
       // Draw all ROC curves for all methods in the dataset.
       TCanvas* GetROCCurve(DataLoader *loader);

@@ -679,6 +679,12 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
       return 0;
    }
 
+   std::set<Types::EAnalysisType> allowedAnalysisTypes = {Types::kClassification/*, Types::kMulticlass*/};
+   if ( allowedAnalysisTypes.count(this->fAnalysisType) == 0 ) {
+      Log() << kERROR << Form("Can only generate ROC integral for analysis type kClassification."/*"and kMulticlass."*/) << Endl;
+      return 0;
+   }
+
    TMVA::MethodBase *method  = dynamic_cast<TMVA::MethodBase *>( this->GetMethod(datasetname, theMethodName) );
    TMVA::Results    *results = method->Data()->GetResults(theMethodName, Types::kTesting, Types::kClassification);
 
@@ -695,43 +701,94 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader, TString theMethodName, Bool_t fLegend)
+TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader, TString theMethodName, Bool_t fLegend, UInt_t iClass)
 {
-  return GetROCCurve((TString)loader->GetName(),theMethodName,fLegend);
+  return GetROCCurve( (TString)loader->GetName(), theMethodName, fLegend, iClass );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Argument iClass specifies the class to generate the ROC curve in a 
+/// multiclass setting. It is ignored for binary classification.
+/// 
+/// Returns a ROC graph for a given method, or nullptr on error.
+///
+/// Note: Evaluation of the given method must have been run prior to ROC 
+/// generation.
 
-TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, Bool_t fLegend)
+TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, Bool_t useLegend, UInt_t iClass)
 {
    if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
       Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
-      return 0;
+      return nullptr;
    }
    
    if ( ! this->HasMethod(datasetname, theMethodName) ) {
       Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
-      return 0;
+      return nullptr;
    }
-   
+
+   std::set<Types::EAnalysisType> allowedAnalysisTypes = {Types::kClassification, Types::kMulticlass};
+   if ( allowedAnalysisTypes.count(this->fAnalysisType) == 0 ) {
+      Log() << kERROR << Form("Can only generate ROC curves for analysis type kClassification and kMulticlass.") << Endl;
+      return nullptr;
+   }
+    
    TMVA::MethodBase *method  = dynamic_cast<TMVA::MethodBase *>( this->GetMethod(datasetname, theMethodName) );
-   TMVA::Results    *results = method->Data()->GetResults(theMethodName, Types::kTesting, Types::kClassification);
+   TMVA::DataSet    *dataset = method->Data();
+   TMVA::Results    *results = dataset->GetResults(theMethodName, Types::kTesting, this->fAnalysisType);
    
-   std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
-   std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
-
-   TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
-   if (!fROCCurve) Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
-
-   TGraph *fGraph = (TGraph  *)fROCCurve->GetROCCurve()->Clone();
-   if(fLegend)
-   {
-        fGraph->GetYaxis()->SetTitle("Background Rejection");
-        fGraph->GetXaxis()->SetTitle("Signal Efficiency");
-        fGraph->SetTitle( Form( "Background Rejection vs. Signal Efficiency (%s)", theMethodName.Data() ) );
+   UInt_t nClasses = method->DataInfo().GetNClasses();
+   if ( this->fAnalysisType == Types::kMulticlass && iClass >= nClasses ) {
+      Log() << kERROR << Form("Given class number (iClass = %i) does not exist. There are %i classes in dataset.", iClass, nClasses) << Endl;
+      return nullptr;
    }
-   delete fROCCurve;
-   return fGraph;
+
+   std::vector<Float_t> mvaRes;
+   std::vector<Bool_t>  mvaResTypes;
+   TMVA::ROCCurve *rocCurve;
+   TGraph         *graph;
+
+   if (this->fAnalysisType == Types::kClassification) {
+      
+      std::vector<Float_t> * rawMvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+      mvaRes = *rawMvaRes;
+
+      std::vector<Bool_t> * rawMvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+      mvaResTypes = *rawMvaResType;
+
+   } else if (this->fAnalysisType == Types::kMulticlass) {
+      std::vector<std::vector<Float_t>> * rawMvaRes = dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
+      
+      // Vector transpose due to values being stored as 
+      //    [ [0, 1, 2], [0, 1, 2], ... ]
+      // in ResultsMulticlass::GetValueVector.
+      for (auto & item : *rawMvaRes) {
+         mvaRes.push_back( item[iClass] );
+      }
+
+      auto eventCollection = dataset->GetEventCollection();
+      for (auto ev : eventCollection) {
+         mvaResTypes.push_back( ev->GetClass() == iClass );
+      }
+   }
+
+   rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes);
+   
+   if ( ! rocCurve ) {
+      Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
+      return nullptr;
+   }
+
+   graph    = (TGraph *)rocCurve->GetROCCurve()->Clone();
+   delete rocCurve;
+
+   if(useLegend) {
+        graph->GetYaxis()->SetTitle("Background Rejection");
+        graph->GetXaxis()->SetTitle("Signal Efficiency");
+        graph->SetTitle( Form( "Background Rejection vs. Signal Efficiency (%s)", theMethodName.Data() ) );
+   }
+
+   return graph;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
