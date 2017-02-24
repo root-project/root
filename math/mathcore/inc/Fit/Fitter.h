@@ -512,10 +512,7 @@ bool Fitter::GetDataFromFCN()  {
 
 #ifndef __CINT__
 
-
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 template<class Function>
 bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
