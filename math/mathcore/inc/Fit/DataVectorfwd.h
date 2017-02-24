@@ -18,17 +18,8 @@ namespace ROOT {
 
    namespace Fit {
 
-
-      //template <class Point> class DataVector;
-      //class DataVector;
-
-      //class BinPoint;
-      //class UnBinPoint;
-
       class BinData;
       class UnBinData;
-
-
 
    } // end namespace Fit
 

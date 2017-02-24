@@ -89,7 +89,7 @@ ROOT::Fit::UnBinData * FillUnBinData(TTree * tree, bool copyData = true, unsigne
 #ifdef DEBUG
       std::cout << "number of unbin data is " << n << " of dim " << N << std::endl;
 #endif
-      d->Initialize(n,N);
+      d->Append(n,N);
       TBranch * bx = tree->GetBranch("x");
       double vx[N];
       bx->SetAddress(vx);
@@ -117,7 +117,7 @@ ROOT::Fit::UnBinData * FillUnBinData(TTree * tree, bool copyData = true, unsigne
       //std::cout << "number of unbin data is " << n << std::endl;
 
       if (dim == 2) {
-         d->Initialize(n,2);
+         d->Append(n,2);
          TBranch * bx = tree->GetBranch("x");
          TBranch * by = tree->GetBranch("y");
          double v[2];
@@ -130,7 +130,7 @@ ROOT::Fit::UnBinData * FillUnBinData(TTree * tree, bool copyData = true, unsigne
          }
       }
       else if (dim == 1) {
-         d->Initialize(n,1);
+         d->Append(n,1);
          TBranch * bx = tree->GetBranch("x");
          double v[1];
          bx->SetAddress(&v[0]);

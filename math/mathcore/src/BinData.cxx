@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Author: L. Moneta Wed Aug 30 11:10:03 2006
+// Author: M. Borinsky
 
 /**********************************************************************
  *                                                                    *
@@ -12,578 +12,789 @@
 
 #include "Fit/BinData.h"
 #include "Math/Error.h"
-#include "Math/IParamFunctionfwd.h"
 
 #include <cassert>
 #include <cmath>
 
+using namespace std;
 
 namespace ROOT {
 
-   namespace Fit {
+   namespace Fit
+   {
 
-   /**
+    BinData::BinData(unsigned int maxpoints, unsigned int dim,
+      ErrorType err ) :
+      FitData( maxpoints, dim ),
+      fErrorType( err ),
+      fDataPtr( NULL ),
+      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
+      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+    {
+      InitializeErrors();
+      InitDataVector( );
+    }
+
+
+    /**
+      constructor from option and default range
     */
+    BinData::BinData (const DataOptions & opt, unsigned int maxpoints,
+      unsigned int dim, ErrorType err ) :
+      FitData( opt, maxpoints, dim ),
+      fErrorType( err ),
+      fDataPtr( NULL ),
+      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
+      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+    {
+      InitializeErrors();
+      InitDataVector( );
+    }
 
-BinData::BinData(unsigned int maxpoints , unsigned int dim , ErrorType err ) :
-//      constructor from dimension of point  and max number of points (to pre-allocate vector)
-//      Give a zero value and then use Initialize later one if the size is not known
-   FitData(),
-   fDim(dim),
-   fPointSize(GetPointSize(err,dim) ),
-   fNPoints(0),
-   fSumContent(0),
-   fSumError2(0),
-   fRefVolume(1.0),
-   fDataVector(0),
-   fDataWrapper(0)
-{
-   unsigned int n = fPointSize*maxpoints;
-   if ( n > MaxSize() )
-      MATH_ERROR_MSGVAL("BinData","Invalid data size n - no allocation done", n )
-   else if (n > 0)
-      fDataVector = new DataVector(n);
-}
-
-BinData::BinData (const DataOptions & opt, unsigned int maxpoints, unsigned int dim, ErrorType err ) :
-//      constructor from option and default range
-      // DataVector( opt, (dim+2)*maxpoints ),
-   FitData(opt),
-   fDim(dim),
-   fPointSize(GetPointSize(err,dim) ),
-   fNPoints(0),
-   fSumContent(0),
-   fSumError2(0),
-   fRefVolume(1.0),
-   fDataVector(0),
-   fDataWrapper(0)
-{
-   unsigned int n = fPointSize*maxpoints;
-   if ( n > MaxSize() )
-      MATH_ERROR_MSGVAL("BinData","Invalid data size n - no allocation done", n )
-   else if (n > 0)
-      fDataVector = new DataVector(n);
-}
-
-   /**
+    /**
+      constructor from options and range
+      efault is 1D and value errors
     */
-BinData::BinData (const DataOptions & opt, const DataRange & range, unsigned int maxpoints , unsigned int dim , ErrorType err  ) :
-//      constructor from options and range
-//      default is 1D and value errors
+    BinData::BinData (const DataOptions & opt, const DataRange & range,
+      unsigned int maxpoints, unsigned int dim, ErrorType err ) :
+      FitData( opt, range, maxpoints, dim ),
+      fErrorType( err ),
+      fDataPtr( NULL ),
+      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
+      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+    {
+      InitializeErrors();
+      InitDataVector( );
+    }
 
-      //DataVector( opt, range, (dim+2)*maxpoints ),
-   FitData(opt,range),
-   fDim(dim),
-   fPointSize(GetPointSize(err,dim) ),
-   fNPoints(0),
-   fSumContent(0),
-   fSumError2(0),
-   fRefVolume(1.0),
-   fDataVector(0),
-   fDataWrapper(0)
-{
-   unsigned int n = fPointSize*maxpoints;
-   if ( n > MaxSize() )
-      MATH_ERROR_MSGVAL("BinData","Invalid data size n - no allocation done", n )
-   else if (n > 0)
-      fDataVector = new DataVector(n);
-}
+    /** constructurs using external data */
 
-/** constructurs using external data */
-
-   /**
+    /**
+      constructor from external data for 1D with errors on  coordinate and value
     */
-BinData::BinData(unsigned int n, const double * dataX, const double * val, const double * ex , const double * eval ) :
-//      constructor from external data for 1D with errors on  coordinate and value
-   fDim(1),
-   fPointSize(2),
-   fNPoints(n),
-   fSumContent(0),
-   fSumError2(0),
-   fRefVolume(1.0),
-   fDataVector(0)
-{
-   if (eval != 0) {
-      fPointSize++;
-      if (ex != 0) fPointSize++;
-   }
-   fDataWrapper  = new DataWrapper(dataX, val, eval, ex);
-}
-
-
-   /**
-
-    */
-BinData::BinData(unsigned int n, const double * dataX, const double * dataY, const double * val, const double * ex , const double * ey, const double * eval  ) :
-//      constructor from external data for 2D with errors on  coordinate and value
-   fDim(2),
-   fPointSize(3),
-   fNPoints(n),
-   fSumContent(0),
-   fSumError2(0),
-   fRefVolume(1.0),
-   fDataVector(0)
-{
-   if (eval != 0) {
-      fPointSize++;
-      if (ex != 0 && ey != 0 ) fPointSize += 2;
-   }
-   fDataWrapper  = new DataWrapper(dataX, dataY, val, eval, ex, ey);
-}
-
-   /**
-    */
-BinData::BinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, const double * val, const double * ex , const double * ey , const double * ez , const double * eval   ) :
-//      constructor from external data for 3D with errors on  coordinate and value
-   fDim(3),
-   fPointSize(4),
-   fNPoints(n),
-   fSumContent(0),
-   fSumError2(0),
-   fRefVolume(1.0),
-   fDataVector(0)
-{
-   if (eval != 0) {
-      fPointSize++;
-      if (ex != 0 && ey != 0 && ez != 0) fPointSize += 3;
-   }
-   fDataWrapper  = new DataWrapper(dataX, dataY, dataZ, val, eval, ex, ey, ez);
-}
-
-
-   /// copy constructor
-BinData::BinData(const BinData & rhs) :
-   FitData(rhs.Opt(), rhs.Range()),
-   fDim(rhs.fDim),
-   fPointSize(rhs.fPointSize),
-   fNPoints(rhs.fNPoints),
-   fSumContent(rhs.fSumContent),
-   fSumError2(rhs.fSumError2),
-   fRefVolume(rhs.fRefVolume),
-   fDataVector(0),
-   fDataWrapper(0),
-   fBinEdge(rhs.fBinEdge)
-{
-   // copy constructor (copy data vector or just the pointer)
-   if (rhs.fDataVector != 0) fDataVector = new DataVector(*rhs.fDataVector);
-   else if (rhs.fDataWrapper != 0) fDataWrapper = new DataWrapper(*rhs.fDataWrapper);
-}
-
-
-
-BinData & BinData::operator= (const BinData & rhs) {
-   // assignment operator
-
-   // copy  options but cannot copy  range since cannot be modified afterwards
-   DataOptions & opt = Opt();
-   opt = rhs.Opt();
-   //t.b.c
-   //DataRange & range = Range();
-   //range = rhs.Range();
-   //
-   // assignment operator
-   if (&rhs == this) return *this;
-   fDim = rhs.fDim;
-   fPointSize = rhs.fPointSize;
-   fNPoints = rhs.fNPoints;
-   fSumContent = rhs.fSumContent;
-   fSumError2 = rhs.fSumError2;
-   fBinEdge = rhs.fBinEdge;
-   fRefVolume = rhs.fRefVolume;
-   // delete previous pointers
-   if (fDataVector) delete fDataVector;
-   if (fDataWrapper) delete fDataWrapper;
-   if (rhs.fDataVector != 0)
-      fDataVector = new DataVector(*rhs.fDataVector);
-   else
-      fDataVector = 0;
-   if (rhs.fDataWrapper != 0)
-      fDataWrapper = new DataWrapper(*rhs.fDataWrapper);
-   else
-      fDataWrapper = 0;
-
-   return *this;
-}
-
-
-
-BinData::~BinData() {
-   // destructor
-   if (fDataVector) delete fDataVector;
-   if (fDataWrapper) delete fDataWrapper;
-}
-
-void BinData::Initialize(unsigned int maxpoints, unsigned int dim , ErrorType err  ) {
-//       preallocate a data set given size and dimension
-//       need to be initialized with the  right dimension before
-   if (fDataWrapper) delete fDataWrapper;
-   fDataWrapper = 0;
-   unsigned int pointSize = GetPointSize(err,dim);
-   if ( pointSize != fPointSize && fDataVector) {
-//       MATH_INFO_MSGVAL("BinData::Initialize"," Reset amd re-initialize with a new fit point size of ",
-//                        pointSize);
-      delete fDataVector;
-      fDataVector = 0;
-   }
-   fPointSize = pointSize;
-   fDim = dim;
-   unsigned int n = fPointSize*maxpoints;
-   if ( n > MaxSize() ) {
-      MATH_ERROR_MSGVAL("BinData::Initialize"," Invalid data size  ", n );
-      return;
-   }
-   if (fDataVector) {
-      // resize vector by adding the extra points on top of the previously existing ones
-      (fDataVector->Data()).resize( fDataVector->Size() + n);
-   }
-   else {
-      fDataVector = new DataVector(n);
-   }
-   // reserve space for bin width in case of integral options
-   if (Opt().fIntegral) fBinEdge.reserve( maxpoints * fDim);
-}
-
-void BinData::Resize(unsigned int npoints) {
-   // resize vector to new points
-   if (fPointSize == 0) return;
-   if ( npoints > MaxSize() ) {
-      MATH_ERROR_MSGVAL("BinData::Resize"," Invalid data size  ", npoints );
-      return;
-   }
-   int nextraPoints = npoints - DataSize()/ fPointSize;
-   if (nextraPoints == 0) return;
-   else if (nextraPoints < 0) {
-      // delete extra points
-      if (!fDataVector) return;
-      (fDataVector->Data()).resize( npoints * fPointSize);
-   }
-   else
-      Initialize(nextraPoints, fDim, GetErrorType() );
-}
-   /**
-   */
-void BinData::Add(double x, double y ) {
-//       add one dim data with only coordinate and values
-   int index = fNPoints*PointSize();
-   assert (fDataVector != 0);
-   assert (PointSize() == 2 );
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-   *itr++ = x;
-   *itr++ = y;
-
-   fNPoints++;
-   fSumContent += y;
-}
-
-   /**
-   */
-void BinData::Add(double x, double y, double ey) {
-//       add one dim data with no error in x
-//       in this case store the inverse of the error in y
-   int index = fNPoints*PointSize();
-
-   assert( fDim == 1);
-   assert (fDataVector != 0);
-   assert (PointSize() == 3 );
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-   *itr++ = x;
-   *itr++ = y;
-   *itr++ =  (ey!= 0) ? 1.0/ey : 0;
-
-   fNPoints++;
-   fSumContent += y;
-   fSumError2 += ey*ey;
-}
-
-   /**
-   */
-void BinData::Add(double x, double y, double ex, double ey) {
-//      add one dim data with  error in x
-//      in this case store the y error and not the inverse
-   int index = fNPoints*PointSize();
-   assert (fDataVector != 0);
-   assert( fDim == 1);
-   assert (PointSize() == 4 );
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-   *itr++ = x;
-   *itr++ = y;
-   *itr++ = ex;
-   *itr++ = ey;
-
-   fNPoints++;
-   fSumContent += y;
-   fSumError2  += ey*ey;
-}
-
-   /**
-   */
-void BinData::Add(double x, double y, double ex, double eyl , double eyh) {
-//      add one dim data with  error in x and asymmetric errors in y
-//      in this case store the y errors and not the inverse
-   int index = fNPoints*PointSize();
-   assert (fDataVector != 0);
-   assert( fDim == 1);
-   assert (PointSize() == 5 );
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-   *itr++ = x;
-   *itr++ = y;
-   *itr++ = ex;
-   *itr++ = eyl;
-   *itr++ = eyh;
-
-   fNPoints++;
-   fSumContent += y;
-   fSumError2  += (eyl+eyh)*(eyl+eyh)/4;
-}
-
-
-   /**
-   */
-void BinData::Add(const double *x, double val) {
-//      add multi dim data with only value (no errors)
-   int index = fNPoints*PointSize();
-   assert (fDataVector != 0);
-   assert (PointSize() == fDim + 1 );
-
-   if (index + PointSize() > DataSize())
-      MATH_ERROR_MSGVAL("BinData::Add","add a point beyond the data size", DataSize() );
-
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-
-   for (unsigned int i = 0; i < fDim; ++i)
-      *itr++ = x[i];
-   *itr++ = val;
-
-   fNPoints++;
-   fSumContent += val;
-}
-
-   /**
-   */
-void BinData::Add(const double *x, double val, double  eval) {
-//      add multi dim data with only error in value
-   int index = fNPoints*PointSize();
-   assert (fDataVector != 0);
-   assert (PointSize() == fDim + 2 );
-
-   if (index + PointSize() > DataSize())
-      MATH_ERROR_MSGVAL("BinData::Add","add a point beyond the data size", DataSize() );
-
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-
-   for (unsigned int i = 0; i < fDim; ++i)
-      *itr++ = x[i];
-   *itr++ = val;
-   *itr++ =  (eval!= 0) ? 1.0/eval : 0;
-
-   fNPoints++;
-   fSumContent += val;
-   fSumError2  += eval*eval;
-}
-
-
-   /**
-   */
-void BinData::Add(const double *x, double val, const double * ex, double  eval) {
-   //      add multi dim data with error in coordinates and value
-   int index = fNPoints*PointSize();
-   assert (fDataVector != 0);
-   assert (PointSize() == 2*fDim + 2 );
-
-   if (index + PointSize() > DataSize())
-      MATH_ERROR_MSGVAL("BinData::Add","add a point beyond the data size", DataSize() );
-
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-
-   for (unsigned int i = 0; i < fDim; ++i)
-      *itr++ = x[i];
-   *itr++ = val;
-   for (unsigned int i = 0; i < fDim; ++i)
-      *itr++ = ex[i];
-   *itr++ = eval;
-
-   fNPoints++;
-   fSumContent += val;
-   fSumError2  += eval*eval;
-}
-
-   /**
-   */
-void BinData::Add(const double *x, double val, const double * ex, double  elval, double  ehval) {
-   //      add multi dim data with error in coordinates and asymmetric error in value
-   int index = fNPoints*PointSize();
-   assert (fDataVector != 0);
-   assert (PointSize() == 2*fDim + 3 );
-
-   if (index + PointSize() > DataSize())
-      MATH_ERROR_MSGVAL("BinData::Add","add a point beyond the data size", DataSize() );
-
-   assert (index + PointSize() <= DataSize() );
-
-   double * itr = &((fDataVector->Data())[ index ]);
-
-   for (unsigned int i = 0; i < fDim; ++i)
-      *itr++ = x[i];
-   *itr++ = val;
-   for (unsigned int i = 0; i < fDim; ++i)
-      *itr++ = ex[i];
-   *itr++ = elval;
-   *itr++ = ehval;
-
-   fNPoints++;
-   fSumContent += val;
-   fSumError2  += (elval+ehval)*(elval+ehval)/4;
-}
-
-void BinData::AddBinUpEdge(const double *xup ) {
-//      add multi dim bin upper edge data (coord2)
-
-   fBinEdge.insert( fBinEdge.end(), xup, xup + fDim);
-
-   // check that is consistent with number of points added in the data
-   assert( fNPoints * fDim == fBinEdge.size() );
-
-   // compute the bin volume
-   const double * xlow = Coords(fNPoints-1);
-
-   double binVolume = 1;
-   for (unsigned int j = 0; j < fDim; ++j) {
-      binVolume *= (xup[j]-xlow[j]);
-   }
-
-   // store the minimum bin volume found as  reference for future normalizations
-   if (fNPoints == 1) {
-      fRefVolume = binVolume;
-      return;
-   }
-
-   if (binVolume < fRefVolume)
-      fRefVolume = binVolume;
-
-}
-
-
-BinData & BinData::LogTransform() {
-   // apply log transform on the bin data values
-
-   if (fNPoints == 0) return *this;
-
-   if (fDataVector) {
-
-      ErrorType type = GetErrorType();
-
-      std::vector<double> & data = fDataVector->Data();
-
-      typedef std::vector<double>::iterator DataItr;
-      unsigned int ip = 0;
-      DataItr itr = data.begin();
-
-      if (type == kNoError ) {
-         fPointSize = fDim + 2;
+    BinData::BinData (unsigned int n, const double * dataX, const double * val,
+      const double * ex , const double * eval ) :
+      FitData( n, dataX ),
+      fDataPtr( NULL ),
+      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
+      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+    {
+      assert( val );
+      fDataPtr = val;
+
+      if ( NULL != eval )
+      {
+        fDataErrorPtr = eval;
+
+        fErrorType = kValueError;
+
+        if ( NULL != ex )
+        {
+          fCoordErrorsPtr.resize( 1 );
+
+          fCoordErrorsPtr[0] = ex;
+
+          fErrorType = kCoordError;
+        }
+      }
+      else
+      {
+        fErrorType = kNoError;
       }
 
-      fSumContent = 0;
-      fSumError2 = 0;
-      while (ip <  fNPoints ) {
-         assert( itr != data.end() );
-         DataItr valitr = itr + fDim;
-         double val = *(valitr);
-         if (val <= 0) {
-            MATH_ERROR_MSG("BinData::TransformLog","Some points have negative values - cannot apply a log transformation");
-            // return an empty data-sets
-            Resize(0);
-            return *this;
-         }
-         *(valitr) = std::log(val);
-         fSumContent += *(valitr);
-         // change also errors to 1/val * err
-         if (type == kNoError ) {
-            // insert new error value
-            DataItr errpos = data.insert(valitr+1,val);
-            // need to get new iterators for right position
-            itr = errpos - fDim -1;
-            //std::cout << " itr " << *(itr) << " itr +1 " << *(itr+1) << std::endl;
-         }
-         else if (type == kValueError) {
-             // new weight = val * old weight
-            *(valitr+1) *= val;
-            double invErr = *(valitr+1);
-            fSumError2  += 1./(invErr*invErr);
-         }
-         else {
-            // other case (error in value is stored) : new error = old_error/value
-            for (unsigned int j = 2*fDim + 1; j < fPointSize; ++j)  {
-               *(itr+j) /= val;
-            }
-            double err = 0;
-            if (type != kAsymError)
-               err = *(itr+2*fDim+1);
-            else
-               err = 0.5 * ( *(itr+2*fDim+1) + *(itr+2*fDim+2) );
-            fSumError2 += err*err;
-         }
-         itr += fPointSize;
-         ip++;
+      fpTmpCoordErrorVector = new double [ fDim ];
+    }
+
+    /**
+      constructor from external data for 2D with errors on  coordinate and value
+    */
+    BinData::BinData(unsigned int n, const double * dataX, const double * dataY,
+      const double * val, const double * ex , const double * ey,
+      const double * eval  ) :
+      FitData( n, dataX, dataY ),
+      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
+      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+    {
+      assert( val );
+      fDataPtr = val;
+
+      if ( NULL != eval )
+      {
+        fDataErrorPtr = eval;
+
+        fErrorType = kValueError;
+
+        if ( NULL != ex || NULL != ey )
+        {
+          fCoordErrorsPtr.resize( 2 );
+
+          fCoordErrorsPtr[0] = ex;
+          fCoordErrorsPtr[1] = ey;
+
+          fErrorType = kCoordError;
+        }
       }
-      // in case of Noerror since we added the errors we have changes the type
-   return *this;
-   }
-   // case of data wrapper - we copy the data and build a datavector
-   if (fDataWrapper == 0) return *this;
-
-   // asym errors are not supported for data wrapper
-   ErrorType type = kValueError;
-   std::vector<double> errx;
-   if (fDataWrapper->CoordErrors(0) != 0 ) {
-      type = kCoordError;
-      errx.resize(fDim);  // allocate vector to store errors
-   }
-
-   BinData tmpData(fNPoints, fDim, type);
-   for (unsigned int i = 0; i < fNPoints; ++i ) {
-      double val = fDataWrapper->Value(i);
-      if (val <= 0) {
-         MATH_ERROR_MSG("BinData::TransformLog","Some points have negative values - cannot apply a log transformation");
-         // return an empty data-sets
-         Resize(0);
-         return *this;
+      else
+      {
+        fErrorType = kNoError;
       }
-      double err = fDataWrapper->Error(i);
-      if (err <= 0) err = 1;
-      if (type == kValueError )
-         tmpData.Add(fDataWrapper->Coords(i), std::log(val), err/val);
-      else if (type == kCoordError) {
-         const double * exold = fDataWrapper->CoordErrors(i);
-         assert(exold != 0);
-         for (unsigned int j = 0; j < fDim; ++j) {
-            std::cout << " j " << j << " val " << val << " " << errx.size() <<  std::endl;
-            errx[j] = exold[j]/val;
-         }
-         tmpData.Add(fDataWrapper->Coords(i), std::log(val), &errx.front(),  err/val);
+
+      fpTmpCoordErrorVector = new double [ fDim ];
+    }
+
+    /**
+      constructor from external data for 3D with errors on  coordinate and value
+    */
+    BinData::BinData(unsigned int n, const double * dataX, const double * dataY,
+      const double * dataZ, const double * val, const double * ex ,
+      const double * ey , const double * ez , const double * eval   ) :
+      FitData( n, dataX, dataY, dataZ ),
+      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
+      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+    {
+      assert( val );
+      fDataPtr = val;
+
+      if ( NULL != eval )
+      {
+        fDataErrorPtr = eval;
+
+        fErrorType = kValueError;
+
+        if ( NULL != ex || NULL != ey || NULL != ez )
+        {
+          fCoordErrorsPtr.resize( 3 );
+
+          fCoordErrorsPtr[0] = ex;
+          fCoordErrorsPtr[1] = ey;
+          fCoordErrorsPtr[2] = ez;
+
+          fErrorType = kCoordError;
+        }
       }
-   }
-   delete fDataWrapper;
-   fDataWrapper = 0; // no needed anymore
-   *this = tmpData;
-   return *this;
-}
+      else
+      {
+        fErrorType = kNoError;
+      }
+
+      fpTmpCoordErrorVector = new double [ fDim ];
+    }
+
+    /**
+      destructor
+    */
+    BinData::~BinData()
+    {
+      assert( fMaxPoints == 0 || fWrapped == fData.empty() );
+
+      assert( kValueError == fErrorType || kCoordError == fErrorType ||
+        kAsymError == fErrorType || kNoError == fErrorType );
+      assert( fMaxPoints == 0 || fDataError.empty() || &fDataError.front() == fDataErrorPtr );
+      assert( fMaxPoints == 0 || fDataErrorHigh.empty() || &fDataErrorHigh.front() == fDataErrorHighPtr );
+      assert( fMaxPoints == 0 || fDataErrorLow.empty() || &fDataErrorLow.front() == fDataErrorLowPtr );
+      assert( fMaxPoints == 0 || fDataErrorLow.empty() == fDataErrorHigh.empty() );
+      assert( fMaxPoints == 0 || fData.empty() || &fData.front() == fDataPtr );
+
+      for ( unsigned int i=0; i < fDim; i++ )
+      {
+        assert( fCoordErrors.empty() || &fCoordErrors[i].front() == fCoordErrorsPtr[i] );
+      }
+
+      if ( fpTmpBinEdgeVector )
+      {
+        delete fpTmpBinEdgeVector;
+        fpTmpBinEdgeVector= NULL;
+      }
+
+      if ( fpTmpCoordErrorVector )
+      {
+        delete fpTmpCoordErrorVector;
+        fpTmpCoordErrorVector = NULL;
+      }
+    }
+
+    /**
+      copy constructors
+    */
+    BinData::BinData (const BinData & rhs) :
+      FitData()
+    {
+      *this = rhs;
+    }
+
+    BinData & BinData::operator= ( const BinData & rhs )
+    {
+      FitData::operator=( rhs );
+
+      if ( fpTmpBinEdgeVector )
+      {
+        assert( Opt().fIntegral );
+
+        delete fpTmpBinEdgeVector;
+        fpTmpBinEdgeVector= NULL;
+      }
+
+      if ( fpTmpCoordErrorVector )
+      {
+        delete fpTmpCoordErrorVector;
+        fpTmpCoordErrorVector = NULL;
+      }
+
+      fDataPtr = NULL;
+      fDataErrorPtr= fDataErrorHighPtr= fDataErrorLowPtr= NULL;
+
+      fErrorType = rhs.fErrorType;
+      fRefVolume = rhs.fRefVolume;
+      fBinEdge = rhs.fBinEdge;
+
+      if ( fWrapped )
+      {
+        fData.clear();
+        fCoordErrors.clear();
+        fDataError.clear();
+        fDataErrorHigh.clear();
+        fDataErrorLow.clear();
+
+        fDataPtr = rhs.fDataPtr;
+        fCoordErrorsPtr = rhs.fCoordErrorsPtr;
+        fDataErrorPtr = rhs.fDataErrorPtr;
+        fDataErrorHighPtr = rhs.fDataErrorHighPtr;
+        fDataErrorLowPtr = rhs.fDataErrorLowPtr;
+      }
+      else
+      {
+        fData = rhs.fData;
+
+        if ( !fData.empty() )
+          fDataPtr = &fData.front();
+
+        fCoordErrors = rhs.fCoordErrors;
+        fDataError = rhs.fDataError;
+        fDataErrorHigh = rhs.fDataErrorHigh;
+        fDataErrorLow = rhs.fDataErrorLow;
+
+        if( ! fCoordErrors.empty() )
+        {
+          assert( kCoordError == fErrorType || kAsymError == fErrorType );
+          fCoordErrorsPtr.resize( fDim );
+
+          for ( unsigned int i=0; i<fDim; i++ )
+          {
+            fCoordErrorsPtr[i] = &fCoordErrors[i].front();
+          }
+        }
+
+        fDataError = rhs.fDataError;
+        fDataErrorHigh = rhs.fDataErrorHigh;
+        fDataErrorLow = rhs.fDataErrorLow;
+
+        assert( fDataErrorLow.empty() == fDataErrorHigh.empty() );
+        assert( fDataErrorLow.empty() != fDataError.empty() || kNoError == fErrorType );
+
+        if ( !fDataError.empty() )
+        {
+          assert( kValueError == fErrorType || kCoordError == fErrorType );
+          fDataErrorPtr = &fDataError.front();
+        }
+        else if ( !fDataErrorHigh.empty() && !fDataErrorLow.empty() )
+        {
+          assert( kAsymError == fErrorType );
+          fDataErrorHighPtr = &fDataErrorHigh.front();
+          fDataErrorLowPtr = &fDataErrorLow.front();
+        }
+      }
+
+      fpTmpCoordErrorVector= new double[ fDim ];
+
+      if ( Opt().fIntegral )
+        fpTmpBinEdgeVector = new double[ fDim ];
+
+      return *this;
+    }
 
 
-   } // end namespace Fit
+    /**
+      preallocate a data set with given size ,  dimension and error type (to get the full point size)
+      If the data set already exists and it is having the compatible point size space for the new points
+      is created in the data sets, while if not compatible the old data are erased and new space of
+      new size is allocated.
+      (i.e if exists initialize is equivalent to a resize( NPoints() + maxpoints)
+    */
+
+    void BinData::Append( unsigned int newPoints, unsigned int dim , ErrorType err )
+    {
+      assert( !fWrapped );
+      assert( fMaxPoints == 0 || fWrapped == fData.empty() );
+
+      assert( kValueError == fErrorType || kCoordError == fErrorType ||
+        kAsymError == fErrorType || kNoError == fErrorType );
+      assert( fMaxPoints == 0 || fDataError.empty() || &fDataError.front() == fDataErrorPtr );
+      assert( fMaxPoints == 0 || fDataErrorHigh.empty() || &fDataErrorHigh.front() == fDataErrorHighPtr );
+      assert( fMaxPoints == 0 || fDataErrorLow.empty() || &fDataErrorLow.front() == fDataErrorLowPtr );
+      assert( fMaxPoints == 0 || fDataErrorLow.empty() == fDataErrorHigh.empty() );
+      assert( fMaxPoints == 0 || fData.empty() || &fData.front() == fDataPtr );
+
+      FitData::Append( newPoints, dim );
+
+      fErrorType = err;
+
+      InitDataVector( );
+      InitializeErrors( );
+    }
+
+    void BinData::Initialize( unsigned int newPoints, unsigned int dim, ErrorType err )
+    {
+      Append( newPoints, dim, err );
+    }
+
+
+
+    /**
+      apply a Log transformation of the data values
+      can be used for example when fitting an exponential or gaussian
+      Transform the data in place need to copy if want to preserve original data
+      The data sets must not contain negative values. IN case it does,
+      an empty data set is returned
+    */
+    BinData & BinData::LogTransform()
+    { // apply log transform on the bin data values
+
+      if ( fWrapped )
+      {
+        UnWrap();
+      }
+
+      if ( kNoError == fErrorType )
+      {
+        fDataError.resize( fNPoints );
+        fDataErrorPtr = &fDataError.front();
+      }
+
+      for ( unsigned int i=0; i < fNPoints; i++ )
+      {
+        double val = fData[i];
+
+        if ( val <= 0 )
+        {
+           MATH_ERROR_MSG("BinData::TransformLog","Some points have negative values - cannot apply a log transformation");
+           return *this;
+        }
+
+        fData[i] = std::log( val );
+
+        if( kNoError == fErrorType )
+        {
+          fDataError[i] = val;
+        }
+        else if ( kValueError == fErrorType )
+        {
+          fDataError[i]*= val;
+        }
+        else if ( kCoordError == fErrorType )
+        {
+          fDataError[i]/= val;
+        }
+        else if ( kAsymError == fErrorType )
+        {
+          fDataErrorHigh[i]/= val;
+          fDataErrorLow[i]/= val;
+        }
+        else
+          assert(false);
+      }
+
+      if ( kNoError == fErrorType )
+      {
+        fErrorType = kValueError;
+      }
+
+      return *this;
+    }
+
+
+    /**
+      add one dim data with only coordinate and values
+    */
+    void BinData::Add( double x, double y )
+    {
+      assert( kNoError == fErrorType );
+
+      assert( !fData.empty() && fDataPtr );
+      assert( fDataErrorHigh.empty() && !fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() && !fDataErrorLowPtr );
+      assert( fDataError.empty() && !fDataErrorPtr );
+      assert( fCoordErrors.empty() && fCoordErrorsPtr.empty() );
+
+      fData[ fNPoints ] = y;
+
+      FitData::Add( x );
+    }
+
+    /**
+      add one dim data with no error in the coordinate (x)
+      in this case store the inverse of the error in the value (y)
+    */
+    void BinData::Add( double x, double y, double ey )
+    {
+      assert( kValueError == fErrorType );
+      assert( !fData.empty() && fDataPtr );
+      assert( fDataErrorHigh.empty() && !fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() && !fDataErrorLowPtr );
+      assert( !fDataError.empty() && fDataErrorPtr );
+      assert( fCoordErrors.empty() && fCoordErrorsPtr.empty() );
+
+      fData[ fNPoints ] = y;
+      fDataError[ fNPoints ] = (ey != 0.0) ? 1.0/ey : 0.0;
+
+      FitData::Add( x );
+    }
+
+    /**
+      add one dim data with  error in the coordinate (x)
+      in this case store the value (y)  error and not the inverse
+    */
+    void BinData::Add( double x, double y, double ex, double ey )
+    {
+      assert( kCoordError == fErrorType );
+      assert( !fData.empty() && fDataPtr );
+      assert( !fDataError.empty() && fDataErrorPtr );
+      assert( fDataErrorHigh.empty() && !fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() && !fDataErrorLowPtr );
+      assert( !fCoordErrors.empty() && fCoordErrors.size() == 1 );
+      assert( !fCoordErrorsPtr.empty() && fCoordErrorsPtr.size() == 1 && fCoordErrorsPtr[0] );
+      assert( &fCoordErrors[0].front() == fCoordErrorsPtr[0] );
+
+      fData[ fNPoints ] = y;
+      fCoordErrors[0][ fNPoints ] = ex;
+      fDataError[ fNPoints ] = ey;
+
+      FitData::Add( x );
+    }
+
+    /**
+      add one dim data with  error in the coordinate (x) and asymmetric errors in the value (y)
+      in this case store the y errors and not the inverse
+    */
+    void BinData::Add( double x, double y, double ex, double eyl, double eyh )
+    {
+      assert( kAsymError == fErrorType );
+      assert( !fData.empty() && fDataPtr );
+      assert( !fDataErrorHigh.empty() && fDataErrorHighPtr );
+      assert( !fDataErrorLow.empty() && fDataErrorLowPtr );
+      assert( fDataError.empty() && !fDataErrorPtr );
+      assert( !fCoordErrors.empty() && fCoordErrors.size() == 1 );
+      assert( !fCoordErrorsPtr.empty() && fCoordErrorsPtr.size() == 1 && fCoordErrorsPtr[0] );
+      assert( &fCoordErrors[0].front() == fCoordErrorsPtr[0] );
+
+      fData[ fNPoints ] = y;
+      fCoordErrors[0][ fNPoints ] = ex;
+      fDataErrorHigh[ fNPoints ] = eyh;
+      fDataErrorLow[ fNPoints ] = eyl;
+
+      FitData::Add( x );
+    }
+
+    /**
+      add multi-dim coordinate data with only value
+    */
+    void BinData::Add( const double* x, double val )
+    {
+      assert( kNoError == fErrorType );
+
+      assert( !fData.empty() && fDataPtr );
+      assert( fDataErrorHigh.empty() && !fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() && !fDataErrorLowPtr );
+      assert( fDataError.empty() && !fDataErrorPtr );
+      assert( fCoordErrors.empty() && fCoordErrorsPtr.empty() );
+
+      fData[ fNPoints ] = val;
+
+      FitData::Add( x );
+    }
+
+    /**
+      add multi-dim coordinate data with only error in value
+    */
+    void BinData::Add( const double* x, double val, double eval )
+    {
+      assert( kValueError == fErrorType );
+      assert( !fData.empty() && fDataPtr );
+      assert( fDataErrorHigh.empty() && !fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() && !fDataErrorLowPtr );
+      assert( !fDataError.empty() && fDataErrorPtr );
+      assert( fCoordErrors.empty() && fCoordErrorsPtr.empty() );
+
+      fData[ fNPoints ] = val;
+      fDataError[ fNPoints ] = (eval != 0.0) ? 1.0/eval : 0.0;
+
+      FitData::Add( x );
+    }
+
+    /**
+      add multi-dim coordinate data with both error in coordinates and value
+    */
+    void BinData::Add( const double* x, double val, const double* ex, double eval )
+    {
+      assert( kCoordError == fErrorType );
+      assert( !fData.empty() && fDataPtr );
+      assert( !fDataError.empty() && fDataErrorPtr );
+      assert( fDataErrorHigh.empty() && !fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() && !fDataErrorLowPtr );
+      assert( fCoordErrors.size() == fDim );
+      assert( fCoordErrorsPtr.size() == fDim );
+
+      fData[ fNPoints ] = val;
+
+      for( unsigned int i=0; i<fDim; i++ )
+      {
+        assert( &fCoordErrors[i].front() == fCoordErrorsPtr[i] );
+
+        fCoordErrors[i][ fNPoints ] = ex[i];
+      }
+
+      fDataError[ fNPoints ] = eval;
+
+      FitData::Add( x );
+    }
+
+    /**
+      add multi-dim coordinate data with both error in coordinates and value
+    */
+    void BinData::Add( const double* x, double val, const double* ex, double elval, double ehval )
+    {
+      assert( kAsymError == fErrorType );
+
+      assert( !fData.empty() && fDataPtr );
+      assert( !fDataErrorHigh.empty() && fDataErrorHighPtr );
+      assert( !fDataErrorLow.empty() && fDataErrorLowPtr );
+      assert( fDataError.empty() && !fDataErrorPtr );
+      assert( fCoordErrors.size() == fDim );
+      assert( fCoordErrorsPtr.size() == fDim );
+
+      fData[ fNPoints ] = val;
+
+      for( unsigned int i=0; i<fDim; i++ )
+      {
+        assert( &fCoordErrors[i].front() == fCoordErrorsPtr[i] );
+
+        fCoordErrors[i][ fNPoints ] = ex[i];
+      }
+
+      fDataErrorLow[ fNPoints ] = elval;
+      fDataErrorHigh[ fNPoints ] = ehval;
+
+      FitData::Add( x );
+    }
+
+
+    /**
+       add the bin width data, a pointer to an array with the bin upper edge information.
+       This is needed when fitting with integral options
+       The information is added for the previously inserted point.
+       BinData::Add  must be called before
+    */
+    void BinData::AddBinUpEdge( const double* xup )
+    {
+      if ( fBinEdge.empty() )
+        InitBinEdge();
+
+      assert( fBinEdge.size() == fDim );
+
+      for ( unsigned int i=0; i<fDim; i++ )
+      {
+        fBinEdge[i].push_back( xup[i] );
+
+        // check that is consistent with number of points added in the data
+        assert( fNPoints == fBinEdge[i].size() );
+      }
+
+      // compute the bin volume
+      const double* xlow = Coords( fNPoints-1 );
+
+      double binVolume = 1.0;
+      for ( unsigned int j = 0; j < fDim; j++ )
+      {
+        binVolume *= ( xup[j] - xlow[j] );
+      }
+
+      // store the minimum bin volume found as  reference for future normalizations
+      if ( fNPoints == 1 )
+        fRefVolume = binVolume;
+      else if ( binVolume < fRefVolume )
+        fRefVolume = binVolume;
+    }
+
+
+    void BinData::InitDataVector ()
+    {
+      fData.resize( fMaxPoints );
+      fDataPtr = &fData.front();
+    }
+
+    void BinData::InitializeErrors()
+    {
+      assert( kValueError == fErrorType || kCoordError == fErrorType ||
+        kAsymError == fErrorType || kNoError == fErrorType );
+
+      if ( fpTmpCoordErrorVector )
+      {
+        delete fpTmpCoordErrorVector;
+        fpTmpCoordErrorVector = NULL;
+      }
+
+      if ( kNoError == fErrorType )
+      {
+        fCoordErrors.clear();
+        fCoordErrorsPtr.clear();
+
+        fDataErrorHigh.clear();
+        fDataErrorHighPtr = NULL;
+
+        fDataErrorLow.clear();
+        fDataErrorLowPtr = NULL;
+
+        fDataError.clear();
+        fDataErrorPtr = NULL;
+
+        return;
+      }
+
+      if ( kCoordError == fErrorType || kAsymError == fErrorType )
+      {
+        fCoordErrorsPtr.resize( fDim );
+        fCoordErrors.resize( fDim );
+        for( unsigned int i=0; i < fDim; i++ )
+        {
+          fCoordErrors[i].resize( fMaxPoints );
+
+          fCoordErrorsPtr[i] = &fCoordErrors[i].front();
+        }
+
+        fpTmpCoordErrorVector = new double[fDim];
+      }
+      else
+      {
+        fCoordErrors.clear();
+        fCoordErrorsPtr.clear();
+      }
+
+      if ( kValueError == fErrorType || kCoordError == fErrorType )
+      {
+        fDataError.resize( fMaxPoints );
+        fDataErrorPtr = &fDataError.front();
+
+        fDataErrorHigh.clear();
+        fDataErrorHighPtr = NULL;
+        fDataErrorLow.clear();
+        fDataErrorLowPtr = NULL;
+      }
+      else if ( fErrorType == kAsymError )
+      {
+        fDataErrorHigh.resize( fMaxPoints );
+        fDataErrorHighPtr = &fDataErrorHigh.front();
+
+        fDataErrorLow.resize( fMaxPoints );
+        fDataErrorLowPtr = &fDataErrorLow.front();
+
+        fDataError.clear();
+        fDataErrorPtr = NULL;
+      }
+      else
+      {
+        assert(false);
+      }
+    }
+
+    void BinData::InitBinEdge()
+    {
+      fBinEdge.resize( fDim );
+
+      for( unsigned int i=0; i<fDim; i++ )
+      {
+        fBinEdge[i].reserve( fMaxPoints );
+      }
+
+      if ( fpTmpBinEdgeVector )
+      {
+        delete fpTmpBinEdgeVector;
+        fpTmpBinEdgeVector = NULL;
+      }
+
+      fpTmpBinEdgeVector = new double[ fDim ];
+    }
+
+    void BinData::UnWrap( )
+    {
+      assert( fWrapped );
+      assert( kValueError == fErrorType || kCoordError == fErrorType ||
+        kAsymError == fErrorType || kNoError == fErrorType );
+      assert( fDataError.empty() || &fDataError.front() == fDataErrorPtr );
+      assert( fDataErrorHigh.empty() || &fDataErrorHigh.front() == fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() || &fDataErrorLow.front() == fDataErrorLowPtr );
+      assert( fDataErrorLow.empty() == fDataErrorHigh.empty() );
+
+      assert( fData.empty() );
+      assert( fDataPtr );
+
+      fData.resize( fNPoints );
+      std::copy( fDataPtr, fDataPtr + fNPoints, fData.begin() );
+      fDataPtr = &fData.front();
+
+      for ( unsigned int i=0; i < fDim; i++ )
+      {
+        assert( fCoordErrorsPtr[i] );
+        assert( fCoordErrors.empty() || &fCoordErrors[i].front() == fCoordErrorsPtr[i] );
+      }
+
+      if( kValueError == fErrorType || kCoordError == fErrorType )
+      {
+        assert( fDataError.empty() );
+        assert( fDataErrorPtr );
+
+        fDataError.resize( fNPoints );
+        std::copy( fDataErrorPtr, fDataErrorPtr + fNPoints, fDataError.begin() );
+        fDataErrorPtr = &fDataError.front();
+      }
+
+      if ( kValueError == fErrorType )
+      {
+        for ( unsigned int i=0; i < fNPoints; i++ )
+        {
+          fDataError[i] = 1.0 / fDataError[i];
+        }
+      }
+
+      if ( kCoordError == fErrorType || kAsymError == fErrorType )
+      {
+        fCoordErrors.resize( fDim );
+        for( unsigned int i=0; i < fDim; i++ )
+        {
+          assert( fCoordErrorsPtr[i] );
+          fCoordErrors[i].resize( fNPoints );
+          std::copy( fCoordErrorsPtr[i], fCoordErrorsPtr[i] + fNPoints, fCoordErrors[i].begin() );
+          fCoordErrorsPtr[i] = &fCoordErrors[i].front();
+        }
+
+        if( kAsymError == fErrorType )
+        {
+          assert( fDataErrorHigh.empty() );
+          assert( fDataErrorLow.empty() );
+          assert( fDataErrorHighPtr && fDataErrorLowPtr );
+
+          fDataErrorHigh.resize( fNPoints );
+          fDataErrorLow.resize( fNPoints );
+          std::copy( fDataErrorHighPtr, fDataErrorHighPtr + fNPoints, fDataErrorHigh.begin() );
+          std::copy( fDataErrorLowPtr, fDataErrorLowPtr + fNPoints, fDataErrorLow.begin() );
+          fDataErrorHighPtr = &fDataErrorHigh.front();
+          fDataErrorLowPtr = &fDataErrorLow.front();
+        }
+      }
+
+      FitData::UnWrap();
+    }
+
+
+  } // end namespace Fit
 
 } // end namespace ROOT
 

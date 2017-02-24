@@ -13,14 +13,10 @@
 #ifndef ROOT_Fit_BinData
 #define ROOT_Fit_BinData
 
-#include "Fit/DataVector.h"
+#include "Fit/FitData.h"
+#include "Math/Error.h"
+#include <cmath>
 
-
-#ifdef USE_BINPOINT_CLASS
-
-#include "Fit/BinPoint.h"
-
-#endif
 
 
 namespace ROOT {
@@ -60,476 +56,515 @@ public :
 
    enum ErrorType { kNoError, kValueError, kCoordError, kAsymError };
 
-   static unsigned int GetPointSize(ErrorType err, unsigned int dim) {
-      if (dim == 0 || dim > MaxSize() ) return 0;
-      if (err == kNoError) return dim + 1;   // no errors
-      if (err == kValueError) return dim + 2;  // error only on the value
-      if (err == kCoordError) return 2 * dim + 2 ;  // error on value and coordinate
-      return 2 * dim + 3;   // error on value (low and high)  and error on coordinate
+  /**
+    constructor from dimension of point  and max number of points (to pre-allocate vector)
+    Give a zero value and then use Initialize later one if the size is not known
+  */
+
+  explicit BinData(unsigned int maxpoints = 0, unsigned int dim = 1,
+    ErrorType err = kValueError);
+
+
+  /**
+    constructor from option and default range
+  */
+  explicit BinData (const DataOptions & opt, unsigned int maxpoints = 0,
+    unsigned int dim = 1, ErrorType err = kValueError);
+
+  /**
+    constructor from options and range
+    efault is 1D and value errors
+  */
+  BinData (const DataOptions & opt, const DataRange & range,
+    unsigned int maxpoints = 0, unsigned int dim = 1, ErrorType err = kValueError );
+
+  /** constructurs using external data */
+
+  /**
+    constructor from external data for 1D with errors on  coordinate and value
+  */
+  BinData(unsigned int n, const double * dataX, const double * val,
+    const double * ex , const double * eval );
+
+  /**
+    constructor from external data for 2D with errors on  coordinate and value
+  */
+  BinData(unsigned int n, const double * dataX, const double * dataY,
+    const double * val, const double * ex , const double * ey,
+    const double * eval  );
+
+  /**
+    constructor from external data for 3D with errors on  coordinate and value
+  */
+  BinData(unsigned int n, const double * dataX, const double * dataY,
+    const double * dataZ, const double * val, const double * ex ,
+    const double * ey , const double * ez , const double * eval   );
+
+  /**
+    destructor
+  */
+  virtual ~BinData();
+
+  /**
+    copy constructors
+  */
+  BinData(const BinData & rhs);
+
+  BinData & operator= ( const BinData & rhs );
+
+
+  /**
+    preallocate a data set with given size ,  dimension and error type (to get the full point size)
+    If the data set already exists and it is having the compatible point size space for the new points
+    is created in the data sets, while if not compatible the old data are erased and new space of
+    new size is allocated.
+    (i.e if exists initialize is equivalent to a resize( NPoints() + maxpoints)
+  */
+
+  void Append( unsigned int newPoints, unsigned int dim = 1, ErrorType err = kValueError );
+
+  void Initialize( unsigned int newPoints, unsigned int dim = 1, ErrorType err = kValueError );
+
+  /**
+    flag to control if data provides error on the coordinates
+  */
+  bool HaveCoordErrors() const {
+    assert (  fErrorType == kNoError ||
+              fErrorType == kValueError ||
+              fErrorType == kCoordError ||
+              fErrorType == kAsymError );
+
+    return fErrorType == kCoordError;
+  }
+
+  /**
+    flag to control if data provides asymmetric errors on the value
+  */
+  bool HaveAsymErrors() const {
+    assert (  fErrorType == kNoError ||
+              fErrorType == kValueError ||
+              fErrorType == kCoordError ||
+              fErrorType == kAsymError );
+
+    return fErrorType == kAsymError;
+  }
+
+
+  /**
+    apply a Log transformation of the data values
+    can be used for example when fitting an exponential or gaussian
+    Transform the data in place need to copy if want to preserve original data
+    The data sets must not contain negative values. IN case it does,
+    an empty data set is returned
+  */
+  BinData & LogTransform();
+
+
+  /**
+    add one dim data with only coordinate and values
+  */
+  void Add( double x, double y );
+
+  /**
+    add one dim data with no error in the coordinate (x)
+    in this case store the inverse of the error in the value (y)
+  */
+  void Add( double x, double y, double ey );
+
+  /**
+    add one dim data with  error in the coordinate (x)
+    in this case store the value (y)  error and not the inverse
+  */
+  void Add( double x, double y, double ex, double ey );
+
+  /**
+    add one dim data with  error in the coordinate (x) and asymmetric errors in the value (y)
+    in this case store the y errors and not the inverse
+  */
+  void Add( double x, double y, double ex, double eyl, double eyh );
+
+  /**
+    add multi-dim coordinate data with only value
+  */
+  void Add( const double* x, double val );
+
+  /**
+    add multi-dim coordinate data with only error in value
+  */
+  void Add( const double* x, double val, double eval );
+
+  /**
+    add multi-dim coordinate data with both error in coordinates and value
+  */
+  void Add( const double* x, double val, const double* ex, double eval );
+
+  /**
+    add multi-dim coordinate data with both error in coordinates and value
+  */
+  void Add( const double* x, double val, const double* ex, double elval, double ehval );
+
+  /**
+     add the bin width data, a pointer to an array with the bin upper edge information.
+     This is needed when fitting with integral options
+     The information is added for the previously inserted point.
+     BinData::Add  must be called before
+  */
+  void AddBinUpEdge( const double* xup );
+
+  /**
+    return the value for the given fit point
+  */
+  double Value( unsigned int ipoint ) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( fDataPtr );
+    assert( fData.empty() || &fData.front() == fDataPtr );
+
+    return fDataPtr[ipoint];
+  }
+
+  /**
+    return error on the value for the given fit point
+    Safe (but slower) method returning correctly the error on the value
+    in case of asymm errors return the average 0.5(eu + el)
+  */
+  double Error( unsigned int ipoint ) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( kValueError == fErrorType || kCoordError == fErrorType ||
+      kAsymError == fErrorType || kNoError == fErrorType );
+
+    if ( fErrorType == kNoError )
+    {
+      assert( !fDataErrorPtr && !fDataErrorHighPtr && !fDataErrorLowPtr );
+      assert( fDataError.empty() && fDataErrorHigh.empty() && fDataErrorLow.empty() );
+      return 1.0;
     }
 
-   ErrorType GetErrorType() const {
-      if (fPointSize == fDim + 1) return kNoError;
-      if (fPointSize == fDim + 2) return kValueError;
-      if (fPointSize == 2 * fDim + 2) return kCoordError;
-      assert( fPointSize == 2 * fDim + 3 ) ;
-      return kAsymError;
-   }
+    if ( fErrorType == kValueError ) // need to invert (inverror is stored)
+    {
+      assert( fDataErrorPtr && !fDataErrorHighPtr && !fDataErrorLowPtr );
+      assert( fDataErrorHigh.empty() && fDataErrorLow.empty() );
+      assert( fDataError.empty() || &fDataError.front() == fDataErrorPtr );
 
+      double eval = fDataErrorPtr[ ipoint ];
+
+      if (fWrapped)
+        return eval;
+      else
+        return (eval != 0.0) ? 1.0/eval : 0.0;
+    }
+
+    if ( fErrorType == kAsymError )
+    {  // return 1/2(el + eh)
+      assert( !fDataErrorPtr && fDataErrorHighPtr && fDataErrorLowPtr );
+      assert( fDataError.empty() );
+      assert( fDataErrorHigh.empty() || &fDataErrorHigh.front() == fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() || &fDataErrorLow.front() == fDataErrorLowPtr );
+      assert( fDataErrorLow.empty() == fDataErrorHigh.empty() );
+
+      double eh = fDataErrorHighPtr[ ipoint ];
+      double el = fDataErrorLowPtr[ ipoint ];
+
+      return (el+eh) / 2.0;
+    }
+
+    assert( fErrorType == kCoordError );
+    return fDataErrorPtr[ ipoint ];
+  }
+
+  void GetAsymError( unsigned int ipoint, double& lowError, double& highError ) const
+  {
+    assert( fErrorType == kAsymError );
+    assert( !fDataErrorPtr && fDataErrorHighPtr && fDataErrorLowPtr );
+    assert( fDataError.empty() );
+    assert( fDataErrorHigh.empty() || &fDataErrorHigh.front() == fDataErrorHighPtr );
+    assert( fDataErrorLow.empty() || &fDataErrorLow.front() == fDataErrorLowPtr );
+    assert( fDataErrorLow.empty() == fDataErrorHigh.empty() );
+
+    lowError = fDataErrorLowPtr[ ipoint ];
+    highError = fDataErrorHighPtr[ ipoint ];
+  }
+
+  /**
+    Return the inverse of error on the value for the given fit point
+    useful when error in the coordinates are not stored and then this is used directly this as the weight in
+    the least square function
+  */
+  double InvError( unsigned int ipoint ) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( kValueError == fErrorType || kCoordError == fErrorType ||
+      kAsymError == fErrorType || kNoError == fErrorType );
+
+    if ( fErrorType == kNoError )
+    {
+      assert( !fDataErrorPtr && !fDataErrorHighPtr && !fDataErrorLowPtr );
+      assert( fDataError.empty() && fDataErrorHigh.empty() && fDataErrorLow.empty() );
+      return 1.0;
+    }
+
+    if ( fErrorType == kValueError ) // need to invert (inverror is stored)
+    {
+      assert( fDataErrorPtr && !fDataErrorHighPtr && !fDataErrorLowPtr );
+      assert( fDataErrorHigh.empty() && fDataErrorLow.empty() );
+      assert( fDataError.empty() || &fDataError.front() == fDataErrorPtr );
+
+      double eval = fDataErrorPtr[ ipoint ];
+
+      if (fWrapped)
+        return 1.0 / eval;
+      else
+        return (eval != 0.0) ? eval : 0.0;
+    }
+
+    if ( fErrorType == kAsymError )
+    {  // return 1/2(el + eh)
+      assert( !fDataErrorPtr && fDataErrorHighPtr && fDataErrorLowPtr );
+      assert( fDataError.empty() );
+      assert( fDataErrorHigh.empty() || &fDataErrorHigh.front() == fDataErrorHighPtr );
+      assert( fDataErrorLow.empty() || &fDataErrorLow.front() == fDataErrorLowPtr );
+      assert( fDataErrorLow.empty() == fDataErrorHigh.empty() );
+
+      double eh = fDataErrorHighPtr[ ipoint ];
+      double el = fDataErrorLowPtr[ ipoint ];
+
+      return 2.0 / (el+eh);
+    }
+
+    assert( fErrorType == kCoordError );
+    return 1.0 / fDataErrorPtr[ ipoint ];
+  }
 
 
    /**
-      constructor from dimension of point  and max number of points (to pre-allocate vector)
-      Give a zero value and then use Initialize later one if the size is not known
-    */
+    retrieve at the same time a  pointer to the coordinate data and the fit value
+    More efficient than calling Coords(i) and Value(i)
+  */
+  // not threadsafe, to be replaced with never constructs!
+  // for example: just return std::array or std::vector, there's
+  // is going to be only minor overhead in c++11.
+  const double * GetPoint( unsigned int ipoint, double & value ) const
+  {
+    assert( ipoint < fMaxPoints );
+    value = Value( ipoint );
 
-   explicit BinData(unsigned int maxpoints = 0, unsigned int dim = 1, ErrorType err = kValueError);
+    return Coords( ipoint );
+  }
 
-   /**
-      constructor from option and default range
-    */
-   explicit BinData (const DataOptions & opt, unsigned int maxpoints = 0, unsigned int dim = 1, ErrorType err = kValueError);
+  /**
+    returns a single coordinate error component of a point.
+    This function is threadsafe in contrast to Coords(...)
+    and can easily get vectorized by the compiler in loops
+    running over the ipoint-index.
+  */
+  double GetCoordErrorComponent( unsigned int ipoint, unsigned int icoord ) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( icoord < fDim );
+    assert( fCoordErrorsPtr.size() == fDim );
+    assert( fCoordErrorsPtr[icoord] );
+    assert( fCoordErrors.empty() || &fCoordErrors[icoord].front() == fCoordErrorsPtr[icoord] );
 
-   /**
-      constructor from options and range
-      efault is 1D and value errors
-    */
-   BinData (const DataOptions & opt, const DataRange & range, unsigned int maxpoints = 0, unsigned int dim = 1, ErrorType err = kValueError );
+    return fCoordErrorsPtr[icoord][ipoint];
+  }
 
-   /** constructurs using external data */
+  /**
+    Return a pointer to the errors in the coordinates for the given fit point
+  */
+  // not threadsafe, to be replaced with never constructs!
+  // for example: just return std::array or std::vector, there's
+  // is going to be only minor overhead in c++11.
+  const double* CoordErrors( unsigned int ipoint ) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( fpTmpCoordErrorVector );
+    assert( fErrorType == kCoordError || fErrorType == kAsymError );
 
-   /**
-      constructor from external data for 1D with errors on  coordinate and value
-    */
-   BinData(unsigned int n, const double * dataX, const double * val, const double * ex , const double * eval );
+    for ( unsigned int i=0; i < fDim; i++ )
+    {
+      assert( fCoordErrorsPtr[i] );
+      assert( fCoordErrors.empty() || &fCoordErrors[i].front() == fCoordErrorsPtr[i] );
 
-   /**
-      constructor from external data for 2D with errors on  coordinate and value
-    */
-   BinData(unsigned int n, const double * dataX, const double * dataY, const double * val, const double * ex , const double * ey, const double * eval  );
+      fpTmpCoordErrorVector[i] = fCoordErrorsPtr[i][ipoint];
+    }
 
-   /**
-      constructor from external data for 3D with errors on  coordinate and value
-    */
-   BinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, const double * val, const double * ex , const double * ey , const double * ez , const double * eval   );
-
-   /**
-      copy constructors
-   */
-   BinData(const BinData &);
-
-   /**
-       assignment operator
-   */
-   BinData & operator= (const BinData &);
-
-
-   /**
-      destructor
-   */
-   virtual ~BinData();
-
-   /**
-      preallocate a data set with given size ,  dimension and error type (to get the full point size)
-      If the data set already exists and it is having the compatible point size space for the new points
-      is created in the data sets, while if not compatible the old data are erased and new space of
-      new size is allocated.
-      (i.e if exists initialize is equivalent to a resize( NPoints() + maxpoints)
-    */
-   void Initialize(unsigned int maxpoints, unsigned int dim = 1, ErrorType err = kValueError );
+    return fpTmpCoordErrorVector;
+  }
 
 
-   /**
-      return the size of a fit point (is the coordinate dimension + 1 for the value and eventually
-      the number of all errors
-    */
-   unsigned int PointSize() const {
-      return fPointSize;
-   }
+  /**
+    retrieve in a single call a pointer to the coordinate data, value and inverse error for
+    the given fit point.
+    To be used only when type is kValueError or kNoError. In the last case the value 1 is returned
+    for the error.
+  */
+  // not threadsafe, to be replaced with never constructs!
+  // for example: just return std::array or std::vector, there's
+  // is going to be only minor overhead in c++11.
+  const double* GetPoint( unsigned int ipoint, double & value, double & invError ) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( fErrorType == kNoError || fErrorType == kValueError );
 
-   /**
-      return the size of internal data  (number of fit points)
-      if data are not copied in but used externally the size is 0
-    */
-   unsigned int DataSize() const {
-      if (fDataVector) return fDataVector->Size();
+    double e = Error( ipoint );
+
+    if (fWrapped)
+      invError = e;
+    else
+      invError = ( e != 0.0 ) ? 1.0/e : 1.0;
+
+    return GetPoint( ipoint, value );
+  }
+
+  /**
+    Retrieve the errors on the point (coordinate and value) for the given fit point
+    It must be called only when the coordinate errors are stored otherwise it will produce an
+    assert.
+  */
+  // not threadsafe, to be replaced with never constructs!
+  // for example: just return std::array or std::vector, there's
+  // is going to be only minor overhead in c++11.
+  const double* GetPointError(unsigned int ipoint, double & errvalue) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( fErrorType == kCoordError || fErrorType == kAsymError );
+
+    errvalue = Error( ipoint );
+    return CoordErrors( ipoint );
+  }
+
+  /**
+    Get errors on the point (coordinate errors and asymmetric value errors) for the
+    given fit point.
+    It must be called only when the coordinate errors and asymmetric errors are stored
+    otherwise it will produce an assert.
+  */
+  // not threadsafe, to be replaced with never constructs!
+  // for example: just return std::array or std::vector, there's
+  // is going to be only minor overhead in c++11.
+  const double* GetPointError(unsigned int ipoint, double & errlow, double & errhigh) const
+  {
+    assert( ipoint < fMaxPoints );
+    assert( fErrorType == kAsymError );
+    assert( !fDataErrorPtr && fDataErrorHighPtr && fDataErrorLowPtr );
+    assert( fDataError.empty() );
+    assert( fDataErrorHigh.empty() || &fDataErrorHigh.front() == fDataErrorHighPtr );
+    assert( fDataErrorLow.empty() || &fDataErrorLow.front() == fDataErrorLowPtr );
+    assert( fDataErrorLow.empty() == fDataErrorHigh.empty() );
+
+    errhigh = fDataErrorHighPtr[ ipoint ];
+    errlow = fDataErrorLowPtr[ ipoint ];
+
+    return CoordErrors( ipoint );
+  }
+
+  /**
+    returns a single coordinate error component of a point.
+    This function is threadsafe in contrast to Coords(...)
+    and can easily get vectorized by the compiler in loops
+    running over the ipoint-index.
+  */
+  double GetBinUpEdgeComponent( unsigned int ipoint, unsigned int icoord ) const
+  {
+    assert( icoord < fDim );
+    assert( !fBinEdge.empty() );
+    assert( ipoint < fBinEdge.front().size() );
+
+    return fBinEdge[icoord][ipoint];
+  }
+
+  /**
+     return an array containing the upper edge of the bin for coordinate i
+     In case of empty bin they could be merged in a single larger bin
+     Return a NULL pointer  if the bin width  is not stored
+  */
+  // not threadsafe, to be replaced with never constructs!
+  // for example: just return std::array or std::vector, there's
+  // is going to be only minor overhead in c++11.
+  const double* BinUpEdge( unsigned int ipoint ) const
+  {
+    if ( fBinEdge.empty() || ipoint > fBinEdge.front().size() )
       return 0;
-   }
 
-   /**
-      flag to control if data provides error on the coordinates
-    */
-   bool HaveCoordErrors() const {
-      if (fPointSize > fDim +2) return true;
-      return false;
-   }
+    assert( fpTmpBinEdgeVector );
+    assert( !fBinEdge.empty() );
+    assert( ipoint < fMaxPoints );
 
-   /**
-      flag to control if data provides asymmetric errors on the value
-    */
-   bool HaveAsymErrors() const {
-      if (fPointSize > 2 * fDim +2) return true;
-      return false;
-   }
+    for ( unsigned int i=0; i < fDim; i++ )
+    {
+      fpTmpBinEdgeVector[i] = fBinEdge[i][ ipoint ];
+    }
 
+    return fpTmpBinEdgeVector;
+  }
 
-   /**
-      add one dim data with only coordinate and values
-   */
-   void Add(double x, double y );
+  /**
+    query if the data store the bin edges instead of the center
+  */
+  bool HasBinEdges() const {
+    return fBinEdge.size() == fDim && fBinEdge[0].size() > 0;
+  }
 
-   /**
-      add one dim data with no error in the coordinate (x)
-      in this case store the inverse of the error in the value (y)
-   */
-   void Add(double x, double y, double ey);
+  /**
+     retrieve the reference volume used to normalize the data when the option bin volume is set
+  */
+  double RefVolume() const { return fRefVolume; }
 
-   /**
-      add one dim data with  error in the coordinate (x)
-      in this case store the value (y)  error and not the inverse
-   */
-   void Add(double x, double y, double ex, double ey);
+  /**
+    set the reference volume used to normalize the data when the option bin volume is set
+  */
+  void SetRefVolume(double value) { fRefVolume = value; }
 
-   /**
-      add one dim data with  error in the coordinate (x) and asymmetric errors in the value (y)
-      in this case store the y errors and not the inverse
-   */
-   void Add(double x, double y, double ex, double eyl , double eyh);
-
-   /**
-      add multi-dim coordinate data with only value (no errors)
-   */
-   void Add(const double *x, double val);
-
-   /**
-      add multi-dim coordinate data with only error in value
-   */
-   void Add(const double *x, double val, double  eval);
-
-   /**
-      add multi-dim coordinate data with both error in coordinates and value
-   */
-   void Add(const double *x, double val, const double * ex, double  eval);
-
-   /**
-      add multi-dim coordinate data with both error in coordinates and value
-   */
-   void Add(const double *x, double val, const double * ex, double  elval, double  ehval);
-
-   /**
-      return a pointer to the coordinates data for the given fit point
-    */
-   const double * Coords(unsigned int ipoint) const {
-      if (fDataVector)
-         return &((fDataVector->Data())[ ipoint*fPointSize ] );
-
-      return fDataWrapper->Coords(ipoint);
-   }
-
-   /**
-      return the value for the given fit point
-    */
-   double Value(unsigned int ipoint) const {
-      if (fDataVector)
-         return (fDataVector->Data())[ ipoint*fPointSize + fDim ];
-
-      return fDataWrapper->Value(ipoint);
-   }
-
-
-   /**
-      return error on the value for the given fit point
-      Safe (but slower) method returning correctly the error on the value
-      in case of asymm errors return the average 0.5(eu + el)
-    */
-   double Error(unsigned int ipoint) const {
-      if (fDataVector) {
-         ErrorType type = GetErrorType();
-         if (type == kNoError ) return 1;
-         // error on the value is the last element in the point structure
-         double eval =  (fDataVector->Data())[ (ipoint+1)*fPointSize - 1];
-         if (type == kValueError ) // need to invert (inverror is stored)
-            return eval != 0 ? 1.0/eval : 0;
-         else if (type == kAsymError) {  // return 1/2(el + eh)
-            double el = (fDataVector->Data())[ (ipoint+1)*fPointSize - 2];
-            return 0.5 * (el+eval);
-         }
-         return eval; // case of coord errors
-      }
-
-      return fDataWrapper->Error(ipoint);
-   }
-
-   /**
-      Return the inverse of error on the value for the given fit point
-      useful when error in the coordinates are not stored and then this is used directly this as the weight in
-      the least square function
-    */
-   double InvError(unsigned int ipoint) const {
-      if (fDataVector) {
-         // error on the value is the last element in the point structure
-         double eval =  (fDataVector->Data())[ (ipoint+1)*fPointSize - 1];
-         return eval;
-//          if (!fWithCoordError) return eval;
-//          // when error in the coordinate is stored, need to invert it
-//          return eval != 0 ? 1.0/eval : 0;
-      }
-      //case data wrapper
-
-      double eval = fDataWrapper->Error(ipoint);
-      return eval != 0 ? 1.0/eval : 0;
-   }
-
-
-   /**
-      Return a pointer to the errors in the coordinates for the given fit point
-    */
-   const double * CoordErrors(unsigned int ipoint) const {
-      if (fDataVector) {
-         // error on the value is the last element in the point structure
-         return  &(fDataVector->Data())[ (ipoint)*fPointSize + fDim + 1];
-      }
-
-      return fDataWrapper->CoordErrors(ipoint);
-   }
-
-   /**
-      retrieve at the same time a  pointer to the coordinate data and the fit value
-      More efficient than calling Coords(i) and Value(i)
-    */
-   const double * GetPoint(unsigned int ipoint, double & value) const {
-      if (fDataVector) {
-         unsigned int j = ipoint*fPointSize;
-         const std::vector<double> & v = (fDataVector->Data());
-         const double * x = &v[j];
-         value = v[j+fDim];
-         return x;
-      }
-      value = fDataWrapper->Value(ipoint);
-      return fDataWrapper->Coords(ipoint);
-   }
-
-   /**
-      retrieve in a single call a pointer to the coordinate data, value and inverse error for
-      the given fit point.
-      To be used only when type is kValueError or kNoError. In the last case the value 1 is returned
-      for the error.
-   */
-   const double * GetPoint(unsigned int ipoint, double & value, double & invError) const {
-      if (fDataVector) {
-         const std::vector<double> & v = (fDataVector->Data());
-         unsigned int j = ipoint*fPointSize;
-         const double * x = &v[j];
-         j += fDim;
-         value = v[j];
-         if (fPointSize == fDim +1) // value error (type=kNoError)
-            invError = 1;
-         else if (fPointSize == fDim +2) // value error (type=kNoError)
-            invError = v[j+1];
-         else
-            assert(0); // cannot be here
-
-         return x;
-      }
-      value = fDataWrapper->Value(ipoint);
-      double e = fDataWrapper->Error(ipoint);
-      invError = ( e > 0 ) ? 1.0/e : 1.0;
-      return fDataWrapper->Coords(ipoint);
-   }
-
-   /**
-      Retrieve the errors on the point (coordinate and value) for the given fit point
-      It must be called only when the coordinate errors are stored otherwise it will produce an
-      assert.
-   */
-   const double * GetPointError(unsigned int ipoint, double & errvalue) const {
-      if (fDataVector) {
-         assert(fPointSize > fDim + 2);
-         unsigned int j = ipoint*fPointSize;
-         const std::vector<double> & v = (fDataVector->Data());
-         const double * ex = &v[j+fDim+1];
-         errvalue = v[j + 2*fDim +1];
-         return ex;
-      }
-      errvalue = fDataWrapper->Error(ipoint);
-      return fDataWrapper->CoordErrors(ipoint);
-   }
-
-   /**
-      Get errors on the point (coordinate errors and asymmetric value errors) for the
-      given fit point.
-      It must be called only when the coordinate errors and asymmetric errors are stored
-      otherwise it will produce an assert.
-   */
-   const double * GetPointError(unsigned int ipoint, double & errlow, double & errhigh) const {
-      // external data is not supported for asymmetric errors
-      assert(fDataVector);
-
-      assert(fPointSize > 2 * fDim + 2);
-      unsigned int j = ipoint*fPointSize;
-      const std::vector<double> & v = (fDataVector->Data());
-      const double * ex = &v[j+fDim+1];
-      errlow  = v[j + 2*fDim +1];
-      errhigh = v[j + 2*fDim +2];
-      return ex;
-   }
-
-
-#ifdef USE_BINPOINT_CLASS
-   const BinPoint & GetPoint(unsigned int ipoint) const {
-      if (fDataVector) {
-         unsigned int j = ipoint*fPointSize;
-         const std::vector<double> & v = (fDataVector->Data());
-         const double * x = &v[j];
-         double value = v[j+fDim];
-         if (fPointSize > fDim + 2) {
-            const double * ex = &v[j+fDim+1];
-            double err = v[j + 2*fDim +1];
-            fPoint.Set(x,value,ex,err);
-         }
-         else {
-            double invError = v[j+fDim+1];
-            fPoint.Set(x,value,invError);
-         }
-
-      }
-      else {
-         double value = fDataWrapper->Value(ipoint);
-         double e = fDataWrapper->Error(ipoint);
-         if (fPointSize > fDim + 2) {
-            fPoint.Set(fDataWrapper->Coords(ipoint), value, fDataWrapper->CoordErrors(ipoint), e);
-         } else {
-            double invError = ( e != 0 ) ? 1.0/e : 0;
-            fPoint.Set(fDataWrapper->Coords(ipoint), value, invError);
-         }
-      }
-      return fPoint;
-   }
-
-
-   const BinPoint & GetPointError(unsigned int ipoint) const {
-      if (fDataVector) {
-         unsigned int j = ipoint*fPointSize;
-         const std::vector<double> & v = (fDataVector->Data());
-         const double * x = &v[j];
-         double value = v[j+fDim];
-         double invError = v[j+fDim+1];
-         fPoint.Set(x,value,invError);
-      }
-      else {
-         double value = fDataWrapper->Value(ipoint);
-         double e = fDataWrapper->Error(ipoint);
-         double invError = ( e != 0 ) ? 1.0/e : 0;
-         fPoint.Set(fDataWrapper->Coords(ipoint), value, invError);
-      }
-      return fPoint;
-   }
-#endif
-
-   /**
-      resize the vector to the new given npoints
-      if vector does not exists is created using existing point size
-    */
-   void Resize (unsigned int npoints);
-
-   /**
-      return number of fit points
-    */
-   unsigned int NPoints() const { return fNPoints; }
-
-   /**
-      return number of fit points
-    */
-   unsigned int Size() const { return fNPoints; }
-
-   /**
-      return coordinate data dimension
-    */
-   unsigned int NDim() const { return fDim; }
-
-   /**
-      apply a Log transformation of the data values
-      can be used for example when fitting an exponential or gaussian
-      Transform the data in place need to copy if want to preserve original data
-      The data sets must not contain negative values. IN case it does,
-      an empty data set is returned
-    */
-   BinData & LogTransform();
-
-
-   /**
-       return an array containing the upper edge of the bin for coordinate i
-       In case of empty bin they could be merged in a single larger bin
-       Return a NULL pointer  if the bin width  is not stored
-   */
-   const double * BinUpEdge(unsigned int icoord) const {
-      if (fBinEdge.size() == 0 || icoord*fDim > fBinEdge.size() ) return 0;
-      return &fBinEdge[ icoord * fDim];
-   }
-
-   /**
-      query if the data store the bin edges instead of the center
-   */
-   bool HasBinEdges() const {
-      return fBinEdge.size() > 0 && fBinEdge.size() == fDim*fNPoints;
-   }
-
-   /**
-       add the bin width data, a pointer to an array with the bin upper edge information.
-       This is needed when fitting with integral options
-       The information is added for the previously inserted point.
-       BinData::Add  must be called before
-   */
-   void AddBinUpEdge(const double * xup);
-
-   /**
-       retrieve the reference volume used to normalize the data when the option bin volume is set
-    */
-   double RefVolume() const { return fRefVolume; }
-
-   /**
-      set the reference volume used to normalize the data when the option bin volume is set
-    */
-   void SetRefVolume(double value) { fRefVolume = value; }
-
-
-   /**
-      compute the total sum of the data content
-      (sum of weights in cse of weighted data set)
-   */
-   double SumOfContent() const { return fSumContent; }
-
-   /**
-      compute the total sum of the error square
-      (sum of weight square in case of a weighted data set)
-   */
-   double SumOfError2() const { return fSumError2;}
-
+  /**
+     retrieve the errortype
+  */
+  ErrorType GetErrorType( ) const
+  {
+    return fErrorType;
+  }
 
 protected:
+  void InitDataVector ();
 
-   void SetNPoints(unsigned int n) { fNPoints = n; }
+  void InitializeErrors();
+
+  void InitBinEdge();
+
+  void UnWrap( );
 
 private:
 
+  ErrorType fErrorType;
+  double fRefVolume;  // reference bin volume - used to normalize the bins in case of variable bins data
 
-   unsigned int fDim;       // coordinate dimension
-   unsigned int fPointSize; // total point size including value and errors (= fDim + 2 for error in only Y )
-   unsigned int fNPoints;   // number of contained points in the data set (can be different than size of vector)
-   double fSumContent;  // total sum of the bin data content
-   double fSumError2;  // total sum square of the errors
-   double fRefVolume;  // reference bin volume - used to normalize the bins in case of variable bins data
+  /**
+   * Stores the data values the same way as the coordinates.
+   *
+  */
+  std::vector< double > fData;
+  const double* fDataPtr;
 
-   DataVector * fDataVector;  // pointer to the copied in data vector
-   DataWrapper * fDataWrapper;  // pointer to the external data wrapper structure
+  std::vector< std::vector< double > > fCoordErrors;
+  std::vector< const double* > fCoordErrorsPtr;
+  // This vector contains the coordinate errors
+  // in the same way as fCoords.
 
-   std::vector<double> fBinEdge;  // vector containing the bin upper edge (coordinate will contain low edge)
+  std::vector< double > fDataError;
+  std::vector< double > fDataErrorHigh;
+  std::vector< double > fDataErrorLow;
+  const double*  fDataErrorPtr;
+  const double*  fDataErrorHighPtr;
+  const double*  fDataErrorLowPtr;
+  // This vector contains the data error.
+  // Either only fDataError or fDataErrorHigh and fDataErrorLow are used.
 
+  double* fpTmpCoordErrorVector; // not threadsafe stuff!
 
-#ifdef USE_BINPOINT_CLASS
-   mutable BinPoint fPoint;
-#endif
+  std::vector< std::vector< double > > fBinEdge;
+  // vector containing the bin upper edge (coordinate will contain low edge)
 
+  double* fpTmpBinEdgeVector; // not threadsafe stuff!
 };
 
 
@@ -540,5 +575,3 @@ private:
 
 
 #endif /* ROOT_Fit_BinData */
-
-
