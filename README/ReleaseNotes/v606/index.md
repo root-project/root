@@ -743,5 +743,6 @@ Changes will be part of the future 6.06/10
 ### I/O
 
 - Fixed the I/O of std::vector<T> where T is a class *and* no dictionary was generated for std::vector<T> *and* sizeof(T)%sizeof(T*) is not zero. [ROOT-8478]
+- Resolve several issues with Collection proxy for std::bitset and std::vector<bool>
 
 ### Bugs fixed in this release
