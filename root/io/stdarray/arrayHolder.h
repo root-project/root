@@ -58,9 +58,32 @@ class MetaArrayHolder {
 #endif
 };
 
+class MetaArrayHolder2 {
+  public:
+   void Set(int a, int b, int c) {
+      m_a2.Set(a,b,c);
+      }
+   MetaArrayHolder2(int a, int b, int c){Set(a,b,c);};
+   MetaArrayHolder2() {
+      Set(0,0,0);
+   };
+   std::string ToString() {
+      std::stringstream ss;
+      ss << "MetaArrayHolder2: " << m_a2.ToString();
+      return ss.str();
+   }
+private:
+    ArrayHolder m_a2;
+};
+
+
+
+
 #ifdef __ROOTCLING__
 #pragma link C++ class ArrayHolder+;
 #pragma link C++ class MetaArrayHolder+;
+#pragma link C++ class MetaArrayHolder2+;
+#pragma link C++ class vector<MetaArrayHolder2>+;
 #endif
 
 #endif

@@ -58,4 +58,21 @@ bool isCorrect_2(const std::string& out) {
    return ret;
 }
 
+bool isCorrect_3(const std::string& out) {
+   static const char* expected_out = R"(MetaArrayHolder2: 0-1-2-10-11-0.5-1.5-2.5-
+---
+MetaArrayHolder2: 0-1-2-10-11-0.5-1.5-2.5-
+MetaArrayHolder2: 1-2-3-10-11-1.5-2.5-3.5-
+---
+MetaArrayHolder2: 0-1-2-10-11-0.5-1.5-2.5-
+MetaArrayHolder2: 1-2-3-10-11-1.5-2.5-3.5-
+MetaArrayHolder2: 2-3-4-10-11-2.5-3.5-4.5-
+---
+)";
+
+   auto ret = out == expected_out;
+   if(!ret) std::cerr << "ERROR! Unexpected output:\n" << out << "\nExpected was:\n" << expected_out << std::endl;
+   return ret;
+}
+
 #endif

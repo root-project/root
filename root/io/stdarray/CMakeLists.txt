@@ -44,6 +44,17 @@ ROOTTEST_ADD_TEST(colWiseRead_42
                   MACRO colWiseRead_42.C+
                   DEPENDS colWiseWrite_4)
 
+ROOTTEST_ADD_TEST(colWiseWrite_5
+                  MACRO colWiseWrite_5.C+)
+
+ROOTTEST_ADD_TEST(colWiseRead_51
+                  MACRO colWiseRead_51.C+
+                  DEPENDS colWiseWrite_5)
+
+ROOTTEST_ADD_TEST(colWiseRead_52
+                  MACRO colWiseRead_52.C+
+                  DEPENDS colWiseWrite_5)
+
 ROOTTEST_ADD_TEST(checkRealData
                   MACRO checkRealData.C
                   OUTREF checkRealData.ref)
