@@ -84,6 +84,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `TTree::Branch()` now complains for wrong leaf list strings, e.g. "value/F[4]" (which should really be spelled as "value[4]/F").
 - Allow reading of older version of TTreePerfStats (ROOT-8520)
 - Introduce TDataFrame which offers a new and highly efficient way to analyse data stored in TTrees
+- In `TTree::OptimizeBaskets()` do not call GetBasket(0) to avoid disc reads
 
 ## 2D Graphics Libraries
 - If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
