@@ -24,7 +24,9 @@ namespace ROOT {
 
    namespace Math {
 
-
+      namespace Internal {
+         double DerivPrecision(double eps);
+      };
       /**
          Class to Wrap a ROOT Function class (like TF1)  in a IParamMultiFunction interface
          of multi-dimensions to be used in the ROOT::Math numerical algorithm.
@@ -37,7 +39,7 @@ namespace ROOT {
          @ingroup CppFunctions
       */
 
-//LM note: are there any issues when cloning the class for the parameters that are not copied anymore ??
+      //LM note: are there any issues when cloning the class for the parameters that are not copied anymore ??
 
       template<class BackendType>
       class WrappedMultiTF1Templ: virtual public ROOT::Math::IParametricGradFunctionMultiDimTempl<BackendType> {
@@ -117,10 +119,10 @@ namespace ROOT {
 
          /// precision value used for calculating the derivative step-size
          /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
-         void SetDerivPrecision(double eps);
+         static void SetDerivPrecision(double eps);
 
          /// get precision value used for calculating the derivative step-size
-         double GetDerivPrecision();
+         static double GetDerivPrecision();
 
          /// method to retrieve the internal function pointer
          const TF1 *GetFunction() const
@@ -166,7 +168,6 @@ namespace ROOT {
          unsigned int fDim;             // cached value of dimension
          //std::vector<double> fParams;   // cached vector with parameter values
 
-         double fEps;          // epsilon used in derivative calculation h ~ eps |p|
       };
 
 // impelmentations for WrappedMultiTF1Templ<BackendType>
@@ -176,8 +177,7 @@ namespace ROOT {
          fPolynomial(false),
          fOwnFunc(false),
          fFunc(&f),
-         fDim(dim),
-         fEps(0.001)
+         fDim(dim)
          //fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
       {
          // constructor of WrappedMultiTF1Templ<BackendType>
@@ -243,7 +243,8 @@ namespace ROOT {
             // need to set parameter values
             fFunc->SetParameters(par);
             // no need to call InitArgs (it is called in TF1::GradientPar)
-            fFunc->GradientPar(x, grad, fEps);
+            double prec = this->GetDerivPrecision();
+            fFunc->GradientPar(x, grad, prec);
          } else { // case of linear functions
             unsigned int np = NPar();
             for (unsigned int i = 0; i < np; ++i)
@@ -258,7 +259,8 @@ namespace ROOT {
          // see note above concerning the fixed parameters
          if (! fLinear) {
             fFunc->SetParameters(p);
-            return fFunc->GradientPar(ipar, x, fEps);
+            double prec = this->GetDerivPrecision();
+            return fFunc->GradientPar(ipar, x, prec);
          }
          if (fPolynomial) {
             // case of polynomial function (no parameter dependency)  (case for dim = 1)
@@ -277,13 +279,13 @@ namespace ROOT {
       template<class BackendType>
       void WrappedMultiTF1Templ<BackendType>::SetDerivPrecision(double eps)
       {
-         fEps = eps;
+         ::ROOT::Math::Internal::DerivPrecision(eps);
       }
 
       template<class BackendType>
       double WrappedMultiTF1Templ<BackendType>::GetDerivPrecision()
       {
-         return fEps;
+         return ::ROOT::Math::Internal::DerivPrecision(-1);
       }
 
       template<class BackendType>
