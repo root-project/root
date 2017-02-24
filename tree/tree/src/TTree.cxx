@@ -6627,9 +6627,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (bsize > bmax) bsize = bmax;
          UInt_t newBsize = UInt_t(bsize);
          if (pass) { // only on the second pass so that it doesn't interfere with scaling
-            if (branch->GetBasket(0) != 0) {
-               newBsize = newBsize + (branch->GetBasket(0)->GetNevBuf() * sizeof(Int_t) * 2); // make room for meta data
-            }
+            newBsize = newBsize + (branch->GetEntries() * sizeof(Int_t) * 2); // make room for meta data
             // We used ATLAS fully-split xAOD for testing, which is a rather unbalanced TTree, 10K branches,
             // with 8K having baskets smaller than 512 bytes. To achieve good I/O performance ATLAS uses auto-flush 100,
             // resulting in the smallest baskets being ~300-400 bytes, so this change increases their memory by about 8k*150B =~ 1MB,
