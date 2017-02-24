@@ -500,6 +500,24 @@ TMVA::IMethod* TMVA::Factory::GetMethod(const TString& datasetname,  const TStri
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Checks whether a given method name is defined for a given dataset.
+
+Bool_t TMVA::Factory::HasMethod(const TString& datasetname,  const TString &methodTitle ) const
+{
+   if(fMethodsMap.find(datasetname)==fMethodsMap.end()) return 0;
+
+   std::string methodName = methodTitle.Data();
+   auto isEqualToMethodName = [&methodName](TMVA::IMethod * m) {
+      return ( 0 == methodName.compare( m->GetName() ) );
+   };
+
+   TMVA::Factory::MVector * methods = this->fMethodsMap.at(datasetname);
+   Bool_t isMethodNameExisting = std::any_of( methods->begin(), methods->end(), isEqualToMethodName);
+
+   return isMethodNameExisting;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
 {
@@ -642,42 +660,27 @@ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t TMVA::Factory::GetROCIntegral(TMVA::DataLoader *loader,TString theMethodName)
+Double_t TMVA::Factory::GetROCIntegral(TMVA::DataLoader *loader, TString theMethodName)
 {
   return GetROCIntegral((TString)loader->GetName(),theMethodName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t TMVA::Factory::GetROCIntegral(TString datasetname,TString theMethodName)
+Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodName)
 {
    if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
       Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
       return 0;
    }
-   MVector *methods = fMethodsMap[datasetname.Data()];
-   MVector::iterator itrMethod = methods->begin();
-   TMVA::MethodBase *method = 0;
-   while (itrMethod != methods->end()) {
-      TMVA::MethodBase *cmethod = dynamic_cast<TMVA::MethodBase *>(*itrMethod);
-      if (!cmethod) {
-         //msg of error here
-         itrMethod++;
-         continue;
-      }
-      if (cmethod->GetMethodName() == theMethodName) {
-         method = cmethod;
-         break;
-      }
-      itrMethod++;
-   }
 
-   if (!method) {
+   if ( ! this->HasMethod(datasetname, theMethodName) ) {
       Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
       return 0;
    }
 
-   TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(), Types::kTesting, Types::kClassification);
+   TMVA::MethodBase *method  = dynamic_cast<TMVA::MethodBase *>( this->GetMethod(datasetname, theMethodName) );
+   TMVA::Results    *results = method->Data()->GetResults(theMethodName, Types::kTesting, Types::kClassification);
 
    std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
    std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
@@ -692,55 +695,40 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname,TString theMethodName
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader,TString theMethodName,Bool_t fLegend)
+TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader, TString theMethodName, Bool_t fLegend)
 {
   return GetROCCurve((TString)loader->GetName(),theMethodName,fLegend);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGraph* TMVA::Factory::GetROCCurve(TString  datasetname,TString theMethodName,Bool_t fLegend)
+TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, Bool_t fLegend)
 {
    if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
       Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
       return 0;
    }
-   MVector *methods = fMethodsMap[datasetname.Data()];
-   MVector::iterator itrMethod = methods->begin();
-   TMVA::MethodBase *method = 0;
-   while (itrMethod != methods->end()) {
-      TMVA::MethodBase *cmethod = dynamic_cast<TMVA::MethodBase *>(*itrMethod);
-      if (!cmethod) {
-         //msg of error here
-         itrMethod++;
-         continue;
-      }
-      if (cmethod->GetMethodName() == theMethodName) {
-         method = cmethod;
-         break;
-      }
-      itrMethod++;
-   }
-
-   if (!method) {
+   
+   if ( ! this->HasMethod(datasetname, theMethodName) ) {
       Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
       return 0;
    }
-
-   TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(), Types::kTesting, Types::kClassification);
-
+   
+   TMVA::MethodBase *method  = dynamic_cast<TMVA::MethodBase *>( this->GetMethod(datasetname, theMethodName) );
+   TMVA::Results    *results = method->Data()->GetResults(theMethodName, Types::kTesting, Types::kClassification);
+   
    std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
    std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
 
    TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
    if (!fROCCurve) Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
 
-   TGraph  *fGraph = (TGraph  *)fROCCurve->GetROCCurve()->Clone();
+   TGraph *fGraph = (TGraph  *)fROCCurve->GetROCCurve()->Clone();
    if(fLegend)
    {
         fGraph->GetYaxis()->SetTitle("Background Rejection");
         fGraph->GetXaxis()->SetTitle("Signal Efficiency");
-        fGraph->SetTitle(Form("Background Rejection vs. Signal Efficiency (%s)",method->GetMethodName().Data()));
+        fGraph->SetTitle( Form( "Background Rejection vs. Signal Efficiency (%s)", theMethodName.Data() ) );
    }
    delete fROCCurve;
    return fGraph;

@@ -133,7 +133,8 @@ namespace TMVA {
       void DeleteAllMethods( void );
 
       // accessors
-      IMethod* GetMethod( const TString& datasetname, const TString& title )const;
+      IMethod* GetMethod( const TString& datasetname, const TString& title ) const;
+      Bool_t   HasMethod( const TString& datasetname, const TString& title ) const;
 
       Bool_t Verbose( void ) const { return fVerbose; }
       void SetVerbose( Bool_t v=kTRUE );
