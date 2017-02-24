@@ -19,3 +19,7 @@ if(CTEST_BUILD_NAME MATCHES slc6|centos7)
               roottest-root-html-runMakeIndex
               roottest-root-multicore-fork)
 endif()
+
+if(CTEST_BUILD_NAME MATCHES fst)
+  list(APPEND CTEST_CUSTOM_TESTS_IGNORE roottest-python-JsMVA-NewMethods)
+endif()
