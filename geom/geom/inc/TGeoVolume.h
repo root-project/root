@@ -13,6 +13,7 @@
 #ifndef ROOT_TGeoVolume
 #define ROOT_TGeoVolume
 
+#include <mutex>
 
 #include "TGeoAtt.h"
 
@@ -322,7 +323,8 @@ public:
 protected:
    mutable std::vector<ThreadData_t*> fThreadData; //! Thread specific data vector
    mutable Int_t                      fThreadSize; //! Thread vector size
-
+   mutable std::mutex                 fMutex;      //! Mutex for concurrent operations
+   
 public:
    TGeoVolumeAssembly();
    TGeoVolumeAssembly(const char *name);

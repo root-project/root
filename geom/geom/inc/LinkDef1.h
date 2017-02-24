@@ -82,7 +82,9 @@
 #pragma link C++ class TGeoBuilder;
 #pragma link C++ class TGeoNavigator+;
 #pragma link C++ class TGeoNavigatorArray;
-#pragma link C++ struct std::map<Long_t, TGeoNavigatorArray *>;
-#pragma link C++ struct std::pair<Long_t, TGeoNavigatorArray *>;
+#pragma link C++ struct std::map<std::thread::id, TGeoNavigatorArray *>;
+#pragma link C++ struct std::pair<std::thread::id, TGeoNavigatorArray *>;
+#pragma link C++ struct std::map<std::thread::id, Int_t>;
+#pragma link C++ struct std::pair<std::thread::id, Int_t>;
 
 #endif

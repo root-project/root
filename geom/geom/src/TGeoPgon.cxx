@@ -59,7 +59,6 @@ End_Macro
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
-#include "TThread.h"
 
 ClassImp(TGeoPgon)
 
@@ -92,7 +91,7 @@ TGeoPgon::ThreadData_t& TGeoPgon::GetThreadData() const
 
 void TGeoPgon::ClearThreadData() const
 {
-   TThread::Lock();
+   std::lock_guard<std::mutex> guard(fMutex);
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
    {
@@ -101,7 +100,6 @@ void TGeoPgon::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
-   TThread::UnLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +108,7 @@ void TGeoPgon::ClearThreadData() const
 void TGeoPgon::CreateThreadData(Int_t nthreads)
 {
    if (fThreadSize) ClearThreadData();
-   TThread::Lock();
+   std::lock_guard<std::mutex> guard(fMutex);
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid=0; tid<nthreads; tid++) {
@@ -120,7 +118,6 @@ void TGeoPgon::CreateThreadData(Int_t nthreads)
          fThreadData[tid]->fDblBuffer = new Double_t[fNedges+10];
       }
    }
-   TThread::UnLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

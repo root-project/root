@@ -12,6 +12,9 @@
 #ifndef ROOT_TGeoManager
 #define ROOT_TGeoManager
 
+#include <mutex>
+#include <thread>
+
 #include "TObjArray.h"
 #include "TGeoNavigator.h"
 
@@ -34,6 +37,7 @@ class TGeoParallelWorld;
 class TGeoManager : public TNamed
 {
 protected:
+   static std::mutex     fgMutex;           //! mutex for navigator booking in MT mode
    static Bool_t         fgLock;            //! Lock preventing a second geometry to be loaded
    static Int_t          fgVerboseLevel;    //! Verbosity level for Info messages (no IO).
    static Int_t          fgMaxLevel;        //! Maximum level in geometry
@@ -90,10 +94,10 @@ private :
    TObjArray            *fOverlaps;         //-> list of geometrical overlaps
    UChar_t              *fBits;             //! bits used for voxelization
    // Map of navigator arrays per thread
-   typedef std::map<Long_t, TGeoNavigatorArray *>   NavigatorsMap_t;
-   typedef NavigatorsMap_t::iterator                NavigatorsMapIt_t;
-   typedef std::map<Long_t, Int_t>                  ThreadsMap_t;
-   typedef ThreadsMap_t::const_iterator             ThreadsMapIt_t;
+   typedef std::map<std::thread::id, TGeoNavigatorArray *>   NavigatorsMap_t;
+   typedef NavigatorsMap_t::iterator                         NavigatorsMapIt_t;
+   typedef std::map<std::thread::id, Int_t>                  ThreadsMap_t;
+   typedef ThreadsMap_t::const_iterator                      ThreadsMapIt_t;
 
    NavigatorsMap_t       fNavigators;       //! Map between thread id's and navigator arrays
    static ThreadsMap_t  *fgThreadId;        //! Thread id's map

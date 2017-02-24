@@ -248,7 +248,6 @@ in order to enhance rays.
 #include "TKey.h"
 #include "THashList.h"
 #include "TClass.h"
-#include "TThread.h"
 #include "ThreadLocalStorage.h"
 
 #include "TGeoVoxelFinder.h"
@@ -289,6 +288,7 @@ TGeoManager *gGeoManager = 0;
 
 ClassImp(TGeoManager)
 
+std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock         = kFALSE;
 Bool_t TGeoManager::fgLockNavigators = kFALSE;
 Int_t  TGeoManager::fgVerboseLevel = 1;
@@ -806,12 +806,8 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 
 TGeoNavigator *TGeoManager::AddNavigator()
 {
-   if (fMultiThread) TThread::Lock();
-//   if (fgLockNavigators) {
-//      Error("AddNavigator", "Navigators are locked. Use SetNavigatorsLock(false) first.");
-//      return 0;
-//   }
-   Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
+   if (fMultiThread) fgMutex.lock();
+   std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;
    if (it != fNavigators.end()) array = it->second;
@@ -821,7 +817,7 @@ TGeoNavigator *TGeoManager::AddNavigator()
    }
    TGeoNavigator *nav = array->AddNavigator();
    if (fClosed) nav->GetCache()->BuildInfoBranch();
-   if (fMultiThread) TThread::UnLock();
+   if (fMultiThread) fgMutex.unlock();
    return nav;
 }
 
@@ -834,7 +830,7 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
    if (!fMultiThread) return fCurrentNavigator;
    TGeoNavigator *nav = tnav; // TTHREAD_TLS_GET(TGeoNavigator*,tnav);
    if (nav) return nav;
-   Long_t threadId = TThread::SelfId();
+   std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
    TGeoNavigatorArray *array = it->second;
@@ -848,7 +844,7 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 
 TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 {
-   Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
+   std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
    TGeoNavigatorArray *array = it->second;
@@ -860,16 +856,18 @@ TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 
 Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
 {
-   Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
+   std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) {
-      Error("SetCurrentNavigator", "No navigator defined for thread %ld\n", threadId);
+      Error("SetCurrentNavigator", "No navigator defined for this thread\n");
+      std::cout << "  thread id: " << threadId << std::endl;
       return kFALSE;
    }
    TGeoNavigatorArray *array = it->second;
    TGeoNavigator *nav = array->SetCurrentNavigator(index);
    if (!nav) {
-      Error("SetCurrentNavigator", "Navigator %d not existing for thread %ld\n", index, threadId);
+      Error("SetCurrentNavigator", "Navigator %d not existing for this thread\n", index);
+      std::cout << "  thread id: " << threadId << std::endl;
       return kFALSE;
    }
    if (!fMultiThread) fCurrentNavigator = nav;
@@ -889,7 +887,7 @@ void TGeoManager::SetNavigatorsLock(Bool_t flag)
 
 void TGeoManager::ClearNavigators()
 {
-   if (fMultiThread) TThread::Lock();
+   if (fMultiThread) fgMutex.lock();
    TGeoNavigatorArray *arr = 0;
    for (NavigatorsMap_t::iterator it = fNavigators.begin();
         it != fNavigators.end(); it++) {
@@ -897,7 +895,7 @@ void TGeoManager::ClearNavigators()
       if (arr) delete arr;
    }
    fNavigators.clear();
-   if (fMultiThread) TThread::UnLock();
+   if (fMultiThread) fgMutex.unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -905,7 +903,7 @@ void TGeoManager::ClearNavigators()
 
 void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 {
-   if (fMultiThread) TThread::Lock();
+   if (fMultiThread) fgMutex.lock();
    for (NavigatorsMap_t::iterator it = fNavigators.begin();
         it != fNavigators.end(); it++) {
       TGeoNavigatorArray *arr = (*it).second;
@@ -913,13 +911,13 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
          if ((TGeoNavigator*)arr->Remove((TObject*)nav)) {
             delete nav;
             if (!arr->GetEntries()) fNavigators.erase(it);
-            if (fMultiThread) TThread::UnLock();
+            if (fMultiThread) fgMutex.unlock();
             return;
          }
       }
    }
    Error("Remove navigator", "Navigator %p not found", nav);
-   if (fMultiThread) TThread::UnLock();
+   if (fMultiThread) fgMutex.unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -933,8 +931,8 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
    }
    if (!fMultiThread) {
       ROOT::EnableThreadSafety();
-      Long_t threadId =TThread::SelfId();
-      NavigatorsMap_t::const_iterator it = fNavigators.find(0);
+      std::thread::id threadId = std::this_thread::get_id();
+      NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
       if (it != fNavigators.end()) {
          TGeoNavigatorArray *array = it->second;
          fNavigators.erase(it);
@@ -957,11 +955,11 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
 void TGeoManager::ClearThreadData() const
 {
    if (!fMaxThreads) return;
-   TThread::Lock();
+   fgMutex.lock();
    TIter next(fVolumes);
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next())) vol->ClearThreadData();
-   TThread::UnLock();
+   fgMutex.unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -970,11 +968,11 @@ void TGeoManager::ClearThreadData() const
 void TGeoManager::CreateThreadData() const
 {
    if (!fMaxThreads) return;
-   TThread::Lock();
+   fgMutex.lock();
    TIter next(fVolumes);
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next())) vol->CreateThreadData(fMaxThreads);
-   TThread::UnLock();
+   fgMutex.unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -984,10 +982,10 @@ void TGeoManager::CreateThreadData() const
 void TGeoManager::ClearThreadsMap()
 {
    if (gGeoManager && !gGeoManager->IsMultiThread()) return;
-   TThread::Lock();
+   fgMutex.lock();
    if (!fgThreadId->empty()) fgThreadId->clear();
    fgNumThreads = 0;
-   TThread::UnLock();
+   fgMutex.unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1000,14 +998,15 @@ Int_t TGeoManager::ThreadId()
    Int_t ttid = tid; // TTHREAD_TLS_GET(Int_t,tid);
    if (ttid > -1) return ttid;
    if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;
-   TGeoManager::ThreadsMapIt_t it = fgThreadId->find(TThread::SelfId());
+   std::thread::id threadId = std::this_thread::get_id();   
+   TGeoManager::ThreadsMapIt_t it = fgThreadId->find(threadId);
    if (it != fgThreadId->end()) return it->second;
    // Map needs to be updated.
-   TThread::Lock();
-   (*fgThreadId)[TThread::SelfId()] = fgNumThreads;
+   fgMutex.lock();
+   (*fgThreadId)[threadId] = fgNumThreads;
    tid = fgNumThreads; // TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
    ttid = fgNumThreads++;
-   TThread::UnLock();
+   fgMutex.unlock();
    return ttid;
 }
 

@@ -12,6 +12,8 @@
 #ifndef ROOT_TGeoXtru
 #define ROOT_TGeoXtru
 
+#include <mutex>
+
 #include "TGeoBBox.h"
 
 class TGeoPolygon;
@@ -48,6 +50,8 @@ protected:
 
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! size of thread-specific array
+   mutable std::mutex                 fMutex;      //! mutex for thread data
+
    TGeoXtru(const TGeoXtru&);
    TGeoXtru& operator=(const TGeoXtru&);
 

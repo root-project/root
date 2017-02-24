@@ -28,7 +28,6 @@ The navigator can be updated to reflect this path array: `array->UpdateNavigator
 #include "TGeoBranchArray.h"
 
 #include "TMath.h"
-#include "TThread.h"
 #include "TString.h"
 #include "TGeoNavigator.h"
 #include "TGeoCache.h"
@@ -174,13 +173,9 @@ TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
 TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 {
    if (&other == this) return *this;
-//   TThread::Lock();
-//   TObject::operator=(other);
    fLevel = other.fLevel;
    fMatrix.CopyFrom(&other.fMatrix);
    if (fLevel+1) memcpy(fArray, other.fArray, (fLevel+1)*sizeof(TGeoNode*));
-//   SetBit(other.TestBit(kBASelfAlloc));
-//   TThread::UnLock();
    return *this;
 }
 

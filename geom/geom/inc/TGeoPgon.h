@@ -12,6 +12,8 @@
 #ifndef ROOT_TGeoPgon
 #define ROOT_TGeoPgon
 
+#include <mutex>
+
 #include "TGeoPcon.h"
 
 class TGeoPgon : public TGeoPcon
@@ -34,6 +36,7 @@ protected:
    Int_t                 fNedges;    // number of edges (at least one)
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! Size for the navigation data array
+   mutable std::mutex                 fMutex;      //! Mutex for thread data
 
    // internal utility methods
    Int_t                 GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax=TGeoShape::Big()) const;

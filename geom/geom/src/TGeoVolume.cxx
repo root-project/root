@@ -389,7 +389,6 @@ volumes (or volume assemblies) as content.
 #include "TMap.h"
 #include "TFile.h"
 #include "TKey.h"
-#include "TThread.h"
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
@@ -2789,18 +2788,6 @@ TGeoVolumeAssembly::ThreadData_t::~ThreadData_t()
 TGeoVolumeAssembly::ThreadData_t& TGeoVolumeAssembly::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
-/*
-   TThread::Lock();
-   if (tid >= fThreadSize)
-   {
-      Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
-             tid, fThreadSize);
-      fThreadData.resize(tid + 1);
-      fThreadSize = tid + 1;
-   }
-   if (fThreadData[tid] == 0) fThreadData[tid] = new ThreadData_t;
-   TThread::UnLock();
-*/
    return *fThreadData[tid];
 }
 
@@ -2808,7 +2795,7 @@ TGeoVolumeAssembly::ThreadData_t& TGeoVolumeAssembly::GetThreadData() const
 
 void TGeoVolumeAssembly::ClearThreadData() const
 {
-   TThread::Lock();
+   std::lock_guard<std::mutex> guard(fMutex);
    TGeoVolume::ClearThreadData();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
@@ -2818,14 +2805,13 @@ void TGeoVolumeAssembly::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
-   TThread::UnLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
 {
-   TThread::Lock();
+   std::lock_guard<std::mutex> guard(fMutex);
    // Create assembly thread data here
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
@@ -2835,7 +2821,6 @@ void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
       }
    }
    TGeoVolume::CreateThreadData(nthreads);
-   TThread::UnLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
