@@ -26,9 +26,46 @@
 #include "Math/GenVector/BoostY.h"
 #include "Math/GenVector/BoostZ.h"
 
-namespace ROOT {
+//#ifdef TEX
+/**
 
-  namespace Math {
+   A variable names bgamma appears in several places in this file. A few
+   words of elaboration are needed to make its meaning clear.  On page 69
+   of Misner, Thorne and Wheeler, (Exercise 2.7) the elements of the matrix
+   for a general Lorentz boost are given as
+
+   \f[   \Lambda^{j'}_k = \Lambda^{k'}_j
+              = (\gamma - 1) n^j n^k + \delta^{jk}  \f]
+
+   where the n^i are unit vectors in the direction of the three spatial
+   axes.  Using the definitions, \f$ n^i = \beta_i/\beta \f$ , then, for example,
+
+   \f[   \Lambda_{xy} = (\gamma - 1) n_x n_y
+              = (\gamma - 1) \beta_x \beta_y/\beta^2  \f]
+
+   By definition, \f[   \gamma^2 = 1/(1 - \beta^2)  \f]
+
+   so that   \f[   \gamma^2 \beta^2 = \gamma^2 - 1  \f]
+
+   or   \f[   \beta^2 = (\gamma^2 - 1)/\gamma^2  \f]
+
+   If we insert this into the expression for \f$ \Lambda_{xy} \f$, we get
+
+   \f[   \Lambda_{xy} = (\gamma - 1) \gamma^2/(\gamma^2 - 1) \beta_x \beta_y \f]
+
+   or, finally
+
+   \f[   \Lambda_{xy} = \gamma^2/(\gamma+1) \beta_x \beta_y  \f]
+
+   The expression \f$ \gamma^2/(\gamma+1) \f$ is what we call <em>bgamma</em> in the code below.
+
+   \class ROOT::Math::Boost
+*/
+//#endif
+
+namespace ROOT {
+namespace Math {
+namespace Impl {
 
 //__________________________________________________________________________________________
   /**
@@ -40,14 +77,14 @@ namespace ROOT {
      transformations which do not mix space and time components.
 
      @ingroup GenVector
-
   */
 
+template < typename T >
 class Boost {
 
 public:
 
-  typedef double Scalar;
+  typedef T Scalar;
 
   enum ELorentzRotationMatrixIndex {
       kLXX =  0, kLXY =  1, kLXZ =  2, kLXT =  3
@@ -61,6 +98,7 @@ public:
      , kYY =  4, kYZ =  5, kYT =  6
      , kZZ =  7, kZT =  8
      , kTT =  9
+     , kNElems = 10 
   };
 
   // ========== Constructors and Assignment =====================
@@ -74,7 +112,7 @@ public:
      Construct given a three Scalars beta_x, beta_y, and beta_z
    */
   Boost(Scalar beta_x, Scalar beta_y, Scalar beta_z)
-   { SetComponents(beta_x, beta_y, beta_z); }
+  { SetComponents(beta_x, beta_y, beta_z); }
 
   /**
      Construct given a beta vector (which must have methods x(), y(), z())
@@ -93,7 +131,7 @@ public:
    /**
       copy constructor
    */
-   Boost(Boost const & b) {
+  Boost( Boost<T> const & b) {
       *this = b;
    }
 
@@ -101,9 +139,9 @@ public:
      Construct from an axial boost
   */
 
-  explicit Boost( BoostX const & bx ) {SetComponents(bx.BetaVector());}
-  explicit Boost( BoostY const & by ) {SetComponents(by.BetaVector());}
-  explicit Boost( BoostZ const & bz ) {SetComponents(bz.BetaVector());}
+  explicit Boost( BoostX<T> const & bx ) {SetComponents(bx.BetaVector());}
+  explicit Boost( BoostY<T> const & by ) {SetComponents(by.BetaVector());}
+  explicit Boost( BoostZ<T> const & bz ) {SetComponents(bz.BetaVector());}
 
   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
@@ -111,8 +149,8 @@ public:
       Assignment operator
     */
    Boost &
-   operator=(Boost const & rhs ) {
-    for (unsigned int i=0; i < 10; ++i) {
+   operator=(Boost<T> const & rhs ) {
+    for (unsigned int i=0; i < kNElems; ++i) {
        fM[i] = rhs.fM[i];
     }
     return *this;
@@ -122,17 +160,34 @@ public:
      Assign from an axial pure boost
   */
   Boost &
-  operator=( BoostX const & bx ) { return operator=(Boost(bx)); }
+  operator=( BoostX<T> const & bx ) { return operator=(Boost(bx)); }
   Boost &
-  operator=( BoostY const & by ) { return operator=(Boost(by)); }
+  operator=( BoostY<T> const & by ) { return operator=(Boost(by)); }
   Boost &
-  operator=( BoostZ const & bz ) { return operator=(Boost(bz)); }
+  operator=( BoostZ<T> const & bz ) { return operator=(Boost(bz)); }
 
   /**
      Re-adjust components to eliminate small deviations from a perfect
      orthosyplectic matrix.
    */
-  void Rectify();
+  void Rectify() {
+    // Assuming the representation of this is close to a true Lorentz Rotation,
+    // but may have drifted due to round-off error from many operations,
+    // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
+    // again.
+    
+    if (fM[kTT] <= 0) {
+      GenVector::Throw (
+                        "Attempt to rectify a boost with non-positive gamma");
+      return;
+    }
+    DisplacementVector3D< Cartesian3D<Scalar> > beta ( fM[kXT], fM[kYT], fM[kZT] );
+    beta /= fM[kTT];
+    if ( beta.mag2() >= 1 ) {
+      beta /= ( beta.R() * ( 1.0 + 1.0e-16 ) );
+    }
+    SetComponents ( beta );
+  }
 
   // ======== Components ==============
 
@@ -140,13 +195,43 @@ public:
      Set components from beta_x, beta_y, and beta_z
   */
   void
-  SetComponents (Scalar beta_x, Scalar beta_y, Scalar beta_z);
+  SetComponents (Scalar bx, Scalar by, Scalar bz) {
+    using namespace std;
+    // set the boost beta as 3 components
+    Scalar bp2 = bx*bx + by*by + bz*bz;
+    if ( bp2 >= Scalar(1) ) {
+      GenVector::Throw (
+                        "Beta Vector supplied to set Boost represents speed >= c");
+      // SetIdentity();
+    }
+    else
+    {
+      const Scalar gamma = Scalar(1) / sqrt( Scalar(1) - bp2 );
+      const Scalar bgamma = gamma * gamma / ( Scalar(1) + gamma );
+      fM[kXX] = Scalar(1) + bgamma * bx * bx;
+      fM[kYY] = Scalar(1) + bgamma * by * by;
+      fM[kZZ] = Scalar(1) + bgamma * bz * bz;
+      fM[kXY] = bgamma * bx * by;
+      fM[kXZ] = bgamma * bx * bz;
+      fM[kYZ] = bgamma * by * bz;
+      fM[kXT] = gamma * bx;
+      fM[kYT] = gamma * by;
+      fM[kZT] = gamma * bz;
+      fM[kTT] = gamma;
+    }
+  }
 
   /**
      Get components into beta_x, beta_y, and beta_z
   */
   void
-  GetComponents (Scalar& beta_x, Scalar& beta_y, Scalar& beta_z) const;
+  GetComponents (Scalar& bx, Scalar& by, Scalar& bz) const {
+    // get beta of the boots as 3 components
+    Scalar gaminv = Scalar(1)/fM[kTT];
+    bx = fM[kXT]*gaminv;
+    by = fM[kYT]*gaminv;
+    bz = fM[kZT]*gaminv;
+  }
 
   /**
      Set components from a beta vector
@@ -192,7 +277,7 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin ) const {
-     double bx,by,bz = 0;
+     T bx,by,bz = 0;
      GetComponents (bx,by,bz);
      *begin++ = bx;
      *begin++ = by;
@@ -202,8 +287,13 @@ public:
   /**
      The beta vector for this boost
    */
-  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector;
-  XYZVector BetaVector() const;
+  typedef DisplacementVector3D<Cartesian3D<T>, DefaultCoordinateSystemTag > XYZVector;
+  XYZVector BetaVector() const {
+    // get boost beta vector
+    const Scalar gaminv = Scalar(1)/fM[kTT];
+    return DisplacementVector3D< Cartesian3D<Scalar> >
+      ( fM[kXT]*gaminv, fM[kYT]*gaminv, fM[kZT]*gaminv );
+  }
 
   /**
      Get elements of internal 4x4 symmetric representation, into a data
@@ -212,7 +302,13 @@ public:
      that large, then this will lead to undefined behavior.
   */
   void
-  GetLorentzRotation (Scalar r[]) const;
+  GetLorentzRotation (Scalar r[]) const {
+    // get Lorentz rotation corresponding to this boost as an array of 16 values
+    r[kLXX] = fM[kXX];  r[kLXY] = fM[kXY];  r[kLXZ] = fM[kXZ];  r[kLXT] = fM[kXT];
+    r[kLYX] = fM[kXY];  r[kLYY] = fM[kYY];  r[kLYZ] = fM[kYZ];  r[kLYT] = fM[kYT];
+    r[kLZX] = fM[kXZ];  r[kLZY] = fM[kYZ];  r[kLZZ] = fM[kZZ];  r[kLZT] = fM[kZT];
+    r[kLTX] = fM[kXT];  r[kLTY] = fM[kYT];  r[kLTZ] = fM[kZT];  r[kLTT] = fM[kTT];
+  }
 
   // =========== operations ==============
 
@@ -220,8 +316,19 @@ public:
      Lorentz transformation operation on a Minkowski ('Cartesian')
      LorentzVector
   */
-  LorentzVector< ROOT::Math::PxPyPzE4D<double> >
-  operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const;
+  LorentzVector< ROOT::Math::PxPyPzE4D<T> >
+  operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<T> > & v) const {
+    // apply boost to a PxPyPzE LorentzVector
+    const Scalar x = v.Px();
+    const Scalar y = v.Py();
+    const Scalar z = v.Pz();
+    const Scalar t = v.E();
+    return LorentzVector< PxPyPzE4D<T> >
+      (   fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t
+        , fM[kXY]*x + fM[kYY]*y + fM[kYZ]*z + fM[kYT]*t
+        , fM[kXZ]*x + fM[kYZ]*y + fM[kZZ]*z + fM[kZT]*t
+        , fM[kXT]*x + fM[kYT]*y + fM[kZT]*z + fM[kTT]*t );
+  }
 
   /**
      Lorentz transformation operation on a LorentzVector in any
@@ -230,8 +337,8 @@ public:
   template <class CoordSystem>
   LorentzVector<CoordSystem>
   operator() (const LorentzVector<CoordSystem> & v) const {
-    LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+    const LorentzVector< PxPyPzE4D<T> > xyzt(v);
+    const LorentzVector< PxPyPzE4D<T> > r_xyzt = operator()(xyzt);
     return LorentzVector<CoordSystem> ( r_xyzt );
   }
 
@@ -243,8 +350,8 @@ public:
   template <class Foreign4Vector>
   Foreign4Vector
   operator() (const Foreign4Vector & v) const {
-    LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+    const LorentzVector< PxPyPzE4D<T> > xyzt(v);
+    const LorentzVector< PxPyPzE4D<T> > r_xyzt = operator()(xyzt);
     return Foreign4Vector ( r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T() );
   }
 
@@ -261,33 +368,51 @@ public:
   /**
       Invert a Boost in place
    */
-  void Invert();
-
+  void Invert() {
+    // invert in place boost (modifying the object)
+    fM[kXT] = -fM[kXT];
+    fM[kYT] = -fM[kYT];
+    fM[kZT] = -fM[kZT];
+  }
+ 
   /**
       Return inverse of  a boost
    */
-  Boost Inverse() const;
+  Boost<T> Inverse() const {
+   // return inverse of boost
+    Boost<T> tmp(*this);
+    tmp.Invert();
+    return tmp;
+  }
 
   /**
      Equality/inequality operators
    */
-  bool operator == (const Boost & rhs) const {
-    for (unsigned int i=0; i < 10; ++i) {
-      if( fM[i] != rhs.fM[i] )  return false;
+  bool operator == (const Boost<T> & rhs) const {
+    bool OK = true;
+    for (unsigned int i=0; i < kNElems; ++i) {
+      if ( fM[i] != rhs.fM[i] ) { OK = false; break; }
     }
-    return true;
+    return OK;
   }
+  
   bool operator != (const Boost & rhs) const {
     return ! operator==(rhs);
   }
 
 protected:
 
-  void SetIdentity();
+  void SetIdentity() {
+    // set identity boost
+    fM[kXX] = Scalar(1); fM[kXY] = Scalar(0); fM[kXZ] = Scalar(0); fM[kXT] = Scalar(0);
+    fM[kYY] = Scalar(1); fM[kYZ] = Scalar(0); fM[kYT] = Scalar(0);
+    fM[kZZ] = Scalar(1); fM[kZT] = Scalar(0);
+    fM[kTT] = Scalar(1);
+  }
 
 private:
 
-  Scalar fM[10];
+  Scalar fM[kNElems];
 
 };  // Boost
 
@@ -298,16 +423,25 @@ private:
  */
   // TODO - I/O should be put in the manipulator form
 
-std::ostream & operator<< (std::ostream & os, const Boost & b);
+template< typename T >
+std::ostream & operator<< (std::ostream & os, const Boost<T> & b ) {
+   // TODO - this will need changing for machine-readable issues
+   //        and even the human readable form needs formatiing improvements
+   T m[16];
+   b.GetLorentzRotation(m);
+   os << "\n" << m[0]  << "  " << m[1]  << "  " << m[2]  << "  " << m[3];
+   os << "\n" << "\t"  << "  " << m[5]  << "  " << m[6]  << "  " << m[7];
+   os << "\n" << "\t"  << "  " << "\t"  << "  " << m[10] << "  " << m[11];
+   os << "\n" << "\t"  << "  " << "\t"  << "  " << "\t"  << "  " << m[15] << "\n";
+   return os;
+}
 
+} // namespace Impl
 
-} //namespace Math
-} //namespace ROOT
-
-
-
-
-
-
+typedef Impl::Boost<double> Boost;
+typedef Impl::Boost<float>  BoostF;  
+  
+} // namespace Math
+} // namespace ROOT
 
 #endif /* ROOT_Math_GenVector_Boost  */
