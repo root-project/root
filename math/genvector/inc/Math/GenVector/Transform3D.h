@@ -652,11 +652,11 @@ public:
      const T detxy = fM[kYX]*fM[kZZ] - fM[kYZ]*fM[kZX];
      const T detxz = fM[kYX]*fM[kZY] - fM[kYY]*fM[kZX];
      const T det   = fM[kXX]*detxx - fM[kXY]*detxy + fM[kXZ]*detxz;
-     if (det == 0) {
+     if ( det == T(0) ) {
        std::cerr << "Transform3D::inverse error: zero determinant" << std::endl;
        return;
      }
-     det = 1./det; detxx *= det; detxy *= det; detxz *= det;
+     det = T(1)/det; detxx *= det; detxy *= det; detxz *= det;
      const T detyx = (fM[kXY]*fM[kZZ] - fM[kXZ]*fM[kZY] )*det;
      const T detyy = (fM[kXX]*fM[kZZ] - fM[kXZ]*fM[kZX] )*det;
      const T detyz = (fM[kXX]*fM[kZY] - fM[kXY]*fM[kZX] )*det;
@@ -664,9 +664,9 @@ public:
      const T detzy = (fM[kXX]*fM[kYZ] - fM[kXZ]*fM[kYX] )*det;
      const T detzz = (fM[kXX]*fM[kYY] - fM[kXY]*fM[kYX] )*det;
      SetComponents
-       (detxx, -detyx,  detzx, -detxx*fM[kDX]+detyx*fM[kDY]-detzx*fM[kDZ],
+       ( detxx, -detyx,  detzx, -detxx*fM[kDX]+detyx*fM[kDY]-detzx*fM[kDZ],
         -detxy,  detyy, -detzy,  detxy*fM[kDX]-detyy*fM[kDY]+detzy*fM[kDZ],
-        detxz, -detyz,  detzz, -detxz*fM[kDX]+detyz*fM[kDY]-detzz*fM[kDZ]);
+         detxz, -detyz,  detzz, -detxz*fM[kDX]+detyz*fM[kDY]-detzz*fM[kDZ]);
    }
    
 
@@ -750,19 +750,19 @@ protected:
        for (int j = 0; j < 3; ++j)
          fM[4*i + j] = rotData[3*i+j];
        // empty vector data
-       fM[4*i + 3] = 0;
+       fM[4*i + 3] = T(0);
      }
    }
 
    /**
       make transformation from only translation (identity rotations)
    */
-   void  AssignFrom( const Vector & v )
+   void AssignFrom( const Vector & v )
    {
      // assign from a translation only (identity rotations)
-     fM[kXX] = 1.0;  fM[kXY] = 0.0; fM[kXZ] = 0.0; fM[kDX] = v.X();
-     fM[kYX] = 0.0;  fM[kYY] = 1.0; fM[kYZ] = 0.0; fM[kDY] = v.Y();
-     fM[kZX] = 0.0;  fM[kZY] = 0.0; fM[kZZ] = 1.0; fM[kDZ] = v.Z();
+     fM[kXX] = T(1);  fM[kXY] = T(0); fM[kXZ] = T(0); fM[kDX] = v.X();
+     fM[kYX] = T(0);  fM[kYY] = T(1); fM[kYZ] = T(0); fM[kDY] = v.Y();
+     fM[kZX] = T(0);  fM[kZY] = T(0); fM[kZZ] = T(1); fM[kDZ] = v.Z();
    }
    
    /**
@@ -771,9 +771,9 @@ protected:
    void SetIdentity()
    {
      //set identity ( identity rotation and zero translation)
-     fM[kXX] = 1.0;  fM[kXY] = 0.0; fM[kXZ] = 0.0; fM[kDX] = 0.0;
-     fM[kYX] = 0.0;  fM[kYY] = 1.0; fM[kYZ] = 0.0; fM[kDY] = 0.0;
-     fM[kZX] = 0.0;  fM[kZY] = 0.0; fM[kZZ] = 1.0; fM[kDZ] = 0.0;
+     fM[kXX] = T(1);  fM[kXY] = T(0); fM[kXZ] = T(0); fM[kDX] = T(0);
+     fM[kYX] = T(0);  fM[kYY] = T(1); fM[kYZ] = T(0); fM[kDY] = T(0);
+     fM[kZX] = T(0);  fM[kZY] = T(0); fM[kZZ] = T(1); fM[kDZ] = T(0);
    }
 
 private:
