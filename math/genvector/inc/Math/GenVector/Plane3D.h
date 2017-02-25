@@ -26,7 +26,7 @@ namespace ROOT {
 
 namespace Math {
 
-
+namespace Impl {
 
 //_______________________________________________________________________________
    /**
@@ -38,22 +38,24 @@ namespace Math {
       belonging to plane.
       More information on the mathematics describing a plane in 3D is available on
       <A HREF=http://mathworld.wolfram.com/Plane.html>MathWord</A>.
-      The Plane3D class contains the 4 scalar values in double which represent the
+      The Plane3D class contains the 4 scalar values in T which represent the
       four coefficients, fA, fB, fC, fD. fA, fB, fC are the normal components normalized to 1,
       i.e. fA**2 + fB**2 + fC**2 = 1
 
       @ingroup GenVector
    */
+  
+   template <class T = double>
    class Plane3D {
 
    public:
 
       // ------ ctors ------
 
-      typedef double Scalar;
+      typedef T Scalar;
 
-      typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > Vector;
-      typedef  PositionVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >     Point;
+      typedef DisplacementVector3D<Cartesian3D<T>, DefaultCoordinateSystemTag > Vector;
+      typedef PositionVector3D<Cartesian3D<T>, DefaultCoordinateSystemTag >     Point;
 
 
 
@@ -70,12 +72,18 @@ namespace Math {
          \param c scalar value
          \param d sxcalar value
       */
-      Plane3D(const Scalar & a, const Scalar & b, const Scalar & c, const Scalar & d);
+      Plane3D(const Scalar & a, const Scalar & b, const Scalar & c, const Scalar & d)
+        : fA(a), fB(b), fC(c), fD(d)
+      {
+        //renormalize a,b,c to unit
+        Normalize();
+      }
+
 
       /**
        constructor a Plane3D from a normal vector and a point coplanar to the plane
-       \param n normal expressed as a ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-       \param p point  expressed as a  ROOT::Math::PositionVector3D<Cartesian3D<double> >
+       \param n normal expressed as a ROOT::Math::DisplacementVector3D<Cartesian3D<T> >
+       \param p point  expressed as a  ROOT::Math::PositionVector3D<Cartesian3D<T> >
       */
       Plane3D(const Vector & n, const Point & p )
       {
@@ -107,9 +115,9 @@ namespace Math {
 
       /**
        constructor from three generic point belonging to the plane
-       \param p1 point1 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-       \param p2 point2 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-       \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
+       \param p1 point1 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<T> >
+       \param p2 point2 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<T> >
+       \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<T> >
       */
       template <class T1, class T2, class T3, class U>
       Plane3D(const  PositionVector3D<T1,U> & p1, const  PositionVector3D<T2,U> & p2, const  PositionVector3D<T3,U> & p3  )
@@ -182,33 +190,38 @@ namespace Math {
        normal vector to the plane.
        \param p Point expressed in Cartesian Coordinates
        */
-      Scalar Distance(const Point & p) const;
-
+      Scalar Distance(const Point & p) const
+      {
+        return fA*p.X() + fB*p.Y() + fC*p.Z() + fD;
+      }
+     
       /**
        Return the distance to a Point described with generic coordinates
        \param p Point expressed as generic ROOT::Math::PositionVector3D
        */
-      template <class T, class U>
-      Scalar Distance(const PositionVector3D<T,U> & p) const {
+      template <class T1, class U>
+      Scalar Distance(const PositionVector3D<T1,U> & p) const {
          return Distance( Point(p.X(), p.Y(), p.Z() ) );
       }
 
       /**
        Return the projection of a Cartesian point to a plane
-       \param p Point expressed as PositionVector3D<Cartesian3D<double> >
+       \param p Point expressed as PositionVector3D<Cartesian3D<T> >
        */
-      Point ProjectOntoPlane(const Point & p) const;
+      Point ProjectOntoPlane(const Point & p) const
+      {
+        const Scalar d = Distance(p);
+        return XYZPoint( p.X() - fA*d, p.Y() - fB*d, p.Z() - fC*d);
+      }
 
       /**
        Return the projection of a point to a plane
        \param p Point expressed as generic ROOT::Math::PositionVector3D
        */
-      template <class T, class U>
-      PositionVector3D<T,U> ProjectOntoPlane(const PositionVector3D<T,U> & p) const {
-         Point pxyz = ProjectOntoPlane(Point(p.X(), p.Y(), p.Z() ) );
-         PositionVector3D<T,U> p2;
-         p2.SetXYZ( pxyz.X(), pxyz.Y(), pxyz.Z() );
-         return p2;
+      template <class T1, class U>
+      PositionVector3D<T1,U> ProjectOntoPlane(const PositionVector3D<T1,U> & p) const {
+         const Point pxyz = ProjectOntoPlane(Point(p.X(), p.Y(), p.Z() ) );
+         return PositionVector3D<T,U>( pxyz.X(), pxyz.Y(), pxyz.Z() );
       }
 
 
@@ -230,16 +243,46 @@ namespace Math {
       /**
          Normalize the normal (a,b,c) plane components
       */
-      void Normalize();
-
+      void Normalize()
+      {
+        // normalize the plane
+        const Scalar s = std::sqrt( fA*fA + fB*fB + fC*fC );
+        // what to do if s = 0 ??
+        // CRJ - This does not work with Vc types... ToDo decide how to handle...
+        //if ( s == 0 ) { fD = 0; return; }
+        const Scalar w = Scalar(1)/s;
+        fA *= w;
+        fB *= w;
+        fC *= w;
+        fD *= w;
+      }
 
    private:
 
       // internal method to construct class from a vector and a point
-      void BuildFromVecAndPoint(const Vector & n, const Point & p);
+      void BuildFromVecAndPoint(const Vector & n, const Point & p)
+      {
+        // build from a normal vector and a point
+        fA =  n.X();
+        fB =  n.Y();
+        fC =  n.Z();
+        fD = - n.Dot(p);
+        Normalize();
+      }
+     
       // internal method to construct class from 3 points
-      void BuildFrom3Points(const Point & p1, const Point & p2, const Point & p3);
-
+      void BuildFrom3Points(const Point & p1, const Point & p2, const Point & p3)
+      {
+        // plane from thre points
+        // normal is (x3-x1) cross (x2 -x1)
+        const Vector n = (p2-p1).Cross(p3-p1);
+        fA = n.X();
+        fB = n.Y();
+        fC = n.Z();
+        fD = - n.Dot(p1);
+        Normalize();
+      }
+     
       // plane data members the four scalar which  satisfies fA*x + fB*y + fC*z + fD = 0
       // for every point (x,y,z) belonging to the plane.
       // fA**2 + fB**2 + fC** =1 plane is stored in normalized form
@@ -255,10 +298,23 @@ namespace Math {
       Stream Output and Input
    */
    // TODO - I/O should be put in the manipulator form
+   template < typename T >
+   std::ostream & operator<< (std::ostream & os, const Plane3D<T> & p)
+   {
+     os << "\n" << p.Normal().X()
+        << "  " << p.Normal().Y()
+        << "  " << p.Normal().Z()
+        << "  " << p.HesseDistance()
+        << "\n";
+     return os;
+   }
 
-   std::ostream & operator<< (std::ostream & os, const Plane3D & p);
+} // end namespace Impl
 
-
+// typedefs for double and float versions
+typedef Impl::Plane3D<double> Plane3D;
+typedef Impl::Plane3D<float>  Plane3DF;
+  
 } // end namespace Math
 
 } // end namespace ROOT

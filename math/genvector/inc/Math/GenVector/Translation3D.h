@@ -19,6 +19,8 @@
 
 #include "Math/GenVector/DisplacementVector3D.h"
 
+#include "Math/GenVector/Plane3D.h"
+
 #include "Math/GenVector/PositionVector3Dfwd.h"
 
 #include "Math/GenVector/LorentzVectorfwd.h"
@@ -31,10 +33,8 @@ namespace ROOT {
 
 namespace Math {
 
-
-   class Plane3D;
-
-
+namespace Impl {
+ 
 //____________________________________________________________________________________________________
 /**
     Class describing a 3 dimensional translation. It can be combined (using the operator *)
@@ -48,12 +48,15 @@ namespace Math {
 
 */
 
+template <class T>
 class Translation3D {
 
 
   public:
 
-    typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >  Vector;
+    typedef T Scalar;
+
+    typedef DisplacementVector3D<Cartesian3D<T>, DefaultCoordinateSystemTag >  Vector;
 
 
 
@@ -76,7 +79,7 @@ class Translation3D {
    /**
       Construct from x,y,z values representing the translation
    */
-   Translation3D(double dx, double dy, double dz) :
+   Translation3D(T dx, T dy, T dz) :
       fVect( Vector(dx, dy, dz) )
    {  }
 
@@ -144,7 +147,7 @@ class Translation3D {
       Set the components from 3 scalars
    */
    void
-   SetComponents (double  dx, double  dy, double  dz ) {
+   SetComponents (T  dx, T  dy, T  dz ) {
       fVect.SetCoordinates(dx,dy,dz);
    }
 
@@ -152,7 +155,7 @@ class Translation3D {
       Get the components into 3 scalars
    */
    void
-   GetComponents (double &dx, double &dy, double &dz) const {
+   GetComponents (T &dx, T &dy, T &dz) const {
       fVect.GetCoordinates(dx,dy,dz);
    }
 
@@ -161,7 +164,7 @@ class Translation3D {
       Set the XYZ vector components from 3 scalars
    */
    void
-   SetXYZ (double  dx, double  dy, double  dz ) {
+   SetXYZ (T  dx, T  dy, T  dz ) {
       fVect.SetXYZ(dx,dy,dz);
    }
 
@@ -222,8 +225,16 @@ class Translation3D {
    /**
       Transformation on a 3D plane
    */
-   Plane3D operator() (const Plane3D & plane) const;
-
+   Plane3D<T> operator() ( const Plane3D<T> & plane ) const
+   {
+     // transformations on a 3D plane
+     Vector n = plane.Normal();
+     // take a point on the plane. Use origin projection on the plane
+     // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
+     T d = plane.HesseDistance();
+     PositionVector3D<Cartesian3D<T> > p( - d * n.X() , - d *n.Y(), -d *n.Z() );
+     return PLANE( operator() (n), operator() (p) );
+   }
 
    /**
       Transformation operation for Vectors. Apply same rules as operator()
@@ -240,7 +251,7 @@ class Translation3D {
    /**
       multiply (combine) with another transformation in place
    */
-   Translation3D & operator *= (const Translation3D  & t) {
+   Translation3D<T> & operator *= (const Translation3D<T>  & t) {
       fVect+= t.Vect();
       return *this;
    }
@@ -248,8 +259,8 @@ class Translation3D {
    /**
       multiply (combine) two transformations
    */
-   Translation3D operator * (const Translation3D  & t) const {
-      return Translation3D( fVect + t.Vect() );
+   Translation3D<T> operator * (const Translation3D<T>  & t) const {
+      return Translation3D<T>( fVect + t.Vect() );
    }
 
    /**
@@ -262,20 +273,20 @@ class Translation3D {
    /**
       Return the inverse of the transformation.
    */
-   Translation3D Inverse() const {
-      return Translation3D( -fVect.X(), -fVect.Y(),-fVect.Z() );
+   Translation3D<T> Inverse() const {
+      return Translation3D<T>( -fVect.X(), -fVect.Y(),-fVect.Z() );
    }
 
 
    /**
       Equality/inequality operators
    */
-   bool operator == (const Translation3D & rhs) const {
+   bool operator == (const Translation3D<T> & rhs) const {
       if( fVect != rhs.fVect )  return false;
       return true;
    }
 
-   bool operator != (const Translation3D & rhs) const {
+   bool operator != (const Translation3D<T> & rhs) const {
       return ! operator==(rhs);
    }
 
@@ -295,11 +306,26 @@ private:
 
 // TODO - I/O should be put in the manipulator form
 
-std::ostream & operator<< (std::ostream & os, const Translation3D & t);
+template <class T>
+std::ostream & operator<< (std::ostream & os, const Translation3D<T> & t)
+{
+   // TODO - this will need changing for machine-readable issues
+   //        and even the human readable form needs formatiing improvements
+
+   T m[3];
+   t.GetComponents(m, m+3);
+   return os << "\n" << m[0] << "  " << m[1] << "  " << m[2] << "\n";
+}
 
 // need a function Transform = Translation * Rotation ???
 
-   } // end namespace Math
+} // end namespace Impl
+
+// typedefs for double and float versions
+typedef Impl::Translation3D<double> Translation3D;
+typedef Impl::Translation3D<float>  Translation3DF;
+
+} // end namespace Math
 
 } // end namespace ROOT
 
