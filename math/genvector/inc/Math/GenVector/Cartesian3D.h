@@ -120,7 +120,7 @@ public :
 
    // pseudorapidity
    Scalar Eta() const {
-      return Impl::Eta_FromRhoZ ( Rho(),fZ);
+      return Impl::Eta_FromRhoZ( Rho(), fZ );
    }
 
    /**

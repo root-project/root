@@ -97,8 +97,8 @@ public :
 
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
-   Scalar X()     const { return fR*std::cos(fPhi);}
-   Scalar Y()     const { return fR*std::sin(fPhi);}
+   Scalar X()     const { using namespace std; return fR*cos(fPhi);}
+   Scalar Y()     const { using namespace std; return fR*sin(fPhi);}
    Scalar Mag2()  const { return fR*fR;}
 
 
@@ -134,8 +134,9 @@ private:
       restrict abgle hi to be between -PI and PI
     */
    inline void Restrict() {
+      using namespace std;
       if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
       return;
    }
 

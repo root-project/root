@@ -137,15 +137,16 @@ public :
 
    // other coordinate representation
 
-   Scalar Px() const { return fPt*cos(fPhi);}
+   Scalar Px() const { using namespace std; return cos(fPhi);}
    Scalar X () const { return Px();         }
-   Scalar Py() const { return fPt*sin(fPhi);}
+   Scalar Py() const { using namespace std; return sin(fPhi);}
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
-      return fPt >   0 ? fPt*std::sinh(fEta)     :
-         fEta == 0 ? 0                       :
-         fEta >  0 ? fEta - etaMax<Scalar>() :
-         fEta + etaMax<Scalar>() ;
+      using namespace std; 
+      return ( fPt >   0 ? fPt*sinh(fEta)          :
+               fEta == 0 ? 0                       :
+               fEta >  0 ? fEta - etaMax<Scalar>() :
+               fEta + etaMax<Scalar>() );
    }
    Scalar Z () const { return Pz(); }
 
@@ -153,10 +154,11 @@ public :
        magnitude of momentum
    */
    Scalar P() const {
-      return  fPt  > 0                 ?  fPt*std::cosh(fEta)       :
-         fEta >  etaMax<Scalar>() ?  fEta - etaMax<Scalar>()   :
-         fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>()   :
-         0                         ;
+      using namespace std; 
+      return ( fPt  > 0                 ?  fPt*cosh(fEta)           :
+               fEta >  etaMax<Scalar>() ?  fEta - etaMax<Scalar>()  :
+               fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>()  :
+               0                                                   );
    }
    Scalar R() const { return P(); }
 
@@ -175,13 +177,14 @@ public :
       invariant mass
    */
    Scalar M() const    {
+      using namespace std; 
       Scalar mm = M2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         return sqrt(mm);
       } else {
          GenVector::Throw ("PtEtaPhiE4D::M() - Tachyonic:\n"
                            "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
-         return -std::sqrt(-mm);
+         return -sqrt(-mm);
       }
    }
    Scalar Mag() const    { return M(); }
@@ -201,13 +204,14 @@ public :
       transverse mass
    */
    Scalar Mt() const {
+      using namespace std; 
       Scalar mm = Mt2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         return sqrt(mm);
       } else {
          GenVector::Throw ("PtEtaPhiE4D::Mt() - Tachyonic:\n"
                            "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
-         return -std::sqrt(-mm);
+         return -sqrt(-mm);
       }
    }
 
@@ -218,7 +222,8 @@ public :
       transverse energy
    */
    Scalar Et() const {
-      return fE / std::cosh(fEta); // faster using eta
+      using namespace std; 
+      return fE / cosh(fEta); // faster using eta
    }
 
    /**
@@ -230,8 +235,9 @@ public :
 private:
    inline static Scalar pi() { return M_PI; }
    inline void Restrict() {
+      using namespace std; 
       if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
       return;
    }
 public:
@@ -240,9 +246,9 @@ public:
       polar angle
    */
    Scalar Theta() const {
-      if (fPt  >  0) return 2* std::atan( exp( - fEta ) );
-      if (fEta >= 0) return 0;
-      return pi();
+      using namespace std; 
+      return ( fPt  >  0 ? Scalar(2) * atan( exp( - fEta ) ) :
+               fEta >= 0 ? Scalar(0) : pi() );
    }
 
    // --------- Set Coordinates of this system  ---------------

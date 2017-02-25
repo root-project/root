@@ -89,8 +89,9 @@ public :
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}
    Scalar Mag2()  const { return fX*fX + fY*fY; }
-   Scalar R()     const { return std::sqrt( Mag2());}
-   Scalar Phi()   const { return (fX==0 && fY==0) ? 0.0 : atan2(fY,fX);}
+   Scalar R()     const { using namespace std; return sqrt( Mag2()); }
+   Scalar Phi()   const { using namespace std;
+                          return (fX==Scalar(0) && fY==Scalar(0)) ? Scalar(0) : atan2(fY,fX);}
 
    /**
        set the x coordinate value keeping y constant
@@ -124,8 +125,9 @@ public :
        rotate by an angle
     */
    void Rotate(Scalar angle) {
-      Scalar s = std::sin(angle);
-      Scalar c = std::cos(angle);
+      using namespace std;
+      const Scalar s = sin(angle);
+      const Scalar c = cos(angle);
       SetCoordinates( c*fX - s*fY, s*fX + c * fY );
    }
 
@@ -161,10 +163,11 @@ public :
    template <class T2>
    explicit Cartesian2D( const Polar2D<T2> & v )
    {
-      Scalar r = v.R();    // re-using this instead of calling v.X() and v.Y()
+      using namespace std;
+      const Scalar r = v.R();    // re-using this instead of calling v.X() and v.Y()
       // is the speed improvement
-      fX = r * std::cos(v.Phi());
-      fY = r * std::sin(v.Phi());
+      fX = r * cos(v.Phi());
+      fY = r * sin(v.Phi());
    }
    // Technical note:  This works even though only Polar2Dfwd.h is
    // included (and in fact, including Polar2D.h would cause circularity
@@ -174,9 +177,10 @@ public :
    template <class T2>
    Cartesian2D & operator = (const Polar2D<T2> & v)
    {
-      Scalar r = v.R();
-      fX = r * std::cos(v.Phi());
-      fY = r * std::sin(v.Phi());
+      using namespace std;
+      const Scalar r = v.R();
+      fX = r * cos(v.Phi());
+      fY = r * sin(v.Phi());
       return *this;
    }
 
