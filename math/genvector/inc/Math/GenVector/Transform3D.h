@@ -73,7 +73,7 @@ namespace Impl {
 
 */
 
-template <class T = double>
+template <typename T = double>
 class Transform3D {
 
 

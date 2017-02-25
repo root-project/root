@@ -48,7 +48,7 @@ namespace Impl {
 
 */
 
-template <class T>
+template <typename T = double>
 class Translation3D {
 
 

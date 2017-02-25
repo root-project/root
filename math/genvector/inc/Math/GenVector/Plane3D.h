@@ -45,7 +45,7 @@ namespace Impl {
       @ingroup GenVector
    */
   
-   template <class T = double>
+   template <typename T = double>
    class Plane3D {
 
    public:
