@@ -245,8 +245,9 @@ namespace Impl {
       */
       void Normalize()
       {
+        using namespace std;
         // normalize the plane
-        const Scalar s = std::sqrt( fA*fA + fB*fB + fC*fC );
+        const Scalar s = sqrt( fA*fA + fB*fB + fC*fC );
         // what to do if s = 0 ??
         // CRJ - This does not work with Vc types... ToDo decide how to handle...
         //if ( s == 0 ) { fD = 0; return; }
