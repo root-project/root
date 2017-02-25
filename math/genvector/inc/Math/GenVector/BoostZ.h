@@ -233,11 +233,11 @@ public:
    /**
       Equality/inequality operators
    */
-   bool operator == (const BoostZ & rhs) const {
+   bool operator == (const BoostZ<T> & rhs) const {
       return ( fBeta  == rhs.fBeta  &&
                fGamma == rhs.fGamma );
    }
-   bool operator != (const BoostZ & rhs) const {
+   bool operator != (const BoostZ<T> & rhs) const {
       return ! operator==(rhs);
    }
 

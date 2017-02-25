@@ -81,8 +81,7 @@ public:
      // again.
      
      if ( fGamma <= Scalar(0) ) {
-       GenVector::Throw (
-                         "Attempt to rectify a boost with non-positive gamma");
+       GenVector::Throw("Attempt to rectify a boost with non-positive gamma");
      }
      else
      {
@@ -223,9 +222,9 @@ public:
    /**
       Return inverse of  a rotation
    */
-   BoostY Inverse() const {
+   BoostY<T> Inverse() const {
      // return inverse
-     BoostY tmp(*this);
+     BoostY<T> tmp(*this);
      tmp.Invert();
      return tmp;
    }
@@ -233,11 +232,11 @@ public:
    /**
       Equality/inequality operators
    */
-   bool operator == (const BoostY & rhs) const {
+   bool operator == (const BoostY<T> & rhs) const {
       return ( fBeta  == rhs.fBeta &&
                fGamma == rhs.fGamma );
    }
-   bool operator != (const BoostY & rhs) const {
+   bool operator != (const BoostY<T> & rhs) const {
       return ! operator==(rhs);
    }
 

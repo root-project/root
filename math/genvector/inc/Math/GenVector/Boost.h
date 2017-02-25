@@ -148,7 +148,7 @@ public:
    /**
       Assignment operator
     */
-   Boost &
+   Boost<T> &
    operator=(Boost<T> const & rhs ) {
     for (unsigned int i=0; i < kNElems; ++i) {
        fM[i] = rhs.fM[i];
@@ -159,12 +159,12 @@ public:
   /**
      Assign from an axial pure boost
   */
-  Boost &
-  operator=( BoostX<T> const & bx ) { return operator=(Boost(bx)); }
-  Boost &
-  operator=( BoostY<T> const & by ) { return operator=(Boost(by)); }
-  Boost &
-  operator=( BoostZ<T> const & bz ) { return operator=(Boost(bz)); }
+  Boost<T> &
+  operator=( BoostX<T> const & bx ) { return operator=(Boost<T>(bx)); }
+  Boost<T> &
+  operator=( BoostY<T> const & by ) { return operator=(Boost<T>(by)); }
+  Boost<T> &
+  operator=( BoostZ<T> const & bz ) { return operator=(Boost<T>(bz)); }
 
   /**
      Re-adjust components to eliminate small deviations from a perfect
@@ -176,17 +176,18 @@ public:
     // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
     // again.
     
-    if (fM[kTT] <= 0) {
-      GenVector::Throw (
-                        "Attempt to rectify a boost with non-positive gamma");
-      return;
+    if ( fM[kTT] <= Scalar(0) ) {
+      GenVector::Throw("Attempt to rectify a boost with non-positive gamma");
     }
-    DisplacementVector3D< Cartesian3D<Scalar> > beta ( fM[kXT], fM[kYT], fM[kZT] );
-    beta /= fM[kTT];
-    if ( beta.mag2() >= 1 ) {
-      beta /= ( beta.R() * ( 1.0 + 1.0e-16 ) );
+    else
+    {
+      DisplacementVector3D< Cartesian3D<Scalar> > beta ( fM[kXT], fM[kYT], fM[kZT] );
+      beta /= fM[kTT];
+      if ( beta.mag2() >= 1 ) {
+        beta /= ( beta.R() * Scalar( 1.0 + 1.0e-16 ) );
+      }
+      SetComponents ( beta );
     }
-    SetComponents ( beta );
   }
 
   // ======== Components ==============
