@@ -183,8 +183,8 @@ public:
    template <class CoordSystem>
    LorentzVector<CoordSystem>
    operator() (const LorentzVector<CoordSystem> & v) const {
-      LorentzVector< PxPyPzE4D<T> > xyzt(v);
-      LorentzVector< PxPyPzE4D<T> > r_xyzt = operator()(xyzt);
+      const LorentzVector< PxPyPzE4D<T> > xyzt(v);
+      const LorentzVector< PxPyPzE4D<T> > r_xyzt = operator()(xyzt);
       return LorentzVector<CoordSystem> ( r_xyzt );
    }
 
@@ -196,8 +196,8 @@ public:
    template <class Foreign4Vector>
    Foreign4Vector
    operator() (const Foreign4Vector & v) const {
-      LorentzVector< PxPyPzE4D<T> > xyzt(v);
-      LorentzVector< PxPyPzE4D<T> > r_xyzt = operator()(xyzt);
+      const LorentzVector< PxPyPzE4D<T> > xyzt(v);
+      const LorentzVector< PxPyPzE4D<T> > r_xyzt = operator()(xyzt);
       return Foreign4Vector ( r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T() );
    }
 

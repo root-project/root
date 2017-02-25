@@ -104,10 +104,9 @@ public:
    SetComponents (Scalar bx) {
      using namespace std;
      // set component
-     Scalar bp2 = bx*bx;
-     if (bp2 >= Scalar(1) ) {
-       GenVector::Throw (
-                         "Beta Vector supplied to set BoostX represents speed >= c");
+     const Scalar bp2 = bx*bx;
+     if ( bp2 >= Scalar(1) ) {
+       GenVector::Throw("Beta Vector supplied to set BoostX represents speed >= c");
      }
      else
      {
@@ -137,7 +136,7 @@ public:
    /**
        Set the given beta of the Boost
    */
-   void  SetBeta(Scalar beta) { SetComponents(beta); }
+   void SetBeta(Scalar beta) { SetComponents(beta); }
 
    /**
       The beta vector for this boost

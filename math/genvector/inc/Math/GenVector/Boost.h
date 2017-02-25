@@ -199,10 +199,9 @@ public:
   SetComponents (Scalar bx, Scalar by, Scalar bz) {
     using namespace std;
     // set the boost beta as 3 components
-    Scalar bp2 = bx*bx + by*by + bz*bz;
+    const Scalar bp2 = bx*bx + by*by + bz*bz;
     if ( bp2 >= Scalar(1) ) {
-      GenVector::Throw (
-                        "Beta Vector supplied to set Boost represents speed >= c");
+      GenVector::Throw("Beta Vector supplied to set Boost represents speed >= c");
       // SetIdentity();
     }
     else
@@ -228,7 +227,7 @@ public:
   void
   GetComponents (Scalar& bx, Scalar& by, Scalar& bz) const {
     // get beta of the boots as 3 components
-    Scalar gaminv = Scalar(1)/fM[kTT];
+    const Scalar gaminv = Scalar(1)/fM[kTT];
     bx = fM[kXT]*gaminv;
     by = fM[kYT]*gaminv;
     bz = fM[kZT]*gaminv;
