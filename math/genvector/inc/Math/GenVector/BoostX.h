@@ -267,7 +267,7 @@ std::ostream & operator<< (std::ostream & os, const BoostX<T> & b) {
 } //namepsace Impl
 
 typedef Impl::BoostX<double> BoostX;
-typedef Impl::BoostX<float> BoostXF;  
+typedef Impl::BoostX<float>  BoostXF;  
   
 } //namespace Math
 } //namespace ROOT

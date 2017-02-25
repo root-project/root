@@ -183,7 +183,7 @@ public:
     {
       DisplacementVector3D< Cartesian3D<Scalar> > beta ( fM[kXT], fM[kYT], fM[kZT] );
       beta /= fM[kTT];
-      if ( beta.mag2() >= 1 ) {
+      if ( beta.mag2() >= Scalar(1) ) {
         beta /= ( beta.R() * Scalar( 1.0 + 1.0e-16 ) );
       }
       SetComponents ( beta );
@@ -277,11 +277,11 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin ) const {
-     T bx,by,bz = 0;
-     GetComponents (bx,by,bz);
-     *begin++ = bx;
-     *begin++ = by;
-     *begin = bz;
+    T bx(0), by(0), bz(0);
+    GetComponents (bx,by,bz);
+    *begin++ = bx;
+    *begin++ = by;
+    *begin = bz;
   }
 
   /**
