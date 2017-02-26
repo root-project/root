@@ -80,7 +80,8 @@ int tdf001_introduction() {
    auto b1b2_cut = d.Filter(cutb1b2, {"b2","b1"});
    auto minVal = b1b2_cut.Min();
    auto maxVal = b1b2_cut.Max();
-   auto meanVal = b1b2_cut.Mean("b2"); // <- Here the column is not the default one.
+   auto meanVal = b1b2_cut.Mean();
+   auto nonDefmeanVal = b1b2_cut.Mean("b2"); // <- Column is not the default
    std::cout << "The mean is always included between the min and the max: "
              << *minVal << " <= " << *meanVal << " <= " << *maxVal << std::endl;
 
