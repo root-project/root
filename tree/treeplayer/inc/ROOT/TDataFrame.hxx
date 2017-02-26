@@ -274,9 +274,9 @@ class TDataFrameAction final : public TDataFrameActionBase {
    std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
 
 public:
-   TDataFrameAction(Helper&& h, const BranchNames &bl, const std::shared_ptr<PrevDataFrame>& pd)
-      : fHelper(std::move(h)), fBranches(bl), fTmpBranches(pd->GetTmpBranches()), fPrevData(*pd),
-        fFirstData(pd->GetDataFrame()) { }
+   TDataFrameAction(Helper&& h, const BranchNames &bl, PrevDataFrame& pd)
+      : fHelper(std::move(h)), fBranches(bl), fTmpBranches(pd.GetTmpBranches()), fPrevData(pd),
+        fFirstData(pd.GetDataFrame()) { }
 
    TDataFrameAction(const TDataFrameAction &) = delete;
 
@@ -407,7 +407,7 @@ public:
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<DFF_t> (std::move(f), actualBl, fProxiedPtr, name);
+      auto FilterPtr = std::make_shared<DFF_t> (std::move(f), actualBl, *fProxiedPtr, name);
       df->Book(FilterPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(std::move(FilterPtr));
       return tdf_f;
@@ -443,7 +443,7 @@ public:
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
-      auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, fProxiedPtr);
+      auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
       df->Book(BranchPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(std::move(BranchPtr));
       return tdf_b;
@@ -492,7 +492,7 @@ public:
       const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs-1, bl, defBl);
       using Op_t = ROOT::Internal::Operations::ForeachSlotOperation<F>;
       using DFA_t  = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, *fProxiedPtr));
       df->Run();
    }
 
@@ -542,7 +542,7 @@ public:
       auto redObjPtr = std::make_shared<T>(initValue);
       using Op_t = ROOT::Internal::Operations::ReduceOperation<F,T>;
       using DFA_t = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr.get(), nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr.get(), nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(redObjPtr);
    }
 
@@ -558,7 +558,7 @@ public:
       auto cSPtr = std::make_shared<unsigned int>(0);
       using Op_t = ROOT::Internal::Operations::CountOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr.get(), nSlots), BranchNames({}), fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr.get(), nSlots), BranchNames({}), *fProxiedPtr));
       return df->MakeActionResultProxy(cSPtr);
    }
 
@@ -580,7 +580,7 @@ public:
       auto valuesPtr = std::make_shared<COLL>();
       using Op_t = ROOT::Internal::Operations::TakeOperation<T,COLL>;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(valuesPtr);
    }
 
@@ -683,7 +683,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
@@ -714,7 +714,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1,W>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
@@ -745,7 +745,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1,B2>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
@@ -778,7 +778,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1,B2,W>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
@@ -1013,11 +1013,11 @@ private:
       if (hasAxisLimits) {
          using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
          using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X,W>>;
-         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       } else {
          using Op_t = ROOT::Internal::Operations::FillOperation;
          using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X,W>>;
-         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
       return df->MakeActionResultProxy(h);
    }
@@ -1034,11 +1034,11 @@ private:
       if (hasAxisLimits) {
          using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
          using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
-         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       } else {
          using Op_t = ROOT::Internal::Operations::FillOperation;
          using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
-         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
       return df->MakeActionResultProxy(h);
    }
@@ -1051,7 +1051,7 @@ private:
       using Op_t = ROOT::Internal::Operations::MinOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(minV.get(), nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(minV.get(), nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(minV);
    }
 
@@ -1063,7 +1063,7 @@ private:
       using Op_t = ROOT::Internal::Operations::MaxOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(maxV.get(), nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(maxV.get(), nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(maxV);
    }
 
@@ -1076,7 +1076,7 @@ private:
       using Op_t = ROOT::Internal::Operations::MeanOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(meanV.get(), nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(meanV.get(), nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(meanV);
    }
    /// \endcond
@@ -1228,9 +1228,9 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
 public:
-   TDataFrameBranch(const std::string &name, F&& expression, const BranchNames &bl, const std::shared_ptr<PrevData>& pd)
-      : TDataFrameBranchBase(pd->GetDataFrame(), pd->GetTmpBranches(), name),
-        fExpression(std::move(expression)), fBranches(bl), fPrevData(*pd)
+   TDataFrameBranch(const std::string &name, F&& expression, const BranchNames &bl, PrevData& pd)
+      : TDataFrameBranchBase(pd.GetDataFrame(), pd.GetTmpBranches(), name),
+        fExpression(std::move(expression)), fBranches(bl), fPrevData(pd)
    {
       fTmpBranches.emplace_back(name);
    }
@@ -1330,9 +1330,9 @@ class TDataFrameFilter final : public TDataFrameFilterBase {
 
 public:
    TDataFrameFilter(FilterF&& f, const BranchNames &bl,
-                    const std::shared_ptr<PrevDataFrame>& pd, const std::string& name = "")
-      : TDataFrameFilterBase(pd->GetDataFrame(), pd->GetTmpBranches(), name),
-        fFilter(std::move(f)), fBranches(bl), fPrevData(*pd) { }
+                    PrevDataFrame& pd, const std::string& name = "")
+      : TDataFrameFilterBase(pd.GetDataFrame(), pd.GetTmpBranches(), name),
+        fFilter(std::move(f)), fBranches(bl), fPrevData(pd) { }
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
 
