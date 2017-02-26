@@ -43,6 +43,7 @@
 #pragma link C++ class ROOT::Mpi::TIntraCommunicator;
 #pragma link C++ class ROOT::Mpi::TInterCommunicator;
 #pragma link C++ class ROOT::Mpi::TGroup;
+#pragma link C++ class ROOT::Mpi::TErrorHandler;
 
 /*
  * Global communicator
