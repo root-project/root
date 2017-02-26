@@ -305,7 +305,7 @@ Statistics are retrieved through a call to the `Report` method:
 - when `Report` is called on the main `TDataFrame` object, it prints stats for all named filters declared up to that point
 - when called on a stored chain state (i.e. a chain/graph node), it prints stats for all named filters in the section of the chain between the main `TDataFrame` and that node (included).
 
-Stats are printed in the same order as named filters have been added to the graph, and *refer to the latest event-loop* that has been run using the relevant `TDataFrame`. A warning is printed if `Report` is called before the event-loop has been run at least once.
+Stats are printed in the same order as named filters have been added to the graph, and *refer to the latest event-loop* that has been run using the relevant `TDataFrame`. If `Report` is called before the event-loop has been run at least once, a run is triggered.
 
 ### Temporary branches
 Temporary branches are created by invoking `AddBranch(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary branch.
@@ -367,7 +367,7 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches) 
+TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches)
    : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
          std::make_shared<ROOT::Detail::TDataFrameImpl>(
             treeName, dirPtr, defaultBranches))
@@ -462,8 +462,6 @@ void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
 }
 
 void TDataFrameFilterBase::PrintReport() const {
-   if (fName.empty())
-      return;
    const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
    const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
    double perc = accepted;
@@ -514,8 +512,11 @@ void TDataFrameImpl::Run()
          BuildAllReaderValues(r, slot);
 
          // recursive call to check filters and conditionally execute actions
-         while (r.Next())
-            for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, r.GetCurrentEntry());
+         while (r.Next()) {
+            const auto currEntry = r.GetCurrentEntry();
+            for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, currEntry);
+            for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, currEntry);
+          }
       });
    } else {
 #endif // R__USE_IMT
@@ -530,8 +531,11 @@ void TDataFrameImpl::Run()
       BuildAllReaderValues(r, 0);
 
       // recursive call to check filters and conditionally execute actions
-      while (r.Next())
-         for (auto &actionPtr : fBookedActions) actionPtr->Run(0, r.GetCurrentEntry());
+      while (r.Next()) {
+         const auto currEntry = r.GetCurrentEntry();
+         for (auto &actionPtr : fBookedActions) actionPtr->Run(0, currEntry);
+         for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(0, currEntry);
+      }
 #ifdef R__USE_IMT
    }
 #endif // R__USE_IMT
@@ -610,6 +614,7 @@ void TDataFrameImpl::Book(ROOT::Internal::ActionBasePtr_t actionPtr)
 void TDataFrameImpl::Book(ROOT::Detail::FilterBasePtr_t filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
+   fBookedNamedFilters.emplace_back(filterPtr);
 }
 
 void TDataFrameImpl::Book(TmpBranchBasePtr_t branchPtr)
@@ -630,7 +635,7 @@ unsigned int TDataFrameImpl::GetNSlots() const
 
 /// Call `PrintReport` on all booked filters
 void TDataFrameImpl::Report() const {
-   for(const auto& fPtr : fBookedFilters)
+   for(const auto& fPtr : fBookedNamedFilters)
       fPtr->PrintReport();
 }
 

@@ -966,9 +966,8 @@ public:
    void Report() {
       auto df = GetDataFrameChecked();
       if (!df->HasRunAtLeastOnce())
-         Info("TDataFrame::Report", "Warning: the event-loop has not been run yet, all reports are empty");
-      else
-         fProxiedPtr->Report();
+         df->Run();
+      fProxiedPtr->Report();
    }
 
 private:
@@ -1389,6 +1388,7 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
 
    ROOT::Internal::ActionBaseVec_t fBookedActions;
    ROOT::Detail::FilterBaseVec_t fBookedFilters;
+   ROOT::Detail::FilterBaseVec_t fBookedNamedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    std::string fTreeName;
