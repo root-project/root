@@ -2,8 +2,8 @@
 /// \ingroup tutorial_tdataframe
 /// \notebook -nodraw
 /// This tutorial illustrates how to use TProfiles in combination with the
-/// TDataFrame. See the documentation of TProfile to better understand the
-/// analogy of this code with the example one.
+/// TDataFrame. See the documentation of TProfile and TProfile2D to better
+/// understand the analogy of this code with the example one.
 ///
 /// \macro_code
 ///
@@ -25,6 +25,7 @@ void fill_tree(const char* filename, const char* treeName)
    TTree t(treeName,treeName);
    float px, py, pz;
    t.Branch("px", &px);
+   t.Branch("py", &py);
    t.Branch("pz", &pz);
    for (int i=0; i<25000; i++) {
       gRandom->Rannor(px,py);
@@ -45,12 +46,17 @@ void tdf003_profiles()
 
    // We read the tree from the file and create a TDataFrame.
    TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"px","pz"});
+   ROOT::Experimental::TDataFrame d(treeName, &f, {"px","py","pz"});
 
-   // Create the profile
-   auto hprof = d.Profile1D<float, float>(TProfile("hprof","Profile of pz versus px",64,-4,4));
+   // Create the profiles
+   auto hprof1d = d.Profile1D<float, float>(TProfile("hprof1d","Profile of pz versus px",64,-4,4));
+   auto hprof2d = d.Profile2D<float, float, float>(TProfile2D("hprof2d","Profile of pz versus px and py",40,-4,4,40,-4,4,0,20));
 
    // And Draw
    auto c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);
-   hprof->DrawClone();
+   hprof1d->DrawClone();
+   auto c2 = new TCanvas("c2","Profile2D histogram example",200,10,700,500);
+   c2->cd();
+   hprof2d->DrawClone();
+
 }
