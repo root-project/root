@@ -31,6 +31,11 @@ void CountOperation::Finalize()
    }
 }
 
+CountOperation::~CountOperation()
+{
+   Finalize();
+}
+
 void FillOperation::UpdateMinMax(unsigned int slot, double v) {
    auto& thisMin = fMin[slot];
    auto& thisMax = fMax[slot];
@@ -98,6 +103,11 @@ void FillOperation::Finalize()
    }
 }
 
+FillOperation::~FillOperation()
+{
+   Finalize();
+}
+
 template void FillOperation::Exec(unsigned int, const std::vector<float>&);
 template void FillOperation::Exec(unsigned int, const std::vector<double>&);
 template void FillOperation::Exec(unsigned int, const std::vector<char>&);
@@ -123,6 +133,11 @@ void MinOperation::Finalize()
    for (auto &m : fMins) *fResultMin = std::min(m, *fResultMin);
 }
 
+MinOperation::~MinOperation()
+{
+   Finalize();
+}
+
 template void MinOperation::Exec(unsigned int, const std::vector<float>&);
 template void MinOperation::Exec(unsigned int, const std::vector<double>&);
 template void MinOperation::Exec(unsigned int, const std::vector<char>&);
@@ -144,6 +159,11 @@ void MaxOperation::Finalize()
    for (auto &m : fMaxs) {
       *fResultMax = std::max(m, *fResultMax);
    }
+}
+
+MaxOperation::~MaxOperation()
+{
+   Finalize();
 }
 
 template void MaxOperation::Exec(unsigned int, const std::vector<float>&);
@@ -168,6 +188,11 @@ void MeanOperation::Finalize()
    Count_t sumOfCounts = 0;
    for (auto &c : fCounts) sumOfCounts += c;
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
+}
+
+MeanOperation::~MeanOperation()
+{
+   Finalize();
 }
 
 template void MeanOperation::Exec(unsigned int, const std::vector<float>&);
