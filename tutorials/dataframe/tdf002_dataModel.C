@@ -67,7 +67,7 @@ void fill_tree(const char* filename, const char* treeName) {
 int tdf002_dataModel() {
 
    // We prepare an input tree to run on
-   auto fileName = "myfile_dataModel.root";
+   auto fileName = "tdf002_dataModel.root";
    auto treeName = "myTree";
    fill_tree(fileName,treeName);
 

@@ -39,7 +39,7 @@ void fill_tree(const char* filename, const char* treeName)
 void tdf003_profiles()
 {
    // We prepare an input tree to run on
-   auto fileName = "myfile.root";
+   auto fileName = "tdf003_profiles.root";
    auto treeName = "myTree";
    fill_tree(fileName,treeName);
 
