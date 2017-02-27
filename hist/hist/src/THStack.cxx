@@ -97,6 +97,12 @@ Begin_Macro(source)
 ../../../tutorials/hist/candleplotstack.C
 End_Macro
 
+Automatic coloring according to the current palette is available as shown in the
+following example:
+
+Begin_Macro(source)
+../../../tutorials/hist/thstackpalettecolor.C
+End_Macro
 */
 
 
