@@ -1051,5 +1051,5 @@ void THStack::SetMinimum(Double_t minimum)
 /// Get iterator over itnernal hists list.
 TIter THStack::begin() const
 {
-  return fHists->begin();
+  return TIter(fHists);
 }
