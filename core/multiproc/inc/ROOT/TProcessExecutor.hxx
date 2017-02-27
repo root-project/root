@@ -45,12 +45,10 @@ public:
    // Map
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-   /// \cond
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   /// \endcond
    using TExecutor<TProcessExecutor>::Map;
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
@@ -126,9 +124,10 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
    return reslist;
 }
 
-// tell doxygen to ignore this (\endcond closes the statement)
-/// \cond
-
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of an
+/// std::vector as argument.
+/// A vector containg executions' results is returned.
 // actual implementation of the Map method. all other calls with arguments eventually
 // call this one
 template<class F, class T, class Cond>
@@ -171,6 +170,10 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
    return reslist;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of a
+/// sequence as argument.
+/// A vector containg executions' results is returned.
 template<class F, class INTEGER, class Cond>
 auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
@@ -179,9 +182,10 @@ auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<type
    const auto &reslist = Map(func, vargs);
    return reslist;
 }
-// tell doxygen to stop ignoring code
-/// \endcond
 
+//////////////////////////////////////////////////////////////////////////
+/// "Reduce" an std::vector into a single object by passing a
+/// function as the second argument defining the reduction operation.
 template<class T, class R>
 T TProcessExecutor::Reduce(const std::vector<T> &objs, R redfunc)
 {
