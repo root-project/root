@@ -264,6 +264,13 @@ Begin_Macro(source)
    return c3;
 }
 End_Macro
+
+Automatic coloring according to the current palette is available as shown in the
+following example:
+
+Begin_Macro(source)
+../../../tutorials/graphs/multigraphpalettecolor.C
+End_Macro
 */
 
 
