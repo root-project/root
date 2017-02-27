@@ -190,6 +190,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## I/O Libraries
 - [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
+- Fix ROOT-8686 and ROOT-8595 which led to error when persistifying classes which featured std::arrays as data members in TTrees.
 - TDavixFile: Added support for bucket name in path
 - Fix error sometimes prompted when trying to write std::array column-wise
 
