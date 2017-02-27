@@ -32,9 +32,6 @@
 namespace ROOT {
 
    class TThreadExecutor: public TExecutor<TThreadExecutor> {
-      template<class T>
-      friend class ParallelReductionResolver;
-
    public:
       explicit TThreadExecutor();
 
