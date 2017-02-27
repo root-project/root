@@ -1045,3 +1045,8 @@ void THStack::SetMinimum(Double_t minimum)
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
 }
+
+TIter THStack::begin() const
+{
+  return fHists->begin();
+}

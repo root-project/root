@@ -60,6 +60,8 @@ public:
    TList           *GetHists()  const { return fHists; }
    Int_t            GetNhists() const;
    TObjArray       *GetStack();
+   TIter            begin() const;
+   TIter            end() const { return TIter::End(); }
    virtual Double_t GetMaximum(Option_t *option="");
    virtual Double_t GetMinimum(Option_t *option="");
    TAxis           *GetXaxis() const;
@@ -74,6 +76,7 @@ public:
    virtual void     SetHistogram(TH1 *h) {fHistogram = h;}
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
+
 
    ClassDef(THStack,2)  //A collection of histograms
 };
