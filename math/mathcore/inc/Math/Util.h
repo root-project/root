@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <limits>
+#include <vector>
 
 
 // for defining unused variables in the interfaces
@@ -67,6 +68,39 @@ inline double EvalLog(double x) {
 
 }  // end namespace Util
 
+      template<class T>
+      class KahanSum {
+      public:
+         void Add(const T &x)
+         {
+            auto y = x - correction;
+            auto t = sum + y;
+            correction = (t - sum) - y;
+            sum = t;
+         }
+
+         void Add(const std::vector<T> &elements)
+         {
+            for (auto e : elements)
+               this->Add(e);
+         }
+
+         static double Accumulate(const std::vector<T> &elements)
+         {
+            KahanSum init;
+            init.Add(elements);
+            return init.sum;
+         }
+
+         double Result()
+         {
+            return sum;
+         }
+
+      private:
+         double sum = 0.;
+         double correction = 0.;
+      };
 
    } // end namespace Math
 
