@@ -1472,3 +1472,9 @@ void TMultiGraph::SetMinimum(Double_t minimum)
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
 }
+
+
+TIter TMultiGraph::begin() const
+{
+  return fGraphs->begin();
+}
