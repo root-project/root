@@ -1312,6 +1312,7 @@ public:
    virtual void PartialReport() const = 0;
    std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
    BranchNames GetTmpBranches() const;
+   bool HasName() const;
    void CreateSlots(unsigned int nSlots);
    void PrintReport() const;
 };

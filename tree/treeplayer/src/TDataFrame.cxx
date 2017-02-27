@@ -448,6 +448,8 @@ std::weak_ptr<TDataFrameImpl> TDataFrameFilterBase::GetDataFrame() const { retur
 
 BranchNames TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
 
+bool TDataFrameFilterBase::HasName() const { return !fName.empty(); };
+
 void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
 {
    fReaderValues.resize(nSlots);
@@ -614,7 +616,9 @@ void TDataFrameImpl::Book(ROOT::Internal::ActionBasePtr_t actionPtr)
 void TDataFrameImpl::Book(ROOT::Detail::FilterBasePtr_t filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
-   fBookedNamedFilters.emplace_back(filterPtr);
+   if (filterPtr->HasName()) {
+      fBookedNamedFilters.emplace_back(filterPtr);
+   }
 }
 
 void TDataFrameImpl::Book(TmpBranchBasePtr_t branchPtr)
