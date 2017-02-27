@@ -260,8 +260,12 @@ void PyMethodBase::LoadSKVersion()
    }
 
    PyObject *pSklearnVersion = PyObject_GetAttrString(pModuleSkModule, "__version__");
-
+   
+   #if PY_MAJOR_VERSION < 3
    std::istringstream sVersion(std::string(PyBytes_AS_STRING(pSklearnVersion)));
+   #else
+   std::istringstream sVersion(std::string(PyUnicode_AsUTF8(pSklearnVersion)));
+   #endif
    std::string  sVersionMayor;
    std::string  sVersionMinor;
    std::getline(sVersion, sVersionMayor, '.');
