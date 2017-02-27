@@ -62,16 +62,16 @@ One just register command like:
     serv->RegisterCommand("/DoSomething","SomeFunction()");
 
 Element with name `DoSomething` will appear in the web browser and can be clicked.
-It will result in `gROOT->ProcessLineSync("SomeFunction()")` call. 
+It will result in `gROOT->ProcessLineSync("SomeFunction()")` call.
 
-One could configure argument(s) for the command. 
-For that one should use `%arg1`, `%arg2` and so on identifiers. Like:   
+One could configure argument(s) for the command.
+For that one should use `%arg1`, `%arg2` and so on identifiers. Like:
 
     serv->RegisterCommand("/DoSomething","SomeFunction(%arg1%,%arg2%)");
 
-User will be requested to enter arguments values, when command element clicked in the browser. 
+User will be requested to enter arguments values, when command element clicked in the browser.
 Example of the command which executes arbitrary string in appliction via ProcessLine looks like:
-  
+
     serv->RegisterCommand("/Process","%arg1%");
 
 When registering command, one could specify icon name which will be displayed with the command.
@@ -119,7 +119,7 @@ By default server runs in readonly mode and do not allow methods execution via '
 One could provide several options for the same item, separating them with '&' sign:
 
     root [10]  serv->Restrict("/Folder/histo1",  "allow_method=GetTitle&hide=guest");
- 
+
 Complete list of supported options could be found in [TRootSniffer:Restrict()](https://root.cern/root/html/TRootSniffer.html#TRootSniffer:Restrict) method documentation.
 
 
@@ -195,7 +195,7 @@ Example of authorization configuration for FastCGI connection:
                        "realm" => "root",
                        "require" => "valid-user"
                     ) )
- 
+
 
 ## Integration with existing applications
 
@@ -211,7 +211,7 @@ The first method is to configure an asynchronous timer for the server, like for 
 
     serv->SetTimer(100, kFALSE);
 
-Then, the timer will be activated even without any gSystem->ProcessEvents() method call. The main advantage of such method is that the application code can be used without any modifications. But there is no control when access to the application data is performed. It could happen just in-between of **`TH1::Fill()`** calls and an histogram object may be incomplete. Therefore such method is not recommended. 
+Then, the timer will be activated even without any gSystem->ProcessEvents() method call. The main advantage of such method is that the application code can be used without any modifications. But there is no control when access to the application data is performed. It could happen just in-between of **`TH1::Fill()`** calls and an histogram object may be incomplete. Therefore such method is not recommended.
 
 
 ### Regular calls of THttpServer::ProcessRequests() method
@@ -285,7 +285,7 @@ The result will be: "title".
 For the `root.json` request one could specify the 'compact' parameter, which allow to reduce the number of spaces and new lines without data lost. This parameter can have values from '0' (no compression) till '3' (no spaces and new lines at all).
 In addition, one can use simple compression algorithm for big arrays. If compact='10', zero values in the begin and at the end
 of the array will be excluded. If compact='20', similar values or large zero gaps in-between will be compressed. Such array
-compression support in JSROOT from version 4.8.2.   
+compression support in JSROOT from version 4.8.2.
 
 Usage of `root.json` request is about as efficient as binary `root.bin` request. Comparison of different request methods with TH2 histogram from hsimple.C shown in the table:
 
@@ -329,10 +329,10 @@ Or one could disable read-only mode with the call:
 
 Or one could allow access to the folder, object or specific object methods with:
 
-    serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' account 
-    serv->Restrict("/Histograms/hist1", "allow=all"); // allow full access for all users 
-    serv->Restrict("/Histograms/hist1", "allow_method=Rebin"); // allow only Rebin method 
-    
+    serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' account
+    serv->Restrict("/Histograms/hist1", "allow=all"); // allow full access for all users
+    serv->Restrict("/Histograms/hist1", "allow_method=Rebin"); // allow only Rebin method
+
 'exe.json' accepts following parameters:
 
    - `method` - name of method to execute
@@ -353,7 +353,7 @@ One also used `exe.bin` method - in this case results of method execution will b
     [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=Clone&_destroy_result_' -O clone.json
 
 If method required object as argument, it could be posted in binary or XML format as POST request. If binary form is used, one should specify following parameters:
- 
+
     [shell] wget 'http://localhost:8080/hist/exe.json?method=Add&h1=_post_object_&_post_class_=TH1I&c1=10' --post-file=h.bin -O res.json
 
 Here is important to specify post object class, which is not stored in the binary buffer. When used XML form (produced with [TBufferXML::ConvertToXML](https://root.cern/root/html/TBufferXML.html#TBufferXML:ConvertToXML)) method, only string with XML code could be specified:
@@ -375,12 +375,12 @@ It can be invoked with `cmd.json` request like:
 
 If command fails, `false` will be returned, otherwise result of gROOT->ProcessLineSync() execution.
 
-If command definition include arguments: 
+If command definition include arguments:
 
     serv->RegisterCommand("/ResetCounter", "DoReset(%arg1%,%arg2%)");
-    
+
 One could specify them in the URL string:
-    
+
     [shell] wget http://localhost:8080/ResetCounter/cmd.json?arg1=7&arg2=12 -O result.txt
 
 
@@ -412,13 +412,12 @@ To use `multi.json` request from the JavaScript, one should create special 'POST
 
      var xhr = JSROOT.NewHttpRequest("your_server/multi.json?number=3", "multi", function(res) {
         if (!res) return;
-        for (var n=0;n<res.length;++n) { 
+        for (var n=0;n<res.length;++n) {
            console.log('Requested element ', res[n]._typename);
-           // JSROOT.draw('drawid', res[n], 'hist'); 
+           // JSROOT.draw('drawid', res[n], 'hist');
         }
-     }); 
+     });
      xhr.send("Files/job1.root/hpx/root.json\nFiles/job1.root/hpxpy/root.json\nFiles/job1.root/hprof/root.json\n");
 
-Here arguemnt "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.  
+Here arguemnt "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
 
-       
