@@ -15,8 +15,7 @@
 /// * Map(F func, T& args): func is executed on each element of the collection of arguments args
 ///
 /// For either signature, func is executed as many times as needed by a pool of
-/// nThreads threads; the number of workers can be passed to the constructor
-/// or set via SetNWorkers. It defaults to the number of cores.\n
+/// nThreads threads; It defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
 /// be created upon execution of func, returned objects included: ROOT::TThreadExecutor never
