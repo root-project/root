@@ -70,7 +70,7 @@ For that one should use `%arg1`, `%arg2` and so on identifiers. Like:
     serv->RegisterCommand("/DoSomething","SomeFunction(%arg1%,%arg2%)");
 
 User will be requested to enter arguments values, when command element clicked in the browser.
-Example of the command which executes arbitrary string in appliction via ProcessLine looks like:
+Example of the command which executes arbitrary string in application via ProcessLine looks like:
 
     serv->RegisterCommand("/Process","%arg1%");
 
@@ -142,7 +142,7 @@ One could specify a debug parameter to be able to adjust the FastCGI configurati
 
 All user access will be ruled by the main web server. Authorized account names could be used to configure access restriction in THttpServer.
 
-### Configure fastcgi with Apcahe2
+### Configure fastcgi with Apache2
 
 First of all, one should compile and install [mod_fastcgi](http://www.fastcgi.com) module.
 Then *mod_fastcgi* should be specified in httpd.conf to load it when Apache server is started.
@@ -387,7 +387,7 @@ One could specify them in the URL string:
 
 ### Performing multiple requests at once
 
-To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requestsed simultaneosely. For this purposes `multi.bin` or `multi.json` requests could be used.
+To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requested simultaneously. For this purposes `multi.bin` or `multi.json` requests could be used.
 Both require string as POST data which format as:
 
     subfolder/item1/root.json\n
@@ -405,7 +405,7 @@ For `multi.bin` any kind of requests can be used. It returns binary buffer with 
     [size2 (little endian), 4 bytes] + [request2 result, size2 bytes]
     [size3 (little endian), 4 bytes] + [request3 result, size3 bytes]
 
-While POST data in request used to transfer list of multiple reqeusts, it is not possible to submit
+While POST data in request used to transfer list of multiple requests, it is not possible to submit
 such kind of requests, which themselvs require data from POST block.
 
 To use `multi.json` request from the JavaScript, one should create special 'POST' HTTP request and properly parse it. JSROOT provides special method to do this:
@@ -419,5 +419,5 @@ To use `multi.json` request from the JavaScript, one should create special 'POST
      });
      xhr.send("Files/job1.root/hpx/root.json\nFiles/job1.root/hpxpy/root.json\nFiles/job1.root/hprof/root.json\n");
 
-Here arguemnt "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
+Here argument "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
 
