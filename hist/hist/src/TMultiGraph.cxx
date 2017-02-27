@@ -1474,6 +1474,8 @@ void TMultiGraph::SetMinimum(Double_t minimum)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get iterator over internal graphs list.
 TIter TMultiGraph::begin() const
 {
   return fGraphs->begin();
