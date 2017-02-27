@@ -1472,3 +1472,11 @@ void TMultiGraph::SetMinimum(Double_t minimum)
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get iterator over internal graphs list.
+TIter TMultiGraph::begin() const
+{
+  return TIter(fGraphs);
+}

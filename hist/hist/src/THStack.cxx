@@ -1045,3 +1045,11 @@ void THStack::SetMinimum(Double_t minimum)
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get iterator over internal hists list.
+TIter THStack::begin() const
+{
+  return TIter(fHists);
+}
