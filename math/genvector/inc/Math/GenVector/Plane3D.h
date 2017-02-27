@@ -17,6 +17,8 @@
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1
 
+#include <type_traits>
+
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/PositionVector3D.h"
 
@@ -62,7 +64,7 @@ namespace Impl {
       /**
          default constructor create plane z = 0
       */
-      Plane3D ( ) : fA(0), fB(0), fC(1.), fD(0) { }
+      Plane3D() : fA(0), fB(0), fC(1), fD(0) { }
 
       /**
        generic constructors from the four scalar values describing the plane
@@ -98,7 +100,7 @@ namespace Impl {
        \param p point  expressed as a generic ROOT::Math::PositionVector3D
       */
       template<class T1, class T2, class U>
-      Plane3D( const  DisplacementVector3D<T1,U> & n, const  PositionVector3D<T2,U> & p)
+      Plane3D( const DisplacementVector3D<T1,U> & n, const  PositionVector3D<T2,U> & p )
       {
          BuildFromVecAndPoint( Vector(n), Point(p) );
       }
@@ -232,7 +234,10 @@ namespace Impl {
          Exact equality
       */
       bool operator==(const Plane3D & rhs) const {
-         return  fA  == rhs.fA &&  fB == rhs.fB  &&  fC == rhs.fC && fD == rhs.fD;
+        return ( fA == rhs.fA &&
+                 fB == rhs.fB &&
+                 fC == rhs.fC &&
+                 fD == rhs.fD );
       }
       bool operator!= (const Plane3D & rhs) const {
          return !(operator==(rhs));
@@ -243,15 +248,39 @@ namespace Impl {
       /**
          Normalize the normal (a,b,c) plane components
       */
-      void Normalize()
+      template< typename SCALAR = T >
+      typename std::enable_if< std::is_arithmetic<SCALAR>::value, void >::type
+      Normalize()
       {
-        using namespace std;
         // normalize the plane
-        const Scalar s = sqrt( fA*fA + fB*fB + fC*fC );
-        // what to do if s = 0 ??
-        // CRJ - This does not work with Vc types... ToDo decide how to handle...
-        //if ( s == 0 ) { fD = 0; return; }
-        const Scalar w = Scalar(1)/s;
+        const SCALAR s = std::sqrt( fA*fA + fB*fB + fC*fC );
+        // what to do if s = 0 ?
+        if ( s == 0 ) { fD = 0; }
+        else
+        {
+          const SCALAR w = Scalar(1)/s;
+          fA *= w;
+          fB *= w;
+          fC *= w;
+          fD *= w;
+        }
+      }
+
+      /**
+        Normalize the normal (a,b,c) plane components
+      */
+      template< typename SCALAR = T >
+      typename std::enable_if< !std::is_arithmetic<SCALAR>::value, void >::type
+      Normalize()
+      {
+        // normalize the plane
+        SCALAR s = sqrt( fA*fA + fB*fB + fC*fC );
+        // what to do if s = 0 ?
+        const auto m = ( s == SCALAR(0) );
+        // set zero entries to 1 in the vector to avoid /0 later on
+        s(m)  = SCALAR(1);
+        fD(m) = SCALAR(0);
+        const SCALAR w = SCALAR(1)/s;
         fA *= w;
         fB *= w;
         fC *= w;

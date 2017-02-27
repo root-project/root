@@ -68,7 +68,6 @@ public:
    */
    explicit BoostZ(Scalar beta_z) { SetComponents(beta_z); }
 
-
    // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
    /**
