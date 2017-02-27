@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #include "ROOT/TDFOperations.hxx"
+#include "ROOT/TDFOperations.hxx"
 
 namespace ROOT {
 
@@ -31,11 +31,6 @@ void CountOperation::Finalize()
    }
 }
 
-CountOperation::~CountOperation()
-{
-   Finalize();
-}
-
 void FillOperation::UpdateMinMax(unsigned int slot, double v) {
    auto& thisMin = fMin[slot];
    auto& thisMax = fMax[slot];
@@ -44,11 +39,11 @@ void FillOperation::UpdateMinMax(unsigned int slot, double v) {
 }
 
 
-FillOperation::FillOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots) : fResultHist(h),
-                                                                               fNSlots(nSlots),
-                                                                               fBufSize (fgTotalBufSize / nSlots),
-                                                                               fMin(nSlots, std::numeric_limits<BufEl_t>::max()),
-                                                                               fMax(nSlots, std::numeric_limits<BufEl_t>::min())
+FillOperation::FillOperation(const std::shared_ptr<Hist_t>& h, unsigned int nSlots)
+: fResultHist(h), fNSlots(nSlots),
+  fBufSize (fgTotalBufSize / nSlots),
+  fMin(nSlots, std::numeric_limits<BufEl_t>::max()),
+  fMax(nSlots, std::numeric_limits<BufEl_t>::min())
 {
    fBuffers.reserve(fNSlots);
    fWBuffers.reserve(fNSlots);
@@ -62,13 +57,13 @@ FillOperation::FillOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots) : f
    }
 }
 
-void FillOperation::Exec(double v, unsigned int slot)
+void FillOperation::Exec(unsigned int slot, double v)
 {
    UpdateMinMax(slot, v);
    fBuffers[slot].emplace_back(v);
 }
 
-void FillOperation::Exec(double v, double w, unsigned int slot)
+void FillOperation::Exec(unsigned int slot, double v, double w)
 {
    UpdateMinMax(slot, v);
    fBuffers[slot].emplace_back(v);
@@ -103,26 +98,21 @@ void FillOperation::Finalize()
    }
 }
 
-FillOperation::~FillOperation()
-{
-   Finalize();
-}
-
-template void FillOperation::Exec(const std::vector<float>&, unsigned int);
-template void FillOperation::Exec(const std::vector<double>&, unsigned int);
-template void FillOperation::Exec(const std::vector<char>&, unsigned int);
-template void FillOperation::Exec(const std::vector<int>&, unsigned int);
-template void FillOperation::Exec(const std::vector<unsigned int>&, unsigned int);
-template void FillOperation::Exec(const std::vector<float>&, const std::vector<float>&, unsigned int);
-template void FillOperation::Exec(const std::vector<double>&, const std::vector<double>&, unsigned int);
-template void FillOperation::Exec(const std::vector<char>&, const std::vector<char>&, unsigned int);
-template void FillOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
-template void FillOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
+template void FillOperation::Exec(unsigned int, const std::vector<float>&);
+template void FillOperation::Exec(unsigned int, const std::vector<double>&);
+template void FillOperation::Exec(unsigned int, const std::vector<char>&);
+template void FillOperation::Exec(unsigned int, const std::vector<int>&);
+template void FillOperation::Exec(unsigned int, const std::vector<unsigned int>&);
+template void FillOperation::Exec(unsigned int, const std::vector<float>&, const std::vector<float>&);
+template void FillOperation::Exec(unsigned int, const std::vector<double>&, const std::vector<double>&);
+template void FillOperation::Exec(unsigned int, const std::vector<char>&, const std::vector<char>&);
+template void FillOperation::Exec(unsigned int, const std::vector<int>&, const std::vector<int>&);
+template void FillOperation::Exec(unsigned int, const std::vector<unsigned int>&, const std::vector<unsigned int>&);
 
 MinOperation::MinOperation(double *minVPtr, unsigned int nSlots)
    : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max()) { }
 
-void MinOperation::Exec(double v, unsigned int slot)
+void MinOperation::Exec(unsigned int slot, double v)
 {
    fMins[slot] = std::min(v, fMins[slot]);
 }
@@ -133,22 +123,17 @@ void MinOperation::Finalize()
    for (auto &m : fMins) *fResultMin = std::min(m, *fResultMin);
 }
 
-MinOperation::~MinOperation()
-{
-   Finalize();
-}
-
-template void MinOperation::Exec(const std::vector<float>&, unsigned int);
-template void MinOperation::Exec(const std::vector<double>&, unsigned int);
-template void MinOperation::Exec(const std::vector<char>&, unsigned int);
-template void MinOperation::Exec(const std::vector<int>&, unsigned int);
-template void MinOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+template void MinOperation::Exec(unsigned int, const std::vector<float>&);
+template void MinOperation::Exec(unsigned int, const std::vector<double>&);
+template void MinOperation::Exec(unsigned int, const std::vector<char>&);
+template void MinOperation::Exec(unsigned int, const std::vector<int>&);
+template void MinOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 
 MaxOperation::MaxOperation(double *maxVPtr, unsigned int nSlots)
    : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::min()) { }
 
-void MaxOperation::Exec(double v, unsigned int slot)
+void MaxOperation::Exec(unsigned int slot, double v)
 {
    fMaxs[slot] = std::max(v, fMaxs[slot]);
 }
@@ -161,21 +146,16 @@ void MaxOperation::Finalize()
    }
 }
 
-MaxOperation::~MaxOperation()
-{
-   Finalize();
-}
-
-template void MaxOperation::Exec(const std::vector<float>&, unsigned int);
-template void MaxOperation::Exec(const std::vector<double>&, unsigned int);
-template void MaxOperation::Exec(const std::vector<char>&, unsigned int);
-template void MaxOperation::Exec(const std::vector<int>&, unsigned int);
-template void MaxOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+template void MaxOperation::Exec(unsigned int, const std::vector<float>&);
+template void MaxOperation::Exec(unsigned int, const std::vector<double>&);
+template void MaxOperation::Exec(unsigned int, const std::vector<char>&);
+template void MaxOperation::Exec(unsigned int, const std::vector<int>&);
+template void MaxOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 
 MeanOperation::MeanOperation(double *meanVPtr, unsigned int nSlots) : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0) {}
 
-void MeanOperation::Exec(double v, unsigned int slot)
+void MeanOperation::Exec(unsigned int slot, double v)
 {
    fSums[slot] += v;
    fCounts[slot] ++;
@@ -190,16 +170,11 @@ void MeanOperation::Finalize()
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
 }
 
-MeanOperation::~MeanOperation()
-{
-   Finalize();
-}
-
-template void MeanOperation::Exec(const std::vector<float>&, unsigned int);
-template void MeanOperation::Exec(const std::vector<double>&, unsigned int);
-template void MeanOperation::Exec(const std::vector<char>&, unsigned int);
-template void MeanOperation::Exec(const std::vector<int>&, unsigned int);
-template void MeanOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+template void MeanOperation::Exec(unsigned int, const std::vector<float>&);
+template void MeanOperation::Exec(unsigned int, const std::vector<double>&);
+template void MeanOperation::Exec(unsigned int, const std::vector<char>&);
+template void MeanOperation::Exec(unsigned int, const std::vector<int>&);
+template void MeanOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 
 } // end NS Operations

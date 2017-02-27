@@ -1079,7 +1079,9 @@
                               .call(this.lineatt.func)
                               .call(this.fillatt.func);
 
-         var res = { x: bin.grx,
+         var res = { name: this.GetObject().fName,
+                     title: this.GetObject().fTitle,
+                     x: bin.grx,
                      y: bin.gry,
                      color1: this.lineatt.color,
                      color2: this.fillatt.color,
@@ -1347,7 +1349,7 @@
          return res;
       }
 
-      this.DrawNextHisto = function(indx, opt) {
+      this.DrawNextHisto = function(indx, opt, mm) {
          var stack = this.GetObject(),
              hist = stack.fHistogram, hopt = "",
              hlst = this.nostack ? stack.fHists : stack.fStack,
@@ -1363,6 +1365,7 @@
             hopt += " same";
          } else {
             hopt = (opt || "") + " axis";
+            if (mm) hopt += ";minimum:" + mm.min + ";maximum:" + mm.max;
          }
 
          // special handling of stacked histograms - set $baseh object for correct drawing
@@ -1406,6 +1409,7 @@
          var histo = stack.fHistogram;
 
          if (!histo) {
+
             // compute the min/max of each axis
             var xmin = 0, xmax = 0, ymin = 0, ymax = 0;
             for (var i = 0; i < nhists; ++i) {
@@ -1431,12 +1435,17 @@
             histo.fYaxis.fXmax = ymax;
          }
          histo.fTitle = stack.fTitle;
-         if (!histo.TestBit(JSROOT.TH1StatusBits.kIsZoomed)) {
-            histo.fMinimum = (pad && pad.fLogy) ? mm.min / (1 + 0.5 * JSROOT.log10(mm.max / mm.min)) : mm.min;
-            histo.fMaximum = (pad && pad.fLogy) ? mm.max * (1 + 0.2 * JSROOT.log10(mm.max / mm.min)) : mm.max;
+
+         if (pad && pad.fLogy) {
+            if (mm.max<=0) mm.max = 1;
+            if (mm.min<=0) mm.min = 1e-4*mm.max;
+            var kmin = 1/(1 + 0.5*JSROOT.log10(mm.max / mm.min)),
+                kmax = 1 + 0.2*JSROOT.log10(mm.max / mm.min);
+            mm.min*=kmin;
+            mm.max*=kmax;
          }
 
-         this.DrawNextHisto(!lsame ? -1 : 0, opt);
+         this.DrawNextHisto(!lsame ? -1 : 0, opt, mm);
          return this;
       }
 
@@ -2027,7 +2036,8 @@
 
       var d = d3.select(findbin).datum();
 
-      var res = { x: d.grx1, y: d.gry1,
+      var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
+                  x: d.grx1, y: d.gry1,
                   color1: this.lineatt.color,
                   lines: this.TooltipText(d, true) };
       if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
@@ -2103,7 +2113,8 @@
          return null;
       }
 
-      var res = { x: pmain.grx(bestbin.x), y: pmain.gry(bestbin.y),
+      var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
+                  x: pmain.grx(bestbin.x), y: pmain.gry(bestbin.y),
                   color1: this.lineatt.color,
                   lines: this.TooltipText(bestbin, true) };
 
@@ -2781,34 +2792,39 @@
 
       if (nlevels<1) nlevels = JSROOT.gStyle.fNumberContours;
       this.fContour = [];
-      this.zmin = zmin;
-      this.zmax = zmax;
+      this.colzmin = zmin;
+      this.colzmax = zmax;
 
       if (this.root_pad().fLogz) {
-         if (this.zmax <= 0) this.zmax = 1.;
-         if (this.zmin <= 0)
+         if (this.colzmax <= 0) this.colzmax = 1.;
+         if (this.colzmin <= 0)
             if ((zminpositive===undefined) || (zminpositive <= 0))
-               this.zmin = 0.0001*this.zmax;
+               this.colzmin = 0.0001*this.colzmax;
             else
-               this.zmin = ((zminpositive < 3) || (zminpositive>100)) ? 0.3*zminpositive : 1;
-         if (this.zmin >= this.zmax) this.zmin = 0.0001*this.zmax;
+               this.colzmin = ((zminpositive < 3) || (zminpositive>100)) ? 0.3*zminpositive : 1;
+         if (this.colzmin >= this.colzmax) this.colzmin = 0.0001*this.colzmax;
 
-         var logmin = Math.log(this.zmin)/Math.log(10);
-         var logmax = Math.log(this.zmax)/Math.log(10);
-         var dz = (logmax-logmin)/nlevels;
-         this.fContour.push(this.zmin);
+         var logmin = Math.log(this.colzmin)/Math.log(10),
+             logmax = Math.log(this.colzmax)/Math.log(10),
+             dz = (logmax-logmin)/nlevels;
+         this.fContour.push(this.colzmin);
          for (var level=1; level<nlevels; level++)
             this.fContour.push(Math.exp((logmin + dz*level)*Math.log(10)));
-         this.fContour.push(this.zmax);
+         this.fContour.push(this.colzmax);
          this.fCustomContour = true;
       } else {
-         if ((this.zmin === this.zmax) && (this.zmin !== 0)) {
-            this.zmax += 0.01*Math.abs(this.zmax);
-            this.zmin -= 0.01*Math.abs(this.zmin);
+         if ((this.colzmin === this.colzmax) && (this.colzmin !== 0)) {
+            this.colzmax += 0.01*Math.abs(this.colzmax);
+            this.colzmin -= 0.01*Math.abs(this.colzmin);
          }
-         var dz = (this.zmax-this.zmin)/nlevels;
+         var dz = (this.colzmax-this.colzmin)/nlevels;
          for (var level=0; level<=nlevels; level++)
-            this.fContour.push(this.zmin + dz*level);
+            this.fContour.push(this.colzmin + dz*level);
+      }
+
+      if (this.Dimension() < 3) {
+         this.zmin = this.colzmin;
+         this.zmax = this.colzmax;
       }
 
       return this.fContour;
@@ -2821,8 +2837,8 @@
       if ((main !== this) && main.fContour) {
          this.fContour = main.fContour;
          this.fCustomContour = main.fCustomContour;
-         this.zmin = main.zmin;
-         this.zmax = main.zmax;
+         this.colzmin = main.colzmin;
+         this.colzmax = main.colzmax;
          return this.fContour;
       }
 
@@ -2832,9 +2848,9 @@
           zmin = this.minbin, zmax = this.maxbin, zminpos = this.minposbin;
       if (zmin === zmax) { zmin = this.gminbin; zmax = this.gmaxbin; zminpos = this.gminposbin }
       if (histo.fContour) nlevels = histo.fContour.length;
-      if ((this.histo.fMinimum != -1111) && (this.histo.fMaximum != -1111)) {
-         zmin = this.histo.fMinimum;
-         zmax = this.histo.fMaximum;
+      if ((this.options.minimum !== -1111) && (this.options.maximum != -1111)) {
+         zmin = this.options.minimum;
+         zmax = this.options.maximum;
       }
       if (this.zoom_zmin != this.zoom_zmax) {
          zmin = this.zoom_zmin;
@@ -2844,9 +2860,13 @@
       if (histo.fContour && (histo.fContour.length>1) && histo.TestBit(JSROOT.TH1StatusBits.kUserContour)) {
          this.fContour = JSROOT.clone(histo.fContour);
          this.fCustomContour = true;
-         this.zmin = zmin;
-         this.zmax = zmax;
+         this.colzmin = zmin;
+         this.colzmax = zmax;
          if (zmax > this.fContour[this.fContour.length-1]) this.fContour.push(zmax);
+         if (this.Dimension()<3) {
+            this.zmin = this.colzmin;
+            this.zmax = this.colzmax;
+         }
          return this.fContour;
       }
 
@@ -2872,12 +2892,12 @@
       }
 
       // bins less than zmin not drawn
-      if (zc < this.zmin) return (this.options.Color === 11) ? 0 : -1;
+      if (zc < this.colzmin) return (this.options.Color === 11) ? 0 : -1;
 
       // if bin content exactly zmin, draw it when col0 specified or when content is positive
-      if (zc===this.zmin) return ((this.zmin != 0) || (this.options.Color === 11) || this.IsTH2Poly()) ? 0 : -1;
+      if (zc===this.colzmin) return ((this.colzmin != 0) || (this.options.Color === 11) || this.IsTH2Poly()) ? 0 : -1;
 
-      return Math.floor(0.01+(zc-this.zmin)*(cntr.length-1)/(this.zmax-this.zmin));
+      return Math.floor(0.01+(zc-this.colzmin)*(cntr.length-1)/(this.colzmax-this.colzmin));
    }
 
    JSROOT.THistPainter.prototype.getIndexColor = function(index, asindx) {
@@ -3899,6 +3919,7 @@
          bin = histo.fBins.arr[i];
          colindx = this.getValueColor(bin.fContent, true);
          if (colindx === null) continue;
+         if ((bin.fContent === 0) && (this.options.Color === 11)) continue;
 
          // check if bin outside visible range
          if ((bin.fXmin > pmain.scale_xmax) || (bin.fXmax < pmain.scale_xmin) ||
@@ -4115,7 +4136,7 @@
 
             res += "M"+xx+","+yy + "v"+hh + "h"+ww + "v-"+hh + "z";
 
-            if ((binz<0) && (this.options.Box === 1))
+            if ((binz<0) && (this.options.Box === 10))
                cross += "M"+xx+","+yy + "l"+ww+","+hh + "M"+(xx+ww)+","+yy + "l-"+ww+","+hh;
 
             if ((this.options.Box === 11) && (ww>5) && (hh>5)) {
@@ -4338,7 +4359,7 @@
       for (i = handle.i1; i < handle.i2; ++i) {
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            if ((binz == 0) || (binz < this.minbin)) continue;
+            if ((binz <= 0) || (binz < this.minbin)) continue;
 
             cw = handle.grx[i+1] - handle.grx[i];
             ch = handle.gry[j] - handle.gry[j+1];
@@ -4553,7 +4574,7 @@
    }
 
    JSROOT.TH2Painter.prototype.ProcessTooltip = function(pnt) {
-      if ((pnt==null) || !this.draw_content || !this.draw_g || !this.tt_handle) {
+      if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
          this.ProvideUserTooltip(null);
@@ -4583,6 +4604,9 @@
                if ((realx < bin.fXmin) || (realx > bin.fXmax) ||
                     (realy < bin.fYmin) || (realy > bin.fYmax)) continue;
 
+               // ignore empty bins with col0 option
+               if ((bin.fContent === 0) && (this.options.Color === 11)) continue;
+
                var gr = bin.fPoly, numgraphs = 1;
                if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
 
@@ -4602,7 +4626,8 @@
             return null;
          }
 
-         var res = { x: pnt.x, y: pnt.y,
+         var res = { name: histo.fName, title: histo.fTitle,
+                     x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
                      color2: this.fillatt ? this.fillatt.color : 'blue',
                      exact: true, menu: true,
@@ -4646,7 +4671,8 @@
             return null;
          }
 
-         var res = { x: pnt.x, y: pnt.y,
+         var res = { name: histo.fName, title: histo.fTitle,
+                     x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
                      color2: this.fillatt ? this.fillatt.color : 'blue',
                      lines: this.GetCandleTips(p), exact: true, menu: true };
@@ -4702,7 +4728,8 @@
          return null;
       }
 
-      var res = { x: pnt.x, y: pnt.y,
+      var res = { name: histo.fName, title: histo.fTitle,
+                  x: pnt.x, y: pnt.y,
                   color1: this.lineatt ? this.lineatt.color : 'green',
                   color2: this.fillatt ? this.fillatt.color : 'blue',
                   lines: this.GetBinTips(i, j), exact: true, menu: true };
@@ -4815,8 +4842,8 @@
       this.options = this.DecodeOptions(opt);
 
       if (this.IsTH2Poly()) {
-         this.options.Color = 1; // default color
-         if (this.options.Lego) this.options.Lego = 12; // and lego always 12
+         if (this.options.Lego) this.options.Lego = 12; else// and lego always 12
+         if (!this.options.Color) this.options.Color = 1; // default color
       }
 
       this._show_empty_bins = false; // this.MatchObjectType('TProfile2D');

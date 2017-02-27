@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "TH1F.h"
@@ -33,15 +34,32 @@ using namespace Internal::TDFTraitsUtils;
 using Count_t = unsigned long;
 using Hist_t = ::TH1F;
 
+template<typename F>
+class ForeachSlotOperation {
+   F fCallable;
+public:
+   using BranchTypes_t = typename TRemoveFirst<typename TFunctionTraits<F>::Args_t>::Types_t;
+   ForeachSlotOperation(F&& f) : fCallable(f) {}
+
+   template<typename...Args>
+   void Exec(unsigned int slot, Args&&...args) {
+      // check that the decayed types of Args are the same as the branch types
+      static_assert(std::is_same<TTypeList<typename std::decay<Args>::type...>, BranchTypes_t>::value, "");
+      fCallable(slot, std::forward<Args>(args)...);
+   }
+
+   void Finalize() { /* noop */ }
+};
+
 class CountOperation {
    unsigned int *fResultCount;
    std::vector<Count_t> fCounts;
 
 public:
+   using BranchTypes_t = TTypeList<>;
    CountOperation(unsigned int *resultCount, unsigned int nSlots);
    void Exec(unsigned int slot);
    void Finalize();
-   ~CountOperation();
 };
 
 class FillOperation {
@@ -61,12 +79,12 @@ class FillOperation {
    void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillOperation(std::shared_ptr<Hist_t> h, unsigned int nSlots);
-   void Exec(double v, unsigned int slot);
-   void Exec(double v, double w, unsigned int slot);
+   FillOperation(const std::shared_ptr<Hist_t>& h, unsigned int nSlots);
+   void Exec(unsigned int slot, double v);
+   void Exec(unsigned int slot, double v, double w);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(const T &vs, unsigned int slot)
+   void Exec(unsigned int slot, const T &vs)
    {
       auto& thisBuf = fBuffers[slot];
       for (auto& v : vs) {
@@ -76,7 +94,7 @@ public:
    }
 
    template <typename T, typename W, typename std::enable_if<TIsContainer<T>::fgValue && TIsContainer<W>::fgValue, int>::type = 0>
-   void Exec(const T &vs, const W &ws, unsigned int slot)
+   void Exec(unsigned int slot, const T &vs, const W &ws)
    {
       auto& thisBuf = fBuffers[slot];
       for (auto& v : vs) {
@@ -91,53 +109,60 @@ public:
    }
 
    void Finalize();
-   ~FillOperation();
 };
 
-extern template void FillOperation::Exec(const std::vector<float>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<double>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<char>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<int>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<unsigned int>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<float>&, const std::vector<float>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<double>&, const std::vector<double>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<char>&, const std::vector<char>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<int>&, const std::vector<int>&, unsigned int);
-extern template void FillOperation::Exec(const std::vector<unsigned int>&, const std::vector<unsigned int>&, unsigned int);
+extern template void FillOperation::Exec(unsigned int, const std::vector<float>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<double>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<char>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<int>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<unsigned int>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<float>&, const std::vector<float>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<double>&, const std::vector<double>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<char>&, const std::vector<char>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<int>&, const std::vector<int>&);
+extern template void FillOperation::Exec(unsigned int, const std::vector<unsigned int>&, const std::vector<unsigned int>&);
 
 template<typename HIST=Hist_t>
 class FillTOOperation {
-   TThreadedObject<HIST> fTo;
+   std::unique_ptr<TThreadedObject<HIST>> fTo;
 
 public:
-   FillTOOperation(std::shared_ptr<HIST> h, unsigned int nSlots) : fTo(*h)
+   FillTOOperation(FillTOOperation&&) = default;
+
+   FillTOOperation(const std::shared_ptr<HIST>& h, unsigned int nSlots)
+      : fTo(new TThreadedObject<HIST>(*h))
    {
-      fTo.SetAtSlot(0, h);
+      fTo->SetAtSlot(0, h);
       // Initialise all other slots
       for (unsigned int i = 0 ; i < nSlots; ++i) {
-         fTo.GetAtSlot(i);
+         fTo->GetAtSlot(i);
       }
    }
-   void Exec(double x0, unsigned int slot) // 1D histos
+
+   void Exec(unsigned int slot, double x0) // 1D histos
    {
-      fTo.GetAtSlotUnchecked(slot)->Fill(x0);
+      fTo->GetAtSlotUnchecked(slot)->Fill(x0);
    }
-   void Exec(double x0, double x1, unsigned int slot) // 1D weighted and 2D histos
+
+   void Exec(unsigned int slot, double x0, double x1) // 1D weighted and 2D histos
    {
-      fTo.GetAtSlotUnchecked(slot)->Fill(x0, x1);
+      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1);
    }
-   void Exec(double x0, double x1, double x2, unsigned int slot) // 2D weighted and 3D histos
+
+   void Exec(unsigned int slot, double x0, double x1, double x2) // 2D weighted and 3D histos
    {
-      fTo.GetAtSlotUnchecked(slot)->Fill(x0, x1, x2);
+      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1, x2);
    }
-   void Exec(double x0, double x1, double x2, double x3, unsigned int slot) // 3D weighted histos
+
+   void Exec(unsigned int slot, double x0, double x1, double x2, double x3) // 3D weighted histos
    {
-      fTo.GetAtSlotUnchecked(slot)->Fill(x0, x1, x2, x3);
+      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1, x2, x3);
    }
+
    template <typename X0, typename std::enable_if<TIsContainer<X0>::fgValue, int>::type = 0>
-   void Exec(const X0 &x0s, unsigned int slot)
+   void Exec(unsigned int slot, const X0 &x0s)
    {
-      auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
       for (auto& x0 : x0s) {
          thisSlotH->Fill(x0); // TODO: Can be optimised in case T == vector<double>
       }
@@ -145,9 +170,9 @@ public:
 
    template <typename X0, typename X1,
              typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue, int>::type = 0>
-   void Exec(const X0 &x0s, const X1 &x1s, unsigned int slot)
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
-      auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -162,9 +187,9 @@ public:
 
    template <typename X0, typename X1, typename X2,
              typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue && TIsContainer<X2>::fgValue, int>::type = 0>
-   void Exec(const X0 &x0s, const X1 &x1s, const X2 &x2s, unsigned int slot)
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s)
    {
-      auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -178,9 +203,9 @@ public:
    }
    template <typename X0, typename X1, typename X2, typename X3,
              typename std::enable_if<TIsContainer<X0>::fgValue && TIsContainer<X1>::fgValue && TIsContainer<X2>::fgValue && TIsContainer<X3>::fgValue, int>::type = 0>
-   void Exec(const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s, unsigned int slot)
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s)
    {
-      auto thisSlotH = fTo.GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size() && x1s.size() == x3s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -195,11 +220,7 @@ public:
    }
    void Finalize()
    {
-      fTo.Merge();
-   }
-   ~FillTOOperation()
-   {
-      Finalize();
+      fTo->Merge();
    }
 };
 
@@ -209,7 +230,8 @@ template<typename T, typename COLL>
 class TakeOperation {
    std::vector<std::shared_ptr<COLL>> fColls;
 public:
-   TakeOperation(std::shared_ptr<COLL> resultColl, unsigned int nSlots)
+   using BranchTypes_t = TTypeList<T>;
+   TakeOperation(const std::shared_ptr<COLL>& resultColl, unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i)
@@ -217,13 +239,13 @@ public:
    }
 
    template <typename V, typename std::enable_if<!TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(V v, unsigned int slot)
+   void Exec(unsigned int slot, V v)
    {
       fColls[slot]->emplace_back(v);
    }
 
    template <typename V, typename std::enable_if<TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(const V &vs, unsigned int slot)
+   void Exec(unsigned int slot, const V &vs)
    {
       auto thisColl = fColls[slot];
       thisColl.insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
@@ -239,10 +261,6 @@ public:
          }
       }
    }
-   ~TakeOperation()
-   {
-      Finalize();
-   }
 };
 
 // note: changes to this class should probably be replicated in its unspecialized
@@ -251,7 +269,8 @@ template<typename T>
 class TakeOperation<T, std::vector<T>> {
    std::vector<std::shared_ptr<std::vector<T>>> fColls;
 public:
-   TakeOperation(std::shared_ptr<std::vector<T>> resultColl, unsigned int nSlots)
+   using BranchTypes_t = TTypeList<T>;
+   TakeOperation(const std::shared_ptr<std::vector<T>>& resultColl, unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) {
@@ -262,13 +281,13 @@ public:
    }
 
    template <typename V, typename std::enable_if<!TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(V v, unsigned int slot)
+   void Exec(unsigned int slot, V v)
    {
       fColls[slot]->emplace_back(v);
    }
 
    template <typename V, typename std::enable_if<TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(const V &vs, unsigned int slot)
+   void Exec(unsigned int slot, const V &vs)
    {
       auto thisColl = fColls[slot];
       thisColl->insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
@@ -285,11 +304,6 @@ public:
          rColl->insert(rColl->end(), coll->begin(), coll->end());
       }
    }
-
-   ~TakeOperation()
-   {
-      Finalize();
-   }
 };
 
 template<typename F, typename T>
@@ -298,11 +312,12 @@ class ReduceOperation {
    T* fReduceRes;
    std::vector<T> fReduceObjs;
 public:
-   ReduceOperation(F&& f, T* reduceRes, unsigned int nSlots) : fReduceFun(f),
-      fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
+   using BranchTypes_t = TTypeList<T>;
+   ReduceOperation(F&& f, T* reduceRes, unsigned int nSlots)
+      : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
    { }
 
-   void Exec(const T& value, unsigned int slot)
+   void Exec(unsigned int slot, const T& value)
    {
       fReduceObjs[slot] = fReduceFun(fReduceObjs[slot], value);
    }
@@ -312,11 +327,6 @@ public:
       for (auto& t : fReduceObjs)
          *fReduceRes = fReduceFun(*fReduceRes, t);
    }
-
-   ~ReduceOperation()
-   {
-      Finalize();
-   }
 };
 
 class MinOperation {
@@ -325,23 +335,22 @@ class MinOperation {
 
 public:
    MinOperation(double *minVPtr, unsigned int nSlots);
-   void Exec(double v, unsigned int slot);
+   void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(const T &vs, unsigned int slot)
+   void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) fMins[slot] = std::min((double)v, fMins[slot]);
    }
 
    void Finalize();
-   ~MinOperation();
 };
 
-extern template void MinOperation::Exec(const std::vector<float>&, unsigned int);
-extern template void MinOperation::Exec(const std::vector<double>&, unsigned int);
-extern template void MinOperation::Exec(const std::vector<char>&, unsigned int);
-extern template void MinOperation::Exec(const std::vector<int>&, unsigned int);
-extern template void MinOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+extern template void MinOperation::Exec(unsigned int, const std::vector<float>&);
+extern template void MinOperation::Exec(unsigned int, const std::vector<double>&);
+extern template void MinOperation::Exec(unsigned int, const std::vector<char>&);
+extern template void MinOperation::Exec(unsigned int, const std::vector<int>&);
+extern template void MinOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 class MaxOperation {
    double *fResultMax;
@@ -349,23 +358,22 @@ class MaxOperation {
 
 public:
    MaxOperation(double *maxVPtr, unsigned int nSlots);
-   void Exec(double v, unsigned int slot);
+   void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(const T &vs, unsigned int slot)
+   void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) fMaxs[slot] = std::max((double)v, fMaxs[slot]);
    }
 
    void Finalize();
-   ~MaxOperation();
 };
 
-extern template void MaxOperation::Exec(const std::vector<float>&, unsigned int);
-extern template void MaxOperation::Exec(const std::vector<double>&, unsigned int);
-extern template void MaxOperation::Exec(const std::vector<char>&, unsigned int);
-extern template void MaxOperation::Exec(const std::vector<int>&, unsigned int);
-extern template void MaxOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+extern template void MaxOperation::Exec(unsigned int, const std::vector<float>&);
+extern template void MaxOperation::Exec(unsigned int, const std::vector<double>&);
+extern template void MaxOperation::Exec(unsigned int, const std::vector<char>&);
+extern template void MaxOperation::Exec(unsigned int, const std::vector<int>&);
+extern template void MaxOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 
 class MeanOperation {
@@ -375,10 +383,10 @@ class MeanOperation {
 
 public:
    MeanOperation(double *meanVPtr, unsigned int nSlots);
-   void Exec(double v, unsigned int slot);
+   void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
-   void Exec(const T &vs, unsigned int slot)
+   void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
          fSums[slot] += v;
@@ -387,14 +395,13 @@ public:
    }
 
    void Finalize();
-   ~MeanOperation();
 };
 
-extern template void MeanOperation::Exec(const std::vector<float>&, unsigned int);
-extern template void MeanOperation::Exec(const std::vector<double>&, unsigned int);
-extern template void MeanOperation::Exec(const std::vector<char>&, unsigned int);
-extern template void MeanOperation::Exec(const std::vector<int>&, unsigned int);
-extern template void MeanOperation::Exec(const std::vector<unsigned int>&, unsigned int);
+extern template void MeanOperation::Exec(unsigned int, const std::vector<float>&);
+extern template void MeanOperation::Exec(unsigned int, const std::vector<double>&);
+extern template void MeanOperation::Exec(unsigned int, const std::vector<char>&);
+extern template void MeanOperation::Exec(unsigned int, const std::vector<int>&);
+extern template void MeanOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 
 } // end of NS Operations
