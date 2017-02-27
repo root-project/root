@@ -1048,7 +1048,7 @@ void THStack::SetMinimum(Double_t minimum)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get iterator over itnernal hists list.
+/// Get iterator over internal hists list.
 TIter THStack::begin() const
 {
   return TIter(fHists);
