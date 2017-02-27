@@ -368,6 +368,16 @@ namespace Experimental {
 
 class TDataFrame;
 
+} // end Experimental
+} // end ROOT
+
+namespace cling {
+   std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
+}
+
+namespace ROOT {
+namespace Experimental {
+
 /**
 * \class ROOT::Experimental::TDataFrameInterface
 * \ingroup dataframe
