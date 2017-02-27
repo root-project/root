@@ -554,21 +554,35 @@ public:
    /**
       Transformation operation for Position Vector in any coordinate system
    */
-   template<class CoordSystem >
+   template<class CoordSystem>
    PositionVector3D<CoordSystem> operator() (const PositionVector3D <CoordSystem> & p) const {
       const Point xyzNew = operator() ( Point(p) );
-      return  PositionVector3D<CoordSystem> (xyzNew);
+      return PositionVector3D<CoordSystem> (xyzNew);
    }
-
+   /**
+      Transformation operation for Position Vector in any coordinate system
+   */
+   template<class CoordSystem>
+   PositionVector3D<CoordSystem> operator * ( const PositionVector3D<CoordSystem>& v ) const {
+     return operator() (v);
+   }
+     
    /**
       Transformation operation for Displacement Vector in any coordinate system
    */
    template<class CoordSystem >
    DisplacementVector3D<CoordSystem> operator() (const DisplacementVector3D <CoordSystem> & v) const {
       const Vector xyzNew = operator() ( Vector(v) );
-      return  DisplacementVector3D<CoordSystem> (xyzNew);
+      return DisplacementVector3D<CoordSystem> (xyzNew);
    }
-
+   /**
+      Transformation operation for Displacement Vector in any coordinate system
+   */
+   template<class CoordSystem >
+   DisplacementVector3D<CoordSystem> operator * (const DisplacementVector3D<CoordSystem> & v) const {
+     return operator() (v);
+   }
+     
    /**
       Transformation operation for points between different coordinate system tags
    */
@@ -596,6 +610,13 @@ public:
       const Vector xyzNew = operator() ( Vector(q.Vect() ) );
       return  LorentzVector<CoordSystem> (xyzNew.X(), xyzNew.Y(), xyzNew.Z(), q.E() );
    }
+   /**
+      Transformation operation for a Lorentz Vector in any  coordinate system
+   */
+   template <class CoordSystem >
+   LorentzVector<CoordSystem> operator * (const LorentzVector<CoordSystem> & q) const {
+     return operator() (q);
+   }
 
    /**
       Transformation on a 3D plane
@@ -611,21 +632,7 @@ public:
      return Plane3D<T>( operator() (n), operator() (p) );
    }
 
-
    // skip transformation for arbitrary vectors - not really defined if point or displacement vectors
-
-   // same but with operator *
-   /**
-      Transformation operation for Vectors. Apply same rules as operator()
-      depending on type of vector.
-      Will work only for DisplacementVector3D, PositionVector3D and LorentzVector
-   */
-   template<class AVector >
-   AVector operator * (const AVector & v) const {
-      return operator() (v);
-   }
-
-
 
    /**
       multiply (combine) with another transformation in place

@@ -13,8 +13,8 @@ namespace ROOT {
       Class describing a pure boost in some direction
    */
 
-    class Boost;
-    
+class Boost;
+
 }  // namespace Math
 }  // namespace ROOT
 

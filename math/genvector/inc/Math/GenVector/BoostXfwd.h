@@ -13,7 +13,7 @@ namespace ROOT {
       Class describing a pure Lorentz Boost along the X axis
    */
 
-    class BoostX;
+class BoostX;
 
 }  // namespace Math
 }  // namespace ROOT

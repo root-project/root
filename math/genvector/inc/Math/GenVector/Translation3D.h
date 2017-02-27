@@ -26,7 +26,7 @@
 #include "Math/GenVector/LorentzVectorfwd.h"
 
 #include <iostream>
-
+#include <type_traits>
 
 
 namespace ROOT {
@@ -183,6 +183,13 @@ class Translation3D {
                   p.Z() + fVect.Z() ) ;
       return tmp;
    }
+   /**
+     Transformation operation
+   */
+   template<class CoordSystem, class Tag > 
+   PositionVector3D<CoordSystem,Tag> operator * ( const PositionVector3D<CoordSystem,Tag> & v ) const {
+     return operator() (v);
+   }
 
    /**
       Transformation operation for Displacement Vector in any coordinate system and default tag
@@ -192,7 +199,14 @@ class Translation3D {
    DisplacementVector3D<CoordSystem,Tag> operator() (const DisplacementVector3D <CoordSystem,Tag> & v) const {
       return  v;
    }
-
+   /**
+     Transformation operation
+   */
+   template<class CoordSystem, class Tag > 
+   DisplacementVector3D<CoordSystem,Tag> operator * ( const DisplacementVector3D<CoordSystem,Tag> & v ) const {
+     return operator() (v);
+   }
+  
    /**
       Transformation operation for points between different coordinate system tags
    */
@@ -202,7 +216,6 @@ class Translation3D {
       tmp.SetXYZ( p1.X(), p1.Y(), p1.Z() );
       p2 =  operator()(tmp);
     }
-
 
    /**
       Transformation operation for Displacement Vector of different coordinate systems
@@ -217,9 +230,16 @@ class Translation3D {
       Transformation operation for a Lorentz Vector in any  coordinate system
       A LorentzVector contains a displacement vector so no translation applies as well
    */
-   template <class CoordSystem >
+   template <class CoordSystem>
    LorentzVector<CoordSystem> operator() (const LorentzVector<CoordSystem> & q) const {
       return  q;
+   }
+   /**
+     Transformation operation
+   */
+   template<class CoordSystem> 
+   LorentzVector<CoordSystem> operator * ( const LorentzVector<CoordSystem> & v ) const {
+     return operator() (v);
    }
 
    /**
@@ -235,18 +255,6 @@ class Translation3D {
      PositionVector3D<Cartesian3D<T> > p( - d * n.X() , - d *n.Y(), -d *n.Z() );
      return PLANE( operator() (n), operator() (p) );
    }
-
-   /**
-      Transformation operation for Vectors. Apply same rules as operator()
-      depending on type of vector.
-      Will work only for DisplacementVector3D, PositionVector3D and LorentzVector
-   */
-   template<class AVector >
-   AVector operator * (const AVector & v) const {
-      return operator() (v);
-   }
-
-
 
    /**
       multiply (combine) with another transformation in place

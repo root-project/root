@@ -148,14 +148,13 @@ public :
       invariant mass
    */
    Scalar M() const    {
-      using namespace std;
       Scalar mm = M2();
       if (mm >= 0) {
-         return sqrt(mm);
+         return std::sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzE4D::M() - Tachyonic:\n"
                    "    P^2 > E^2 so the mass would be imaginary");
-         return -sqrt(-mm);
+         return -std::sqrt(-mm);
       }
    }
    Scalar Mag() const    { return M(); }
@@ -169,7 +168,7 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt()   const { using namespace std; return std::sqrt(Perp2());}
+   Scalar Pt()   const { return std::sqrt(Perp2());}
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -182,14 +181,13 @@ public :
       transverse mass
    */
    Scalar Mt() const {
-      using namespace std;
       Scalar mm = Mt2();
-      if ( mm >= 0 ) {
-         return sqrt(mm);
+      if (mm >= 0) {
+         return std::sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzE4D::Mt() - Tachyonic:\n"
                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         return -sqrt(-mm);
+         return -std::sqrt(-mm);
       }
    }
 
@@ -206,25 +204,22 @@ public :
       transverse energy
    */
    Scalar Et() const {
-      using namespace std;
       Scalar etet = Et2();
-      return fT < 0.0 ? -sqrt(etet) : sqrt(etet);
+      return fT < 0.0 ? -std::sqrt(etet) : std::sqrt(etet);
    }
 
    /**
       azimuthal angle
    */
    Scalar Phi() const  {
-      using namespace std;
-      return ( fX == Scalar(0) && fY == Scalar(0) ) ? Scalar(0) : atan2(fY,fX);
+      return (fX == 0.0 && fY == 0.0) ? 0 : std::atan2(fY,fX);
    }
 
    /**
       polar angle
    */
    Scalar Theta() const {
-      using namespace std;
-      return (fX == Scalar(0) && fY == Scalar(0) && fZ == Scalar(0) ) ? Scalar(0) : atan2(Pt(),fZ);
+      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : std::atan2(Pt(),fZ);
    }
 
    /**
