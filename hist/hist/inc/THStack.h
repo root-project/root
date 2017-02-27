@@ -77,7 +77,6 @@ public:
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
 
-
    ClassDef(THStack,2)  //A collection of histograms
 };
 
