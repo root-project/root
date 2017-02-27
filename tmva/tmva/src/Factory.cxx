@@ -701,9 +701,9 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader, TString theMethodName, Bool_t fLegend, UInt_t iClass)
+TGraph* TMVA::Factory::GetROCCurve(DataLoader *loader, TString theMethodName, Bool_t useLegend, UInt_t iClass)
 {
-  return GetROCCurve( (TString)loader->GetName(), theMethodName, fLegend, iClass );
+  return GetROCCurve( (TString)loader->GetName(), theMethodName, useLegend, iClass );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -809,61 +809,43 @@ TCanvas * TMVA::Factory::GetROCCurve(TString datasetname)
     }
 
     // Create canvas.
-    TString name("ROCCurve ");
-    name += datasetname;
-    TCanvas *fCanvas = new TCanvas(name,"ROC Curve",200,10,700,500);
+    TString name = Form("ROCCurve %s", datasetname.Data());
+    TCanvas *fCanvas = new TCanvas(name, "ROC Curve", 200, 10, 700, 500);
     fCanvas->SetGrid();
     UInt_t line_color = 0;         //Count line colors in canvas.
 
-    TLegend *fLegend = new TLegend(0.15, 0.15, 0.35, 0.3, "MVA Method");
-    TGraph *fGraph   = nullptr;
+    TLegend *legend = new TLegend(0.15, 0.15, 0.35, 0.3, "MVA Method");
+    TGraph *graph   = nullptr;
 
     // Loop over dataset.
     MVector *methods = fMethodsMap[datasetname.Data()];
-    MVector::iterator itr = methods->begin();
-
-    while (itr != methods->end()) {
-
-        TMVA::MethodBase *method = dynamic_cast<TMVA::MethodBase *>(*itr);
-        itr++;
-        if (!method) {
-            continue;
+    for (auto * method_raw : *methods) {
+        TMVA::MethodBase *method = dynamic_cast<TMVA::MethodBase *>(method_raw);
+        if (method == nullptr) {
+         continue;
         }
-        // Get results.
-        TMVA::Results *results = method->Data()->GetResults(method->GetMethodName(),
-                                                            Types::kTesting,
-                                                            Types::kClassification);
 
-        std::vector<Float_t> *mvaRes =
-            dynamic_cast<ResultsClassification *>(results)->GetValueVector();
-        std::vector<Bool_t>  *mvaResType =
-            dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+        TString methodName = method->GetMethodName();
+        Bool_t useLegend = (line_color == 0);
 
-        // Generate ROCCurve.
-        TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
-        if (!fROCCurve)
-            Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", method->GetMethodName().Data(), datasetname.Data()) << Endl;
-        fGraph=(TGraph*)fROCCurve->GetROCCurve()->Clone();
-   delete fROCCurve;
+        UInt_t iClass = 0;
+        graph = this->GetROCCurve(datasetname, methodName, useLegend, iClass);
+
         // Draw axes.
-        if (line_color == 0)
-        {
-            fGraph->GetYaxis()->SetTitle("Background Rejection");
-            fGraph->GetXaxis()->SetTitle("Signal Efficiency");
-            fGraph->SetTitle("Background Rejection vs. Signal Efficiency");
-            fGraph->Draw("AC");
+        if (useLegend) {
+            graph->Draw("AC");
+        } else {
+            graph->Draw("C");
         }
-        else
-            fGraph->Draw("C");
 
-        fGraph->SetLineWidth(2);
-        fGraph->SetLineColor(++line_color);
+        graph->SetLineWidth(2);
+        graph->SetLineColor(++line_color);
 
-        fLegend->AddEntry(fGraph, method->GetMethodName(), "l");
+        legend->AddEntry(graph, methodName, "l");
     }
 
     // Draw legend.
-    fLegend->Draw();
+    legend->Draw();
 
    return fCanvas;
 }
