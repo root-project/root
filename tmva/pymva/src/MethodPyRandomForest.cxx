@@ -46,12 +46,11 @@
 
 #include <iomanip>
 #include <fstream>
+#include <string>
 
 using namespace TMVA;
 
 REGISTER_METHOD(PyRandomForest)
-
-ClassImp(MethodPyRandomForest)
 
 //_______________________________________________________________________
 MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
@@ -67,6 +66,7 @@ MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
    min_weight_fraction_leaf(0),
    max_features("'auto'"),
    max_leaf_nodes("None"),
+   min_impurity_split(1e-7),
    bootstrap(kTRUE),
    oob_score(kFALSE),
    n_jobs(1),
@@ -88,6 +88,7 @@ MethodPyRandomForest::MethodPyRandomForest(DataSetInfo &theData, const TString &
      min_weight_fraction_leaf(0),
      max_features("'auto'"),
      max_leaf_nodes("None"),
+     min_impurity_split(1e-7),
      bootstrap(kTRUE),
      oob_score(kFALSE),
      n_jobs(1),
@@ -144,6 +145,10 @@ void MethodPyRandomForest::DeclareOptions()
     Best nodes are defined as relative reduction in impurity.\
     If None then unlimited number of leaf nodes.\
     If not None then ``max_depth`` will be ignored.");
+   DeclareOptionRef(min_impurity_split, "MinImpuritySplit", "Float_t, optional (default=1e-7)\
+    Threshold for early stopping in tree growth. A node will split \
+    if its impurity is above the threshold, otherwise it is a leaf. \
+    .. versionadded:: 0.18");
    DeclareOptionRef(bootstrap, "Bootstrap", "boolean, optional (default=True) \
     Whether bootstrap samples are used when building trees.");
    DeclareOptionRef(oob_score, "OoBScore", " bool Whether to use out-of-bag samples to estimate\
@@ -243,10 +248,6 @@ void MethodPyRandomForest::ProcessOptions()
    }
    Py_DECREF(pomax_leaf_nodes);
 
-//    bootstrap(kTRUE),
-//    oob_score(kFALSE),
-//    n_jobs(1),
-
    PyObject *porandom_state = Eval(random_state);
    if (!porandom_state) {
       Log() << kFATAL << Form(" RandomState = %s... that does not work !! ", random_state.Data())
@@ -257,9 +258,6 @@ void MethodPyRandomForest::ProcessOptions()
    }
    Py_DECREF(porandom_state);
 
-//    verbose(0),
-//    warm_start(kFALSE),
-//    class_weight("None")
    PyObject *poclass_weight = Eval(class_weight);
    if (!poclass_weight) {
       Log() << kFATAL << Form(" ClassWeight = %s... that does not work !! ", class_weight.Data())
@@ -288,24 +286,25 @@ void  MethodPyRandomForest::Init()
       Log() << Endl;
    }
 
+   LoadSKVersion();
 
    //Training data
    UInt_t fNvars = Data()->GetNVariables();
-   int fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
-   int dims[2];
+   Int_t fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
+   Int_t dims[2];
    dims[0] = fNrowsTraining;
    dims[1] = fNvars;
    fTrainData = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
-   float *TrainData = (float *)(PyArray_DATA(fTrainData));
+   Float_t *TrainData = (Float_t *)(PyArray_DATA(fTrainData));
 
 
    fTrainDataClasses = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
-   float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
+   Float_t *TrainDataClasses = (Float_t *)(PyArray_DATA(fTrainDataClasses));
 
    fTrainDataWeights = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
-   float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
+   Float_t *TrainDataWeights = (Float_t *)(PyArray_DATA(fTrainDataWeights));
 
-   for (int i = 0; i < fNrowsTraining; i++) {
+   for (Int_t i = 0; i < fNrowsTraining; i++) {
       const TMVA::Event *e = Data()->GetTrainingEvent(i);
       for (UInt_t j = 0; j < fNvars; j++) {
          TrainData[j + i * fNvars] = e->GetValue(j);
@@ -330,21 +329,27 @@ void MethodPyRandomForest::Train()
    PyObject *porandom_state = Eval(random_state);
    PyObject *poclass_weight = Eval(class_weight);
 
-   PyObject *args = Py_BuildValue("(isOiifOOiiiOiiO)", n_estimators, criterion.Data(), pomax_depth, min_samples_split, \
-                                  min_samples_leaf, min_weight_fraction_leaf, pomax_features, pomax_leaf_nodes, \
-                                  bootstrap, oob_score, n_jobs, porandom_state, verbose, warm_start, poclass_weight);
+   PyObject *args;
+   if (fSkVersionMinor == 17) {
+      args = Py_BuildValue("(isOiifOOiiiOiiO)", n_estimators, criterion.Data(), pomax_depth, min_samples_split, \
+                           min_samples_leaf, min_weight_fraction_leaf, pomax_features, pomax_leaf_nodes, \
+                           bootstrap, oob_score, n_jobs, porandom_state, verbose, warm_start, poclass_weight);
+   } else { //if sk >=18 need an extra argument
+      args = Py_BuildValue("(isOiifOOfiiiOiiO)", n_estimators, criterion.Data(), pomax_depth, min_samples_split, \
+                           min_samples_leaf, min_weight_fraction_leaf, pomax_features, pomax_leaf_nodes, \
+                           min_impurity_split, bootstrap, oob_score, n_jobs, porandom_state, verbose, warm_start, poclass_weight);
+   }
    Py_DECREF(pomax_depth);
    PyObject_Print(args, stdout, 0);
    std::cout << std::endl;
 
    PyObject *pDict = PyModule_GetDict(fModule);
    PyObject *fClassifierClass = PyDict_GetItemString(pDict, "RandomForestClassifier");
-   //    Log() << kFATAL <<"Train =" <<n_jobs<<Endl;
-
+//     Log() << kFATAL <<"Train =" <<n_jobs<<Endl;
    // Create an instance of the class
    if (PyCallable_Check(fClassifierClass)) {
       //instance
-      fClassifier = PyObject_CallObject(fClassifierClass , args);
+      fClassifier = PyObject_CallObject(fClassifierClass, args);
       PyObject_Print(fClassifier, stdout, 0);
 
       Py_DECREF(args);
@@ -357,20 +362,24 @@ void MethodPyRandomForest::Train()
 
    }
 
-   fClassifier = PyObject_CallMethod(fClassifier, const_cast<char *>("fit"), const_cast<char *>("(OOO)"), fTrainData, fTrainDataClasses, fTrainDataWeights);
+   fClassifier = PyObject_CallMethod(fClassifier, const_cast<Char_t *>("fit"), const_cast<Char_t *>("(OOO)"), fTrainData, fTrainDataClasses, fTrainDataWeights);
 
-   if(!fClassifier)
-   {
-      Log() << kFATAL << "Can't create classifier object from RandomForestClassifier" << Endl;
-      Log() << Endl;  
+
+//    std::cout<<"\n--train-- \n"<<PY_MAJOR_VERSION<<" "<<PY_MINOR_VERSION<<"\n";
+//    PyObject_Print(fClassifier, stdout, 0);
+//    std::cout<<"\n--train--\n";
+
+   if (!fClassifier) {
+      PyErr_Print();
+      Log() << kFATAL << "Can't fit classifier with object RandomForestClassifier" << Endl;
+      Log() << Endl;
    }
-   if (IsModelPersistence())
-   {
-        TString path = GetWeightFileDir() + "/PyRFModel.PyData";
-        Log() << Endl;
-        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-        Log() << Endl;
-        Serialize(path,fClassifier);
+   if (IsModelPersistence()) {
+      TString path = GetWeightFileDir() + "/PyRFModel.PyData";
+      Log() << Endl;
+      Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+      Log() << Endl;
+      Serialize(path, fClassifier);
    }
 }
 
@@ -395,11 +404,11 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    int dims[2];
    dims[0] = 1;
    dims[1] = nvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   PyArrayObject *pEvent = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
 
    for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
-   
+
    PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
    mvaValue = proba[0]; //getting signal prob
@@ -419,11 +428,10 @@ void MethodPyRandomForest::ReadModelFromFile()
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
-   UnSerialize(path,&fClassifier);
-   if(!fClassifier)
-   {
-     Log() << kFATAL << "Can't load RandomForestClassifier from Serialized data." << Endl;
-     Log() << Endl;
+   UnSerialize(path, &fClassifier);
+   if (!fClassifier) {
+      Log() << kFATAL << "Can't load RandomForestClassifier from Serialized data." << Endl;
+      Log() << Endl;
    }
 }
 

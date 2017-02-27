@@ -121,6 +121,13 @@ namespace TMVA {
       //Best nodes are defined as relative reduction in impurity.
       //If None then unlimited number of leaf nodes.
       //If not None then ``max_depth`` will be ignored.
+
+      Float_t min_impurity_split; //Float_t, optional (default=1e-7)
+      //Threshold for early stopping in tree growth. A node will split
+      //if its impurity is above the threshold, otherwise it is a leaf.
+      //.. versionadded:: 0.18
+
+
       Bool_t bootstrap;//boolean, optional (default=True)
       //Whether bootstrap samples are used when building trees.
       Bool_t oob_score;//Whether to use out-of-bag samples to estimate

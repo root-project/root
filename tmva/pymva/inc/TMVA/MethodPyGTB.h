@@ -69,7 +69,7 @@ namespace TMVA {
 
       using MethodBase::ReadWeightsFromStream;
       // the actual "weights"
-      virtual void AddWeightsXMLTo(void * /* parent */ ) const {}        // = 0;
+      virtual void AddWeightsXMLTo(void * /* parent */) const {}         // = 0;
       virtual void ReadWeightsFromXML(void * /*wghtnode*/) {}    // = 0;
       virtual void ReadWeightsFromStream(std::istream &) {} //= 0;       // backward compatibility
    private :
@@ -98,6 +98,14 @@ namespace TMVA {
       //Boosting. `subsample` interacts with the parameter `n_estimators`.
       //Choosing `subsample < 1.0` leads to a reduction of variance
       //and an increase in bias.
+
+      TString criterion;//string, optional (default=”friedman_mse”)
+      //The function to measure the quality of a split.
+      //Supported criteria are “friedman_mse” for the mean squared error with improvement score by Friedman,
+      //“mse” for mean squared error, and “mae” for the mean absolute error.
+      //The default value of “friedman_mse” is generally the best as it can provide a better approximation in some cases.
+      //New in version 0.18.
+
       Int_t min_samples_split;// integer, optional (default=2)
       //The minimum number of samples required to split an internal node.
       Int_t min_samples_leaf;//integer, optional (default=1)
@@ -139,6 +147,11 @@ namespace TMVA {
       //Best nodes are defined as relative reduction in impurity.
       //If None then unlimited number of leaf nodes.
       //If not None then ``max_depth`` will be ignored.
+
+      Float_t min_impurity_split; //Float_t, optional (default=1e-7)
+      //Threshold for early stopping in tree growth. A node will split
+      //if its impurity is above the threshold, otherwise it is a leaf.
+      //.. versionadded:: 0.18
 
       Bool_t warm_start;//bool, optional (default=False)
       //When set to ``True``, reuse the solution of the previous call to fit

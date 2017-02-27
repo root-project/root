@@ -90,8 +90,8 @@ namespace TMVA {
       static TString Py_GetProgramName();
 
       PyObject *Eval(TString code); // required to parse booking options from string to pyobjects
-      static void Serialize(TString file,PyObject *classifier);
-      static void UnSerialize(TString file,PyObject** obj);
+      static void Serialize(TString file, PyObject *classifier);
+      static void UnSerialize(TString file, PyObject **obj);
 
       virtual void     Train() = 0;
       // options treatment
@@ -127,7 +127,9 @@ namespace TMVA {
       PyObject *fPyReturn; // python return data
 
    protected:
-      void PyRunString(TString code, TString errorMessage="Failed to run python code", int start=Py_single_input); // runs python code from string in local namespace with error handling
+      void PyRunString(TString code, TString errorMessage = "Failed to run python code", int start = Py_single_input); // runs python code from string in local namespace with error handling
+
+      void LoadSKVersion(); //method to load SciKit learn version
 
    private:
       static PyObject *fModuleBuiltin;
@@ -142,6 +144,8 @@ namespace TMVA {
       static PyObject *fMain; // module __main__ to get namespace local and global
       static PyObject *fGlobalNS; // global namesapace
       PyObject *fLocalNS; // local namesapace
+      Int_t fSkVersionMayor; //sklearn version mayor
+      Int_t fSkVersionMinor; //sklearn version minor
 
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
 

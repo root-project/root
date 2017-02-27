@@ -228,7 +228,7 @@ void MethodPyAdaBoost::Train()
    // Create an instance of the class
    if (PyCallable_Check(fClassifierClass)) {
       //instance
-      fClassifier = PyObject_CallObject(fClassifierClass , args);
+      fClassifier = PyObject_CallObject(fClassifierClass, args);
       PyObject_Print(fClassifier, stdout, 0);
 
       Py_DECREF(args);
@@ -243,13 +243,12 @@ void MethodPyAdaBoost::Train()
 
    fClassifier = PyObject_CallMethod(fClassifier, (char *)"fit", (char *)"(OOO)", fTrainData, fTrainDataClasses, fTrainDataWeights);
 
-   if (IsModelPersistence())
-   {
-        TString path = GetWeightFileDir() + "/PyAdaBoostModel.PyData";
-        Log() << Endl;
-        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-        Log() << Endl;
-        Serialize(path,fClassifier);
+   if (IsModelPersistence()) {
+      TString path = GetWeightFileDir() + "/PyAdaBoostModel.PyData";
+      Log() << Endl;
+      Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+      Log() << Endl;
+      Serialize(path, fClassifier);
    }
 }
 
@@ -274,11 +273,11 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    int dims[2];
    dims[0] = 1;
    dims[1] = nvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   PyArrayObject *pEvent = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
 
    for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
-   
+
    PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
    mvaValue = proba[0]; //getting signal prob
@@ -298,7 +297,7 @@ void MethodPyAdaBoost::ReadModelFromFile()
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
-   UnSerialize(path,&fClassifier);
+   UnSerialize(path, &fClassifier);
 }
 
 //_______________________________________________________________________
