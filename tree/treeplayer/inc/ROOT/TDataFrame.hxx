@@ -808,7 +808,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
@@ -839,7 +839,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1,W>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
@@ -868,7 +868,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
@@ -899,7 +899,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0,B1,W>>;
       auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
 
