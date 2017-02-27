@@ -7,36 +7,36 @@ It is the successor of the JSRootIO project.
 
 ## Installing JSROOT
 
-In most practical cases it is not necessary to install JSROOT - it can be used directly from project web sites <https://root.cern/js/> and <http://jsroot.gsi.de/>. 
+In most practical cases it is not necessary to install JSROOT - it can be used directly from project web sites <https://root.cern/js/> and <http://jsroot.gsi.de/>.
 
 When required, there are following alternatives to install JSROOT on other web servers:
 
    - download and unpack [provided](https://github.com/linev/jsroot/releases) packages (recommended)
-   - use [bower](https://bower.io/) package manager and invoke `bower install jsroot`  
+   - use [bower](https://bower.io/) package manager and invoke `bower install jsroot`
    - clone master branch from [repository](https://github.com/linev/jsroot/)
- 
+
 One could use JSROOT directly from local file system. If source code was unpacked/checked-out in `/home/user/jsroot/` subfolder, one could just open it in browser with <file:///home/user/jsroot/index.htm> address.
 
 
 ## Drawing objects in JSROOT
 
-[The main page](https://root.cern/js/latest/) of the JSROOT project provides the possibility to interactively open ROOT files and draw objects like histogram or canvas. 
+[The main page](https://root.cern/js/latest/) of the JSROOT project provides the possibility to interactively open ROOT files and draw objects like histogram or canvas.
 
 To automate files loading and objects drawing, one can provide number of URL parameters in address string like:
 
 - file - name of the file, which will be automatically open with page loading
 - files - array of file names for loading
-- localfile - automatically activate dialog for selecting local ROOT files 
-- json - name of JSON file with stored ROOT object like histogram or canvas 
+- localfile - automatically activate dialog for selecting local ROOT files
+- json - name of JSON file with stored ROOT object like histogram or canvas
 - item - item name to be displayed
 - opt - drawing option for the item
-- items - array of items name 
-- opts - array of drawing options for the items 
+- items - array of items name
+- opts - array of drawing options for the items
 - layout - can be 'simple', 'flex', 'collapsible', 'tabs', 'gridNxM', 'horizNMK', 'vertNMK'
-- browser - layout of the browser 'float', 'fix', 'no', 'off'  
+- browser - layout of the browser 'float', 'fix', 'no', 'off'
 - nobrowser - do not display file browser (same as browser=no)
 - float - display floating browser (same as browser=float)
-- status - configure status line 'no' (default), 'off' (completely disable), 'size' 
+- status - configure status line 'no' (default), 'off' (completely disable), 'size'
 - load - name of extra JavaScript to load
 - optimize - drawing optimization 0:off, 1:only large histograms (default), 2:always
 - paltte - id of default color palette, 51..121 - new ROOT6 palette  (default 57)
@@ -57,21 +57,21 @@ Following layouts are supported:
   - simple - available space used for single object (default)
   - [collapsible](https://root.cern/js/latest/api.htm#url_syntax_collapsible_layout) - fix-sized canvas group behind each other and can be collapsed individually
   - [flex](https://root.cern/js/latest/api.htm#url_syntax_flexible_layout) - creates as many frames as necessary, each can be individually moved/enlarged
-  - [tabs](https://root.cern/js/latest/api.htm#url_syntax_tabs_layout) - tabs widget 
+  - [tabs](https://root.cern/js/latest/api.htm#url_syntax_tabs_layout) - tabs widget
   - [gridNxM](https://root.cern/js/latest/api.htm#url_syntax_grid_layout) - fixed-size grid with NxM frames
-  - gridiNxM - grid with NxM frames with possibility to adjust frames sizes 
+  - gridiNxM - grid with NxM frames with possibility to adjust frames sizes
   - vertN - N frames sorted in vertical direction (like gridi1xN)
   - horizN - N frames sorted in horizontal direction (like gridiNx1)
   - [vert121](https://root.cern//js/latest/api.htm#url_syntax_veritcal_layout) - 3 frames sorted in vertical direction, second frame divided on two sub-frames
   - [horiz32_12](https://root.cern//js/latest/api.htm#url_syntax_horizontal_layout) - 2 horizontal frames with 3 and 2 subframes, and 1/3 and 2/3 as relative size
 
-When specifying `files`, `items` or `opts` parameters, array of strings could be provided  like `files=['file1.root','file2.root']`.  One could skip quotes when specifying elements names `items=[file1.root/hpx,file2.root/hpy]` or `opts=['',colz]`. 
+When specifying `files`, `items` or `opts` parameters, array of strings could be provided  like `files=['file1.root','file2.root']`.  One could skip quotes when specifying elements names `items=[file1.root/hpx,file2.root/hpy]` or `opts=['',colz]`.
 
 Many examples of URL string usage can be found on [JSROOT examples](https://root.cern/js/latest/api.htm) page.
 
 One can very easy integrate JSROOT graphic into arbitrary HTML pages using a __iframe__ tag:
 
-    <iframe width="700" height="400" 
+    <iframe width="700" height="400"
             src="https://root.cern/js/latest/?nobrowser&file=../files/hsimple.root&item=hpxpy&opt=colz">
     </iframe>
 
@@ -80,85 +80,85 @@ One can very easy integrate JSROOT graphic into arbitrary HTML pages using a __i
 
 List of supported classes and draw options:
 
-- TH1 : [hist](https://root.cern/js/latest/examples.htm#th1), 
-[p](https://root.cern/js/latest/examples.htm#th1_p), 
-[p0](https://root.cern/js/latest/examples.htm#th1_p0), 
-[*](https://root.cern/js/latest/examples.htm#th1_star), 
-[l](https://root.cern/js/latest/examples.htm#th1_l), 
-[lf2](https://root.cern/js/latest/examples.htm#th1_lf2), 
-[e](https://root.cern/js/latest/examples.htm#th1_e), 
-[e0](https://root.cern/js/latest/examples.htm#th1_e0), 
-[e1](https://root.cern/js/latest/examples.htm#th1_e1), 
-[e1x0](https://root.cern/js/latest/examples.htm#th1_e1x0), 
-[e3](https://root.cern/js/latest/examples.htm#th1_e3), 
-[e4](https://root.cern/js/latest/examples.htm#th1_e4), 
-[lego](https://root.cern/js/latest/examples.htm#th1_lego), 
+- TH1 : [hist](https://root.cern/js/latest/examples.htm#th1),
+[p](https://root.cern/js/latest/examples.htm#th1_p),
+[p0](https://root.cern/js/latest/examples.htm#th1_p0),
+[*](https://root.cern/js/latest/examples.htm#th1_star),
+[l](https://root.cern/js/latest/examples.htm#th1_l),
+[lf2](https://root.cern/js/latest/examples.htm#th1_lf2),
+[e](https://root.cern/js/latest/examples.htm#th1_e),
+[e0](https://root.cern/js/latest/examples.htm#th1_e0),
+[e1](https://root.cern/js/latest/examples.htm#th1_e1),
+[e1x0](https://root.cern/js/latest/examples.htm#th1_e1x0),
+[e3](https://root.cern/js/latest/examples.htm#th1_e3),
+[e4](https://root.cern/js/latest/examples.htm#th1_e4),
+[lego](https://root.cern/js/latest/examples.htm#th1_lego),
 [text](https://root.cern/js/latest/examples.htm#th1_text),
 [X+Y+](https://root.cern/js/latest/examples.htm#th1_x+y+)
-- TH2 : [scat](https://root.cern/js/latest/examples.htm#th2), 
-[col](https://root.cern/js/latest/examples.htm#th2_col), 
-[colz](https://root.cern/js/latest/examples.htm#th2_colz), 
-[box](https://root.cern/js/latest/examples.htm#th2_box), 
-[box1](https://root.cern/js/latest/examples.htm#th2_box1), 
-[text](https://root.cern/js/latest/examples.htm#th2_text), 
-[lego](https://root.cern/js/latest/examples.htm#th2_lego), 
-[arr](https://root.cern/js/latest/examples.htm#th2_arr), 
-[cont](https://root.cern/js/latest/examples.htm#th2_cont), 
-[cont1](https://root.cern/js/latest/examples.htm#th2_cont1), 
-[cont2](https://root.cern/js/latest/examples.htm#th2_cont2), 
-[cont3](https://root.cern/js/latest/examples.htm#th2_cont3), 
-[cont4](https://root.cern/js/latest/examples.htm#th2_cont4), 
-[surf](https://root.cern/js/latest/examples.htm#th2_surf), 
-[surf1](https://root.cern/js/latest/examples.htm#th2_surf1), 
-[surf2](https://root.cern/js/latest/examples.htm#th2_surf2), 
-[surf3](https://root.cern/js/latest/examples.htm#th2_surf3), 
-[surf4](https://root.cern/js/latest/examples.htm#th2_surf4), 
-[surf6](https://root.cern/js/latest/examples.htm#th2_surf6), 
-[surf7](https://root.cern/js/latest/examples.htm#th2_surf7), 
+- TH2 : [scat](https://root.cern/js/latest/examples.htm#th2),
+[col](https://root.cern/js/latest/examples.htm#th2_col),
+[colz](https://root.cern/js/latest/examples.htm#th2_colz),
+[box](https://root.cern/js/latest/examples.htm#th2_box),
+[box1](https://root.cern/js/latest/examples.htm#th2_box1),
+[text](https://root.cern/js/latest/examples.htm#th2_text),
+[lego](https://root.cern/js/latest/examples.htm#th2_lego),
+[arr](https://root.cern/js/latest/examples.htm#th2_arr),
+[cont](https://root.cern/js/latest/examples.htm#th2_cont),
+[cont1](https://root.cern/js/latest/examples.htm#th2_cont1),
+[cont2](https://root.cern/js/latest/examples.htm#th2_cont2),
+[cont3](https://root.cern/js/latest/examples.htm#th2_cont3),
+[cont4](https://root.cern/js/latest/examples.htm#th2_cont4),
+[surf](https://root.cern/js/latest/examples.htm#th2_surf),
+[surf1](https://root.cern/js/latest/examples.htm#th2_surf1),
+[surf2](https://root.cern/js/latest/examples.htm#th2_surf2),
+[surf3](https://root.cern/js/latest/examples.htm#th2_surf3),
+[surf4](https://root.cern/js/latest/examples.htm#th2_surf4),
+[surf6](https://root.cern/js/latest/examples.htm#th2_surf6),
+[surf7](https://root.cern/js/latest/examples.htm#th2_surf7),
 [lego](https://root.cern/js/latest/examples.htm#th2_lego),
 [lego0](https://root.cern/js/latest/examples.htm#th2_lego0),
-[lego1](https://root.cern/js/latest/examples.htm#th2_lego1), 
-[lego2](https://root.cern/js/latest/examples.htm#th2_lego2), 
-[lego3](https://root.cern/js/latest/examples.htm#th2_lego3), 
+[lego1](https://root.cern/js/latest/examples.htm#th2_lego1),
+[lego2](https://root.cern/js/latest/examples.htm#th2_lego2),
+[lego3](https://root.cern/js/latest/examples.htm#th2_lego3),
 [lego4](https://root.cern/js/latest/examples.htm#th2_lego4)
 - TH2Poly : [col](https://root.cern/js/latest/examples.htm#th2poly_honeycomb),
-[lego](https://root.cern/js/latest/examples.htm#th2poly_lego), 
-[europe](https://root.cern/js/latest/examples.htm#th2poly_europe), 
+[lego](https://root.cern/js/latest/examples.htm#th2poly_lego),
+[europe](https://root.cern/js/latest/examples.htm#th2poly_europe),
 [usa](https://root.cern/js/latest/examples.htm#th2poly_usa)
-- TH3 : [scat](https://root.cern/js/latest/examples.htm#th3), 
-[box](https://root.cern/js/latest/examples.htm#th3_box), 
+- TH3 : [scat](https://root.cern/js/latest/examples.htm#th3),
+[box](https://root.cern/js/latest/examples.htm#th3_box),
 [box1](https://root.cern/js/latest/examples.htm#th3_box1)
-- TProfile : [dflt](https://root.cern/js/latest/examples.htm#tprofile), 
-[e](https://root.cern/js/latest/examples.htm#tprofile_e), 
-[e1](https://root.cern/js/latest/examples.htm#tprofile_e1), 
-[pe2](https://root.cern/js/latest/examples.htm#tprofile_pe2), 
-[hist](https://root.cern/js/latest/examples.htm#tprofile_hist), 
-[text](https://root.cern/js/latest/examples.htm#tprofile_text), 
+- TProfile : [dflt](https://root.cern/js/latest/examples.htm#tprofile),
+[e](https://root.cern/js/latest/examples.htm#tprofile_e),
+[e1](https://root.cern/js/latest/examples.htm#tprofile_e1),
+[pe2](https://root.cern/js/latest/examples.htm#tprofile_pe2),
+[hist](https://root.cern/js/latest/examples.htm#tprofile_hist),
+[text](https://root.cern/js/latest/examples.htm#tprofile_text),
 [texte](https://root.cern/js/latest/examples.htm#tprofile_texte)
 - TProfile2D : [example](https://root.cern/js/latest/examples.htm#misc_profile2d)
-- THStack : [example](https://root.cern/js/latest/examples.htm#thstack)   
+- THStack : [example](https://root.cern/js/latest/examples.htm#thstack)
 - TF1 : [example](https://root.cern/js/latest/examples.htm#tf1_canv)
 - TF2 : [example](https://root.cern/js/latest/examples.htm#misc_tf2)
-- TGraph : [dflt](https://root.cern/js/latest/examples.htm#tgraph), 
-[L](https://root.cern/js/latest/examples.htm#tgraph_l), 
-[P](https://root.cern/js/latest/examples.htm#tgraph_p), 
-[*](https://root.cern/js/latest/examples.htm#tgraph_star), 
+- TGraph : [dflt](https://root.cern/js/latest/examples.htm#tgraph),
+[L](https://root.cern/js/latest/examples.htm#tgraph_l),
+[P](https://root.cern/js/latest/examples.htm#tgraph_p),
+[*](https://root.cern/js/latest/examples.htm#tgraph_star),
 [B](https://root.cern/js/latest/examples.htm#tgraph_b)
-- TGraphErrors : [dflt](https://root.cern/js/latest/examples.htm#tgrapherrors), 
-[l](https://root.cern/js/latest/examples.htm#tgrapherrors_l), 
-[lx](https://root.cern/js/latest/examples.htm#tgrapherrors_lx), 
-[z](https://root.cern/js/latest/examples.htm#tgrapherrors_z), 
-[>](https://root.cern/js/latest/examples.htm#tgrapherrors_>), 
-[|>](https://root.cern/js/latest/examples.htm#tgrapherrors_|>), 
-[||](https://root.cern/js/latest/examples.htm#tgrapherrors_||), 
-[[]](https://root.cern/js/latest/examples.htm#tgrapherrors_[]), 
-[0](https://root.cern/js/latest/examples.htm#tgrapherrors_0), 
-[2](https://root.cern/js/latest/examples.htm#tgrapherrors_2), 
-[3](https://root.cern/js/latest/examples.htm#tgrapherrors_3), 
-[4](https://root.cern/js/latest/examples.htm#tgrapherrors_4), 
+- TGraphErrors : [dflt](https://root.cern/js/latest/examples.htm#tgrapherrors),
+[l](https://root.cern/js/latest/examples.htm#tgrapherrors_l),
+[lx](https://root.cern/js/latest/examples.htm#tgrapherrors_lx),
+[z](https://root.cern/js/latest/examples.htm#tgrapherrors_z),
+[>](https://root.cern/js/latest/examples.htm#tgrapherrors_>),
+[|>](https://root.cern/js/latest/examples.htm#tgrapherrors_|>),
+[||](https://root.cern/js/latest/examples.htm#tgrapherrors_||),
+[[]](https://root.cern/js/latest/examples.htm#tgrapherrors_[]),
+[0](https://root.cern/js/latest/examples.htm#tgrapherrors_0),
+[2](https://root.cern/js/latest/examples.htm#tgrapherrors_2),
+[3](https://root.cern/js/latest/examples.htm#tgrapherrors_3),
+[4](https://root.cern/js/latest/examples.htm#tgrapherrors_4),
 [5](https://root.cern/js/latest/examples.htm#tgrapherrors_5),
-- TGraphAsymmErrors : [dflt](https://root.cern/js/latest/examples.htm#tgraphasymmerrors), 
-[z](https://root.cern/js/latest/examples.htm#tgraphasymmerrors_z) and other from TGraphErrors 
+- TGraphAsymmErrors : [dflt](https://root.cern/js/latest/examples.htm#tgraphasymmerrors),
+[z](https://root.cern/js/latest/examples.htm#tgraphasymmerrors_z) and other from TGraphErrors
 - TMultiGraph : [example](https://root.cern/js/latest/examples.htm#tmultigraph_c3), [exclusion](https://root.cern/js/latest/examples.htm#tmultigraph_exclusion)
 - TGraph2D : [example](https://root.cern/js/latest/examples.htm#tgraph2d)
 - TLatex : [example](https://root.cern/js/latest/examples.htm#tlatex_latex)
@@ -183,24 +183,24 @@ In the URL string one could use "+" sign to specify objects superposition:
 Analogue, one could specify individual draw options for superimposed objects
 
    - [item=hpx+hprof&opt=logy+hist](https://root.cern/js/latest/?file=../files/hsimple.root&item=hpx+hprof&opt=logy+hist)
-  
+
 Here "logy" option will be used for "hpx1" item and "hist" option for "hprof;1" item.
 
-While draw option can include "+" sign itself, for superposition one could specify arrays of items and draw options like:  
+While draw option can include "+" sign itself, for superposition one could specify arrays of items and draw options like:
 
    - [item=[hpx;1,hprof;1]&opt=[logy,hist]](https://root.cern/js/latest/?file=../files/hsimple.root&item=[hpx;1,hprof;1]&opt=[logy,hist])
-  
+
 
 ## TTree draw
 
-JSROOT provides possibility to display TTree data, using [TTree::Draw](https://root.cern/doc/master/classTTree.html) syntax: 
+JSROOT provides possibility to display TTree data, using [TTree::Draw](https://root.cern/doc/master/classTTree.html) syntax:
 
    - [opt=px](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple;1&opt=px)
    - [opt=px:py](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple;1&opt=px:py)
    - [opt=px:py:pz](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple;1&opt=px:py:pz)
-   
-Histogram ranges and binning defined after reading first 1000 entries from the tree. 
-Like in ROOT, one could configure histogram binning and range directly:   
+
+Histogram ranges and binning defined after reading first 1000 entries from the tree.
+Like in ROOT, one could configure histogram binning and range directly:
 
    - [opt=px:py>>h(50,-5,5,50,-5,5)](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py>>h%2850,-5,5,50,-5,5%29)
 
@@ -211,17 +211,17 @@ For any integer value one can accumulate histogram with value bits distribution,
 There is special handling of TBits objects:
 
    - [opt=event.fTriggerBits](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTriggerBits)
- 
+
 It is allowed to use different expressions with branch values:
 
    - [opt=px+py:px-py](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px+py:px-py)
-   
+
 Such expression can include arithmetical operations and all methods, provided in JavaScript [Math](http://www.w3schools.com/jsref/jsref_obj_math.asp) class:
-     
+
    - [opt=Math.abs(px+py)](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=Math.abs%28px+py%29)
 
 In the expression one could use "Entry$" and "Entries$" variables.
- 
+
 One also could specify cut condition, separating it with "::" from the rest draw expression like:
 
    - [opt=px:py::pz>5](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py::pz>5)
@@ -230,7 +230,7 @@ Contrary to the normal ROOT, JSROOT allows to use "(expr?res1:res2)" operator (p
 
    - [opt=px:py::(pz>5?2:1)](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple&opt=px:py::%28pz>5?2:1%29)
 
-It is possible to "dump" content of any branch (by default - first 10 entries):   
+It is possible to "dump" content of any branch (by default - first 10 entries):
 
    - [item=ntuple/px&opt=dump](https://root.cern/js/latest/?file=../files/hsimple.root&item=ntuple/px&opt=dump)
 
@@ -240,27 +240,27 @@ Or one could dump values produced with draw expression (also first 10 entries by
 
 Working with array indexes is supported. By default, all elements in array are used for the drawing.
 One could specify index for any array dimension (-1 means last element in the array). For instance, dump last element from `event.fTracks` array:
- 
+
    - [opt=event.fTracks[-1].fBits>>dump](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTracks[-1].fBits>>dump)
 
 For any array or collection kind one could extract its size with expression:
 
    - [opt=event.fTracks.@size](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTracks.@size;num:3000)
-   
+
 At the end of expression one can add several parameters with the syntax:
 
     <draw_expession>;par1name:par1value;par2name:par2value
-    
-Following parameters are supported:    
+
+Following parameters are supported:
   - "first" - id of the first entry to process
   - "entries" - number of entries to process
   - "monitor" - periodically show intermediate draw results (interval in milliseconds)
-  - "maxrange" - maximal number of ranges in single HTTP request 
+  - "maxrange" - maximal number of ranges in single HTTP request
   - "accum" - number of accumulated values before creating histogram
   - "htype" - last letter in histogram type like "I", "F", "D", "S", "L", "C"
-  - "hbins" - number of bins on each histogram axis 
+  - "hbins" - number of bins on each histogram axis
   - "drawopt" - drawing option for produced histogram
-  
+
 Example - [opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25)
 
 
@@ -269,7 +269,7 @@ Example - [opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25](
 JSROOT implements display of TGeo objects like:
 
 - [file=rootgeom.root&item=simple1](https://root.cern/js/latest/?file=../files/geom/rootgeom.root&item=simple1)
-- [file=building.root&item=geom&opt=z](https://root.cern/js/latest/?nobrowser&file=../files/geom/building.root&item=geom;1&opt=z)  
+- [file=building.root&item=geom&opt=z](https://root.cern/js/latest/?nobrowser&file=../files/geom/building.root&item=geom;1&opt=z)
 
 Following classes are supported by geometry viewer:
   - TGeoVolume
@@ -279,7 +279,7 @@ Following classes are supported by geometry viewer:
 
 Following draw options could be specified (separated by semicolon or ';'):
    - axis  - draw axis coordinates
-   - z   - set z axis direction up (normally y axis is up and x looks in user direction)           
+   - z   - set z axis direction up (normally y axis is up and x looks in user direction)
    - clipx/clipy/clipz - enable correspondent clipping panel
    - clip or clipxyz - enable all three clipping panels
    - ssao - enable Smooth Lighting Shader (or Screen Space Ambient Occlusion)
@@ -291,19 +291,19 @@ Following draw options could be specified (separated by semicolon or ';'):
    - macro:name.C - invoke ROOT configuration macro
    - dflt_colors - set default volumes colors as TGeoManager::DefaultColors() does
    - transpXY - set global transparency value (XY is number between 1 and 99)
-   - rotate - enable automatic rotation of the geometry 
-   
+   - rotate - enable automatic rotation of the geometry
 
-It is possible to display only part of geometry model. For instance, one could select sub-item like:  
+
+It is possible to display only part of geometry model. For instance, one could select sub-item like:
 
 - [file=rootgeom.root&item=simple1/TOP/REPLICA_1](https://root.cern/js/latest/?file=../files/geom/rootgeom.root&item=simple1/TOP/REPLICA_1)
 
 Or one can use simple selection syntax (work only with first-level volumes):
- 
+
 - [item=simple1&opt=-bar1-bar2](https://root.cern/js/latest/?file=../files/geom/rootgeom.root&item=simple1;1&opt=-bar1-bar2)
-  
+
 Syntax uses '+' sign to enable visibility flag of specified volume and '-' sign to disable visibility.
-One could use wildcard symbol like '+TUBE1*'.  
+One could use wildcard symbol like '+TUBE1*'.
 
 Another way to configure visibility flags is usage of ROOT macros, which typically looks like:
 
@@ -318,35 +318,35 @@ Another way to configure visibility flags is usage of ROOT macros, which typical
       gGeoManager->GetVolume("ALIC")->Draw("ogl");
       new TBrowser;
     }
-  
-Example of such macro can be found in root tutorials. 
+
+Example of such macro can be found in root tutorials.
 
 From provided macro only following calls will be executed in JSROOT:
 
    * `gGeoManager->DefaultColors()`
-   * `gGeoManager->GetVolume("HALL")->InvisibleAll()` 
-   * `gGeoManager->GetVolume("HALL")->SetTransparency(30)` 
-   * `gGeoManager->GetVolume("HALL")->SetLineColor(5)` 
+   * `gGeoManager->GetVolume("HALL")->InvisibleAll()`
+   * `gGeoManager->GetVolume("HALL")->SetTransparency(30)`
+   * `gGeoManager->GetVolume("HALL")->SetLineColor(5)`
    * `gGeoManager->GetVolume("ALIC")->Draw("ogl")`
-    
+
 All other will be ignored.
 
-  
+
 Example of major LHC detectors:
- * ALICE: [full](https://root.cern/js/latest/?file=https://root.cern/files/alice2.root&item=Geometry;1&opt=macro:https://root.cern/js/files/geomAlice.C) 
+ * ALICE: [full](https://root.cern/js/latest/?file=https://root.cern/files/alice2.root&item=Geometry;1&opt=macro:https://root.cern/js/files/geomAlice.C)
  * ATLAS: [full](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=clipxyz), [cryo](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=macro:https://root.cern/files/atlas_cryo.C), [sctt](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=macro:https://root.cern/files/atlas_sctt.C)
  * CMS: [cmse](https://root.cern/js/latest/?file=https://root.cern/files/cms.root&item=cms;1&opt=macro:https://root.cern/files/cms_cmse.C;clipxyz), [calo](https://root.cern/js/latest/?file=https://root.cern/files/cms.root&item=cms;1&opt=macro:https://root.cern/files/cms_calo.C;clipxyz)
  * LHCb: [full](https://root.cern/js/latest/?file=https://root.cern/files/lhcbfull.root&item=Geometry;1&opt=all;dflt_colors)
 
 Other detectors examples:
- * HADES: [full](https://root.cern/js/latest/?file=https://root.cern/files/hades2.root&item=CBMGeom;1&opt=all;dflt_colors), [preselected](https://root.cern/js/latest/?json=../files/geom/hades.json.gz)  
- * BABAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_all.C), [emca](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_emca.C) 
- * STAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_all.C;clipxyz), [svtt](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_svtt.C) 
+ * HADES: [full](https://root.cern/js/latest/?file=https://root.cern/files/hades2.root&item=CBMGeom;1&opt=all;dflt_colors), [preselected](https://root.cern/js/latest/?json=../files/geom/hades.json.gz)
+ * BABAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_all.C), [emca](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_emca.C)
+ * STAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_all.C;clipxyz), [svtt](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_svtt.C)
  * D0: [full](https://root.cern/js/latest/?file=https://root.cern/files/d0.root&item=d0;1&opt=clipxyz)
  * NA47: [full](https://root.cern/js/latest/?file=https://root.cern/files/na47.root&item=na47;1&opt=dflt_colors)
  * BRAHMS: [full](https://root.cern/js/latest/?file=https://root.cern/files/brahms.root&item=brahms;1&opt=dflt_colors)
  * SLD: [full](https://root.cern/js/latest/?file=https://root.cern/files/sld.root&item=sld;1&opt=dflt_colors;clipxyz)
-    
+
 Together with geometry one could display tracks (TEveTrack) and hits (TEvePointSet) objects.
 Either one do it interactively by drag and drop, or superimpose drawing with `+` sign like:
 
@@ -392,18 +392,18 @@ In the `<div>` element with "simpleGUI" id one can specify many custom parameter
     ...
 
 
-## Reading local ROOT files 
+## Reading local ROOT files
 
 JSROOT can read files from local file system using HTML5 FileReader functionality.
 Main limitation here - user should interactively select files for reading.
-There is button __"..."__ on the main JSROOT page, which starts file selection dialog. 
+There is button __"..."__ on the main JSROOT page, which starts file selection dialog.
 If valid ROOT file is selected, JSROOT will be able to normally read content of such file.
 
 One could try to invoke such dialog with "localfile" parameter in URL string:
 
    - <https://root.cern/js/latest/?localfile>
 
-It could happen, that due to security limitations automatic popup will be blocked.  
+It could happen, that due to security limitations automatic popup will be blocked.
 
 For debuging purposes one can install JSROOT on local file system and let read ROOT files from the same location. Like:
 
@@ -411,9 +411,9 @@ For debuging purposes one can install JSROOT on local file system and let read R
 
 But this works only with Firefox.
 
-  
 
-## JSROOT with THttpServer 
+
+## JSROOT with THttpServer
 
 THttpServer provides http access to objects from running ROOT application.
 JSROOT is used to implement the user interface in the web browsers.
@@ -447,7 +447,7 @@ The parameter value is the update interval in milliseconds.
 ### JSON file-based monitoring
 
 Solid file-based monitoring (without integration of THttpServer into application) can be
-implemented in JSON format. There is the [TBufferJSON](https://root.cern/doc/master/classTBufferJSON.html) class, 
+implemented in JSON format. There is the [TBufferJSON](https://root.cern/doc/master/classTBufferJSON.html) class,
 which is capable to convert any (beside TTree) ROOT object into JSON. Any ROOT application can use such class to
 create JSON files for selected objects and write such files in a directory,
 which can be accessed via web server. Then one can use JSROOT to read such files and display objects in a web browser.
@@ -482,7 +482,7 @@ In this particular case, the histogram is not changing.
 
 ## JSROOT API
 
-JSROOT can be used in arbitrary HTML pages and disaplay data, produced without ROOT-based applications. 
+JSROOT can be used in arbitrary HTML pages and disaplay data, produced without ROOT-based applications.
 
 Many different examples of JSROOT API usage can be found on [JSROOT API examples](https://root.cern/js/latest/api.htm) page.
 
@@ -519,12 +519,12 @@ For instance, to load functionality with normal 2D graphics and binary ROOT file
 
 One could use minified version of all scripts (as shown in example) - this reduce page loading time significantly.
 
-When JSROOT installed with bower package manager, one could re-use basic libraries like `d3.js` or `three.js` from bower itself. For that one should add `bower` into URL:   
+When JSROOT installed with bower package manager, one could re-use basic libraries like `d3.js` or `three.js` from bower itself. For that one should add `bower` into URL:
 
     <script type="text/javascript" src="vendor/jsroot/scripts/JSRootCore.js?bower&2d&io"></script>
 
 Bower support will be automatically enabled when script path conatin __"bower_components/jsroot/"__ string.
- 
+
 
 
 ### Use of JSON
@@ -551,7 +551,7 @@ In the callback function one gets JavaScript object (or null in case of failure)
 If JSON string was obtained by different method, it should be parsed with:
 
     var obj = JSROOT.parse(json_string);
-    
+
 
 
 ### Objects drawing
@@ -568,7 +568,7 @@ One could use the JSROOT.draw function:
 
 The first argument is the id of the HTML div element, where drawing will be performed. The second argument is the object to draw and the third one is the drawing option.
 
-Here is complete [running example](https://root.cern/js/latest/api.htm#custom_html_read_json) ans [source code](https://github.com/linev/jsroot/blob/master/demo/read_json.htm): 
+Here is complete [running example](https://root.cern/js/latest/api.htm#custom_html_read_json) ans [source code](https://github.com/linev/jsroot/blob/master/demo/read_json.htm):
 
     var filename = "https://root.cern/js/files/th2ul.json.gz";
     JSROOT.NewHttpRequest(filename, 'object', function(obj) {
@@ -611,7 +611,7 @@ For example, reading an object from a file and displaying it will look like:
     });
 
 Here is [running example](https://root.cern/js/latest/api.htm#custom_html_read_root_file) and [source code](https://github.com/linev/jsroot/blob/master/demo/read_file.htm)
-   
+
 
 
 ### TTree API
@@ -625,53 +625,52 @@ Simple TTree::Draw operation can be performed with following code:
           JSROOT.draw("drawing", obj, "px:py::pz>5");
        });
     });
-    
+
 To get access to selected branches, one should use TSelector class:
 
 
     var filename = "https://root.cern/js/files/hsimple.root";
     JSROOT.OpenFile(filename, function(file) {
        file.ReadObject("ntuple;1", function(tree) {
-         
+
           var selector = new JSROOT.TSelector();
-          
-          selector.AddBranch("px"); 
+
+          selector.AddBranch("px");
           selector.AddBranch("py");
-          
+
           var cnt = 0, sumpx = 0, sumpy = 0;
-              
+
           selector.Begin = function() {
              // function called before reading of TTree starts
           }
-              
+
           selector.Process = function() {
              // function called for every entry
              sumpx += this.tgtobj.px;
              sumpy += this.tgtobj.py;
              cnt++;
           }
-              
+
           selector.Terminate = function(res) {
              if (!res || (cnt===0)) return;
              var meanpx = sumpx/cnt, meanpy = sumpy/cnt;
              console.log('Results', meanpx, meanpy);
           }
-          
+
           tree.Process(selector);
-       
+
        });
     });
 
-Here is [running example](https://root.cern/js/latest/api.htm#custom_html_read_tree) and [source code](https://github.com/linev/jsroot/blob/master/demo/read_tree.htm)
+Here is [running example](https://root.cern/js/latest/api.htm#ttree_tselector) and [source code](https://github.com/linev/jsroot/blob/master/demo/read_tree.htm)
 
 This examples shows how read TTree from binary file and create JSROOT.TSelector object.
 Logically it is similar to original TSelector class - for every read entry TSelector::Process() method is called.
 Selected branches can be accessed from **tgtobj** data member. At the end of tree reading TSelector::Terminate() method
-will be called. 
+will be called.
 
 As second parameter of tree.Process() function one could provide object with arguments
 
     var args = { numentries: 1000, firstentry: 500 };
     tree.Process(selector, args);
-    
- 
+
