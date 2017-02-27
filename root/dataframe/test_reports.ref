@@ -1,6 +1,7 @@
 mtf       : pass=100        all=100000     --    0.100 %
-mtnoop    : pass=100        all=100        --  100.000 %
+--
 mtf       : pass=100        all=100000     --    0.100 %
 mtnoop    : pass=100        all=100        --  100.000 %
 mtf2      : pass=94999      all=100000     --   94.999 %
+--
 mtf2      : pass=94999      all=100000     --   94.999 %

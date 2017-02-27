@@ -35,17 +35,16 @@ int main(int argc, char** argv) {
    TFile f(fileName);
    ROOT::Experimental::TDataFrame df("reportsTree", &f, {"b"});
    auto f1 = df.Filter(cut1, {}, "mtf");
-   auto m1 = f1.Filter(noopb, {}, "mtnoop")
-               .Mean<double>();
-   f1.Report(); // warning, filters have not run
-   *m1;
-   df.Report(); // cutflow reports for "mtf", "mtnoop"
-   auto f2 = df.AddBranch("foo", []() { return 42; })
+   auto f2 = f1.Filter(noopb, {}, "mtnoop");
+
+   auto f3 = df.AddBranch("foo", []() { return 42; })
                .Filter(cut2, {}, "mtf2");
-   auto m2 = f2.Min<double>();
-   *m2;
+
+   f1.Report(); // report only mtf
+   std::cout << "--\n";
    df.Report(); // report all filters, only mtf2 prints non-zero values
-   f2.Report(); // report only mtf2
+   std::cout << "--\n";
+   f3.Report(); // report only mtf2
 
    return 0;
 }
