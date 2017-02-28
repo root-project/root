@@ -136,6 +136,7 @@ clang/LLVM technology.
 #ifdef __APPLE__
 #include <dlfcn.h>
 #include <mach-o/dyld.h>
+#include <mach-o/loader.h>
 #endif // __APPLE__
 
 #ifdef R__UNIX
@@ -2692,11 +2693,15 @@ void TCling::UpdateListOfLoadedSharedLibraries()
 #elif defined(R__MACOSX)
    // fPrevLoadedDynLibInfo stores the *next* image index to look at
    uint32_t imageIndex = (uint32_t) (size_t) fPrevLoadedDynLibInfo;
-   const char* imageName = 0;
-   while ((imageName = _dyld_get_image_name(imageIndex))) {
-      // Skip binary
-      if (imageIndex > 0)
-         RegisterLoadedSharedLibrary(imageName);
+
+   while (const mach_header* mh = _dyld_get_image_header(imageIndex)) {
+      // Skip non-dylibs
+      if (mh->filetype == MH_DYLIB) {
+         if (const char* imageName = _dyld_get_image_name(imageIndex)) {
+            RegisterLoadedSharedLibrary(imageName);
+         }
+      }
+
       ++imageIndex;
    }
    fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
