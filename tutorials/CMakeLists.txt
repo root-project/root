@@ -217,7 +217,7 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/timeonaxis.C
                  graphs/timeonaxis2.C
                  graphs/timeonaxis3.C
-                 graphs/exclusiongraph.C graphs/multigraph.C
+                 graphs/exclusiongraph.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
                  hist/ContourList.C
