@@ -71,19 +71,6 @@ namespace TMVA {
    class MethodBDT : public MethodBase {
 
    public:
-      // #### Some temporary variables to store timing information
-      Double_t buildTreeTime = 0;
-         Double_t buildTreeSumTime = 0;
-         Double_t buildTreeTrainTime = 0;
-         Double_t buildTreeFilterTime = 0;
-
-      Double_t boostTreeTime = 0;
-         Double_t boostTreeLeafTime = 0;
-         Double_t boostTreeFitTime = 0;
-         Double_t boostTreeUpdatePredictionsTime = 0;
-         Double_t boostTreeUpdateTargetsTime = 0;
-
-      Double_t totalTreeTime = 0;
 
       // constructor for training and reading
       MethodBDT( const TString& jobName,
@@ -133,11 +120,13 @@ namespace TMVA {
       UInt_t   GetNTrees() const {return fForest.size();}
    private:
 
-      // Multithreading only if the compilation flag is turned on
+      // #### Multithreading only if the compilation flag is turned on
 
       #ifdef R__USE_IMT
+      // #### had to define this as a pointer so that we can set the number of CPUs to use AFTER getting
+      // #### information from the user. Needed to do this to automate timing vs nCPUs during development.
       std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
-      // number of CPUs available for parallelization
+      // #### number of CPUs available for parallelization
       UInt_t GetNumCPUs(){
          SysInfo_t s;
          gSystem->GetSysInfo(&s);

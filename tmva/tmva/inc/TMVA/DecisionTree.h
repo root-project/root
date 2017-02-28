@@ -82,10 +82,6 @@ namespace TMVA {
       static const Int_t fgRandomSeed; // set nonzero for debugging and zero for random seeds
 
    public:
-      // #### Some vars to save the timing info for parallelization studies
-      double trainNodeTime = 0;
-      double sumNodeTime = 0;
-      double filterNodeTime = 0;
 
       typedef std::vector<TMVA::Event*> EventList;
       typedef std::vector<const TMVA::Event*> EventConstList;
@@ -232,7 +228,10 @@ namespace TMVA {
          return ncpu;
       };
 
-      // root multithreading object
+      // #### root multithreading object
+      // #### had to define as pointer so that we can initialize the number of CPUs to use AFTER
+      // #### getting information from the user. Needed to do this to automate timing vs nCPUs during
+      // #### development.
       std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
 
       #endif

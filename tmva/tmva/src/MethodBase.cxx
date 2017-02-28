@@ -689,8 +689,7 @@ void TMVA::MethodBase::TrainMethod()
    } else {
 
       Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "regression on training sample" << Endl;
-      // #### commenting out because I don't care about this when timing the BDTs, should return this to the normal state when done
-      //AddRegressionOutput( Types::kTraining );
+      AddRegressionOutput( Types::kTraining );
 
       if (HasMVAPdfs() ) {
          Log() <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Create PDFs" << Endl;
