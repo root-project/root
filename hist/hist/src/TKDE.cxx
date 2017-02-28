@@ -1127,12 +1127,13 @@ TF1* TKDE::GetKDEFunction(UInt_t npx, Double_t xMin , Double_t xMax) {
    TString name = "KDEFunc_"; name+= GetName();
    TString title = "KDE "; title+= GetTitle();
    if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
+   //Do not register the TF1 to global list
+   bool previous = TF1::DefaultAddToGlobalList(kFALSE);
    TF1 * pdf = new TF1(name.Data(), this, xMin, xMax, 0);
+   TF1::DefaultAddToGlobalList(previous);
    if (npx > 0) pdf->SetNpx(npx);
    pdf->SetTitle(title);
-   TF1 * f =  (TF1*)pdf->Clone();
-   delete pdf;
-   return f;
+   return pdf;
 }
 
 TF1* TKDE::GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx, Double_t xMin , Double_t xMax) {
