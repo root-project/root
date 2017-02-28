@@ -16,7 +16,7 @@ namespace Internal {
 
 namespace Operations {
 
-CountOperation::CountOperation(unsigned int *resultCount, unsigned int nSlots) : fResultCount(resultCount), fCounts(nSlots, 0) {}
+CountOperation::CountOperation(const std::shared_ptr<unsigned int>& resultCount, unsigned int nSlots) : fResultCount(resultCount), fCounts(nSlots, 0) {}
 
 void CountOperation::Exec(unsigned int slot)
 {
@@ -109,7 +109,7 @@ template void FillOperation::Exec(unsigned int, const std::vector<char>&, const 
 template void FillOperation::Exec(unsigned int, const std::vector<int>&, const std::vector<int>&);
 template void FillOperation::Exec(unsigned int, const std::vector<unsigned int>&, const std::vector<unsigned int>&);
 
-MinOperation::MinOperation(double *minVPtr, unsigned int nSlots)
+MinOperation::MinOperation(const std::shared_ptr<double>& minVPtr, unsigned int nSlots)
    : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max()) { }
 
 void MinOperation::Exec(unsigned int slot, double v)
@@ -130,7 +130,7 @@ template void MinOperation::Exec(unsigned int, const std::vector<int>&);
 template void MinOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 
-MaxOperation::MaxOperation(double *maxVPtr, unsigned int nSlots)
+MaxOperation::MaxOperation(const std::shared_ptr<double>& maxVPtr, unsigned int nSlots)
    : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::min()) { }
 
 void MaxOperation::Exec(unsigned int slot, double v)
@@ -153,7 +153,7 @@ template void MaxOperation::Exec(unsigned int, const std::vector<int>&);
 template void MaxOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 
-MeanOperation::MeanOperation(double *meanVPtr, unsigned int nSlots) : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0) {}
+MeanOperation::MeanOperation(const std::shared_ptr<double>& meanVPtr, unsigned int nSlots) : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0) {}
 
 void MeanOperation::Exec(unsigned int slot, double v)
 {
