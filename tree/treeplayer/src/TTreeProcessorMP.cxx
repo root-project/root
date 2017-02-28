@@ -18,9 +18,9 @@
 ///
 /// \class ROOT::TTreeProcessorMP
 /// \brief This class provides an interface to process a TTree dataset
-///        in parallel with multi-process technology 
+///        in parallel with multi-process technology
 ///
-/// ###ROOT::TTreeProcessorMP::Process 
+/// ###ROOT::TTreeProcessorMP::Process
 /// The possible usages of the Process method are the following:\n
 /// * Process(<dataset>, F func, const std::string& treeName, ULong64_t nToProcess):
 ///     func is executed nToProcess times with argument a TTreeReader&, initialized for
@@ -34,7 +34,7 @@
 ///
 /// For legacy, the following signature is also supported:
 /// * Process(<dataset>, TSelector& selector, const std::string& treeName, ULong64_t nToProcess):
-///   where seelctor is a TSelector derived class describing the analysis and the other arguments
+///   where selector is a TSelector derived class describing the analysis and the other arguments
 ///   have the same meaning as above.
 ///
 /// For either set of signatures, the processing function is executed as many times as
