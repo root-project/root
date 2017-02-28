@@ -87,7 +87,5 @@ void mlpRegression() {
                                         "ANN extrapolation, ANN output - truth",
                                         225, vx, vy, delta);
 
-   if (!gROOT->IsBatch()) {
-      g2Extrapolate->Draw("TRI2");
-   }
+   g2Extrapolate->Draw("TRI2 OLD");
 }
