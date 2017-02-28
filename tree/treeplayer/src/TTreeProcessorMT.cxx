@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TTreeProcessorMT
+/** \class ROOT::TTreeProcessorMT
     \brief A class to process the entries of a TTree in parallel.
  
-By means of its Process method, TTreeProcessorMT provides a way to process the
+By means of its Process method, ROOT::TTreeProcessorMT provides a way to process the
 entries of a TTree in parallel. When invoking TTreeProcessor::Process, the user
 passes a function whose only parameter is a TTreeReader. The function iterates
 on a subrange of entries by using that TTreeReader.
 
-The implementation of TTreeProcessorMT parallelizes the processing of the subranges,
+The implementation of ROOT::TTreeProcessorMT parallelizes the processing of the subranges,
 each corresponding to a cluster in the TTree. This is possible thanks to the use
 of a ROOT::TThreadedObject, so that each thread works with its own TFile and TTree
 objects.
