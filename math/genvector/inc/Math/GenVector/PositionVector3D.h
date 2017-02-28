@@ -576,36 +576,53 @@ namespace ROOT {
     // ------------- I/O to/from streams -------------
 
     template< class char_t, class traits_t, class T, class U >
-      inline
-      std::basic_ostream<char_t,traits_t> &
-      operator << ( std::basic_ostream<char_t,traits_t> & os
+    inline
+    typename std::enable_if< std::is_arithmetic<typename PositionVector3D<T,U>::Scalar>::value,
+                             std::basic_ostream<char_t,traits_t> & >::type
+    operator << ( std::basic_ostream<char_t,traits_t> & os
                   , PositionVector3D<T,U> const & v
                   )
     {
-      if( !os )  return os;
-
-      typename T::Scalar a, b, c;
-      v.GetCoordinates(a, b, c);
-
-      if( detail::get_manip( os, detail::bitforbit ) )  {
-        detail::set_manip( os, detail::bitforbit, '\00' );
-        typedef GenVector_detail::BitReproducible BR;
-        BR::Output(os, a);
-        BR::Output(os, b);
-        BR::Output(os, c);
+      if ( os ) {
+      
+        typename T::Scalar a, b, c;
+        v.GetCoordinates(a, b, c);
+        
+        if( detail::get_manip( os, detail::bitforbit ) )  {
+          detail::set_manip( os, detail::bitforbit, '\00' );
+          typedef GenVector_detail::BitReproducible BR;
+          BR::Output(os, a);
+          BR::Output(os, b);
+          BR::Output(os, c);
+        }
+        else  {
+          os << detail::get_manip( os, detail::open  ) << a
+             << detail::get_manip( os, detail::sep   ) << b
+             << detail::get_manip( os, detail::sep   ) << c
+             << detail::get_manip( os, detail::close );
+        }
       }
-      else  {
-        os << detail::get_manip( os, detail::open  ) << a
-           << detail::get_manip( os, detail::sep   ) << b
-           << detail::get_manip( os, detail::sep   ) << c
-           << detail::get_manip( os, detail::close );
-      }
-
       return os;
-
     }  // op<< <>()
 
-
+    template< class char_t, class traits_t, class T, class U >
+    inline
+    typename std::enable_if< !std::is_arithmetic<typename PositionVector3D<T,U>::Scalar>::value,
+                             std::basic_ostream<char_t,traits_t> & >::type
+    operator << ( std::basic_ostream<char_t,traits_t> & os
+                  , PositionVector3D<T,U> const & v
+                  )
+    {
+      if ( os ) {
+        os << "{ ";
+        for ( std::size_t i = 0; i < PositionVector3D<T,U>::Scalar::Size; ++i ) {
+          os << "(" << v.x()[i] << "," << v.y()[i] << "," << v.z()[i] << ") ";
+        }
+        os << "}";
+      }
+      return os;
+    }  // op<< <>()
+    
     template< class char_t, class traits_t, class T, class U >
       inline
       std::basic_istream<char_t,traits_t> &
