@@ -11,7 +11,7 @@
 
 /** \class ROOT::TTreeProcessorMT
     \brief A class to process the entries of a TTree in parallel.
- 
+
 By means of its Process method, ROOT::TTreeProcessorMT provides a way to process the
 entries of a TTree in parallel. When invoking TTreeProcessor::Process, the user
 passes a function whose only parameter is a TTreeReader. The function iterates
@@ -67,7 +67,7 @@ TTreeProcessorMT::TTreeProcessorMT(TTree& tree) : treeView(tree) {}
 /// The user needs to be aware that each of the subranges can potentially
 /// be processed in parallel. This means that the code of the user function
 /// should be thread safe.
-/// 
+///
 /// \param[in] func User-defined function that processes a subrange of entries
 void TTreeProcessorMT::Process(std::function<void(TTreeReader&)> func)
 {
