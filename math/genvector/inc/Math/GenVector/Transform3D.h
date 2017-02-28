@@ -362,10 +362,10 @@ public:
      const T cos1 = x1.Dot(y1);
      const T cos2 = x2.Dot(y2);
 
-     const auto m1 = ( fabs( T(1) - cos1 ) <= T(0.000001) ||
-                       fabs( T(1) - cos2 ) <= T(0.000001) );
+     const auto m1 = ( abs( T(1) - cos1 ) <= T(0.000001) ||
+                       abs( T(1) - cos2 ) <= T(0.000001) );
      
-     const auto m2 = ( fabs(cos1-cos2) > T(0.000001) );
+     const auto m2 = ( abs(cos1-cos2) > T(0.000001) );
      if ( any_of(m2) ) {
        std::cerr << "Transform3D: Warning: angles between axes are not equal"
                  << std::endl;

@@ -249,11 +249,11 @@ namespace ROOT {
        */
       template <class IT>
       void GetCoordinates( IT begin) const {
-         Scalar a,b,c = 0;
-         GetCoordinates (a,b,c);
-         *begin++ = a;
-         *begin++ = b;
-         *begin = c;
+        Scalar a,b,c = Scalar(0);
+        GetCoordinates (a,b,c);
+        *begin++ = a;
+        *begin++ = b;
+        *begin = c;
       }
 
       /**
@@ -262,8 +262,8 @@ namespace ROOT {
          then (x, y, z) are converted to that form)
        */
       DisplacementVector3D<CoordSystem, Tag>& SetXYZ (Scalar a, Scalar b, Scalar c) {
-            fCoordinates.SetXYZ(a,b,c);
-            return *this;
+        fCoordinates.SetXYZ(a,b,c);
+        return *this;
       }
 
       // ------------------- Equality -----------------
@@ -333,11 +333,24 @@ namespace ROOT {
       Scalar Perp2() const { return fCoordinates.Perp2();}
 
       /**
-         return unit vector parallel to this
+         return unit vector parallel to this (scalar)
       */
-      DisplacementVector3D  Unit() const {
-        Scalar tot = R();
+      template< typename SCALAR = Scalar >
+      typename std::enable_if< std::is_arithmetic<SCALAR>::value, DisplacementVector3D >::type
+      Unit() const {
+        const auto tot = R();
         return tot == 0 ? *this : DisplacementVector3D(*this) / tot;
+      }
+
+      /**
+         return unit vector parallel to this (scalar)
+      */
+      template< typename SCALAR = Scalar >
+      typename std::enable_if< !std::is_arithmetic<SCALAR>::value, DisplacementVector3D >::type
+      Unit() const {
+        SCALAR tot = R();
+        tot( tot == SCALAR(0) ) = SCALAR(1);
+        return DisplacementVector3D(*this) / tot;
       }
 
       // ------ Setting of individual elements present in coordinate system ------
