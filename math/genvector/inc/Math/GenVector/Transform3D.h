@@ -36,6 +36,7 @@
 #include "Math/GenVector/RotationZfwd.h"
 
 #include <iostream>
+#include <type_traits>
 
 //#include "Math/Vector3Dfwd.h"
 
@@ -241,22 +242,25 @@ public:
    }
 #endif
 
-
+public:
+  
    /**
       Construct transformation from one coordinate system defined by three
       points (origin + two axis) to
       a new coordinate system defined by other three points (origin + axis)
+      Scalar version.
       @param fr0  point defining origin of original reference system
       @param fr1  point defining first axis of original reference system
       @param fr2  point defining second axis of original reference system
       @param to0  point defining origin of transformed reference system
       @param to1  point defining first axis transformed reference system
       @param to2  point defining second axis transformed reference system
-
    */
+  template < typename SCALAR = T >
    Transform3D
-   (const Point & fr0, const Point & fr1, const Point & fr2,
-    const Point & to0, const Point & to1, const Point & to2 )
+   ( const Point & fr0, const Point & fr1, const Point & fr2,
+     const Point & to0, const Point & to1, const Point & to2,
+     typename std::enable_if<std::is_arithmetic<SCALAR>::value>::type* = nullptr )
    {
      // takes impl. from CLHEP ( E.Chernyaev). To be checked
     
@@ -270,11 +274,12 @@ public:
      const T cos1 = x1.Dot(y1);
      const T cos2 = x2.Dot(y2);
      
-     if (std::fabs(1.0-cos1) <= 0.000001 || std::fabs(1.0-cos2) <= 0.000001) {
+     if ( std::fabs( T(1) - cos1 ) <= T(0.000001) ||
+          std::fabs( T(1) - cos2 ) <= T(0.000001) ) {
        std::cerr << "Transform3D: Error : zero angle between axes" << std::endl;
        SetIdentity();
      } else {
-       if (std::fabs(cos1-cos2) > 0.000001) {
+       if ( std::fabs(cos1-cos2) > T(0.000001) ) {
          std::cerr << "Transform3D: Warning: angles between axes are not equal"
                    << std::endl;
        }
@@ -323,10 +328,101 @@ public:
        SetComponents(txx, txy, txz, dx2-txx*dx1-txy*dy1-txz*dz1,
                      tyx, tyy, tyz, dy2-tyx*dx1-tyy*dy1-tyz*dz1,
                      tzx, tzy, tzz, dz2-tzx*dx1-tzy*dy1-tzz*dz1);
+       
      }
    }
 
+   /**
+      Construct transformation from one coordinate system defined by three
+      points (origin + two axis) to
+      a new coordinate system defined by other three points (origin + axis)
+      Vectorised version.
+      @param fr0  point defining origin of original reference system
+      @param fr1  point defining first axis of original reference system
+      @param fr2  point defining second axis of original reference system
+      @param to0  point defining origin of transformed reference system
+      @param to1  point defining first axis transformed reference system
+      @param to2  point defining second axis transformed reference system
+   */
+  template < typename SCALAR = T >
+   Transform3D
+   ( const Point & fr0, const Point & fr1, const Point & fr2,
+     const Point & to0, const Point & to1, const Point & to2,
+     typename std::enable_if<!std::is_arithmetic<SCALAR>::value>::type* = nullptr )
+   {
+     // takes impl. from CLHEP ( E.Chernyaev). To be checked
+    
+     Vector x1 = (fr1 - fr0).Unit();
+     Vector y1 = (fr2 - fr0).Unit();
+     Vector x2 = (to1 - to0).Unit();
+     Vector y2 = (to2 - to0).Unit();
+     
+     //   C H E C K   A N G L E S
 
+     const T cos1 = x1.Dot(y1);
+     const T cos2 = x2.Dot(y2);
+
+     const auto m1 = ( fabs( T(1) - cos1 ) <= T(0.000001) ||
+                       fabs( T(1) - cos2 ) <= T(0.000001) );
+     
+     const auto m2 = ( fabs(cos1-cos2) > T(0.000001) );
+     if ( any_of(m2) ) {
+       std::cerr << "Transform3D: Warning: angles between axes are not equal"
+                 << std::endl;
+     }
+     
+     //   F I N D   R O T A T I O N   M A T R I X
+     
+     Vector z1 = (x1.Cross(y1)).Unit();
+     y1        = z1.Cross(x1);
+     
+     Vector z2 = (x2.Cross(y2)).Unit();
+     y2        = z2.Cross(x2);
+     
+     T x1x = x1.x();      T x1y = x1.y();      T x1z = x1.z();
+     T y1x = y1.x();      T y1y = y1.y();      T y1z = y1.z();
+     T z1x = z1.x();      T z1y = z1.y();      T z1z = z1.z();
+     
+     T x2x = x2.x();      T x2y = x2.y();      T x2z = x2.z();
+     T y2x = y2.x();      T y2y = y2.y();      T y2z = y2.z();
+     T z2x = z2.x();      T z2y = z2.y();      T z2z = z2.z();
+     
+     T detxx =  (y1y *z1z  - z1y *y1z );
+     T detxy = -(y1x *z1z  - z1x *y1z );
+     T detxz =  (y1x *z1y  - z1x *y1y );
+     T detyx = -(x1y *z1z  - z1y *x1z );
+     T detyy =  (x1x *z1z  - z1x *x1z );
+     T detyz = -(x1x *z1y  - z1x *x1y );
+     T detzx =  (x1y *y1z  - y1y *x1z );
+     T detzy = -(x1x *y1z  - y1x *x1z );
+     T detzz =  (x1x *y1y  - y1x *x1y );
+     
+     T txx = x2x *detxx + y2x *detyx + z2x *detzx;
+     T txy = x2x *detxy + y2x *detyy + z2x *detzy;
+     T txz = x2x *detxz + y2x *detyz + z2x *detzz;
+     T tyx = x2y *detxx + y2y *detyx + z2y *detzx;
+     T tyy = x2y *detxy + y2y *detyy + z2y *detzy;
+     T tyz = x2y *detxz + y2y *detyz + z2y *detzz;
+     T tzx = x2z *detxx + y2z *detyx + z2z *detzx;
+     T tzy = x2z *detxy + y2z *detyy + z2z *detzy;
+     T tzz = x2z *detxz + y2z *detyz + z2z *detzz;
+     
+     //   S E T    T R A N S F O R M A T I O N
+     
+     T dx1 = fr0.x(), dy1 = fr0.y(), dz1 = fr0.z();
+     T dx2 = to0.x(), dy2 = to0.y(), dz2 = to0.z();
+     
+     SetComponents(txx, txy, txz, dx2-txx*dx1-txy*dy1-txz*dz1,
+                   tyx, tyy, tyz, dy2-tyx*dx1-tyy*dy1-tyz*dz1,
+                   tzx, tzy, tzz, dz2-tzx*dx1-tzy*dy1-tzz*dz1);
+
+     if ( any_of(m1) )
+     {
+       std::cerr << "Transform3D: Error : zero angle between axes" << std::endl;
+       SetIdentity(m1);
+     }
+     
+   }
 
    // use compiler generated copy ctor, copy assignmet and dtor
 
@@ -407,7 +503,8 @@ public:
    */
    template<class IT>
    void GetComponents(IT begin) const {
-      std::copy ( fM, fM+12, begin );
+      using namespace std;
+      copy ( fM, fM+12, begin );
    }
 
    /**
@@ -496,9 +593,9 @@ public:
    */
    template <class AnyRotation>
    AnyRotation Rotation() const {
-      return AnyRotation(Rotation3D(fM[kXX], fM[kXY], fM[kXZ],
-                                    fM[kYX], fM[kYY], fM[kYZ],
-                                    fM[kZX], fM[kZY], fM[kZZ] ) );
+      return AnyRotation( Rotation3D( fM[kXX], fM[kXY], fM[kXZ],
+                                      fM[kYX], fM[kYY], fM[kYZ],
+                                      fM[kZX], fM[kZY], fM[kZZ] ) );
    }
 
    /**
@@ -556,8 +653,7 @@ public:
    */
    template<class CoordSystem>
    PositionVector3D<CoordSystem> operator() (const PositionVector3D <CoordSystem> & p) const {
-      const Point xyzNew = operator() ( Point(p) );
-      return PositionVector3D<CoordSystem> (xyzNew);
+      return PositionVector3D<CoordSystem> ( operator() ( Point(p) ) );
    }
    /**
       Transformation operation for Position Vector in any coordinate system
@@ -572,8 +668,7 @@ public:
    */
    template<class CoordSystem >
    DisplacementVector3D<CoordSystem> operator() (const DisplacementVector3D <CoordSystem> & v) const {
-      const Vector xyzNew = operator() ( Vector(v) );
-      return DisplacementVector3D<CoordSystem> (xyzNew);
+      return DisplacementVector3D<CoordSystem> ( operator() ( Vector(v) ) );
    }
    /**
       Transformation operation for Displacement Vector in any coordinate system
@@ -587,7 +682,8 @@ public:
       Transformation operation for points between different coordinate system tags
    */
    template<class CoordSystem, class Tag1, class Tag2 >
-   void Transform (const PositionVector3D <CoordSystem,Tag1> & p1, PositionVector3D <CoordSystem,Tag2> & p2  ) const {
+   void Transform (const PositionVector3D <CoordSystem,Tag1> & p1,
+                   PositionVector3D <CoordSystem,Tag2> & p2  ) const {
       const Point xyzNew = operator() ( Point(p1.X(), p1.Y(), p1.Z()) );
       p2.SetXYZ( xyzNew.X(), xyzNew.Y(), xyzNew.Z() );
    }
@@ -597,7 +693,8 @@ public:
       Transformation operation for Displacement Vector of different coordinate systems
    */
    template<class CoordSystem,  class Tag1, class Tag2 >
-   void Transform (const DisplacementVector3D <CoordSystem,Tag1> & v1, DisplacementVector3D <CoordSystem,Tag2> & v2  ) const {
+   void Transform (const DisplacementVector3D <CoordSystem,Tag1> & v1,
+                   DisplacementVector3D <CoordSystem,Tag2> & v2  ) const {
       const Vector xyzNew = operator() ( Vector(v1.X(), v1.Y(), v1.Z() ) );
       v2.SetXYZ( xyzNew.X(), xyzNew.Y(), xyzNew.Z() );
    }
@@ -608,7 +705,7 @@ public:
    template <class CoordSystem >
    LorentzVector<CoordSystem> operator() (const LorentzVector<CoordSystem> & q) const {
       const Vector xyzNew = operator() ( Vector(q.Vect() ) );
-      return  LorentzVector<CoordSystem> (xyzNew.X(), xyzNew.Y(), xyzNew.Z(), q.E() );
+      return  LorentzVector<CoordSystem> ( xyzNew.X(), xyzNew.Y(), xyzNew.Z(), q.E() );
    }
    /**
       Transformation operation for a Lorentz Vector in any  coordinate system
@@ -627,7 +724,7 @@ public:
      const Vector n = plane.Normal();
      // take a point on the plane. Use origin projection on the plane
      // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
-     T d = plane.HesseDistance();
+     const T d = plane.HesseDistance();
      Point p( - d * n.X() , - d *n.Y(), -d *n.Z() );
      return Plane3D<T>( operator() (n), operator() (p) );
    }
@@ -645,9 +742,11 @@ public:
    inline Transform3D<T> operator * (const Transform3D<T>  & t) const;
 
    /**
-       Invert the transformation in place
+       Invert the transformation in place (scalar)
    */
-   void Invert()
+   template< typename SCALAR = T >
+   typename std::enable_if< std::is_arithmetic<SCALAR>::value, void >::type
+   Invert()
    {
      //
      // Name: Transform3D::inverse                     Date:    24.09.96
@@ -655,28 +754,77 @@ public:
      //
      // Function: Find inverse affine transformation.
      
-     const T detxx = fM[kYY]*fM[kZZ] - fM[kYZ]*fM[kZY];
-     const T detxy = fM[kYX]*fM[kZZ] - fM[kYZ]*fM[kZX];
-     const T detxz = fM[kYX]*fM[kZY] - fM[kYY]*fM[kZX];
-     const T det   = fM[kXX]*detxx - fM[kXY]*detxy + fM[kXZ]*detxz;
+     T detxx = fM[kYY]*fM[kZZ] - fM[kYZ]*fM[kZY];
+     T detxy = fM[kYX]*fM[kZZ] - fM[kYZ]*fM[kZX];
+     T detxz = fM[kYX]*fM[kZY] - fM[kYY]*fM[kZX];
+     T det   = fM[kXX]*detxx - fM[kXY]*detxy + fM[kXZ]*detxz;
      if ( det == T(0) ) {
        std::cerr << "Transform3D::inverse error: zero determinant" << std::endl;
        return;
      }
-     det = T(1)/det; detxx *= det; detxy *= det; detxz *= det;
-     const T detyx = (fM[kXY]*fM[kZZ] - fM[kXZ]*fM[kZY] )*det;
-     const T detyy = (fM[kXX]*fM[kZZ] - fM[kXZ]*fM[kZX] )*det;
-     const T detyz = (fM[kXX]*fM[kZY] - fM[kXY]*fM[kZX] )*det;
-     const T detzx = (fM[kXY]*fM[kYZ] - fM[kXZ]*fM[kYY] )*det;
-     const T detzy = (fM[kXX]*fM[kYZ] - fM[kXZ]*fM[kYX] )*det;
-     const T detzz = (fM[kXX]*fM[kYY] - fM[kXY]*fM[kYX] )*det;
+     det = T(1)/det;
+     detxx *= det; detxy *= det; detxz *= det;
+     T detyx = (fM[kXY]*fM[kZZ] - fM[kXZ]*fM[kZY] )*det;
+     T detyy = (fM[kXX]*fM[kZZ] - fM[kXZ]*fM[kZX] )*det;
+     T detyz = (fM[kXX]*fM[kZY] - fM[kXY]*fM[kZX] )*det;
+     T detzx = (fM[kXY]*fM[kYZ] - fM[kXZ]*fM[kYY] )*det;
+     T detzy = (fM[kXX]*fM[kYZ] - fM[kXZ]*fM[kYX] )*det;
+     T detzz = (fM[kXX]*fM[kYY] - fM[kXY]*fM[kYX] )*det;
      SetComponents
        ( detxx, -detyx,  detzx, -detxx*fM[kDX]+detyx*fM[kDY]-detzx*fM[kDZ],
         -detxy,  detyy, -detzy,  detxy*fM[kDX]-detyy*fM[kDY]+detzy*fM[kDZ],
-         detxz, -detyz,  detzz, -detxz*fM[kDX]+detyz*fM[kDY]-detzz*fM[kDZ]);
+         detxz, -detyz,  detzz, -detxz*fM[kDX]+detyz*fM[kDY]-detzz*fM[kDZ] );
+   }
+
+   /**
+       Invert the transformation in place (vectorised)
+   */
+   template< typename SCALAR = T >
+   typename std::enable_if< !std::is_arithmetic<SCALAR>::value, void >::type
+   Invert()
+   {
+     //
+     // Name: Transform3D::inverse                     Date:    24.09.96
+     // Author: E.Chernyaev (IHEP/Protvino)            Revised:
+     //
+     // Function: Find inverse affine transformation.
+     
+     T detxx = fM[kYY]*fM[kZZ] - fM[kYZ]*fM[kZY];
+     T detxy = fM[kYX]*fM[kZZ] - fM[kYZ]*fM[kZX];
+     T detxz = fM[kYX]*fM[kZY] - fM[kYY]*fM[kZX];
+     T det   = fM[kXX]*detxx - fM[kXY]*detxy + fM[kXZ]*detxz;
+     const auto detZmask = ( det == T(0) );
+     if ( any_of(detZmask) ) {
+       std::cerr << "Transform3D::inverse error: zero determinant" << std::endl;
+       det(detZmask) = T(1);
+     }
+     det = T(1)/det;
+     detxx *= det; detxy *= det; detxz *= det;    
+     T detyx = (fM[kXY]*fM[kZZ] - fM[kXZ]*fM[kZY] )*det;
+     T detyy = (fM[kXX]*fM[kZZ] - fM[kXZ]*fM[kZX] )*det;
+     T detyz = (fM[kXX]*fM[kZY] - fM[kXY]*fM[kZX] )*det;
+     T detzx = (fM[kXY]*fM[kYZ] - fM[kXZ]*fM[kYY] )*det;
+     T detzy = (fM[kXX]*fM[kYZ] - fM[kXZ]*fM[kYX] )*det;
+     T detzz = (fM[kXX]*fM[kYY] - fM[kXY]*fM[kYX] )*det;
+     // Set det=0 cases to 0
+     if ( any_of(detZmask) ) {
+       detxx(detZmask) = T(0);
+       detxy(detZmask) = T(0);
+       detxz(detZmask) = T(0);
+       detyx(detZmask) = T(0);
+       detyy(detZmask) = T(0);
+       detyz(detZmask) = T(0);
+       detzx(detZmask) = T(0);
+       detzy(detZmask) = T(0);
+       detzz(detZmask) = T(0);
+     }
+     // set final components
+     SetComponents
+       ( detxx, -detyx,  detzx, -detxx*fM[kDX]+detyx*fM[kDY]-detzx*fM[kDZ],
+        -detxy,  detyy, -detzy,  detxy*fM[kDX]-detyy*fM[kDY]+detzy*fM[kDZ],
+         detxz, -detyz,  detzz, -detxz*fM[kDX]+detyz*fM[kDY]-detzz*fM[kDZ] );
    }
    
-
    /**
       Return the inverse of the transformation.
    */
@@ -783,8 +931,21 @@ protected:
      fM[kZX] = T(0);  fM[kZY] = T(0); fM[kZZ] = T(1); fM[kDZ] = T(0);
    }
 
-private:
+   /**
+      Set identity transformation (identity rotation , zero translation)
+      vectorised version that sets using a mask
+   */
+   template< typename SCALAR = T >
+   typename std::enable_if< !std::is_arithmetic<SCALAR>::value, void >::type
+   SetIdentity( const typename SCALAR::mask_type m )
+   {
+     //set identity ( identity rotation and zero translation)
+     fM[kXX](m) = T(1);  fM[kXY](m) = T(0); fM[kXZ](m) = T(0); fM[kDX](m) = T(0);
+     fM[kYX](m) = T(0);  fM[kYY](m) = T(1); fM[kYZ](m) = T(0); fM[kDY](m) = T(0);
+     fM[kZX](m) = T(0);  fM[kZY](m) = T(0); fM[kZZ](m) = T(1); fM[kDZ](m) = T(0);
+   }
 
+private:
 
    T fM[12];    // transformation elements (3x4 matrix)
 

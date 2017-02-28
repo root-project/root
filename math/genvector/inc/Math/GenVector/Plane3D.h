@@ -122,7 +122,9 @@ namespace Impl {
        \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<T> >
       */
       template <class T1, class T2, class T3, class U>
-      Plane3D(const  PositionVector3D<T1,U> & p1, const  PositionVector3D<T2,U> & p2, const  PositionVector3D<T3,U> & p3  )
+      Plane3D( const PositionVector3D<T1,U> & p1,
+               const PositionVector3D<T2,U> & p2,
+               const PositionVector3D<T3,U> & p3  )
       {
          BuildFrom3Points( Point(p1.X(), p1.Y(), p1.Z()),
                            Point(p2.X(), p2.Y(), p2.Z()),
@@ -213,7 +215,7 @@ namespace Impl {
       Point ProjectOntoPlane(const Point & p) const
       {
         const Scalar d = Distance(p);
-        return XYZPoint( p.X() - fA*d, p.Y() - fB*d, p.Z() - fC*d);
+        return XYZPoint( p.X() - fA*d, p.Y() - fB*d, p.Z() - fC*d );
       }
 
       /**
@@ -222,7 +224,7 @@ namespace Impl {
        */
       template <class T1, class U>
       PositionVector3D<T1,U> ProjectOntoPlane(const PositionVector3D<T1,U> & p) const {
-         const Point pxyz = ProjectOntoPlane(Point(p.X(), p.Y(), p.Z() ) );
+         const Point pxyz = ProjectOntoPlane( Point( p.X(), p.Y(), p.Z() ) );
          return PositionVector3D<T,U>( pxyz.X(), pxyz.Y(), pxyz.Z() );
       }
 
@@ -255,7 +257,7 @@ namespace Impl {
         // normalize the plane
         const SCALAR s = std::sqrt( fA*fA + fB*fB + fC*fC );
         // what to do if s = 0 ?
-        if ( s == 0 ) { fD = 0; }
+        if ( s == SCALAR(0) ) { fD = SCALAR(0); }
         else
         {
           const SCALAR w = Scalar(1)/s;
@@ -293,9 +295,9 @@ namespace Impl {
       void BuildFromVecAndPoint(const Vector & n, const Point & p)
       {
         // build from a normal vector and a point
-        fA =  n.X();
-        fB =  n.Y();
-        fC =  n.Z();
+        fA =   n.X();
+        fB =   n.Y();
+        fC =   n.Z();
         fD = - n.Dot(p);
         Normalize();
       }
@@ -306,9 +308,9 @@ namespace Impl {
         // plane from thre points
         // normal is (x3-x1) cross (x2 -x1)
         const Vector n = (p2-p1).Cross(p3-p1);
-        fA = n.X();
-        fB = n.Y();
-        fC = n.Z();
+        fA =   n.X();
+        fB =   n.Y();
+        fC =   n.Z();
         fD = - n.Dot(p1);
         Normalize();
       }

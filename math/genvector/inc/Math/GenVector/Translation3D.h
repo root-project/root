@@ -101,7 +101,8 @@ class Translation3D {
 
    */
    template<class CoordSystem, class Tag>
-   Translation3D (const  PositionVector3D<CoordSystem,Tag> & p1, const PositionVector3D<CoordSystem,Tag> & p2 ) :
+   Translation3D ( const PositionVector3D<CoordSystem,Tag> & p1,
+                   const PositionVector3D<CoordSystem,Tag> & p2 ) :
       fVect(p2-p1)
    { }
 
@@ -177,11 +178,9 @@ class Translation3D {
    */
    template<class CoordSystem, class Tag >
    PositionVector3D<CoordSystem,Tag> operator() (const PositionVector3D <CoordSystem,Tag> & p) const {
-      PositionVector3D<CoordSystem,Tag>  tmp;
-      tmp.SetXYZ (p.X() + fVect.X(),
-                  p.Y() + fVect.Y(),
-                  p.Z() + fVect.Z() ) ;
-      return tmp;
+      return PositionVector3D<CoordSystem,Tag> ( p.X() + fVect.X(),
+                                                 p.Y() + fVect.Y(),
+                                                 p.Z() + fVect.Z() );
    }
    /**
      Transformation operation
@@ -221,9 +220,10 @@ class Translation3D {
       Transformation operation for Displacement Vector of different coordinate systems
    */
    template<class CoordSystem,  class Tag1, class Tag2 >
-   void Transform (const DisplacementVector3D <CoordSystem,Tag1> & v1, DisplacementVector3D <CoordSystem,Tag2> & v2  ) const {
+   void Transform ( const DisplacementVector3D <CoordSystem,Tag1> & v1,
+                    DisplacementVector3D <CoordSystem,Tag2> & v2  ) const {
       // just copy v1 in v2
-      v2.SetXYZ(v1.X(), v1.Y(), v1.Z() );
+      v2.SetXYZ( v1.X(), v1.Y(), v1.Z() );
    }
 
    /**
@@ -231,15 +231,15 @@ class Translation3D {
       A LorentzVector contains a displacement vector so no translation applies as well
    */
    template <class CoordSystem>
-   LorentzVector<CoordSystem> operator() (const LorentzVector<CoordSystem> & q) const {
-      return  q;
+   LorentzVector<CoordSystem> operator() ( const LorentzVector<CoordSystem> & q ) const {
+      return q;
    }
    /**
      Transformation operation
    */
    template<class CoordSystem> 
-   LorentzVector<CoordSystem> operator * ( const LorentzVector<CoordSystem> & v ) const {
-     return operator() (v);
+   LorentzVector<CoordSystem> operator * ( const LorentzVector<CoordSystem> & q ) const {
+     return operator() (q);
    }
 
    /**
@@ -248,11 +248,11 @@ class Translation3D {
    Plane3D<T> operator() ( const Plane3D<T> & plane ) const
    {
      // transformations on a 3D plane
-     Vector n = plane.Normal();
+     const Vector n = plane.Normal();
      // take a point on the plane. Use origin projection on the plane
      // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
-     T d = plane.HesseDistance();
-     PositionVector3D<Cartesian3D<T> > p( - d * n.X() , - d *n.Y(), -d *n.Z() );
+     const T d = plane.HesseDistance();
+     PositionVector3D<Cartesian3D<T> > p( - d * n.X() , - d * n.Y(), - d * n.Z() );
      return PLANE( operator() (n), operator() (p) );
    }
 
