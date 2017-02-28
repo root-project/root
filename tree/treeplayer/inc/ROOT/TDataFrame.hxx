@@ -187,7 +187,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
                            TDFTraitsUtils::TStaticSeq<S...>)
 {
    // isTmpBranch has length bl.size(). Elements are true if the corresponding
-   // branch is a temporary branch created with AddBranch, false if they are
+   // branch is a temporary branch created with AddCol, false if they are
    // actual branches present in the TTree.
    std::array<bool, sizeof...(S)> isTmpBranch;
    for (unsigned int i = 0; i < isTmpBranch.size(); ++i)
@@ -196,7 +196,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
    // Build vector of pointers to TTreeReaderValueBase.
    // tvb[i] points to a TTreeReader{Value,Array} specialized for the i-th BranchType,
    // corresponding to the i-th branch in bl
-   // For temporary branches (declared with AddBranch) a nullptr is created instead
+   // For temporary branches (declared with AddCol) a nullptr is created instead
    // S is expected to be a sequence of sizeof...(BranchTypes) integers
    // Note that here TTypeList only contains one single type
    TVBVec_t tvb{isTmpBranch[S] ? nullptr : ReaderValueOrArray(r, bl.at(S), TDFTraitsUtils::TTypeList<BranchTypes>())
@@ -445,7 +445,7 @@ public:
    /// for another branch in the TTree.
    template <typename F>
    TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>
-   AddBranch(const std::string &name, F expression, const BranchNames &bl = {})
+   AddCol(const std::string &name, F expression, const BranchNames &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
