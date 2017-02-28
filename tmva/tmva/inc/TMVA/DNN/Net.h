@@ -115,7 +115,7 @@ public:
 
    /*! Evaluate the loss function of the net using the activations
     *  that are currently stored in the output layer. */
-   inline Scalar_t Loss(const Matrix_t &Y, bool includeRegularization = false) const;
+   inline Scalar_t Loss(const Matrix_t &Y, bool includeRegularization = true) const;
 
    /*! Propagate the input batch X through the net and evaluate the
     *  error function for the resulting activations of the output
@@ -307,6 +307,7 @@ template<typename Architecture_t, typename Layer_t>
    -> Scalar_t
 {
    auto loss = evaluate<Architecture_t>(fJ, Y, fLayers.back().GetOutput());
+   includeRegularization &= (fR != ERegularization::kNone);
    if (includeRegularization) {
       for (auto &l : fLayers) {
          loss += fWeightDecay * regularization<Architecture_t>(l.GetWeights(), fR);
