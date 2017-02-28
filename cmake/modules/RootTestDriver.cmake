@@ -190,6 +190,11 @@ if(CMD)
   else()
     execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
 
+    if(_rc STREQUAL "Segmentation fault")
+       message(STATUS "Got ${_rc}, retrying again once more...")
+       execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
+    endif()
+
     if(DEFINED RC AND (NOT _rc EQUAL RC))
       message(FATAL_ERROR "error code: ${_rc}")
     elseif(NOT DEFINED RC AND _rc)
