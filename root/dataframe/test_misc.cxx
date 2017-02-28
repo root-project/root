@@ -247,16 +247,9 @@ int main() {
    ROOT::Experimental::TDataFrame d11(treeName, &f);
    auto d11c = d.Count();
    {
-      auto d11c2 = d.Count();
-      auto d11c4 = d.Count();
-      auto d11c3 = d.Count();
-      auto d11c5 = d.Count();
-      auto d11c6 = d.Count();
-      auto d11c7 = d.Count();
-      auto d11c8 = d.Count();
-      auto d11c9 = d.Count();
-      auto d11c10 = d.Count();
-      auto d11c11 = d.Count();
+      std::vector<decltype(d11c)> v;
+      for (int i=0;i<10000;++i)
+         v.emplace_back(d.Count());
    }
    std::cout << "Count with action pointers which went out of scope: " << *d11c << std::endl;
 
