@@ -112,21 +112,25 @@ namespace ROOT {
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Constructor based on a TChain.
-         /// \param[in] chain Chain of files containing the tree to process.
-         /// \param[in] tn Name of the tree to process. If not provided,
-         ///               the implementation will automatically search for a
-         ///               tree in the chain of files.
-         TTreeView(TChain& chain, std::string_view tn) : fTreeName(tn), fCurrentIdx(0)
+         /// Constructor based on a TTree.
+         /// \param[in] tree Tree or chain of files containing the tree to process.
+         TTreeView(TTree& tree) : fTreeName(tree.GetName()), fCurrentIdx(0)
          {
-            TObjArray* filelist = chain.GetListOfFiles();
-            if (filelist->GetEntries() > 0) { 
-               for (auto f : *filelist)
-                  fFileNames.emplace_back(f->GetTitle());
-               Init();
+            static const TClassRef clRefTChain("TChain");
+            if (clRefTChain == tree.IsA()) {
+               TObjArray* filelist = dynamic_cast<TChain&>(tree).GetListOfFiles();
+               if (filelist->GetEntries() > 0) { 
+                  for (auto f : *filelist)
+                     fFileNames.emplace_back(f->GetTitle());
+                  Init();
+               }
+               else {
+                  ::Error("TreeView constructor", "The provided chain of files is empty, cannot process tree %s", fTreeName.data());
+               }
             }
             else {
-               ::Error("TreeView constructor", "The provided chain of files is empty, cannot process tree %s", fTreeName.data());
+               fFileNames.emplace_back(tree.GetCurrentFile()->GetName());
+               Init();
             }
          }
 
@@ -192,7 +196,7 @@ namespace ROOT {
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
       TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");
-      TTreeProcessorMT(TChain& chain, std::string_view treename = ""); 
+      TTreeProcessorMT(TTree& tree);
  
       void Process(std::function<void(TTreeReader&)> func);
 

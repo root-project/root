@@ -150,7 +150,7 @@ int tdf001_introduction() {
    // this is like having a general container at disposal able to accommodate
    // any value of any type.
    // Let's dive in an example:
-   auto entries_sum = d.AddBranch("sum", [](double b1, int b2) { return b2 + b1; }, {"b1", "b2"})
+   auto entries_sum = d.AddCol("sum", [](double b1, int b2) { return b2 + b1; }, {"b1", "b2"})
                        .Filter([](double sum) { return sum > 4.2; }, {"sum"})
                        .Count();
    std::cout << *entries_sum << std::endl;

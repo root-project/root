@@ -106,10 +106,10 @@ int tdf002_dataModel() {
       return ptsw;
       };
 
-   auto augmented_d = d.AddBranch("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
+   auto augmented_d = d.AddCol("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
                        .Filter([](int tracks_n){return tracks_n > 2;}, {"tracks_n"})
-                       .AddBranch("tracks_pts", getPt)
-                       .AddBranch("tracks_pts_weights", getPtWeights);
+                       .AddCol("tracks_pts", getPt)
+                       .AddCol("tracks_pts_weights", getPtWeights);
 
    auto trN = augmented_d.Histo1D("tracks_n",40,-.5,39.5);
    auto trPts = augmented_d.Histo1D("tracks_pts");

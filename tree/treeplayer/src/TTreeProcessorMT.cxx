@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TTreeProcessorMT
+/** \class ROOT::TTreeProcessorMT
     \brief A class to process the entries of a TTree in parallel.
- 
-By means of its Process method, TTreeProcessorMT provides a way to process the
+
+By means of its Process method, ROOT::TTreeProcessorMT provides a way to process the
 entries of a TTree in parallel. When invoking TTreeProcessor::Process, the user
 passes a function whose only parameter is a TTreeReader. The function iterates
 on a subrange of entries by using that TTreeReader.
 
-The implementation of TTreeProcessorMT parallelizes the processing of the subranges,
+The implementation of ROOT::TTreeProcessorMT parallelizes the processing of the subranges,
 each corresponding to a cluster in the TTree. This is possible thanks to the use
 of a ROOT::TThreadedObject, so that each thread works with its own TFile and TTree
 objects.
@@ -48,12 +48,9 @@ TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view t
 TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename) : treeView(filenames, treename) {}
 
 ////////////////////////////////////////////////////////////////////////
-/// Constructor based on a TChain.
-/// \param[in] chain Chain of files containing the tree to process.
-/// \param[in] treename Name of the tree to process. If not provided,
-///                     the implementation will automatically search for a
-///                     tree in the chain of files.
-TTreeProcessorMT::TTreeProcessorMT(TChain& chain, std::string_view treename) : treeView(chain, treename) {}
+/// Constructor based on a TTree.
+/// \param[in] tree Tree or chain of files containing the tree to process.
+TTreeProcessorMT::TTreeProcessorMT(TTree& tree) : treeView(tree) {}
 
 //////////////////////////////////////////////////////////////////////////////
 /// Process the entries of a TTree in parallel. The user-provided function
@@ -70,7 +67,7 @@ TTreeProcessorMT::TTreeProcessorMT(TChain& chain, std::string_view treename) : t
 /// The user needs to be aware that each of the subranges can potentially
 /// be processed in parallel. This means that the code of the user function
 /// should be thread safe.
-/// 
+///
 /// \param[in] func User-defined function that processes a subrange of entries
 void TTreeProcessorMT::Process(std::function<void(TTreeReader&)> func)
 {

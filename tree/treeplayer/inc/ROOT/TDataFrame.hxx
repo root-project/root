@@ -187,7 +187,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
                            TDFTraitsUtils::TStaticSeq<S...>)
 {
    // isTmpBranch has length bl.size(). Elements are true if the corresponding
-   // branch is a temporary branch created with AddBranch, false if they are
+   // branch is a temporary branch created with AddCol, false if they are
    // actual branches present in the TTree.
    std::array<bool, sizeof...(S)> isTmpBranch;
    for (unsigned int i = 0; i < isTmpBranch.size(); ++i)
@@ -196,7 +196,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
    // Build vector of pointers to TTreeReaderValueBase.
    // tvb[i] points to a TTreeReader{Value,Array} specialized for the i-th BranchType,
    // corresponding to the i-th branch in bl
-   // For temporary branches (declared with AddBranch) a nullptr is created instead
+   // For temporary branches (declared with AddCol) a nullptr is created instead
    // S is expected to be a sequence of sizeof...(BranchTypes) integers
    // Note that here TTypeList only contains one single type
    TVBVec_t tvb{isTmpBranch[S] ? nullptr : ReaderValueOrArray(r, bl.at(S), TDFTraitsUtils::TTypeList<BranchTypes>())
@@ -445,7 +445,7 @@ public:
    /// for another branch in the TTree.
    template <typename F>
    TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>
-   AddBranch(const std::string &name, F expression, const BranchNames &bl = {})
+   AddCol(const std::string &name, F expression, const BranchNames &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
@@ -552,7 +552,7 @@ public:
       auto redObjPtr = std::make_shared<T>(initValue);
       using Op_t = ROOT::Internal::Operations::ReduceOperation<F,T>;
       using DFA_t = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(redObjPtr);
    }
 
@@ -568,7 +568,7 @@ public:
       auto cSPtr = std::make_shared<unsigned int>(0);
       using Op_t = ROOT::Internal::Operations::CountOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr.get(), nSlots), BranchNames({}), *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), BranchNames({}), *fProxiedPtr));
       return df->MakeActionResultProxy(cSPtr);
    }
 
@@ -1061,7 +1061,7 @@ private:
       using Op_t = ROOT::Internal::Operations::MinOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(minV.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(minV, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(minV);
    }
 
@@ -1073,7 +1073,7 @@ private:
       using Op_t = ROOT::Internal::Operations::MaxOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(maxV.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(maxV, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(maxV);
    }
 
@@ -1086,7 +1086,7 @@ private:
       using Op_t = ROOT::Internal::Operations::MeanOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(meanV.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(meanV, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(meanV);
    }
    /// \endcond
