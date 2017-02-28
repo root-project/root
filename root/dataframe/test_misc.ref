@@ -52,8 +52,8 @@ Histo2: nEntries 20
 Histo3: nEntries 290
 Histo4: nEntries 290
 10
-AddBranch Histo entries: 10
-AddBranch Histo mean: 60.9524
+AddCol Histo entries: 10
+AddCol Histo mean: 60.9524
 Min b2: 0
 Min dv: -1
 Max b2: 361

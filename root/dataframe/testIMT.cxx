@@ -112,7 +112,7 @@ void tests() {
    {
       ROOT::Experimental::TDataFrame d(treeName, &f);
 
-      auto r = d.AddBranch("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
+      auto r = d.AddCol("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
                 .Filter([](bool iseven) { return iseven; }, {"iseven"})
                 .Count();
       std::cout << "Count filter on added branch " << *r << std::endl;
@@ -135,7 +135,7 @@ void tests() {
    {
       ROOT::Experimental::TDataFrame d(treeName, &f);
 
-      auto fd = d.AddBranch("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
+      auto fd = d.AddCol("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
                 .Filter([](bool iseven) { return iseven; }, {"iseven"});
 
       auto min = d.Min("b1");
@@ -167,9 +167,9 @@ void tests() {
 
       ROOT::Experimental::TDataFrame d(treeName, &f, {"tracks"});
 
-      auto ad = d.AddBranch("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
+      auto ad = d.AddCol("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
                  .Filter([](int tracks_n){return tracks_n > 2;}, {"tracks_n"})
-                 .AddBranch("tracks_pts", getPt);
+                 .AddCol("tracks_pts", getPt);
       auto trN = ad.Histo1D("tracks_n", 100 , -.5, 99.5);
       auto trPts = ad.Histo1D("tracks_pts");
 

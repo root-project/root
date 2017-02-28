@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
    auto f1 = df.Filter(cut1, {}, "mtf");
    auto f2 = f1.Filter(noopb, {}, "mtnoop");
 
-   auto f3 = df.AddBranch("foo", []() { return 42; })
+   auto f3 = df.AddCol("foo", []() { return 42; })
                .Filter(cut2, {}, "mtf2");
 
    f1.Report(); // report only mtf
