@@ -850,13 +850,14 @@ namespace Detail {
 
    template <typename Bitset_t>
    struct TCollectionProxyInfo::Pushback<Internal::TStdBitsetHelper<Bitset_t>  > : public TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> > {
-      typedef Bitset_t         Cont_t;
-      typedef bool             Iter_t;
-      typedef bool             Value_t;
-      typedef Environ<Iter_t>  Env_t;
-      typedef Env_t           *PEnv_t;
-      typedef Cont_t          *PCont_t;
-      typedef Value_t         *PValue_t;
+      using InfoBase_t = TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> >;
+      using typename InfoBase_t::Cont_t;
+      using typename InfoBase_t::Iter_t;
+      using typename InfoBase_t::Value_t;
+      using typename InfoBase_t::Env_t;
+      using typename InfoBase_t::PEnv_t;
+      using typename InfoBase_t::PCont_t;
+      using typename InfoBase_t::PValue_t;
 
       static void resize(void*,size_t)  {
       }
