@@ -16,19 +16,20 @@ set(TestSource
     testIntegration.cxx
     testRootFinder.cxx
     testSampleQuantiles.cxx
-    kDTreeTest.cxx 
+    kDTreeTest.cxx
     testkdTreeBinning.cxx
-    newKDTreeTest.cxx 
+    newKDTreeTest.cxx
     binarySearchTime.cxx
     stdsort.cxx
     testSpecFuncErf.cxx
     testSpecFuncGamma.cxx
     testSpecFuncBeta.cxx
-    testSpecFuncBetaI.cxx 
-    testSpecFuncSiCi.cxx 
+    testSpecFuncBetaI.cxx
+    testSpecFuncSiCi.cxx
     testIntegrationMultiDim.cxx
     testAnalyticalIntegrals.cxx
     testTStatistic.cxx
+    testKahan.cxx
     fit/testFit.cxx
     fit/testGraphFit.cxx
     fit/SparseDataComparer.cxx
