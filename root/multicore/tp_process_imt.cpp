@@ -90,8 +90,21 @@ int main(int argc, char** argv) {
      chain.Add(kFileName.c_str());
      tp.reset(new ROOT::TTreeProcessorMT(chain));
   }
+  else if (kConstructor == "entrylist") {
+     TChain chain(kTreeName.c_str());
+     chain.Add(kFileName.c_str());
+     chain.Add(kFileName.c_str());
+
+     // Select only 3 entries of different clusters in the chain.
+     // Two are located in the first tree, one in the second
+     TEntryList entries;
+     entries.Enter(0); entries.Enter(12345); entries.Enter(30007);
+
+     tp.reset(new ROOT::TTreeProcessorMT(chain, entries));
+  }
   else {
      std::cerr << "Error: " << kConstructor << " is not a valid constructor name. Please choose filename, collection or chain" << std::endl;
+     return 1;
   }
   
   // Request the processing of the tree
@@ -101,6 +114,7 @@ int main(int argc, char** argv) {
 
      auto start = myReader.GetCurrentEntry();
 
+     int numEntries = 0;
      double maxPt = -1.;
      while(myReader.Next()) {
         auto evtNum (*eventNumRV);
@@ -110,6 +124,8 @@ int main(int argc, char** argv) {
            auto pt = track.Pt();
            if (pt>maxPt) maxPt = pt;
         }
+
+        ++numEntries;
      }
 
      auto end = myReader.GetCurrentEntry();
@@ -117,6 +133,9 @@ int main(int argc, char** argv) {
      std::lock_guard<std::mutex> lock(mutex);
      if (maxPt > globalMaxPt) globalMaxPt = maxPt;
      std::cout << "[IMT] Finished task with range " << start << "-" << end << std::endl;
+
+     if (kConstructor == "entrylist")
+        std::cout << "[IMT] Processed " << numEntries << " entries" << std::endl;
   });
 
   std::cout << "[IMT] Global max pt is " << globalMaxPt << std::endl; 

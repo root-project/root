@@ -7,3 +7,8 @@ NUM TASKS (collection): 26
 [IMT] TTreeProcessorMT::Process with 4 threads
 [IMT] Global max pt is 58.7637
 NUM TASKS (chain): 26
+[IMT] TTreeProcessorMT::Process with 4 threads
+[IMT] Global max pt is 37.5882
+NUM TASKS (tentrylist): 26 
+NUM EMPTY TASKS (tentrylist): 23 
+NUM 1-ENTRY TASKS (tentrylist): 3
