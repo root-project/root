@@ -52,6 +52,12 @@ TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view>& filename
 /// \param[in] tree Tree or chain of files containing the tree to process.
 TTreeProcessorMT::TTreeProcessorMT(TTree& tree) : treeView(tree) {}
 
+////////////////////////////////////////////////////////////////////////
+/// Constructor based on a TTree and a TEntryList.
+/// \param[in] tree Tree or chain of files containing the tree to process.
+/// \param[in] entries List of entry numbers to process.
+TTreeProcessorMT::TTreeProcessorMT(TTree& tree, TEntryList& entries) : treeView(tree, entries) {}
+
 //////////////////////////////////////////////////////////////////////////////
 /// Process the entries of a TTree in parallel. The user-provided function
 /// receives a TTreeReader which can be used to iterate on a subrange of
@@ -89,8 +95,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader&)> func)
 
          g.run([this, &func, start, end, i]() {
             treeView->SetCurrent(i);
-            auto tr = treeView->GetTreeReader();
-            tr->SetEntriesRange(start, end);
+            auto tr = treeView->GetTreeReader(start, end);
             func(*tr);
          });
       }
