@@ -50,8 +50,7 @@ void tdf004_cutFlowReport() {
    fill_tree(fileName,treeName);
 
    // We read the tree from the file and create a TDataFrame
-   TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"b1", "b2"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1", "b2"});
 
    // ## Define cuts and create the report
    // Here we define two simple cuts

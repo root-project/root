@@ -51,8 +51,7 @@ int tdf001_introduction() {
    // We select a default column, a *branch* to adopt ROOT jargon, which will
    // be looked at if none is specified by the user when dealing with filters
    //and actions.
-   TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"b1"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
 
    // ## Operations on the dataframe
    // We now review some *actions* which can be performed on the data frame.

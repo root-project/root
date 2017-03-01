@@ -45,8 +45,7 @@ void tdf003_profiles()
    fill_tree(fileName,treeName);
 
    // We read the tree from the file and create a TDataFrame.
-   TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"px","py","pz"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"px","py","pz"});
 
    // Create the profiles
    auto hprof1d = d.Profile1D<float, float>(TProfile("hprof1d","Profile of pz versus px",64,-4,4));

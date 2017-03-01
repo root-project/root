@@ -73,8 +73,7 @@ int tdf002_dataModel() {
 
    // We read the tree from the file and create a TDataFrame, a class that
    // allows us to interact with the data contained in the tree.
-   TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"tracks"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"tracks"});
 
    // ## Operating on branches which are collection of objects
    // Here we deal with the simplest of the cuts: we decide to accept the event
