@@ -375,6 +375,23 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
+/// \param[in] defaultBranches Collection of default branches.
+///
+/// The default branches are looked at in case no branch is specified in the
+/// booking of actions or transformations.
+/// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+/// methods available.
+TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+         std::make_shared<ROOT::Detail::TDataFrameImpl>(
+            treeName, filenameglob, defaultBranches))
+{ }
+
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Build the dataframe
 /// \param[in] tree The tree or chain to be studied.
 /// \param[in] defaultBranches Collection of default branches.
 ///
@@ -391,6 +408,16 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames &defaultBranches)
 
 
 namespace Internal {
+
+const char* ToConstCharPtr(const char* s)
+{
+   return s;
+}
+
+const char* ToConstCharPtr(const std::string s)
+{
+   return s.c_str();
+}
 
 unsigned int GetNSlots() {
    unsigned int nSlots = 1;
@@ -480,8 +507,16 @@ TDataFrameImpl::TDataFrameImpl(const std::string &treeName, TDirectory *dirPtr, 
 {
 }
 
+TDataFrameImpl::TDataFrameImpl(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches)
+   : fTreeName(treeName), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
+{
+   auto chain = new TChain(treeName.c_str());
+   chain->Add(filenameglob.c_str());
+   fTree = std::shared_ptr<TTree>(chain);
+}
+
 TDataFrameImpl::TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches)
-   : fTree(&tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
+   : fTree(std::shared_ptr<TTree>(&tree,[](TTree*){})), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
 {
 }
 
@@ -489,14 +524,22 @@ void TDataFrameImpl::Run()
 {
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
-      const auto fileName = fTree ? static_cast<TFile *>(fTree->GetCurrentFile())->GetName() : fDirPtr->GetName();
-      const std::string      treeName = fTree ? fTree->GetName() : fTreeName;
-      ROOT::TTreeProcessorMT tp(fileName, treeName);
-      ROOT::TSpinMutex       slotMutex;
+      using ttpmt_t = ROOT::TTreeProcessorMT;
+      std::unique_ptr<ttpmt_t> tp;
+      auto isChain = fTree ? fTree->InheritsFrom(TChain::Class()) : false;
+      if (isChain) {
+         tp.reset(new ttpmt_t(*fTree));
+      } else {
+         const auto fileName = fTree ? static_cast<TFile *>(fTree->GetCurrentFile())->GetName() : fDirPtr->GetName();
+         const std::string treeName = fTree ? fTree->GetName() : fTreeName;
+         tp.reset(new ttpmt_t(fileName, treeName));
+      }
+
+      ROOT::TSpinMutex slotMutex;
       std::map<std::thread::id, unsigned int> slotMap;
       unsigned int globalSlotIndex = 0;
       CreateSlots(fNSlots);
-      tp.Process([this, &slotMutex, &globalSlotIndex, &slotMap](TTreeReader &r) -> void {
+      tp->Process([this, &slotMutex, &globalSlotIndex, &slotMap](TTreeReader &r) -> void {
          const auto   thisThreadID = std::this_thread::get_id();
          unsigned int slot;
          {
@@ -524,7 +567,7 @@ void TDataFrameImpl::Run()
 #endif // R__USE_IMT
       TTreeReader r;
       if (fTree) {
-         r.SetTree(fTree);
+         r.SetTree(fTree.get());
       } else {
          r.SetTree(fTreeName.c_str(), fDirPtr);
       }
@@ -581,7 +624,7 @@ const BranchNames &TDataFrameImpl::GetDefaultBranches() const
 TTree *TDataFrameImpl::GetTree() const
 {
    if (fTree) {
-      return fTree;
+      return fTree.get();
    } else {
       auto treePtr = static_cast<TTree *>(fDirPtr->Get(fTreeName.c_str()));
       return treePtr;

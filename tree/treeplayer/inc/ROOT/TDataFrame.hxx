@@ -21,6 +21,7 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFTraitsUtils.hxx"
 #include "TBranchElement.h"
+#include "TChain.h"
 #include "TH1F.h" // For Histo actions
 #include "TH2F.h" // For Histo actions
 #include "TH3F.h" // For Histo actions
@@ -161,6 +162,8 @@ class TDataFrameImpl;
 
 namespace Internal {
 
+const char* ToConstCharPtr(const char* s);
+const char* ToConstCharPtr(const std::string s);
 unsigned int GetNSlots();
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
@@ -1113,7 +1116,7 @@ private:
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
 
-      auto tree = static_cast<TTree*>(df->GetDirectory()->Get(df->GetTreeName().c_str()));
+      auto tree = df->GetTree();
       auto theBranchName = bl[0];
       auto branch = tree->GetBranch(theBranchName.c_str());
 
@@ -1191,6 +1194,23 @@ protected:
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
 public:
+   TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches = {});
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Build the dataframe
+   /// \tparam FILENAMESCOLL The type of the file collection: only requirement: must have begin and end.
+   /// \param[in] treeName Name of the tree contained in the directory
+   /// \param[in] filenamescoll Collection of file names, for example a list of strings.
+   /// \param[in] defaultBranches Collection of default branches.
+   ///
+   /// The default branches are looked at in case no branch is specified in the
+   /// booking of actions or transformations.
+   /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+   /// methods available.
+   template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches = {})
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+      std::make_shared<ROOT::Detail::TDataFrameImpl>(
+      treeName, filenamescoll, defaultBranches)) {};
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames &defaultBranches = {});
 };
@@ -1404,13 +1424,25 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    std::string fTreeName;
    ::TDirectory *fDirPtr = nullptr;
-   TTree *fTree = nullptr;
+   std::shared_ptr<TTree> fTree;
    const BranchNames fDefaultBranches;
    const unsigned int fNSlots;
    bool fHasRunAtLeastOnce = false;
+   bool fOwnsDirPtr = false;
 
 public:
    TDataFrameImpl(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
+   TDataFrameImpl(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches = {});
+   template<typename FILENAMESCOLL>
+   TDataFrameImpl(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches = {})
+      : fTreeName(treeName), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
+   {
+      auto chain = new TChain(treeName.c_str());
+      for (auto& fileName : filenamescoll)
+         chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
+      fTree = std::shared_ptr<TTree>(chain);
+
+   }
    TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches = {});
    TDataFrameImpl(const TDataFrameImpl &) = delete;
    ~TDataFrameImpl(){};
