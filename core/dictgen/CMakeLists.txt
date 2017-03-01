@@ -19,9 +19,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 CHECK_CXX_COMPILER_FLAG("-fno-rtti" CXX_HAS_fno_rtti)
 if(CXX_HAS_fno_rtti)
-    set_source_files_properties(src/rootcling_impl.cxx   PROPERTIES COMPILE_FLAGS "-fno-rtti")
-    set_source_files_properties(src/LinkdefReader.cxx    PROPERTIES COMPILE_FLAGS "-fno-rtti")
-    set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
+    set_source_files_properties(src/rootcling_impl.cxx   PROPERTIES COMPILE_FLAGS "-fno-rtti -DR__NO_INLINE_CLASSDEF")
+    set_source_files_properties(src/LinkdefReader.cxx    PROPERTIES COMPILE_FLAGS "-fno-rtti -DR__NO_INLINE_CLASSDEF")
+    set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti -DR__NO_INLINE_CLASSDEF")
 endif()
 
 ROOT_OBJECT_LIBRARY(Dictgen
