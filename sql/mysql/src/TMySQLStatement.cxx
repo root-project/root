@@ -464,8 +464,6 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
       default:
          return 0;
    }
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
