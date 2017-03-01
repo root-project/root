@@ -723,6 +723,7 @@ void THStack::Paint(Option_t *choptin)
 
    TString opt = option;
    opt.ToLower();
+   opt.ReplaceAll(" ","");
    Bool_t lsame = kFALSE;
    if (opt.Contains("same")) {
       lsame = kTRUE;
@@ -765,7 +766,6 @@ void THStack::Paint(Option_t *choptin)
       return;
    }
    Bool_t lnoaxis = kFALSE;
-   if (opt.Contains("a")) lnoaxis = kTRUE;
 
    // compute the min/max of each axis
    TH1 *h;
@@ -787,8 +787,8 @@ void THStack::Paint(Option_t *choptin)
    snprintf(loption,31,"%s",opt.Data());
    char *nostack  = strstr(loption,"nostack");
    char *nostackb = strstr(loption,"nostackb");
-   char *candle = strstr(loption,"candle");
-   char *violin = strstr(loption,"violin");
+   char *candle   = strstr(loption,"candle");
+   char *violin   = strstr(loption,"violin");
 
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
@@ -954,6 +954,12 @@ void THStack::Paint(Option_t *choptin)
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
+
+   opt.ReplaceAll("nostack","");
+   opt.ReplaceAll("candle","");
+   if (opt.Contains("a")) lnoaxis = kTRUE;
+
+   printf("lnoaxis = %d\n",lnoaxis);
    if (!lsame && !lnoaxis) fHistogram->Paint("axissame");
 }
 
