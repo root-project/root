@@ -958,8 +958,6 @@ void THStack::Paint(Option_t *choptin)
    opt.ReplaceAll("nostack","");
    opt.ReplaceAll("candle","");
    if (opt.Contains("a")) lnoaxis = kTRUE;
-
-   printf("lnoaxis = %d\n",lnoaxis);
    if (!lsame && !lnoaxis) fHistogram->Paint("axissame");
 }
 
