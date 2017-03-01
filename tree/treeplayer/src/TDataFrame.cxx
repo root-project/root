@@ -154,18 +154,18 @@ std::cout << *c << std::endl;
 
 ### Creating a temporary branch
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived quantity `z = sqrt(x*x + y*y)`.
-Using the `AddCol` transformation, we can create a new column in the data-set containing the variable "z":
+Using the `AddColumn` transformation, we can create a new column in the data-set containing the variable "z":
 ~~~{.cpp}
 auto sqrtSum = [](double x, double y) { return sqrt(x*x + y*y); };
 auto zCut = [](double z) { return z > 0.; }
 
 ROOT::Experimental::TDataFrame d(treeName, filePtr);
-auto zMean = d.AddCol("z", sqrtSum, {"x","y"})
+auto zMean = d.AddColumn("z", sqrtSum, {"x","y"})
               .Filter(zCut, {"z"})
               .Mean("z");
 std::cout << *zMean << std::endl;
 ~~~
-`AddCol` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to variables created with `AddCol` as if they were actual tree branches, but they are evaluated on the fly, once per event. As with filters, `AddCol` calls can be chained with other transformations to create multiple temporary branches.
+`AddColumn` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to variables created with `AddColumn` as if they were actual tree branches, but they are evaluated on the fly, once per event. As with filters, `AddColumn` calls can be chained with other transformations to create multiple temporary branches.
 
 ### Executing multiple actions
 As a final example let us apply two different cuts on branch "MET" and fill two different histograms with the "pt\_v" of the filtered events.
@@ -197,7 +197,7 @@ You don't need to read all these to start using `TDataFrame`, but they are usefu
 ### Default branch lists
 When constructing a `TDataFrame` object, it is possible to specify a **default branch list** for your analysis, in the usual form of a list of strings representing branch names. The default branch list will be used as fallback whenever one specific to the transformation/action is not present.
 ~~~{.cpp}
-// use "b1" and "b2" as default branches for `Filter`, `AddCol` and actions
+// use "b1" and "b2" as default branches for `Filter`, `AddColumn` and actions
 ROOT::Experimental::TDataFrame d1(treeName, &file, {"b1","b2"});
 // filter acts on default branch list, no need to specify it
 auto h = d1.Filter([](int b1, int b2) { return b1 > b2; }).Histo1D("otherVar");
@@ -275,7 +275,7 @@ auto h1 = filtered.Histo1D("var1");
 
 // create a new branch "vec" with a vector extracted from a complex object (only for filtered entries)
 // and save the state of the chain
-auto newBranchFiltered = filtered.AddCol("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
+auto newBranchFiltered = filtered.AddColumn("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
 
 // apply a cut and fill a histogram with "vec"
 auto h2 = newBranchFiltered.Filter(cut1).Histo1D("vec");
@@ -308,7 +308,7 @@ Statistics are retrieved through a call to the `Report` method:
 Stats are printed in the same order as named filters have been added to the graph, and *refer to the latest event-loop* that has been run using the relevant `TDataFrame`. If `Report` is called before the event-loop has been run at least once, a run is triggered.
 
 ### Temporary branches
-Temporary branches are created by invoking `AddCol(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary branch.
+Temporary branches are created by invoking `AddColumn(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary branch.
 
 A new variable is created called `name`, accessible as if it was contained in the dataset from subsequent transformations/actions.
 
@@ -351,8 +351,8 @@ In the following, whenever we say an action "returns" something, we always mean 
 As pointed out before in this document, `TDataFrame` can transparently perform multi-threaded event loops to speed up the execution of its actions. Users only have to call `ROOT::EnableImplicitMT()` *before* constructing the `TDataFrame` object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct subset of entries**, and their partial results are merged before returning the final values to the user.
 
 ### Thread safety
-`Filter` and `AddCol` transformations should be inherently thread-safe: they have no side-effects and are not dependent on global state.
-Most `Filter`/`AddCol` functions will in fact be pure in the functional programming sense.
+`Filter` and `AddColumn` transformations should be inherently thread-safe: they have no side-effects and are not dependent on global state.
+Most `Filter`/`AddColumn` functions will in fact be pure in the functional programming sense.
 All actions are built to be thread-safe with the exception of `Foreach`, in which case users are responsible of thread-safety, see [here](#generic-actions).
 
 */
