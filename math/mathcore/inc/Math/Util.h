@@ -86,21 +86,22 @@ namespace ROOT {
                this->Add(e);
          }
 
-         static double Accumulate(const std::vector<T> &elements)
+         static T Accumulate(const std::vector<T> &elements)
          {
+
             KahanSum init;
             init.Add(elements);
             return init.sum;
          }
 
-         double Result()
+         T Result()
          {
             return sum;
          }
 
       private:
-         double sum = 0.;
-         double correction = 0.;
+         T sum{};
+         T correction{};
       };
 
    } // end namespace Math
