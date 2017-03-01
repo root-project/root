@@ -27,15 +27,15 @@
 template<class Element> class TVectorT : public TObject {
 
 protected:
-   Int_t    fNrows;                // number of rows
-   Int_t    fRowLwb;               // lower bound of the row index
-   Element *fElements;             //[fNrows] elements themselves
+   Int_t    fNrows{0};                // number of rows
+   Int_t    fRowLwb{0};               // lower bound of the row index
+   Element *fElements{nullptr};             //[fNrows] elements themselves
 
    enum {kSizeMax = 5};             // size data container on stack, see New_m(),Delete_m()
    enum {kWorkMax = 100};           // size of work array's in several routines
 
    Element  fDataStack[kSizeMax];  //! data container
-   Bool_t   fIsOwner;              //!default kTRUE, when Use array kFALSE
+   Bool_t   fIsOwner{kTRUE};              //!default kTRUE, when Use array kFALSE
 
    Element* New_m   (Int_t size);
    void     Delete_m(Int_t size,Element*&);
