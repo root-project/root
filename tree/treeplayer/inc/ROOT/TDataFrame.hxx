@@ -1428,7 +1428,6 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    const BranchNames fDefaultBranches;
    const unsigned int fNSlots;
    bool fHasRunAtLeastOnce = false;
-   bool fOwnsDirPtr = false;
 
 public:
    TDataFrameImpl(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
