@@ -381,6 +381,10 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
 #if PY_VERSION_HEX >= 0x02050000
       , 0                             // nb_index
 #endif
+#if PY_VERSION_HEX >= 0x03050000
+      , 0                             // nb_matrix_multiply
+      , 0                             // nb_inplace_matrix_multiply
+#endif
    };
 
 } // unnamed namespace
