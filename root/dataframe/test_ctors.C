@@ -26,12 +26,12 @@ void test_ctors() {
    std::cout << "done\n";
    TFile f(fileName);
 
-   // Filter, AddCol, Count and Foreach. We want one printout
+   // Filter, AddColumn, Count and Foreach. We want one printout
    std::cout << "building dataframe...\n";
    ROOT::Experimental::TDataFrame d(treeName, &f, {"obj"});
    std::cout << "done\nbuilding chain...\n";
    auto dd = d.Filter([](const Sentinel& o) { std::cout << "filter\n"; return o.get() > 0; })
-              .AddCol("ox", [](const Sentinel& o) { std::cout << "addbranch\n"; return o.get(); });
+              .AddColumn("ox", [](const Sentinel& o) { std::cout << "addbranch\n"; return o.get(); });
    auto r = dd.Count();
    std::cout << "done\n";
    std::cout << "running chain...\n";

@@ -145,19 +145,19 @@ int main() {
    std::cout << "Histo3: nEntries " << h3->GetEntries() << std::endl;
    std::cout << "Histo4: nEntries " << h4->GetEntries() << std::endl;
 
-   // TEST 7: AddCol
+   // TEST 7: AddColumn
    ROOT::Experimental::TDataFrame d6(treeName, &f);
-   auto r6 = d6.AddCol("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
+   auto r6 = d6.AddColumn("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
                .Filter([](bool iseven) { return iseven; }, {"iseven"})
                .Count();
    auto c6v = *r6;
    std::cout << c6v << std::endl;
-   CheckRes(c6v, 10U, "AddCol");
+   CheckRes(c6v, 10U, "AddColumn");
 
-   // TEST 8: AddCol with default branches, filters, non-trivial types
+   // TEST 8: AddColumn with default branches, filters, non-trivial types
    ROOT::Experimental::TDataFrame d7(treeName, &f, {"tracks"});
    auto dd7 = d7.Filter([](int b2) { return b2 % 2 == 0; }, {"b2"})
-                 .AddCol("ptsum", [](FourVectors const & tracks) {
+                 .AddColumn("ptsum", [](FourVectors const & tracks) {
                     double sum = 0;
                     for(auto& track: tracks)
                        sum += track.Pt();
@@ -165,9 +165,9 @@ int main() {
    auto c7 = dd7.Count();
    auto h7 = dd7.Histo1D("ptsum");
    auto c7v = *c7;
-   CheckRes(c7v, 10U, "AddCol complicated");
-   std::cout << "AddCol Histo entries: " << h7->GetEntries() << std::endl;
-   std::cout << "AddCol Histo mean: " << h7->GetMean() << std::endl;
+   CheckRes(c7v, 10U, "AddColumn complicated");
+   std::cout << "AddColumn Histo entries: " << h7->GetEntries() << std::endl;
+   std::cout << "AddColumn Histo mean: " << h7->GetMean() << std::endl;
 
    // TEST 9: Get minimum, maximum, mean
    ROOT::Experimental::TDataFrame d8(treeName, &f, {"b2"});
@@ -202,7 +202,7 @@ int main() {
    // TEST 10: Get a full column
    ROOT::Experimental::TDataFrame d9(treeName, &f, {"tracks"});
    auto dd9 = d9.Filter([](int b2) { return b2 % 2 == 0; }, {"b2"})
-                 .AddCol("ptsum", [](FourVectors const & tracks) {
+                 .AddColumn("ptsum", [](FourVectors const & tracks) {
                     double sum = 0;
                     for(auto& track: tracks)
                        sum += track.Pt();

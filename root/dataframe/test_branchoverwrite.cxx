@@ -17,9 +17,9 @@ int main() {
 
    TFile f("test_branchoverwrite.root");
    ROOT::Experimental::TDataFrame d("emptyTree", &f, {"a"});
-   d.AddCol("b", []() { return 8; });
+   d.AddColumn("b", []() { return 8; });
    try {
-      auto c = d.AddCol("a", []() { return 42; });
+      auto c = d.AddColumn("a", []() { return 42; });
    } catch (const std::runtime_error& e) {
       std::cout << "Exception caught: " << e.what() << std::endl;
    }
