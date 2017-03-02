@@ -550,7 +550,8 @@ which the parameter's definition needs to be autoloaded.
 *   [[ROOT-8483](https://sft.its.cern.ch/jira/browse/ROOT-8483)] - misleading error message from TTreeReaderValue
 
 ## Release 6.08/04
-Released on January 13, 2016
+
+Released on January 13, 2017
 
 ### TTree
 
@@ -569,9 +570,9 @@ Released on January 13, 2016
 *   [[ROOT-8523](https://sft.its.cern.ch/jira/browse/ROOT-8523)] - Failure to catch exceptions in interactive C++ on linux.
 
 
-## HEAD of the v6-08-00-patches branch
+## Release 6.08/06
 
-Changes will be part of the future 6.08/06
+Released on March 2, 2017
 
 ### Interpreter
 
@@ -608,3 +609,17 @@ Changes will be part of the future 6.08/06
 *   [[ROOT-8516](https://sft.its.cern.ch/jira/browse/ROOT-8516)] - Possible I/O corruption in writing when using a cache, typically on remote servers, e.g. XRootD
 *   Fix [[ROOT-8686](https://sft.its.cern.ch/jira/browse/ROOT-8686)] and [[ROOT-8595](https://sft.its.cern.ch/jira/browse/ROOT-8595)] which led to error when persistifying classes which featured std::arrays as data members in TTrees.
 *   Fix column wise write of std::arrays which was failing with cryptic error message under certain circumstances.
+* [ROOT-8230] - Inherited method in PyROOT/RooFit not found
+* [ROOT-8454] - linking against libNew produce not working programs, TMapfile not usable
+* [ROOT-8511] - Filter MacOSX bundles from the lists of ACliC libraries (MH_BUNDLE versus MH_DYLIB
+* [ROOT-8539] - Problem with interpreting a macro when moving from ROOT 6.06/08 to 6.08/04
+* [ROOT-8544] - Regression in ROOT 6.08.04: MPI program hangs when loading TFile plugins
+* [ROOT-8568] - TSystem OpenConnection does not work in latest root (6.08.04, 6.09.01), but works in root 6.06.04
+* [ROOT-8579] - TApplication::ProcessLine / ExecuteFile does not return error state if file not present
+* [ROOT-8694] - Segfault when drawing TKDE
+
+
+
+## HEAD of the v6-08-00-patches branch
+
+Changes will be part of the future 6.08/08
