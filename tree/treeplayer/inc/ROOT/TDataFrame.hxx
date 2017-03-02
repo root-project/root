@@ -396,7 +396,8 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] bl Names of the branches in input to the filter function.
+   /// \param[in] bn Names of the branches in input to the filter function.
+   /// \param[in] name Optional name of this filter. See `Report`.
    ///
    /// Append a filter node at the point of the call graph corresponding to the
    /// object this method is called on.
@@ -412,13 +413,13 @@ public:
    /// once, the cached result is served.
    template <typename F>
    TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
-   Filter(F f, const BranchNames &bl = {}, const std::string& name = "")
+   Filter(F f, const BranchNames &bn = {}, const std::string& name = "")
    {
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
       const BranchNames &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
+      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bn, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (std::move(f), actualBl, *fProxiedPtr, name);
       df->Book(FilterPtr);
