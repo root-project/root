@@ -765,7 +765,6 @@ void THStack::Paint(Option_t *choptin)
       padsav->cd();
       return;
    }
-   Bool_t lnoaxis = kFALSE;
 
    // compute the min/max of each axis
    TH1 *h;
@@ -957,8 +956,7 @@ void THStack::Paint(Option_t *choptin)
 
    opt.ReplaceAll("nostack","");
    opt.ReplaceAll("candle","");
-   if (opt.Contains("a")) lnoaxis = kTRUE;
-   if (!lsame && !lnoaxis) fHistogram->Paint("axissame");
+   if (!lsame && !opt.Contains("a")) fHistogram->Paint("axissame");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
