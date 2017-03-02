@@ -502,6 +502,8 @@ void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
 }
 
 void TDataFrameFilterBase::PrintReport() const {
+   if (fName.empty()) // PrintReport is no-op for unnamed filters
+      return;
    const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
    const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
    double perc = accepted;
