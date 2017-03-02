@@ -1498,9 +1498,9 @@ public:
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
    ::TDirectory *GetDirectory() const;
    std::string GetTreeName() const;
-   void Book(ROOT::Internal::ActionBasePtr_t actionPtr);
-   void Book(ROOT::Detail::FilterBasePtr_t filterPtr);
-   void Book(TmpBranchBasePtr_t branchPtr);
+   void Book(const ROOT::Internal::ActionBasePtr_t& actionPtr);
+   void Book(const ROOT::Detail::FilterBasePtr_t& filterPtr);
+   void Book(const ROOT::Detail::TmpBranchBasePtr_t& branchPtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const;
    template<typename T>

@@ -632,12 +632,12 @@ std::string TDataFrameImpl::GetTreeName() const
    return fTree->GetName();
 }
 
-void TDataFrameImpl::Book(ROOT::Internal::ActionBasePtr_t actionPtr)
+void TDataFrameImpl::Book(const ROOT::Internal::ActionBasePtr_t& actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
 }
 
-void TDataFrameImpl::Book(ROOT::Detail::FilterBasePtr_t filterPtr)
+void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t& filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -645,7 +645,7 @@ void TDataFrameImpl::Book(ROOT::Detail::FilterBasePtr_t filterPtr)
    }
 }
 
-void TDataFrameImpl::Book(TmpBranchBasePtr_t branchPtr)
+void TDataFrameImpl::Book(const ROOT::Detail::TmpBranchBasePtr_t& branchPtr)
 {
    fBookedBranches[branchPtr->GetName()] = branchPtr;
 }
