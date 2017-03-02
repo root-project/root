@@ -31,10 +31,10 @@ void run() {
    ROOT::Experimental::TDataFrame d(treeName, "test_glob_*root");
    auto c1 = d.Count();
 
-   auto dd = d.Filter(ok, {});
+   auto dd = d.Filter(ok);
    auto c2 = dd.Count();
 
-   auto ddd = d.Filter(ko, {});
+   auto ddd = d.Filter(ko);
    auto c3 = ddd.Count();
 
    std::cout << "c1 " << *c1 << std::endl;

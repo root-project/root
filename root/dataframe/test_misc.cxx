@@ -92,24 +92,24 @@ int main() {
    auto ko = []() { return false; };
 
    // TEST 1: no-op filter and Run
-   d.Filter(ok, {}).Foreach([](double x) { std::cout << x << std::endl; }, {"b1"});
+   d.Filter(ok).Foreach([](double x) { std::cout << x << std::endl; }, {"b1"});
 
    // TEST 2: Forked actions
    // always apply first filter before doing three different actions
-   auto dd = d.Filter(ok, {});
+   auto dd = d.Filter(ok);
    dd.Foreach([](double x) { std::cout << x << " "; }, {"b1"});
    dd.Foreach([](int y) { std::cout << y << std::endl; }, {"b2"});
    auto c = dd.Count();
    // ... and another filter-and-foreach
-   auto ddd = dd.Filter(ko, {});
-   ddd.Foreach([]() { std::cout << "ERROR" << std::endl; }, {});
+   auto ddd = dd.Filter(ko);
+   ddd.Foreach([]() { std::cout << "ERROR" << std::endl; });
    auto cv = *c;
    std::cout << "c " << cv << std::endl;
    CheckRes(cv,20U,"Forked Actions");
 
    // TEST 3: default branches
    ROOT::Experimental::TDataFrame d2(treeName, fileName, {"b1"});
-   auto d2f = d2.Filter([](double b1) { return b1 < 5; }).Filter(ok, {});
+   auto d2f = d2.Filter([](double b1) { return b1 < 5; }).Filter(ok);
    auto c2 = d2f.Count();
    d2f.Foreach([](double b1) { std::cout << b1 << std::endl; });
       auto c2v = *c2;
@@ -118,7 +118,7 @@ int main() {
 
    // TEST 4: execute Run lazily and implicitly
    ROOT::Experimental::TDataFrame d3(treeName, fileName, {"b1"});
-   auto d3f = d3.Filter([](double b1) { return b1 < 4; }).Filter(ok, {});
+   auto d3f = d3.Filter([](double b1) { return b1 < 4; }).Filter(ok);
    auto c3 = d3f.Count();
    auto c3v = *c3;
    std::cout << "c3 " << c3v << std::endl;

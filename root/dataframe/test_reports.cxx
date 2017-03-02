@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
    auto ac1 = df.AddColumn("foo", []() { return 42; });
    auto f2 = ac1.Filter(noopb);
-   auto f3 = f2.Filter(cut2, {}, "mtf2");
+   auto f3 = f2.Filter(cut2, "mtf2");
 
    // Report on the original dataframe
    // "mtf", "mtf2" will be listed, in this order

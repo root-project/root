@@ -22,11 +22,11 @@ int main() {
 
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
    auto sentinel = []() { std::cout << "filter called" << std::endl; return true; };
-   auto f1 = d.Filter(sentinel, {});
+   auto f1 = d.Filter(sentinel);
    auto m1 = f1.Min();
    *m1;
    std::cout << "end first run" << std::endl;
-   auto f2 = d.Filter(sentinel, {});
+   auto f2 = d.Filter(sentinel);
    auto dummy = f2.Max();
    *m1; // this should NOT cause a second printing of "filter called"
 
