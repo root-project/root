@@ -163,6 +163,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   anti-aliasing for filled area for the Cocoa backend. Default is `no`.
 - The "BOX" option, to draw 3D histograms, has been reimplemented by Evgueni Tcherniaev
   The following picture show the old and new version
+- `ChangeLabel` is now available for log axis as well as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8537).
+
 
 ![New box option for 3D histograms](NewBoxOption.png)
 

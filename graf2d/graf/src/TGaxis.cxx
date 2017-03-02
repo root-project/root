@@ -1881,6 +1881,8 @@ L110:
       decade      = ih1-2;
       labelnumber = ih1;
       if ( xmnlog > 0 && (xmnlog-Double_t(ih1) > 0) ) labelnumber++;
+      Int_t changelablogid  = 0;
+      Int_t changelablognum = 0;
       for (j=1; j<=nbinin; j++) {
 
 // Plot decade
@@ -1957,25 +1959,30 @@ L110:
             if (n1a == 0)goto L210;
             kmod = nbinin/n1a;
             if (kmod == 0) kmod=1000000;
-            if ((nbinin <= n1a) || (j == 1) || (j == nbinin) || ((nbinin > n1a)
-            && (j%kmod == 0))) {
+            if ((nbinin <= n1a) || (j == 1) || (j == nbinin) || ((nbinin > n1a) && (j%kmod == 0))) {
                if (labelnumber == 0) {
-                  textaxis->PaintTextNDC(xx,yy,"1");
+                  snprintf(chtemp,256, "1");
                } else if (labelnumber == 1) {
-                  textaxis->PaintTextNDC(xx,yy,"10");
+                  snprintf(chtemp,256, "10");
                } else {
                   if (noExponent) {
-                     textaxis->PaintTextNDC(xx,yy,&label[first]);
+                     chtemp = &label[first];
                   } else {
-                        snprintf(chtemp,256, "10^{%d}", labelnumber);
-                        typolabel = chtemp;
-                        typolabel.ReplaceAll("-", "#minus");
-                        textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
-                                             gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                                             0, textaxis->GetTextSize(), typolabel.Data());
-
+                     snprintf(chtemp,256, "10^{%d}", labelnumber);
                   }
                }
+               if (fNModLabs) {
+                  if (changelablogid  == 0) changelablognum = nbinin-j;
+                  changelablogid++;
+                  ChangeLabelAttributes(changelablogid, changelablognum, textaxis, chtemp);
+               }
+               typolabel = chtemp;
+               typolabel.ReplaceAll("-", "#minus");
+               textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
+                                    gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
+                                    0, textaxis->GetTextSize(), typolabel.Data());
+               if (fNModLabs) ResetLabelAttributes(textaxis);
+
             }
             labelnumber++;
          }
