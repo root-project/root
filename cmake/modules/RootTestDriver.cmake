@@ -190,7 +190,7 @@ if(CMD)
   else()
     execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
 
-    if(_rc STREQUAL "Segmentation fault")
+    if(_rc STREQUAL "Segmentation fault" OR _rc EQUAL 11)
        message(STATUS "Got ${_rc}, retrying again once more...")
        execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
     endif()
