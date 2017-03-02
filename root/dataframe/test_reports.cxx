@@ -34,16 +34,27 @@ int main(int argc, char** argv) {
 #endif
    ROOT::Experimental::TDataFrame df("reportsTree", fileName, {"b"});
    auto f1 = df.Filter(cut1, {}, "mtf");
-   auto f2 = f1.Filter(noopb, {}, "mtnoop");
 
-   auto f3 = df.AddColumn("foo", []() { return 42; })
-               .Filter(cut2, {}, "mtf2");
+   auto ac1 = df.AddColumn("foo", []() { return 42; });
+   auto f2 = ac1.Filter(noopb);
+   auto f3 = f2.Filter(cut2, {}, "mtf2");
 
-   f1.Report(); // report only mtf
+   // Report on the original dataframe
+   // "mtf", "mtf2" will be listed, in this order
+   df.Report();
    std::cout << "--\n";
-   df.Report(); // report all filters, only mtf2 prints non-zero values
+   // Report on a named filter
+   // only "mtf" listed
+   f1.Report();
    std::cout << "--\n";
-   f3.Report(); // report only mtf2
+   // Report on nodes with no upstream named filters (new column, unnamed filter)
+   // no output
+   ac1.Report();
+   f2.Report();
+   std::cout << "--\n";
+   // Report on a named filter with upstream unnamed filters
+   // only "mtf2" listed
+   f3.Report();
 
    return 0;
 }
