@@ -192,10 +192,11 @@ if(CMD)
 
     if(_rc STREQUAL "Segmentation fault" OR _rc EQUAL 11)
        message(STATUS "Got ${_rc}, retrying again once more... with coredump enabled")
+       string (REPLACE ";" " " _cmd_str "${_cmd}")
        file(WRITE run_with_coredump.sh "
 pwd
 ulimit -c unlimited
-${_cmd}
+${_cmd_str}
 ")
        execute_process(COMMAND bash run_with_coredump.sh ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
     endif()
