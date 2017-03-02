@@ -283,12 +283,12 @@ public:
 
    TDataFrameAction(const TDataFrameAction &) = delete;
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void Run(unsigned int slot, Long64_t entry)
+   void Run(unsigned int slot, Long64_t entry) final
    {
       // check if entry passes all filters
       if (fPrevData.CheckFilters(slot, entry))
@@ -1322,12 +1322,12 @@ public:
 
    TDataFrameBranch(const TDataFrameBranch &) = delete;
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void *GetValue(unsigned int slot, Long64_t entry)
+   void *GetValue(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
@@ -1340,14 +1340,14 @@ public:
 
    const std::type_info &GetTypeId() const { return typeid(Ret_t); }
 
-   void CreateSlots(unsigned int nSlots)
+   void CreateSlots(unsigned int nSlots) final
    {
       fReaderValues.resize(nSlots);
       fLastCheckedEntry.resize(nSlots, -1);
       fLastResultPtr.resize(nSlots);
    }
 
-   bool CheckFilters(unsigned int slot, Long64_t entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       // dummy call: it just forwards to the previous object in the chain
       return fPrevData.CheckFilters(slot, entry);
@@ -1367,11 +1367,11 @@ public:
 
    // recursive chain of `Report`s
    // TDataFrameBranch simply forwards the call to the previous node
-   void Report() const {
+   void Report() const final {
       fPrevData.PartialReport();
    }
 
-   void PartialReport() const {
+   void PartialReport() const final {
       fPrevData.PartialReport();
    }
 
@@ -1421,7 +1421,7 @@ public:
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
 
-   bool CheckFilters(unsigned int slot, Long64_t entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
          if (!fPrevData.CheckFilters(slot, entry)) {
@@ -1453,18 +1453,18 @@ public:
                      fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
    }
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
 
    // recursive chain of `Report`s
-   void Report() const {
+   void Report() const final {
       PartialReport();
    }
 
-   void PartialReport() const {
+   void PartialReport() const final {
       fPrevData.PartialReport();
       PrintReport();
    }
