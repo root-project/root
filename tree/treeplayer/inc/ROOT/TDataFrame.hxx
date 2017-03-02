@@ -428,6 +428,32 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Append a filter to the call graph.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
+   /// \param[in] name Optional name of this filter. See `Report`.
+   ///
+   /// Refer to the first overload of this method for the full documentation.
+   template <typename F>
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(F f, const std::string& name)
+   {
+      return Filter(f, {}, name);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Append a filter to the call graph.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
+   /// \param[in] bn Names of the branches in input to the filter function.
+   ///
+   /// Refer to the first overload of this method for the full documentation.
+   template <typename F>
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(F f, const std::initializer_list<std::string>& bn)
+   {
+      return Filter(f, BranchNames{bn});
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a temporary branch
    /// \param[in] name The name of the temporary branch.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the temporary branch.
