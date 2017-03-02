@@ -10,6 +10,13 @@ module ThreadLocalStorage {
 // These can be used in C mode.
 module ROOT_Types {
   module "RtypesCore.h" { header "RtypesCore.h" export * }
+  module "ESTLType.h" { header "ESTLType.h" export * }
+  // FIXME: This module should contain only header files with types.
+  // The listed below headers are here because we want them to work in both
+  // -frtti and -fno-rtti environment. Move them into a separate module.
+  module "RStringView.h" { header "RStringView.h" export * }
+  module "Varargs.h" { header "Varargs.h" export * } // Old should revisit, either drop or delete.
+  module "TClassEdit.h" { header "TClassEdit.h" export * }
   module "RConfig.h" { textual header "RConfig.h" export * }
   module "RConfigure.h" { textual header "RConfigure.h" export * }
   module "RVersion.h" { textual header "RVersion.h" export * }
@@ -37,13 +44,9 @@ module ROOT_Core_Config_C {
  
  exclude header "RtypesImp.h"
  module "Rtypes.h" { header "Rtypes.h" export * }
- module "TClassEdit.h" { header "TClassEdit.h" export * }
  module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
  module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * }
  module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
- module "ESTLType.h" { header "ESTLType.h" export * }
- module "RStringView.h" { header "RStringView.h" export * }
- module "Varargs.h" { header "Varargs.h" export * } // Old should revisit, either drop or delete.
  module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
  module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
  module "strlcpy.h" { header "strlcpy.h" export * } // #included by Rtypes, could go away?
