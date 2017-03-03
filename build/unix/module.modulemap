@@ -17,6 +17,7 @@ module ROOT_Types {
   module "RStringView.h" { header "RStringView.h" export * }
   module "Varargs.h" { header "Varargs.h" export * } // Old should revisit, either drop or delete.
   module "TClassEdit.h" { header "TClassEdit.h" export * }
+  module "strlcpy.h" { header "strlcpy.h" export * }
   module "RConfig.h" { textual header "RConfig.h" export * }
   module "RConfigure.h" { textual header "RConfigure.h" export * }
   module "RVersion.h" { textual header "RVersion.h" export * }
@@ -49,7 +50,6 @@ module ROOT_Core_Config_C {
  module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
  module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
  module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
- module "strlcpy.h" { header "strlcpy.h" export * } // #included by Rtypes, could go away?
 
  // Should we marked textual because of inclusion libcpp_string_view.h,
  // using macros to set up the header file.
