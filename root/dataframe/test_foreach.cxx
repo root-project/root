@@ -29,8 +29,6 @@ int main() {
    auto treeName = "foreachTree";
    FillTree(fileName, treeName);
 
-   TFile f(fileName);
-
    // evaluation of RMS of branch "b" using ForeachSlot
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT(2);
@@ -41,7 +39,7 @@ int main() {
 
    std::vector<double> rmss(nSlots, 0.);
    std::vector<unsigned int> counts(nSlots, 0);
-   ROOT::Experimental::TDataFrame d("foreachTree", &f, {"b1"});
+   ROOT::Experimental::TDataFrame d("foreachTree", fileName, {"b1"});
    auto rmsLambda = [&rmss, &counts](unsigned int slot, double b) {
       rmss[slot] += b*b;
       counts[slot] += 1;

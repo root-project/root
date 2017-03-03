@@ -87,11 +87,10 @@ auto treeName = "myTree";
 
 void tests() {
 
-   TFile f(fileName);
 
    std::cout << "Parallelism check" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
       auto sleep = [] () { std::this_thread::sleep_for(std::chrono::microseconds(1)); return true; };
       auto sleepCount = d.Filter(sleep).Count();
       *sleepCount;
@@ -99,7 +98,7 @@ void tests() {
 
    std::cout << "Simple filtering" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
       auto ok = []() { return true; };
       auto ko = []() { return false; };
       auto cok = d.Filter(ok).Count();
@@ -110,7 +109,7 @@ void tests() {
 
    std::cout << "\nAdding branch and filter" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
 
       auto r = d.AddColumn("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
                 .Filter([](bool iseven) { return iseven; }, {"iseven"})
@@ -120,7 +119,7 @@ void tests() {
 
    std::cout << "\nGetting the mean, min and the max" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
 
       auto min = d.Min("b2");
       auto max = d.Max("b2");
@@ -133,7 +132,7 @@ void tests() {
 
    std::cout << "\nAdd branch, filter, getting the min and the max" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
 
       auto fd = d.AddColumn("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
                 .Filter([](bool iseven) { return iseven; }, {"iseven"});
@@ -147,7 +146,7 @@ void tests() {
 
    std::cout << "Histo1D" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
 
       auto h = d.Histo1D("b1");
 
@@ -165,7 +164,7 @@ void tests() {
          return pts;
          };
 
-      ROOT::Experimental::TDataFrame d(treeName, &f, {"tracks"});
+      ROOT::Experimental::TDataFrame d(treeName, fileName, {"tracks"});
 
       auto ad = d.AddColumn("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
                  .Filter([](int tracks_n){return tracks_n > 2;}, {"tracks_n"})
@@ -181,7 +180,7 @@ void tests() {
 
    std::cout << "\nGetting a column as list" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
 
       auto double_list = d.Take<double/*, std::vector<double>*/>("b1");
       std::cout << "Get: size of list<double> " << double_list->size() << std::endl;
@@ -189,7 +188,7 @@ void tests() {
 
    std::cout << "\nGetting a column as vector" << std::endl;
    {
-      ROOT::Experimental::TDataFrame d(treeName, &f);
+      ROOT::Experimental::TDataFrame d(treeName, fileName);
 
       auto double_list = d.Take<double, std::vector<double>>("b1");
       std::cout << "Get: size of list<double> " << double_list->size() << std::endl;

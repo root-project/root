@@ -32,8 +32,7 @@ int main(int argc, char** argv) {
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
 #endif
-   TFile f(fileName);
-   ROOT::Experimental::TDataFrame df("reportsTree", &f, {"b"});
+   ROOT::Experimental::TDataFrame df("reportsTree", fileName, {"b"});
    auto f1 = df.Filter(cut1, {}, "mtf");
    auto f2 = f1.Filter(noopb, {}, "mtnoop");
 

@@ -38,7 +38,7 @@ void test_reduce() {
    ROOT::EnableImplicitMT();
 #endif
    TFile f(fileName);
-   ROOT::Experimental::TDataFrame d("reduceTree", &f, {"i"});
+   ROOT::Experimental::TDataFrame d("reduceTree", fileName, {"i"});
    auto r = d.Reduce([](int a, int b) { return a + b; }, {"i"});
    auto rDefBranch = d.Filter([]() { return true; })
                       .Reduce([](int a, int b) { return a*b; }, {}, 1);

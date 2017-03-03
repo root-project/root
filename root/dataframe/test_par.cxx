@@ -26,9 +26,8 @@ int main() {
    auto fileName = "test_par.root";
    auto treeName = "myTree";
    FillTree(fileName, treeName);
-   TFile f(fileName);
 
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"i"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"i"});
    auto count = d.Count();
    auto max = d.Filter([](int i) { return i % 2 == 1; }).Max<int>();
    auto min = d.Min<int>();

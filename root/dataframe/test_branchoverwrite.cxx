@@ -6,17 +6,18 @@
 
 #include <iostream>
 
+auto filename("test_branchoverwrite.root");
+
 int main() {
    {
-      TFile wf("test_branchoverwrite.root", "RECREATE");
+      TFile wf(filename, "RECREATE");
       TTree t("emptyTree", "emptyTree");
       int a;
       t.Branch("a", &a);
       t.Write();
    }
 
-   TFile f("test_branchoverwrite.root");
-   ROOT::Experimental::TDataFrame d("emptyTree", &f, {"a"});
+   ROOT::Experimental::TDataFrame d("emptyTree", filename, {"a"});
    d.AddColumn("b", []() { return 8; });
    try {
       auto c = d.AddColumn("a", []() { return 42; });

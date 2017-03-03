@@ -5,10 +5,13 @@
 
 #include <stdexcept>
 
+auto fileName("testtypeguessing.root");
+auto treeName("myTree");
+
 int main() {
    {
-      TFile f("testtypeguessing.root", "RECREATE");
-      TTree t("myTree", "myTree");
+      TFile f(fileName, "RECREATE");
+      TTree t(treeName, treeName);
       int b = 42;
       t.Branch("b", &b);
       TString s = "fortytwo";
@@ -17,8 +20,8 @@ int main() {
       t.Write();
    }
 
-   TFile f("testtypeguessing.root");
-   ROOT::Experimental::TDataFrame d("myTree", &f);
+   TFile f(fileName);
+   ROOT::Experimental::TDataFrame d(treeName, fileName);
    // TTreeReader should cause a runtime error (type mismatch) when the event-loop is run
    auto hb = d.Histo1D<double>("b");
 

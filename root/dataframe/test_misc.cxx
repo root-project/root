@@ -85,9 +85,8 @@ int main() {
    auto treeName = "myTree";
    FillTree(fileName,treeName);
 
-   TFile f(fileName);
    // Define data-frame
-   ROOT::Experimental::TDataFrame d(treeName, &f);
+   ROOT::Experimental::TDataFrame d(treeName, fileName);
    // ...and two dummy filters
    auto ok = []() { return true; };
    auto ko = []() { return false; };
@@ -109,7 +108,7 @@ int main() {
    CheckRes(cv,20U,"Forked Actions");
 
    // TEST 3: default branches
-   ROOT::Experimental::TDataFrame d2(treeName, &f, {"b1"});
+   ROOT::Experimental::TDataFrame d2(treeName, fileName, {"b1"});
    auto d2f = d2.Filter([](double b1) { return b1 < 5; }).Filter(ok, {});
    auto c2 = d2f.Count();
    d2f.Foreach([](double b1) { std::cout << b1 << std::endl; });
@@ -118,7 +117,7 @@ int main() {
    CheckRes(c2v,5U,"Default branches");
 
    // TEST 4: execute Run lazily and implicitly
-   ROOT::Experimental::TDataFrame d3(treeName, &f, {"b1"});
+   ROOT::Experimental::TDataFrame d3(treeName, fileName, {"b1"});
    auto d3f = d3.Filter([](double b1) { return b1 < 4; }).Filter(ok, {});
    auto c3 = d3f.Count();
    auto c3v = *c3;
@@ -126,7 +125,7 @@ int main() {
    CheckRes(c3v,4U,"Execute Run lazily and implicitly");
 
    // TEST 5: non trivial branch
-   ROOT::Experimental::TDataFrame d4(treeName, &f, {"tracks"});
+   ROOT::Experimental::TDataFrame d4(treeName, fileName, {"tracks"});
    auto d4f = d4.Filter([](FourVectors const & tracks) { return tracks.size() > 7; });
    auto c4 = d4f.Count();
    auto c4v = *c4;
@@ -134,7 +133,7 @@ int main() {
    CheckRes(c4v,1U,"Non trivial test");
 
    // TEST 6: Create a histogram
-   ROOT::Experimental::TDataFrame d5(treeName, &f, {"b2"});
+   ROOT::Experimental::TDataFrame d5(treeName, fileName, {"b2"});
    auto h1 = d5.Histo1D();
    auto h2 = d5.Histo1D("b1");
    TH1F dvHisto("dvHisto","The DV histo", 64, -8, 8);
@@ -146,7 +145,7 @@ int main() {
    std::cout << "Histo4: nEntries " << h4->GetEntries() << std::endl;
 
    // TEST 7: AddColumn
-   ROOT::Experimental::TDataFrame d6(treeName, &f);
+   ROOT::Experimental::TDataFrame d6(treeName, fileName);
    auto r6 = d6.AddColumn("iseven", [](int b2) { return b2 % 2 == 0; }, {"b2"})
                .Filter([](bool iseven) { return iseven; }, {"iseven"})
                .Count();
@@ -155,7 +154,7 @@ int main() {
    CheckRes(c6v, 10U, "AddColumn");
 
    // TEST 8: AddColumn with default branches, filters, non-trivial types
-   ROOT::Experimental::TDataFrame d7(treeName, &f, {"tracks"});
+   ROOT::Experimental::TDataFrame d7(treeName, fileName, {"tracks"});
    auto dd7 = d7.Filter([](int b2) { return b2 % 2 == 0; }, {"b2"})
                  .AddColumn("ptsum", [](FourVectors const & tracks) {
                     double sum = 0;
@@ -170,7 +169,7 @@ int main() {
    std::cout << "AddColumn Histo mean: " << h7->GetMean() << std::endl;
 
    // TEST 9: Get minimum, maximum, mean
-   ROOT::Experimental::TDataFrame d8(treeName, &f, {"b2"});
+   ROOT::Experimental::TDataFrame d8(treeName, fileName, {"b2"});
    auto min_b2 = d8.Min();
    auto min_dv = d8.Min("dv");
    auto max_b2 = d8.Max();
@@ -200,7 +199,7 @@ int main() {
    std::cout << "Mean dv: " << *mean_dv << std::endl;
 
    // TEST 10: Get a full column
-   ROOT::Experimental::TDataFrame d9(treeName, &f, {"tracks"});
+   ROOT::Experimental::TDataFrame d9(treeName, fileName, {"tracks"});
    auto dd9 = d9.Filter([](int b2) { return b2 % 2 == 0; }, {"b2"})
                  .AddColumn("ptsum", [](FourVectors const & tracks) {
                     double sum = 0;
@@ -219,7 +218,7 @@ int main() {
    }
 
    // TEST 11: Re-hang action to TDataFrameProxy after running
-   ROOT::Experimental::TDataFrame d10(treeName, &f, {"tracks"});
+   ROOT::Experimental::TDataFrame d10(treeName, fileName, {"tracks"});
    auto d10f = d10.Filter([](FourVectors const & tracks) { return tracks.size() > 2; });
    auto c10 = d10f.Count();
    std::cout << "Count for the first run is " << *c10 << std::endl;
@@ -231,7 +230,7 @@ int main() {
    // TEST 12: Test a frame which goes out of scope
    auto l = [](FourVectors const & tracks) { return tracks.size() > 2; };
    auto giveMeFilteredDF = [&](){
-      ROOT::Experimental::TDataFrame d11(treeName, &f, {"tracks"});
+      ROOT::Experimental::TDataFrame d11(treeName, fileName, {"tracks"});
       auto a = d11.Filter(l);
       return a;
    };
@@ -244,7 +243,7 @@ int main() {
    }
 
    // TEST 13: an action result pointer goes out of scope and the chain is ran
-   ROOT::Experimental::TDataFrame d11(treeName, &f);
+   ROOT::Experimental::TDataFrame d11(treeName, fileName);
    auto d11c = d.Count();
    {
       std::vector<decltype(d11c)> v;
@@ -254,7 +253,7 @@ int main() {
    std::cout << "Count with action pointers which went out of scope: " << *d11c << std::endl;
 
    // TEST 14: fill 1D histograms
-   ROOT::Experimental::TDataFrame d12(treeName, &f, {"b1","b2"});
+   ROOT::Experimental::TDataFrame d12(treeName, fileName, {"b1","b2"});
    auto wh1 = d12.Histo1D<double, int>();
    auto wh2 = d12.Histo1D<std::vector<double>, std::list<int>>("dv","sl");
    std::cout << "Wh1 Histo entries: " << wh1->GetEntries() << std::endl;
@@ -263,7 +262,7 @@ int main() {
    std::cout << "Wh2 Histo mean: " << wh2->GetMean() << std::endl;
 
    // TEST 15: fill 2D histograms
-   ROOT::Experimental::TDataFrame d13(treeName, &f, {"b1","b2","b3"});
+   ROOT::Experimental::TDataFrame d13(treeName, fileName, {"b1","b2","b3"});
    auto h12d = d13.Histo2D<double, int>(TH2F("h1","",64,0,1024,64,0,1024));
    auto h22d = d13.Histo2D<std::vector<double>, std::list<int>>(TH2F("h2","",64,0,1024,64,0,1024),"dv","sl");
    auto h32d = d13.Histo2D<double, int, float>(TH2F("h3","",64,0,1024,64,0,1024));
@@ -272,7 +271,7 @@ int main() {
    std::cout << "h32d Histo entries: " << h32d->GetEntries() << " sum of weights: " << h32d->GetSumOfWeights() << std::endl;
 
    // TEST 15: fill 3D histograms
-   ROOT::Experimental::TDataFrame d14(treeName, &f, {"b1","b2","b3","b4"});
+   ROOT::Experimental::TDataFrame d14(treeName, fileName, {"b1","b2","b3","b4"});
    auto h13d = d14.Histo3D<double, int, float>(TH3F("h4","",64,0,1024,64,0,1024,64,0,1024));
    auto h23d = d14.Histo3D<std::vector<double>,
                            std::list<int>,

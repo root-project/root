@@ -20,8 +20,7 @@ int main() {
    auto treeName = "myTree";
    fill_tree(fileName,treeName);
 
-   TFile file(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &file, {"b1"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
    auto sentinel = []() { std::cout << "filter called" << std::endl; return true; };
    auto f1 = d.Filter(sentinel, {});
    auto m1 = f1.Min();

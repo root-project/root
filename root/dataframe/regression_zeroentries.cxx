@@ -9,9 +9,11 @@
 #include <iostream>
 #include <limits>
 
+auto fileName("regression_zeroentries.root");
+
 int main() {
    {
-      TFile wf("regression_zeroentries.root", "RECREATE");
+      TFile wf(fileName, "RECREATE");
       TTree t("emptyTree", "emptyTree");
       int a;
       t.Branch("a", &a);
@@ -21,8 +23,8 @@ int main() {
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
 #endif
-   TFile f("regression_zeroentries.root");
-   ROOT::Experimental::TDataFrame d("emptyTree", &f, {"a"});
+   TFile f(fileName);
+   ROOT::Experimental::TDataFrame d("emptyTree", fileName, {"a"});
 
    // apply all actions to an empty tree, multi-thread case
    auto min = d.Min<int>();

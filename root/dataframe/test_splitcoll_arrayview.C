@@ -39,7 +39,7 @@ int test_splitcoll_arrayview() {
 
    TFile f(fileName);
    try {
-      ROOT::Experimental::TDataFrame d(treeName, &f, {"v.a"});
+      ROOT::Experimental::TDataFrame d(treeName, fileName, {"v.a"});
       auto c = d.Filter([](std::array_view<float> d) { for (auto v : d )std::cout << v << std::endl; return d[1] > 5; }).Count();
       auto val = *c;
       std::cout << "count " << val << std::endl;
@@ -47,7 +47,7 @@ int test_splitcoll_arrayview() {
       std::cout << "Exception caught: " << e.what() << std::endl;
    }
 
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"v"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"v"});
    auto c = d.Filter([](std::array_view<A> d) {  for (auto v : d )std::cout << v.a << std::endl; return d[1].a > 5; }).Count();
    auto val = *c;
    std::cout << "count " << val << std::endl;

@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
    FillTree(fileName, treeName);
    
    TFile f("test_callables.root");
-   ROOT::Experimental::TDataFrame d("callablesTree", &f, {"b"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b"});
 
    // free function
    d.Filter(freeFilter)
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     .Foreach(foreach);
 
    if (freeCounter == fff.GetCounter() && freeCounter*2 == counter
-       && freeCounter == static_cast<TTree*>(f.Get("callablesTree"))->GetEntries())
+       && freeCounter == static_cast<TTree*>(f.Get(treeName))->GetEntries())
       Info("test_callables", "alright");
    else
       Error("test_callables",
