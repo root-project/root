@@ -99,6 +99,6 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    };
 
    // Assume number of threads has been initialized via ROOT::EnableImplicitMT
-   TThreadExecutor pool(Internal::TPoolManager::GetPoolSize());
+   TThreadExecutor pool;
    pool.Map(mapFunction, vTuple);
 }
