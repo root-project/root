@@ -1221,6 +1221,9 @@ protected:
 };
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
+private:
+   std::shared_ptr<TTree> fTree;
+   void InitTree(TTree &tree, bool ownsTree);
 public:
    TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
@@ -1235,10 +1238,7 @@ public:
    /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
    /// methods available.
    template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
-   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches = {})
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
-      std::make_shared<ROOT::Detail::TDataFrameImpl>(
-      treeName, filenamescoll, defaultBranches)) {};
+   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches = {});
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames &defaultBranches = {});
 };
@@ -1450,27 +1450,14 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    ROOT::Detail::FilterBaseVec_t fBookedNamedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
-   std::string fTreeName;
-   ::TDirectory *fDirPtr = nullptr;
-   std::shared_ptr<TTree> fTree;
+   ::TDirectory *fDirPtr{nullptr};
+   TTree* fTree{nullptr};
    const BranchNames fDefaultBranches;
-   const unsigned int fNSlots;
-   bool fHasRunAtLeastOnce = false;
+   const unsigned int fNSlots{0};
+   bool fHasRunAtLeastOnce{false};
 
 public:
-   TDataFrameImpl(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
-   TDataFrameImpl(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches = {});
-   template<typename FILENAMESCOLL>
-   TDataFrameImpl(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches = {})
-      : fTreeName(treeName), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-   {
-      auto chain = new TChain(treeName.c_str());
-      for (auto& fileName : filenamescoll)
-         chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
-      fTree = std::shared_ptr<TTree>(chain);
-
-   }
-   TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches = {});
+   TDataFrameImpl(TTree* tree, const BranchNames &defaultBranches);
    TDataFrameImpl(const TDataFrameImpl &) = delete;
    ~TDataFrameImpl(){};
    void Run();
@@ -1502,6 +1489,7 @@ public:
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
+   void SetTree(TTree* tree) {fTree = tree;}
 };
 
 } // end NS ROOT::Detail
@@ -1521,6 +1509,17 @@ void Experimental::TActionResultProxy<T>::TriggerRun()
       throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
    }
    df->Run();
+}
+
+template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches) : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+   std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+{
+   auto chain = new TChain(treeName.c_str());
+   for (auto& fileName : filenamescoll)
+      chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
+   fTree = std::make_shared<TTree>(static_cast<TTree*>(chain));
+   fProxiedPtr->SetTree(chain);
 }
 
 } // end NS Experimental

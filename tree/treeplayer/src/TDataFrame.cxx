@@ -368,10 +368,20 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
-         std::make_shared<ROOT::Detail::TDataFrameImpl>(
-            treeName, dirPtr, defaultBranches))
-{ }
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr,defaultBranches))
+{
+   if (!dirPtr) {
+      auto msg = "Invalid TDirectory!";
+      throw std::runtime_error(msg);
+   }
+   auto tree = static_cast<TTree*>(dirPtr->Get(treeName.c_str()));
+   if (!tree) {
+      auto msg = "Tree \"" + treeName + "\" cannot be found!";
+      throw std::runtime_error(msg);
+   }
+   fTree = std::shared_ptr<TTree>(tree,[](TTree*){});
+   fProxiedPtr->SetTree(tree);
+}
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
@@ -384,10 +394,13 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
-         std::make_shared<ROOT::Detail::TDataFrameImpl>(
-            treeName, filenameglob, defaultBranches))
-{ }
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+{
+   auto chain = new TChain(treeName.c_str());
+   chain->Add(filenameglob.c_str());
+   fTree = std::shared_ptr<TTree>(static_cast<TTree*>(chain));
+   fProxiedPtr->SetTree(chain);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -400,12 +413,10 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(TTree &tree, const BranchNames &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
-         std::make_shared<ROOT::Detail::TDataFrameImpl>(tree, defaultBranches))
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
 { }
 
-}
-
+} // end NS Experimental
 
 namespace Internal {
 
@@ -501,24 +512,9 @@ void TDataFrameFilterBase::PrintReport() const {
           fName.c_str(), accepted, all, perc);
 }
 
-
-TDataFrameImpl::TDataFrameImpl(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches)
-   : fTreeName(treeName), fDirPtr(dirPtr), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-{
-}
-
-TDataFrameImpl::TDataFrameImpl(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches)
-   : fTreeName(treeName), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-{
-   auto chain = new TChain(treeName.c_str());
-   chain->Add(filenameglob.c_str());
-   fTree = std::shared_ptr<TTree>(chain);
-}
-
-TDataFrameImpl::TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches)
-   : fTree(std::shared_ptr<TTree>(&tree,[](TTree*){})), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-{
-}
+TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames &defaultBranches)
+   : fTree(tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
+{ }
 
 void TDataFrameImpl::Run()
 {
@@ -526,14 +522,7 @@ void TDataFrameImpl::Run()
    if (ROOT::IsImplicitMTEnabled()) {
       using ttpmt_t = ROOT::TTreeProcessorMT;
       std::unique_ptr<ttpmt_t> tp;
-      auto isChain = fTree ? fTree->InheritsFrom(TChain::Class()) : false;
-      if (isChain) {
-         tp.reset(new ttpmt_t(*fTree));
-      } else {
-         const auto fileName = fTree ? static_cast<TFile *>(fTree->GetCurrentFile())->GetName() : fDirPtr->GetName();
-         const std::string treeName = fTree ? fTree->GetName() : fTreeName;
-         tp.reset(new ttpmt_t(fileName, treeName));
-      }
+      tp.reset(new ttpmt_t(*fTree));
 
       ROOT::TSpinMutex slotMutex;
       std::map<std::thread::id, unsigned int> slotMap;
@@ -565,12 +554,7 @@ void TDataFrameImpl::Run()
       });
    } else {
 #endif // R__USE_IMT
-      TTreeReader r;
-      if (fTree) {
-         r.SetTree(fTree.get());
-      } else {
-         r.SetTree(fTreeName.c_str(), fDirPtr);
-      }
+      TTreeReader r(fTree);
 
       CreateSlots(1);
       BuildAllReaderValues(r, 0);
@@ -623,12 +607,7 @@ const BranchNames &TDataFrameImpl::GetDefaultBranches() const
 
 TTree *TDataFrameImpl::GetTree() const
 {
-   if (fTree) {
-      return fTree.get();
-   } else {
-      auto treePtr = static_cast<TTree *>(fDirPtr->Get(fTreeName.c_str()));
-      return treePtr;
-   }
+   return fTree;
 }
 
 const TDataFrameBranchBase &TDataFrameImpl::GetBookedBranch(const std::string &name) const
@@ -648,7 +627,7 @@ TDirectory *TDataFrameImpl::GetDirectory() const
 
 std::string TDataFrameImpl::GetTreeName() const
 {
-   return fTreeName;
+   return fTree->GetName();
 }
 
 void TDataFrameImpl::Book(ROOT::Internal::ActionBasePtr_t actionPtr)
