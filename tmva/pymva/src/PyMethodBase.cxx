@@ -1,5 +1,5 @@
 // @(#)root/tmva/pymva $Id$
-// Authors: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer 2015
+// Authors: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer 2015, Stefan Wunsch 2017
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -11,7 +11,7 @@
  *                                                                                *
  **********************************************************************************/
 
-#include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
+#include <Python.h> // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include <TMVA/PyMethodBase.h>
 
 #include "TMVA/DataSet.h"
@@ -52,7 +52,8 @@ public:
    ~PyGILRAII(){PyGILState_Release(m_GILState);}
 };
 
-//_______________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+
 PyMethodBase::PyMethodBase(const TString &jobName,
                            Types::EMVA methodType,
                            const TString &methodTitle,
@@ -71,7 +72,8 @@ PyMethodBase::PyMethodBase(const TString &jobName,
    }
 }
 
-//_______________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+
 PyMethodBase::PyMethodBase(Types::EMVA methodType,
                            DataSetInfo &dsi,
                            const TString &weightFile): MethodBase(methodType, dsi, weightFile),
@@ -88,12 +90,21 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
    }
 }
 
-//_______________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+
 PyMethodBase::~PyMethodBase()
 {
 }
 
-//_______________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+/// Evaluate Python code
+///
+/// \param[in] code Python code as string
+/// \return Python object from evaluation of code line
+///
+/// Take a Python code as input and evaluate it in the local namespace. Then,
+/// return the result as Python object.
+
 PyObject *PyMethodBase::Eval(TString code)
 {
    if(!PyIsInitialized()) PyInitialize();
@@ -103,11 +114,14 @@ PyObject *PyMethodBase::Eval(TString code)
    return result;
 }
 
-//_______________________________________________________________________
-// NOTE: We introduce a shared global namespace fGlobalNS, but using
-// a private local namespace fLocalNS. This prohibits the interference
-// of instances of the same method with the same factory, e.g., by overriding
-// variables in the same local namespace.
+///////////////////////////////////////////////////////////////////////////////
+/// Initialize Python interpreter
+///
+/// NOTE: We introduce a shared global namespace `fGlobalNS`, but using
+/// a private local namespace `fLocalNS`. This prohibits the interference
+/// of instances of the same method with the same factory, e.g., by overriding
+/// variables in the same local namespace.
+
 void PyMethodBase::PyInitialize()
 {
    TMVA::MsgLogger Log;
@@ -177,7 +191,9 @@ void PyMethodBase::PyInitialize()
    Py_DECREF(pDict);
 }
 
-//_______________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+// Finalize Python interpreter
+
 void PyMethodBase::PyFinalize()
 {
    Py_Finalize();
@@ -187,6 +203,12 @@ void PyMethodBase::PyFinalize()
    if (fPickleLoads) Py_DECREF(fPickleLoads);
    if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Set program name for Python interpeter
+///
+/// \param[in] name Program name
+
 void PyMethodBase::PySetProgramName(TString name)
 {
    #if PY_MAJOR_VERSION < 3
@@ -196,17 +218,32 @@ void PyMethodBase::PySetProgramName(TString name)
    #endif
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+
 size_t mystrlen(const char* s) { return strlen(s); }
+
+///////////////////////////////////////////////////////////////////////////////
+
 size_t mystrlen(const wchar_t* s) { return wcslen(s); }
 
-//_______________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+/// Get program name from Python interpreter
+///
+/// \return Program name
+
 TString PyMethodBase::Py_GetProgramName()
 {
    auto progName = ::Py_GetProgramName();
    return std::string(progName, progName + mystrlen(progName));
 }
-//_______________________________________________________________________
-int  PyMethodBase::PyIsInitialized()
+
+///////////////////////////////////////////////////////////////////////////////
+/// Check Python interpreter initialization status
+///
+/// \return Boolean whether interpreter is initialized
+
+int PyMethodBase::PyIsInitialized()
 {
    if (!Py_IsInitialized()) return kFALSE;
    if (!fEval) return kFALSE;
@@ -216,10 +253,19 @@ int  PyMethodBase::PyIsInitialized()
    return kTRUE;
 }
 
-//_______________________________________________________________________
-void PyMethodBase::Serialize(TString path,PyObject *obj)
+///////////////////////////////////////////////////////////////////////////////
+/// Serialize Python object
+///
+/// \param[in] path Path where object is written to file
+/// \param[in] obj Python object
+///
+/// The input Python object is serialized and written to a file. The Python
+/// module `pickle` is used to do so.
+
+void PyMethodBase::Serialize(TString path, PyObject *obj)
 {
    if(!PyIsInitialized()) PyInitialize();
+
    PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"wb");
    PyObject *file = PyObject_CallObject(fOpen,file_arg);
    PyObject *model_arg = Py_BuildValue("(OO)", obj,file);
@@ -231,8 +277,14 @@ void PyMethodBase::Serialize(TString path,PyObject *obj)
    Py_DECREF(model_data);
 }
 
-//_______________________________________________________________________
-Int_t PyMethodBase::UnSerialize(TString path,PyObject **obj)
+///////////////////////////////////////////////////////////////////////////////
+/// Unserialize Python object
+///
+/// \param[in] path Path to serialized Python object
+/// \param[in] obj Python object where the unserialized Python object is loaded
+///  \return Error code
+
+Int_t PyMethodBase::UnSerialize(TString path, PyObject **obj)
 {
    // Load file
    PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"rb");
@@ -251,11 +303,18 @@ Int_t PyMethodBase::UnSerialize(TString path,PyObject **obj)
    return 0;
 }
 
-//_______________________________________________________________________
-// Helper function to run python code from string in local namespace with
-// error handling
-// `start` defines the start symbol defined in PyRun_String (Py_eval_input,
-// Py_single_input, Py_file_input)
+///////////////////////////////////////////////////////////////////////////////
+/// Execute Python code from string
+///
+/// \param[in] code Python code as string
+/// \param[in] errorMessage Error message which shall be shown if the execution fails
+/// \param[in] start Start symbol
+///
+/// Helper function to run python code from string in local namespace with
+/// error handling
+/// `start` defines the start symbol defined in PyRun_String (Py_eval_input,
+/// Py_single_input, Py_file_input)
+
 void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
    fPyReturn = PyRun_String(code, start, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
