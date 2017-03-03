@@ -2,15 +2,16 @@
 #  CheckCompiler.cmake
 #---------------------------------------------------------------------------------------------------
 
+include(CheckLanguage)
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
 if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
   endif()
-  enable_language(Fortran OPTIONAL)
-  if(NOT CMAKE_Fortran_COMPILER)
-    set(CMAKE_Fortran_COMPILER_LOADED)   # FindBLAS/LAPACK tests CMAKE_Fortran_COMPILER_LOADED
+  check_language(Fortran)
+  if(CMAKE_Fortran_COMPILER)
+    enable_language(Fortran)
   endif()
 else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
