@@ -26,7 +26,6 @@ objects.
 #include "TROOT.h"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "ROOT/TThreadExecutor.hxx"
-#include "ROOT/TPoolManager.hxx"
 
 using namespace ROOT;
 
