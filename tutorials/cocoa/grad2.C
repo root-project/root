@@ -7,8 +7,6 @@
 ///
 /// \author Timur Pocheptsov
 
-
-
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
 #include "TVirtualX.h"
@@ -37,7 +35,7 @@ void grad2()
    const Color_t customGreen = freeIndices[2], grad2 = freeIndices[3];
 
    //2. Check that we are ROOT with Cocoa back-end enabled.
-   TCanvas * const cnv = new TCanvas("gradiend demo 2", "gradient demo 2", 100, 100, 800, 600);
+   TCanvas * const cnv = new TCanvas("gradient demo 2", "gradient demo 2", 100, 100, 800, 600);
    //After canvas was created, gVirtualX should be non-null.
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       ::Error("grad2", "This macro works only on OS X with --enable-cocoa");
