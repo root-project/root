@@ -27,7 +27,7 @@ cat ${TESTNAME}.out | grep -e " \[IMT\]"
 grep -v -e "Info in" ${TESTNAME}.err | cat > /dev/stderr
 
 # Print number of threads actually used
-OBSERVED_NTHREADS=`cat ${TESTNAME}.err | grep -e "\[IMT\] Thread" | sort | uniq | wc -l`
+OBSERVED_NTHREADS=`cat ${TESTNAME}.err | grep -E "\[IMT\] Thread ([0-9]+|0x[0-9a-f]+)$" | sort | uniq | wc -l`
 echo "NUM THREADS: $OBSERVED_NTHREADS"
 
 # Print number of tasks executed
