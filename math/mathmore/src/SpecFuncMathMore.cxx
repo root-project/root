@@ -289,7 +289,7 @@ double expint(double x) {
 //
 double expint_n(int n, double x) {
 
-   return gsl_sf_expint_En(n,x);
+   return gsl_sf_expint_En(n, x);
 
 }
 
