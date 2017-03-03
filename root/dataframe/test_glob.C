@@ -1,3 +1,10 @@
+
+#include "TFile.h"
+#include "TH1F.h"
+#include "TTree.h"
+
+#include "ROOT/TDataFrame.hxx"
+
 // A simple helper function to fill a test tree and save it to file
 // This makes the example stand-alone
 void FillTree(const char* filename, const char* treeName) {
