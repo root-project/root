@@ -24,7 +24,7 @@
 
 #include "TNamed.h"
 
-class TRandom : public ROOT::Math::TRandomEngine, public TNamed {
+class TRandom : public TNamed, public ROOT::Math::TRandomEngine {
 
 protected:
    UInt_t   fSeed;  //Random number generator seed
@@ -56,7 +56,7 @@ public:
    virtual  Double_t Uniform(Double_t x1, Double_t x2);
    virtual  void     WriteRandom(const char *filename) const;
 
-   ClassDef(TRandom,2)  //Simple Random number generator (periodicity = 10**9)
+   ClassDef(TRandom,3)  //Simple Random number generator (periodicity = 10**9)
 };
 
 R__EXTERN TRandom *gRandom;

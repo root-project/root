@@ -18,6 +18,7 @@
 #include "TChain.h"
 #include "TTreeReader.h"
 #include "TError.h"
+#include "TEntryList.h"
 #include "ROOT/TThreadedObject.hxx"
 
 #include <string.h>
@@ -50,7 +51,9 @@ namespace ROOT {
          std::string fTreeName;               ///< Name of the tree
          std::unique_ptr<TFile> fCurrentFile; ///<! Current file object of this view.
          std::unique_ptr<TTree> fCurrentTree; ///<! Current tree object of this view.
-         int fCurrentIdx;                     ///<! Index of the current file.
+         unsigned int fCurrentIdx;            ///<! Index of the current file.
+         std::vector<TEntryList> fEntryLists; ///< Entry numbers to be processed per tree/file
+         TEntryList fCurrentEntryList;        ///< Entry numbers for the current range being processed
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Initialize the file and the tree for this view, first looking for a tree in
@@ -135,12 +138,52 @@ namespace ROOT {
          }
 
          //////////////////////////////////////////////////////////////////////////
+         /// Constructor based on a TTree and a TEntryList.
+         /// \param[in] tree Tree or chain of files containing the tree to process.
+         /// \param[in] entries List of entry numbers to process.
+         TTreeView(TTree& tree, TEntryList& entries) : TTreeView(tree)
+         {
+            static const TClassRef clRefTChain("TChain");
+            if (clRefTChain == tree.IsA()) {
+               // We need to convert the global entry numbers to per-tree entry numbers.
+               // This will allow us to build a TEntryList for a given entry range of a tree of the chain.
+               size_t nTrees = fFileNames.size();
+               fEntryLists.resize(nTrees);
+
+               TChain *chain = dynamic_cast<TChain*>(&tree);
+               Long64_t currListEntry  = entries.GetEntry(0);
+               Long64_t currTreeOffset = 0;
+
+               for (unsigned int treeNum = 0; treeNum < nTrees && currListEntry >= 0; ++treeNum) {
+                  chain->LoadTree(currTreeOffset);
+                  TTree *currTree = chain->GetTree();
+                  Long64_t currTreeEntries = currTree->GetEntries();
+                  Long64_t nextTreeOffset = currTreeOffset + currTreeEntries;
+
+                  while (currListEntry >= 0 && currListEntry < nextTreeOffset) {
+                     fEntryLists[treeNum].Enter(currListEntry - currTreeOffset);
+                     currListEntry = entries.Next();
+                  }
+
+                  currTreeOffset = nextTreeOffset;
+               }
+            }
+            else {
+               fEntryLists.emplace_back(entries);
+            }
+         }
+
+         //////////////////////////////////////////////////////////////////////////
          /// Copy constructor.
          /// \param[in] view Object to copy.
          TTreeView(const TTreeView& view) : fTreeName(view.fTreeName), fCurrentIdx(view.fCurrentIdx) 
          {
             for (auto& fn : view.fFileNames)
                fFileNames.emplace_back(fn);
+
+            for (auto& el : view.fEntryLists)
+               fEntryLists.emplace_back(el);
+
             Init();
          }
 
@@ -154,9 +197,29 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
-         std::unique_ptr<TTreeReader> GetTreeReader() const
+         std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end)
          {
-            return std::unique_ptr<TTreeReader>(new TTreeReader(fCurrentTree.get()));
+            TTreeReader *reader;
+            if (fEntryLists.size() > 0 && fEntryLists[fCurrentIdx].GetN() > 0) {
+               // TEntryList and SetEntriesRange do not work together (the former has precedence).
+               // We need to construct a TEntryList that contains only those entry numbers
+               // in our desired range.
+               fCurrentEntryList.Reset();
+               Long64_t entry = fEntryLists[fCurrentIdx].GetEntry(0);
+               do {
+                  if (entry >= start && entry < end) fCurrentEntryList.Enter(entry);
+               } while ((entry = fEntryLists[fCurrentIdx].Next()) >= 0);
+
+               reader = new TTreeReader(fCurrentTree.get(), &fCurrentEntryList);
+
+            }
+            else {
+               // If no TEntryList is involved we can safely set the range in the reader
+               reader = new TTreeReader(fCurrentTree.get());
+               reader->SetEntriesRange(start, end);
+            }
+
+            return std::unique_ptr<TTreeReader>(reader);
          }
 
          //////////////////////////////////////////////////////////////////////////
@@ -175,7 +238,7 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Set the current file and tree of this view.
-         void SetCurrent(int i)
+         void SetCurrent(unsigned int i)
          {
             if (i != fCurrentIdx) {
                fCurrentIdx = i;
@@ -197,6 +260,7 @@ namespace ROOT {
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
       TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");
       TTreeProcessorMT(TTree& tree);
+      TTreeProcessorMT(TTree& tree, TEntryList& entries);
  
       void Process(std::function<void(TTreeReader&)> func);
 

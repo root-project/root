@@ -514,7 +514,7 @@ Bool_t TH1Merger::DifferentAxesMerge() {
             }
          }
          if (binz <= 0 || binz >= hist->GetNbinsZ() + 1) {
-            if (fH0->fZaxis.CanExtend() || ( hist->fZaxis.GetBinCenter(binz) > fH0->fZaxis.GetXmin() && hist->fXaxis.GetBinCenter(binz) < fH0->fZaxis.GetXmax()) ) {
+            if (fH0->fZaxis.CanExtend() || ( hist->fZaxis.GetBinCenter(binz) > fH0->fZaxis.GetXmin() && hist->fZaxis.GetBinCenter(binz) < fH0->fZaxis.GetXmax()) ) {
                Error("TH1Merger::DifferentAxesMerge", "Cannot merge histograms - the histograms %s can extend the Z axis or have"
                      " different limits and underflows/overflows are present in the histogram %s.",fH0->GetName(),hist->GetName());
                   return kFALSE;

@@ -385,13 +385,14 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   //Long64_t lastgood = 65547; //49203;
-   Long64_t lastgood = 50753; //for new TFormula
-   if (last <lastgood-900 || last > lastgood+900 || comp <1.8 || comp > 2.4) OK = kFALSE;
+   constexpr Long64_t lastgood  = 51651;
+   constexpr Long64_t tolerance = 100;
+   if (last <lastgood-tolerance || last > lastgood+tolerance || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
+      printf("%-8s File size= %lld (expected %lld +/- %lld)\n"
+             "%-8s Comp Fact=  %3.2f (expected 2.1 +/- 0.3)\n"," ",last,lastgood,tolerance," ",comp);
    }
    if (gPrintSubBench) { printf("Test  3 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }

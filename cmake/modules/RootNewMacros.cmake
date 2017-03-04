@@ -425,6 +425,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
 
   set(excluded_headers "RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
                         Rtypes.h RtypesCore.h TClassEdit.h
+                        TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h TGenericClassInfo.h
                         TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
                         RootMetaSelection.h libcpp_string_view.h
@@ -471,7 +472,7 @@ function(ROOT_LINKER_LIBRARY library)
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
-  include_directories(${CMAKE_BINARY_DIR}/include)                # This is a copy and certainly should last one
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   set(library_name ${library})
   if(TARGET ${library})
     message("Target ${library} already exists. Renaming target name to ${library}_new")
@@ -577,7 +578,7 @@ endfunction()
 function(ROOT_OBJECT_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  include_directories(AFTER ${CMAKE_BINARY_DIR}/include)
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} OBJECT ${lib_srcs})
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
      add_dependencies(${library} ${CMAKE_MATCH_2})
@@ -634,7 +635,7 @@ endfunction()
 function(ROOT_MODULE_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  include_directories(${CMAKE_BINARY_DIR}/include)
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} SHARED ${lib_srcs})
   add_dependencies(${library} move_headers)
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
@@ -782,7 +783,7 @@ function(ROOT_EXECUTABLE executable)
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
-  include_directories(${CMAKE_BINARY_DIR}/include)
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_executable( ${executable} ${_all} ${exe_srcs})
   target_link_libraries(${executable} ${ARG_LIBRARIES} )
   if(WIN32 AND ${executable} MATCHES .exe)

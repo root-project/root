@@ -10,6 +10,14 @@ module ThreadLocalStorage {
 // These can be used in C mode.
 module ROOT_Types {
   module "RtypesCore.h" { header "RtypesCore.h" export * }
+  module "ESTLType.h" { header "ESTLType.h" export * }
+  // FIXME: This module should contain only header files with types.
+  // The listed below headers are here because we want them to work in both
+  // -frtti and -fno-rtti environment. Move them into a separate module.
+  module "RStringView.h" { header "RStringView.h" export * }
+  module "Varargs.h" { header "Varargs.h" export * } // Old should revisit, either drop or delete.
+  module "TClassEdit.h" { header "TClassEdit.h" export * }
+  module "strlcpy.h" { header "strlcpy.h" export * }
   module "RConfig.h" { textual header "RConfig.h" export * }
   module "RConfigure.h" { textual header "RConfigure.h" export * }
   module "RVersion.h" { textual header "RVersion.h" export * }
@@ -18,26 +26,30 @@ module ROOT_Types {
   export *
 }
 
+module ROOT_IsAProxy {
+ module "TIsAProxy.h" { header "TIsAProxy.h" export * }
+ module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
+ export *
+}
+
 // This module is special, it contains headers which don't require rtti support
 // to build (eg. don't use dynamic_cast or typeid). They are also needed when
 // compiling rootcling with -fno-rtti. We have to keep them outside module ROOT
 // to avoid -fno-rtti invocation to trigger building of entire module ROOT
 // some of whose headers require -frtti.
+// Rtypes.h however has an optional dependency on rtti unless one defines
+// R__NO_INLINE_CLASSDEF. We therefore keep two versions of this module: One
+// with rtti and one without rtti.
 module ROOT_Core_Config_C {
  //requires cplusplus
  
  exclude header "RtypesImp.h"
  module "Rtypes.h" { header "Rtypes.h" export * }
- module "TClassEdit.h" { header "TClassEdit.h" export * }
  module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
  module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * }
  module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
- module "ESTLType.h" { header "ESTLType.h" export * }
- module "RStringView.h" { header "RStringView.h" export * }
- module "Varargs.h" { header "Varargs.h" export * } // Old should revisit, either drop or delete.
  module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
  module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
- module "strlcpy.h" { header "strlcpy.h" export * } // #included by Rtypes, could go away?
 
  // Should we marked textual because of inclusion libcpp_string_view.h,
  // using macros to set up the header file.

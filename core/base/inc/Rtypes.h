@@ -183,14 +183,10 @@ namespace ROOT {
 // The macros below use TGenericClassInfo and TInstrumentedIsAProxy, so let's
 // ensure they are included.
 #include "TGenericClassInfo.h"
-#include "TIsAProxy.h"
 
 typedef std::atomic<TClass*> atomic_TClass_ptr;
 
-// Parts or ROOT are compiled with no-rtti and cannot use or even see typeid().
-// Hide the following declaration (that is only needed by ClassDefInline) for
-// these cases by #defining R__NO_INLINE_CLASSDEF:
-#ifndef R__NO_INLINE_CLASSDEF
+#include "TIsAProxy.h"
 
 namespace ROOT { namespace Internal {
 struct TTypeNameExtractionBase {
@@ -260,7 +256,6 @@ class ClassDefGenerateInitInstanceLocalInjector:
    std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
 
 }} // namespace ROOT::Internal
-#endif // R__NO_INLINE_CLASSDEF
 
 
 // Common part of ClassDef definition.

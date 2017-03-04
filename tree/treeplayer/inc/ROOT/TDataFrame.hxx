@@ -21,6 +21,7 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFTraitsUtils.hxx"
 #include "TBranchElement.h"
+#include "TChain.h"
 #include "TH1F.h" // For Histo actions
 #include "TH2F.h" // For Histo actions
 #include "TH3F.h" // For Histo actions
@@ -161,6 +162,8 @@ class TDataFrameImpl;
 
 namespace Internal {
 
+const char* ToConstCharPtr(const char* s);
+const char* ToConstCharPtr(const std::string s);
 unsigned int GetNSlots();
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
@@ -280,12 +283,12 @@ public:
 
    TDataFrameAction(const TDataFrameAction &) = delete;
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void Run(unsigned int slot, Long64_t entry)
+   void Run(unsigned int slot, Long64_t entry) final
    {
       // check if entry passes all filters
       if (fPrevData.CheckFilters(slot, entry))
@@ -393,7 +396,8 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] bl Names of the branches in input to the filter function.
+   /// \param[in] bn Names of the branches in input to the filter function.
+   /// \param[in] name Optional name of this filter. See `Report`.
    ///
    /// Append a filter node at the point of the call graph corresponding to the
    /// object this method is called on.
@@ -409,18 +413,44 @@ public:
    /// once, the cached result is served.
    template <typename F>
    TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
-   Filter(F f, const BranchNames &bl = {}, const std::string& name = "")
+   Filter(F f, const BranchNames &bn = {}, const std::string& name = "")
    {
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
       const BranchNames &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
+      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bn, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (std::move(f), actualBl, *fProxiedPtr, name);
       df->Book(FilterPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(std::move(FilterPtr));
       return tdf_f;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Append a filter to the call graph.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
+   /// \param[in] name Optional name of this filter. See `Report`.
+   ///
+   /// Refer to the first overload of this method for the full documentation.
+   template <typename F>
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(F f, const std::string& name)
+   {
+      return Filter(f, {}, name);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Append a filter to the call graph.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
+   /// \param[in] bn Names of the branches in input to the filter function.
+   ///
+   /// Refer to the first overload of this method for the full documentation.
+   template <typename F>
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(F f, const std::initializer_list<std::string>& bn)
+   {
+      return Filter(f, BranchNames{bn});
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -792,7 +822,6 @@ public:
       return df->MakeActionResultProxy(h);
    }
 
-
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a profile (*lazy action*)
    /// \tparam B0 The type of the branch the values of which are used to fill the profile.
@@ -912,6 +941,35 @@ public:
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(h);
    }
+
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return any entity with a Fill method (*lazy action*)
+   /// \tparam BRANCHTYPES The types of the branches the values of which are used to fill the object.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] bl The name of the branches read to fill the object.
+   ///
+   /// The returned object is independent of the input one.
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TActionResultProxy documentation.
+   /// The user renounces to the ownership of the model. The value to be used is the
+   /// returned one.
+   /// It is compulsory to express the branches to be considered.
+   template <typename... BRANCHTYPES, typename T>
+   TActionResultProxy<T> Fill(T &&model, const BranchNames& bl)
+   {
+      auto h = std::make_shared<T>(model);
+      if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
+         throw std::runtime_error("The absence of axes limits is not supported yet.");
+      }
+      using Op_t = ROOT::Internal::Operations::FillTOOperation<T>;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BRANCHTYPES...>>;
+      auto df = GetDataFrameChecked();
+      auto nSlots = df->GetNSlots();
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
+      return df->MakeActionResultProxy(h);
+   }
+
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the minimum of processed branch values (*lazy action*)
@@ -1113,7 +1171,7 @@ private:
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
 
-      auto tree = static_cast<TTree*>(df->GetDirectory()->Get(df->GetTreeName().c_str()));
+      auto tree = df->GetTree();
       auto theBranchName = bl[0];
       auto branch = tree->GetBranch(theBranchName.c_str());
 
@@ -1190,7 +1248,24 @@ protected:
 };
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
+private:
+   std::shared_ptr<TTree> fTree;
+   void InitTree(TTree &tree, bool ownsTree);
 public:
+   TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches = {});
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Build the dataframe
+   /// \tparam FILENAMESCOLL The type of the file collection: only requirement: must have begin and end.
+   /// \param[in] treeName Name of the tree contained in the directory
+   /// \param[in] filenamescoll Collection of file names, for example a list of strings.
+   /// \param[in] defaultBranches Collection of default branches.
+   ///
+   /// The default branches are looked at in case no branch is specified in the
+   /// booking of actions or transformations.
+   /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+   /// methods available.
+   template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches = {});
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames &defaultBranches = {});
 };
@@ -1247,12 +1322,12 @@ public:
 
    TDataFrameBranch(const TDataFrameBranch &) = delete;
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void *GetValue(unsigned int slot, Long64_t entry)
+   void *GetValue(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
@@ -1265,14 +1340,14 @@ public:
 
    const std::type_info &GetTypeId() const { return typeid(Ret_t); }
 
-   void CreateSlots(unsigned int nSlots)
+   void CreateSlots(unsigned int nSlots) final
    {
       fReaderValues.resize(nSlots);
       fLastCheckedEntry.resize(nSlots, -1);
       fLastResultPtr.resize(nSlots);
    }
 
-   bool CheckFilters(unsigned int slot, Long64_t entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       // dummy call: it just forwards to the previous object in the chain
       return fPrevData.CheckFilters(slot, entry);
@@ -1292,11 +1367,11 @@ public:
 
    // recursive chain of `Report`s
    // TDataFrameBranch simply forwards the call to the previous node
-   void Report() const {
+   void Report() const final {
       fPrevData.PartialReport();
    }
 
-   void PartialReport() const {
+   void PartialReport() const final {
       fPrevData.PartialReport();
    }
 
@@ -1346,7 +1421,7 @@ public:
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
 
-   bool CheckFilters(unsigned int slot, Long64_t entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
          if (!fPrevData.CheckFilters(slot, entry)) {
@@ -1378,18 +1453,18 @@ public:
                      fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
    }
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
 
    // recursive chain of `Report`s
-   void Report() const {
+   void Report() const final {
       PartialReport();
    }
 
-   void PartialReport() const {
+   void PartialReport() const final {
       fPrevData.PartialReport();
       PrintReport();
    }
@@ -1402,16 +1477,14 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    ROOT::Detail::FilterBaseVec_t fBookedNamedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
-   std::string fTreeName;
-   ::TDirectory *fDirPtr = nullptr;
-   TTree *fTree = nullptr;
+   ::TDirectory *fDirPtr{nullptr};
+   TTree* fTree{nullptr};
    const BranchNames fDefaultBranches;
-   const unsigned int fNSlots;
-   bool fHasRunAtLeastOnce = false;
+   const unsigned int fNSlots{0};
+   bool fHasRunAtLeastOnce{false};
 
 public:
-   TDataFrameImpl(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
-   TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches = {});
+   TDataFrameImpl(TTree* tree, const BranchNames &defaultBranches);
    TDataFrameImpl(const TDataFrameImpl &) = delete;
    ~TDataFrameImpl(){};
    void Run();
@@ -1425,9 +1498,9 @@ public:
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
    ::TDirectory *GetDirectory() const;
    std::string GetTreeName() const;
-   void Book(ROOT::Internal::ActionBasePtr_t actionPtr);
-   void Book(ROOT::Detail::FilterBasePtr_t filterPtr);
-   void Book(TmpBranchBasePtr_t branchPtr);
+   void Book(const ROOT::Internal::ActionBasePtr_t& actionPtr);
+   void Book(const ROOT::Detail::FilterBasePtr_t& filterPtr);
+   void Book(const ROOT::Detail::TmpBranchBasePtr_t& branchPtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const;
    template<typename T>
@@ -1443,6 +1516,7 @@ public:
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
+   void SetTree(TTree* tree) {fTree = tree;}
 };
 
 } // end NS ROOT::Detail
@@ -1462,6 +1536,17 @@ void Experimental::TActionResultProxy<T>::TriggerRun()
       throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
    }
    df->Run();
+}
+
+template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches) : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+   std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+{
+   auto chain = new TChain(treeName.c_str());
+   for (auto& fileName : filenamescoll)
+      chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
+   fTree = std::make_shared<TTree>(static_cast<TTree*>(chain));
+   fProxiedPtr->SetTree(chain);
 }
 
 } // end NS Experimental

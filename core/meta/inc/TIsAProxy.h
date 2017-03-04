@@ -13,8 +13,9 @@
 #define ROOT_TIsAProxy
 
 #include "TVirtualIsAProxy.h"
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #include <atomic>
+#include <typeinfo>
 
 class TClass;
 
