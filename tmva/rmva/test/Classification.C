@@ -36,12 +36,19 @@ void Classification()
    factory->AddSpectator("spec1 := var1*2",  "Spectator 1", "units", 'F');
    factory->AddSpectator("spec2 := var1*3",  "Spectator 2", "units", 'F');
 
+   TFile *input(0);
    TString fname = "./tmva_class_example.root";
-
-   if (gSystem->AccessPathName(fname))    // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
-
-   TFile *input = TFile::Open(fname);
+   if (!gSystem->AccessPathName( fname )) {
+      input = TFile::Open( fname ); // check if file in local directory exists
+   }
+   else {
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+   }
+   if (!input) {
+      std::cout << "ERROR: could not open data file" << std::endl;
+      exit(1);
+   }
 
    std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
 
