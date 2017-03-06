@@ -405,8 +405,7 @@ End_Macro
 #include <limits.h>
 
 #ifdef R__USE_IMT
-#include "tbb/task.h"
-#include "tbb/task_group.h"
+#include "ROOT/TThreadExecutor.hxx"
 #include <thread>
 #include <string>
 #include <sstream>
@@ -5351,8 +5350,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       std::atomic<Int_t> nbpar(0);
       tbb::task_group g;
 
-      for (i = 0; i < nbranches; i++) {
-         g.run([&]() {
+      auto mapFunction = [&]() {
             // The branch to process is obtained when the task starts to run.
             // This way, since branches are sorted, we make sure that branches
             // leading to big tasks are processed first. If we assigned the
@@ -5381,9 +5379,11 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
             if (nbtask < 0) errnb = nbtask;
             else            nbpar += nbtask;
-         });
-      }
-      g.wait();
+            return 0;
+         };
+
+      ROOT::TThreadExecutor pool;
+      pool.Map(mapFunction, nbranches);
 
       if (errnb < 0) {
          nb = errnb;
