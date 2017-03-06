@@ -1117,7 +1117,7 @@ int testVector(int ngen, bool testio=false) {
 
    s1 = a.testOperations(v1);  a.print(VecType<V1>::name()+" operations");
    scale = Dim*20;
-   if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 10; // for problem with RhoEtaPhi
+   if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
    if (Dim==4 && VecType<V2>::name() == "PtEtaPhiMVector") scale *= 10;
 #if defined (R__LINUX) && !defined(R__B64)
    // problem of precision on linux 32
