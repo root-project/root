@@ -2018,21 +2018,15 @@ void MethodUnitTestWithROCLimits::run()
   dataloader->AddVariable( _VariableNames->at(3),                "Variable 4", "units", 'F' );
 
   TFile* input(0);
-
   FileStat_t stat;
 
-  TString fname = "../tmva/test/data/toy_sigbkg.root"; //tmva_example.root";
-  const char *fcname = gSystem->ExpandPathName("$ROOTSYS/tmva/test/data/toy_sigbkg.root");
+  TString fname = "./tmva_class_example.root";
   if(!gSystem->GetPathInfo(fname,stat)) {
      input = TFile::Open( fname );
-  } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
-     input = TFile::Open( "../"+fname );
-  } else if(fcname && !gSystem->GetPathInfo(fcname,stat)) {
-     input = TFile::Open( fcname );
   } else {
-     input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" );
+     TFile::SetCacheFileDir(".");
+     input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
   }
-  delete [] fcname;
   if (input == NULL) {
      cerr << "broken/inaccessible input file" << endl;
   }
@@ -2449,14 +2443,12 @@ void RegressionUnitTestWithDeviation::run()
    TFile* input(0);
    FileStat_t stat;
 
-   // FIXME:: give the filename of the sample somewhere else?
-   TString fname = "../tmva/test/tmva_reg_example.root";
+   TString fname = "./tmva_reg_example.root";
    if(!gSystem->GetPathInfo(fname,stat)) {
       input = TFile::Open( fname );
-   } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
-      input = TFile::Open( "../"+fname );
    } else {
-      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" );
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD");
    }
    if (input == NULL) {
       cerr << "broken/inaccessible input file" << endl;
