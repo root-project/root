@@ -200,7 +200,6 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
       // if histogram is empty it does not matter if it has label or not 
       if (allHaveLabels && !histoIsEmpty) {
-         if (histoIsEmpty) continue;
          THashList* hlabels=h->GetXaxis()->GetLabels();
          Bool_t haveOneLabel = (hlabels != nullptr);
          // do here to print message only one time

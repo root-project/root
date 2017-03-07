@@ -408,6 +408,7 @@ TFormula::TFormula(const TFormula &formula) :
    fNumber = formula.GetNumber();
    fFormula = formula.GetExpFormula();   // returns fFormula in case of Lambda's
    fLambdaPtr = nullptr;
+   fFuncPtr = nullptr;
 
    // case of function based on a C++  expression (lambda's) which is ready to be compiled
    if (formula.fLambdaPtr && formula.TestBit(TFormula::kLambda)) {

@@ -96,7 +96,7 @@ fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
 /// The size of thedata vector must be at least  dataDim*dataSize
 ///
 TKDTreeBinning::TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, const std::vector<double> &data, UInt_t nBins, bool adjustBinEdges)
-: fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)0), fDim(dataDim),
+: fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)0), fNBins (nBins), fDim(dataDim),
 fDataSize(dataSize), fDataThresholds(std::vector<std::pair<Double_t, Double_t> >(fDim, std::make_pair(0., 0.))),
 fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
    if (adjustBinEdges) SetBit(kAdjustBinEdges);
@@ -113,6 +113,7 @@ fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
 TKDTreeBinning::TKDTreeBinning() :
 //   fData(nullptr),
    fDataBins(nullptr),
+   fNBins (0),
    fDim(0),
    fDataSize(0),
    fIsSorted(kFALSE), fIsSortedAsc(kFALSE) 
