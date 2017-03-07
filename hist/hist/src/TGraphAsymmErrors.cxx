@@ -613,7 +613,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       }
    }
    else {
-      tsumw = pass->GetSumOfWeights();
+      tsumw = total->GetSumOfWeights();
       tsumw2 = tsumw;
    }
    if (TMath::Abs(tsumw - tsumw2) > 1e-6)
