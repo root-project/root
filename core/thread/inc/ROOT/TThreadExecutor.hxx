@@ -108,7 +108,7 @@ namespace ROOT {
    /// fixed arguments) by wrapping them in a lambda or with std::bind.
    template<class F>
    void TThreadExecutor::Foreach(F func, unsigned nTimes) {
-       ParallelFor(0U, nTimes, 1, [&](unsigned int i){func();});
+       ParallelFor(0U, nTimes, 1, [&](unsigned int){func();});
    }
 
    //////////////////////////////////////////////////////////////////////////
