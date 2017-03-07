@@ -4880,7 +4880,7 @@ Int_t TTree::FlushBaskets() const
         Int_t j = pos.fetch_add(1);
 
         auto branch = fSortedBranches[j].second;
-        if (R__unlikely(!branch)) { return 0; }
+        if (R__unlikely(!branch)) { return; }
 
         if (R__unlikely(gDebug > 0)) {
             std::stringstream ss;
@@ -4893,11 +4893,10 @@ Int_t TTree::FlushBaskets() const
 
         if (nbtask < 0) { nerrpar++; }
         else            { nbpar += nbtask; }
-        return 0;
       };
 
       ROOT::TThreadExecutor pool;
-      pool.Map(mapFunction, nb);
+      pool.Foreach(mapFunction, nb);
 
       fIMTFlush = false;
       const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
@@ -5378,11 +5377,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
             if (nbtask < 0) errnb = nbtask;
             else            nbpar += nbtask;
-            return 0;
          };
 
       ROOT::TThreadExecutor pool;
-      pool.Map(mapFunction, nbranches);
+      pool.Foreach(mapFunction, nbranches);
 
       if (errnb < 0) {
          nb = errnb;
