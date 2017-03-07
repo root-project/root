@@ -31,6 +31,19 @@ int PoolTest() {
    if(chunkedredres3 != 21)
       return 18;
 
+  /***** Foreach tests *****/
+
+  std::vector<int> vec{1,1,1,1};
+  auto lambdaNTimes = [&](){vec[0]+=1;};
+
+   pool.Foreach(lambdaNTimes, 4);
+   if(redfunc(vec) != 8)
+      return 19;
+
+   std::vector<int> vec2{1,1,1,1};
+   pool.Foreach([&](int &i){i=2;}, vec2);
+   if(redfunc(vec) != 8)
+      return 20;
    return 0;
 }
 
