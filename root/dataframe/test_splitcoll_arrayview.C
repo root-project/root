@@ -48,7 +48,13 @@ int test_splitcoll_arrayview() {
    }
 
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"v"});
-   auto c = d.Filter([](std::array_view<A> d) {  for (auto v : d )std::cout << v.a << std::endl; return d[1].a > 5; }).Count();
+   auto c = d.Filter([](std::array_view<A> d) {
+      int q=0;
+      for (auto v : d ) {
+         std::cout << v.a << std::endl;
+         q += v.a;
+      }
+      return 0 == q%3; }).Count();
    auto val = *c;
    std::cout << "count " << val << std::endl;
 
