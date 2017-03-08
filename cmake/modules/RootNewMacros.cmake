@@ -228,7 +228,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---Get the list of include directories------------------
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
-
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+    set(localinclude ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+  endif()
   #---Get the list of header files-------------------------
   set(headerfiles)
   set(fullheaderfiles)
@@ -245,7 +247,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       list(APPEND headerfiles ${fp})
       list(APPEND fullheaderfiles ${fp})
     else()
-      find_file(headerFile ${fp} HINTS ${incdirs})
+      find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs})
       list(APPEND headerfiles ${fp})
       if(headerFile)
         list(APPEND fullheaderfiles ${headerFile})
