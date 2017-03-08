@@ -226,32 +226,43 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(libprefix "")
   endif()
 
+  #---Get the list of include directories------------------
+  get_directory_property(incdirs INCLUDE_DIRECTORIES)
+
   #---Get the list of header files-------------------------
   set(headerfiles)
+  set(fullheaderfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-    file(GLOB files inc/${fp})
-    if(files)
+    if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
+      file(GLOB files inc/${fp} ${fp})
       foreach(f ${files})
-        if(NOT f MATCHES LinkDef)
-          set(headerfiles ${headerfiles} ${f})
+        if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
+          list(APPEND headerfiles ${f})
+          list(APPEND fullheaderfiles ${f})
         endif()
       endforeach()
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-      set(headerfiles ${headerfiles} ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+    elseif(IS_ABSOLUTE ${fp})
+      list(APPEND headerfiles ${fp})
+      list(APPEND fullheaderfiles ${fp})
     else()
-      set(headerfiles ${headerfiles} ${fp})
+      find_file(headerFile ${fp} HINTS ${incdirs})
+      list(APPEND headerfiles ${fp})
+      if(headerFile)
+        list(APPEND fullheaderfiles ${headerFile})
+      else()
+        list(APPEND fullheaderfiles ${fp})
+      endif()
+      unset(headerFile CACHE)
     endif()
   endforeach()
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  rheaderfiles "${headerfiles}")
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}") 
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
     # FIXME: Glob these folder.
     set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
-    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  rheaderfiles "${rheaderfiles}")
+    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
   endif()
 
-  #---Get the list of include directories------------------
-  get_directory_property(incdirs INCLUDE_DIRECTORIES)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_SOURCE_DIR}/interpreter/cling/include # This is for the RuntimeUniverse
@@ -353,9 +364,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
-                                        ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
-                     IMPLICIT_DEPENDS CXX ${_linkdef} ${headerfiles}
-                     DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
+                                        ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
+                     IMPLICIT_DEPENDS CXX ${_linkdef} ${fullheaderfiles}
+                     DEPENDS ${fullheaderfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
