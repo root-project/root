@@ -361,7 +361,9 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
     fClingInitialized = false;
    fNpar = 0;
    fMethod = 0;
+   fNumber = 0;
    fLambdaPtr = nullptr;
+   fFuncPtr = nullptr;
 
 
    fNdim = ndim;
