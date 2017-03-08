@@ -2,13 +2,15 @@ ROOTTEST_ADD_TEST(runatlasaod
                   COPY_TO_BUILDDIR small_aod.pool.root
                   MACRO runatlasaod.C
                   OUTCNV atlasaod_convert.sh
-                  OUTREF atlasaod.ref)
+                  OUTREF atlasaod.ref
+                  LABELS longtest)
 
 ROOTTEST_ADD_TEST(runcms310
                   COPY_TO_BUILDDIR CMSSW_3_1_0_pre11-RelValZTT-default-copy.root
                   MACRO runcms310.C
                   OUTCNV cms310_convert.sh
-                  OUTREF cms310.ref)
+                  OUTREF cms310.ref
+                  LABELS longtest)
 
 ROOTTEST_ADD_TEST(runaliceesd
                   COPY_TO_BUILDDIR alice_ESDs.root

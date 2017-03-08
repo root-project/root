@@ -19,7 +19,8 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(unorderedMap unorderedMap.h  SELECTION unord
 ROOTTEST_ADD_TEST(unorderedMap
                   MACRO  execUnorderedMap.C
                   OUTREF execUnorderedMap.ref
-                  DEPENDS ${GENERATE_REFLEX_TEST} unorderedSet)
+                  DEPENDS ${GENERATE_REFLEX_TEST} unorderedSet
+                  LABELS longtest)
 
 ROOTTEST_ADD_TEST(Names
                   COPY_TO_BUILDDIR auxCode.h commonUtils.h

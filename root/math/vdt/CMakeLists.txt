@@ -23,5 +23,6 @@ ROOTTEST_GENERATE_EXECUTABLE(${testname}
 ROOTTEST_ADD_TEST(${testname}
                   EXEC ${testname}
                   FAILREGEX "too" # for "too slow" and "too inaccurate" :)
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST}
+                  LABELS longtest)
 endif()

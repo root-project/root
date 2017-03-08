@@ -78,7 +78,8 @@ ROOTTEST_GENERATE_EXECUTABLE(ttree_write ttree_write.cpp LIBRARIES Core Hist RIO
 
 ROOTTEST_ADD_TEST(ttree_write
                   EXEC ttree_write
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST}
+                  LABELS longtest)
 
 ROOTTEST_GENERATE_EXECUTABLE(ttree_read ttree_read.cpp LIBRARIES Core Hist RIO Thread Tree)
 
