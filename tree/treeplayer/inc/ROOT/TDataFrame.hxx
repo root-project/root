@@ -248,7 +248,7 @@ protected:
    const BranchNames fTmpBranches;
    std::vector<TVBVec_t> fReaderValues;
 public:
-   TDataFrameActionBase(const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& firstData, const BranchNames& bn);
+   TDataFrameActionBase(const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& firstData, const BranchNames& tmpBranches);
    virtual ~TDataFrameActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
@@ -1284,7 +1284,7 @@ protected:
    BranchNames fTmpBranches;
    const std::string fName;
 public:
-   TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string &name);
+   TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, const BranchNames& tmpBranches, const std::string &name);
    virtual ~TDataFrameBranchBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
@@ -1390,7 +1390,7 @@ protected:
    const std::string fName;
 
 public:
-   TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string& name);
+   TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, const BranchNames& tmpBranches, const std::string& name);
    virtual ~TDataFrameFilterBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
