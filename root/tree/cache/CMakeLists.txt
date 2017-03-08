@@ -17,7 +17,8 @@ ROOTTEST_ADD_TEST(cachedChain
 ROOTTEST_ADD_TEST(TestCache
                   MACRO execTestCache.cxx+
                   OUTREF execTestCache.ref)
-                  
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 ROOT_GENERATE_DICTIONARY(TheEventDict Event.h LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(TheEvent TEST Event.cxx TheEventDict.cxx LIBRARIES ${ROOT_LIBRARIES})
 ROOTTEST_ADD_TEST(perfstattest-libevent-build 
