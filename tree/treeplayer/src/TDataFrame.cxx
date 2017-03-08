@@ -464,8 +464,8 @@ const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, co
    return useDefBl ? defBl : bl;
 }
 
-TDataFrameActionBase::TDataFrameActionBase(const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& firstData, const BranchNames& bn)
-   : fFirstData(firstData), fTmpBranches(bn) { }
+TDataFrameActionBase::TDataFrameActionBase(const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& firstData, const BranchNames& tmpBranches)
+   : fFirstData(firstData), fTmpBranches(tmpBranches) { }
 
 void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resize(nSlots); }
 
@@ -473,8 +473,8 @@ void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resi
 
 namespace Detail {
 
-TDataFrameBranchBase::TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string &name)
-   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+TDataFrameBranchBase::TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, const BranchNames& tmpBranches, const std::string &name)
+   : fFirstData(df), fTmpBranches(tmpBranches), fName(name) {};
 
 BranchNames TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
 
@@ -482,8 +482,8 @@ std::string TDataFrameBranchBase::GetName() const { return fName; }
 
 std::weak_ptr<TDataFrameImpl> TDataFrameBranchBase::GetDataFrame() const { return fFirstData; }
 
-TDataFrameFilterBase::TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string& name)
-   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+TDataFrameFilterBase::TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, const BranchNames& tmpBranches, const std::string& name)
+   : fFirstData(df), fTmpBranches(tmpBranches), fName(name) {};
 
 std::weak_ptr<TDataFrameImpl> TDataFrameFilterBase::GetDataFrame() const { return fFirstData; }
 
