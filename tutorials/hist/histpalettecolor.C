@@ -41,11 +41,11 @@ void histpalettecolor()
       h5->Fill(px, 2.);
    }
 
-   h1->SetMarkerStyle(20);
-   h2->SetMarkerStyle(21);
-   h3->SetMarkerStyle(22);
-   h4->SetMarkerStyle(23);
-   h5->SetMarkerStyle(24);
+   h1->SetMarkerStyle(kFullCircle);
+   h2->SetMarkerStyle(kFullSquare);
+   h3->SetMarkerStyle(kFullTriangleUp);
+   h4->SetMarkerStyle(kFullTriangleDown);
+   h5->SetMarkerStyle(kOpenCircle);
 
    h1->Draw("PLC PMC");
    h2->Draw("SAME PLC PMC");
