@@ -314,18 +314,19 @@ void MethodPyRandomForest::Train()
 {
    // Load training data (data, classes, weights) to python arrays
    int fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
-   int dims[2];
-   dims[0] = fNrowsTraining;
-   dims[1] = fNvars;
-   fTrainData = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   npy_intp dimsData[2];
+   dimsData[0] = fNrowsTraining;
+   dimsData[1] = fNvars;
+   fTrainData = (PyArrayObject *)PyArray_SimpleNew(2, dimsData, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainData", (PyObject*)fTrainData);
    float *TrainData = (float *)(PyArray_DATA(fTrainData));
 
-   fTrainDataClasses = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
+   npy_intp dimsClasses = (npy_intp) fNrowsTraining;
+   fTrainDataClasses = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainDataClasses", (PyObject*)fTrainDataClasses);
    float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
 
-   fTrainDataWeights = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
+   fTrainDataWeights = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainDataWeights", (PyObject*)fTrainDataWeights);
    float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
 
@@ -385,10 +386,10 @@ std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long
    nEvents = lastEvt-firstEvt;
 
    // Get data
-   int dims[2];
+   npy_intp dims[2];
    dims[0] = nEvents;
    dims[1] = fNvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
 
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
@@ -426,10 +427,10 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
 
    // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
-   int dims[2];
+   npy_intp dims[2];
    dims[0] = 1;
    dims[1] = fNvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
    for (UInt_t i = 0; i < fNvars; i++) pValue[i] = e->GetValue(i);
 
@@ -455,10 +456,10 @@ std::vector<Float_t>& MethodPyRandomForest::GetMulticlassValues()
 
    // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
-   int dims[2];
+   npy_intp dims[2];
    dims[0] = 1;
    dims[1] = fNvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
    for (UInt_t i = 0; i < fNvars; i++) pValue[i] = e->GetValue(i);
 
