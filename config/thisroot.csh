@@ -59,64 +59,64 @@ setenv ROOTSYS "`(cd ${thisroot}/..;pwd)`"
 
 if ($?old_rootsys) then
    setenv PATH `echo $PATH | sed -e "s;:$old_rootsys/bin:;:;g" \
-                                 -e "s;:$old_rootsys/bin;;g"   \
-                                 -e "s;$old_rootsys/bin:;;g"   \
-                                 -e "s;$old_rootsys/bin;;g"`
+                                 -e "s;:$old_rootsys/bin$$;;g"   \
+                                 -e "s;^$old_rootsys/bin:;;g"   \
+                                 -e "s;^$old_rootsys/bin$$;;g"`
    if ($?LD_LIBRARY_PATH) then
       setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib$$;;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib$$;;g"`
    endif
    if ($?DYLD_LIBRARY_PATH) then
       setenv DYLD_LIBRARY_PATH `echo $DYLD_LIBRARY_PATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib$$;;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib$$;;g"`
    endif
    if ($?SHLIB_PATH) then
       setenv SHLIB_PATH `echo $SHLIB_PATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib$$;;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib$$;;g"`
    endif
    if ($?LIBPATH) then
       setenv LIBPATH `echo $LIBPATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib$$;;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib$$;;g"`
    endif
    if ($?PYTHONPATH) then
       setenv PYTHONPATH `echo $PYTHONPATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib$$;;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib$$;;g"`
    endif
    if ($?MANPATH) then
       setenv MANPATH `echo $MANPATH | \
                              sed -e "s;:$old_rootsys/man:;:;g" \
-                                 -e "s;:$old_rootsys/man;;g"   \
-                                 -e "s;$old_rootsys/man:;;g"   \
-                                 -e "s;$old_rootsys/man;;g"`
+                                 -e "s;:$old_rootsys/man$$;;g"   \
+                                 -e "s;^$old_rootsys/man:;;g"   \
+                                 -e "s;^$old_rootsys/man$$;;g"`
    endif
    if ($?CMAKE_PREFIX_PATH) then
       setenv CMAKE_PREFIX_PATH `echo $CMAKE_PREFIX_PATH | \
                              sed -e "s;:${old_rootsys}:;:;g" \
-                                 -e "s;:${old_rootsys};;g"   \
-                                 -e "s;${old_rootsys}:;;g"   \
-                                 -e "s;${old_rootsys};;g"`
+                                 -e "s;:${old_rootsys}$$;;g"   \
+                                 -e "s;^${old_rootsys}:;;g"   \
+                                 -e "s;^${old_rootsys}$$;;g"`
    endif
    if ($?JUPYTER_PATH) then
       setenv JUPYTER_PATH `echo $JUPYTER_PATH | \
                              sed -e "s;:$old_rootsys/etc/notebook:;:;g" \
-                                 -e "s;:$old_rootsys/etc/notebook;;g"   \
-                                 -e "s;$old_rootsys/etc/notebook:;;g"   \
-                                 -e "s;$old_rootsys/etc/notebook;;g"`
+                                 -e "s;:$old_rootsys/etc/notebook$$;;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook:;;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook$$;;g"`
    endif
 
 endif
