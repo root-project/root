@@ -1273,13 +1273,12 @@ if(vc AND NOT Vc_FOUND)
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_SRC_MD5 "a248e904f0b1a330ad8f37ec50cbad30")
-  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals/install/${Vc_PROJECT}")
+  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/VC-prefix/install")
   set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(Vc_LIBRARY "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/${Vc_LIBNAME}")
 
-  ExternalProject_Add(${Vc_PROJECT}
-    PREFIX externals
+  ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
     URL_MD5 ${Vc_SRC_MD5}
     BUILD_IN_SOURCE 0
@@ -1294,9 +1293,10 @@ if(vc AND NOT Vc_FOUND)
     INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
   )
 
+  set(VC_TARGET VC)
   add_library(Vc STATIC IMPORTED)
   set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-  add_dependencies(Vc ${Vc_PROJECT})
+  add_dependencies(Vc VC)
 
   set(Vc_LIBRARIES Vc)
   set(Vc_INCLUDE_DIR "${Vc_ROOTDIR}/include")
