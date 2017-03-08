@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
    auto listTree = new TTree("TheList","TheList");
    listTree->Branch("theList","TList",&theList);
 
-   for(unsigned int i = 0; i<100000;++i) {
+   for(unsigned int i = 0; i<10000;++i) {
       listTree->Fill();
    }
    f.Write();
