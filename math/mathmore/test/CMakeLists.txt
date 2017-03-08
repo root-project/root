@@ -24,6 +24,9 @@ set(TestMathMoreSource
      testVavilov.cxx
      simanTSP.cxx  )
 
+set(LongTests
+    testFunctor.cxx
+    testPermute.cxx)
 
 if(ROOT_unuran_FOUND)
   list(APPEND Libraries Unuran)
@@ -48,6 +51,11 @@ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # bind1st
 foreach(file ${TestMathMoreSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${GSL_LIBRARIES} ${Libraries})
-  ROOT_ADD_TEST(mathmore-${testname} COMMAND ${testname}) 
+  
+  if(file IN_LIST LongTests)
+    ROOT_ADD_TEST(mathmore-${testname} COMMAND ${testname} LABELS longtest)
+  else()
+    ROOT_ADD_TEST(mathmore-${testname} COMMAND ${testname})
+  endif()  
 endforeach()
 

@@ -35,6 +35,9 @@ set(TestSource
     fit/SparseFit4.cxx
     fit/SparseFit3.cxx )
 
+set(LongTests
+    testMathRandom
+    testFitPerf)
 
 if(ROOT_roofit_FOUND)
   list(APPEND TestSource fit/testRooFit.cxx)
@@ -59,6 +62,11 @@ endif()
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname})
+
+  if(file IN_LIST LongTests)
+    ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname} LABELS longtest)
+  else()
+    ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname})
+  endif()
 endforeach()
 
