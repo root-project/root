@@ -464,6 +464,9 @@ const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, co
    return useDefBl ? defBl : bl;
 }
 
+TDataFrameActionBase::TDataFrameActionBase(const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& firstData, const BranchNames& bn)
+   : fFirstData(firstData), fTmpBranches(bn) { }
+
 void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resize(nSlots); }
 
 } // end NS Internal

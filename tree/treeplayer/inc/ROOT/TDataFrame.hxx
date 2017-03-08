@@ -244,8 +244,11 @@ const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, co
 
 class TDataFrameActionBase {
 protected:
+   std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
+   const BranchNames fTmpBranches;
    std::vector<TVBVec_t> fReaderValues;
 public:
+   TDataFrameActionBase(const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& firstData, const BranchNames& bn);
    virtual ~TDataFrameActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
@@ -272,14 +275,12 @@ class TDataFrameAction final : public TDataFrameActionBase {
 
    Helper fHelper;
    const BranchNames fBranches;
-   const BranchNames fTmpBranches;
    PrevDataFrame &fPrevData;
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
 
 public:
    TDataFrameAction(Helper&& h, const BranchNames &bl, PrevDataFrame& pd)
-      : fHelper(std::move(h)), fBranches(bl), fTmpBranches(pd.GetTmpBranches()), fPrevData(pd),
-        fFirstData(pd.GetDataFrame()) { }
+      : TDataFrameActionBase(pd.GetDataFrame(), pd.GetTmpBranches()),
+        fHelper(std::move(h)), fBranches(bl), fPrevData(pd) { }
 
    TDataFrameAction(const TDataFrameAction &) = delete;
 
