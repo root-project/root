@@ -243,6 +243,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           list(APPEND fullheaderfiles ${f})
         endif()
       endforeach()
+    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND 
+           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp}) # only for ROOT project
+      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      list(APPEND fullheaderfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     elseif(IS_ABSOLUTE ${fp})
       list(APPEND headerfiles ${fp})
       list(APPEND fullheaderfiles ${fp})
