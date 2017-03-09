@@ -446,6 +446,10 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
                         snprintf.h strlcpy.h")
+
+   # Deprecated header files.
+  set (excluded_headers "${excluded_headers} TSelectorCint.h")
+
   set(modulemap_entry "module \"${library}\" {")
   # For modules GCocoa and GQuartz we need objc context.
   if (${library} MATCHES "(libGCocoa|libGQuartz)\..*")
