@@ -397,7 +397,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     # all rest of the first dict is in the PCH but this file is not and it
     # cannot be present in the original dictionary.
     if(NOT ARG_MULTIDICT)
-      ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${rheaderfiles}")
+      ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${headerfiles}")
     endif()
   endif(cxxmodules)
 endfunction()
