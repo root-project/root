@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 if(MSVC)
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
 else()
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti -DR__NO_INLINE_CLASSDEF")
 endif()
 
 # This to avoid warning coming from  message coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441

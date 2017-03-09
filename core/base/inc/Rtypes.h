@@ -188,6 +188,8 @@ typedef std::atomic<TClass*> atomic_TClass_ptr;
 
 #include "TIsAProxy.h"
 
+#include "TIsAProxy.h"
+
 namespace ROOT { namespace Internal {
 struct TTypeNameExtractionBase {
    // Implemented in TGenericClassInfo.cxx

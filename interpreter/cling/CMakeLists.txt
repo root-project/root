@@ -213,7 +213,7 @@ string(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 if(MSVC)
   add_definitions(/GR- /DNOMINMAX)
 else()
-  add_definitions(-fno-rtti)
+  add_definitions(-fno-rtti -DR__NO_INLINE_CLASSDEF)
 endif()
 
 if (APPLE)
