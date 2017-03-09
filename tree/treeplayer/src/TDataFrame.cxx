@@ -584,20 +584,36 @@ void TDataFrameImpl::Run()
    fResProxyReadiness.clear();
 }
 
-// build reader values for all actions, filters and branches
+/// Build TTreeReaderValues for all nodes
+///
+/// This method loops over all filters, actions and other booked objects and
+/// calls their `BuildReaderValues` methods. It is called once per node per slot, before
+/// running the event loop. It also informs each node of the TTreeReader that
+/// a particular slot will be using.
 void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
 {
-   for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedActions)
+      ptr->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedFilters)
+      ptr->BuildReaderValues(r, slot);
+   for (auto &bookedBranch : fBookedBranches)
+      bookedBranch.second->BuildReaderValues(r, slot);
 }
 
-// inform all actions filters and branches of the required number of slots
+/// Initialize all nodes of the functional graph before running the event loop
+///
+/// This method loops over all filters, actions and other booked objects and
+/// calls their `CreateSlots` methods. It is called once per node before running the
+/// event loop. The main effect is to inform all nodes of the number of slots
+/// (i.e. workers) that will be used to perform the event loop.
 void TDataFrameImpl::CreateSlots(unsigned int nSlots)
 {
-   for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
-   for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
+   for (auto &ptr : fBookedActions)
+      ptr->CreateSlots(nSlots);
+   for (auto &ptr : fBookedFilters)
+      ptr->CreateSlots(nSlots);
+   for (auto &bookedBranch : fBookedBranches)
+      bookedBranch.second->CreateSlots(nSlots);
 }
 
 std::weak_ptr<ROOT::Detail::TDataFrameImpl> TDataFrameImpl::GetDataFrame()
