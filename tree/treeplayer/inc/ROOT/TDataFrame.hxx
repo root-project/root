@@ -93,10 +93,10 @@ class TActionResultProxy {
    friend class ROOT::Detail::TDataFrameImpl;
 
    ShrdPtrBool_t fReadiness = std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
-   WPTDFI_t fFirstData;                                      ///< Original TDataFrame
+   WPTDFI_t fImplWeakPtr;                                    ///< Points to the TDataFrameImpl at the root of the functional graph
    SPT_t fObjPtr;                                            ///< Shared pointer encapsulating the wrapped result
 
-   /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fFirstData
+   /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
 
    /// Get the pointer to the encapsulated result.
@@ -109,7 +109,7 @@ class TActionResultProxy {
    }
 
    TActionResultProxy(const SPT_t& objPtr, const ShrdPtrBool_t& readiness, const SPTDFI_t& firstData)
-      : fReadiness(readiness), fFirstData(firstData), fObjPtr(objPtr) { }
+      : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr) { }
 
    /// Factory to allow to keep the constructor private
    static TActionResultProxy<T>
@@ -244,16 +244,15 @@ const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, co
 
 class TDataFrameActionBase {
 protected:
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
+   ROOT::Detail::TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only guaranteed to contain a valid address during an event loop.
    const BranchNames fTmpBranches;
    std::vector<TVBVec_t> fReaderValues;
 public:
-   TDataFrameActionBase(const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& firstData, const BranchNames& tmpBranches);
+   TDataFrameActionBase(ROOT::Detail::TDataFrameImpl* implPtr, const BranchNames& tmpBranches);
    virtual ~TDataFrameActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    void CreateSlots(unsigned int nSlots);
-
 };
 
 using ActionBasePtr_t = std::shared_ptr<TDataFrameActionBase>;
@@ -262,10 +261,10 @@ using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 // Forward declarations
 template<typename T>
 T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
-                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>);
+                  ROOT::Detail::TDataFrameImpl* df, TDFTraitsUtils::TTypeList<T>);
 template<typename T>
 std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
-                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
+                                  ROOT::Detail::TDataFrameImpl* df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
 
 
 template <typename Helper, typename PrevDataFrame,
@@ -279,7 +278,7 @@ class TDataFrameAction final : public TDataFrameActionBase {
 
 public:
    TDataFrameAction(Helper&& h, const BranchNames &bl, PrevDataFrame& pd)
-      : TDataFrameActionBase(pd.GetDataFrame(), pd.GetTmpBranches()),
+      : TDataFrameActionBase(pd.GetImplPtr(), pd.GetTmpBranches()),
         fHelper(std::move(h)), fBranches(bl), fPrevData(pd) { }
 
    TDataFrameAction(const TDataFrameAction &) = delete;
@@ -307,7 +306,7 @@ public:
       // S expands to a sequence of integers 0 to sizeof...(types)-1
       // S and BranchTypes are expanded simultaneously by "..."
       fHelper.Exec(slot, GetBranchValue(fReaderValues[slot][S], slot, entry,
-                                        fBranches[S], fFirstData.lock(),
+                                        fBranches[S], fImplPtr,
                                         TDFTraitsUtils::TTypeList<BranchTypes>())
                    ...);
    }
@@ -424,7 +423,7 @@ public:
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (std::move(f), actualBl, *fProxiedPtr, name);
       df->Book(FilterPtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(std::move(FilterPtr));
+      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
       return tdf_f;
    }
 
@@ -486,7 +485,7 @@ public:
       using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
       df->Book(BranchPtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(std::move(BranchPtr));
+      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
    }
 
@@ -1215,9 +1214,10 @@ private:
 
 protected:
    /// Get the TDataFrameImpl if reachable. If not, throw.
-   std::shared_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrameChecked()
+   std::shared_ptr<ROOT::Detail::TDataFrameImpl>
+   GetDataFrameChecked()
    {
-      auto df = fProxiedPtr->GetDataFrame().lock();
+      auto df = fImplWeakPtr.lock();
       if (!df) {
          throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
       }
@@ -1244,8 +1244,17 @@ protected:
       return BranchNames(bnBegin, bnBegin + nExpectedBranches);
    }
 
-   TDataFrameInterface(std::shared_ptr<Proxied>&& proxied) : fProxiedPtr(std::move(proxied)) {}
+   TDataFrameInterface(const std::shared_ptr<Proxied>& proxied,
+                       const std::weak_ptr<ROOT::Detail::TDataFrameImpl>& impl)
+      : fProxiedPtr(proxied), fImplWeakPtr(impl) {}
+
+   /// Only enabled when building a TDataFrameInterface<TDataFrameImpl>
+   template<typename T = Proxied, typename std::enable_if<std::is_same<T,ROOT::Detail::TDataFrameImpl>::value, int>::type = 0>
+   TDataFrameInterface(const std::shared_ptr<Proxied>& proxied)
+      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()) {}
+
    std::shared_ptr<Proxied> fProxiedPtr;
+   std::weak_ptr<ROOT::Detail::TDataFrameImpl> fImplWeakPtr;
 };
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
@@ -1280,18 +1289,18 @@ namespace Detail {
 
 class TDataFrameBranchBase {
 protected:
-   std::weak_ptr<TDataFrameImpl> fFirstData;
+   TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only guaranteed to contain a valid address during an event loop.
    BranchNames fTmpBranches;
    const std::string fName;
 public:
-   TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, const BranchNames& tmpBranches, const std::string &name);
+   TDataFrameBranchBase(TDataFrameImpl* df, const BranchNames& tmpBranches, const std::string &name);
    virtual ~TDataFrameBranchBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void *GetValue(unsigned int slot, Long64_t entry) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
+   TDataFrameImpl* GetImplPtr() const;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    std::string GetName() const;
@@ -1315,7 +1324,7 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
 
 public:
    TDataFrameBranch(const std::string &name, F&& expression, const BranchNames &bl, PrevData& pd)
-      : TDataFrameBranchBase(pd.GetDataFrame(), pd.GetTmpBranches(), name),
+      : TDataFrameBranchBase(pd.GetImplPtr(), pd.GetTmpBranches(), name),
         fExpression(std::move(expression)), fBranches(bl), fPrevData(pd)
    {
       fTmpBranches.emplace_back(name);
@@ -1362,7 +1371,7 @@ public:
    {
       auto valuePtr = std::make_shared<Ret_t>(fExpression(
          ROOT::Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
-                                  fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
+                                        fImplPtr, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
       return valuePtr;
    }
 
@@ -1380,7 +1389,7 @@ public:
 
 class TDataFrameFilterBase {
 protected:
-   std::weak_ptr<TDataFrameImpl> fFirstData;
+   TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only guaranteed to contain a valid address during an event loop.
    const BranchNames fTmpBranches;
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues = {};
    std::vector<Long64_t> fLastCheckedEntry = {-1};
@@ -1390,13 +1399,13 @@ protected:
    const std::string fName;
 
 public:
-   TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, const BranchNames& tmpBranches, const std::string& name);
+   TDataFrameFilterBase(TDataFrameImpl* df, const BranchNames& tmpBranches, const std::string& name);
    virtual ~TDataFrameFilterBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
-   std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
+   TDataFrameImpl* GetImplPtr() const;
    BranchNames GetTmpBranches() const;
    bool HasName() const;
    void CreateSlots(unsigned int nSlots);
@@ -1417,7 +1426,7 @@ class TDataFrameFilter final : public TDataFrameFilterBase {
 public:
    TDataFrameFilter(FilterF&& f, const BranchNames &bl,
                     PrevDataFrame& pd, const std::string& name = "")
-      : TDataFrameFilterBase(pd.GetDataFrame(), pd.GetTmpBranches(), name),
+      : TDataFrameFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name),
         fFilter(std::move(f)), fBranches(bl), fPrevData(pd) { }
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
@@ -1451,7 +1460,7 @@ public:
       (void) slot; // avoid bogus unused-but-set-parameter warning by gcc
       (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
       return fFilter(ROOT::Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
-                     fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
+                     fImplPtr, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
    }
 
    void BuildReaderValues(TTreeReader &r, unsigned int slot) final
@@ -1491,7 +1500,8 @@ public:
    void Run();
    void BuildAllReaderValues(TTreeReader &r, unsigned int slot);
    void CreateSlots(unsigned int nSlots);
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrame();
+   TDataFrameImpl* GetImplPtr();
+   std::shared_ptr<TDataFrameImpl> GetSharedPtr() { return shared_from_this(); }
    const BranchNames &GetDefaultBranches() const;
    const BranchNames GetTmpBranches() const { return {}; };
    TTree* GetTree() const;
@@ -1532,7 +1542,7 @@ namespace Experimental {
 template<typename T>
 void Experimental::TActionResultProxy<T>::TriggerRun()
 {
-   auto df = fFirstData.lock();
+   auto df = fImplWeakPtr.lock();
    if (!df) {
       throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
    }
@@ -1540,8 +1550,8 @@ void Experimental::TActionResultProxy<T>::TriggerRun()
 }
 
 template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
-TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches) : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
-   std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
    for (auto& fileName : filenamescoll)
@@ -1555,7 +1565,7 @@ TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenam
 namespace Internal {
 template <typename T>
 T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, const std::string &branch,
-                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>)
+                  ROOT::Detail::TDataFrameImpl* df, TDFTraitsUtils::TTypeList<T>)
 {
    if (readerValue == nullptr) {
       // temporary branch
@@ -1570,7 +1580,7 @@ T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, cons
 template<typename T>
 std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
                                   Long64_t entry, const std::string& branch,
-                                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df,
+                                  ROOT::Detail::TDataFrameImpl* df,
                                   TDFTraitsUtils::TTypeList<std::array_view<T>>)
 {
    if(readerValue == nullptr) {
