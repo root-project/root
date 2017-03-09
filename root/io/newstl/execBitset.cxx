@@ -12,6 +12,7 @@
 #undef NDEBUG
 #endif
 #include <cassert>
+#include <memory>
 
 template <typename Coll> void runContentTest(TVirtualCollectionProxy *proxy, Coll &bs)
 {
