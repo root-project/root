@@ -246,7 +246,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   if(ARG_NO_ROOTMAP)
     set(CMAKE_ROOTTEST_NOROOTMAP ON)
   endif()
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR})  # headers can be in current source
+
   ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS}
                            MODULE ${dictname}
                            LINKDEF ${ARG_LINKDEF}
