@@ -1,4 +1,3 @@
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 ROOTTEST_GENERATE_DICTIONARY(myclbad bad.h mycl.C LINKDEF LinkDef.h NO_ROOTMAP)
 set(depends ${GENERATE_DICTIONARY_TEST})
 
