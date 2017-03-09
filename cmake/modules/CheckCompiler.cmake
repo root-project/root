@@ -136,7 +136,7 @@ if(cxxmodules)
                              CXX_SUPPORTS_MODULES)
   set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
   if(CXX_SUPPORTS_MODULES)
-    set(ROOT_CXXMODULES_COMMONFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Rmodule-build")
+    set(ROOT_CXXMODULES_COMMONFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack")
     if (APPLE)
       # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
       # trickery to override the contents of system's OpenGL.
