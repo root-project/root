@@ -367,7 +367,7 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches)
+TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames_t &defaultBranches)
    : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr,defaultBranches))
 {
    if (!dirPtr) {
@@ -393,7 +393,7 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames &defaultBranches)
+TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches)
    : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
@@ -412,7 +412,7 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(TTree &tree, const BranchNames &defaultBranches)
+TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
    : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
 { }
 
@@ -420,12 +420,12 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames &defaultBranches)
 
 namespace Internal {
 
-const char* ToConstCharPtr(const char* s)
+const char *ToConstCharPtr(const char *s)
 {
    return s;
 }
 
-const char* ToConstCharPtr(const std::string s)
+const char *ToConstCharPtr(const std::string s)
 {
    return s.c_str();
 }
@@ -438,7 +438,7 @@ unsigned int GetNSlots() {
    return nSlots;
 }
 
-void CheckTmpBranch(const std::string& branchName, TTree *treePtr)
+void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
 {
    auto branch = treePtr->GetBranch(branchName.c_str());
    if (branch != nullptr) {
@@ -448,7 +448,7 @@ void CheckTmpBranch(const std::string& branchName, TTree *treePtr)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, const BranchNames &defBl)
+const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl)
 {
    bool useDefBl = false;
    if (nArgs != bl.size()) {
@@ -464,27 +464,30 @@ const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, co
    return useDefBl ? defBl : bl;
 }
 
+TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches) { }
+
 void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resize(nSlots); }
 
 } // end NS Internal
 
 namespace Detail {
 
-TDataFrameBranchBase::TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string &name)
-   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+TDataFrameBranchBase::TDataFrameBranchBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name) {};
 
-BranchNames TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
+BranchNames_t TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
 
 std::string TDataFrameBranchBase::GetName() const { return fName; }
 
-std::weak_ptr<TDataFrameImpl> TDataFrameBranchBase::GetDataFrame() const { return fFirstData; }
+TDataFrameImpl *TDataFrameBranchBase::GetImplPtr() const { return fImplPtr; }
 
-TDataFrameFilterBase::TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string& name)
-   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+TDataFrameFilterBase::TDataFrameFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name) {};
 
-std::weak_ptr<TDataFrameImpl> TDataFrameFilterBase::GetDataFrame() const { return fFirstData; }
+TDataFrameImpl *TDataFrameFilterBase::GetImplPtr() const { return fImplPtr; }
 
-BranchNames TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
+BranchNames_t TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
 
 bool TDataFrameFilterBase::HasName() const { return !fName.empty(); };
 
@@ -514,7 +517,7 @@ void TDataFrameFilterBase::PrintReport() const {
           fName.c_str(), accepted, all, perc);
 }
 
-TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames &defaultBranches)
+TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches)
    : fTree(tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
 { }
 
@@ -581,28 +584,44 @@ void TDataFrameImpl::Run()
    fResProxyReadiness.clear();
 }
 
-// build reader values for all actions, filters and branches
+/// Build TTreeReaderValues for all nodes
+///
+/// This method loops over all filters, actions and other booked objects and
+/// calls their `BuildReaderValues` methods. It is called once per node per slot, before
+/// running the event loop. It also informs each node of the TTreeReader that
+/// a particular slot will be using.
 void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
 {
-   for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedActions)
+      ptr->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedFilters)
+      ptr->BuildReaderValues(r, slot);
+   for (auto &bookedBranch : fBookedBranches)
+      bookedBranch.second->BuildReaderValues(r, slot);
 }
 
-// inform all actions filters and branches of the required number of slots
+/// Initialize all nodes of the functional graph before running the event loop
+///
+/// This method loops over all filters, actions and other booked objects and
+/// calls their `CreateSlots` methods. It is called once per node before running the
+/// event loop. The main effect is to inform all nodes of the number of slots
+/// (i.e. workers) that will be used to perform the event loop.
 void TDataFrameImpl::CreateSlots(unsigned int nSlots)
 {
-   for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
-   for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
+   for (auto &ptr : fBookedActions)
+      ptr->CreateSlots(nSlots);
+   for (auto &ptr : fBookedFilters)
+      ptr->CreateSlots(nSlots);
+   for (auto &bookedBranch : fBookedBranches)
+      bookedBranch.second->CreateSlots(nSlots);
 }
 
-std::weak_ptr<ROOT::Detail::TDataFrameImpl> TDataFrameImpl::GetDataFrame()
+TDataFrameImpl *TDataFrameImpl::GetImplPtr()
 {
-   return std::weak_ptr<ROOT::Detail::TDataFrameImpl>(shared_from_this());
+   return this;
 }
 
-const BranchNames &TDataFrameImpl::GetDefaultBranches() const
+const BranchNames_t &TDataFrameImpl::GetDefaultBranches() const
 {
    return fDefaultBranches;
 }
@@ -632,12 +651,12 @@ std::string TDataFrameImpl::GetTreeName() const
    return fTree->GetName();
 }
 
-void TDataFrameImpl::Book(const ROOT::Internal::ActionBasePtr_t& actionPtr)
+void TDataFrameImpl::Book(const ROOT::Internal::ActionBasePtr_t &actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t& filterPtr)
+void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t &filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -645,7 +664,7 @@ void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t& filterPtr)
    }
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::TmpBranchBasePtr_t& branchPtr)
+void TDataFrameImpl::Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr)
 {
    fBookedBranches[branchPtr->GetName()] = branchPtr;
 }
@@ -663,7 +682,7 @@ unsigned int TDataFrameImpl::GetNSlots() const
 
 /// Call `PrintReport` on all booked filters
 void TDataFrameImpl::Report() const {
-   for(const auto& fPtr : fBookedNamedFilters)
+   for(const auto &fPtr : fBookedNamedFilters)
       fPtr->PrintReport();
 }
 

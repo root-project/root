@@ -10215,7 +10215,8 @@ int stressHistogram()
       refFile = TFile::Open(refFileName, "RECREATE");
    }
    else {
-      refFile = TFile::Open(refFileName);
+      TFile::SetCacheFileDir(".");
+      refFile = TFile::Open(refFileName, "CACHEREAD");
    }
 
    if ( refFile != 0 ) {

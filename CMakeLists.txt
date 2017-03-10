@@ -202,8 +202,9 @@ if(cxxmodules)
   if (NOT APPLE)
     set(__echo_args "-e")
   endif()
+  file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
   add_custom_command(TARGET copymodulemap POST_BUILD
-                     COMMAND echo ${__echo_args} ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
+                     COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> ${CMAKE_BINARY_DIR}/include/module.modulemap
                      VERBATIM
                     )
   add_dependencies(move_artifacts copymodulemap)

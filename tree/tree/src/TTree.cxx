@@ -4827,8 +4827,8 @@ struct BoolRAIIToggle {
 /// Write to disk all the basket that have not yet been individually written.
 ///
 /// If ROOT has IMT-mode enabled, this will launch multiple TBB tasks in parallel
-/// to do this operation; one per basket compression.  If the caller utilizes
-/// TBB also, care must be taken to prevent deadlocks.
+/// via TThreadExecutor to do this operation; one per basket compression.  If the
+///  caller utilizes TBB also, care must be taken to prevent deadlocks.
 ///
 /// For example, let's say the caller holds mutex A and calls FlushBaskets; while
 /// TBB is waiting for the ROOT compression tasks to complete, it may decide to
@@ -4870,34 +4870,33 @@ Int_t TTree::FlushBaskets() const
       std::atomic<Int_t> nerrpar(0);
       std::atomic<Int_t> nbpar(0);
       std::atomic<Int_t> pos(0);
-      tbb::task_group g;
+         
+      auto mapFunction  = [&]() {
+        // The branch to process is obtained when the task starts to run.
+        // This way, since branches are sorted, we make sure that branches
+        // leading to big tasks are processed first. If we assigned the
+        // branch at task creation time, the scheduler would not necessarily
+        // respect our sorting.
+        Int_t j = pos.fetch_add(1);
 
-      for (Int_t i = 0; i < nb; i++) {
-         g.run([&]() {
-            // The branch to process is obtained when the task starts to run.
-            // This way, since branches are sorted, we make sure that branches
-            // leading to big tasks are processed first. If we assigned the
-            // branch at task creation time, the scheduler would not necessarily
-            // respect our sorting.
-            Int_t j = pos.fetch_add(1);
+        auto branch = fSortedBranches[j].second;
+        if (R__unlikely(!branch)) { return; }
 
-            auto branch = fSortedBranches[j].second;
-            if (R__unlikely(!branch)) { return; }
+        if (R__unlikely(gDebug > 0)) {
+            std::stringstream ss;
+            ss << std::this_thread::get_id();
+            Info("FlushBaskets", "[IMT] Thread %s", ss.str().c_str());
+            Info("FlushBaskets", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+        }
 
-            if (R__unlikely(gDebug > 0)) {
-               std::stringstream ss;
-               ss << std::this_thread::get_id();
-               Info("FlushBaskets", "[IMT] Thread %s", ss.str().c_str());
-               Info("FlushBaskets", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
-            }
+        Int_t nbtask = branch->FlushBaskets();
 
-            Int_t nbtask = branch->FlushBaskets();
+        if (nbtask < 0) { nerrpar++; }
+        else            { nbpar += nbtask; }
+      };
 
-            if (nbtask < 0) { nerrpar++; }
-            else            { nbpar += nbtask; }
-         });
-      }
-      g.wait();
+      ROOT::TThreadExecutor pool;
+      pool.Foreach(mapFunction, nb);
 
       fIMTFlush = false;
       const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
@@ -5348,7 +5347,6 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       Int_t errnb = 0;
       std::atomic<Int_t> pos(0);
       std::atomic<Int_t> nbpar(0);
-      tbb::task_group g;
 
       auto mapFunction = [&]() {
             // The branch to process is obtained when the task starts to run.
@@ -5379,11 +5377,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
             if (nbtask < 0) errnb = nbtask;
             else            nbpar += nbtask;
-            return 0;
          };
 
       ROOT::TThreadExecutor pool;
-      pool.Map(mapFunction, nbranches);
+      pool.Foreach(mapFunction, nbranches);
 
       if (errnb < 0) {
          nb = errnb;

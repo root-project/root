@@ -226,32 +226,49 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(libprefix "")
   endif()
 
+  #---Get the list of include directories------------------
+  get_directory_property(incdirs INCLUDE_DIRECTORIES)
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+    set(localinclude ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+  endif()
   #---Get the list of header files-------------------------
   set(headerfiles)
+  set(fullheaderfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-    file(GLOB files inc/${fp})
-    if(files)
+    if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
+      file(GLOB files inc/${fp} ${fp})
       foreach(f ${files})
-        if(NOT f MATCHES LinkDef)
-          set(headerfiles ${headerfiles} ${f})
+        if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
+          list(APPEND headerfiles ${f})
+          list(APPEND fullheaderfiles ${f})
         endif()
       endforeach()
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-      set(headerfiles ${headerfiles} ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND 
+           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp}) # only for ROOT project
+      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      list(APPEND fullheaderfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+    elseif(IS_ABSOLUTE ${fp})
+      list(APPEND headerfiles ${fp})
+      list(APPEND fullheaderfiles ${fp})
     else()
-      set(headerfiles ${headerfiles} ${fp})
+      find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs})
+      list(APPEND headerfiles ${fp})
+      if(headerFile)
+        list(APPEND fullheaderfiles ${headerFile})
+      else()
+        list(APPEND fullheaderfiles ${fp})
+      endif()
+      unset(headerFile CACHE)
     endif()
   endforeach()
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  rheaderfiles "${headerfiles}")
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}") 
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
     # FIXME: Glob these folder.
     set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
-    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  rheaderfiles "${rheaderfiles}")
+    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
   endif()
 
-  #---Get the list of include directories------------------
-  get_directory_property(incdirs INCLUDE_DIRECTORIES)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_SOURCE_DIR}/interpreter/cling/include # This is for the RuntimeUniverse
@@ -353,9 +370,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
-                                        ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
-                     IMPLICIT_DEPENDS CXX ${_linkdef} ${headerfiles}
-                     DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
+                                        ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
+                     IMPLICIT_DEPENDS CXX ${_linkdef} ${fullheaderfiles}
+                     DEPENDS ${fullheaderfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
@@ -384,7 +401,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     # all rest of the first dict is in the PCH but this file is not and it
     # cannot be present in the original dictionary.
     if(NOT ARG_MULTIDICT)
-      ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${rheaderfiles}")
+      ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${headerfiles}")
     endif()
   endif(cxxmodules)
 endfunction()
@@ -433,12 +450,16 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
                         snprintf.h strlcpy.h")
-  set(modulemap_entry "module \"${library}\" { \\n")
+
+   # Deprecated header files.
+  set (excluded_headers "${excluded_headers} TSelectorCint.h")
+
+  set(modulemap_entry "module \"${library}\" {")
   # For modules GCocoa and GQuartz we need objc context.
   if (${library} MATCHES "(libGCocoa|libGQuartz)\..*")
-    set (modulemap_entry "${modulemap_entry} \\n  requires objc \\n")
+    set (modulemap_entry "${modulemap_entry}\n  requires objc\n")
   else()
-    set (modulemap_entry "${modulemap_entry} \\n  requires cplusplus \\n")
+    set (modulemap_entry "${modulemap_entry}\n  requires cplusplus\n")
   endif()
   if (library_headers)
     set(found_headers ${library_headers})
@@ -447,14 +468,14 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     #message (STATUS "header: ${header}")
     set(textual_header "")
     if (${header} MATCHES ".*\.icc$")
-      set(textual_header " textual")
+      set(textual_header "textual ")
     endif()
     if (NOT ${excluded_headers} MATCHES ${header})
-      set(modulemap_entry "${modulemap_entry} module \"${header}\" { ${textual_header} header \"${header}\" export * }\\n")
+      set(modulemap_entry "${modulemap_entry}  module \"${header}\" { ${textual_header}header \"${header}\" export * }\n")
     endif()
   endforeach()
-  #set(modulemap_entry "${modulemap_entry}  link \"lib/${library}\"\\n")
-  set(modulemap_entry "${modulemap_entry}  export *\\n }\\n")
+  #set(modulemap_entry "${modulemap_entry}  link \"lib/${library}\"\n")
+  set(modulemap_entry "${modulemap_entry}  export *\n}\n\n")
   set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
 endfunction()
 

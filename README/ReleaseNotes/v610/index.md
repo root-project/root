@@ -211,6 +211,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## Parallelism and PROOF
 - Add ROOT::GetImplicitMTPoolSize function to get the size of the pool used to enable implicit multi threading
+- Add the TThreadExecutor::Foreach method for parallelising functions featuring void return type
 
 ## Language Bindings
 

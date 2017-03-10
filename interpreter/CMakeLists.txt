@@ -80,6 +80,10 @@ if(cxxmodules)
   endif(libcxx)
 endif(cxxmodules)
 
+if(gcctoolchain)
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
+endif()
+
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")

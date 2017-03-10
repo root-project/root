@@ -1015,6 +1015,7 @@ TColor::TColor(Float_t r, Float_t g, Float_t b, Float_t a): TNamed("","")
    fGreen  = g;
    fBlue   = b;
    fAlpha  = a;
+   RGBtoHLS(r, g, b, fHue, fLight, fSaturation);
 
    // enter in the list of colors
    TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
