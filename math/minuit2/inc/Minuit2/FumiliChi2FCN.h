@@ -56,6 +56,7 @@ public:
   FumiliChi2FCN() {}
 
   virtual ~FumiliChi2FCN() {}
+  fModelFunction = nullptr;
 
 
 
