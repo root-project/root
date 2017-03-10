@@ -355,7 +355,7 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
    if (!text || !text[0])//Can this ever happen? TPad::PaintText does not check this.
       return;
 
-   if (!GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+   if (GetTextSize()<1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
       return;
 
    NSObject<X11Drawable> * const drawable =
@@ -700,7 +700,7 @@ void TGQuartz::AlignTTFString()
    //End of comment.
 
    //This code is from TGX11TTF (with my fixes).
-   //It looks like align can not be both X and Y aling?
+   //It looks like align can not be both X and Y align?
 
    const EAlign align = EAlign(fTextAlign);
 
@@ -920,7 +920,7 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
       }
 
       // if fore or background have changed from previous character
-      // recalculate the 3 smooting colors (interpolation between fore-
+      // recalculate the 3 smoothing colors (interpolation between fore-
       // and background colors)
       if (fore != col[4].fPixel || back != col[0].fPixel) {
          col[4].fPixel = fore;
@@ -930,7 +930,7 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
             TGCocoa::QueryColor(kNone, col[0]);
          }
 
-         // interpolate between fore and backgound colors
+         // interpolate between fore and background colors
          for (int x = 3; x > 0; --x) {
             col[x].fRed   = (col[4].fRed   * x + col[0].fRed   * (4 - x)) / 4;
             col[x].fGreen = (col[4].fGreen * x + col[0].fGreen * (4 - x)) / 4;
