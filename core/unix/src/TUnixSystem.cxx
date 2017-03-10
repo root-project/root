@@ -605,7 +605,6 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigSegmentationViolation, SigHandler);
    UnixSignal(kSigIllegalInstruction,    SigHandler);
    UnixSignal(kSigSystem,                SigHandler);
-   UnixSignal(kSigPipe,                  SigHandler);
    UnixSignal(kSigAlarm,                 SigHandler);
    UnixSignal(kSigUrgent,                SigHandler);
    UnixSignal(kSigFloatingException,     SigHandler);
