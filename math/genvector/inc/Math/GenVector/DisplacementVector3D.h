@@ -249,7 +249,9 @@ namespace ROOT {
        */
       template <class IT>
       void GetCoordinates( IT begin) const {
-        Scalar a,b,c = Scalar(0);
+        Scalar a = Scalar(0);
+        Scalar b = Scalar(0);
+        Scalar c = Scalar(0);
         GetCoordinates (a,b,c);
         *begin++ = a;
         *begin++ = b;
