@@ -15,8 +15,8 @@ framework, PROOF, that can considerably speed up an analysis.
 
 Thanks to the built-in C++ interpreter cling, the command, the
 scripting and the programming language are all C++. The interpreter
-allows for fast prototyping of the macros since it removes the, time
-consuming, compile/link cycle. It also provides a good environment to
+allows for fast prototyping of the macros since it removes the time
+consuming compile/link cycle. It also provides a good environment to
 learn C++. If more performance is needed the interactively developed
 macros can be compiled using a C++ compiler via a machine independent
 transparent compiler interface called ACliC.
