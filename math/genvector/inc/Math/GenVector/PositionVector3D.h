@@ -227,11 +227,13 @@ namespace ROOT {
        */
       template <class IT>
       void GetCoordinates( IT begin ) const {
-         Scalar a,b,c = 0;
-         GetCoordinates (a,b,c);
-         *begin++ = a;
-         *begin++ = b;
-         *begin   = c;
+        Scalar a = Scalar(0);
+        Scalar b = Scalar(0);
+        Scalar c = Scalar(0);
+        GetCoordinates (a,b,c);
+        *begin++ = a;
+        *begin++ = b;
+        *begin   = c;
       }
 
       /**
@@ -585,7 +587,9 @@ namespace ROOT {
     {
       if ( os ) {
       
-        typename T::Scalar a, b, c;
+        typename T::Scalar a = 0;
+        typename T::Scalar b = 0;
+        typename T::Scalar c = 0;
         v.GetCoordinates(a, b, c);
         
         if( detail::get_manip( os, detail::bitforbit ) )  {

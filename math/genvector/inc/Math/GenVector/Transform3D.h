@@ -983,7 +983,7 @@ inline Transform3D<T> & Transform3D<T>::operator *= (const Transform3D<T>  & t)
 template <class T>
 inline Transform3D<T> Transform3D<T>::operator * (const Transform3D<T>  & t) const
 {
-   // combination of transformations
+  // combination of transformations
 
   return Transform3D<T>(fM[kXX]*t.fM[kXX]+fM[kXY]*t.fM[kYX]+fM[kXZ]*t.fM[kZX],
                         fM[kXX]*t.fM[kXY]+fM[kXY]*t.fM[kYY]+fM[kXZ]*t.fM[kZY],

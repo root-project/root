@@ -192,7 +192,8 @@ public :
    explicit Cartesian3D( const Polar3D<T2> & v ) : fZ (v.Z())
    {
      using namespace std; 
-     const T rho = v.Rho(); // re-using this instead of calling v.X() and v.Y()
+     const T rho = v.Rho();
+     // re-using this instead of calling v.X() and v.Y()
      // is the speed improvement
      fX = rho * cos(v.Phi());
      fY = rho * sin(v.Phi());
