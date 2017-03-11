@@ -241,8 +241,7 @@ be used by the Transform() member function, the *= or
 #include "TLorentzVector.h"
 
 #include "TBuffer.h"
-#include "TClass.h"
-#include "TError.h"
+#include "TString.h"
 #include "TLorentzRotation.h"
 
 ClassImp(TLorentzVector)

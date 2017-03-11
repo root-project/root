@@ -120,61 +120,6 @@ if(libcxx)
   endif()
 endif()
 
-
-#---Check for cxxmodules option------------------------------------------------------------
-if(cxxmodules)
-  # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
-  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fmodules -fcxx-modules")
-  # Check that we can build code with modules enabled, and that repeatedly
-  # including <cassert> still manages to respect NDEBUG properly.
-  CHECK_CXX_SOURCE_COMPILES("#undef NDEBUG
-                             #include <cassert>
-                             #define NDEBUG
-                             #include <cassert>
-                             int main() { assert(this code is not compiled); }"
-                             CXX_SUPPORTS_MODULES)
-  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
-  if(CXX_SUPPORTS_MODULES)
-    set(ROOT_CXXMODULES_COMMONFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack")
-    if (APPLE)
-      # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
-      # trickery to override the contents of system's OpenGL.
-      # On OSX #include TGLIncludes.h will trigger the creation of the system
-      # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
-      # the translation units which it needs to 'rewrite'. The translation units
-      # which need glew support are in graf3d. However, depending on the modulemap
-      # organization we could request it implicitly (eg. one big module for ROOT).
-      # In these cases we need to 'prepend' this include path to the compiler in order
-      # for glew.h to it its trick.
-      #set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem"
-
-      # Workaround the issue described above by not picking up the system module
-      # maps. In this way we can use the -fmodules-local-submodule-visibility
-      # flag.
-      set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
-    endif(APPLE)
-
-    # Provide our own modulemap for implementations other than libcxx.
-    if (NOT libcxx)
-      # Write a empty overlay file to the output directory that CMake can run its compiler tests.
-      # We will create the actual overlay later in the configuration.
-      file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
-      set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__vfs_overlay}")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__vfs_overlay}")
-    endif()
-
-    # These vars are useful when we want to compile things without cxxmodules.
-    set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags.")
-    set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
-  else()
-    message(FATAL_ERROR "cxxmodules is not supported by this compiler")
-  endif()
-endif(cxxmodules)
-
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
 find_package(Threads)
 if(CMAKE_USE_PTHREADS_INIT)
