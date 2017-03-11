@@ -29,7 +29,7 @@ matrix:
       addons:
         apt:
           sources: *sources
-          packages: ['clang-3.9', 'clang-format-3.9']
+          packages: ['clang-3.9', 'clang-format-3.9', 'libstdc++-6-dev']
       compiler: clang
 
 script:
