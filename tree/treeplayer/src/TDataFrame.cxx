@@ -423,24 +423,6 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
 
 namespace Internal {
 
-const char *ToConstCharPtr(const char *s)
-{
-   return s;
-}
-
-const char *ToConstCharPtr(const std::string& s)
-{
-   return s.c_str();
-}
-
-unsigned int GetNSlots() {
-   unsigned int nSlots = 1;
-#ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled()) nSlots = ROOT::GetImplicitMTPoolSize();
-#endif // R__USE_IMT
-   return nSlots;
-}
-
 std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df)
 {
    auto tree = df.GetTree();
@@ -483,38 +465,12 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::
    return "";
 }
 
-void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
-{
-   auto branch = treePtr->GetBranch(branchName.c_str());
-   if (branch != nullptr) {
-      auto msg = "branch \"" + branchName + "\" already present in TTree";
-      throw std::runtime_error(msg);
-   }
-}
-
-/// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl)
-{
-   bool useDefBl = false;
-   if (nArgs != bl.size()) {
-      if (bl.size() == 0 && nArgs == defBl.size()) {
-         useDefBl = true;
-      } else {
-         auto msg = "mismatch between number of filter arguments (" + std::to_string(nArgs) +
-                    ") and number of branches (" + std::to_string(bl.size() ? bl.size() : defBl.size()) + ")";
-         throw std::runtime_error(msg);
-      }
-   }
-
-   return useDefBl ? defBl : bl;
-}
-
 TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches) { }
 
 void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resize(nSlots); }
 
-} // end NS Internal
+}
 
 namespace Detail {
 

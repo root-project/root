@@ -42,25 +42,17 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 
 namespace ROOT {
 
-using BranchNames_t = std::vector<std::string>;
-
-}
-
-// Internal classes
-
-namespace ROOT {
-
+// forward declaration for TDataFrameActionBase
 namespace Detail {
 class TDataFrameImpl;
 }
 
 namespace Internal {
 
-const char *ToConstCharPtr(const char *s);
-const char *ToConstCharPtr(const std::string& s);
+// TODO move into TDFUtils, for now it would cause a circular dependency on TDataFrameImpl
 std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
-unsigned int GetNSlots();
 
+// TODO move into TDFUtils, for now it would cause a circular dependency on TActionResultProxy
 template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
 ROOT::Experimental::TActionResultProxy<ActionResultType>
 CallCreateAction(TDFNode* node, const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
@@ -68,82 +60,6 @@ CallCreateAction(TDFNode* node, const BranchNames_t &bl, const std::shared_ptr<A
 {
    return node->template CreateAction<ActionType,BranchType,ActionResultType>(bl, r, nullptr);
 }
-
-using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
-using TVBVec_t = std::vector<TVBPtr_t>;
-
-template<typename BranchType>
-std::shared_ptr<ROOT::Internal::TTreeReaderValueBase>
-ReaderValueOrArray(TTreeReader &r, const std::string &branch, TDFTraitsUtils::TTypeList<BranchType>) {
-   return std::make_shared<TTreeReaderValue<BranchType>>(r, branch.c_str());
-}
-
-
-template<typename BranchType>
-std::shared_ptr<ROOT::Internal::TTreeReaderValueBase>
-ReaderValueOrArray(TTreeReader &r, const std::string &branch, TDFTraitsUtils::TTypeList<std::array_view<BranchType>>) {
-   return std::make_shared<TTreeReaderArray<BranchType>>(r, branch.c_str());
-}
-
-
-
-template <int... S, typename... BranchTypes>
-TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames_t &bl, const BranchNames_t &tmpbl,
-                           TDFTraitsUtils::TTypeList<BranchTypes...>,
-                           TDFTraitsUtils::TStaticSeq<S...>)
-{
-   // isTmpBranch has length bl.size(). Elements are true if the corresponding
-   // branch is a temporary branch created with AddColumn, false if they are
-   // actual branches present in the TTree.
-   std::array<bool, sizeof...(S)> isTmpBranch;
-   for (unsigned int i = 0; i < isTmpBranch.size(); ++i)
-      isTmpBranch[i] = std::find(tmpbl.begin(), tmpbl.end(), bl.at(i)) != tmpbl.end();
-
-   // Build vector of pointers to TTreeReaderValueBase.
-   // tvb[i] points to a TTreeReader{Value,Array} specialized for the i-th BranchType,
-   // corresponding to the i-th branch in bl
-   // For temporary branches (declared with AddColumn) a nullptr is created instead
-   // S is expected to be a sequence of sizeof...(BranchTypes) integers
-   // Note that here TTypeList only contains one single type
-   TVBVec_t tvb{isTmpBranch[S] ? nullptr : ReaderValueOrArray(r, bl.at(S), TDFTraitsUtils::TTypeList<BranchTypes>())
-                ...}; // "..." expands BranchTypes and S simultaneously
-
-   return tvb;
-}
-
-template <typename Filter>
-void CheckFilter(Filter&)
-{
-   using FilterRet_t = typename TDFTraitsUtils::TFunctionTraits<Filter>::Ret_t;
-   static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
-}
-
-void CheckTmpBranch(const std::string &branchName, TTree *treePtr);
-
-///////////////////////////////////////////////////////////////////////////////
-/// Check that the callable passed to TDataFrameInterface::Reduce:
-/// - takes exactly two arguments of the same type
-/// - has a return value of the same type as the arguments
-template<typename F, typename T>
-void CheckReduce(F&, ROOT::Internal::TDFTraitsUtils::TTypeList<T,T>)
-{
-   using Ret_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
-   static_assert(std::is_same<Ret_t, T>::value,
-      "reduce function must have return type equal to argument type");
-   return;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// This overload of CheckReduce is called if T is not a TTypeList<T,T>
-template<typename F, typename T>
-void CheckReduce(F&, T)
-{
-   static_assert(sizeof(F) == 0,
-      "reduce function must take exactly two arguments of the same type");
-}
-
-/// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl);
 
 class TDataFrameActionBase {
 protected:
@@ -218,42 +134,6 @@ public:
       fHelper.Finalize();
    }
 };
-
-namespace ActionTypes {
-   struct Histo1D {};
-   struct Min {};
-   struct Max {};
-   struct Mean {};
-}
-
-// Utilities to accommodate v7
-namespace TDFV7Utils {
-
-template<typename T, bool ISV7HISTO = !std::is_base_of<TH1, T>::value>
-struct TIsV7Histo {
-   const static bool fgValue = ISV7HISTO;
-};
-
-template<typename T, bool ISV7HISTO = TIsV7Histo<T>::fgValue>
-struct Histo {
-   static void SetCanExtendAllAxes(T &h)
-   {
-      h.SetCanExtend(::TH1::kAllAxes);
-   }
-   static bool HasAxisLimits(T &h)
-   {
-      auto xaxis = h.GetXaxis();
-      return !(xaxis->GetXmin() == 0. && xaxis->GetXmax() == 0.);
-   }
-};
-
-template<typename T>
-struct Histo<T, true> {
-   static void SetCanExtendAllAxes(T&) { }
-   static bool HasAxisLimits(T&) {return true;}
-};
-
-} // end NS TDFV7Utils
 
 } // end NS Internal
 
