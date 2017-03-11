@@ -11,7 +11,7 @@
 #ifndef ROOT_TDFOPERATIONS
 #define ROOT_TDFOPERATIONS
 
-#include "ROOT/TDFTraitsUtils.hxx"
+#include "ROOT/TDFUtils.hxx"
 #include "ROOT/TThreadedObject.hxx"
 
 #include <algorithm>
