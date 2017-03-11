@@ -44,7 +44,7 @@ script:
   if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     BASE_COMMIT="$TRAVIS_BRANCH"
     echo "Running clang-format against branch $BASE_COMMIT, with hash $(git rev-parse $BASE_COMMIT)"
-    RESULT_OUTPUT="$(git-clang-format --commit $BASE_COMMIT --diff --exclude ^interpreter/)"
+    RESULT_OUTPUT="$(git-clang-format --commit $BASE_COMMIT --diff)"
     
     if [ "$RESULT_OUTPUT" == "no modified files to format" ] \
       || [ "$RESULT_OUTPUT" == "clang-format did not modify any files" ] ; then
@@ -57,3 +57,8 @@ script:
       exit 1
     fi
   fi
+
+on_failure:
+  -|
+  echo "Showing current directory contents"
+  ls -la
