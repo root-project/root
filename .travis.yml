@@ -47,7 +47,7 @@ script:
       exit 0
     else
       echo "clang-format failed:"
-      echo 'To reproduce it locally please run git-clang-format-3.9 --commit $BASE_COMMIT --diff --binary `which clang-format-3.9`'
+      echo "To reproduce it locally please run git-clang-format-3.9 --commit $BASE_COMMIT --diff --binary \`which clang-format-3.9\`"
       echo "$RESULT_OUTPUT"
       exit 1
     fi
