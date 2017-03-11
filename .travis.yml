@@ -7,7 +7,7 @@ addons: &addons
     packages: timeout
     sources: &sources
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise
+      - llvm-toolchain-precise-3.9
 
 cache:
   apt: true
@@ -30,7 +30,7 @@ matrix:
       addons:
         apt:
           sources: *sources
-          packages: ['clang-format-3.9']
+          packages: ['clang-format']
       compiler: clang
 
 script:
