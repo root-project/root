@@ -30,7 +30,7 @@ matrix:
       addons:
         apt:
           sources: *sources
-          packages: ['clang-format']
+          packages: ['clang-format-3.9']
       compiler: clang
 
 script:
