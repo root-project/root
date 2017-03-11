@@ -1,0 +1,56 @@
+sudo: false
+
+language: cpp
+
+addons: &addons
+  apt:
+    packages: timeout
+    sources: &sources
+      - llvm-toolchain-precise
+
+cache:
+  apt: true
+  ccache: true
+
+env:
+  global:
+
+# Do not build our sync branch.
+branches:
+  only:
+    - master
+
+matrix:
+  # Abort all builds on a single failing matrix entry.
+  fast_finish: true
+
+  include:
+    # There seems to be a hard limit to how many machines a Travis build will
+    # across all platforms. By interleaving OS X, the hope is to get in the
+    # queue faster while not blocking Linux builds from occuring.
+    - os: linux
+      env: DIST=pangolin COMPILER=g++-4.7 CCOMPILER=gcc-4.7 NIGHTLY_CRON_SYNC=1
+      addons:
+        apt:
+          sources: *sources
+          packages: clang-format
+      compiler: clang
+
+script:
+- |
+  if [ "$TRAVIS_PULL_REQUEST" == "true" ]; then
+    BASE_COMMIT="$TRAVIS_BRANCH"
+    echo "Running clang-format against branch $base_commit, with hash $(git rev-parse $BASE_COMMIT)"
+    RESULT_OUTPUT="$(git-clang-format --commit $BASE_COMMIT --diff --exclude ^interpreter/)"
+    
+    if [ "$RESULT_OUTPUT" == "no modified files to format" ] \
+      || [ "$RESULT_OUTPUT" == "clang-format did not modify any files" ] ; then
+
+      echo "clang-format passed."
+      exit 0
+    else
+      echo "clang-format failed:"
+      echo "$RESULT_OUTPUT"
+      exit 1
+    fi
+  fi
