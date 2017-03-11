@@ -15,7 +15,8 @@ set(PY_HEADERS ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/PyMethodBase.h
                ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyRandomForest.h
                ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyAdaBoost.h
                ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyGTB.h
-               ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyKeras.h)
+               ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyKeras.h
+               ${CMAKE_SOURCE_DIR}/tmva/pymva/inc/TMVA/MethodPyKMeans.h)
 
 ROOT_GENERATE_DICTIONARY(G__PyMVA ${PY_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)
 # ROOT_GENERATE_ROOTMAP(RInterface LINKDEF LinkDef.h)
