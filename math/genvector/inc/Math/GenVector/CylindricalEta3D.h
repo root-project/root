@@ -70,11 +70,12 @@ public :
      fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )
   {
      using namespace std;
-     static Scalar bigEta = -.3f * log(std::numeric_limits<Scalar>::epsilon());
+     static Scalar bigEta = Scalar(-0.3) * log(std::numeric_limits<Scalar>::epsilon());
      if (fabs(fEta) > bigEta) {
-        fRho *= v.Z() / Z(); // This gives a small absolute adjustment in rho,
+        // This gives a small absolute adjustment in rho,
         // which, for large eta, results in a significant
         // improvement in the faithfullness of reproducing z.
+        fRho *= v.Z() / Z(); 
     }
   }
 
