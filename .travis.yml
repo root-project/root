@@ -33,6 +33,12 @@ matrix:
           packages: ['clang-format-3.9']
       compiler: clang
 
+before_script:
+- |
+  wget https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
+  chmod +x git-clang-format
+  export PATH=`pwd`:$PATH
+
 script:
 - |
   if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
