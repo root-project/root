@@ -153,7 +153,8 @@ public :
    Scalar Py() const { return fPt*sin(fPhi);}
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
-      return fPt >   0 ? fPt*std::sinh(fEta)     :
+      using namespace std;
+      return fPt >   0 ? fPt*sinh(fEta)     :
          fEta == 0 ? 0                       :
          fEta >  0 ? fEta - etaMax<Scalar>() :
          fEta + etaMax<Scalar>() ;
@@ -164,7 +165,8 @@ public :
        magnitude of momentum
    */
    Scalar P() const {
-      return  fPt  > 0                 ?  fPt*std::cosh(fEta)       :
+      using namespace std;
+      return  fPt  > 0                 ?  fPt*cosh(fEta)       :
          fEta >  etaMax<Scalar>() ?  fEta - etaMax<Scalar>()   :
          fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>()   :
          0                         ;
@@ -188,7 +190,7 @@ public :
    /**
        Energy (timelike component of momentum-energy 4-vector)
    */
-   Scalar E()   const { return std::sqrt(E2() ); }
+   Scalar E()   const { using namespace std; return sqrt(E2()); }
 
    Scalar T()   const { return E();  }
 
@@ -216,13 +218,14 @@ public :
       transverse mass - will be negative if Mt2() is negative
    */
    Scalar Mt() const {
+      using namespace std;
       Scalar mm = Mt2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         return sqrt(mm);
       } else {
          GenVector::Throw  ("PtEtaPhiM4D::Mt() - Tachyonic:\n"
                             "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         return -std::sqrt(-mm);
+         return -sqrt(-mm);
       }
    }
 
@@ -230,22 +233,25 @@ public :
        transverse energy squared
    */
    Scalar Et2() const {
+      using namespace std;
       // a bit faster than et * et
-      return 2. * E2()/ ( std::cosh(2 * fEta) + 1 );
+      return 2. * E2()/ ( cosh(2 * fEta) + 1 );
    }
 
    /**
       transverse energy
    */
    Scalar Et() const {
-      return E() / std::cosh(fEta);
+      using namespace std;
+      return E() / cosh(fEta);
    }
 
 private:
    inline static Scalar pi() { return M_PI; }
    inline void RestrictPhi() {
+      using namespace std;
       if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
       return;
    }
    // restrict the value of negative mass to avoid unphysical negative E2 values
@@ -265,7 +271,8 @@ public:
       polar angle
    */
    Scalar Theta() const {
-      if (fPt  >  0) return 2* std::atan( exp( - fEta ) );
+      using namespace std;
+      if (fPt  >  0) return 2* atan( exp( - fEta ) );
       if (fEta >= 0) return 0;
       return pi();
    }
