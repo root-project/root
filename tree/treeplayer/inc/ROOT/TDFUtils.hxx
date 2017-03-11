@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TDFTRAITSUTILS
-#define ROOT_TDFTRAITSUTILS
+#ifndef ROOT_TDFUTILS
+#define ROOT_TDFUTILS
 
 #include <functional>
 #include <vector>
@@ -133,4 +133,4 @@ struct TIsContainer {
 
 /// \endcond
 
-#endif
+#endif //TDFUTILS

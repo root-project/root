@@ -19,7 +19,7 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TDFOperations.hxx"
-#include "ROOT/TDFTraitsUtils.hxx"
+#include "ROOT/TDFUtils.hxx"
 #include "TChain.h"
 #include "TH1F.h" // For Histo actions
 #include "TH2F.h" // For Histo actions
