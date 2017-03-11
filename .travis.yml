@@ -6,14 +6,11 @@ addons: &addons
   apt:
     packages: timeout
     sources: &sources
-      - llvm-toolchain-precise
+      - llvm-toolchain-precise-3.9
 
 cache:
   apt: true
   ccache: true
-
-env:
-  global:
 
 # Do not build our sync branch.
 branches:
@@ -29,18 +26,17 @@ matrix:
     # across all platforms. By interleaving OS X, the hope is to get in the
     # queue faster while not blocking Linux builds from occuring.
     - os: linux
-      env: DIST=pangolin COMPILER=g++-4.7 CCOMPILER=gcc-4.7 NIGHTLY_CRON_SYNC=1
       addons:
         apt:
           sources: *sources
-          packages: clang-format
+          packages: ['clang-3.9', 'clang-format-3.9']
       compiler: clang
 
 script:
 - |
   if [ "$TRAVIS_PULL_REQUEST" == "true" ]; then
     BASE_COMMIT="$TRAVIS_BRANCH"
-    echo "Running clang-format against branch $base_commit, with hash $(git rev-parse $BASE_COMMIT)"
+    echo "Running clang-format against branch $BASE_COMMIT, with hash $(git rev-parse $BASE_COMMIT)"
     RESULT_OUTPUT="$(git-clang-format --commit $BASE_COMMIT --diff --exclude ^interpreter/)"
     
     if [ "$RESULT_OUTPUT" == "no modified files to format" ] \
