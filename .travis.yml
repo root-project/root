@@ -35,7 +35,7 @@ matrix:
 
 script:
 - |
-  if [ "$TRAVIS_PULL_REQUEST" == "true" ]; then
+  if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     BASE_COMMIT="$TRAVIS_BRANCH"
     echo "Running clang-format against branch $BASE_COMMIT, with hash $(git rev-parse $BASE_COMMIT)"
     RESULT_OUTPUT="$(git-clang-format --commit $BASE_COMMIT --diff --exclude ^interpreter/)"
