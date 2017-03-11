@@ -249,13 +249,13 @@ namespace ROOT {
        */
       template <class IT>
       void GetCoordinates( IT begin) const {
-        Scalar a = Scalar(0);
-        Scalar b = Scalar(0);
-        Scalar c = Scalar(0);
-        GetCoordinates (a,b,c);
-        *begin++ = a;
-        *begin++ = b;
-        *begin = c;
+         Scalar a = Scalar(0);
+         Scalar b = Scalar(0);
+         Scalar c = Scalar(0);
+         GetCoordinates(a, b, c);
+         *begin++ = a;
+         *begin++ = b;
+         *begin   = c;
       }
 
       /**
@@ -264,8 +264,8 @@ namespace ROOT {
          then (x, y, z) are converted to that form)
        */
       DisplacementVector3D<CoordSystem, Tag>& SetXYZ (Scalar a, Scalar b, Scalar c) {
-        fCoordinates.SetXYZ(a,b,c);
-        return *this;
+         fCoordinates.SetXYZ(a, b, c);
+         return *this;
       }
 
       // ------------------- Equality -----------------
@@ -337,22 +337,22 @@ namespace ROOT {
       /**
          return unit vector parallel to this (scalar)
       */
-      template< typename SCALAR = Scalar >
-      typename std::enable_if< std::is_arithmetic<SCALAR>::value, DisplacementVector3D >::type
-      Unit() const {
-        const auto tot = R();
-        return tot == 0 ? *this : DisplacementVector3D(*this) / tot;
+      template <typename SCALAR = Scalar>
+      typename std::enable_if<std::is_arithmetic<SCALAR>::value, DisplacementVector3D>::type Unit() const
+      {
+         const auto tot = R();
+         return tot == 0 ? *this : DisplacementVector3D(*this) / tot;
       }
 
       /**
          return unit vector parallel to this (scalar)
       */
-      template< typename SCALAR = Scalar >
-      typename std::enable_if< !std::is_arithmetic<SCALAR>::value, DisplacementVector3D >::type
-      Unit() const {
-        SCALAR tot = R();
-        tot( tot == SCALAR(0) ) = SCALAR(1);
-        return DisplacementVector3D(*this) / tot;
+      template <typename SCALAR = Scalar>
+      typename std::enable_if<!std::is_arithmetic<SCALAR>::value, DisplacementVector3D>::type Unit() const
+      {
+         SCALAR tot            = R();
+         tot(tot == SCALAR(0)) = SCALAR(1);
+         return DisplacementVector3D(*this) / tot;
       }
 
       // ------ Setting of individual elements present in coordinate system ------
@@ -634,53 +634,44 @@ namespace ROOT {
 
     // ------------- I/O to/from streams -------------
 
-    template< class char_t, class traits_t, class T, class U >
-    inline
-    typename std::enable_if< std::is_arithmetic<typename DisplacementVector3D<T,U>::Scalar>::value,
-                             std::basic_ostream<char_t,traits_t> & >::type
-    operator << ( std::basic_ostream<char_t,traits_t> & os
-                  , DisplacementVector3D<T,U> const & v
-                  )
+    template <class char_t, class traits_t, class T, class U>
+    inline typename std::enable_if<std::is_arithmetic<typename DisplacementVector3D<T, U>::Scalar>::value,
+                                   std::basic_ostream<char_t, traits_t> &>::type
+    operator<<(std::basic_ostream<char_t, traits_t> &os, DisplacementVector3D<T, U> const &v)
     {
-      if ( os ) {
+       if (os) {
 
-        typename T::Scalar a, b, c;
-        v.GetCoordinates(a, b, c);
-        
-        if( detail::get_manip( os, detail::bitforbit ) )  {
-          detail::set_manip( os, detail::bitforbit, '\00' );
-          typedef GenVector_detail::BitReproducible BR;
-          BR::Output(os, a);
-          BR::Output(os, b);
-          BR::Output(os, c);
-        }
-        else  {
-          os << detail::get_manip( os, detail::open  ) << a
-             << detail::get_manip( os, detail::sep   ) << b
-             << detail::get_manip( os, detail::sep   ) << c
-             << detail::get_manip( os, detail::close );
-        }
+          typename T::Scalar a, b, c;
+          v.GetCoordinates(a, b, c);
+
+          if (detail::get_manip(os, detail::bitforbit)) {
+             detail::set_manip(os, detail::bitforbit, '\00');
+             typedef GenVector_detail::BitReproducible BR;
+             BR::Output(os, a);
+             BR::Output(os, b);
+             BR::Output(os, c);
+          } else {
+             os << detail::get_manip(os, detail::open) << a << detail::get_manip(os, detail::sep) << b
+                << detail::get_manip(os, detail::sep) << c << detail::get_manip(os, detail::close);
+          }
       }
       return os;
     }  // op<< <>()
 
-    template< class char_t, class traits_t, class T, class U >
-    inline
-    typename std::enable_if< !std::is_arithmetic<typename DisplacementVector3D<T,U>::Scalar>::value,
-                             std::basic_ostream<char_t,traits_t> & >::type
-    operator << ( std::basic_ostream<char_t,traits_t> & os
-                  , DisplacementVector3D<T,U> const & v
-                  )
+    template <class char_t, class traits_t, class T, class U>
+    inline typename std::enable_if<!std::is_arithmetic<typename DisplacementVector3D<T, U>::Scalar>::value,
+                                   std::basic_ostream<char_t, traits_t> &>::type
+    operator<<(std::basic_ostream<char_t, traits_t> &os, DisplacementVector3D<T, U> const &v)
     {
-      if ( os ) {
-        os << "{ ";
-        for ( std::size_t i = 0; i < PositionVector3D<T,U>::Scalar::Size; ++i ) {
-          os << "(" << v.x()[i] << "," << v.y()[i] << "," << v.z()[i] << ") ";
-        }
-        os << "}";
-      }
-      return os;
-    }  // op<< <>()
+       if (os) {
+          os << "{ ";
+          for (std::size_t i = 0; i < PositionVector3D<T, U>::Scalar::Size; ++i) {
+             os << "(" << v.x()[i] << "," << v.y()[i] << "," << v.z()[i] << ") ";
+          }
+          os << "}";
+       }
+       return os;
+    } // op<< <>()
 
     template< class char_t, class traits_t, class T, class U >
       inline

@@ -89,9 +89,16 @@ public :
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}
    Scalar Mag2()  const { return fX*fX + fY*fY; }
-   Scalar R()     const { using namespace std; return sqrt(Mag2()); }
-   Scalar Phi()   const { using namespace std;
-                          return (fX==Scalar(0) && fY==Scalar(0)) ? Scalar(0) : atan2(fY,fX);}
+   Scalar R() const
+   {
+      using namespace std;
+      return sqrt(Mag2());
+   }
+   Scalar Phi() const
+   {
+      using namespace std;
+      return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX);
+   }
 
    /**
        set the x coordinate value keeping y constant
@@ -164,7 +171,7 @@ public :
    explicit Cartesian2D( const Polar2D<T2> & v )
    {
       using namespace std;
-      const Scalar r = v.R();    // re-using this instead of calling v.X() and v.Y()
+      const Scalar r = v.R(); // re-using this instead of calling v.X() and v.Y()
       // is the speed improvement
       fX = r * cos(v.Phi());
       fY = r * sin(v.Phi());
@@ -179,8 +186,8 @@ public :
    {
       using namespace std;
       const Scalar r = v.R();
-      fX = r * cos(v.Phi());
-      fY = r * sin(v.Phi());
+      fX             = r * cos(v.Phi());
+      fY             = r * sin(v.Phi());
       return *this;
    }
 

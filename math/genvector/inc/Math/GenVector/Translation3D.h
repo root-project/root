@@ -28,13 +28,12 @@
 #include <iostream>
 #include <type_traits>
 
-
 namespace ROOT {
 
 namespace Math {
 
 namespace Impl {
- 
+
 //____________________________________________________________________________________________________
 /**
     Class describing a 3 dimensional translation. It can be combined (using the operator *)
@@ -51,15 +50,10 @@ namespace Impl {
 template <typename T = double>
 class Translation3D {
 
+public:
+   typedef T Scalar;
 
-  public:
-
-    typedef T Scalar;
-
-    typedef DisplacementVector3D<Cartesian3D<T>, DefaultCoordinateSystemTag >  Vector;
-
-
-
+   typedef DisplacementVector3D<Cartesian3D<T>, DefaultCoordinateSystemTag> Vector;
 
    /**
        Default constructor ( zero translation )
@@ -79,10 +73,7 @@ class Translation3D {
    /**
       Construct from x,y,z values representing the translation
    */
-   Translation3D(T dx, T dy, T dz) :
-      fVect( Vector(dx, dy, dz) )
-   {  }
-
+   Translation3D(T dx, T dy, T dz) : fVect(Vector(dx, dy, dz)) {}
 
    /**
       Construct from any Displacement vector in ant tag and coordinate system
@@ -100,10 +91,9 @@ class Translation3D {
       @param p2  point defining origin of transformed reference system
 
    */
-   template<class CoordSystem, class Tag>
-   Translation3D ( const PositionVector3D<CoordSystem,Tag> & p1,
-                   const PositionVector3D<CoordSystem,Tag> & p2 ) :
-      fVect(p2-p1)
+   template <class CoordSystem, class Tag>
+   Translation3D(const PositionVector3D<CoordSystem, Tag> &p1, const PositionVector3D<CoordSystem, Tag> &p2)
+      : fVect(p2 - p1)
    { }
 
 
@@ -147,28 +137,17 @@ class Translation3D {
    /**
       Set the components from 3 scalars
    */
-   void
-   SetComponents (T  dx, T  dy, T  dz ) {
-      fVect.SetCoordinates(dx,dy,dz);
-   }
+   void SetComponents(T dx, T dy, T dz) { fVect.SetCoordinates(dx, dy, dz); }
 
    /**
       Get the components into 3 scalars
    */
-   void
-   GetComponents (T &dx, T &dy, T &dz) const {
-      fVect.GetCoordinates(dx,dy,dz);
-   }
-
+   void GetComponents(T &dx, T &dy, T &dz) const { fVect.GetCoordinates(dx, dy, dz); }
 
    /**
       Set the XYZ vector components from 3 scalars
    */
-   void
-   SetXYZ (T  dx, T  dy, T  dz ) {
-      fVect.SetXYZ(dx,dy,dz);
-   }
-
+   void SetXYZ(T dx, T dy, T dz) { fVect.SetXYZ(dx, dy, dz); }
 
    // operations on points and vectors
 
@@ -178,16 +157,15 @@ class Translation3D {
    */
    template<class CoordSystem, class Tag >
    PositionVector3D<CoordSystem,Tag> operator() (const PositionVector3D <CoordSystem,Tag> & p) const {
-      return PositionVector3D<CoordSystem,Tag> ( p.X() + fVect.X(),
-                                                 p.Y() + fVect.Y(),
-                                                 p.Z() + fVect.Z() );
+      return PositionVector3D<CoordSystem, Tag>(p.X() + fVect.X(), p.Y() + fVect.Y(), p.Z() + fVect.Z());
    }
    /**
      Transformation operation
    */
-   template<class CoordSystem, class Tag > 
-   PositionVector3D<CoordSystem,Tag> operator * ( const PositionVector3D<CoordSystem,Tag> & v ) const {
-     return operator() (v);
+   template <class CoordSystem, class Tag>
+   PositionVector3D<CoordSystem, Tag> operator*(const PositionVector3D<CoordSystem, Tag> &v) const
+   {
+      return operator()(v);
    }
 
    /**
@@ -201,11 +179,12 @@ class Translation3D {
    /**
      Transformation operation
    */
-   template<class CoordSystem, class Tag > 
-   DisplacementVector3D<CoordSystem,Tag> operator * ( const DisplacementVector3D<CoordSystem,Tag> & v ) const {
-     return operator() (v);
+   template <class CoordSystem, class Tag>
+   DisplacementVector3D<CoordSystem, Tag> operator*(const DisplacementVector3D<CoordSystem, Tag> &v) const
+   {
+      return operator()(v);
    }
-  
+
    /**
       Transformation operation for points between different coordinate system tags
    */
@@ -219,11 +198,11 @@ class Translation3D {
    /**
       Transformation operation for Displacement Vector of different coordinate systems
    */
-   template<class CoordSystem,  class Tag1, class Tag2 >
-   void Transform ( const DisplacementVector3D <CoordSystem,Tag1> & v1,
-                    DisplacementVector3D <CoordSystem,Tag2> & v2  ) const {
-      // just copy v1 in v2
-      v2.SetXYZ( v1.X(), v1.Y(), v1.Z() );
+    template <class CoordSystem, class Tag1, class Tag2>
+    void Transform(const DisplacementVector3D<CoordSystem, Tag1> &v1, DisplacementVector3D<CoordSystem, Tag2> &v2) const
+    {
+       // just copy v1 in v2
+       v2.SetXYZ(v1.X(), v1.Y(), v1.Z());
    }
 
    /**
@@ -231,35 +210,38 @@ class Translation3D {
       A LorentzVector contains a displacement vector so no translation applies as well
    */
    template <class CoordSystem>
-   LorentzVector<CoordSystem> operator() ( const LorentzVector<CoordSystem> & q ) const {
+   LorentzVector<CoordSystem> operator()(const LorentzVector<CoordSystem> &q) const
+   {
       return q;
    }
    /**
      Transformation operation
    */
-   template<class CoordSystem> 
-   LorentzVector<CoordSystem> operator * ( const LorentzVector<CoordSystem> & q ) const {
-     return operator() (q);
+   template <class CoordSystem>
+   LorentzVector<CoordSystem> operator*(const LorentzVector<CoordSystem> &q) const
+   {
+      return operator()(q);
    }
 
    /**
       Transformation on a 3D plane
    */
-   Plane3D<T> operator() ( const Plane3D<T> & plane ) const
+   Plane3D<T> operator()(const Plane3D<T> &plane) const
    {
-     // transformations on a 3D plane
-     const Vector n = plane.Normal();
-     // take a point on the plane. Use origin projection on the plane
-     // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
-     const T d = plane.HesseDistance();
-     PositionVector3D<Cartesian3D<T> > p( - d * n.X() , - d * n.Y(), - d * n.Z() );
-     return PLANE( operator() (n), operator() (p) );
+      // transformations on a 3D plane
+      const Vector n = plane.Normal();
+      // take a point on the plane. Use origin projection on the plane
+      // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
+      const T                          d = plane.HesseDistance();
+      PositionVector3D<Cartesian3D<T>> p(-d * n.X(), -d * n.Y(), -d * n.Z());
+      return PLANE(operator()(n), operator()(p));
    }
 
    /**
       multiply (combine) with another transformation in place
    */
-   Translation3D<T> & operator *= (const Translation3D<T>  & t) {
+   Translation3D<T> &operator*=(const Translation3D<T> &t)
+   {
       fVect+= t.Vect();
       return *this;
    }
@@ -267,9 +249,7 @@ class Translation3D {
    /**
       multiply (combine) two transformations
    */
-   Translation3D<T> operator * (const Translation3D<T>  & t) const {
-      return Translation3D<T>( fVect + t.Vect() );
-   }
+   Translation3D<T> operator*(const Translation3D<T> &t) const { return Translation3D<T>(fVect + t.Vect()); }
 
    /**
        Invert the transformation in place
@@ -281,24 +261,18 @@ class Translation3D {
    /**
       Return the inverse of the transformation.
    */
-   Translation3D<T> Inverse() const {
-      return Translation3D<T>( -fVect.X(), -fVect.Y(),-fVect.Z() );
-   }
-
+   Translation3D<T> Inverse() const { return Translation3D<T>(-fVect.X(), -fVect.Y(), -fVect.Z()); }
 
    /**
       Equality/inequality operators
    */
-   bool operator == (const Translation3D<T> & rhs) const {
+   bool operator==(const Translation3D<T> &rhs) const
+   {
       if( fVect != rhs.fVect )  return false;
       return true;
    }
 
-   bool operator != (const Translation3D<T> & rhs) const {
-      return ! operator==(rhs);
-   }
-
-
+   bool operator!=(const Translation3D<T> &rhs) const { return !operator==(rhs); }
 
 private:
 
@@ -315,13 +289,13 @@ private:
 // TODO - I/O should be put in the manipulator form
 
 template <class T>
-std::ostream & operator<< (std::ostream & os, const Translation3D<T> & t)
+std::ostream &operator<<(std::ostream &os, const Translation3D<T> &t)
 {
    // TODO - this will need changing for machine-readable issues
    //        and even the human readable form needs formatiing improvements
 
    T m[3];
-   t.GetComponents(m, m+3);
+   t.GetComponents(m, m + 3);
    return os << "\n" << m[0] << "  " << m[1] << "  " << m[2] << "\n";
 }
 

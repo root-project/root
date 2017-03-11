@@ -110,13 +110,26 @@ public :
    Scalar Z()     const { return fZ;}
    Scalar Mag2()  const { return fX*fX + fY*fY + fZ*fZ;}
    Scalar Perp2() const { return fX*fX + fY*fY ;}
-   Scalar Rho()   const { using namespace std; return sqrt( Perp2() ); }
-   Scalar R()     const { using namespace std; return sqrt( Mag2() ); }
-   Scalar Theta() const { using namespace std;
-                          return (fX==Scalar(0) && fY==Scalar(0) && fZ==Scalar(0)) ?
-                                 Scalar(0) : atan2(Rho(),Z());}
-   Scalar Phi()   const { using namespace std;
-                          return (fX==Scalar(0) && fY==Scalar(0)) ? Scalar(0) : atan2(fY,fX);}
+   Scalar Rho() const
+   {
+      using namespace std;
+      return sqrt(Perp2());
+   }
+   Scalar R() const
+   {
+      using namespace std;
+      return sqrt(Mag2());
+   }
+   Scalar Theta() const
+   {
+      using namespace std;
+      return (fX == Scalar(0) && fY == Scalar(0) && fZ == Scalar(0)) ? Scalar(0) : atan2(Rho(), Z());
+   }
+   Scalar Phi() const
+   {
+      using namespace std;
+      return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX);
+   }
 
    // pseudorapidity
    Scalar Eta() const {
@@ -150,7 +163,12 @@ public :
    /**
       scale the vector by a scalar quantity a
    */
-   void Scale(Scalar a) { fX *= a; fY *= a; fZ *= a; }
+   void Scale(Scalar a)
+   {
+      fX *= a;
+      fY *= a;
+      fZ *= a;
+   }
 
    /**
       negate the vector
@@ -191,12 +209,12 @@ public :
    template <class T2>
    explicit Cartesian3D( const Polar3D<T2> & v ) : fZ (v.Z())
    {
-     using namespace std; 
-     const T rho = v.Rho();
-     // re-using this instead of calling v.X() and v.Y()
-     // is the speed improvement
-     fX = rho * cos(v.Phi());
-     fY = rho * sin(v.Phi());
+      using namespace std;
+      const T rho = v.Rho();
+      // re-using this instead of calling v.X() and v.Y()
+      // is the speed improvement
+      fX = rho * cos(v.Phi());
+      fY = rho * sin(v.Phi());
    }
    // Technical note:  This works even though only Polar3Dfwd.h is
    // included (and in fact, including Polar3D.h would cause circularity
@@ -206,10 +224,10 @@ public :
    template <class T2>
    Cartesian3D & operator = (const Polar3D<T2> & v)
    {
-      using namespace std; 
+      using namespace std;
       const T rho = v.Rho();
-      fX = rho * cos(v.Phi());
-      fY = rho * sin(v.Phi());
+      fX          = rho * cos(v.Phi());
+      fY          = rho * sin(v.Phi());
       fZ = v.Z();
       return *this;
    }

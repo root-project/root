@@ -107,11 +107,10 @@ public :
 
 private:
    inline static Scalar pi() { return Scalar(M_PI); }
-   inline void Restrict()
+   inline void          Restrict()
    {
       using namespace std;
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
       return;
    }
 public:
@@ -122,15 +121,28 @@ public:
    Scalar Z()     const { return fZ;   }
    Scalar Phi()   const { return fPhi; }
 
-   Scalar X()     const { using namespace std; return fRho*cos(fPhi); }
-   Scalar Y()     const { using namespace std; return fRho*sin(fPhi); }
+   Scalar X() const
+   {
+      using namespace std;
+      return fRho * cos(fPhi);
+   }
+   Scalar Y() const
+   {
+      using namespace std;
+      return fRho * sin(fPhi);
+   }
 
    Scalar Mag2()  const { return fRho*fRho + fZ*fZ;   }
-   Scalar R()     const { using namespace std; return sqrt( Mag2());  }
+   Scalar R() const
+   {
+      using namespace std;
+      return sqrt(Mag2());
+   }
    Scalar Perp2() const { return fRho*fRho;           }
-   Scalar Theta() const {
-     using namespace std;
-     return (fRho==Scalar(0) && fZ==Scalar(0) ) ? Scalar(0) : atan2(fRho,fZ);
+   Scalar Theta() const
+   {
+      using namespace std;
+      return (fRho == Scalar(0) && fZ == Scalar(0)) ? Scalar(0) : atan2(fRho, fZ);
    }
 
    // pseudorapidity - use same implementation as in Cartesian3D
