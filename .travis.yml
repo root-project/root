@@ -6,6 +6,7 @@ addons: &addons
   apt:
     packages: timeout
     sources: &sources
+      - ubuntu-toolchain-r-test
       - llvm-toolchain-precise-3.9
 
 cache:
