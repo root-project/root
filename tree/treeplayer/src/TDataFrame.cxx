@@ -67,7 +67,7 @@ common operations: building blocks to trigger custom calculations are available 
 1.  **build a data-frame** object by specifying your data-set
 2.  **apply a series of transformations** to your data
     1.  **filter** (e.g. apply some cuts) or
-    2.  create a **temporary branch** (e.g. make available an alias or the result of a non trivial operation involving other branches)
+    2.  create a **temporary column** (e.g. the result of an expensive computation on branches, or an alias for a branch)
 3.  **apply actions** to the transformed data to produce results (e.g. fill a histogram)
 4.
 <table>
@@ -138,7 +138,7 @@ h->Draw();
 ~~~
 The first line creates a `TDataFrame` associated to the `TTree` "myTree". This tree has a branch named "MET".
 
-`Histo` is an action; it returns a smart pointer (a `TActionResultPtr` to be precise) to a `TH1F` histogram filled with the `MET` of all events.
+`Histo1D` is an action; it returns a smart pointer (a `TActionResultProxy` to be precise) to a `TH1F` histogram filled with the `MET` of all events.
 If the quantity stored in the branch is a collection, the histogram is filled with its elements.
 
 There are many other possible [actions](#overview), and all their results are wrapped in smart pointers; we'll see why in a minute.
@@ -154,7 +154,7 @@ std::cout << *c << std::endl;
 ~~~
 `Filter` takes a function (a lambda in this example, but it can be any kind of function or even a functor class) and a list of branch names. The filter function is applied to the specified branches for each event; it is required to return a `bool` which signals whether the event passes the filter (`true`) or not (`false`). You can think of your data as "flowing" through the chain of calls, being transformed, filtered and finally used to perform actions. Multiple `Filter` calls can be chained one after another.
 
-### Creating a temporary branch
+### Creating a temporary column
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived quantity `z = sqrt(x*x + y*y)`.
 Using the `AddColumn` transformation, we can create a new column in the data-set containing the variable "z":
 ~~~{.cpp}
@@ -167,7 +167,7 @@ auto zMean = d.AddColumn("z", sqrtSum, {"x","y"})
               .Mean("z");
 std::cout << *zMean << std::endl;
 ~~~
-`AddColumn` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to variables created with `AddColumn` as if they were actual tree branches, but they are evaluated on the fly, once per event. As with filters, `AddColumn` calls can be chained with other transformations to create multiple temporary branches.
+`AddColumn` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to variables created with `AddColumn` as if they were actual tree branches, but they are evaluated on the fly, once per event. As with filters, `AddColumn` calls can be chained with other transformations to create multiple temporary columns.
 
 ### Executing multiple actions
 As a final example let us apply two different cuts on branch "MET" and fill two different histograms with the "pt\_v" of the filtered events.
@@ -212,19 +212,19 @@ auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}).Min();
 ~~~
 
 ### Branch type guessing and explicit declaration of branch types
-C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree` branches we want to work on. For filters, temporary branches and some of the actions, **branch types are deduced from the signature** of the relevant filter function/temporary branch expression/action function:
+C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree` branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the signature** of the relevant filter function/temporary column expression/action function:
 ~~~{.cpp}
 // here b1 is deduced to be `int` and b2 to be `double`
 dataFrame.Filter([](int x, double y) { return x > 0 && y < 0.; }, {"b1", "b2"});
 ~~~
 If we specify an incorrect type for one of the branches, an exception with an informative message will be thrown at runtime, when the branch value is actually read from the `TTree`: the implementation of `TDataFrame` allows the detection of type mismatches. The same would happen if we swapped the order of "b1" and "b2" in the branch list passed to `Filter`.
 
-Certain actions, on the other hand, do not take a function as argument (e.g. `Histo`), so we cannot deduce the type of the branch at compile-time. In this case **`TDataFrame` tries to guess the type of the branch**, trying out the most common ones and `std::vector` thereof. This is why we never needed to specify the branch types for all actions in the above snippets.
+Certain actions, on the other hand, do not take a function as argument (e.g. `Histo1D`), so we cannot deduce the type of the branch at compile-time. In this case **`TDataFrame` tries to guess the type of the branch**, trying out the most common ones and `std::vector` thereof. This is why we never needed to specify the branch types for all actions in the above snippets.
 
 When the branch type is not a common one such as `int`, `double`, `char` or `float` it is therefore good practice to specify it as a template parameter to the action itself, like this:
 ~~~{.cpp}
 dataFrame.Histo1D("b1"); // OK if b1 is a "common" type
-dataFrame.Histo<Object_t>("myObject"); // OK, "myObject" is deduced to be of type `Object_t`
+dataFrame.Histo1D<Object_t>("myObject"); // OK, "myObject" is deduced to be of type `Object_t`
 // dataFrame.Histo1D("myObject"); // THROWS an exception
 ~~~
 
@@ -262,7 +262,7 @@ You see how we created one `double` variable for each thread in the pool, and la
 ### Call graphs (storing and reusing sets of transformations)
 **Sets of transformations can be stored as variables** and reused multiple times to create **call graphs** in which several paths of filtering/creation of branches are executed simultaneously; we often refer to this as "storing the state of the chain".
 
-This feature can be used, for example, to create a temporary branch once and use it in several subsequent filters or actions, or to apply a strict filter to the data-set *before* executing several other transformations and actions, effectively reducing the amount of events processed.
+This feature can be used, for example, to create a temporary column once and use it in several subsequent filters or actions, or to apply a strict filter to the data-set *before* executing several other transformations and actions, effectively reducing the amount of events processed.
 
 Let's try to make this clearer with a commented example:
 ~~~{.cpp}
@@ -290,8 +290,8 @@ h2->Draw(); // first access to an action result: run event-loop!
 h3->Draw("SAME"); // event loop does not need to be run again here..
 std::cout << "Entries in h1: " << h1->GetEntries() << std::endl; // ..or here
 ~~~
-`TDataFrame` detects when several actions use the same filter or the same temporary branch, and **only evaluates each filter or temporary branch once per event**, regardless of how many times that result is used down the call graph. Objects read from each branch are **built once and never copied**, for maximum efficiency.
-When "upstream" filters are not passed, subsequent filters, temporary branch expressions and actions are not evaluated, so it might be advisable to put the strictest filters first in the chain.
+`TDataFrame` detects when several actions use the same filter or the same temporary column, and **only evaluates each filter or temporary column once per event**, regardless of how many times that result is used down the call graph. Objects read from each branch are **built once and never copied**, for maximum efficiency.
+When "upstream" filters are not passed, subsequent filters, temporary column expressions and actions are not evaluated, so it might be advisable to put the strictest filters first in the chain.
 
 ##  <a name="transformations"></a>Transformations
 ### Filters
@@ -309,8 +309,8 @@ Statistics are retrieved through a call to the `Report` method:
 
 Stats are printed in the same order as named filters have been added to the graph, and *refer to the latest event-loop* that has been run using the relevant `TDataFrame`. If `Report` is called before the event-loop has been run at least once, a run is triggered.
 
-### Temporary branches
-Temporary branches are created by invoking `AddColumn(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary branch.
+### Temporary columns
+Temporary columns are created by invoking `AddColumn(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary column.
 
 A new variable is created called `name`, accessible as if it was contained in the dataset from subsequent transformations/actions.
 
@@ -334,10 +334,11 @@ In the following, whenever we say an action "returns" something, we always mean 
 |------------------|-----------------|
 | Count | Return the number of events processed. |
 | Take | Build a collection of values of a branch. |
-| Histo | Fill a histogram with the values of a branch that passed all filters. |
+| Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the branch values that passed all filters. |
 | Max | Return the maximum of processed branch values. |
 | Mean | Return the mean of processed branch values. |
 | Min | Return the minimum of processed branch values. |
+| Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
 | Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
 
 | **Instant actions** | **Description** |
@@ -345,7 +346,7 @@ In the following, whenever we say an action "returns" something, we always mean 
 | Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
 | ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
 
-| **Extra** | **Description** |
+| **Queries** | **Description** |
 |-----------|-----------------|
 | Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
 
