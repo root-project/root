@@ -1,8 +1,8 @@
 #include "ROOT/TDataFrame.hxx"
 #include "TFile.h"
-#include "TString.h"
 #include "TTree.h"
 
+#include <string>
 #include <stdexcept>
 
 auto fileName("testtypeguessing.root");
@@ -14,7 +14,7 @@ int main() {
       TTree t(treeName, treeName);
       int b = 42;
       t.Branch("b", &b);
-      TString s = "fortytwo";
+      std::string s = "fortytwo";
       t.Branch("s", &s);
       t.Fill();
       t.Write();
@@ -25,7 +25,7 @@ int main() {
    // TTreeReader should cause a runtime error (type mismatch) when the event-loop is run
    auto hb = d.Histo1D<double>("b");
 
-   // this should throw an exception because TString is not a guessable type
+   // this should throw an exception because string is not a guessable type
    try {
       auto hs = d.Histo1D("s");
    } catch (const std::runtime_error& error) {
