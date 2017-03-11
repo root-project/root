@@ -154,7 +154,11 @@ public :
    /**
       Energy
     */
-   Scalar E()  const { using namespace std; return sqrt(E2() ); }
+   Scalar E() const
+   {
+      using namespace std;
+      return sqrt(E2());
+   }
 
    Scalar T() const { return E();}
 
@@ -166,7 +170,11 @@ public :
    /**
       magnitude of spatial components (magnitude of 3-momentum)
    */
-   Scalar P() const { using namespace std; return sqrt(P2()); }
+   Scalar P() const
+   {
+      using namespace std;
+      return sqrt(P2());
+   }
    Scalar R() const { return P(); }
 
    /**
@@ -198,7 +206,11 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt()   const { using namespace std; return sqrt(Perp2());}
+   Scalar Pt() const
+   {
+      using namespace std;
+      return sqrt(Perp2());
+   }
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -245,7 +257,7 @@ public :
    */
    Scalar Phi() const  {
       using namespace std;
-      return (fX == 0.0 && fY == 0.0) ? 0.0 : atan2(fY,fX);
+      return (fX == 0.0 && fY == 0.0) ? 0.0 : atan2(fY, fX);
    }
 
    /**
@@ -253,7 +265,7 @@ public :
    */
    Scalar Theta() const {
       using namespace std;
-      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : atan2(Pt(),fZ);
+      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : atan2(Pt(), fZ);
    }
 
    /**

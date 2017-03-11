@@ -491,7 +491,7 @@ namespace ROOT {
           using namespace std;
           Scalar ee = E();
           Scalar ppz = Pz();
-          return Scalar(0.5) * log( (ee+ppz)/(ee-ppz) );
+          return Scalar(0.5) * log((ee + ppz) / (ee - ppz));
        }
 
        /**
@@ -503,7 +503,7 @@ namespace ROOT {
           using namespace std;
           Scalar ee = E();
           Scalar pp = P();
-          return Scalar(0.5) * log( (ee+pp)/(ee-pp) );
+          return Scalar(0.5) * log((ee + pp) / (ee - pp));
        }
 
        /**
@@ -617,7 +617,7 @@ namespace ROOT {
           else if ( t2 == v2 ) {
              GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
-          return Scalar(1)/sqrt(Scalar(1) - v2/t2 );
+          return Scalar(1) / sqrt(Scalar(1) - v2 / t2);
        } /* gamma */
 
 

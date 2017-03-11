@@ -97,8 +97,16 @@ public :
 
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
-   Scalar X()     const { using namespace std; return fR*cos(fPhi);}
-   Scalar Y()     const { using namespace std; return fR*sin(fPhi);}
+   Scalar X() const
+   {
+      using namespace std;
+      return fR * cos(fPhi);
+   }
+   Scalar Y() const
+   {
+      using namespace std;
+      return fR * sin(fPhi);
+   }
    Scalar Mag2()  const { return fR*fR;}
 
 
@@ -135,8 +143,7 @@ private:
     */
    inline void Restrict() {
       using namespace std;
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
       return;
    }
 

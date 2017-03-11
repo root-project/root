@@ -154,10 +154,7 @@ public :
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
       using namespace std;
-      return fPt >   0 ? fPt*sinh(fEta)     :
-         fEta == 0 ? 0                       :
-         fEta >  0 ? fEta - etaMax<Scalar>() :
-         fEta + etaMax<Scalar>() ;
+      return fPt > 0 ? fPt * sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<Scalar>() : fEta + etaMax<Scalar>();
    }
    Scalar Z () const { return Pz(); }
 
@@ -166,10 +163,9 @@ public :
    */
    Scalar P() const {
       using namespace std;
-      return  fPt  > 0                 ?  fPt*cosh(fEta)       :
-         fEta >  etaMax<Scalar>() ?  fEta - etaMax<Scalar>()   :
-         fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>()   :
-         0                         ;
+      return fPt > 0 ? fPt * cosh(fEta)
+                     : fEta > etaMax<Scalar>() ? fEta - etaMax<Scalar>()
+                                               : fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>() : 0;
    }
    Scalar R() const { return P(); }
 
@@ -190,7 +186,11 @@ public :
    /**
        Energy (timelike component of momentum-energy 4-vector)
    */
-   Scalar E()   const { using namespace std; return sqrt(E2()); }
+   Scalar E() const
+   {
+      using namespace std;
+      return sqrt(E2());
+   }
 
    Scalar T()   const { return E();  }
 
@@ -235,7 +235,7 @@ public :
    Scalar Et2() const {
       using namespace std;
       // a bit faster than et * et
-      return 2. * E2()/ ( cosh(2 * fEta) + 1 );
+      return 2. * E2() / (cosh(2 * fEta) + 1);
    }
 
    /**
@@ -250,8 +250,7 @@ private:
    inline static Scalar pi() { return M_PI; }
    inline void RestrictPhi() {
       using namespace std;
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
       return;
    }
    // restrict the value of negative mass to avoid unphysical negative E2 values
@@ -272,7 +271,7 @@ public:
    */
    Scalar Theta() const {
       using namespace std;
-      if (fPt  >  0) return 2* atan( exp( - fEta ) );
+      if (fPt > 0) return 2 * atan(exp(-fEta));
       if (fEta >= 0) return 0;
       return pi();
    }

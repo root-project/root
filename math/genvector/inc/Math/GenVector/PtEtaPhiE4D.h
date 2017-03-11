@@ -137,16 +137,21 @@ public :
 
    // other coordinate representation
 
-   Scalar Px() const { using namespace std; return fPt*cos(fPhi);}
+   Scalar Px() const
+   {
+      using namespace std;
+      return fPt * cos(fPhi);
+   }
    Scalar X () const { return Px();         }
-   Scalar Py() const { using namespace std; return fPt*sin(fPhi);}
+   Scalar Py() const
+   {
+      using namespace std;
+      return fPt * sin(fPhi);
+   }
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
       using namespace std;
-      return fPt >   0 ? fPt*sinh(fEta)     :
-         fEta == 0 ? 0                       :
-         fEta >  0 ? fEta - etaMax<Scalar>() :
-         fEta + etaMax<Scalar>() ;
+      return fPt > 0 ? fPt * sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<Scalar>() : fEta + etaMax<Scalar>();
    }
    Scalar Z () const { return Pz(); }
 
@@ -155,10 +160,9 @@ public :
    */
    Scalar P() const {
       using namespace std;
-      return  fPt  > 0                 ?  fPt*cosh(fEta)       :
-         fEta >  etaMax<Scalar>() ?  fEta - etaMax<Scalar>()   :
-         fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>()   :
-         0                         ;
+      return fPt > 0 ? fPt * cosh(fEta)
+                     : fEta > etaMax<Scalar>() ? fEta - etaMax<Scalar>()
+                                               : fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>() : 0;
    }
    Scalar R() const { return P(); }
 
@@ -236,8 +240,7 @@ private:
    inline static Scalar pi() { return M_PI; }
    inline void Restrict() {
       using namespace std;
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
       return;
    }
 public:
@@ -247,7 +250,7 @@ public:
    */
    Scalar Theta() const {
       using namespace std;
-      if (fPt  >  0) return 2* atan( exp( - fEta ) );
+      if (fPt > 0) return 2 * atan(exp(-fEta));
       if (fEta >= 0) return 0;
       return pi();
    }

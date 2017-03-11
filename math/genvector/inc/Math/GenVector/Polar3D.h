@@ -109,12 +109,32 @@ public :
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
    Scalar Theta() const { return fTheta; }
-   Scalar Rho()   const { using namespace std; return fR*sin(fTheta); }
-   Scalar X()     const { using namespace std; return Rho()*cos(fPhi);}
-   Scalar Y()     const { using namespace std; return Rho()*sin(fPhi);}
-   Scalar Z()     const { using namespace std; return fR*cos(fTheta); }
+   Scalar Rho() const
+   {
+      using namespace std;
+      return fR * sin(fTheta);
+   }
+   Scalar X() const
+   {
+      using namespace std;
+      return Rho() * cos(fPhi);
+   }
+   Scalar Y() const
+   {
+      using namespace std;
+      return Rho() * sin(fPhi);
+   }
+   Scalar Z() const
+   {
+      using namespace std;
+      return fR * cos(fTheta);
+   }
    Scalar Mag2()  const { return fR*fR;}
-   Scalar Perp2() const { const Scalar r = Rho(); return r*r; }
+   Scalar Perp2() const
+   {
+      const Scalar r = Rho();
+      return r * r;
+   }
 
    // pseudorapidity
    Scalar Eta() const
@@ -157,8 +177,7 @@ private:
    inline static Scalar pi()  { return M_PI; }
    inline void Restrict() {
       using namespace std;
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
       return;
    }
 

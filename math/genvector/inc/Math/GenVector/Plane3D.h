@@ -288,7 +288,6 @@ private:
    Scalar fC;
    Scalar fD;
 
-
    };  // Plane3D<>
 
    /**

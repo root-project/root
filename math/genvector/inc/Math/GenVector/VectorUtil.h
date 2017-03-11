@@ -94,7 +94,7 @@ namespace ROOT {
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar DeltaR( const Vector1 & v1, const Vector2 & v2) {
             using namespace std;
-            return sqrt( DeltaR2(v1,v2) );
+            return sqrt(DeltaR2(v1, v2));
          }
 
 
@@ -116,9 +116,9 @@ namespace ROOT {
             double v1_r2 = v1.X()*v1.X() + v1.Y()*v1.Y() + v1.Z()*v1.Z();
             double v2_r2 = v2.X()*v2.X() + v2.Y()*v2.Y() + v2.Z()*v2.Z();
             double ptot2 = v1_r2*v2_r2;
-            if ( !(ptot2 <= 0) ) {
+            if (!(ptot2 <= 0)) {
                double pdot = v1.X()*v2.X() + v1.Y()*v2.Y() + v1.Z()*v2.Z();
-               arg = pdot/sqrt(ptot2);
+               arg                = pdot / sqrt(ptot2);
                if(arg >  1.0) arg =  1.0;
                if(arg < -1.0) arg = -1.0;
             }
@@ -137,7 +137,7 @@ namespace ROOT {
          template <class Vector1, class Vector2>
          inline double Angle( const  Vector1 & v1, const Vector2 & v2) {
             using namespace std;
-            return acos( CosTheta(v1, v2) );
+            return acos(CosTheta(v1, v2));
          }
 
          /**
@@ -196,7 +196,7 @@ namespace ROOT {
          template <class Vector1, class Vector2>
          inline double Perp( const  Vector1 & v, const Vector2 & u) {
             using namespace std;
-            return sqrt(Perp2(v,u) );
+            return sqrt(Perp2(v, u));
          }
 
 
@@ -337,7 +337,7 @@ namespace ROOT {
                GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double gamma = 1.0 / sqrt(1.0 - b2);
+            double  gamma  = 1.0 / sqrt(1.0 - b2);
             double bp = bx*v.X() + by*v.Y() + bz*v.Z();
             double gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
             double x2 = v.X() + gamma2*bp*bx + gamma*bx*v.T();
@@ -363,7 +363,7 @@ namespace ROOT {
                GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            T gamma = 1.0/ sqrt(1.0 - beta*beta);
+            T                        gamma = 1.0 / sqrt(1.0 - beta * beta);
             typename LVector::Scalar x2 = gamma * v.X() + gamma * beta * v.T();
             typename LVector::Scalar t2 = gamma * beta * v.X() + gamma * v.T();
 
@@ -385,7 +385,7 @@ namespace ROOT {
                GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double gamma = 1.0/ sqrt(1.0 - beta*beta);
+            double  gamma = 1.0 / sqrt(1.0 - beta * beta);
             double y2 = gamma * v.Y() + gamma * beta * v.T();
             double t2 = gamma * beta * v.Y() + gamma * v.T();
             LVector lv;
@@ -406,7 +406,7 @@ namespace ROOT {
                GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double gamma = 1.0/ sqrt(1.0 - beta*beta);
+            double  gamma = 1.0 / sqrt(1.0 - beta * beta);
             double z2 = gamma * v.Z() + gamma * beta * v.T();
             double t2 = gamma * beta * v.Z() + gamma * v.T();
             LVector lv;

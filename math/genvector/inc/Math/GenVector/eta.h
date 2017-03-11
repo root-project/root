@@ -57,7 +57,7 @@ namespace ROOT {
                  return log(z_scaled + sqrt(z_scaled * z_scaled + 1.0));
               } else {
                  // apply correction using first order Taylor expansion of sqrt
-                 return  z>0 ? log(2.0*z_scaled + 0.5/z_scaled) : -log(-2.0*z_scaled);
+                 return z > 0 ? log(2.0 * z_scaled + 0.5 / z_scaled) : -log(-2.0 * z_scaled);
               }
            }
            // case vector has rho = 0
@@ -81,7 +81,7 @@ namespace ROOT {
         template<typename Scalar>
         inline Scalar Eta_FromTheta(Scalar theta, Scalar r) {
            using namespace std;
-           Scalar tanThetaOver2 = tan( theta/2.);
+           Scalar tanThetaOver2 = tan(theta / 2.);
            if (tanThetaOver2 == 0) {
               return r + etaMax<Scalar>();
            }
