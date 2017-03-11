@@ -75,7 +75,7 @@ public :
         // This gives a small absolute adjustment in rho,
         // which, for large eta, results in a significant
         // improvement in the faithfullness of reproducing z.
-        fRho *= v.Z() / Z(); 
+        fRho *= v.Z() / Z();
     }
   }
 
