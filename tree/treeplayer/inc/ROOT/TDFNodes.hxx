@@ -360,6 +360,49 @@ public:
 
 } // end NS ROOT::Detail
 
-} // end NS ROOT
+namespace Internal {
+
+template <typename T>
+T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, const std::string &branch,
+                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<T>)
+{
+   if (readerValue == nullptr) {
+      // temporary branch
+      void *tmpBranchVal = df->GetTmpBranchValue(branch, slot, entry);
+      return *static_cast<T *>(tmpBranchVal);
+   } else {
+      // real branch
+      return **std::static_pointer_cast<TTreeReaderValue<T>>(readerValue);
+   }
+}
+
+template<typename T>
+std::array_view<T> GetBranchValue(TVBPtr_t &readerValue, unsigned int slot,
+                                  Long64_t entry, const std::string &branch,
+                                  ROOT::Detail::TDataFrameImpl *df,
+                                  TDFTraitsUtils::TTypeList<std::array_view<T>>)
+{
+   if(readerValue == nullptr) {
+      // temporary branch
+      void *tmpBranchVal = df->GetTmpBranchValue(branch, slot, entry);
+      auto &tra = *static_cast<TTreeReaderArray<T> *>(tmpBranchVal);
+      return std::array_view<T>(tra.begin(), tra.end());
+   } else {
+      // real branch
+      auto &tra = *std::static_pointer_cast<TTreeReaderArray<T>>(readerValue);
+      if (tra.GetSize() > 1 &&
+          1 != (&tra[1] - &tra[0])) {
+         std::string exceptionText = "Branch ";
+         exceptionText += branch;
+         exceptionText += " hangs from a non-split branch. For this reason, it cannot be accessed via an array_view. Please read the top level branch instead.";
+         throw std::runtime_error(exceptionText.c_str());
+      }
+      return std::array_view<T>(tra.begin(), tra.end());
+   }
+}
+
+} // namespace Internal
+
+} // namespace ROOT
 
 #endif //ROOT_TDFNODES
