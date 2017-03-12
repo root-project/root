@@ -38,9 +38,25 @@ namespace Detail {
 struct TDataFrameGuessedType {};
 }
 
+namespace Internal {
+
+// TODO move into TDFUtils, for now it would cause a circular dependency on TDataFrameImpl
+std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
+
+// TODO move into TDFUtils, for now it would cause a circular dependency on TActionResultProxy
+template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
+ROOT::Experimental::TActionResultProxy<ActionResultType>
+CallCreateAction(TDFNode* node, const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
+                 BranchType*)
+{
+   return node->template CreateAction<ActionType,BranchType,ActionResultType>(bl, r, nullptr);
+}
+
+}
+
 namespace Experimental {
 
-// forward declaration
+// forward declarations
 class TDataFrame;
 
 /**
