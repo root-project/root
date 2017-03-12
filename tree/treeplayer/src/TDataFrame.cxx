@@ -419,10 +419,6 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
    : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
 { }
 
-template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
-
 } // end NS Experimental
 
 } // end NS ROOT
