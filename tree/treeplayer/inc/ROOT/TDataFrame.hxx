@@ -163,7 +163,7 @@ class TDataFrameImpl;
 namespace Internal {
 
 const char *ToConstCharPtr(const char *s);
-const char *ToConstCharPtr(const std::string s);
+const char *ToConstCharPtr(const std::string& s);
 std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
 unsigned int GetNSlots();
 
