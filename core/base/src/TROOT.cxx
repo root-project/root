@@ -503,18 +503,27 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Globally enables the implicit multi-threading in ROOT, activating the
-   /// parallel execution of those methods in ROOT that provide an internal
-   /// parallelisation.
-   /// The 'numthreads' parameter allows to control the number of threads to
-   /// be used by the implicit multi-threading. However, this parameter is just
-   /// a hint for ROOT, which will try to satisfy the request if the execution
-   /// scenario allows it. For example, if ROOT is configured to use an external
-   /// scheduler, setting a value for 'numthreads' might not have any effect.
+   /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
+   /// parallelisation mechanism.
    /// @param[in] numthreads Number of threads to use. If not specified or
    ///                       set to zero, the number of threads is automatically
    ///                       decided by the implementation. Any other value is
    ///                       used as a hint.
+   ///
+   /// ROOT must be built with the compilation flag `imt=ON` for this feature to be available.
+   /// The following objects and methods automatically take advantage of
+   /// multi-threading if a call to `EnableImplicitMT` has been made before usage:
+   ///
+   ///  - TDataFrame internally runs the event-loop by parallelizing over clusters of entries
+   ///  - TTree::GetEntry reads multiple branches in parallel
+   ///  - TTree::FlushBaskets writes multiple baskets to disk in parallel
+   ///
+   /// EnableImplicitMT calls in turn EnableThreadSafety.
+   /// The 'numthreads' parameter allows to control the number of threads to
+   /// be used by the implicit multi-threading. However, this parameter is just
+   /// a hint for ROOT: it will try to satisfy the request if the execution
+   /// scenario allows it. For example, if ROOT is configured to use an external
+   /// scheduler, setting a value for 'numthreads' might not have any effect.
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
@@ -528,7 +537,7 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Disables the implicit multi-threading in ROOT.
+   /// Disables the implicit multi-threading in ROOT (see EnableImplicitMT).
    void DisableImplicitMT()
    {
 #ifdef R__USE_IMT
