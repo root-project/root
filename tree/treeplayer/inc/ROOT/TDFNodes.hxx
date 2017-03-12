@@ -25,17 +25,14 @@ class TDataFrameImpl;
 
 namespace Internal {
 
-// TODO move into TDFUtils, for now it would cause a circular dependency on TDataFrameImpl
-std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
+// Forward declarations
+template<typename T>
+T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
+                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<T>);
 
-// TODO move into TDFUtils, for now it would cause a circular dependency on TActionResultProxy
-template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
-ROOT::Experimental::TActionResultProxy<ActionResultType>
-CallCreateAction(TDFNode* node, const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
-                 BranchType*)
-{
-   return node->template CreateAction<ActionType,BranchType,ActionResultType>(bl, r, nullptr);
-}
+template<typename T>
+std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
+                                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
 
 class TDataFrameActionBase {
 protected:
@@ -52,15 +49,6 @@ public:
 
 using ActionBasePtr_t = std::shared_ptr<TDataFrameActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
-
-// Forward declarations
-template<typename T>
-T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
-                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<T>);
-template<typename T>
-std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
-                                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
-
 
 template <typename Helper, typename PrevDataFrame,
           typename BranchTypes_t = typename Helper::BranchTypes_t>
