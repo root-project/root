@@ -25,13 +25,13 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #include <stdexcept>
 #include <string>
 
-namespace ROOT {
-namespace Experimental {
-
 namespace cling {
-   std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
+   // TDataFrame pretty-printing
+   std::string printValue(ROOT::Experimental::TDataFrame *tdf);
 }
 
+namespace ROOT {
+namespace Experimental {
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
 private:
