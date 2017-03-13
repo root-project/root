@@ -9,18 +9,18 @@
 
    <!-- if necessary, one can load any other scripts from THttpServer or any other source  -->
    <!-- <script src="/jsrootsys/scripts/jquery.min.js" type="text/javascript"></script> -->
-   
+
    <style>
      table, td {
         border: 1px solid black;
      }
-     
+
      #draw_hpx , #draw_hpxpy {
         width:400px;
         height:300px;
      }
    </style>
-   
+
 </head>
 
 <body>
@@ -47,9 +47,9 @@
        </tr>
     </tbody>
   </table>
-  
+
   <script type='text/javascript'>
-  
+
       document.getElementById('btn_hpx').onclick = function() {
          JSROOT.NewHttpRequest("hpx/root.json", 'object', function(obj) {
             JSROOT.redraw("draw_hpx", obj);
@@ -69,7 +69,7 @@
             JSROOT.redraw("draw_hpxpy", arr[1], "col");
          }).send("hpx/root.json\nhpxpy/root.json\n");
       }
-      
+
       document.getElementById('btn_clear').onclick = function() {
          if (JSROOT.cleanup) {
             JSROOT.cleanup("draw_hpx");
@@ -79,9 +79,9 @@
          }
       }
 
-      
+
   </script>
-  
+
 </body>
 
 </html>
