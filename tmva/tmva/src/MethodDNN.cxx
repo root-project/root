@@ -63,13 +63,9 @@ REGISTER_METHOD(DNN)
 
 ClassImp(TMVA::MethodDNN)
 
-using TMVA::DNN::EActivationFunction;
-using TMVA::DNN::ELossFunction;
-using TMVA::DNN::EInitialization;
-using TMVA::DNN::EOutputFunction;
-
 namespace TMVA
 {
+    using namespace DNN;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
