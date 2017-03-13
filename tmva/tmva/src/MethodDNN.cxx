@@ -65,20 +65,17 @@ ClassImp(TMVA::MethodDNN)
 
 namespace TMVA
 {
-    using namespace DNN;
+   using namespace DNN;
 
-////////////////////////////////////////////////////////////////////////////////
-/// standard constructor
+   ////////////////////////////////////////////////////////////////////////////////
+   /// standard constructor
 
-TMVA::MethodDNN::MethodDNN(const TString& jobName,
-                           const TString& methodTitle,
-                           DataSetInfo& theData,
-                           const TString& theOption)
-   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption),
-     fWeightInitialization(), fOutputFunction(), fLayoutString(), fErrorStrategy(),
-     fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
-     fTrainingSettings(), fResume(false), fSettings()
-{
+   TMVA::MethodDNN::MethodDNN(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                              const TString &theOption)
+      : MethodBase(jobName, Types::kDNN, methodTitle, theData, theOption), fWeightInitialization(), fOutputFunction(),
+        fLayoutString(), fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(),
+        fArchitectureString(), fTrainingSettings(), fResume(false), fSettings()
+   {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
