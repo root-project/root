@@ -310,6 +310,20 @@ if(ROOT_vc_FOUND)
   ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
 endif()
 
+#--Vc GenVector test-----------------------------------------------------------------------------------
+if(ROOT_vc_FOUND)
+  include_directories(${Vc_INCLUDE_DIRS})
+  
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-unused-parameter)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-missing-braces)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
+  set_source_files_properties(testGenVectorVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
+  ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES GenVector ${Vc_LIBRARIES} BUILTINS Vc)
+  ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")
+endif()
+
 #--g2root------------------------------------------------------------------------------------------
 if(TARGET g2root)
   ROOT_ADD_TEST(test-g2root COMMAND g2root)
