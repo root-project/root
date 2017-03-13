@@ -15,7 +15,9 @@
 #include "Math/GenVector/Plane3D.h"
 #include "Math/GenVector/Transform3D.h"
 
-int compare(double v1, double v2, const std::string &name = "", double scale = 100.0)
+// note scale here is > 1 as SIMD and scalar floating point calculations not
+// expected to be bit wise identical
+int compare(double v1, double v2, const std::string &name = "", double scale = 1000.0)
 {
    //  ntest = ntest + 1;
 
@@ -202,9 +204,7 @@ int main(int /*argc*/, char ** /*argv*/)
    int ret = 0;
 
    // must be multiple of 8
-   // const unsigned int nPhotons = 96 * 1e2;
-   const unsigned int nPhotons = 8;
-   // const unsigned int nPhotons = 8;
+   const unsigned int nPhotons = 96;
    std::cout << "Creating " << nPhotons << " random photons ..." << std::endl;
 
    // Scalar Types
