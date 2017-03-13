@@ -1,19 +1,19 @@
 
+// ROOT
+#include "Math/GenVector/PositionVector3D.h"
+#include "Math/GenVector/DisplacementVector3D.h"
+#include "Math/GenVector/Plane3D.h"
+#include "Math/GenVector/Transform3D.h"
+
+// Vc
+#include <Vc/Vc>
+
 // STL
 #include <random>
 #include <vector>
 #include <iostream>
 #include <string>
 #include <typeinfo>
-
-// Vc
-#include <Vc/Vc>
-
-// ROOT
-#include "Math/GenVector/PositionVector3D.h"
-#include "Math/GenVector/DisplacementVector3D.h"
-#include "Math/GenVector/Plane3D.h"
-#include "Math/GenVector/Transform3D.h"
 
 // note scale here is > 1 as SIMD and scalar floating point calculations not
 // expected to be bit wise identical
