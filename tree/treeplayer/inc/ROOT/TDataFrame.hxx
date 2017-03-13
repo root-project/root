@@ -30,8 +30,8 @@ class TDirectory;
 class TTree;
 
 namespace cling {
-   // TDataFrame pretty-printing
-   std::string printValue(ROOT::Experimental::TDataFrame *tdf);
+// TDataFrame pretty-printing
+std::string printValue(ROOT::Experimental::TDataFrame *tdf);
 }
 
 namespace ROOT {
@@ -41,6 +41,7 @@ class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
 private:
    std::shared_ptr<TTree> fTree;
    void InitTree(TTree &tree, bool ownsTree);
+
 public:
    TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
@@ -54,8 +55,11 @@ public:
    /// booking of actions or transformations.
    /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
    /// methods available.
-   template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
-   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames_t &defaultBranches = {});
+   template <
+      typename FILENAMESCOLL,
+      typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
+              const BranchNames_t &defaultBranches = {});
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames_t &defaultBranches = {});
 };
@@ -63,13 +67,12 @@ public:
 } // end NS Experimental
 } // end NS ROOT
 
-
 // Functions and method implementations
 namespace ROOT {
 namespace Experimental {
 
 // TODO this belongs in TActionResultProxy.hxx, but it would have a circular dependency on TDataFrameImpl
-template<typename T>
+template <typename T>
 void Experimental::TActionResultProxy<T>::TriggerRun()
 {
    auto df = fImplWeakPtr.lock();
@@ -79,14 +82,16 @@ void Experimental::TActionResultProxy<T>::TriggerRun()
    df->Run();
 }
 
-template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
-TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+template <typename FILENAMESCOLL,
+          typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
+                       const BranchNames_t &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+        std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
-   for (auto &fileName : filenamescoll)
-      chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
-   fTree = std::make_shared<TTree>(static_cast<TTree*>(chain));
+   for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
+   fTree = std::make_shared<TTree>(static_cast<TTree *>(chain));
    fProxiedPtr->SetTree(chain);
 }
 
@@ -98,15 +103,16 @@ TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenam
 namespace cling {
 inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
 {
-   auto df = tdf->GetDataFrameChecked();
-   auto treeName = df->GetTreeName();
+   auto df          = tdf->GetDataFrameChecked();
+   auto treeName    = df->GetTreeName();
    auto defBranches = df->GetDefaultBranches();
    auto tmpBranches = df->GetTmpBranches();
 
    std::ostringstream ret;
    ret << "A data frame built on top of the " << treeName << " dataset.";
    if (!defBranches.empty()) {
-      if(defBranches.size() == 1) ret << "\nDefault branch: " << defBranches[0];
+      if (defBranches.size() == 1)
+         ret << "\nDefault branch: " << defBranches[0];
       else {
          ret << "\nDefault branches:\n";
          for (auto &&branch : defBranches) {
