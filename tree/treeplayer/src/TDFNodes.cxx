@@ -13,7 +13,7 @@
 #include "ROOT/TSpinMutex.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
-#include "TROOT.h" // IsImplicitMTEnabled
+#include "TROOT.h"      // IsImplicitMTEnabled
 #include "TTreeReader.h"
 
 #include <mutex>
@@ -26,31 +26,56 @@ namespace ROOT {
 namespace Internal {
 
 TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches) { }
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches)
+{
+}
 
-void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resize(nSlots); }
+void TDataFrameActionBase::CreateSlots(unsigned int nSlots)
+{
+   fReaderValues.resize(nSlots);
+}
 
 } // end NS Internal
 
 namespace Detail {
 
-TDataFrameBranchBase::TDataFrameBranchBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name) {};
+TDataFrameBranchBase::TDataFrameBranchBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
+                                           const std::string &name)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
-BranchNames_t TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
+BranchNames_t TDataFrameBranchBase::GetTmpBranches() const
+{
+   return fTmpBranches;
+}
 
-std::string TDataFrameBranchBase::GetName() const { return fName; }
+std::string TDataFrameBranchBase::GetName() const
+{
+   return fName;
+}
 
-TDataFrameImpl *TDataFrameBranchBase::GetImplPtr() const { return fImplPtr; }
+TDataFrameImpl *TDataFrameBranchBase::GetImplPtr() const
+{
+   return fImplPtr;
+}
 
-TDataFrameFilterBase::TDataFrameFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name) {};
+TDataFrameFilterBase::TDataFrameFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
+                                           const std::string &name)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
-TDataFrameImpl *TDataFrameFilterBase::GetImplPtr() const { return fImplPtr; }
+TDataFrameImpl *TDataFrameFilterBase::GetImplPtr() const
+{
+   return fImplPtr;
+}
 
-BranchNames_t TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
+BranchNames_t TDataFrameFilterBase::GetTmpBranches() const
+{
+   return fTmpBranches;
+}
 
-bool TDataFrameFilterBase::HasName() const { return !fName.empty(); };
+bool TDataFrameFilterBase::HasName() const
+{
+   return !fName.empty();
+};
 
 void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
 {
@@ -65,22 +90,22 @@ void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
    std::fill(fRejected.begin(), fRejected.end(), 0);
 }
 
-void TDataFrameFilterBase::PrintReport() const {
+void TDataFrameFilterBase::PrintReport() const
+{
    if (fName.empty()) // PrintReport is no-op for unnamed filters
       return;
    const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
-   const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
-   double perc = accepted;
-   if (all > 0)
-      perc /= all;
+   const auto all      = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
+   double     perc     = accepted;
+   if (all > 0) perc /= all;
    perc *= 100.;
-   Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%",
-          fName.c_str(), accepted, all, perc);
+   Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", fName.c_str(), accepted, all, perc);
 }
 
 TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches)
    : fTree(tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-{ }
+{
+}
 
 // This is an helper class to allow to pick a slot without resorting to a map
 // indexed by thread ids.
@@ -89,14 +114,13 @@ TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches
 // TODO move into TDFUtils
 class TSlotStack {
 private:
-   unsigned int        fCursor;
+   unsigned int              fCursor;
    std::vector<unsigned int> fBuf;
    ROOT::TSpinMutex          fMutex;
+
 public:
    TSlotStack() = delete;
-   TSlotStack(unsigned int size): fCursor(size), fBuf(size) {
-      std::iota(fBuf.begin(), fBuf.end(), 0U);
-   }
+   TSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
    void Push(unsigned int slotNumber)
    {
       std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
@@ -108,7 +132,6 @@ public:
       return fBuf[--fCursor];
    }
 };
-
 
 void TDataFrameImpl::Run()
 {
@@ -128,7 +151,7 @@ void TDataFrameImpl::Run()
             const auto currEntry = r.GetCurrentEntry();
             for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, currEntry);
             for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, currEntry);
-          }
+         }
          slotStack.Push(slot);
       });
    } else {
@@ -166,12 +189,9 @@ void TDataFrameImpl::Run()
 /// a particular slot will be using.
 void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
 {
-   for (auto &ptr : fBookedActions)
-      ptr->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedFilters)
-      ptr->BuildReaderValues(r, slot);
-   for (auto &bookedBranch : fBookedBranches)
-      bookedBranch.second->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop
@@ -182,12 +202,9 @@ void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
 /// (i.e. workers) that will be used to perform the event loop.
 void TDataFrameImpl::CreateSlots(unsigned int nSlots)
 {
-   for (auto &ptr : fBookedActions)
-      ptr->CreateSlots(nSlots);
-   for (auto &ptr : fBookedFilters)
-      ptr->CreateSlots(nSlots);
-   for (auto &bookedBranch : fBookedBranches)
-      bookedBranch.second->CreateSlots(nSlots);
+   for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
+   for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
 }
 
 TDataFrameImpl *TDataFrameImpl::GetImplPtr()
@@ -255,9 +272,9 @@ unsigned int TDataFrameImpl::GetNSlots() const
 }
 
 /// Call `PrintReport` on all booked filters
-void TDataFrameImpl::Report() const {
-   for(const auto &fPtr : fBookedNamedFilters)
-      fPtr->PrintReport();
+void TDataFrameImpl::Report() const
+{
+   for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
 }
 
 } // end NS Detail

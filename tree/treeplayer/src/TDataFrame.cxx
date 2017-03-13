@@ -358,18 +358,19 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr,defaultBranches))
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+        std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
       throw std::runtime_error(msg);
    }
-   auto tree = static_cast<TTree*>(dirPtr->Get(treeName.c_str()));
+   auto tree = static_cast<TTree *>(dirPtr->Get(treeName.c_str()));
    if (!tree) {
       auto msg = "Tree \"" + treeName + "\" cannot be found!";
       throw std::runtime_error(msg);
    }
-   fTree = std::shared_ptr<TTree>(tree,[](TTree*){});
+   fTree = std::shared_ptr<TTree>(tree, [](TTree *) {});
    fProxiedPtr->SetTree(tree);
 }
 
@@ -383,15 +384,16 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob,
+                       const BranchNames_t &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+        std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
    chain->Add(filenameglob.c_str());
-   fTree = std::shared_ptr<TTree>(static_cast<TTree*>(chain));
+   fTree = std::shared_ptr<TTree>(static_cast<TTree *>(chain));
    fProxiedPtr->SetTree(chain);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
@@ -403,11 +405,11 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
-{ }
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+        std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
+{
+}
 
 } // end NS Experimental
 
 } // end NS ROOT
-
-

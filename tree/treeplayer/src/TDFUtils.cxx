@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "RConfigure.h"  // R__USE_IMT
+#include "RConfigure.h" // R__USE_IMT
 #include "ROOT/TDFUtils.hxx"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 
