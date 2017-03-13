@@ -276,11 +276,11 @@ endforeach()
 #--dependency for TMVA tutorials
 set (tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
 set (tmva-TMVAClassificationCategory-depends tutorial-tmva-TMVAClassification)
-set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassificationCategory)
-set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample)
-set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
+set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassificationCategory tutorial-tmva-TMVAClassificationCategory)
+set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample tutorial-tmva-TMVAClassificationCategory)
 set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
 set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
+set (tmva-TMVARegression-depends tutorial-tmva-TMVAMulticlass-depends)
 
 
 #---Loop over all tutorials and define the corresponding test---------
