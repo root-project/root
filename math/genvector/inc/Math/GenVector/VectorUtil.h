@@ -93,8 +93,7 @@ namespace ROOT {
           */
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar DeltaR( const Vector1 & v1, const Vector2 & v2) {
-            using namespace std;
-            return sqrt(DeltaR2(v1, v2));
+            return std::sqrt( DeltaR2(v1,v2) );
          }
 
 
@@ -111,14 +110,15 @@ namespace ROOT {
          // need to have a specialization for polar Coordinates ??
          template <class Vector1, class Vector2>
          double CosTheta( const Vector1 &  v1, const Vector2  & v2) {
-            using namespace std;
-            double arg(0);
+            double arg;
             double v1_r2 = v1.X()*v1.X() + v1.Y()*v1.Y() + v1.Z()*v1.Z();
             double v2_r2 = v2.X()*v2.X() + v2.Y()*v2.Y() + v2.Z()*v2.Z();
             double ptot2 = v1_r2*v2_r2;
-            if (!(ptot2 <= 0)) {
+            if(ptot2 <= 0) {
+               arg = 0.0;
+            }else{
                double pdot = v1.X()*v2.X() + v1.Y()*v2.Y() + v1.Z()*v2.Z();
-               arg                = pdot / sqrt(ptot2);
+               arg = pdot/std::sqrt(ptot2);
                if(arg >  1.0) arg =  1.0;
                if(arg < -1.0) arg = -1.0;
             }
@@ -136,8 +136,7 @@ namespace ROOT {
           */
          template <class Vector1, class Vector2>
          inline double Angle( const  Vector1 & v1, const Vector2 & v2) {
-            using namespace std;
-            return acos(CosTheta(v1, v2));
+            return std::acos( CosTheta(v1, v2) );
          }
 
          /**
@@ -195,8 +194,7 @@ namespace ROOT {
           */
          template <class Vector1, class Vector2>
          inline double Perp( const  Vector1 & v, const Vector2 & u) {
-            using namespace std;
-            return sqrt(Perp2(v, u));
+            return std::sqrt(Perp2(v,u) );
          }
 
 
@@ -215,14 +213,13 @@ namespace ROOT {
           */
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar InvariantMass( const Vector1 & v1, const Vector2 & v2) {
-            using namespace std;
             typedef typename  Vector1::Scalar Scalar;
             Scalar ee = (v1.E() + v2.E() );
             Scalar xx = (v1.X() + v2.X() );
             Scalar yy = (v1.Y() + v2.Y() );
             Scalar zz = (v1.Z() + v2.Z() );
             Scalar mm2 = ee*ee - xx*xx - yy*yy - zz*zz;
-            return mm2 < 0.0 ? -sqrt(-mm2) : sqrt(mm2);
+            return mm2 < 0.0 ? -std::sqrt(-mm2) : std::sqrt(mm2);
             //  PxPyPzE4D<double> q(xx,yy,zz,ee);
             //  return q.M();
             //return ( v1 + v2).mag();
@@ -328,7 +325,6 @@ namespace ROOT {
           */
          template <class LVector, class BoostVector>
          LVector boost(const LVector & v, const BoostVector & b) {
-            using namespace std;
             double bx = b.X();
             double by = b.Y();
             double bz = b.Z();
@@ -337,7 +333,7 @@ namespace ROOT {
                GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double  gamma  = 1.0 / sqrt(1.0 - b2);
+            double gamma = 1.0 / std::sqrt(1.0 - b2);
             double bp = bx*v.X() + by*v.Y() + bz*v.Z();
             double gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
             double x2 = v.X() + gamma2*bp*bx + gamma*bx*v.T();
@@ -358,12 +354,11 @@ namespace ROOT {
           */
          template <class LVector, class T>
          LVector boostX(const LVector & v, T beta) {
-            using namespace std;
             if (beta >= 1) {
                GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            T                        gamma = 1.0 / sqrt(1.0 - beta * beta);
+            T gamma = 1.0/ std::sqrt(1.0 - beta*beta);
             typename LVector::Scalar x2 = gamma * v.X() + gamma * beta * v.T();
             typename LVector::Scalar t2 = gamma * beta * v.X() + gamma * v.T();
 
@@ -380,12 +375,11 @@ namespace ROOT {
           */
          template <class LVector>
          LVector boostY(const LVector & v, double beta) {
-            using namespace std;
             if (beta >= 1) {
                GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double  gamma = 1.0 / sqrt(1.0 - beta * beta);
+            double gamma = 1.0/ std::sqrt(1.0 - beta*beta);
             double y2 = gamma * v.Y() + gamma * beta * v.T();
             double t2 = gamma * beta * v.Y() + gamma * v.T();
             LVector lv;
@@ -401,12 +395,11 @@ namespace ROOT {
           */
          template <class LVector>
          LVector boostZ(const LVector & v, double beta) {
-            using namespace std;
             if (beta >= 1) {
                GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double  gamma = 1.0 / sqrt(1.0 - beta * beta);
+            double gamma = 1.0/ std::sqrt(1.0 - beta*beta);
             double z2 = gamma * v.Z() + gamma * beta * v.T();
             double t2 = gamma * beta * v.Z() + gamma * v.T();
             LVector lv;
