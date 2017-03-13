@@ -23,6 +23,7 @@
 
 #include "Math/GenVector/eta.h"
 
+#include <cmath>
 
 namespace ROOT {
 

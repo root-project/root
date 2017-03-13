@@ -37,6 +37,7 @@
 
 #include <iostream>
 #include <type_traits>
+#include <cmath>
 
 //#include "Math/Vector3Dfwd.h"
 
