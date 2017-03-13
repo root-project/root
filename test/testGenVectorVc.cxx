@@ -203,8 +203,7 @@ int main(int /*argc*/, char ** /*argv*/)
 {
    int ret = 0;
 
-   // must be multiple of 8
-   const unsigned int nPhotons = 96;
+   const unsigned int nPhotons = 100;
    std::cout << "Creating " << nPhotons << " random photons ..." << std::endl;
 
    // Scalar Types
