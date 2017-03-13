@@ -56,8 +56,6 @@ public:
   FumiliChi2FCN() {}
 
   virtual ~FumiliChi2FCN() {}
-  fModelFunction = nullptr;
-
 
 
   /**
@@ -170,7 +168,7 @@ public:
  private:
 
   // A pointer to the model function which describes the data
-  const ParametricFunction *fModelFunction;
+  const ParametricFunction *fModelFunction = nullptr;
 
 
 
