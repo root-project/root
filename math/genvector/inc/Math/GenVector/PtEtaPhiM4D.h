@@ -266,7 +266,7 @@ public:
       polar angle
    */
    Scalar Theta() const {
-     return ( fPt  > 0  ? Scalar(2) * atan(exp(-fEta)) :
+     return ( fPt  > 0  ? Scalar(2) * std::atan(std::exp(-fEta)) :
               fEta >= 0 ? 0 : pi() );
    }
 

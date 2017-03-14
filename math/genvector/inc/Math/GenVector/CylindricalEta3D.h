@@ -71,7 +71,7 @@ public :
      fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )
   {
      static Scalar bigEta = Scalar(-0.3) * log(std::numeric_limits<Scalar>::epsilon());
-     if (fabs(fEta) > bigEta) {
+     if (std::fabs(fEta) > bigEta) {
         // This gives a small absolute adjustment in rho,
         // which, for large eta, results in a significant
         // improvement in the faithfullness of reproducing z.
