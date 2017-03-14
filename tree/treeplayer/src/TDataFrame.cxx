@@ -566,6 +566,24 @@ TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches
    : fTree(tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
 { }
 
+
+// This is an helper class to allow to pick a slot without resorting to a mp
+// and a lock. In addition, this method allows the runtime to replace existing
+// threads with new ones without the calculation being affected.
+class TROCircularBuffer {
+private:
+   const unsigned int fSize{0U};
+   std::atomic<unsigned int> fCounter{0U};
+public:
+   TROCircularBuffer(unsigned int size) : fSize(size) {};
+   unsigned int GetValue()
+   {
+      auto val = fCounter.fetch_add(1U);
+      return val%fSize;
+   };
+};
+
+
 void TDataFrameImpl::Run()
 {
 #ifdef R__USE_IMT
@@ -574,27 +592,11 @@ void TDataFrameImpl::Run()
       std::unique_ptr<ttpmt_t> tp;
       tp.reset(new ttpmt_t(*fTree));
 
-      ROOT::TSpinMutex slotMutex;
-      std::map<std::thread::id, unsigned int> slotMap;
-      unsigned int globalSlotIndex = 0;
+      TROCircularBuffer slotsCircBuf(fNSlots);
       CreateSlots(fNSlots);
-      tp->Process([this, &slotMutex, &globalSlotIndex, &slotMap](TTreeReader &r) -> void {
-         const auto   thisThreadID = std::this_thread::get_id();
-         unsigned int slot;
-         {
-            std::lock_guard<ROOT::TSpinMutex> l(slotMutex);
-            auto                              thisSlotIt = slotMap.find(thisThreadID);
-            if (thisSlotIt != slotMap.end()) {
-               slot = thisSlotIt->second;
-            } else {
-               slot                  = globalSlotIndex;
-               slotMap[thisThreadID] = slot;
-               ++globalSlotIndex;
-            }
-         }
-
+      tp->Process([this, &slotsCircBuf](TTreeReader &r) -> void {
+         auto slot = slotsCircBuf.GetValue();
          BuildAllReaderValues(r, slot);
-
          // recursive call to check filters and conditionally execute actions
          while (r.Next()) {
             const auto currEntry = r.GetCurrentEntry();
