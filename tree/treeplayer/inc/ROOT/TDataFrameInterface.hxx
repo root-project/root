@@ -15,6 +15,7 @@
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFUtils.hxx"
+#include "TClass.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions

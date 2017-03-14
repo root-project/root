@@ -8,12 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "RConfigure.h"  // R__USE_IMT
 #include "ROOT/TDFUtils.hxx"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
-#include "TTree.h"
 
 #include <stdexcept>
 #include <string>
+class TTree;
 
 namespace ROOT {
 namespace Internal {

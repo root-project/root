@@ -13,6 +13,8 @@
 
 #include "ROOT/TActionResultProxy.hxx"
 #include "ROOT/TDFUtils.hxx"
+#include "TTreeReaderArray.h"
+#include "TTreeReaderValue.h"
 
 #include <map>
 
