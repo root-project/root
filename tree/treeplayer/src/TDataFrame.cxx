@@ -19,6 +19,7 @@
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 #include "TString.h" // Printf
 
+#include <atomic>
 #include <numeric> // std::accumulate
 #include <thread>
 
