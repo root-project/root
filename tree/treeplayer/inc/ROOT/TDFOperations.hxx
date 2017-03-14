@@ -13,14 +13,14 @@
 
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TThreadedObject.hxx"
+#include "TH1.h"
 
 #include <algorithm>
-#include <limits>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
-#include "TH1F.h"
 
 /// \cond HIDDEN_SYMBOLS
 
