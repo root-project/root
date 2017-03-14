@@ -488,10 +488,9 @@ namespace ROOT {
           // TODO - It would be good to check that E > Pz and use the Throw()
           //        mechanism or at least load a NAN if not.
           //        We should then move the code to a .cpp file.
-          using namespace std;
-          Scalar ee = E();
-          Scalar ppz = Pz();
-          return Scalar(0.5) * log((ee + ppz) / (ee - ppz));
+          const Scalar ee  = E();
+          const Scalar ppz = Pz();
+          return Scalar(0.5) * std::log((ee + ppz) / (ee - ppz));
        }
 
        /**
@@ -500,10 +499,9 @@ namespace ROOT {
        Scalar ColinearRapidity() const {
           // TODO - It would be good to check that E > P and use the Throw()
           //        mechanism or at least load a NAN if not.
-          using namespace std;
-          Scalar ee = E();
-          Scalar pp = P();
-          return Scalar(0.5) * log((ee + pp) / (ee - pp));
+          const Scalar ee = E();
+          const Scalar pp = P();
+          return Scalar(0.5) * std::log((ee + pp) / (ee - pp));
        }
 
        /**
@@ -599,9 +597,8 @@ namespace ROOT {
            Return Gamma scalar value
        */
        Scalar Gamma() const {
-          using namespace std;
-          Scalar v2 = P2();
-          Scalar t2 = E()*E();
+          const Scalar v2 = P2();
+          const Scalar t2 = std::pow(E(), 2);
           if (E() == 0) {
              if ( P2() == 0) {
                 return 1;
@@ -617,7 +614,7 @@ namespace ROOT {
           else if ( t2 == v2 ) {
              GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
-          return Scalar(1) / sqrt(Scalar(1) - v2 / t2);
+          return Scalar(1) / std::sqrt(Scalar(1) - v2 / t2);
        } /* gamma */
 
 

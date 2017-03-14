@@ -110,32 +110,12 @@ public :
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
    Scalar Theta() const { return fTheta; }
-   Scalar Rho() const
-   {
-      using namespace std;
-      return fR * sin(fTheta);
-   }
-   Scalar X() const
-   {
-      using namespace std;
-      return Rho() * cos(fPhi);
-   }
-   Scalar Y() const
-   {
-      using namespace std;
-      return Rho() * sin(fPhi);
-   }
-   Scalar Z() const
-   {
-      using namespace std;
-      return fR * cos(fTheta);
-   }
+   Scalar Rho() const { return fR * std::sin(fTheta); }
+   Scalar X() const { return Rho() * std::cos(fPhi); }
+   Scalar Y() const { return Rho() * std::sin(fPhi); }
+   Scalar Z() const { return fR * std::cos(fTheta); }
    Scalar Mag2()  const { return fR*fR;}
-   Scalar Perp2() const
-   {
-      const Scalar r = Rho();
-      return r * r;
-   }
+   Scalar Perp2() const { return std::pow(Rho(), 2); }
 
    // pseudorapidity
    Scalar Eta() const
@@ -177,9 +157,7 @@ public :
 private:
    inline static Scalar pi()  { return M_PI; }
    inline void Restrict() {
-      using namespace std;
-      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
-      return;
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - std::floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 
 public:
@@ -229,8 +207,8 @@ public:
 
    // The following make this coordinate system look enough like a CLHEP
    // vector that an assignment member template can work with either
-   T x() const { return X();}
-   T y() const { return Y();}
+   T x() const { return X(); }
+   T y() const { return Y(); }
    T z() const { return Z(); }
 
    // ============= Specializations for improved speed ==================

@@ -502,8 +502,7 @@ public:
    */
    template<class IT>
    void GetComponents(IT begin) const {
-      using namespace std;
-      copy(fM, fM + 12, begin);
+      std::copy(fM, fM + 12, begin);
    }
 
    /**

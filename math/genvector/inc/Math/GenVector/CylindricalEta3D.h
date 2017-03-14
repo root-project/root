@@ -70,7 +70,6 @@ public :
   explicit CylindricalEta3D( const CoordSystem & v ) :
      fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )
   {
-     using namespace std;
      static Scalar bigEta = Scalar(-0.3) * log(std::numeric_limits<Scalar>::epsilon());
      if (fabs(fEta) > bigEta) {
         // This gives a small absolute adjustment in rho,
@@ -126,8 +125,7 @@ public :
 private:
    inline static Scalar pi() { return M_PI; }
    inline void Restrict() {
-      using namespace std;
-      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - std::floor(fPhi / (2 * pi()) + .5) * 2 * pi();
       return;
    }
 public:
@@ -137,34 +135,24 @@ public:
    T Rho()   const { return fRho; }
    T Eta()   const { return fEta; }
    T Phi()   const { return fPhi; }
-   T X() const
-   {
-      using namespace std;
-      return fRho * cos(fPhi);
-   }
-   T Y() const
-   {
-      using namespace std;
-      return fRho * sin(fPhi);
-   }
+   T X() const { return fRho * std::cos(fPhi); }
+   T Y() const { return fRho * std::sin(fPhi); }
    T Z() const
    {
-      using namespace std;
-      return fRho > 0 ? fRho * sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<T>() : fEta + etaMax<T>();
+      return fRho > 0 ? fRho * std::sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<T>() : fEta + etaMax<T>();
    }
    T R() const
    {
-      using namespace std;
-      return fRho > 0 ? fRho * cosh(fEta)
+      return fRho > 0 ? fRho * std::cosh(fEta)
                       : fEta > etaMax<T>() ? fEta - etaMax<T>() : fEta < -etaMax<T>() ? -fEta - etaMax<T>() : 0;
    }
-   T Mag2()  const { return R()*R();              }
-   T Perp2() const { return fRho*fRho;            }
-   T Theta() const
+   T Mag2() const
    {
-      using namespace std;
-      return fRho > 0 ? 2 * atan(exp(-fEta)) : (fEta >= 0 ? 0 : pi());
+      const Scalar r = R();
+      return r * r;
    }
+   T Perp2() const { return fRho*fRho;            }
+   T Theta() const { return fRho > 0 ? 2 * std::atan(exp(-fEta)) : (fEta >= 0 ? 0 : pi()); }
 
    // setters (only for data members)
 
