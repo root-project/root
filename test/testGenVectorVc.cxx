@@ -352,9 +352,9 @@ int main(int /*argc*/, char ** /*argv*/)
 
       // assert that the vector time is roughly Vc::double_v::Size times smaller than the scalar time
       // allow 25% for 'safety'
-      if (std::fabs((best_time_vector * Vc::double_v::Size) - best_time_scalar) > 0.25 * best_time_scalar) {
-         ++ret;
-      }
+      // if (std::fabs((best_time_vector * Vc::double_v::Size) - best_time_scalar) > 0.25 * best_time_scalar) {
+      //   ++ret;
+      // }
    }
 
    if (ret)
