@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <typeinfo>
+#include <cmath>
 
 // note scale here is > 1 as SIMD and scalar floating point calculations not
 // expected to be bit wise identical
@@ -350,8 +351,8 @@ int main(int /*argc*/, char ** /*argv*/)
       std::cout << "Vectorised Vc speedup   = " << best_time_scalar / best_time_vector << std::endl;
 
       // assert that the vector time is roughly Vc::double_v::Size times smaller than the scalar time
-      // allow 10% for 'safety'
-      if ((best_time_vector * Vc::double_v::Size) - best_time_scalar > 0.1 * best_time_scalar) {
+      // allow 25% for 'safety'
+      if (std::fabs((best_time_vector * Vc::double_v::Size) - best_time_scalar) > 0.25 * best_time_scalar) {
          ++ret;
       }
    }
