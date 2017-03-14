@@ -7,6 +7,7 @@
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/Plane3D.h"
 #include "Math/GenVector/Transform3D.h"
+#include "TStopwatch.h"
 
 // STL
 #include <random>
@@ -203,97 +204,156 @@ int main(int /*argc*/, char ** /*argv*/)
 {
    int ret = 0;
 
-   const unsigned int nPhotons = 100;
-   std::cout << "Creating " << nPhotons << " random photons ..." << std::endl;
+   {
 
-   // Scalar Types
-   Data<Point<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
+      const unsigned int nPhotons = 100;
+      std::cout << "Creating " << nPhotons << " random photons ..." << std::endl;
 
-   // Vc Types
-   Data<Point<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data;
-   // Clone the exact random values from the Scalar vector
-   // Note we are making the same number of entries in the container, but each entry is a vector entry
-   // with Vc::double_t::Size entries.
-   fill(scalar_data, vc_data);
+      // Scalar Types
+      Data<Point<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
 
-   // Loop over the two containers and compare
-   std::cout << "Ray Tracing :-" << std::endl;
-   for (size_t i = 0; i < nPhotons; ++i) {
-      auto &sc = scalar_data[i];
-      auto &vc = vc_data[i];
+      // Vc Types
+      Data<Point<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data;
+      // Clone the exact random values from the Scalar vector
+      // Note we are making the same number of entries in the container, but each entry is a vector entry
+      // with Vc::double_t::Size entries.
+      fill(scalar_data, vc_data);
 
-      // ray tracing
-      reflectSpherical(sc.position, sc.direction, sc.CoC, sc.radius);
-      reflectPlane(sc.position, sc.direction, sc.plane);
-      reflectSpherical(vc.position, vc.direction, vc.CoC, vc.radius);
-      reflectPlane(vc.position, vc.direction, vc.plane);
+      // Loop over the two containers and compare
+      std::cout << "Ray Tracing :-" << std::endl;
+      for (size_t i = 0; i < nPhotons; ++i) {
+         auto &sc = scalar_data[i];
+         auto &vc = vc_data[i];
 
-      std::cout << "Position  " << sc.position << " " << vc.position << std::endl;
-      std::cout << "Direction " << sc.direction << " " << vc.direction << std::endl;
+         // ray tracing
+         reflectSpherical(sc.position, sc.direction, sc.CoC, sc.radius);
+         reflectPlane(sc.position, sc.direction, sc.plane);
+         reflectSpherical(vc.position, vc.direction, vc.CoC, vc.radius);
+         reflectPlane(vc.position, vc.direction, vc.plane);
 
-      for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
-         ret |= compare(sc.position.x(), vc.position.x()[j]);
-         ret |= compare(sc.position.y(), vc.position.y()[j]);
-         ret |= compare(sc.position.z(), vc.position.z()[j]);
-         ret |= compare(sc.direction.x(), vc.direction.x()[j]);
-         ret |= compare(sc.direction.y(), vc.direction.y()[j]);
-         ret |= compare(sc.direction.z(), vc.direction.z()[j]);
+         std::cout << "Position  " << sc.position << " " << vc.position << std::endl;
+         std::cout << "Direction " << sc.direction << " " << vc.direction << std::endl;
+
+         for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
+            ret |= compare(sc.position.x(), vc.position.x()[j]);
+            ret |= compare(sc.position.y(), vc.position.y()[j]);
+            ret |= compare(sc.position.z(), vc.position.z()[j]);
+            ret |= compare(sc.direction.x(), vc.direction.x()[j]);
+            ret |= compare(sc.direction.y(), vc.direction.y()[j]);
+            ret |= compare(sc.direction.z(), vc.direction.z()[j]);
+         }
+      }
+
+      // Now test Transformation3D
+      std::cout << "Transforms :-" << std::endl;
+      for (size_t i = 0; i < nPhotons; ++i) {
+         auto &sc = scalar_data[i];
+         auto &vc = vc_data[i];
+
+         // make 6 random scalar Points
+         Point<double> sp1(p_x(gen), p_y(gen), p_z(gen));
+         Point<double> sp2(p_x(gen), p_y(gen), p_z(gen));
+         Point<double> sp3(p_x(gen), p_y(gen), p_z(gen));
+         Point<double> sp4(p_x(gen), p_y(gen), p_z(gen));
+         Point<double> sp5(p_x(gen), p_y(gen), p_z(gen));
+         Point<double> sp6(p_x(gen), p_y(gen), p_z(gen));
+         // clone to Vc versions
+         Point<Vc::double_v> vp1(sp1.x(), sp1.y(), sp1.z());
+         Point<Vc::double_v> vp2(sp2.x(), sp2.y(), sp2.z());
+         Point<Vc::double_v> vp3(sp3.x(), sp3.y(), sp3.z());
+         Point<Vc::double_v> vp4(sp4.x(), sp4.y(), sp4.z());
+         Point<Vc::double_v> vp5(sp5.x(), sp5.y(), sp5.z());
+         Point<Vc::double_v> vp6(sp6.x(), sp6.y(), sp6.z());
+
+         // Make transformations from points
+         // note warnings about axis not having the same angles expected here...
+         // point is to check scalar and vector versions do the same thing
+         ROOT::Math::Impl::Transform3D<double>       st(sp1, sp2, sp3, sp4, sp5, sp6);
+         ROOT::Math::Impl::Transform3D<Vc::double_v> vt(vp1, vp2, vp3, vp4, vp5, vp6);
+
+         // transform the vectors
+         const auto sv = st * sc.direction;
+         const auto vv = vt * vc.direction;
+         std::cout << "Transformed Direction " << sv << " " << vv << std::endl;
+
+         // invert the transformations
+         st.Invert();
+         vt.Invert();
+
+         // Move the points back
+         const auto sv_i = st * sv;
+         const auto vv_i = vt * vv;
+         std::cout << "Transformed Back Direction " << sc.direction << " " << sv_i << " " << vv_i << std::endl;
+
+         for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
+            ret |= compare(sv.x(), vv.x()[j]);
+            ret |= compare(sv.y(), vv.y()[j]);
+            ret |= compare(sv.z(), vv.z()[j]);
+            ret |= compare(sc.direction.x(), vv_i.x()[j]);
+            ret |= compare(sc.direction.y(), vv_i.y()[j]);
+            ret |= compare(sc.direction.z(), vv_i.z()[j]);
+         }
+
+         ret |= compare(sc.direction.x(), sv_i.x());
+         ret |= compare(sc.direction.y(), sv_i.y());
+         ret |= compare(sc.direction.z(), sv_i.z());
       }
    }
 
-   // Now test Transformation3D
-   std::cout << "Transforms :-" << std::endl;
-   for (size_t i = 0; i < nPhotons; ++i) {
-      auto &sc = scalar_data[i];
-      auto &vc = vc_data[i];
+   // now run some timing tests
+   {
+      const unsigned int nPhotons = 96000; // Must be multiple of 16 to avoid padding issues below...
 
-      // make 6 random scalar Points
-      Point<double> sp1(p_x(gen), p_y(gen), p_z(gen));
-      Point<double> sp2(p_x(gen), p_y(gen), p_z(gen));
-      Point<double> sp3(p_x(gen), p_y(gen), p_z(gen));
-      Point<double> sp4(p_x(gen), p_y(gen), p_z(gen));
-      Point<double> sp5(p_x(gen), p_y(gen), p_z(gen));
-      Point<double> sp6(p_x(gen), p_y(gen), p_z(gen));
-      // clone to Vc versions
-      Point<Vc::double_v> vp1(sp1.x(), sp1.y(), sp1.z());
-      Point<Vc::double_v> vp2(sp2.x(), sp2.y(), sp2.z());
-      Point<Vc::double_v> vp3(sp3.x(), sp3.y(), sp3.z());
-      Point<Vc::double_v> vp4(sp4.x(), sp4.y(), sp4.z());
-      Point<Vc::double_v> vp5(sp5.x(), sp5.y(), sp5.z());
-      Point<Vc::double_v> vp6(sp6.x(), sp6.y(), sp6.z());
+      const unsigned int nTests = 1000; // number of tests to run
 
-      // Make transformations from points
-      // note warnings about axis not having the same angles expected here...
-      // point is to check scalar and vector versions do the same thing
-      ROOT::Math::Impl::Transform3D<double>       st(sp1, sp2, sp3, sp4, sp5, sp6);
-      ROOT::Math::Impl::Transform3D<Vc::double_v> vt(vp1, vp2, vp3, vp4, vp5, vp6);
+      // scalar data
+      Data<Point<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
+      // vector data with total equal number of photons (including vectorised size)
+      Data<Point<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data(
+         nPhotons / Vc::double_v::Size);
 
-      // transform the vectors
-      const auto sv = st * sc.direction;
-      const auto vv = vt * vc.direction;
-      std::cout << "Transformed Direction " << sv << " " << vv << std::endl;
+      TStopwatch t;
 
-      // invert the transformations
-      st.Invert();
-      vt.Invert();
+      double best_time_scalar{9e30}, best_time_vector{9e30};
 
-      // Move the points back
-      const auto sv_i = st * sv;
-      const auto vv_i = vt * vv;
-      std::cout << "Transformed Back Direction " << sc.direction << " " << sv_i << " " << vv_i << std::endl;
-
-      for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
-         ret |= compare(sv.x(), vv.x()[j]);
-         ret |= compare(sv.y(), vv.y()[j]);
-         ret |= compare(sv.z(), vv.z()[j]);
-         ret |= compare(sc.direction.x(), vv_i.x()[j]);
-         ret |= compare(sc.direction.y(), vv_i.y()[j]);
-         ret |= compare(sc.direction.z(), vv_i.z()[j]);
+      // time the scalar implementation
+      for (unsigned int i = 0; i < nTests; ++i) {
+         t.Start();
+         for (auto &sc : scalar_data) {
+            reflectSpherical(sc.position, sc.direction, sc.CoC, sc.radius);
+            reflectPlane(sc.position, sc.direction, sc.plane);
+         }
+         t.Stop();
+         const auto time = t.RealTime();
+         if (time < best_time_scalar) {
+            best_time_scalar = time;
+         }
       }
 
-      ret |= compare(sc.direction.x(), sv_i.x());
-      ret |= compare(sc.direction.y(), sv_i.y());
-      ret |= compare(sc.direction.z(), sv_i.z());
+      // time the Vc implementation
+      for (unsigned int i = 0; i < nTests; ++i) {
+         t.Start();
+         for (auto &vc : vc_data) {
+            reflectSpherical(vc.position, vc.direction, vc.CoC, vc.radius);
+            reflectPlane(vc.position, vc.direction, vc.plane);
+         }
+         t.Stop();
+         const auto time = t.RealTime();
+         if (time < best_time_vector) {
+            best_time_vector = time;
+         }
+      }
+
+      std::cout << "Scalar best time        = " << best_time_scalar << std::endl;
+      std::cout << "Vectorised Vc best time = " << best_time_vector << std::endl;
+      std::cout << "Vectorised Vc SIMD size = " << Vc::double_v::Size << std::endl;
+      std::cout << "Vectorised Vc speedup   = " << best_time_scalar / best_time_vector << std::endl;
+
+      // assert that the vector time is roughly Vc::double_v::Size times smaller than the scalar time
+      // allow 10% for 'safety'
+      if ((best_time_vector * Vc::double_v::Size) - best_time_scalar > 0.1 * best_time_scalar) {
+         ++ret;
+      }
    }
 
    if (ret)
