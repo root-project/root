@@ -345,7 +345,7 @@ namespace ROOT {
       }
 
       /**
-         return unit vector parallel to this (scalar)
+         return unit vector parallel to this (vector)
       */
       template <typename SCALAR = Scalar, typename std::enable_if<!std::is_arithmetic<SCALAR>::value>::type * = nullptr>
       DisplacementVector3D Unit() const
