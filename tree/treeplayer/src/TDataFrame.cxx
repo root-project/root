@@ -19,7 +19,6 @@
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 #include "TString.h" // Printf
 
-#include <atomic>
 #include <numeric> // std::accumulate
 #include <thread>
 
@@ -568,20 +567,30 @@ TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches
 { }
 
 
-// This is an helper class to allow to pick a slot without resorting to a mp
-// and a lock. In addition, this method allows the runtime to replace existing
-// threads with new ones without the calculation being affected.
-class TROCircularBuffer {
+// This is an helper class to allow to pick a slot without resorting to a map
+// indexed by thread ids.
+// WARNING: this class does not work as a regular stack. The size is
+// fixed at construction time and no blocking is foreseen.
+class TSlotStack {
 private:
-   const unsigned int fSize{0U};
-   std::atomic<unsigned int> fCounter{0U};
+   unsigned int        fCursor;
+   std::vector<unsigned int> fBuf;
+   ROOT::TSpinMutex          fMutex;
 public:
-   TROCircularBuffer(unsigned int size) : fSize(size) {};
-   unsigned int GetValue()
+   TSlotStack() = delete;
+   TSlotStack(unsigned int size): fCursor(size), fBuf(size) {
+      std::iota(fBuf.begin(), fBuf.end(), 0U);
+   }
+   void Push(unsigned int slotNumber)
    {
-      auto val = fCounter.fetch_add(1U);
-      return val%fSize;
+      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+      fBuf[fCursor++] = slotNumber;
    };
+   unsigned int Pop()
+   {
+      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+      return fBuf[--fCursor];
+   }
 };
 
 
@@ -593,10 +602,10 @@ void TDataFrameImpl::Run()
       std::unique_ptr<ttpmt_t> tp;
       tp.reset(new ttpmt_t(*fTree));
 
-      TROCircularBuffer slotsCircBuf(fNSlots);
+      TSlotStack slotStack(fNSlots);
       CreateSlots(fNSlots);
-      tp->Process([this, &slotsCircBuf](TTreeReader &r) -> void {
-         auto slot = slotsCircBuf.GetValue();
+      tp->Process([this, &slotStack](TTreeReader &r) -> void {
+         auto slot = slotStack.Pop();
          BuildAllReaderValues(r, slot);
          // recursive call to check filters and conditionally execute actions
          while (r.Next()) {
@@ -604,6 +613,7 @@ void TDataFrameImpl::Run()
             for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, currEntry);
             for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, currEntry);
           }
+         slotStack.Push(slot);
       });
    } else {
 #endif // R__USE_IMT
