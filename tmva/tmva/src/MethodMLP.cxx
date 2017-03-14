@@ -1305,11 +1305,23 @@ void TMVA::MethodMLP::UpdateNetwork(Double_t desired, Double_t eventWeight)
 
 void TMVA::MethodMLP::UpdateNetwork(const std::vector<Float_t>& desired, Double_t eventWeight)
 {
+   // Norm for softmax
+   Double_t norm = 0.;
    for (UInt_t i = 0, iEnd = desired.size(); i < iEnd; ++i) {
-      Double_t error = GetOutputNeuron( i )->GetActivationValue() - desired.at(i);
+      Double_t act = GetOutputNeuron( i )->GetActivationValue();
+      norm += TMath::Exp( act );
+   }
+
+   // Get output of network, and apply softmax
+   for (UInt_t i = 0, iEnd = desired.size(); i < iEnd; ++i) {
+      Double_t act = GetOutputNeuron( i )->GetActivationValue();
+      Double_t output = TMath::Exp( act ) / norm;
+      Double_t error = output - desired.at(i);
       error *= eventWeight;
       GetOutputNeuron( i )->SetError(error);
    }
+   
+   // Do backpropagation
    CalculateNeuronDeltas();
    UpdateSynapses();
 }
