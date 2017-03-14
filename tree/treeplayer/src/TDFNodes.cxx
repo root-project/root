@@ -8,12 +8,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TDataFrame.hxx"
+#include "RConfigure.h" // R__USE_IMT
 #include "ROOT/TDFNodes.hxx"
+#include "ROOT/TSpinMutex.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#include "RtypesCore.h" // Long64_t
+#include "TROOT.h" // IsImplicitMTEnabled
+#include "TTreeReader.h"
 
+#include <mutex>
 #include <numeric> // std::accumulate
 #include <string>
+class TDirectory;
+class TTree;
 
 namespace ROOT {
 namespace Internal {
