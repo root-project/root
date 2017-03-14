@@ -20,10 +20,11 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFTraitsUtils.hxx"
-#include "TBranchElement.h"
+#include "TChain.h"
 #include "TH1F.h" // For Histo actions
 #include "TH2F.h" // For Histo actions
 #include "TH3F.h" // For Histo actions
+#include "TInterpreter.h"
 #include "TProfile.h" // For Histo actions
 #include "TProfile2D.h" // For Histo actions
 #include "TTreeReader.h"
@@ -40,7 +41,7 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 
 namespace ROOT {
 
-using BranchNames = std::vector<std::string>;
+using BranchNames_t = std::vector<std::string>;
 
 // Fwd declarations
 namespace Detail {
@@ -81,8 +82,8 @@ class TActionResultProxy {
    template<typename V>
    struct TIterationHelper<V,true>{
       using Iterator_t = decltype(std::begin(std::declval<V>()));
-      static Iterator_t GetBegin(const V& v) {return std::begin(v);};
-      static Iterator_t GetEnd(const V& v) {return std::end(v);};
+      static Iterator_t GetBegin(const V &v) {return std::begin(v);};
+      static Iterator_t GetEnd(const V &v) {return std::end(v);};
    };
 /// \endcond
    using SPT_t = std::shared_ptr<T>;
@@ -92,10 +93,10 @@ class TActionResultProxy {
    friend class ROOT::Detail::TDataFrameImpl;
 
    ShrdPtrBool_t fReadiness = std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
-   WPTDFI_t fFirstData;                                      ///< Original TDataFrame
+   WPTDFI_t fImplWeakPtr;                                    ///< Points to the TDataFrameImpl at the root of the functional graph
    SPT_t fObjPtr;                                            ///< Shared pointer encapsulating the wrapped result
 
-   /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fFirstData
+   /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
 
    /// Get the pointer to the encapsulated result.
@@ -107,12 +108,12 @@ class TActionResultProxy {
       return fObjPtr.get();
    }
 
-   TActionResultProxy(const SPT_t& objPtr, const ShrdPtrBool_t& readiness, const SPTDFI_t& firstData)
-      : fReadiness(readiness), fFirstData(firstData), fObjPtr(objPtr) { }
+   TActionResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTDFI_t &firstData)
+      : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr) { }
 
    /// Factory to allow to keep the constructor private
    static TActionResultProxy<T>
-   MakeActionResultProxy(const SPT_t& objPtr, const ShrdPtrBool_t& readiness, const SPTDFI_t& firstData)
+   MakeActionResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTDFI_t &firstData)
    {
       return TActionResultProxy(objPtr, readiness, firstData);
    }
@@ -161,33 +162,44 @@ class TDataFrameImpl;
 
 namespace Internal {
 
+const char *ToConstCharPtr(const char *s);
+const char *ToConstCharPtr(const std::string& s);
+std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
 unsigned int GetNSlots();
+
+template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
+ROOT::Experimental::TActionResultProxy<ActionResultType>
+CallCreateAction(TDFNode* node, const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
+                 BranchType*)
+{
+   return node->template CreateAction<ActionType,BranchType,ActionResultType>(bl, r, nullptr);
+}
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
 template<typename BranchType>
 std::shared_ptr<ROOT::Internal::TTreeReaderValueBase>
-ReaderValueOrArray(TTreeReader& r, const std::string& branch, TDFTraitsUtils::TTypeList<BranchType>) {
+ReaderValueOrArray(TTreeReader &r, const std::string &branch, TDFTraitsUtils::TTypeList<BranchType>) {
    return std::make_shared<TTreeReaderValue<BranchType>>(r, branch.c_str());
 }
 
 
 template<typename BranchType>
 std::shared_ptr<ROOT::Internal::TTreeReaderValueBase>
-ReaderValueOrArray(TTreeReader& r, const std::string& branch, TDFTraitsUtils::TTypeList<std::array_view<BranchType>>) {
+ReaderValueOrArray(TTreeReader &r, const std::string &branch, TDFTraitsUtils::TTypeList<std::array_view<BranchType>>) {
    return std::make_shared<TTreeReaderArray<BranchType>>(r, branch.c_str());
 }
 
 
 
 template <int... S, typename... BranchTypes>
-TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNames &tmpbl,
+TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames_t &bl, const BranchNames_t &tmpbl,
                            TDFTraitsUtils::TTypeList<BranchTypes...>,
                            TDFTraitsUtils::TStaticSeq<S...>)
 {
    // isTmpBranch has length bl.size(). Elements are true if the corresponding
-   // branch is a temporary branch created with AddBranch, false if they are
+   // branch is a temporary branch created with AddColumn, false if they are
    // actual branches present in the TTree.
    std::array<bool, sizeof...(S)> isTmpBranch;
    for (unsigned int i = 0; i < isTmpBranch.size(); ++i)
@@ -196,7 +208,7 @@ TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames &bl, const BranchNa
    // Build vector of pointers to TTreeReaderValueBase.
    // tvb[i] points to a TTreeReader{Value,Array} specialized for the i-th BranchType,
    // corresponding to the i-th branch in bl
-   // For temporary branches (declared with AddBranch) a nullptr is created instead
+   // For temporary branches (declared with AddColumn) a nullptr is created instead
    // S is expected to be a sequence of sizeof...(BranchTypes) integers
    // Note that here TTypeList only contains one single type
    TVBVec_t tvb{isTmpBranch[S] ? nullptr : ReaderValueOrArray(r, bl.at(S), TDFTraitsUtils::TTypeList<BranchTypes>())
@@ -212,7 +224,7 @@ void CheckFilter(Filter&)
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
-void CheckTmpBranch(const std::string& branchName, TTree *treePtr);
+void CheckTmpBranch(const std::string &branchName, TTree *treePtr);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Check that the callable passed to TDataFrameInterface::Reduce:
@@ -237,17 +249,19 @@ void CheckReduce(F&, T)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, const BranchNames &defBl);
+const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl);
 
 class TDataFrameActionBase {
 protected:
+   ROOT::Detail::TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only guaranteed to contain a valid address during an event loop.
+   const BranchNames_t fTmpBranches;
    std::vector<TVBVec_t> fReaderValues;
 public:
+   TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches);
    virtual ~TDataFrameActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    void CreateSlots(unsigned int nSlots);
-
 };
 
 using ActionBasePtr_t = std::shared_ptr<TDataFrameActionBase>;
@@ -255,11 +269,11 @@ using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 
 // Forward declarations
 template<typename T>
-T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
-                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>);
+T &GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
+                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<T>);
 template<typename T>
-std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string& branch,
-                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
+std::array_view<T> GetBranchValue(TVBPtr_t &readerValues, unsigned int slot, Long64_t entry, const std::string &branch,
+                                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<std::array_view<T>>);
 
 
 template <typename Helper, typename PrevDataFrame,
@@ -268,24 +282,22 @@ class TDataFrameAction final : public TDataFrameActionBase {
    using TypeInd_t = typename TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    Helper fHelper;
-   const BranchNames fBranches;
-   const BranchNames fTmpBranches;
+   const BranchNames_t fBranches;
    PrevDataFrame &fPrevData;
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> fFirstData;
 
 public:
-   TDataFrameAction(Helper&& h, const BranchNames &bl, PrevDataFrame& pd)
-      : fHelper(std::move(h)), fBranches(bl), fTmpBranches(pd.GetTmpBranches()), fPrevData(pd),
-        fFirstData(pd.GetDataFrame()) { }
+   TDataFrameAction(Helper &&h, const BranchNames_t &bl, PrevDataFrame &pd)
+      : TDataFrameActionBase(pd.GetImplPtr(), pd.GetTmpBranches()),
+        fHelper(std::move(h)), fBranches(bl), fPrevData(pd) { }
 
    TDataFrameAction(const TDataFrameAction &) = delete;
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void Run(unsigned int slot, Long64_t entry)
+   void Run(unsigned int slot, Long64_t entry) final
    {
       // check if entry passes all filters
       if (fPrevData.CheckFilters(slot, entry))
@@ -303,7 +315,7 @@ public:
       // S expands to a sequence of integers 0 to sizeof...(types)-1
       // S and BranchTypes are expanded simultaneously by "..."
       fHelper.Exec(slot, GetBranchValue(fReaderValues[slot][S], slot, entry,
-                                        fBranches[S], fFirstData.lock(),
+                                        fBranches[S], fImplPtr,
                                         TDFTraitsUtils::TTypeList<BranchTypes>())
                    ...);
    }
@@ -330,11 +342,11 @@ struct TIsV7Histo {
 
 template<typename T, bool ISV7HISTO = TIsV7Histo<T>::fgValue>
 struct Histo {
-   static void SetCanExtendAllAxes(T& h)
+   static void SetCanExtendAllAxes(T &h)
    {
       h.SetCanExtend(::TH1::kAllAxes);
    }
-   static bool HasAxisLimits(T& h)
+   static bool HasAxisLimits(T &h)
    {
       auto xaxis = h.GetXaxis();
       return !(xaxis->GetXmin() == 0. && xaxis->GetXmax() == 0.);
@@ -368,6 +380,16 @@ namespace Experimental {
 
 class TDataFrame;
 
+} // end Experimental
+} // end ROOT
+
+namespace cling {
+   std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
+}
+
+namespace ROOT {
+namespace Experimental {
+
 /**
 * \class ROOT::Experimental::TDataFrameInterface
 * \ingroup dataframe
@@ -378,12 +400,15 @@ template <typename Proxied>
 class TDataFrameInterface {
    friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template<typename T> friend class TDataFrameInterface;
+   template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
+   friend TActionResultProxy<ActionResultType> ROOT::Internal::CallCreateAction(TDFNode*, const BranchNames_t&, const std::shared_ptr<ActionResultType>&, BranchType*);
 public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] bl Names of the branches in input to the filter function.
+   /// \param[in] bn Names of the branches in input to the filter function.
+   /// \param[in] name Optional name of this filter. See `Report`.
    ///
    /// Append a filter node at the point of the call graph corresponding to the
    /// object this method is called on.
@@ -399,18 +424,44 @@ public:
    /// once, the cached result is served.
    template <typename F>
    TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
-   Filter(F f, const BranchNames &bl = {}, const std::string& name = "")
+   Filter(F f, const BranchNames_t &bn = {}, const std::string &name = "")
    {
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
-      const BranchNames &defBl = df->GetDefaultBranches();
+      const BranchNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
+      const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bn, defBl);
       using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t> (std::move(f), actualBl, *fProxiedPtr, name);
       df->Book(FilterPtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(std::move(FilterPtr));
+      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
       return tdf_f;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Append a filter to the call graph.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
+   /// \param[in] name Optional name of this filter. See `Report`.
+   ///
+   /// Refer to the first overload of this method for the full documentation.
+   template <typename F>
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(F f, const std::string &name)
+   {
+      return Filter(f, {}, name);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Append a filter to the call graph.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool` signalling whether the event has passed the selection (true) or not (false).
+   /// \param[in] bn Names of the branches in input to the filter function.
+   ///
+   /// Refer to the first overload of this method for the full documentation.
+   template <typename F>
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(F f, const std::initializer_list<std::string> &bn)
+   {
+      return Filter(f, BranchNames_t{bn});
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -435,17 +486,17 @@ public:
    /// for another branch in the TTree.
    template <typename F>
    TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>
-   AddBranch(const std::string &name, F expression, const BranchNames &bl = {})
+   AddColumn(const std::string &name, F expression, const BranchNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
-      const BranchNames &defBl = df->GetDefaultBranches();
+      const BranchNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
+      const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
       df->Book(BranchPtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(std::move(BranchPtr));
+      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
    }
 
@@ -460,7 +511,7 @@ public:
    /// Users are responsible for the thread-safety of this callable when executing
    /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
    template <typename F>
-   void Foreach(F f, const BranchNames &bl = {})
+   void Foreach(F f, const BranchNames_t &bl = {})
    {
       namespace IU = ROOT::Internal::TDFTraitsUtils;
       using Args_t = typename IU::TFunctionTraits<decltype(f)>::ArgsNoDecay_t;
@@ -484,12 +535,12 @@ public:
    /// `ForeachSlot` works just as well with single-thread execution: in that
    /// case `slot` will always be `0`.
    template<typename F>
-   void ForeachSlot(F f, const BranchNames &bl = {})
+   void ForeachSlot(F f, const BranchNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
-      const BranchNames &defBl= df->GetDefaultBranches();
+      const BranchNames_t &defBl= df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames &actualBl = ROOT::Internal::PickBranchNames(nArgs-1, bl, defBl);
+      const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs-1, bl, defBl);
       using Op_t = ROOT::Internal::Operations::ForeachSlotOperation<F>;
       using DFA_t  = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, *fProxiedPtr));
@@ -514,7 +565,7 @@ public:
    /// booked but not executed. See TActionResultPtr documentation.
    template<typename F, typename T = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
    TActionResultProxy<T>
-   Reduce(F f, const std::string& branchName = {})
+   Reduce(F f, const std::string &branchName = {})
    {
       static_assert(std::is_default_constructible<T>::value,
          "reduce object cannot be default-constructed. Please provide an initialisation value (initValue)");
@@ -532,7 +583,7 @@ public:
    /// See the description of the other Reduce overload for more information.
    template<typename F, typename T = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
    TActionResultProxy<T>
-   Reduce(F f, const std::string& branchName, const T& initValue)
+   Reduce(F f, const std::string &branchName, const T &initValue)
    {
       using Args_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
       ROOT::Internal::CheckReduce(f, Args_t());
@@ -542,7 +593,7 @@ public:
       auto redObjPtr = std::make_shared<T>(initValue);
       using Op_t = ROOT::Internal::Operations::ReduceOperation<F,T>;
       using DFA_t = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(redObjPtr);
    }
 
@@ -558,7 +609,7 @@ public:
       auto cSPtr = std::make_shared<unsigned int>(0);
       using Op_t = ROOT::Internal::Operations::CountOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr.get(), nSlots), BranchNames({}), *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), BranchNames_t({}), *fProxiedPtr));
       return df->MakeActionResultProxy(cSPtr);
    }
 
@@ -782,7 +833,6 @@ public:
       return df->MakeActionResultProxy(h);
    }
 
-
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a profile (*lazy action*)
    /// \tparam B0 The type of the branch the values of which are used to fill the profile.
@@ -903,6 +953,35 @@ public:
       return df->MakeActionResultProxy(h);
    }
 
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return any entity with a Fill method (*lazy action*)
+   /// \tparam BRANCHTYPES The types of the branches the values of which are used to fill the object.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] bl The name of the branches read to fill the object.
+   ///
+   /// The returned object is independent of the input one.
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TActionResultProxy documentation.
+   /// The user renounces to the ownership of the model. The value to be used is the
+   /// returned one.
+   /// It is compulsory to express the branches to be considered.
+   template <typename... BRANCHTYPES, typename T>
+   TActionResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
+   {
+      auto h = std::make_shared<T>(model);
+      if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
+         throw std::runtime_error("The absence of axes limits is not supported yet.");
+      }
+      using Op_t = ROOT::Internal::Operations::FillTOOperation<T>;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BRANCHTYPES...>>;
+      auto df = GetDataFrameChecked();
+      auto nSlots = df->GetNSlots();
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
+      return df->MakeActionResultProxy(h);
+   }
+
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the minimum of processed branch values (*lazy action*)
    /// \tparam T The type of the branch.
@@ -972,9 +1051,11 @@ public:
 
 private:
 
+   inline const char* GetNodeTypeName() {return "";};
+
    /// Returns the default branches if needed, takes care of the error handling.
    template<typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
-   BranchNames GetBranchNames(BranchNames bl, const std::string &actionNameForErr)
+   BranchNames_t GetBranchNames(BranchNames_t bl, const std::string &actionNameForErr)
    {
       constexpr auto isT2Void = std::is_same<T2, void>::value;
       constexpr auto isT3Void = std::is_same<T3, void>::value;
@@ -983,7 +1064,7 @@ private:
       unsigned int neededBranches = 1 + !isT2Void + !isT3Void + !isT4Void;
 
       unsigned int providedBranches = 0;
-      std::for_each(bl.begin(), bl.end(), [&providedBranches](const std::string& s) {if (!s.empty()) providedBranches++;} );
+      std::for_each(bl.begin(), bl.end(), [&providedBranches](const std::string &s) {if (!s.empty()) providedBranches++;} );
 
       if (neededBranches == providedBranches) return bl;
 
@@ -994,7 +1075,7 @@ private:
    // W == void: histogram w/o weights
    template<typename X, typename W>
    TActionResultProxy<::TH1F>
-   Histo1DImpl(void*, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
+   Histo1DImpl(void*, const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h)
    {
       // perform type guessing if needed and build the action
       return CreateAction<ROOT::Internal::ActionTypes::Histo1D>(bl, h, (X*)(nullptr));
@@ -1003,7 +1084,7 @@ private:
    // W != void: histogram w/ weights
    template<typename X, typename W>
    TActionResultProxy<::TH1F>
-   Histo1DImpl(W*, const BranchNames& bl, const std::shared_ptr<::TH1F>& h)
+   Histo1DImpl(W*, const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h)
    {
       // weighted histograms never need to do type guessing, we can build
       // the action here
@@ -1025,7 +1106,7 @@ private:
    /// \cond HIDDEN_SYMBOLS
    template <typename BranchType>
    TActionResultProxy<::TH1F>
-   BuildAndBook(const BranchNames &bl, const std::shared_ptr<::TH1F>& h,
+   BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Histo1D*)
    {
       auto df = GetDataFrameChecked();
@@ -1045,38 +1126,38 @@ private:
 
    template <typename BranchType>
    TActionResultProxy<double>
-   BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& minV,
+   BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &minV,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Min*)
    {
       using Op_t = ROOT::Internal::Operations::MinOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(minV.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(minV, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(minV);
    }
 
    template <typename BranchType>
    TActionResultProxy<double>
-   BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& maxV,
+   BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &maxV,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Max*)
    {
       using Op_t = ROOT::Internal::Operations::MaxOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(maxV.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(maxV, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(maxV);
    }
 
 
    template <typename BranchType>
    TActionResultProxy<double>
-   BuildAndBook(const BranchNames &bl, const std::shared_ptr<double>& meanV,
+   BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &meanV,
                 unsigned int nSlots, ROOT::Internal::ActionTypes::Mean*)
    {
       using Op_t = ROOT::Internal::Operations::MeanOperation;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<DFA_t>(Op_t(meanV.get(), nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(meanV, nSlots), bl, *fProxiedPtr));
       return df->MakeActionResultProxy(meanV);
    }
    /// \endcond
@@ -1084,7 +1165,7 @@ private:
    // Type was specified by the user, no need to guess it
    template <typename ActionType, typename BranchType, typename ActionResultType>
    TActionResultProxy<ActionResultType>
-   CreateAction(const BranchNames& bl, const std::shared_ptr<ActionResultType>& r,
+   CreateAction(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
                 BranchType*)
    {
       auto df = GetDataFrameChecked();
@@ -1095,70 +1176,51 @@ private:
    // User did not specify type, do type guessing
    template <typename ActionType, typename ActionResultType>
    TActionResultProxy<ActionResultType>
-   CreateAction(const BranchNames& bl, const std::shared_ptr<ActionResultType>& r,
+   CreateAction(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
                 ROOT::Detail::TDataFrameGuessedType*)
    {
-      // More types can be added at will at the cost of some compilation time and size of binaries.
-      using AT_t = ActionType;
+      gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
       auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-
-      auto tree = static_cast<TTree*>(df->GetDirectory()->Get(df->GetTreeName().c_str()));
-      auto theBranchName = bl[0];
-      auto branch = tree->GetBranch(theBranchName.c_str());
-
-      if (!branch) {
-         // temporary branch
-         const auto &type_id = df->GetBookedBranch(theBranchName).GetTypeId();
-         if (type_id == typeid(char)) { return BuildAndBook<char>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(int)) { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(double)) { return BuildAndBook<double>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(std::vector<double>)) { return BuildAndBook<std::vector<double>>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(std::vector<float>)) { return BuildAndBook<std::vector<float>>(bl, r, nSlots, (AT_t*)nullptr); }
+      const auto& theBranchName = bl[0];
+      const auto theBranchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df);
+      const auto actionResultTypeName = TClass::GetClass(typeid(std::shared_ptr<ActionResultType>))->GetName();
+      const auto actionTypeName = TClass::GetClass(typeid(ActionType))->GetName();
+      if (theBranchTypeName.empty()) {
+         std::string exceptionText = "The type of branch ";
+         exceptionText += theBranchName;
+         exceptionText += " could not be guessed. Please specify one.";
+         throw std::runtime_error(exceptionText.c_str());
       }
-      // real branch
-      auto branchEl = dynamic_cast<TBranchElement *>(branch);
-      if (!branchEl) { // This is a fundamental type
-         auto title = branch->GetTitle();
-         auto typeCode = title[strlen(title) - 1];
-         if (typeCode == 'B') { return BuildAndBook<char>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (typeCode == 'I') { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (typeCode == 'D') { return BuildAndBook<double>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'b') { return BuildAndBook<UChar_t>(bl, r, nSlots); }
-         // else if (typeCode == 'S') { return BuildAndBook<Short_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 's') { return BuildAndBook<UShort_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'i') { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'F') { return BuildAndBook<float>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'L') { return BuildAndBook<Long64_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'l') { return BuildAndBook<ULong64_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'O') { return BuildAndBook<bool>(bl, r, nSlots, (AT_t*)nullptr); }
-      } else {
-         std::string typeName = branchEl->GetTypeName();
-         if (typeName == "vector<double>") { return BuildAndBook<std::vector<double>>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (typeName == "vector<float>") { return BuildAndBook<std::vector<float>>(bl, r, nSlots, (AT_t*)nullptr); }
-      }
+      std::stringstream createAction_str;
 
-      std::string exceptionText = "The type of branch ";
-      exceptionText += theBranchName;
-      exceptionText += " could not be guessed. Please specify one.";
-      throw std::runtime_error(exceptionText.c_str());
+      createAction_str << "ROOT::Internal::CallCreateAction<"
+                       << GetNodeTypeName() << ", "
+                       << actionTypeName << ", "
+                       << theBranchTypeName << ", "
+                       << actionResultTypeName << "::element_type>("
+                       << "(" << GetNodeTypeName() << "*)" << this << ", "
+                       << "*(ROOT::BranchNames_t*)" << &bl << ", "
+                       << "*(" << actionResultTypeName << "*)" << &r << ", "
+                       << "nullptr);";
+      return *(TActionResultProxy<ActionResultType>*) gInterpreter->ProcessLine(createAction_str.str().c_str());
    }
 
 protected:
    /// Get the TDataFrameImpl if reachable. If not, throw.
-   std::shared_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrameChecked()
+   std::shared_ptr<ROOT::Detail::TDataFrameImpl>
+   GetDataFrameChecked()
    {
-      auto df = fProxiedPtr->GetDataFrame().lock();
+      auto df = fImplWeakPtr.lock();
       if (!df) {
          throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
       }
       return df;
    }
 
-   const BranchNames GetDefaultBranchNames(unsigned int nExpectedBranches, const std::string &actionNameForErr)
+   const BranchNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, const std::string &actionNameForErr)
    {
       auto df = GetDataFrameChecked();
-      const BranchNames &defaultBranches = df->GetDefaultBranches();
+      const BranchNames_t &defaultBranches = df->GetDefaultBranches();
       const auto dBSize = defaultBranches.size();
       if (nExpectedBranches > dBSize) {
          std::string msg("Trying to deduce the branches from the default list in order to ");
@@ -1172,21 +1234,44 @@ protected:
          throw std::runtime_error(msg);
       }
       auto bnBegin = defaultBranches.begin();
-      return BranchNames(bnBegin, bnBegin + nExpectedBranches);
+      return BranchNames_t(bnBegin, bnBegin + nExpectedBranches);
    }
 
-   TDataFrameInterface(std::shared_ptr<Proxied>&& proxied) : fProxiedPtr(std::move(proxied)) {}
+   TDataFrameInterface(const std::shared_ptr<Proxied> &proxied,
+                       const std::weak_ptr<ROOT::Detail::TDataFrameImpl> &impl)
+      : fProxiedPtr(proxied), fImplWeakPtr(impl) {}
+
+   /// Only enabled when building a TDataFrameInterface<TDataFrameImpl>
+   template<typename T = Proxied, typename std::enable_if<std::is_same<T,ROOT::Detail::TDataFrameImpl>::value, int>::type = 0>
+   TDataFrameInterface(const std::shared_ptr<Proxied> &proxied)
+      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()) {}
+
    std::shared_ptr<Proxied> fProxiedPtr;
+   std::weak_ptr<ROOT::Detail::TDataFrameImpl> fImplWeakPtr;
 };
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
+private:
+   std::shared_ptr<TTree> fTree;
+   void InitTree(TTree &tree, bool ownsTree);
 public:
-   TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
-   TDataFrame(TTree &tree, const BranchNames &defaultBranches = {});
+   TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches = {});
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Build the dataframe
+   /// \tparam FILENAMESCOLL The type of the file collection: only requirement: must have begin and end.
+   /// \param[in] treeName Name of the tree contained in the directory
+   /// \param[in] filenamescoll Collection of file names, for example a list of strings.
+   /// \param[in] defaultBranches Collection of default branches.
+   ///
+   /// The default branches are looked at in case no branch is specified in the
+   /// booking of actions or transformations.
+   /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+   /// methods available.
+   template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames_t &defaultBranches = {});
+   TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});
+   TDataFrame(TTree &tree, const BranchNames_t &defaultBranches = {});
 };
-
-extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 } // end NS Experimental
 
@@ -1194,22 +1279,22 @@ namespace Detail {
 
 class TDataFrameBranchBase {
 protected:
-   std::weak_ptr<TDataFrameImpl> fFirstData;
-   BranchNames fTmpBranches;
+   TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only guaranteed to contain a valid address during an event loop.
+   BranchNames_t fTmpBranches;
    const std::string fName;
 public:
-   TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string &name);
+   TDataFrameBranchBase(TDataFrameImpl *df, const BranchNames_t &tmpBranches, const std::string &name);
    virtual ~TDataFrameBranchBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void *GetValue(unsigned int slot, Long64_t entry) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
+   TDataFrameImpl *GetImplPtr() const;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    std::string GetName() const;
-   BranchNames GetTmpBranches() const;
+   BranchNames_t GetTmpBranches() const;
 };
 using TmpBranchBasePtr_t = std::shared_ptr<TDataFrameBranchBase>;
 
@@ -1220,7 +1305,7 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
    using Ret_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
 
    F fExpression;
-   const BranchNames fBranches;
+   const BranchNames_t fBranches;
 
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues;
    std::vector<std::shared_ptr<Ret_t>> fLastResultPtr;
@@ -1228,8 +1313,8 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
 public:
-   TDataFrameBranch(const std::string &name, F&& expression, const BranchNames &bl, PrevData& pd)
-      : TDataFrameBranchBase(pd.GetDataFrame(), pd.GetTmpBranches(), name),
+   TDataFrameBranch(const std::string &name, F &&expression, const BranchNames_t &bl, PrevData &pd)
+      : TDataFrameBranchBase(pd.GetImplPtr(), pd.GetTmpBranches(), name),
         fExpression(std::move(expression)), fBranches(bl), fPrevData(pd)
    {
       fTmpBranches.emplace_back(name);
@@ -1237,12 +1322,12 @@ public:
 
    TDataFrameBranch(const TDataFrameBranch &) = delete;
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void *GetValue(unsigned int slot, Long64_t entry)
+   void *GetValue(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
@@ -1255,14 +1340,14 @@ public:
 
    const std::type_info &GetTypeId() const { return typeid(Ret_t); }
 
-   void CreateSlots(unsigned int nSlots)
+   void CreateSlots(unsigned int nSlots) final
    {
       fReaderValues.resize(nSlots);
       fLastCheckedEntry.resize(nSlots, -1);
       fLastResultPtr.resize(nSlots);
    }
 
-   bool CheckFilters(unsigned int slot, Long64_t entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       // dummy call: it just forwards to the previous object in the chain
       return fPrevData.CheckFilters(slot, entry);
@@ -1276,17 +1361,17 @@ public:
    {
       auto valuePtr = std::make_shared<Ret_t>(fExpression(
          ROOT::Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
-                                  fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
+                                        fImplPtr, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
       return valuePtr;
    }
 
    // recursive chain of `Report`s
    // TDataFrameBranch simply forwards the call to the previous node
-   void Report() const {
+   void Report() const final {
       fPrevData.PartialReport();
    }
 
-   void PartialReport() const {
+   void PartialReport() const final {
       fPrevData.PartialReport();
    }
 
@@ -1294,8 +1379,8 @@ public:
 
 class TDataFrameFilterBase {
 protected:
-   std::weak_ptr<TDataFrameImpl> fFirstData;
-   const BranchNames fTmpBranches;
+   TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only guaranteed to contain a valid address during an event loop.
+   const BranchNames_t fTmpBranches;
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues = {};
    std::vector<Long64_t> fLastCheckedEntry = {-1};
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
@@ -1304,14 +1389,14 @@ protected:
    const std::string fName;
 
 public:
-   TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string& name);
+   TDataFrameFilterBase(TDataFrameImpl *df, const BranchNames_t &tmpBranches, const std::string &name);
    virtual ~TDataFrameFilterBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
-   std::weak_ptr<TDataFrameImpl> GetDataFrame() const;
-   BranchNames GetTmpBranches() const;
+   TDataFrameImpl *GetImplPtr() const;
+   BranchNames_t GetTmpBranches() const;
    bool HasName() const;
    void CreateSlots(unsigned int nSlots);
    void PrintReport() const;
@@ -1325,18 +1410,18 @@ class TDataFrameFilter final : public TDataFrameFilterBase {
    using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    FilterF fFilter;
-   const BranchNames fBranches;
+   const BranchNames_t fBranches;
    PrevDataFrame &fPrevData;
 
 public:
-   TDataFrameFilter(FilterF&& f, const BranchNames &bl,
-                    PrevDataFrame& pd, const std::string& name = "")
-      : TDataFrameFilterBase(pd.GetDataFrame(), pd.GetTmpBranches(), name),
+   TDataFrameFilter(FilterF &&f, const BranchNames_t &bl,
+                    PrevDataFrame &pd, const std::string &name = "")
+      : TDataFrameFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name),
         fFilter(std::move(f)), fBranches(bl), fPrevData(pd) { }
 
    TDataFrameFilter(const TDataFrameFilter &) = delete;
 
-   bool CheckFilters(unsigned int slot, Long64_t entry)
+   bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
          if (!fPrevData.CheckFilters(slot, entry)) {
@@ -1365,21 +1450,21 @@ public:
       (void) slot; // avoid bogus unused-but-set-parameter warning by gcc
       (void) entry; // avoid bogus unused-but-set-parameter warning by gcc
       return fFilter(ROOT::Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S],
-                     fFirstData.lock(), ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
+                     fImplPtr, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
    }
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot)
+   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
 
    // recursive chain of `Report`s
-   void Report() const {
+   void Report() const final {
       PartialReport();
    }
 
-   void PartialReport() const {
+   void PartialReport() const final {
       fPrevData.PartialReport();
       PrintReport();
    }
@@ -1392,39 +1477,38 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    ROOT::Detail::FilterBaseVec_t fBookedNamedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
-   std::string fTreeName;
-   ::TDirectory *fDirPtr = nullptr;
-   TTree *fTree = nullptr;
-   const BranchNames fDefaultBranches;
-   const unsigned int fNSlots;
-   bool fHasRunAtLeastOnce = false;
+   ::TDirectory *fDirPtr{nullptr};
+   TTree *fTree{nullptr};
+   const BranchNames_t fDefaultBranches;
+   const unsigned int fNSlots{0};
+   bool fHasRunAtLeastOnce{false};
 
 public:
-   TDataFrameImpl(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames &defaultBranches = {});
-   TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches = {});
+   TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches);
    TDataFrameImpl(const TDataFrameImpl &) = delete;
    ~TDataFrameImpl(){};
    void Run();
    void BuildAllReaderValues(TTreeReader &r, unsigned int slot);
    void CreateSlots(unsigned int nSlots);
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrame();
-   const BranchNames &GetDefaultBranches() const;
-   const BranchNames GetTmpBranches() const { return {}; };
-   TTree* GetTree() const;
+   TDataFrameImpl *GetImplPtr();
+   std::shared_ptr<TDataFrameImpl> GetSharedPtr() { return shared_from_this(); }
+   const BranchNames_t &GetDefaultBranches() const;
+   const BranchNames_t GetTmpBranches() const { return {}; };
+   TTree *GetTree() const;
    const TDataFrameBranchBase &GetBookedBranch(const std::string &name) const;
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
    ::TDirectory *GetDirectory() const;
    std::string GetTreeName() const;
-   void Book(ROOT::Internal::ActionBasePtr_t actionPtr);
-   void Book(ROOT::Detail::FilterBasePtr_t filterPtr);
-   void Book(TmpBranchBasePtr_t branchPtr);
+   void Book(const ROOT::Internal::ActionBasePtr_t &actionPtr);
+   void Book(const ROOT::Detail::FilterBasePtr_t &filterPtr);
+   void Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const;
    template<typename T>
-   Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T>& r)
+   Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r)
    {
       auto readiness = std::make_shared<bool>(false);
-      const auto& df = shared_from_this();
+      const auto &df = shared_from_this();
       auto resPtr = Experimental::TActionResultProxy<T>::MakeActionResultProxy(r, readiness, df);
       fResProxyReadiness.emplace_back(readiness);
       return resPtr;
@@ -1433,6 +1517,7 @@ public:
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
+   void SetTree(TTree *tree) {fTree = tree;}
 };
 
 } // end NS ROOT::Detail
@@ -1447,19 +1532,41 @@ namespace Experimental {
 template<typename T>
 void Experimental::TActionResultProxy<T>::TriggerRun()
 {
-   auto df = fFirstData.lock();
+   auto df = fImplWeakPtr.lock();
    if (!df) {
       throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
    }
    df->Run();
 }
 
+template<typename FILENAMESCOLL, typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll, const BranchNames_t &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+{
+   auto chain = new TChain(treeName.c_str());
+   for (auto &fileName : filenamescoll)
+      chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
+   fTree = std::make_shared<TTree>(static_cast<TTree*>(chain));
+   fProxiedPtr->SetTree(chain);
+}
+
+template<>
+inline const char* TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>::GetNodeTypeName() { return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>";}
+template<>
+inline const char* TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>::GetNodeTypeName() { return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>";}
+template<>
+inline const char* TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName() { return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>";}
+
+// Before we had to specialise the GetNodeTypeName method
+extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
+extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
+
 } // end NS Experimental
 
 namespace Internal {
 template <typename T>
 T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, const std::string &branch,
-                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df, TDFTraitsUtils::TTypeList<T>)
+                  ROOT::Detail::TDataFrameImpl *df, TDFTraitsUtils::TTypeList<T>)
 {
    if (readerValue == nullptr) {
       // temporary branch
@@ -1472,19 +1579,19 @@ T &GetBranchValue(TVBPtr_t &readerValue, unsigned int slot, Long64_t entry, cons
 }
 
 template<typename T>
-std::array_view<T> GetBranchValue(TVBPtr_t& readerValue, unsigned int slot,
-                                  Long64_t entry, const std::string& branch,
-                                  std::shared_ptr<ROOT::Detail::TDataFrameImpl> df,
+std::array_view<T> GetBranchValue(TVBPtr_t &readerValue, unsigned int slot,
+                                  Long64_t entry, const std::string &branch,
+                                  ROOT::Detail::TDataFrameImpl *df,
                                   TDFTraitsUtils::TTypeList<std::array_view<T>>)
 {
    if(readerValue == nullptr) {
       // temporary branch
-      void* tmpBranchVal = df->GetTmpBranchValue(branch, slot, entry);
-      auto& tra = *static_cast<TTreeReaderArray<T> *>(tmpBranchVal);
+      void *tmpBranchVal = df->GetTmpBranchValue(branch, slot, entry);
+      auto &tra = *static_cast<TTreeReaderArray<T> *>(tmpBranchVal);
       return std::array_view<T>(tra.begin(), tra.end());
    } else {
       // real branch
-      auto& tra = *std::static_pointer_cast<TTreeReaderArray<T>>(readerValue);
+      auto &tra = *std::static_pointer_cast<TTreeReaderArray<T>>(readerValue);
       if (tra.GetSize() > 1 &&
           1 != (&tra[1] - &tra[0])) {
          std::string exceptionText = "Branch ";
@@ -1516,7 +1623,7 @@ inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
       if(defBranches.size() == 1) ret << "\nDefault branch: " << defBranches[0];
       else {
          ret << "\nDefault branches:\n";
-         for (auto&& branch : defBranches) {
+         for (auto &&branch : defBranches) {
             ret << " - " << branch << "\n";
          }
       }

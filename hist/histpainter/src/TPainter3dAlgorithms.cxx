@@ -330,7 +330,7 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
       r[i*3 + 2] = av[i*3 + 2];
       view->WCtoNDC(&r[i*3],&r[i*3]);
    }
- 
+
    //          Draw frame
    SetLineColor(1);
    SetLineStyle(1);
@@ -799,7 +799,7 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
    }
 
    Double_t p1[3], p2[3], x[2], y[2];
-   for (Int_t kpol = 0; kpol < 2; ++kpol) { 
+   for (Int_t kpol = 0; kpol < 2; ++kpol) {
       if (npol[kpol] == 0) continue;
       Int_t nv = npol[kpol];
       Int_t iv = ipol[kpol];
@@ -883,7 +883,7 @@ void TPainter3dAlgorithms::DrawLevelLines(Int_t *icodes, Double_t *xyz, Int_t np
    }
 
    Double_t p1[3], p2[3], x[2], y[2];
-   for (Int_t kpol = 0; kpol < 2; ++kpol) { 
+   for (Int_t kpol = 0; kpol < 2; ++kpol) {
       if (npol[kpol] == 0) continue;
       Int_t nv = npol[kpol];
       Int_t iv = ipol[kpol];

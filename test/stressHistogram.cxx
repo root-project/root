@@ -4390,7 +4390,7 @@ bool testMerge1DLabelAll()
    h3->LabelsOption(">");
 
    auto h0 = (TH1*) h1->Clone("h1clone");
-   
+
    h1->Merge(list);
 
    h4->LabelsOption("a");
@@ -5558,11 +5558,11 @@ bool testMerge2DExtend(UInt_t extendType = TH1::kAllAxes)
 
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
-   
+
    h1->SetCanExtend(extendType);
    h2->SetCanExtend(extendType);
    h4->SetCanExtend(extendType);
-     
+
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
       Double_t y = r.Uniform( minRange,  maxRange);
@@ -5648,13 +5648,13 @@ bool testMerge3DExtend(UInt_t extendType = TH1::kAllAxes)
 }
 
 bool testMerge3DExtendAll() {
-   return testMerge3DExtend(TH1::kAllAxes); 
+   return testMerge3DExtend(TH1::kAllAxes);
 }
 bool testMerge3DExtendX() {
-   return testMerge3DExtend(TH1::kXaxis); 
+   return testMerge3DExtend(TH1::kXaxis);
 }
 bool testMerge3DExtendZ() {
-   return testMerge3DExtend(TH1::kZaxis); 
+   return testMerge3DExtend(TH1::kZaxis);
 }
 
 bool testMerge1DExtendProf()
@@ -10183,7 +10183,7 @@ int stressHistogram()
    testSuite.push_back( &conversionsTestSuite);
    testSuite.push_back( &fillDataTestSuite);
 
-   unsigned int numberOfSuits = testSuite.size(); 
+   unsigned int numberOfSuits = testSuite.size();
 
    status = 0;
    for ( unsigned int i = 0; i < numberOfSuits; ++i ) {

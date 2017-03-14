@@ -73,8 +73,7 @@ int tdf002_dataModel() {
 
    // We read the tree from the file and create a TDataFrame, a class that
    // allows us to interact with the data contained in the tree.
-   TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"tracks"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"tracks"});
 
    // ## Operating on branches which are collection of objects
    // Here we deal with the simplest of the cuts: we decide to accept the event
@@ -106,10 +105,10 @@ int tdf002_dataModel() {
       return ptsw;
       };
 
-   auto augmented_d = d.AddBranch("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
+   auto augmented_d = d.AddColumn("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
                        .Filter([](int tracks_n){return tracks_n > 2;}, {"tracks_n"})
-                       .AddBranch("tracks_pts", getPt)
-                       .AddBranch("tracks_pts_weights", getPtWeights);
+                       .AddColumn("tracks_pts", getPt)
+                       .AddColumn("tracks_pts_weights", getPtWeights);
 
    auto trN = augmented_d.Histo1D("tracks_n",40,-.5,39.5);
    auto trPts = augmented_d.Histo1D("tracks_pts");

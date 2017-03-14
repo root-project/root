@@ -12,6 +12,8 @@
 #include "ROOT/TDataFrame.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "ROOT/TSpinMutex.hxx"
+#include "TBranchElement.h"
+#include "TClass.h"
 #include "TDirectory.h"
 #include "TError.h" // Info
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
@@ -65,7 +67,7 @@ common operations: building blocks to trigger custom calculations are available 
 1.  **build a data-frame** object by specifying your data-set
 2.  **apply a series of transformations** to your data
     1.  **filter** (e.g. apply some cuts) or
-    2.  create a **temporary branch** (e.g. make available an alias or the result of a non trivial operation involving other branches)
+    2.  create a **temporary column** (e.g. the result of an expensive computation on branches, or an alias for a branch)
 3.  **apply actions** to the transformed data to produce results (e.g. fill a histogram)
 4.
 <table>
@@ -136,7 +138,7 @@ h->Draw();
 ~~~
 The first line creates a `TDataFrame` associated to the `TTree` "myTree". This tree has a branch named "MET".
 
-`Histo` is an action; it returns a smart pointer (a `TActionResultPtr` to be precise) to a `TH1F` histogram filled with the `MET` of all events.
+`Histo1D` is an action; it returns a smart pointer (a `TActionResultProxy` to be precise) to a `TH1F` histogram filled with the `MET` of all events.
 If the quantity stored in the branch is a collection, the histogram is filled with its elements.
 
 There are many other possible [actions](#overview), and all their results are wrapped in smart pointers; we'll see why in a minute.
@@ -152,20 +154,20 @@ std::cout << *c << std::endl;
 ~~~
 `Filter` takes a function (a lambda in this example, but it can be any kind of function or even a functor class) and a list of branch names. The filter function is applied to the specified branches for each event; it is required to return a `bool` which signals whether the event passes the filter (`true`) or not (`false`). You can think of your data as "flowing" through the chain of calls, being transformed, filtered and finally used to perform actions. Multiple `Filter` calls can be chained one after another.
 
-### Creating a temporary branch
+### Creating a temporary column
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived quantity `z = sqrt(x*x + y*y)`.
-Using the `AddBranch` transformation, we can create a new column in the data-set containing the variable "z":
+Using the `AddColumn` transformation, we can create a new column in the data-set containing the variable "z":
 ~~~{.cpp}
 auto sqrtSum = [](double x, double y) { return sqrt(x*x + y*y); };
 auto zCut = [](double z) { return z > 0.; }
 
 ROOT::Experimental::TDataFrame d(treeName, filePtr);
-auto zMean = d.AddBranch("z", sqrtSum, {"x","y"})
+auto zMean = d.AddColumn("z", sqrtSum, {"x","y"})
               .Filter(zCut, {"z"})
               .Mean("z");
 std::cout << *zMean << std::endl;
 ~~~
-`AddBranch` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to variables created with `AddBranch` as if they were actual tree branches, but they are evaluated on the fly, once per event. As with filters, `AddBranch` calls can be chained with other transformations to create multiple temporary branches.
+`AddColumn` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to variables created with `AddColumn` as if they were actual tree branches, but they are evaluated on the fly, once per event. As with filters, `AddColumn` calls can be chained with other transformations to create multiple temporary columns.
 
 ### Executing multiple actions
 As a final example let us apply two different cuts on branch "MET" and fill two different histograms with the "pt\_v" of the filtered events.
@@ -197,7 +199,7 @@ You don't need to read all these to start using `TDataFrame`, but they are usefu
 ### Default branch lists
 When constructing a `TDataFrame` object, it is possible to specify a **default branch list** for your analysis, in the usual form of a list of strings representing branch names. The default branch list will be used as fallback whenever one specific to the transformation/action is not present.
 ~~~{.cpp}
-// use "b1" and "b2" as default branches for `Filter`, `AddBranch` and actions
+// use "b1" and "b2" as default branches for `Filter`, `AddColumn` and actions
 ROOT::Experimental::TDataFrame d1(treeName, &file, {"b1","b2"});
 // filter acts on default branch list, no need to specify it
 auto h = d1.Filter([](int b1, int b2) { return b1 > b2; }).Histo1D("otherVar");
@@ -210,19 +212,19 @@ auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}).Min();
 ~~~
 
 ### Branch type guessing and explicit declaration of branch types
-C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree` branches we want to work on. For filters, temporary branches and some of the actions, **branch types are deduced from the signature** of the relevant filter function/temporary branch expression/action function:
+C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree` branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the signature** of the relevant filter function/temporary column expression/action function:
 ~~~{.cpp}
 // here b1 is deduced to be `int` and b2 to be `double`
 dataFrame.Filter([](int x, double y) { return x > 0 && y < 0.; }, {"b1", "b2"});
 ~~~
 If we specify an incorrect type for one of the branches, an exception with an informative message will be thrown at runtime, when the branch value is actually read from the `TTree`: the implementation of `TDataFrame` allows the detection of type mismatches. The same would happen if we swapped the order of "b1" and "b2" in the branch list passed to `Filter`.
 
-Certain actions, on the other hand, do not take a function as argument (e.g. `Histo`), so we cannot deduce the type of the branch at compile-time. In this case **`TDataFrame` tries to guess the type of the branch**, trying out the most common ones and `std::vector` thereof. This is why we never needed to specify the branch types for all actions in the above snippets.
+Certain actions, on the other hand, do not take a function as argument (e.g. `Histo1D`), so we cannot deduce the type of the branch at compile-time. In this case **`TDataFrame` tries to guess the type of the branch**, trying out the most common ones and `std::vector` thereof. This is why we never needed to specify the branch types for all actions in the above snippets.
 
 When the branch type is not a common one such as `int`, `double`, `char` or `float` it is therefore good practice to specify it as a template parameter to the action itself, like this:
 ~~~{.cpp}
 dataFrame.Histo1D("b1"); // OK if b1 is a "common" type
-dataFrame.Histo<Object_t>("myObject"); // OK, "myObject" is deduced to be of type `Object_t`
+dataFrame.Histo1D<Object_t>("myObject"); // OK, "myObject" is deduced to be of type `Object_t`
 // dataFrame.Histo1D("myObject"); // THROWS an exception
 ~~~
 
@@ -260,7 +262,7 @@ You see how we created one `double` variable for each thread in the pool, and la
 ### Call graphs (storing and reusing sets of transformations)
 **Sets of transformations can be stored as variables** and reused multiple times to create **call graphs** in which several paths of filtering/creation of branches are executed simultaneously; we often refer to this as "storing the state of the chain".
 
-This feature can be used, for example, to create a temporary branch once and use it in several subsequent filters or actions, or to apply a strict filter to the data-set *before* executing several other transformations and actions, effectively reducing the amount of events processed.
+This feature can be used, for example, to create a temporary column once and use it in several subsequent filters or actions, or to apply a strict filter to the data-set *before* executing several other transformations and actions, effectively reducing the amount of events processed.
 
 Let's try to make this clearer with a commented example:
 ~~~{.cpp}
@@ -275,7 +277,7 @@ auto h1 = filtered.Histo1D("var1");
 
 // create a new branch "vec" with a vector extracted from a complex object (only for filtered entries)
 // and save the state of the chain
-auto newBranchFiltered = filtered.AddBranch("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
+auto newBranchFiltered = filtered.AddColumn("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
 
 // apply a cut and fill a histogram with "vec"
 auto h2 = newBranchFiltered.Filter(cut1).Histo1D("vec");
@@ -288,8 +290,8 @@ h2->Draw(); // first access to an action result: run event-loop!
 h3->Draw("SAME"); // event loop does not need to be run again here..
 std::cout << "Entries in h1: " << h1->GetEntries() << std::endl; // ..or here
 ~~~
-`TDataFrame` detects when several actions use the same filter or the same temporary branch, and **only evaluates each filter or temporary branch once per event**, regardless of how many times that result is used down the call graph. Objects read from each branch are **built once and never copied**, for maximum efficiency.
-When "upstream" filters are not passed, subsequent filters, temporary branch expressions and actions are not evaluated, so it might be advisable to put the strictest filters first in the chain.
+`TDataFrame` detects when several actions use the same filter or the same temporary column, and **only evaluates each filter or temporary column once per event**, regardless of how many times that result is used down the call graph. Objects read from each branch are **built once and never copied**, for maximum efficiency.
+When "upstream" filters are not passed, subsequent filters, temporary column expressions and actions are not evaluated, so it might be advisable to put the strictest filters first in the chain.
 
 ##  <a name="transformations"></a>Transformations
 ### Filters
@@ -307,8 +309,8 @@ Statistics are retrieved through a call to the `Report` method:
 
 Stats are printed in the same order as named filters have been added to the graph, and *refer to the latest event-loop* that has been run using the relevant `TDataFrame`. If `Report` is called before the event-loop has been run at least once, a run is triggered.
 
-### Temporary branches
-Temporary branches are created by invoking `AddBranch(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary branch.
+### Temporary columns
+Temporary columns are created by invoking `AddColumn(name, f, branchList)`. As usual, `f` can be any callable object (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be assigned to the temporary column.
 
 A new variable is created called `name`, accessible as if it was contained in the dataset from subsequent transformations/actions.
 
@@ -332,10 +334,11 @@ In the following, whenever we say an action "returns" something, we always mean 
 |------------------|-----------------|
 | Count | Return the number of events processed. |
 | Take | Build a collection of values of a branch. |
-| Histo | Fill a histogram with the values of a branch that passed all filters. |
+| Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the branch values that passed all filters. |
 | Max | Return the maximum of processed branch values. |
 | Mean | Return the mean of processed branch values. |
 | Min | Return the minimum of processed branch values. |
+| Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
 | Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
 
 | **Instant actions** | **Description** |
@@ -343,7 +346,7 @@ In the following, whenever we say an action "returns" something, we always mean 
 | Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
 | ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
 
-| **Extra** | **Description** |
+| **Queries** | **Description** |
 |-----------|-----------------|
 | Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
 
@@ -351,8 +354,8 @@ In the following, whenever we say an action "returns" something, we always mean 
 As pointed out before in this document, `TDataFrame` can transparently perform multi-threaded event loops to speed up the execution of its actions. Users only have to call `ROOT::EnableImplicitMT()` *before* constructing the `TDataFrame` object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct subset of entries**, and their partial results are merged before returning the final values to the user.
 
 ### Thread safety
-`Filter` and `AddBranch` transformations should be inherently thread-safe: they have no side-effects and are not dependent on global state.
-Most `Filter`/`AddBranch` functions will in fact be pure in the functional programming sense.
+`Filter` and `AddColumn` transformations should be inherently thread-safe: they have no side-effects and are not dependent on global state.
+Most `Filter`/`AddColumn` functions will in fact be pure in the functional programming sense.
 All actions are built to be thread-safe with the exception of `Foreach`, in which case users are responsible of thread-safety, see [here](#generic-actions).
 
 */
@@ -367,11 +370,41 @@ All actions are built to be thread-safe with the exception of `Foreach`, in whic
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
-         std::make_shared<ROOT::Detail::TDataFrameImpl>(
-            treeName, dirPtr, defaultBranches))
-{ }
+TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames_t &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr,defaultBranches))
+{
+   if (!dirPtr) {
+      auto msg = "Invalid TDirectory!";
+      throw std::runtime_error(msg);
+   }
+   auto tree = static_cast<TTree*>(dirPtr->Get(treeName.c_str()));
+   if (!tree) {
+      auto msg = "Tree \"" + treeName + "\" cannot be found!";
+      throw std::runtime_error(msg);
+   }
+   fTree = std::shared_ptr<TTree>(tree,[](TTree*){});
+   fProxiedPtr->SetTree(tree);
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Build the dataframe
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
+/// \param[in] defaultBranches Collection of default branches.
+///
+/// The default branches are looked at in case no branch is specified in the
+/// booking of actions or transformations.
+/// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+/// methods available.
+TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+{
+   auto chain = new TChain(treeName.c_str());
+   chain->Add(filenameglob.c_str());
+   fTree = std::shared_ptr<TTree>(static_cast<TTree*>(chain));
+   fProxiedPtr->SetTree(chain);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
@@ -382,15 +415,23 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 /// booking of actions or transformations.
 /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(TTree &tree, const BranchNames &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
-         std::make_shared<ROOT::Detail::TDataFrameImpl>(tree, defaultBranches))
+TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
 { }
 
-}
-
+} // end NS Experimental
 
 namespace Internal {
+
+const char *ToConstCharPtr(const char *s)
+{
+   return s;
+}
+
+const char *ToConstCharPtr(const std::string& s)
+{
+   return s.c_str();
+}
 
 unsigned int GetNSlots() {
    unsigned int nSlots = 1;
@@ -400,7 +441,49 @@ unsigned int GetNSlots() {
    return nSlots;
 }
 
-void CheckTmpBranch(const std::string& branchName, TTree *treePtr)
+std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df)
+{
+   auto tree = df.GetTree();
+   if (auto branch = tree->GetBranch(colName.c_str())) {
+      static const TClassRef tbranchelRef("TBranchElement");
+      if (branch->InheritsFrom(tbranchelRef)) {
+         return static_cast<TBranchElement*>(branch)->GetClassName();
+      } else { // Try the fundamental type
+         auto title = branch->GetTitle();
+         auto typeCode = title[strlen(title) - 1];
+         if (typeCode == 'B') return "char";
+         else if (typeCode == 'b') return "unsigned char";
+         else if (typeCode == 'I') return "int";
+         else if (typeCode == 'i') return "unsigned int";
+         else if (typeCode == 'S') return "short";
+         else if (typeCode == 's') return "unsigned short";
+         else if (typeCode == 'D') return "double";
+         else if (typeCode == 'F') return "float";
+         else if (typeCode == 'L') return "Long64_t";
+         else if (typeCode == 'l') return "ULong64_t";
+         else if (typeCode == 'O') return "bool";
+      }
+   } else {
+      const auto &type_id = df.GetBookedBranch(colName.c_str()).GetTypeId();
+      if (auto c = TClass::GetClass(type_id)) {
+         return c->GetName();
+      } else if (type_id == typeid(char)) return "char";
+      else if (type_id == typeid(unsigned char)) return "unsigned char";
+      else if (type_id == typeid(int)) return "int";
+      else if (type_id == typeid(unsigned int)) return "unsigned int";
+      else if (type_id == typeid(short)) return "short";
+      else if (type_id == typeid(unsigned short)) return "unsigned short";
+      else if (type_id == typeid(double)) return "double";
+      else if (type_id == typeid(float)) return "float";
+      else if (type_id == typeid(Long64_t)) return "Long64_t";
+      else if (type_id == typeid(ULong64_t)) return "ULong64_t";
+      else if (type_id == typeid(bool)) return "bool";
+
+   }
+   return "";
+}
+
+void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
 {
    auto branch = treePtr->GetBranch(branchName.c_str());
    if (branch != nullptr) {
@@ -410,7 +493,7 @@ void CheckTmpBranch(const std::string& branchName, TTree *treePtr)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, const BranchNames &defBl)
+const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl)
 {
    bool useDefBl = false;
    if (nArgs != bl.size()) {
@@ -426,27 +509,30 @@ const BranchNames &PickBranchNames(unsigned int nArgs, const BranchNames &bl, co
    return useDefBl ? defBl : bl;
 }
 
+TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches) { }
+
 void TDataFrameActionBase::CreateSlots(unsigned int nSlots) { fReaderValues.resize(nSlots); }
 
 } // end NS Internal
 
 namespace Detail {
 
-TDataFrameBranchBase::TDataFrameBranchBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string &name)
-   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+TDataFrameBranchBase::TDataFrameBranchBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name) {};
 
-BranchNames TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
+BranchNames_t TDataFrameBranchBase::GetTmpBranches() const { return fTmpBranches; }
 
 std::string TDataFrameBranchBase::GetName() const { return fName; }
 
-std::weak_ptr<TDataFrameImpl> TDataFrameBranchBase::GetDataFrame() const { return fFirstData; }
+TDataFrameImpl *TDataFrameBranchBase::GetImplPtr() const { return fImplPtr; }
 
-TDataFrameFilterBase::TDataFrameFilterBase(const std::weak_ptr<TDataFrameImpl>& df, BranchNames branches, const std::string& name)
-   : fFirstData(df), fTmpBranches(branches), fName(name) {};
+TDataFrameFilterBase::TDataFrameFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name) {};
 
-std::weak_ptr<TDataFrameImpl> TDataFrameFilterBase::GetDataFrame() const { return fFirstData; }
+TDataFrameImpl *TDataFrameFilterBase::GetImplPtr() const { return fImplPtr; }
 
-BranchNames TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
+BranchNames_t TDataFrameFilterBase::GetTmpBranches() const { return fTmpBranches; }
 
 bool TDataFrameFilterBase::HasName() const { return !fName.empty(); };
 
@@ -464,6 +550,8 @@ void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
 }
 
 void TDataFrameFilterBase::PrintReport() const {
+   if (fName.empty()) // PrintReport is no-op for unnamed filters
+      return;
    const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
    const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
    double perc = accepted;
@@ -474,60 +562,62 @@ void TDataFrameFilterBase::PrintReport() const {
           fName.c_str(), accepted, all, perc);
 }
 
+TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches)
+   : fTree(tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
+{ }
 
-TDataFrameImpl::TDataFrameImpl(const std::string &treeName, TDirectory *dirPtr, const BranchNames &defaultBranches)
-   : fTreeName(treeName), fDirPtr(dirPtr), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-{
-}
 
-TDataFrameImpl::TDataFrameImpl(TTree &tree, const BranchNames &defaultBranches)
-   : fTree(&tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
-{
-}
+// This is an helper class to allow to pick a slot without resorting to a map
+// indexed by thread ids.
+// WARNING: this class does not work as a regular stack. The size is
+// fixed at construction time and no blocking is foreseen.
+class TSlotStack {
+private:
+   unsigned int        fCursor;
+   std::vector<unsigned int> fBuf;
+   ROOT::TSpinMutex          fMutex;
+public:
+   TSlotStack() = delete;
+   TSlotStack(unsigned int size): fCursor(size), fBuf(size) {
+      std::iota(fBuf.begin(), fBuf.end(), 0U);
+   }
+   void Push(unsigned int slotNumber)
+   {
+      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+      fBuf[fCursor++] = slotNumber;
+   };
+   unsigned int Pop()
+   {
+      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+      return fBuf[--fCursor];
+   }
+};
+
 
 void TDataFrameImpl::Run()
 {
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
-      const auto fileName = fTree ? static_cast<TFile *>(fTree->GetCurrentFile())->GetName() : fDirPtr->GetName();
-      const std::string      treeName = fTree ? fTree->GetName() : fTreeName;
-      ROOT::TTreeProcessorMT tp(fileName, treeName);
-      ROOT::TSpinMutex       slotMutex;
-      std::map<std::thread::id, unsigned int> slotMap;
-      unsigned int globalSlotIndex = 0;
+      using ttpmt_t = ROOT::TTreeProcessorMT;
+      std::unique_ptr<ttpmt_t> tp;
+      tp.reset(new ttpmt_t(*fTree));
+
+      TSlotStack slotStack(fNSlots);
       CreateSlots(fNSlots);
-      tp.Process([this, &slotMutex, &globalSlotIndex, &slotMap](TTreeReader &r) -> void {
-         const auto   thisThreadID = std::this_thread::get_id();
-         unsigned int slot;
-         {
-            std::lock_guard<ROOT::TSpinMutex> l(slotMutex);
-            auto                              thisSlotIt = slotMap.find(thisThreadID);
-            if (thisSlotIt != slotMap.end()) {
-               slot = thisSlotIt->second;
-            } else {
-               slot                  = globalSlotIndex;
-               slotMap[thisThreadID] = slot;
-               ++globalSlotIndex;
-            }
-         }
-
+      tp->Process([this, &slotStack](TTreeReader &r) -> void {
+         auto slot = slotStack.Pop();
          BuildAllReaderValues(r, slot);
-
          // recursive call to check filters and conditionally execute actions
          while (r.Next()) {
             const auto currEntry = r.GetCurrentEntry();
             for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, currEntry);
             for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, currEntry);
           }
+         slotStack.Push(slot);
       });
    } else {
 #endif // R__USE_IMT
-      TTreeReader r;
-      if (fTree) {
-         r.SetTree(fTree);
-      } else {
-         r.SetTree(fTreeName.c_str(), fDirPtr);
-      }
+      TTreeReader r(fTree);
 
       CreateSlots(1);
       BuildAllReaderValues(r, 0);
@@ -552,40 +642,51 @@ void TDataFrameImpl::Run()
    fResProxyReadiness.clear();
 }
 
-// build reader values for all actions, filters and branches
+/// Build TTreeReaderValues for all nodes
+///
+/// This method loops over all filters, actions and other booked objects and
+/// calls their `BuildReaderValues` methods. It is called once per node per slot, before
+/// running the event loop. It also informs each node of the TTreeReader that
+/// a particular slot will be using.
 void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
 {
-   for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedActions)
+      ptr->BuildReaderValues(r, slot);
+   for (auto &ptr : fBookedFilters)
+      ptr->BuildReaderValues(r, slot);
+   for (auto &bookedBranch : fBookedBranches)
+      bookedBranch.second->BuildReaderValues(r, slot);
 }
 
-// inform all actions filters and branches of the required number of slots
+/// Initialize all nodes of the functional graph before running the event loop
+///
+/// This method loops over all filters, actions and other booked objects and
+/// calls their `CreateSlots` methods. It is called once per node before running the
+/// event loop. The main effect is to inform all nodes of the number of slots
+/// (i.e. workers) that will be used to perform the event loop.
 void TDataFrameImpl::CreateSlots(unsigned int nSlots)
 {
-   for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
-   for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
+   for (auto &ptr : fBookedActions)
+      ptr->CreateSlots(nSlots);
+   for (auto &ptr : fBookedFilters)
+      ptr->CreateSlots(nSlots);
+   for (auto &bookedBranch : fBookedBranches)
+      bookedBranch.second->CreateSlots(nSlots);
 }
 
-std::weak_ptr<ROOT::Detail::TDataFrameImpl> TDataFrameImpl::GetDataFrame()
+TDataFrameImpl *TDataFrameImpl::GetImplPtr()
 {
-   return std::weak_ptr<ROOT::Detail::TDataFrameImpl>(shared_from_this());
+   return this;
 }
 
-const BranchNames &TDataFrameImpl::GetDefaultBranches() const
+const BranchNames_t &TDataFrameImpl::GetDefaultBranches() const
 {
    return fDefaultBranches;
 }
 
 TTree *TDataFrameImpl::GetTree() const
 {
-   if (fTree) {
-      return fTree;
-   } else {
-      auto treePtr = static_cast<TTree *>(fDirPtr->Get(fTreeName.c_str()));
-      return treePtr;
-   }
+   return fTree;
 }
 
 const TDataFrameBranchBase &TDataFrameImpl::GetBookedBranch(const std::string &name) const
@@ -605,15 +706,15 @@ TDirectory *TDataFrameImpl::GetDirectory() const
 
 std::string TDataFrameImpl::GetTreeName() const
 {
-   return fTreeName;
+   return fTree->GetName();
 }
 
-void TDataFrameImpl::Book(ROOT::Internal::ActionBasePtr_t actionPtr)
+void TDataFrameImpl::Book(const ROOT::Internal::ActionBasePtr_t &actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
 }
 
-void TDataFrameImpl::Book(ROOT::Detail::FilterBasePtr_t filterPtr)
+void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t &filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -621,7 +722,7 @@ void TDataFrameImpl::Book(ROOT::Detail::FilterBasePtr_t filterPtr)
    }
 }
 
-void TDataFrameImpl::Book(TmpBranchBasePtr_t branchPtr)
+void TDataFrameImpl::Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr)
 {
    fBookedBranches[branchPtr->GetName()] = branchPtr;
 }
@@ -639,7 +740,7 @@ unsigned int TDataFrameImpl::GetNSlots() const
 
 /// Call `PrintReport` on all booked filters
 void TDataFrameImpl::Report() const {
-   for(const auto& fPtr : fBookedNamedFilters)
+   for(const auto &fPtr : fBookedNamedFilters)
       fPtr->PrintReport();
 }
 

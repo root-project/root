@@ -52,12 +52,12 @@ public:
 };
 
 class CountOperation {
-   unsigned int *fResultCount;
+   std::shared_ptr<unsigned int> fResultCount;
    std::vector<Count_t> fCounts;
 
 public:
    using BranchTypes_t = TTypeList<>;
-   CountOperation(unsigned int *resultCount, unsigned int nSlots);
+   CountOperation(const std::shared_ptr<unsigned int>& resultCount, unsigned int nSlots);
    void Exec(unsigned int slot);
    void Finalize();
 };
@@ -309,11 +309,11 @@ public:
 template<typename F, typename T>
 class ReduceOperation {
    F fReduceFun;
-   T* fReduceRes;
+   std::shared_ptr<T> fReduceRes;
    std::vector<T> fReduceObjs;
 public:
    using BranchTypes_t = TTypeList<T>;
-   ReduceOperation(F&& f, T* reduceRes, unsigned int nSlots)
+   ReduceOperation(F&& f, const std::shared_ptr<T>& reduceRes, unsigned int nSlots)
       : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
    { }
 
@@ -330,11 +330,11 @@ public:
 };
 
 class MinOperation {
-   double *fResultMin;
+   std::shared_ptr<double> fResultMin;
    std::vector<double> fMins;
 
 public:
-   MinOperation(double *minVPtr, unsigned int nSlots);
+   MinOperation(const std::shared_ptr<double>& minVPtr, unsigned int nSlots);
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
@@ -353,11 +353,11 @@ extern template void MinOperation::Exec(unsigned int, const std::vector<int>&);
 extern template void MinOperation::Exec(unsigned int, const std::vector<unsigned int>&);
 
 class MaxOperation {
-   double *fResultMax;
+   std::shared_ptr<double> fResultMax;
    std::vector<double> fMaxs;
 
 public:
-   MaxOperation(double *maxVPtr, unsigned int nSlots);
+   MaxOperation(const std::shared_ptr<double>& maxVPtr, unsigned int nSlots);
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
@@ -377,12 +377,12 @@ extern template void MaxOperation::Exec(unsigned int, const std::vector<unsigned
 
 
 class MeanOperation {
-   double *fResultMean;
+   std::shared_ptr<double> fResultMean;
    std::vector<Count_t> fCounts;
    std::vector<double> fSums;
 
 public:
-   MeanOperation(double *meanVPtr, unsigned int nSlots);
+   MeanOperation(const std::shared_ptr<double>& meanVPtr, unsigned int nSlots);
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>

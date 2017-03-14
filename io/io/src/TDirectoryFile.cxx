@@ -1154,12 +1154,13 @@ TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *f
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a sub-directory and return a pointer to the created directory.
+/// Create a sub-directory "a" or a hierarchy of sub-directories "a/b/c/...".
 ///
-/// Returns 0 in case of error.
-/// Returns 0 if a directory with the same name already exists.
-/// Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
-/// In this case, the function returns the pointer to the "a" directory if the operation is successful.
+/// Returns 0 in case of error or if a sub-directory (hierarchy) with the requested
+/// name already exists.
+/// Returns a pointer to the created sub-directory or to the top sub-directory of
+/// the hierarchy (in the above example, the returned TDirectory * always points
+/// to "a").
 
 TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
 {

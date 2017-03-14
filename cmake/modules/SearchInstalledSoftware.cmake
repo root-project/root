@@ -1,6 +1,8 @@
 #---Check for installed packages depending on the build options/components eamnbled -
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
+
+set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarFiles)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
@@ -1129,29 +1131,6 @@ if(davix OR builtin_davix)
   endif()
 endif()
 
-#---Check for vc and its compatibility-----------------------------------------------
-if(vc)
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5)
-      message(STATUS "VC requires GCC version >= 4.5; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    endif()
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4)
-      message(STATUS "VC requires Apple Clang version >= 4.0; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
-      message(STATUS "VC requires Clang version >= 3.1; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    endif()
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)  # equivalent to MSVC 2010
-      message(STATUS "VC requires MSVC version >= 2011; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for TCMalloc---------------------------------------------------------------
 if (tcmalloc)
   message(STATUS "Looking for tcmalloc")
@@ -1247,39 +1226,96 @@ if (vecgeom)
   endif()
 endif()
 
-#---Check for Vc---------------------------------------------------------------------
+#---Check for Vc compatibility-----------------------------------------------------------
 if(vc OR builtin_vc)
-  if(NOT builtin_vc)
-    message(STATUS "Looking for Vc")
-    find_package(Vc 1.0 CONFIG QUIET)
-    if(NOT Vc_FOUND)
-      if(fail-on-missing)
-        message(FATAL_ERROR "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
-      else()
-        message(STATUS "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
-        message(STATUS "              Alternatively, you can also enable the option 'builtin_vc' to build the Vc libraries internally")
-        message(STATUS "              For the time being switching OFF 'vc' option")
-        set(vc OFF CACHE BOOL "" FORCE)
-      endif()
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5)
+      message(STATUS "Vc requires GCC version >= 4.5; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
     endif()
-    set(VC_INCLUDE_DIRS ${Vc_INCLUDE_DIR})    # Missing from VcConfig.cmake
-    set(VC_LIBRARIES ${Vc_LIBRARIES})         # ROOT project name is "VC"; upstream uses "Vc".
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4)
+      message(STATUS "Vc requires Apple Clang version >= 4.0; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
+      message(STATUS "Vc requires Clang version >= 3.1; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    endif()
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)  # equivalent to MSVC 2010
+      message(STATUS "Vc requires MSVC version >= 2011; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    endif()
   endif()
-  if(builtin_vc)
-    set(vc_version 1.1.0)
-    set(VC_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      VC
-      URL ${repository_tarfiles}/Vc-${vc_version}.tar.gz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-      BUILD_BYPRODUCTS ${VC_LIBRARIES}
-    )
-    set(VC_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    set(VC_TARGET VC)
-    set(vc ON CACHE BOOL "" FORCE)
+endif()
+
+#---Check for Vc---------------------------------------------------------------------
+if(builtin_vc)
+  unset(Vc_FOUND)
+  unset(Vc_FOUND CACHE)
+  set(vc ON CACHE BOOL "" FORCE)
+elseif(vc)
+  if(fail-on-missing)
+    find_package(Vc 1.3.0 CONFIG QUIET REQUIRED)
+  else()
+    find_package(Vc 1.3.0 CONFIG QUIET)
+    if(NOT Vc_FOUND)
+      message(STATUS  "Vc library not found, support for it disabled.")
+      message(STATUS  "Please enable the option 'builtin_vc' to build Vc internally.")
+      set(vc OFF CACHE BOOL "" FORCE)
+    endif()
   endif()
+endif()
+
+if(vc AND NOT Vc_FOUND)
+  set(Vc_VERSION "1.3.0")
+  set(Vc_PROJECT "Vc-${Vc_VERSION}")
+  set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
+  set(Vc_SRC_MD5 "a248e904f0b1a330ad8f37ec50cbad30")
+  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals/install/${Vc_PROJECT}")
+  set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
+  set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(Vc_LIBRARY "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/${Vc_LIBNAME}")
+
+  ExternalProject_Add(${Vc_PROJECT}
+    PREFIX externals
+    URL     ${Vc_SRC_URI}
+    URL_MD5 ${Vc_SRC_MD5}
+    BUILD_IN_SOURCE 0
+    BUILD_BYPRODUCTS ${Vc_LIBRARY}
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+  )
+
+  add_library(Vc STATIC IMPORTED)
+  set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
+  add_dependencies(Vc ${Vc_PROJECT})
+
+  set(Vc_LIBRARIES Vc)
+  set(Vc_INCLUDE_DIR "${Vc_ROOTDIR}/include")
+  set(Vc_CMAKE_MODULES_DIR "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/cmake/Vc")
+
+  find_package_handle_standard_args(Vc
+    FOUND_VAR Vc_FOUND
+    REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
+    VERSION_VAR Vc_VERSION)
+
+  install(DIRECTORY ${Vc_ROOTDIR}/ DESTINATION ".")
+endif()
+
+if(Vc_FOUND)
+	# Missing from VcConfig.cmake
+	set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
 endif()
 
 #---Check for Vdt--------------------------------------------------------------------

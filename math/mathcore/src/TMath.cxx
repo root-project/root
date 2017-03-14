@@ -1210,7 +1210,9 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
          else
             nppm = n*prob[i]; // use m = 0
 
-         j = TMath::FloorNint(nppm);
+         // be careful with machine precision
+         double eps = 4 * TMath::Limits<Double_t>::Epsilon();
+         j = TMath::FloorNint(nppm + eps);
 
          // LM : fix for numerical problems if nppm is actually equal to j, but results different for numerical error
          // g in the paper is nppm -j

@@ -151,7 +151,7 @@ public:
                                   Double_t labSize = -1., Int_t labAlign = -1,
                                   Int_t labColor = -1 , Int_t labFont = -1,
                                   TString labText = ""); // *MENU*
-   virtual void       SetLimits(Double_t xmin, Double_t xmax) { /* set axis limits */ fXmin = xmin; fXmax = xmax; }
+   virtual void       SetLimits(Double_t xmin, Double_t xmax) { /* set axis limits */ fXmin = xmin; fXmax = xmax; } // *MENU*
            void       SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
            void       SetNoExponent(Bool_t noExponent=kTRUE);  // *TOGGLE* *GETTER=GetNoExponent
    virtual void       SetParent(TObject *obj) {fParent = obj;}

@@ -51,8 +51,7 @@ int tdf001_introduction() {
    // We select a default column, a *branch* to adopt ROOT jargon, which will
    // be looked at if none is specified by the user when dealing with filters
    //and actions.
-   TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, &f, {"b1"});
+   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
 
    // ## Operations on the dataframe
    // We now review some *actions* which can be performed on the data frame.
@@ -150,7 +149,7 @@ int tdf001_introduction() {
    // this is like having a general container at disposal able to accommodate
    // any value of any type.
    // Let's dive in an example:
-   auto entries_sum = d.AddBranch("sum", [](double b1, int b2) { return b2 + b1; }, {"b1", "b2"})
+   auto entries_sum = d.AddColumn("sum", [](double b1, int b2) { return b2 + b1; }, {"b1", "b2"})
                        .Filter([](double sum) { return sum > 4.2; }, {"sum"})
                        .Count();
    std::cout << *entries_sum << std::endl;

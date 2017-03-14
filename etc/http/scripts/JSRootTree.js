@@ -574,6 +574,10 @@
                        && (this.htype!=="F") && (this.htype!=="L") && (this.htype!=="D")) this.htype = "F";
                }
                break;
+            case "hbins" :
+               this.hist_nbins = parseInt(parvalue);
+               if (isNaN(this.hist_nbins) || (this.hist_nbins<=3)) delete this.hist_nbins;
+               break;
             case "drawopt":
                args.drawopt = parvalue;
                break;
@@ -848,6 +852,9 @@
          res.min = Math.min.apply(null, arr);
          res.max = Math.max.apply(null, arr);
 
+         if (this.hist_nbins)
+            nbins = res.nbins = this.hist_nbins;
+
          res.isinteger = (Math.round(res.min)===res.min) && (Math.round(res.max)===res.max);
          if (res.isinteger)
             for (var k=0;k<arr.length;++k)
@@ -1013,6 +1020,18 @@
           zbin = this.z.GetBin(zvalue);
 
       this.hist.fArray[xbin + (this.x.nbins+2) * (ybin + (this.y.nbins+2)*zbin) ] += weight;
+      if (!this.x.lbls && !this.y.lbls && !this.z.lbls) {
+         this.hist.fTsumw += weight;
+         this.hist.fTsumwx += weight*xvalue;
+         this.hist.fTsumwy += weight*yvalue;
+         this.hist.fTsumwz += weight*zvalue;
+         this.hist.fTsumwx2 += weight*xvalue*xvalue;
+         this.hist.fTsumwy2 += weight*yvalue*yvalue;
+         this.hist.fTsumwz2 += weight*zvalue*zvalue;
+         this.hist.fTsumwxy += weight*xvalue*yvalue;
+         this.hist.fTsumwxz += weight*xvalue*zvalue;
+         this.hist.fTsumwyz += weight*yvalue*zvalue;
+      }
    }
 
    JSROOT.TDrawSelector.prototype.DumpValue = function(v1, v2, v3, v4) {
@@ -1945,8 +1964,8 @@
       // now calculate entries range
 
       handle.firstentry = handle.lastentry = 0;
-      for (var nn = 0; nn < selector.branches.length; ++nn) {
-         var branch = selector.branches[nn], e1 = branch.fFirstEntry;
+      for (var nn = 0; nn < handle.arr.length; ++nn) {
+         var branch = handle.arr[nn].branch, e1 = branch.fFirstEntry;
          if (e1 === undefined) e1 = (branch.fBasketBytes[0] ? branch.fBasketEntry[0] : 0);
          handle.firstentry = Math.max(handle.firstentry, e1);
          handle.lastentry = (nn===0) ? (e1 + branch.fEntries) : Math.min(handle.lastentry, e1 + branch.fEntries);
@@ -2060,7 +2079,7 @@
 
                var blob = (places.length > 2) ? blobs[n++] : blobs,
                    buf = JSROOT.CreateTBuffer(blob, 0, handle.file),
-                   basket = buf.ReadTBasket({ _typename: "TBasket" });
+                   basket = buf.ClassStreamer({}, "TBasket");
 
                if (basket.fNbytes !== bitems[k].branch.fBasketBytes[bitems[k].basket])
                   console.error('mismatch in read basket sizes', bitems[k].branch.fBasketBytes[bitems[k].basket]);

@@ -24,7 +24,7 @@
 #ifndef ROOT_TClingValue
 #define ROOT_TClingValue
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #include "TInterpreterValue.h"
 
 namespace cling {

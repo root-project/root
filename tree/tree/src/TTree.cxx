@@ -405,8 +405,7 @@ End_Macro
 #include <limits.h>
 
 #ifdef R__USE_IMT
-#include "tbb/task.h"
-#include "tbb/task_group.h"
+#include "ROOT/TThreadExecutor.hxx"
 #include <thread>
 #include <string>
 #include <sstream>
@@ -4828,8 +4827,8 @@ struct BoolRAIIToggle {
 /// Write to disk all the basket that have not yet been individually written.
 ///
 /// If ROOT has IMT-mode enabled, this will launch multiple TBB tasks in parallel
-/// to do this operation; one per basket compression.  If the caller utilizes
-/// TBB also, care must be taken to prevent deadlocks.
+/// via TThreadExecutor to do this operation; one per basket compression.  If the
+///  caller utilizes TBB also, care must be taken to prevent deadlocks.
 ///
 /// For example, let's say the caller holds mutex A and calls FlushBaskets; while
 /// TBB is waiting for the ROOT compression tasks to complete, it may decide to
@@ -4871,34 +4870,33 @@ Int_t TTree::FlushBaskets() const
       std::atomic<Int_t> nerrpar(0);
       std::atomic<Int_t> nbpar(0);
       std::atomic<Int_t> pos(0);
-      tbb::task_group g;
+         
+      auto mapFunction  = [&]() {
+        // The branch to process is obtained when the task starts to run.
+        // This way, since branches are sorted, we make sure that branches
+        // leading to big tasks are processed first. If we assigned the
+        // branch at task creation time, the scheduler would not necessarily
+        // respect our sorting.
+        Int_t j = pos.fetch_add(1);
 
-      for (Int_t i = 0; i < nb; i++) {
-         g.run([&]() {
-            // The branch to process is obtained when the task starts to run.
-            // This way, since branches are sorted, we make sure that branches
-            // leading to big tasks are processed first. If we assigned the
-            // branch at task creation time, the scheduler would not necessarily
-            // respect our sorting.
-            Int_t j = pos.fetch_add(1);
+        auto branch = fSortedBranches[j].second;
+        if (R__unlikely(!branch)) { return; }
 
-            auto branch = fSortedBranches[j].second;
-            if (R__unlikely(!branch)) { return; }
+        if (R__unlikely(gDebug > 0)) {
+            std::stringstream ss;
+            ss << std::this_thread::get_id();
+            Info("FlushBaskets", "[IMT] Thread %s", ss.str().c_str());
+            Info("FlushBaskets", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+        }
 
-            if (R__unlikely(gDebug > 0)) {
-               std::stringstream ss;
-               ss << std::this_thread::get_id();
-               Info("FlushBaskets", "[IMT] Thread %s", ss.str().c_str());
-               Info("FlushBaskets", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
-            }
+        Int_t nbtask = branch->FlushBaskets();
 
-            Int_t nbtask = branch->FlushBaskets();
+        if (nbtask < 0) { nerrpar++; }
+        else            { nbpar += nbtask; }
+      };
 
-            if (nbtask < 0) { nerrpar++; }
-            else            { nbpar += nbtask; }
-         });
-      }
-      g.wait();
+      ROOT::TThreadExecutor pool;
+      pool.Foreach(mapFunction, nb);
 
       fIMTFlush = false;
       const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
@@ -5349,10 +5347,8 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       Int_t errnb = 0;
       std::atomic<Int_t> pos(0);
       std::atomic<Int_t> nbpar(0);
-      tbb::task_group g;
 
-      for (i = 0; i < nbranches; i++) {
-         g.run([&]() {
+      auto mapFunction = [&]() {
             // The branch to process is obtained when the task starts to run.
             // This way, since branches are sorted, we make sure that branches
             // leading to big tasks are processed first. If we assigned the
@@ -5381,9 +5377,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
             if (nbtask < 0) errnb = nbtask;
             else            nbpar += nbtask;
-         });
-      }
-      g.wait();
+         };
+
+      ROOT::TThreadExecutor pool;
+      pool.Foreach(mapFunction, nbranches);
 
       if (errnb < 0) {
          nb = errnb;
@@ -6689,9 +6686,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (bsize > bmax) bsize = bmax;
          UInt_t newBsize = UInt_t(bsize);
          if (pass) { // only on the second pass so that it doesn't interfere with scaling
-            if (branch->GetBasket(0) != 0) {
-               newBsize = newBsize + (branch->GetBasket(0)->GetNevBuf() * sizeof(Int_t) * 2); // make room for meta data
-            }
+            newBsize = newBsize + (branch->GetEntries() * sizeof(Int_t) * 2); // make room for meta data
             // We used ATLAS fully-split xAOD for testing, which is a rather unbalanced TTree, 10K branches,
             // with 8K having baskets smaller than 512 bytes. To achieve good I/O performance ATLAS uses auto-flush 100,
             // resulting in the smallest baskets being ~300-400 bytes, so this change increases their memory by about 8k*150B =~ 1MB,

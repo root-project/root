@@ -70,7 +70,7 @@ class Azog: public RTDyldMemoryManager {
                   uintptr_t Size, uint32_t Align,
                   bool code, bool isReadOnly) {
 
-      uintptr_t RequiredSize = 2*Size; // Space for internal alignment.
+      uintptr_t RequiredSize = Size;
       if (code)
         m_Start = exeMM->allocateCodeSection(RequiredSize, Align,
                                              0 /* SectionID */,
@@ -95,11 +95,17 @@ class Azog: public RTDyldMemoryManager {
 
       uintptr_t RequiredSize = Alignment * ((Size + Alignment - 1)/Alignment + 1);
       if ( (m_Current + RequiredSize) > m_End ) {
-        cling::errs() << "Error in block allocation by Azog. "
-           << "Not enough memory was reserved for the current module. "
-           << Size << " (round to " << RequiredSize << " ) was need but\n"
-           << "We only have " << (m_End - m_Current) << ".\n";
-        return nullptr;
+        // This must be the last block.
+        if ((m_Current + Size) <= m_End) {
+          RequiredSize = Size;
+        } else {
+          cling::errs() << "Error in block allocation by Azog. "
+                        << "Not enough memory was reserved for the current module. "
+                        << Size << " (with alignment: " << RequiredSize
+                        << " ) is needed but\n"
+                        << "we only have " << (m_End - m_Current) << ".\n";
+          return nullptr;
+        }
       }
 
       uintptr_t Addr = (uintptr_t)m_Current;
@@ -120,6 +126,23 @@ class Azog: public RTDyldMemoryManager {
   AllocInfo m_Code;
   AllocInfo m_ROData;
   AllocInfo m_RWData;
+
+#ifdef LLVM_ON_WIN32
+  uintptr_t getBaseAddr() const {
+    if (LLVM_LIKELY(m_Code.m_Start && m_ROData.m_Start && m_RWData.m_Start)) {
+      return uintptr_t(std::min(std::min(m_Code.m_Start, m_ROData.m_Start),
+                                m_RWData.m_Start));
+    }
+    if (LLVM_LIKELY(m_Code.m_Start)) {
+      return uintptr_t(m_ROData.m_Start
+                           ? std::min(m_Code.m_Start, m_ROData.m_Start)
+                           : std::min(m_Code.m_Start, m_RWData.m_Start));
+    }
+    return uintptr_t(m_ROData.m_Start && m_RWData.m_Start
+                         ? std::min(m_ROData.m_Start, m_RWData.m_Start)
+                         : std::max(m_ROData.m_Start, m_RWData.m_Start));
+  }
+#endif
 
 public:
   Azog(cling::IncrementalJIT& Jit): m_jit(Jit) {}
@@ -177,12 +200,20 @@ public:
 
   void registerEHFrames(uint8_t *Addr, uint64_t LoadAddr,
                         size_t Size) override {
+#ifdef LLVM_ON_WIN32
+    platform::RegisterEHFrames(Addr, Size, getBaseAddr(), true);
+#else
     return getExeMM()->registerEHFrames(Addr, LoadAddr, Size);
+#endif
   }
 
   void deregisterEHFrames(uint8_t *Addr, uint64_t LoadAddr,
                           size_t Size) override {
+#ifdef LLVM_ON_WIN32
+    platform::DeRegisterEHFrames(Addr, Size);
+#else
     return getExeMM()->deregisterEHFrames(Addr, LoadAddr, Size);
+#endif
   }
 
   uint64_t getSymbolAddress(const std::string &Name) override {

@@ -211,7 +211,6 @@ namespace Detail {
     * @version 1.0
     * @date    10/10/2004
     */
-#ifndef __CINT__
    struct EnvironBase {
    private:
       EnvironBase(const EnvironBase&); // Intentionally not implement, copy is not supported
@@ -242,10 +241,6 @@ namespace Detail {
          return new Environ();
       }
    };
-#else
-   struct EnvironBase;
-   template <typename T> struct Environ;
-#endif
 
    template <class T, class Q> struct PairHolder {
       T first;
@@ -492,9 +487,7 @@ namespace Detail {
 
 
    public:
-#ifndef __CINT__
       const std::type_info &fInfo;
-#endif
       size_t fIterSize;
       size_t fValueDiff;
       int    fValueOffset;
@@ -746,15 +739,12 @@ namespace Detail {
       }
    };
 
-#ifndef __CINT__
    // Need specialization for boolean references due to stupid STL std::vector<bool>
    template<> inline void* TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>::address(std::vector<Bool_t>::const_reference ) {
       R__ASSERT(0);
       return 0;
    }
-#endif
 
-#ifndef __CINT__
    template <typename Bitset_t> struct TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> > : public TCollectionProxyInfo::Address<const Bool_t &>
    {
       typedef Bitset_t                 Cont_t;
@@ -860,13 +850,14 @@ namespace Detail {
 
    template <typename Bitset_t>
    struct TCollectionProxyInfo::Pushback<Internal::TStdBitsetHelper<Bitset_t>  > : public TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> > {
-      typedef Bitset_t         Cont_t;
-      typedef bool             Iter_t;
-      typedef bool             Value_t;
-      typedef Environ<Iter_t>  Env_t;
-      typedef Env_t           *PEnv_t;
-      typedef Cont_t          *PCont_t;
-      typedef Value_t         *PValue_t;
+      using InfoBase_t = TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> >;
+      using typename InfoBase_t::Cont_t;
+      using typename InfoBase_t::Iter_t;
+      using typename InfoBase_t::Value_t;
+      using typename InfoBase_t::Env_t;
+      using typename InfoBase_t::PEnv_t;
+      using typename InfoBase_t::PCont_t;
+      using typename InfoBase_t::PValue_t;
 
       static void resize(void*,size_t)  {
       }
@@ -881,7 +872,6 @@ namespace Detail {
          return 0;
       }
    };
-#endif
 
 } // namespace Detail
 

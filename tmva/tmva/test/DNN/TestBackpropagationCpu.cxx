@@ -26,22 +26,23 @@ int main()
    std::cout << "Testing Backpropagation:" << std::endl;
 
    double error;
+   int iret = 0;
 
    error = testBackpropagationWeightsLinear<TCpu<Scalar_t>>(1.0);
    if (error > 1e-3)
-       return 1;
+       iret++;
 
    error = testBackpropagationL1Regularization<TCpu<Scalar_t>>(1e-2);
    if (error > 1e-3)
-       return 1;
+       iret++;
 
    error = testBackpropagationL2Regularization<TCpu<Scalar_t>>(1.0);
    if (error > 1e-3)
-       return 1;
+       iret++;
 
    error = testBackpropagationBiasesLinear<TCpu<Scalar_t>>(1.0);
    if (error > 1e-3)
-       return 1;
+       iret++;
 
-   return 0;
+   return iret;
 }

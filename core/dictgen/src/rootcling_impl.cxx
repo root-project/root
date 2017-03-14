@@ -166,9 +166,6 @@ const char *rootClingHelp =
 
 #include "rootcling_impl.h"
 
-// See Rtypes.h:
-#define R__NO_INLINE_CLASSDEF
-
 #include "RConfigure.h"
 #include "RConfig.h"
 
@@ -236,7 +233,7 @@ const char *rootClingHelp =
 #include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Support/Path.h"
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #include "TModuleGenerator.h"
 #include "TClassEdit.h"
 #include "TClingUtils.h"

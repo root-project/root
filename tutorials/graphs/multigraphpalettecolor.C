@@ -18,12 +18,12 @@
 
 void multigraphpalettecolor()
 {
-   TMultiGraph *mg  = new TMultiGraph();
+   auto mg  = new TMultiGraph();
 
-   TGraph *gr1 = new TGraph(); gr1->SetMarkerStyle(20);
-   TGraph *gr2 = new TGraph(); gr2->SetMarkerStyle(21);
-   TGraph *gr3 = new TGraph(); gr3->SetMarkerStyle(23);
-   TGraph *gr4 = new TGraph(); gr4->SetMarkerStyle(24);
+   auto gr1 = new TGraph(); gr1->SetMarkerStyle(20);
+   auto gr2 = new TGraph(); gr2->SetMarkerStyle(21);
+   auto gr3 = new TGraph(); gr3->SetMarkerStyle(23);
+   auto gr4 = new TGraph(); gr4->SetMarkerStyle(24);
 
    Double_t dx = 6.28/100;
    Double_t x  = -3.14;

@@ -16,11 +16,11 @@
 
 //////////////////////////////////////////////////////////////////////////
 ///
-/// \class TTreeProcessorMP
+/// \class ROOT::TTreeProcessorMP
 /// \brief This class provides an interface to process a TTree dataset
-///        in parallel with multi-process technology 
+///        in parallel with multi-process technology
 ///
-/// ###TTreeProcessorMP::Process 
+/// ###ROOT::TTreeProcessorMP::Process
 /// The possible usages of the Process method are the following:\n
 /// * Process(<dataset>, F func, const std::string& treeName, ULong64_t nToProcess):
 ///     func is executed nToProcess times with argument a TTreeReader&, initialized for
@@ -34,7 +34,7 @@
 ///
 /// For legacy, the following signature is also supported:
 /// * Process(<dataset>, TSelector& selector, const std::string& treeName, ULong64_t nToProcess):
-///   where seelctor is a TSelector derived class describing the analysis and the other arguments
+///   where selector is a TSelector derived class describing the analysis and the other arguments
 ///   have the same meaning as above.
 ///
 /// For either set of signatures, the processing function is executed as many times as
@@ -42,9 +42,9 @@
 /// or set via SetNWorkers. It defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
-/// be created upon execution of func, returned objects included: TTreeProcessorMP never
+/// be created upon execution of func, returned objects included: ROOT::TTreeProcessorMP never
 /// deletes what it returns, it simply forgets it.\n
-/// **Note:** that the usage of TTreeProcessorMP::Process is indicated only when the task to be
+/// **Note:** that the usage of ROOT::TTreeProcessorMP::Process is indicated only when the task to be
 /// executed takes more than a few seconds, otherwise the overhead introduced
 /// by Process will outrun the benefits of parallel execution on most machines.
 ///
@@ -59,7 +59,7 @@
 /// a standard container (vector, list, deque), an initializer list
 /// or a pointer to a TCollection (TList*, TObjArray*, ...).
 /// \endparblock
-/// **Note:** the version of TTreeProcessorMP::Process that takes a TFileCollection* as argument incurs
+/// **Note:** the version of ROOT::TTreeProcessorMP::Process that takes a TFileCollection* as argument incurs
 /// in the overhead of copying data from the TCollection to an STL container. Only
 /// use it when absolutely necessary.\n
 /// **Note:** in cases where the function to be executed takes more than
