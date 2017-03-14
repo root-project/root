@@ -1314,9 +1314,9 @@ void TMVA::MethodMLP::UpdateNetwork(const std::vector<Float_t>& desired, Double_
 
    // Get output of network, and apply softmax
    for (UInt_t i = 0, iEnd = desired.size(); i < iEnd; ++i) {
-      Double_t act = GetOutputNeuron(i)->GetActivationValue();
+      Double_t act    = GetOutputNeuron(i)->GetActivationValue();
       Double_t output = TMath::Exp(act) / norm;
-      Double_t error = output - desired.at(i);
+      Double_t error  = output - desired.at(i);
       error *= eventWeight;
       GetOutputNeuron(i)->SetError(error);
    }
