@@ -142,7 +142,10 @@ if(cxxmodules)
 
   set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack")
 
-  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
+  # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
+  if (APPLE)
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
+  endif(APPLE)
 
   configure_file("${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap" COPYONLY)
 
