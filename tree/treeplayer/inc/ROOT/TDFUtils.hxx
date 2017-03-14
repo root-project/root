@@ -13,14 +13,18 @@
 
 #include "ROOT/RArrayView.hxx"
 #include "TH1.h"
-#include "TTree.h"
-#include "TTreeReader.h"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
 
+#include <array>
+#include <cstddef>     // std::size_t
 #include <functional>
-#include <vector>
+#include <memory>
+#include <string>
 #include <type_traits> // std::decay
+#include <vector>
+class TTree;
+class TTreeReader;
 
 /// \cond HIDDEN_SYMBOLS
 
