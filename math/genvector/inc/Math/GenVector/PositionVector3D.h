@@ -577,10 +577,11 @@ namespace ROOT {
 
     // ------------- I/O to/from streams -------------
 
-    template <class char_t, class traits_t, class T, class U>
-    inline typename std::enable_if<std::is_arithmetic<typename PositionVector3D<T, U>::Scalar>::value,
-                                   std::basic_ostream<char_t, traits_t> &>::type
-    operator<<(std::basic_ostream<char_t, traits_t> &os, PositionVector3D<T, U> const &v)
+    template <
+       class char_t, class traits_t, class T, class U,
+       typename std::enable_if<std::is_arithmetic<typename PositionVector3D<T, U>::Scalar>::value>::type * = nullptr>
+    std::basic_ostream<char_t, traits_t> &operator<<(std::basic_ostream<char_t, traits_t> &os,
+                                                     PositionVector3D<T, U> const &v)
     {
        if (os) {
 
@@ -603,10 +604,11 @@ namespace ROOT {
       return os;
     }  // op<< <>()
 
-    template <class char_t, class traits_t, class T, class U>
-    inline typename std::enable_if<!std::is_arithmetic<typename PositionVector3D<T, U>::Scalar>::value,
-                                   std::basic_ostream<char_t, traits_t> &>::type
-    operator<<(std::basic_ostream<char_t, traits_t> &os, PositionVector3D<T, U> const &v)
+    template <
+       class char_t, class traits_t, class T, class U,
+       typename std::enable_if<!std::is_arithmetic<typename PositionVector3D<T, U>::Scalar>::value>::type * = nullptr>
+    std::basic_ostream<char_t, traits_t> &operator<<(std::basic_ostream<char_t, traits_t> &os,
+                                                     PositionVector3D<T, U> const &v)
     {
        if (os) {
           os << "{ ";

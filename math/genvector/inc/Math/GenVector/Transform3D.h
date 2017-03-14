@@ -245,9 +245,9 @@ public:
       @param to1  point defining first axis transformed reference system
       @param to2  point defining second axis transformed reference system
    */
-   template <typename SCALAR = T>
+   template <typename SCALAR = T, typename std::enable_if<std::is_arithmetic<SCALAR>::value>::type * = nullptr>
    Transform3D(const Point &fr0, const Point &fr1, const Point &fr2, const Point &to0, const Point &to1,
-               const Point &to2, typename std::enable_if<std::is_arithmetic<SCALAR>::value>::type * = nullptr)
+               const Point &to2)
    {
       // takes impl. from CLHEP ( E.Chernyaev). To be checked
 
@@ -339,9 +339,9 @@ public:
       @param to1  point defining first axis transformed reference system
       @param to2  point defining second axis transformed reference system
    */
-   template <typename SCALAR = T>
+   template <typename SCALAR = T, typename std::enable_if<!std::is_arithmetic<SCALAR>::value>::type * = nullptr>
    Transform3D(const Point &fr0, const Point &fr1, const Point &fr2, const Point &to0, const Point &to1,
-               const Point &to2, typename std::enable_if<!std::is_arithmetic<SCALAR>::value>::type * = nullptr)
+               const Point &to2)
    {
       // takes impl. from CLHEP ( E.Chernyaev). To be checked
 
@@ -738,8 +738,8 @@ public:
    /**
        Invert the transformation in place (scalar)
    */
-   template <typename SCALAR = T>
-   typename std::enable_if<std::is_arithmetic<SCALAR>::value, void>::type Invert()
+   template <typename SCALAR = T, typename std::enable_if<std::is_arithmetic<SCALAR>::value>::type * = nullptr>
+   void Invert()
    {
       //
       // Name: Transform3D::inverse                     Date:    24.09.96
@@ -773,8 +773,8 @@ public:
    /**
        Invert the transformation in place (vectorised)
    */
-   template <typename SCALAR = T>
-   typename std::enable_if<!std::is_arithmetic<SCALAR>::value, void>::type Invert()
+   template <typename SCALAR = T, typename std::enable_if<!std::is_arithmetic<SCALAR>::value>::type * = nullptr>
+   void Invert()
    {
       //
       // Name: Transform3D::inverse                     Date:    24.09.96
@@ -931,9 +931,8 @@ protected:
       Set identity transformation (identity rotation , zero translation)
       vectorised version that sets using a mask
    */
-   template <typename SCALAR = T>
-   typename std::enable_if<!std::is_arithmetic<SCALAR>::value, void>::type SetIdentity(
-      const typename SCALAR::mask_type m)
+   template <typename SCALAR = T, typename std::enable_if<!std::is_arithmetic<SCALAR>::value>::type * = nullptr>
+   void SetIdentity(const typename SCALAR::mask_type m)
    {
       // set identity ( identity rotation and zero translation)
       fM[kXX](m) = T(1);

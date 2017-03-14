@@ -218,8 +218,8 @@ protected:
    /**
       Normalize the normal (a,b,c) plane components
    */
-   template <typename SCALAR = T>
-   typename std::enable_if<std::is_arithmetic<SCALAR>::value, void>::type Normalize()
+   template <typename SCALAR = T, typename std::enable_if<std::is_arithmetic<SCALAR>::value>::type * = nullptr>
+   void Normalize()
    {
       // normalize the plane
       const SCALAR s = std::sqrt(fA * fA + fB * fB + fC * fC);
@@ -238,8 +238,8 @@ protected:
    /**
      Normalize the normal (a,b,c) plane components
    */
-   template <typename SCALAR = T>
-   typename std::enable_if<!std::is_arithmetic<SCALAR>::value, void>::type Normalize()
+   template <typename SCALAR = T, typename std::enable_if<!std::is_arithmetic<SCALAR>::value>::type * = nullptr>
+   void Normalize()
    {
       // normalize the plane
       SCALAR s = sqrt(fA * fA + fB * fB + fC * fC);
