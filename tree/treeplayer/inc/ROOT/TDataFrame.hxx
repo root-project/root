@@ -16,14 +16,18 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
 
+#include "ROOT/TActionResultProxy.hxx"
 #include "ROOT/TDataFrameInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "TDirectory.h"
-#include "TTree.h"
+#include "TChain.h"
 
+#include <memory>
+#include <iosfwd> // std::ostringstream
 #include <stdexcept>
 #include <string>
+class TDirectory;
+class TTree;
 
 namespace cling {
    // TDataFrame pretty-printing

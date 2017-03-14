@@ -8,22 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include "ROOT/TDataFrame.hxx"
-#include "ROOT/TTreeProcessorMT.hxx"
-#include "ROOT/TSpinMutex.hxx"
-#include "TBranchElement.h"
-#include "TClass.h"
-#include "TDirectory.h"
-#include "TError.h" // Info
-#include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
-#include "TString.h" // Printf
-
-#include <numeric> // std::accumulate
-#include <thread>
 
 namespace ROOT {
-
 namespace Experimental {
 
 /**
