@@ -11,26 +11,22 @@
 #ifndef ROOT_TDATAFRAME_INTERFACE
 #define ROOT_TDATAFRAME_INTERFACE
 
-#include "ROOT/RArrayView.hxx"
 #include "ROOT/TActionResultProxy.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "TChain.h"
-#include "TH1F.h" // For Histo actions
-#include "TH2F.h" // For Histo actions
-#include "TH3F.h" // For Histo actions
+#include "TH1.h" // For Histo actions
+#include "TH2.h" // For Histo actions
+#include "TH3.h" // For Histo actions
 #include "TInterpreter.h"
 #include "TProfile.h" // For Histo actions
 #include "TProfile2D.h" // For Histo actions
-#include "TTreeReader.h"
-#include "TTreeReaderArray.h"
-#include "TTreeReaderValue.h"
 
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <typeinfo>
-#include <vector>
+#include <type_traits> // is_same, enable_if
 
 namespace ROOT {
 

@@ -9,7 +9,6 @@
  *************************************************************************/
 
 #include "ROOT/TDataFrameInterface.hxx"
-#include "TBranch.h"
 #include "TBranchElement.h"
 
 namespace ROOT {
