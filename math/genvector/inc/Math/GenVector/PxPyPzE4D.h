@@ -147,8 +147,9 @@ public :
    /**
       invariant mass
    */
-   Scalar M() const    {
-      Scalar mm = M2();
+   Scalar M() const
+   {
+      const Scalar mm = M2();
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
@@ -168,7 +169,7 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt()   const { return std::sqrt(Perp2());}
+   Scalar Pt() const { return std::sqrt(Perp2()); }
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -181,7 +182,7 @@ public :
       transverse mass
    */
    Scalar Mt() const {
-      Scalar mm = Mt2();
+      const Scalar mm = Mt2();
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
@@ -204,7 +205,7 @@ public :
       transverse energy
    */
    Scalar Et() const {
-      Scalar etet = Et2();
+      const Scalar etet = Et2();
       return fT < 0.0 ? -std::sqrt(etet) : std::sqrt(etet);
    }
 
@@ -212,14 +213,14 @@ public :
       azimuthal angle
    */
    Scalar Phi() const  {
-      return (fX == 0.0 && fY == 0.0) ? 0 : std::atan2(fY,fX);
+      return (fX == 0.0 && fY == 0.0) ? 0 : std::atan2(fY, fX);
    }
 
    /**
       polar angle
    */
    Scalar Theta() const {
-      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : std::atan2(Pt(),fZ);
+      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : std::atan2(Pt(), fZ);
    }
 
    /**
