@@ -112,6 +112,8 @@ ClassImp(TMVA::MethodBoost)
    , fMVAvalues(0)
 {
    fMVAvalues = new std::vector<Float_t>;
+   fDataSetManager = NULL;
+   fHistoricBoolOption = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
