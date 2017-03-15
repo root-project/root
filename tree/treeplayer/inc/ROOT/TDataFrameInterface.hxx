@@ -870,14 +870,28 @@ private:
       auto        df                   = GetDataFrameChecked();
       const auto &theBranchName        = bl[0];
       const auto  theBranchTypeName    = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df);
-      const auto  actionResultTypeName = TClass::GetClass(typeid(std::shared_ptr<ActionResultType>))->GetName();
-      const auto  actionTypeName       = TClass::GetClass(typeid(ActionType))->GetName();
       if (theBranchTypeName.empty()) {
-         std::string exceptionText = "The type of branch ";
+         std::string exceptionText = "The type of column ";
          exceptionText += theBranchName;
          exceptionText += " could not be guessed. Please specify one.";
          throw std::runtime_error(exceptionText.c_str());
       }
+      auto actionResultTypeClass = TClass::GetClass(typeid(std::shared_ptr<ActionResultType>));
+      if (!actionResultTypeClass) {
+         std::string exceptionText = "An error occurred while inferring the result type of the operation on column ";
+         exceptionText += theBranchName;
+         exceptionText += ".";
+         throw std::runtime_error(exceptionText.c_str());
+      }
+      const auto actionResultTypeName = actionResultTypeClass->GetName();
+      auto actionTypeClass = TClass::GetClass(typeid(ActionType));
+      if(!actionTypeClass) {
+         std::string exceptionText = "An error occurred while inferring the action type of the operation on column ";
+         exceptionText += theBranchName;
+         exceptionText += ".";
+         throw std::runtime_error(exceptionText.c_str());
+      }
+      const auto actionTypeName = actionTypeClass->GetName();
       std::stringstream createAction_str;
 
       createAction_str << "ROOT::Internal::CallCreateAction<" << GetNodeTypeName() << ", " << actionTypeName << ", "
@@ -886,7 +900,14 @@ private:
                        << "*(ROOT::BranchNames_t*)" << &bl << ", "
                        << "*(" << actionResultTypeName << "*)" << &r << ", "
                        << "nullptr);";
-      return *(TActionResultProxy<ActionResultType> *)gInterpreter->ProcessLine(createAction_str.str().c_str());
+      auto retVal = gInterpreter->ProcessLine(createAction_str.str().c_str());
+      if (!retVal) {
+         std::string exceptionText = "An error occurred while jitting this action ";
+         exceptionText += createAction_str.str();
+         exceptionText += ".";
+         throw std::runtime_error(exceptionText.c_str());
+      }
+      return *(TActionResultProxy<ActionResultType> *)retVal;
    }
 
 protected:
