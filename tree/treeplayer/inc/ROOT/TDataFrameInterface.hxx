@@ -39,7 +39,6 @@ struct TDataFrameGuessedType {
 
 namespace Internal {
 
-// TODO move into TDFUtils, for now it would cause a circular dependency on TActionResultProxy
 template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
 ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNode *node, const BranchNames_t &bl,
                                                                           const std::shared_ptr<ActionResultType> &r,
