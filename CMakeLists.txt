@@ -35,6 +35,12 @@ include(RootNewMacros)
 include(CheckCompiler)
 include(MacroEnsureVersion)
 
+#---Set home directory to avoid CCache issue----------------------------------------------------
+# Temporairly workaround as CCache has issues reading the config file due to kerb
+if ((NOT APPLE) AND (NOT WIN32))
+   set(ENV{HOME} /build/)
+endif()
+
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
    find_program(ccache_cmd NAMES ccache ccache-swig HINTS /usr/local/bin/)
