@@ -37,7 +37,7 @@ include(MacroEnsureVersion)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
-   find_program(ccache_cmd NAMES ccache ccache-swig)
+   find_program(ccache_cmd NAMES ccache ccache-swig HINTS /usr/local/bin/)
    mark_as_advanced(ccache_cmd ${ccache_cmd})
    if(ccache_cmd)
       message(STATUS "Using ccache for building")
