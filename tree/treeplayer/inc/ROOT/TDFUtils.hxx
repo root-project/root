@@ -31,6 +31,10 @@ class TTreeReader;
 namespace ROOT {
 
 using BranchNames_t = std::vector<std::string>;
+namespace Detail {
+// forward declaration for ColumnName2ColumnTypeName
+class TDataFrameBranchBase;
+}
 
 namespace Internal {
 namespace TDFTraitsUtils {
@@ -141,12 +145,14 @@ struct TIsContainer {
 
 } // end NS TDFTraitsUtils
 
+using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
+using TVBVec_t = std::vector<TVBPtr_t>;
+
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &, ROOT::Detail::TDataFrameBranchBase *);
+
 const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string s);
 unsigned int GetNSlots();
-
-using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
-using TVBVec_t = std::vector<TVBPtr_t>;
 
 template <typename BranchType>
 std::shared_ptr<ROOT::Internal::TTreeReaderValueBase> ReaderValueOrArray(TTreeReader &r, const std::string &branch,

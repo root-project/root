@@ -12,6 +12,7 @@
 #define ROOT_TDFNODES
 
 #include "ROOT/TDFUtils.hxx"
+#include "ROOT/RArrayView.hxx"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
 
@@ -314,7 +315,7 @@ public:
    const BranchNames_t &           GetDefaultBranches() const;
    const BranchNames_t             GetTmpBranches() const { return {}; };
    TTree *                         GetTree() const;
-   const TDataFrameBranchBase &GetBookedBranch(const std::string &name) const;
+   TDataFrameBranchBase *GetBookedBranch(const std::string &name) const;
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry);
    ::TDirectory *GetDirectory() const;
    std::string   GetTreeName() const;

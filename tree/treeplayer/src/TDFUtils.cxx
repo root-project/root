@@ -9,7 +9,11 @@
  *************************************************************************/
 
 #include "RConfigure.h" // R__USE_IMT
+#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TDataFrameBranchBase
 #include "ROOT/TDFUtils.hxx"
+#include "TBranch.h"
+#include "TBranchElement.h"
+#include "TClassRef.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 
 #include <stdexcept>
@@ -18,6 +22,73 @@ class TTree;
 
 namespace ROOT {
 namespace Internal {
+
+/// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
+/// column created by AddColumn.
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
+                                      ROOT::Detail::TDataFrameBranchBase *tmpBranch)
+{
+   if (auto branch = tree.GetBranch(colName.c_str())) {
+      // this must be a real TTree branch
+      static const TClassRef tbranchelRef("TBranchElement");
+      if (branch->InheritsFrom(tbranchelRef)) {
+         return static_cast<TBranchElement *>(branch)->GetClassName();
+      } else { // Try the fundamental type
+         auto title    = branch->GetTitle();
+         auto typeCode = title[strlen(title) - 1];
+         if (typeCode == 'B')
+            return "char";
+         else if (typeCode == 'b')
+            return "unsigned char";
+         else if (typeCode == 'I')
+            return "int";
+         else if (typeCode == 'i')
+            return "unsigned int";
+         else if (typeCode == 'S')
+            return "short";
+         else if (typeCode == 's')
+            return "unsigned short";
+         else if (typeCode == 'D')
+            return "double";
+         else if (typeCode == 'F')
+            return "float";
+         else if (typeCode == 'L')
+            return "Long64_t";
+         else if (typeCode == 'l')
+            return "ULong64_t";
+         else if (typeCode == 'O')
+            return "bool";
+      }
+   } else {
+      // this must be a temporary branch
+      const auto &type_id = tmpBranch->GetTypeId();
+      if (auto c = TClass::GetClass(type_id)) {
+         return c->GetName();
+      } else if (type_id == typeid(char))
+         return "char";
+      else if (type_id == typeid(unsigned char))
+         return "unsigned char";
+      else if (type_id == typeid(int))
+         return "int";
+      else if (type_id == typeid(unsigned int))
+         return "unsigned int";
+      else if (type_id == typeid(short))
+         return "short";
+      else if (type_id == typeid(unsigned short))
+         return "unsigned short";
+      else if (type_id == typeid(double))
+         return "double";
+      else if (type_id == typeid(float))
+         return "float";
+      else if (type_id == typeid(Long64_t))
+         return "Long64_t";
+      else if (type_id == typeid(ULong64_t))
+         return "ULong64_t";
+      else if (type_id == typeid(bool))
+         return "bool";
+   }
+   return "";
+}
 
 const char *ToConstCharPtr(const char *s)
 {

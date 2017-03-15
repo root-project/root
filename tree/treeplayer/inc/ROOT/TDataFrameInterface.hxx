@@ -39,9 +39,6 @@ struct TDataFrameGuessedType {
 
 namespace Internal {
 
-// TODO move into TDFUtils, for now it would cause a circular dependency on TDataFrameImpl
-std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
-
 // TODO move into TDFUtils, for now it would cause a circular dependency on TActionResultProxy
 template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
 ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNode *node, const BranchNames_t &bl,
@@ -50,7 +47,7 @@ ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNod
 {
    return node->template CreateAction<ActionType, BranchType, ActionResultType>(bl, r, nullptr);
 }
-}
+} // namespace Internal
 
 namespace Experimental {
 
@@ -196,7 +193,8 @@ public:
          ss << "namespace " << nsName;
          ss << " {\n";
          for (auto brName : usedBranches) {
-            auto brTypeName = ROOT::Internal::ColumnName2ColumnTypeName(brName, *df);
+            auto brTypeName =
+               ROOT::Internal::ColumnName2ColumnTypeName(brName, *df->GetTree(), df->GetBookedBranch(brName));
             ss << brTypeName << " " << brName << ";\n";
             usedBranchesTypes.emplace_back(brTypeName);
          }
@@ -995,7 +993,8 @@ private:
       gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
       auto        df                   = GetDataFrameChecked();
       const auto &theBranchName        = bl[0];
-      const auto  theBranchTypeName    = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df);
+      const auto  theBranchTypeName =
+         ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df->GetTree(), df->GetBookedBranch(theBranchName));
       if (theBranchTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += theBranchName;
