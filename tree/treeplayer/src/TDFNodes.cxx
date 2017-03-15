@@ -16,6 +16,7 @@
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TTreeReader.h"
 
+#include <cassert>
 #include <mutex>
 #include <numeric> // std::accumulate
 #include <string>
@@ -125,9 +126,11 @@ public:
    {
       std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
       fBuf[fCursor++] = slotNumber;
+      assert(fCursor <= fBuf.size() && "TSlotStack assumes that at most a fixed number of values can be present in the stack. fCursor is greater than the size of the internal buffer. This violates such assumption.");
    };
    unsigned int Pop()
    {
+      assert(fCursor > 0 && "TSlotStack assumes that a value can be always popped. fCursor is <=0 and this violates such assumption.");
       std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
       return fBuf[--fCursor];
    }
