@@ -277,8 +277,8 @@ set (tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification
 set (tmva-TMVAClassificationCategory-depends tutorial-tmva-TMVAClassification)
 set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassificationCategory tutorial-tmva-TMVAClassificationApplication)
 set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample tutorial-tmva-TMVAClassificationCategory)
-set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass tmva-TMVAClassificationCategoryApplication)
-set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression tmva-TMVAMulticlassApplication)
+set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass tutorial-tmva-TMVAClassificationCategoryApplication)
+set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression tutorial-tmva-TMVAMulticlassApplication)
 set (tmva-TMVARegression-depends tutorial-tmva-TMVAMulticlass)
 
 
