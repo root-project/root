@@ -113,7 +113,7 @@ Bool_t RooAbsData::releaseVars(RooAbsData* data)
 RooAbsData::RooAbsData()
 {
   claimVars(this) ;
-  _dstore = 0 ;
+  _dstore = nullptr ;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
 
@@ -198,7 +198,7 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 //     }
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
-    _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
+    _dstore = std::unique_ptr<RooAbsDataStore>(new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) );
 
   } else {
 
@@ -221,7 +221,6 @@ RooAbsData::~RooAbsData()
   }
 
   // delete owned contents.
-  delete _dstore ;
   delete _iterator ;
   delete _cacheIter ;
 
@@ -238,10 +237,8 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-  if (dynamic_cast<RooTreeDataStore*>(_dstore)) {
-    RooVectorDataStore* newStore =  new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) ;
-    delete _dstore ;
-    _dstore = newStore ;
+  if (dynamic_cast<RooTreeDataStore*>(&*_dstore)) {
+    _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) );
   }
 }
 
@@ -2331,12 +2328,12 @@ Bool_t RooAbsData::hasFilledCache() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// give access to internal data TTree (if it exists)
-/// RooDataSet keeps ownership, RooFit is responsible for deleting.
+/// Return a pointer to the TTree which stores the data. Returns a nullpointer
+/// if vector-based storage is used. The RooAbsData remains owner of the tree
 
 const TTree* RooAbsData::tree() const
 {
-  if (dynamic_cast<const RooTreeDataStore*>(_dstore)) {
+  if (dynamic_cast<const RooTreeDataStore*>(&*_dstore)) {
     return _dstore->tree();
   } else {
     coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
@@ -2346,17 +2343,16 @@ const TTree* RooAbsData::tree() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// clone internal data TTree or create it from vector-based storage
-/// transfers ownership, user is responsible for deleting.
+/// Return a clone of the TTree which stores the data or create such a tree
+/// if vector storage is used. The user is responsible for deleting the tree
 
-TTree* RooAbsData::export_tree() const
+TTree* RooAbsData::GetClonedTree() const
 {
-  if (dynamic_cast<const RooTreeDataStore*>(_dstore)) {
-    return const_cast<TTree*>(_dstore->tree())->CloneTree();
+  if (dynamic_cast<RooTreeDataStore*>(&*_dstore)) {
+    return _dstore->tree()->CloneTree();
   } else {
     RooTreeDataStore buffer(GetName(), GetTitle(), *get(), *_dstore);
-    TTree* t = &(buffer.tree());
-    return (TTree*)(t->CloneTree());
+    return buffer.tree()->CloneTree();
   }
 }
 
@@ -2365,9 +2361,7 @@ TTree* RooAbsData::export_tree() const
 
 void RooAbsData::convertToTreeStore()
 {
-  if (nullptr==dynamic_cast<RooTreeDataStore*>(_dstore)) {
-    RooTreeDataStore* newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
-    delete _dstore;
-    _dstore = newStore;
+  if (nullptr==dynamic_cast<RooTreeDataStore*>(&*_dstore)) {
+    _dstore = std::unique_ptr<RooAbsDataStore>(new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore));
   }
 }

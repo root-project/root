@@ -52,10 +52,10 @@ public:
   RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
 
-  RooAbsDataStore* store() { return _dstore ; }
-  const RooAbsDataStore* store() const { return _dstore ; }
+  RooAbsDataStore* store() { return &*_dstore ; }
+  const RooAbsDataStore* store() const { return &*_dstore ; }
   const TTree* tree() const ;
-  TTree* export_tree() const ;
+  TTree* GetClonedTree() const ;
    
   void convertToVectorStore() ;
   void convertToTreeStore() ;
@@ -258,7 +258,7 @@ protected:
   TIterator *_iterator;    //! Iterator over dimension variables
   TIterator *_cacheIter ;  //! Iterator over cached variables
 
-  RooAbsDataStore* _dstore ; // Data storage implementation
+  std::unique_ptr<RooAbsDataStore> _dstore ; // Data storage implementation
 
   std::map<std::string,RooAbsData*> _ownedComponents ; // Owned external components
 
