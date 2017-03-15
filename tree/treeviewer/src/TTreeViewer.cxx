@@ -322,13 +322,18 @@ TTreeViewer::TTreeViewer(const char* treeName) :
    fTree = 0;
    if (!gClient) return;
    char command[128];
-   snprintf(command,128, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   gROOT->ProcessLine("#ifndef GTV_DEFINED\n\
+                       TTreeViewer *gTV = 0;\n\
+                       TTree *tv__tree = 0;\n\
+                       TList *tv__tree_list = 0;\n\
+                       TFile *tv__tree_file = 0;\n\
+                       #define GTV_DEFINED 1;\n\
+                       #endif");
+   snprintf(command,128, "gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
-   gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
-   gROOT->ProcessLine("TList *tv__tree_list = new TList;");
+   gROOT->ProcessLine("tv__tree_list = new TList;");
    fFilename = "";
-   gROOT->ProcessLine("TFile *tv__tree_file = 0;");
    gInterpreter->SaveContext();
    BuildInterface();
    SetTreeName(treeName);
@@ -347,14 +352,19 @@ TTreeViewer::TTreeViewer(const TTree *tree) :
 
    fTree = 0;
    char command[128];
-   snprintf(command,128, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   gROOT->ProcessLine("#ifndef GTV_DEFINED\n\
+                       TTreeViewer *gTV = 0;\n\
+                       TTree *tv__tree = 0;\n\
+                       TList *tv__tree_list = 0;\n\
+                       TFile *tv__tree_file = 0;\n\
+                       #define GTV_DEFINED 1;\n\
+                       #endif");
+   snprintf(command,128, "gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
    if (!tree) return;
-   gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
-   gROOT->ProcessLine("TList *tv__tree_list = new TList;");
+   gROOT->ProcessLine("tv__tree_list = new TList;");
    fFilename = "";
-   gROOT->ProcessLine("TFile *tv__tree_file = 0;");
    gInterpreter->SaveContext();
    BuildInterface();
    TDirectory *dirsav = gDirectory;
