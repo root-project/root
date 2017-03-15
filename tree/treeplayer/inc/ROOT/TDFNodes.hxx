@@ -11,7 +11,6 @@
 #ifndef ROOT_TDFNODES
 #define ROOT_TDFNODES
 
-#include "ROOT/TActionResultProxy.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
@@ -322,17 +321,9 @@ public:
    void Book(const ROOT::Internal::ActionBasePtr_t &actionPtr);
    void Book(const ROOT::Detail::FilterBasePtr_t &filterPtr);
    void Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr);
+   void Book(const std::shared_ptr<bool> &branchPtr);
    bool         CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const;
-   template <typename T>
-   Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r)
-   {
-      auto        readiness = std::make_shared<bool>(false);
-      const auto &df        = shared_from_this();
-      auto        resPtr    = Experimental::TActionResultProxy<T>::MakeActionResultProxy(r, readiness, df);
-      fResProxyReadiness.emplace_back(readiness);
-      return resPtr;
-   }
    bool HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
    void Report() const;
    /// End of recursive chain of calls, does nothing
