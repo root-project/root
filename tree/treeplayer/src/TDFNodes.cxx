@@ -225,9 +225,10 @@ TTree *TDataFrameImpl::GetTree() const
    return fTree;
 }
 
-const TDataFrameBranchBase &TDataFrameImpl::GetBookedBranch(const std::string &name) const
+TDataFrameBranchBase *TDataFrameImpl::GetBookedBranch(const std::string &name) const
 {
-   return *fBookedBranches.find(name)->second.get();
+   auto it = fBookedBranches.find(name);
+   return it == fBookedBranches.end() ? nullptr : it->second.get();
 }
 
 void *TDataFrameImpl::GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry)
