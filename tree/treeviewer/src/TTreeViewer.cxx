@@ -2455,10 +2455,14 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem *parent, Bool_t listIt)
 {
    if (!branch) return;
-   TString   name;
-   if (prefix && strlen(prefix) >0) name = Form("%s.%s",prefix,branch->GetName());
-   else                             name = branch->GetName();
-   Int_t     ind;
+   TString name;
+   if (prefix && strlen(prefix) > 0) {
+      name = prefix;
+      if (!name.EndsWith(".")) name += ".";
+      name += branch->GetName();
+   }
+   else name = branch->GetName();
+   Int_t ind;
    TGListTreeItem *branchItem = 0;
    ULong_t *itemType;
    // map this branch
@@ -2495,7 +2499,8 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
                for (Int_t lf=0; lf<leaves->GetEntries(); lf++) {
                   leaf = (TLeaf *)leaves->At(lf);
                   leafName = name;
-                  leafName.Append(".").Append(EmptyBrackets(leaf->GetName()));
+                  if (!leafName.EndsWith(".")) leafName.Append(".");
+                  leafName.Append(EmptyBrackets(leaf->GetName()));
                   itemType = new ULong_t(kLTLeafType);
                   pic = gClient->GetPicture("leaf_t.xpm");
                   spic = gClient->GetPicture("leaf_t.xpm");
@@ -2562,7 +2567,8 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
                for (Int_t lf=0; lf<leaves->GetEntries(); lf++) {
                   leaf = (TLeaf *)leaves->At(lf);
                   leafName = name;
-                  leafName.Append(".").Append(EmptyBrackets(leaf->GetName()));
+                  if (!leafName.EndsWith(".")) leafName.Append(".");
+                  leafName.Append(EmptyBrackets(leaf->GetName()));
                   textEntry = new TGString(leafName.Data());
                   pic = gClient->GetPicture("leaf_t.xpm");
                   spic = gClient->GetPicture("leaf_t.xpm");
