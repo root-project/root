@@ -16,6 +16,7 @@
 #include <string>
 #include <typeinfo>
 #include <cmath>
+#include <type_traits>
 
 // note scale here is > 1 as SIMD and scalar floating point calculations not
 // expected to be bit wise identical
@@ -98,12 +99,11 @@ void fill(const INDATA &in, OUTDATA &out)
    }
 }
 
-template <typename POINT, typename VECTOR, typename FTYPE>
-inline
-   typename std::enable_if<std::is_arithmetic<typename POINT::Scalar>::value &&
-                              std::is_arithmetic<typename VECTOR::Scalar>::value && std::is_arithmetic<FTYPE>::value,
-                           bool>::type
-   reflectSpherical(POINT &position, VECTOR &direction, const POINT &CoC, const FTYPE radius)
+template <typename POINT, typename VECTOR, typename FTYPE,
+          typename = typename std::enable_if<std::is_arithmetic<typename POINT::Scalar>::value &&
+                                             std::is_arithmetic<typename VECTOR::Scalar>::value &&
+                                             std::is_arithmetic<FTYPE>::value>::type>
+inline bool reflectSpherical(POINT &position, VECTOR &direction, const POINT &CoC, const FTYPE radius)
 {
    constexpr FTYPE zero(0), two(2.0), four(4.0), half(0.5);
    const FTYPE     a     = direction.Mag2();
@@ -124,12 +124,12 @@ inline
    return OK;
 }
 
-template <typename POINT, typename VECTOR, typename FTYPE>
-inline
-   typename std::enable_if<!std::is_arithmetic<typename POINT::Scalar>::value &&
-                              !std::is_arithmetic<typename VECTOR::Scalar>::value && !std::is_arithmetic<FTYPE>::value,
-                           typename FTYPE::mask_type>::type
-   reflectSpherical(POINT &position, VECTOR &direction, const POINT &CoC, const FTYPE radius)
+template <typename POINT, typename VECTOR, typename FTYPE,
+          typename = typename std::enable_if<!std::is_arithmetic<typename POINT::Scalar>::value &&
+                                             !std::is_arithmetic<typename VECTOR::Scalar>::value &&
+                                             !std::is_arithmetic<FTYPE>::value>::type>
+inline typename FTYPE::mask_type reflectSpherical(POINT &position, VECTOR &direction, const POINT &CoC,
+                                                  const FTYPE radius)
 {
    const FTYPE               two(2.0), four(4.0), half(0.5);
    const FTYPE               a     = direction.Mag2();
@@ -154,12 +154,10 @@ inline
    return OK;
 }
 
-template <typename POINT, typename VECTOR, typename PLANE>
-inline typename std::enable_if<std::is_arithmetic<typename POINT::Scalar>::value &&
-                                  std::is_arithmetic<typename VECTOR::Scalar>::value &&
-                                  std::is_arithmetic<typename PLANE::Scalar>::value,
-                               bool>::type
-reflectPlane(POINT &position, VECTOR &direction, const PLANE &plane)
+template <typename POINT, typename VECTOR, typename PLANE,
+          typename = typename std::enable_if<std::is_arithmetic<typename POINT::Scalar>::value &&
+                                             std::is_arithmetic<typename VECTOR::Scalar>::value>::type>
+inline bool reflectPlane(POINT &position, VECTOR &direction, const PLANE &plane)
 {
    constexpr typename POINT::Scalar two(2.0);
    const bool                       OK = true;
@@ -174,12 +172,10 @@ reflectPlane(POINT &position, VECTOR &direction, const PLANE &plane)
    return OK;
 }
 
-template <typename POINT, typename VECTOR, typename PLANE, typename FTYPE = typename POINT::Scalar>
-inline typename std::enable_if<!std::is_arithmetic<typename POINT::Scalar>::value &&
-                                  !std::is_arithmetic<typename VECTOR::Scalar>::value &&
-                                  !std::is_arithmetic<typename PLANE::Scalar>::value,
-                               typename FTYPE::mask_type>::type
-reflectPlane(POINT &position, VECTOR &direction, const PLANE &plane)
+template <typename POINT, typename VECTOR, typename PLANE, typename FTYPE = typename POINT::Scalar,
+          typename = typename std::enable_if<!std::is_arithmetic<typename POINT::Scalar>::value &&
+                                             !std::is_arithmetic<typename VECTOR::Scalar>::value>::type>
+inline typename FTYPE::mask_type reflectPlane(POINT &position, VECTOR &direction, const PLANE &plane)
 {
    const typename POINT::Scalar    two(2.0);
    const typename FTYPE::mask_type OK(true);
