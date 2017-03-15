@@ -11,15 +11,23 @@
 #ifndef ROOT_TACTIONRESULTPROXY
 #define ROOT_TACTIONRESULTPROXY
 
-#include "TDFUtils.hxx"
+#include "ROOT/TDFNodes.hxx"
+#include "ROOT/TDFUtils.hxx"
 
 #include <memory>
 
 namespace ROOT {
 
 // Fwd declarations
+namespace Experimental {
+template <typename T>
+class TActionResultProxy;
+}
+
 namespace Detail {
-class TDataFrameImpl;
+template <typename T>
+ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &             r,
+                                                                const std::shared_ptr<TDataFrameImpl> &df);
 }
 
 namespace Experimental {
@@ -64,7 +72,8 @@ class TActionResultProxy {
    using SPTDFI_t      = std::shared_ptr<ROOT::Detail::TDataFrameImpl>;
    using WPTDFI_t      = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
-   friend class ROOT::Detail::TDataFrameImpl;
+   template<typename W> friend TActionResultProxy<W> ROOT::Detail::MakeActionResultProxy(
+      const std::shared_ptr<W> &, const std::shared_ptr<ROOT::Detail::TDataFrameImpl> &);
 
    ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
@@ -86,13 +95,6 @@ class TActionResultProxy {
    TActionResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTDFI_t &firstData)
       : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr)
    {
-   }
-
-   /// Factory to allow to keep the constructor private
-   static TActionResultProxy<T> MakeActionResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness,
-                                                      const SPTDFI_t &firstData)
-   {
-      return TActionResultProxy(objPtr, readiness, firstData);
    }
 
 public:
@@ -124,8 +126,29 @@ public:
    }
 };
 
+template <typename T>
+void TActionResultProxy<T>::TriggerRun()
+{
+   auto df = fImplWeakPtr.lock();
+   if (!df) {
+      throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
+   }
+   df->Run();
+}
 } // end NS Experimental
 
+namespace Detail {
+template <typename T>
+ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &             r,
+                                                                const std::shared_ptr<TDataFrameImpl> &df)
+{
+   auto readiness = std::make_shared<bool>(false);
+   auto resPtr    = ROOT::Experimental::TActionResultProxy<T>(r, readiness, df);
+   df->Book(readiness);
+   return resPtr;
+}
+
+} // namespace Detail
 } // end NS ROOT
 
 #endif // ROOT_TACTIONRESULTPROXY

@@ -64,24 +64,6 @@ public:
    TDataFrame(TTree &tree, const BranchNames_t &defaultBranches = {});
 };
 
-} // end NS Experimental
-} // end NS ROOT
-
-// Functions and method implementations
-namespace ROOT {
-namespace Experimental {
-
-// TODO this belongs in TActionResultProxy.hxx, but it would have a circular dependency on TDataFrameImpl
-template <typename T>
-void Experimental::TActionResultProxy<T>::TriggerRun()
-{
-   auto df = fImplWeakPtr.lock();
-   if (!df) {
-      throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-   }
-   df->Run();
-}
-
 template <typename FILENAMESCOLL,
           typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
@@ -123,6 +105,6 @@ inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
 
    return ret.str();
 }
-}
+} // namespace cling
 
 #endif // ROOT_TDATAFRAME

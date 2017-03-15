@@ -263,6 +263,11 @@ void TDataFrameImpl::Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr)
    fBookedBranches[branchPtr->GetName()] = branchPtr;
 }
 
+void TDataFrameImpl::Book(const std::shared_ptr<bool> &readinessPtr)
+{
+   fResProxyReadiness.emplace_back(readinessPtr);
+}
+
 // dummy call, end of recursive chain of calls
 bool TDataFrameImpl::CheckFilters(int, unsigned int)
 {
