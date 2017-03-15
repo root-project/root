@@ -103,38 +103,27 @@ void TDataFrameFilterBase::PrintReport() const
    Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", fName.c_str(), accepted, all, perc);
 }
 
+void TDataFrameImpl::TSlotStack::Push(unsigned int slotNumber)
+{
+   std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+   fBuf[fCursor++] = slotNumber;
+   assert(fCursor <= fBuf.size() && "TSlotStack assumes that at most a fixed number of values can be present in the "
+                                    "stack. fCursor is greater than the size of the internal buffer. This violates "
+                                    "such assumption.");
+}
+
+unsigned int TDataFrameImpl::TSlotStack::Pop()
+{
+   assert(fCursor > 0 &&
+          "TSlotStack assumes that a value can be always popped. fCursor is <=0 and this violates such assumption.");
+   std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+   return fBuf[--fCursor];
+}
+
 TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches)
    : fTree(tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
 {
 }
-
-// This is an helper class to allow to pick a slot without resorting to a map
-// indexed by thread ids.
-// WARNING: this class does not work as a regular stack. The size is
-// fixed at construction time and no blocking is foreseen.
-// TODO move into TDFUtils
-class TSlotStack {
-private:
-   unsigned int              fCursor;
-   std::vector<unsigned int> fBuf;
-   ROOT::TSpinMutex          fMutex;
-
-public:
-   TSlotStack() = delete;
-   TSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
-   void Push(unsigned int slotNumber)
-   {
-      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-      fBuf[fCursor++] = slotNumber;
-      assert(fCursor <= fBuf.size() && "TSlotStack assumes that at most a fixed number of values can be present in the stack. fCursor is greater than the size of the internal buffer. This violates such assumption.");
-   };
-   unsigned int Pop()
-   {
-      assert(fCursor > 0 && "TSlotStack assumes that a value can be always popped. fCursor is <=0 and this violates such assumption.");
-      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-      return fBuf[--fCursor];
-   }
-};
 
 void TDataFrameImpl::Run()
 {
