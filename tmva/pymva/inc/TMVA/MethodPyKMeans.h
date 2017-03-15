@@ -83,10 +83,6 @@ namespace TMVA {
 
       Int_t n_clusters; // int, optional, default: 8
       // The number of clusters to form as well as the number of centroids to generate.
-      Int_t max_iter; // int, default: 300
-      // Maximum number of iterations of the k-means algorithm for a single run.
-      Int_t n_init; // int, default: 10
-      // Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the best output of n_init consecutive runs in terms of inertia.
       TString init; // {‘k-means++’, ‘random’ or an ndarray}
       // Method for initialization, defaults to ‘k-means++’:
       //     ‘k-means++’ : selects initial cluster centers for k-mean 
@@ -96,31 +92,26 @@ namespace TMVA {
       //     from data for the initial centroids.
       //     If an ndarray is passed, it should be of shape
       //     (n_clusters, n_features) and gives the initial centers.
-      TString algorithm; // “auto”, “full” or “elkan”, default=”auto”
-      // K-means algorithm to use. The classical EM-style algorithm is “full”.
-      // The “elkan” variation is more efficient by using the triangle inequality,
-      // but currently doesn’t support sparse data.
-      // “auto” chooses “elkan” for dense data and “full” for sparse data.
+      Int_t n_init; // int, default: 10
+      // Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the best output of n_init consecutive runs in terms of inertia.
+      Int_t max_iter; // int, default: 300
+      // Maximum number of iterations of the k-means algorithm for a single run.
+      Double_t tol; // float, default: 1e-4
+      // Relative tolerance with regards to inertia to declare convergence
       TString precompute_distances; // {‘auto’, True, False}
       // Precompute distances (faster but takes more memory).
       // ‘auto’ : do not precompute distances if n_samples * n_clusters > 12 million.
       //     This corresponds to about 100MB overhead per job using double precision.
       // True : always precompute distances
       // False : never precompute distances
-      Double_t tol; // float, default: 1e-4
-      // Relative tolerance with regards to inertia to declare convergence
-      Int_t n_jobs; // int
-      // The number of jobs to use for the computation.
-      // This works by computing each of the n_init runs in parallel.
-      // If -1 all CPUs are used. If 1 is given, no parallel computing code is used at all,
-      // which is useful for debugging. For n_jobs below -1, (n_cpus + 1 + n_jobs) are used.
-      // Thus for n_jobs = -2, all CPUs but one are used.
+      Int_t verbose; // int, default 0
+      // Verbosity mode.
+      
+      // Int_t random_state; // integer or numpy.RandomState, optional
       TString random_state; // integer or numpy.RandomState, optional
       // The generator used to initialize the centers.
       // If an integer is given, it fixes the seed.
       // Defaults to the global numpy random number generator.
-      Int_t verbose; // int, default 0
-      // Verbosity mode.
       Bool_t copy_x; // boolean, default True
       // When pre-computing distances it is more numerically accurate
       // to center the data first. If copy_x is True, then
@@ -128,6 +119,21 @@ namespace TMVA {
       // If False, the original data is modified, and put back before
       // the function returns, but small numerical differences may be
       // introduced by subtracting and then adding the data mean.
+      Int_t n_jobs; // int
+      // The number of jobs to use for the computation.
+      // This works by computing each of the n_init runs in parallel.
+      // If -1 all CPUs are used. If 1 is given, no parallel computing code is used at all,
+      // which is useful for debugging. For n_jobs below -1, (n_cpus + 1 + n_jobs) are used.
+      // Thus for n_jobs = -2, all CPUs but one are used.
+      // --------------------------------------------------------------
+      // only in version 0.18 of scikit-learn
+      // TString algorithm; // “auto”, “full” or “elkan”, default=”auto”
+      // K-means algorithm to use. The classical EM-style algorithm is “full”.
+      // The “elkan” variation is more efficient by using the triangle inequality,
+      // but currently doesn’t support sparse data.
+      // “auto” chooses “elkan” for dense data and “full” for sparse data.
+      // --------------------------------------------------------------
+      
 
       // get help message text
       void GetHelpMessage() const;

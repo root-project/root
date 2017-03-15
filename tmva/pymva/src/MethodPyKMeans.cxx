@@ -60,16 +60,16 @@ MethodPyKMeans::MethodPyKMeans(const TString &jobName,
       const TString &theOption) :
    PyMethodBase(jobName, Types::kPyKMeans, methodTitle, dsi, theOption),
    n_clusters(8),
-   max_iter(300),
-   n_init(10),
    init("'k-means++'"),
-   algorithm("auto"),
-   precompute_distances("'None'"),
+   n_init(10),
+   max_iter(300),
    tol(0.0001),
-   n_jobs(1),
-   random_state("'None'"),
+   precompute_distances("'auto'"),
    verbose(0),
-   copy_x(kTRUE)
+   random_state("None"),
+   copy_x(kTRUE),
+   n_jobs(1)
+   // algorithm("auto"),    // This parameter is available in scikit-learn version 0.18
 {
 }
 
@@ -77,16 +77,16 @@ MethodPyKMeans::MethodPyKMeans(const TString &jobName,
 MethodPyKMeans::MethodPyKMeans(DataSetInfo &theData, const TString &theWeightFile)
    : PyMethodBase(Types::kPyKMeans, theData, theWeightFile),
      n_clusters(8),
-     max_iter(300),
-     n_init(10),
      init("'k-means++'"),
-     algorithm("auto"),
-     precompute_distances("'None'"),
+     n_init(10),
+     max_iter(300),
      tol(0.0001),
-     n_jobs(1),
-     random_state("'None'"),
+     precompute_distances("'auto'"),
      verbose(0),
-     copy_x(kTRUE)
+     random_state("None"),
+     copy_x(kTRUE),
+     n_jobs(1)
+     // algorithm("auto"),    // This parameter is available in scikit-learn version 0.18
 {
 }
 
@@ -111,27 +111,26 @@ void MethodPyKMeans::DeclareOptions()
 
    DeclareOptionRef(n_clusters, "NClusters", "Integer, optional, default: 8. The number of clusters to form as well as the number of centroids to generate.");
 
-   DeclareOptionRef(max_iter, "MaxIter", "Integer, default: 300. Maximum number of iterations of the k-means algorithm for a single run.");
-
-   DeclareOptionRef(n_init, "NInit", "Integer, default: 10. Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the best output of n_init consecutive runs in terms of inertia.");
-
    DeclareOptionRef(init, "Init", "{‘k-means++’, ‘random’ or an ndarray}. Method for initialization, defaults to ‘k-means++’: ‘k-means++’ : selects initial cluster centers for k-mean clustering in a smart way to speed up convergence. See section Notes in k_init for more details. ‘random’: choose k observations (rows) at random from data for the initial centroids. If an ndarray is passed, it should be of shape (n_clusters, n_features) and gives the initial centers.");
-
-   DeclareOptionRef(algorithm, "Algorithm", "\"auto\", \"full\" or \"elkan\", default=\"auto\" K-means algorithm to use. The classical EM-style algorithm is \"full\". The \"elkan\" variation is more efficient by using the triangle inequality, but currently doesn’t support sparse data. \"auto\" chooses \"elkan\" for dense data and \"full\" for sparse data.");
-
-   DeclareOptionRef(precompute_distances, "PrecomputeDistances", "{‘auto’, True, False}. Precompute distances (faster but takes more memory). ‘auto’ : do not precompute distances if n_samples * n_clusters > 12 million. This corresponds to about 100MB overhead per job using double precision. True : always precompute distances. False : never precompute distances");
+   
+   DeclareOptionRef(n_init, "NInit", "Integer, default: 10. Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the best output of n_init consecutive runs in terms of inertia.");
+   
+   DeclareOptionRef(max_iter, "MaxIter", "Integer, default: 300. Maximum number of iterations of the k-means algorithm for a single run.");
 
    DeclareOptionRef(tol, "Tol", "float, default: 1e-4. Relative tolerance with regards to inertia to declare convergence");
 
-   DeclareOptionRef(n_jobs, "NJobs", "Integer. The number of jobs to use for the computation. This works by computing each of the n_init runs in parallel. If -1 all CPUs are used. If 1 is given, no parallel computing code is used at all, which is useful for debugging. For n_jobs below -1, (n_cpus + 1 + n_jobs) are used. Thus for n_jobs = -2, all CPUs but one are used.");
-
-   DeclareOptionRef(random_state, "RandomState", "integer or numpy.RandomState, optional. The generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global numpy random number generator.");
+   DeclareOptionRef(precompute_distances, "PrecomputeDistances", "{‘auto’, True, False}. Precompute distances (faster but takes more memory). ‘auto’ : do not precompute distances if n_samples * n_clusters > 12 million. This corresponds to about 100MB overhead per job using double precision. True : always precompute distances. False : never precompute distances");
 
    DeclareOptionRef(verbose, "Verbose", "int, default 0. Verbosity mode.");
 
+   DeclareOptionRef(random_state, "RandomState", "integer or numpy.RandomState, optional. The generator used to initialize the centers. If an integer is given, it fixes the seed. Defaults to the global numpy random number generator.");
+
    DeclareOptionRef(copy_x, "CopyX", "boolean, default True. When pre-computing distances it is more numerically accurate to center the data first. If copy_x is True, then the original data is not modified. If False, the original data is modified, and put back before the function returns, but small numerical differences may be introduced by subtracting and then adding the data mean.");
 
+   DeclareOptionRef(n_jobs, "NJobs", "Integer. The number of jobs to use for the computation. This works by computing each of the n_init runs in parallel. If -1 all CPUs are used. If 1 is given, no parallel computing code is used at all, which is useful for debugging. For n_jobs below -1, (n_cpus + 1 + n_jobs) are used. Thus for n_jobs = -2, all CPUs but one are used.");
 
+   // This parameter is available in scikit-learn version 0.18
+   // DeclareOptionRef(algorithm, "Algorithm", "\"auto\", \"full\" or \"elkan\", default=\"auto\" K-means algorithm to use. The classical EM-style algorithm is \"full\". The \"elkan\" variation is more efficient by using the triangle inequality, but currently doesn’t support sparse data. \"auto\" chooses \"elkan\" for dense data and \"full\" for sparse data.");
 
 }
 
@@ -143,20 +142,6 @@ void MethodPyKMeans::ProcessOptions()
           << " I set it to 8 .. just so that the program does not crash"
           << Endl;
     n_clusters = 8;
-  }
-   
-  if (max_iter <= 0) {
-    Log() << kERROR << " MaxIter <=0... that does not work !! "
-          << " I set it to 300 .. just so that the program does not crash"
-          << Endl;
-    max_iter = 300;
-  }
-   
-  if (n_init <= 0) {
-    Log() << kERROR << " NInit <=0... that does not work !! "
-          << " I set it to 10 .. just so that the program does not crash"
-          << Endl;
-    n_init = 10;
   }
    
   PyObject *poinit = Eval(init);
@@ -171,12 +156,22 @@ void MethodPyKMeans::ProcessOptions()
   }
   Py_DECREF(poinit);
 
-  if(algorithm!="auto" && algorithm!="full" && algorithm!="elkan"){
-    Log() << kFATAL << Form(" Algorithm=%s... that does not work !! ", algorithm.Data())
-          << " The options are \"auto\", \"full\", or \"elkan\""
+  if (n_init <= 0) {
+    Log() << kERROR << " NInit <=0... that does not work !! "
+          << " I set it to 10 .. just so that the program does not crash"
           << Endl;
+    n_init = 10;
   }
 
+  if (max_iter <= 0) {
+    Log() << kERROR << " MaxIter <=0... that does not work !! "
+          << " I set it to 300 .. just so that the program does not crash"
+          << Endl;
+    max_iter = 300;
+  }
+
+  // tol(0.0001)
+   
   PyObject *poprecompute_distances = Eval(precompute_distances);
   if(!poprecompute_distances) {
     Log() << kFATAL << Form(" PrecomputeDistances = %s... that does not work !! ", precompute_distances.Data())
@@ -184,10 +179,10 @@ void MethodPyKMeans::ProcessOptions()
           << Endl;
   }
   Py_DECREF(poprecompute_distances);
+   
+  // verbose(0)
 
-  // tol(0.0001)
-  // n_jobs(1)
-
+  // random_state(None)
   PyObject *porandom_state = Eval(random_state);
   if (!porandom_state) {
     Log() << kFATAL << Form(" RandomState = %s... that does not work !! ", random_state.Data())
@@ -198,8 +193,17 @@ void MethodPyKMeans::ProcessOptions()
   }
   Py_DECREF(porandom_state);
 
-  // verbose(0)
   // copy_x(True)
+  
+  // n_jobs(1)
+
+  // This parameter is available in scikit-learn version 0.18
+  // if(algorithm!="auto" && algorithm!="full" && algorithm!="elkan"){
+  //   Log() << kFATAL << Form(" Algorithm=%s... that does not work !! ", algorithm.Data())
+  //         << " The options are \"auto\", \"full\", or \"elkan\""
+  //         << Endl;
+  // }
+
 }
 
 
@@ -261,7 +265,8 @@ void MethodPyKMeans::Train()
   PyObject *poprecompute_distances = Eval(precompute_distances);
   PyObject *porandom_state = Eval(random_state);
 
-  PyObject *args = Py_BuildValue("(iiiOsOfiOii)", n_clusters, max_iter, n_init, poinit, algorithm.Data(), poprecompute_distances, tol, n_jobs, porandom_state, verbose, copy_x);
+  PyObject *args = Py_BuildValue("(iOiifOiOii)", n_clusters, poinit, n_init, max_iter, tol, poprecompute_distances, verbose, porandom_state, copy_x, n_jobs);
+  // PyObject *args = Py_BuildValue("(iiiOOfiiii)", n_clusters, max_iter, n_init, poinit, poprecompute_distances, tol, n_jobs, random_state, verbose, copy_x);
 
   PyObject_Print(args, stdout, 0);
   std::cout << std::endl;
@@ -275,38 +280,40 @@ void MethodPyKMeans::Train()
     //instance
     fClassifier = PyObject_CallObject(fClassifierClass , args);
     PyObject_Print(fClassifier, stdout, 0);
+    std::cout << std::endl;
 
     Py_DECREF(args);
   } else {
-     PyErr_Print();
-     Py_DECREF(pDict);
-     Py_DECREF(fClassifierClass);
-     Log() << kFATAL << "Can't call function KMeans" << Endl;
-     Log() << Endl;
+    PyErr_Print();
+    Py_DECREF(pDict);
+    Py_DECREF(fClassifierClass);
+    Log() << kFATAL << "Can't call function KMeans" << Endl;
+    Log() << Endl;
 
   }
+  
+  // fClassifier = PyObject_CallMethod(fClassifier, const_cast<char *>("fit"), const_cast<char *>("(OOO)"), fTrainData, fTrainDataClasses, fTrainDataWeights);
+  fClassifier = PyObject_CallMethod(fClassifier, const_cast<char *>("fit"), const_cast<char *>("(OO)"), fTrainData, fTrainDataClasses);
 
-   fClassifier = PyObject_CallMethod(fClassifier, const_cast<char *>("fit"), const_cast<char *>("(OOO)"), fTrainData, fTrainDataClasses, fTrainDataWeights);
-
-   if(!fClassifier)
-   {
-      Log() << kFATAL << "Can't create classifier object from KMeans" << Endl;
-      Log() << Endl;  
-   }
-   if (IsModelPersistence())
-   {
-        TString path = GetWeightFileDir() + "/PyKMeansModel.PyData";
-        Log() << Endl;
-        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-        Log() << Endl;
-        Serialize(path,fClassifier);
-   }
+  if(!fClassifier)
+  {
+    Log() << kFATAL << "Can't create classifier object from KMeans" << Endl;
+    Log() << Endl;  
+  }
+  if (IsModelPersistence())
+  {
+    TString path = GetWeightFileDir() + "/PyKMeansModel.PyData";
+    Log() << Endl;
+    Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+    Log() << Endl;
+    Serialize(path,fClassifier);
+  }
 }
 
 //_______________________________________________________________________
 void MethodPyKMeans::TestClassification()
 {
-   MethodBase::TestClassification();
+  MethodBase::TestClassification();
 }
 
 
@@ -349,11 +356,11 @@ void MethodPyKMeans::ReadModelFromFile()
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
    UnSerialize(path,&fClassifier);
-   // if(!fClassifier)
-   // {
-   //   Log() << kFATAL << "Can't load KMeans from Serialized data." << Endl;
-   //   Log() << Endl;
-   // }
+   if(!fClassifier)
+   {
+     Log() << kFATAL << "Can't load KMeans from Serialized data." << Endl;
+     Log() << Endl;
+   }
 }
 
 //_______________________________________________________________________
