@@ -122,7 +122,7 @@ void tdf101_h1Analysis() {
    ROOT::Experimental::TDataFrame dataFrame(chain);
    auto selected = Select(dataFrame);
 
-   auto hdmdARP = selected.Histo1D<float>(TH1F("hdmd", "Dm_d",40,0.13,0.17), "dm_d");
+   auto hdmdARP = selected.Histo1D(TH1F("hdmd", "Dm_d",40,0.13,0.17), "dm_d");
    auto selectedAddedBranch = selected.AddColumn("h2_y",
                               [](float rpd0_t, float ptd0_d){return rpd0_t/0.029979f*1.8646f/ptd0_d;},
                               {"rpd0_t", "ptd0_d"});

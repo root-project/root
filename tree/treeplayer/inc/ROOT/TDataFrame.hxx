@@ -20,11 +20,11 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFTraitsUtils.hxx"
-#include "TBranchElement.h"
 #include "TChain.h"
 #include "TH1F.h" // For Histo actions
 #include "TH2F.h" // For Histo actions
 #include "TH3F.h" // For Histo actions
+#include "TInterpreter.h"
 #include "TProfile.h" // For Histo actions
 #include "TProfile2D.h" // For Histo actions
 #include "TTreeReader.h"
@@ -163,8 +163,17 @@ class TDataFrameImpl;
 namespace Internal {
 
 const char *ToConstCharPtr(const char *s);
-const char *ToConstCharPtr(const std::string s);
+const char *ToConstCharPtr(const std::string& s);
+std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
 unsigned int GetNSlots();
+
+template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
+ROOT::Experimental::TActionResultProxy<ActionResultType>
+CallCreateAction(TDFNode* node, const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
+                 BranchType*)
+{
+   return node->template CreateAction<ActionType,BranchType,ActionResultType>(bl, r, nullptr);
+}
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
@@ -391,6 +400,8 @@ template <typename Proxied>
 class TDataFrameInterface {
    friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template<typename T> friend class TDataFrameInterface;
+   template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
+   friend TActionResultProxy<ActionResultType> ROOT::Internal::CallCreateAction(TDFNode*, const BranchNames_t&, const std::shared_ptr<ActionResultType>&, BranchType*);
 public:
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1040,6 +1051,8 @@ public:
 
 private:
 
+   inline const char* GetNodeTypeName() {return "";};
+
    /// Returns the default branches if needed, takes care of the error handling.
    template<typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
    BranchNames_t GetBranchNames(BranchNames_t bl, const std::string &actionNameForErr)
@@ -1166,50 +1179,30 @@ private:
    CreateAction(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r,
                 ROOT::Detail::TDataFrameGuessedType*)
    {
-      // More types can be added at will at the cost of some compilation time and size of binaries.
-      using AT_t = ActionType;
+      gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
       auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-
-      auto tree = df->GetTree();
-      auto theBranchName = bl[0];
-      auto branch = tree->GetBranch(theBranchName.c_str());
-
-      if (!branch) {
-         // temporary branch
-         const auto &type_id = df->GetBookedBranch(theBranchName).GetTypeId();
-         if (type_id == typeid(char)) { return BuildAndBook<char>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(int)) { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(double)) { return BuildAndBook<double>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(std::vector<double>)) { return BuildAndBook<std::vector<double>>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (type_id == typeid(std::vector<float>)) { return BuildAndBook<std::vector<float>>(bl, r, nSlots, (AT_t*)nullptr); }
+      const auto& theBranchName = bl[0];
+      const auto theBranchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df);
+      const auto actionResultTypeName = TClass::GetClass(typeid(std::shared_ptr<ActionResultType>))->GetName();
+      const auto actionTypeName = TClass::GetClass(typeid(ActionType))->GetName();
+      if (theBranchTypeName.empty()) {
+         std::string exceptionText = "The type of branch ";
+         exceptionText += theBranchName;
+         exceptionText += " could not be guessed. Please specify one.";
+         throw std::runtime_error(exceptionText.c_str());
       }
-      // real branch
-      auto branchEl = dynamic_cast<TBranchElement *>(branch);
-      if (!branchEl) { // This is a fundamental type
-         auto title = branch->GetTitle();
-         auto typeCode = title[strlen(title) - 1];
-         if (typeCode == 'B') { return BuildAndBook<char>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (typeCode == 'I') { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (typeCode == 'D') { return BuildAndBook<double>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'b') { return BuildAndBook<UChar_t>(bl, r, nSlots); }
-         // else if (typeCode == 'S') { return BuildAndBook<Short_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 's') { return BuildAndBook<UShort_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'i') { return BuildAndBook<int>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'F') { return BuildAndBook<float>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'L') { return BuildAndBook<Long64_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'l') { return BuildAndBook<ULong64_t>(bl, r, nSlots, (AT_t*)nullptr); }
-         // else if (typeCode == 'O') { return BuildAndBook<bool>(bl, r, nSlots, (AT_t*)nullptr); }
-      } else {
-         std::string typeName = branchEl->GetTypeName();
-         if (typeName == "vector<double>") { return BuildAndBook<std::vector<double>>(bl, r, nSlots, (AT_t*)nullptr); }
-         else if (typeName == "vector<float>") { return BuildAndBook<std::vector<float>>(bl, r, nSlots, (AT_t*)nullptr); }
-      }
+      std::stringstream createAction_str;
 
-      std::string exceptionText = "The type of branch ";
-      exceptionText += theBranchName;
-      exceptionText += " could not be guessed. Please specify one.";
-      throw std::runtime_error(exceptionText.c_str());
+      createAction_str << "ROOT::Internal::CallCreateAction<"
+                       << GetNodeTypeName() << ", "
+                       << actionTypeName << ", "
+                       << theBranchTypeName << ", "
+                       << actionResultTypeName << "::element_type>("
+                       << "(" << GetNodeTypeName() << "*)" << this << ", "
+                       << "*(ROOT::BranchNames_t*)" << &bl << ", "
+                       << "*(" << actionResultTypeName << "*)" << &r << ", "
+                       << "nullptr);";
+      return *(TActionResultProxy<ActionResultType>*) gInterpreter->ProcessLine(createAction_str.str().c_str());
    }
 
 protected:
@@ -1279,9 +1272,6 @@ public:
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames_t &defaultBranches = {});
 };
-
-extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 } // end NS Experimental
 
@@ -1559,6 +1549,17 @@ TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenam
    fTree = std::make_shared<TTree>(static_cast<TTree*>(chain));
    fProxiedPtr->SetTree(chain);
 }
+
+template<>
+inline const char* TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>::GetNodeTypeName() { return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>";}
+template<>
+inline const char* TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>::GetNodeTypeName() { return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>";}
+template<>
+inline const char* TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName() { return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>";}
+
+// Before we had to specialise the GetNodeTypeName method
+extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
+extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 } // end NS Experimental
 

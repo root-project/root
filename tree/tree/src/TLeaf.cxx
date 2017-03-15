@@ -130,8 +130,9 @@ void TLeaf::Browse(TBrowser* b)
    } else {
       if ((fBranch->GetListOfLeaves()->GetEntries() > 1) ||
           (strcmp(fBranch->GetName(), GetName()) != 0)) {
-         TString name;
-         name.Form("%s.%s", fBranch->GetName(), GetName());
+         TString name(fBranch->GetName());
+         if (!name.EndsWith(".")) name += ".";
+         name += GetName();
          fBranch->GetTree()->Draw(name, "", b ? b->GetDrawOption() : "");
       } else {
          fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");
