@@ -263,7 +263,6 @@ set(benchmarks-depends tutorial-hsimple
 set(geom-na49view-depends tutorial-geom-geometry)
 set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
-set(tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
 
 #--many roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
@@ -276,11 +275,11 @@ endforeach()
 #--dependency for TMVA tutorials
 set (tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
 set (tmva-TMVAClassificationCategory-depends tutorial-tmva-TMVAClassification)
-set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassificationCategory tutorial-tmva-TMVAClassificationCategory)
+set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassificationCategory tutorial-tmva-TMVAClassificationApplication)
 set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample tutorial-tmva-TMVAClassificationCategory)
-set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
-set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
-set (tmva-TMVARegression-depends tutorial-tmva-TMVAMulticlass-depends)
+set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass tutorial-tmva-TMVAClassificationCategoryApplication)
+set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression tutorial-tmva-TMVAMulticlassApplication)
+set (tmva-TMVARegression-depends tutorial-tmva-TMVAMulticlass)
 
 
 #---Loop over all tutorials and define the corresponding test---------
