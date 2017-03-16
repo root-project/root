@@ -327,7 +327,7 @@ TTreeViewer::TTreeViewer(const char* treeName) :
                        TTree *tv__tree = 0;\n\
                        TList *tv__tree_list = 0;\n\
                        TFile *tv__tree_file = 0;\n\
-                       #define GTV_DEFINED 1;\n\
+                       #define GTV_DEFINED\n\
                        #endif");
    snprintf(command,128, "gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
@@ -357,7 +357,7 @@ TTreeViewer::TTreeViewer(const TTree *tree) :
                        TTree *tv__tree = 0;\n\
                        TList *tv__tree_list = 0;\n\
                        TFile *tv__tree_file = 0;\n\
-                       #define GTV_DEFINED 1;\n\
+                       #define GTV_DEFINED\n\
                        #endif");
    snprintf(command,128, "gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
