@@ -31,9 +31,10 @@ class TTreeReader;
 namespace ROOT {
 
 using BranchNames_t = std::vector<std::string>;
+
+// forward declarations
 namespace Detail {
-// forward declaration for ColumnName2ColumnTypeName
-class TDataFrameBranchBase;
+class TDataFrameBranchBase; // for ColumnName2ColumnTypeName
 }
 
 namespace Internal {
@@ -143,6 +144,20 @@ struct TIsContainer {
    static const bool fgValue = Test<Test_t>(nullptr);
 };
 
+// Extract first of possibly many template parameters. For non-template types, the result is the type itself
+template<typename T>
+struct TExtractType {
+   using type = T;
+};
+
+template<typename T, template<typename...> class U, typename...Extras>
+struct TExtractType<U<T, Extras...>> {
+   using type = T;
+};
+
+template<typename T>
+using ExtractType_t = typename TExtractType<T>::type;
+
 } // end NS TDFTraitsUtils
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
@@ -154,44 +169,48 @@ const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string s);
 unsigned int GetNSlots();
 
-template <typename BranchType>
-std::shared_ptr<ROOT::Internal::TTreeReaderValueBase> ReaderValueOrArray(TTreeReader &r, const std::string &branch,
-                                                                         TDFTraitsUtils::TTypeList<BranchType>)
-{
-   return std::make_shared<TTreeReaderValue<BranchType>>(r, branch.c_str());
-}
+/// Choose between TTreeReader{Array,Value} depending on whether the branch type
+/// T is a `std::array_view<T>` or any other type (respectively).
+template <typename T>
+struct TReaderValueOrArray {
+   using Proxy_t = TTreeReaderValue<T>;
+};
 
-template <typename BranchType>
-std::shared_ptr<ROOT::Internal::TTreeReaderValueBase> ReaderValueOrArray(
-   TTreeReader &r, const std::string &branch, TDFTraitsUtils::TTypeList<std::array_view<BranchType>>)
-{
-   return std::make_shared<TTreeReaderArray<BranchType>>(r, branch.c_str());
-}
+template <typename T>
+struct TReaderValueOrArray<std::array_view<T>> {
+   using Proxy_t = TTreeReaderArray<T>;
+};
 
-template <int... S, typename... BranchTypes>
-TVBVec_t BuildReaderValues(TTreeReader &r, const BranchNames_t &bl, const BranchNames_t &tmpbl,
-                           TDFTraitsUtils::TTypeList<BranchTypes...>, TDFTraitsUtils::TStaticSeq<S...>)
+template <typename T>
+using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
+
+/// Initialize a tuple of TDataFrameValues.
+/// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
+/// TDataFrameValue. For temporary columns a pointer to the corresponding variable
+/// is passed instead.
+template <typename TDFValueTuple, typename... BranchTypes, int... S>
+void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r, const BranchNames_t &bn,
+                   const BranchNames_t &tmpbn,
+                   const std::map<std::string, std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>> &tmpBranches,
+                   ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
+                   ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>)
 {
-   // isTmpBranch has length bl.size(). Elements are true if the corresponding
+   // isTmpBranch has length bn.size(). Elements are true if the corresponding
    // branch is a temporary branch created with AddColumn, false if they are
    // actual branches present in the TTree.
-   std::array<bool, sizeof...(S)> isTmpBranch;
-   for (unsigned int i = 0; i < isTmpBranch.size(); ++i)
-      isTmpBranch[i]   = std::find(tmpbl.begin(), tmpbl.end(), bl.at(i)) != tmpbl.end();
+   std::array<bool, sizeof...(S)> isTmpColumn;
+   for (auto i = 0u; i < isTmpColumn.size(); ++i)
+      isTmpColumn[i] = std::find(tmpbn.begin(), tmpbn.end(), bn.at(i)) != tmpbn.end();
 
-   // Build vector of pointers to TTreeReaderValueBase.
-   // tvb[i] points to a TTreeReader{Value,Array} specialized for the i-th BranchType,
-   // corresponding to the i-th branch in bl
-   // For temporary branches (declared with AddColumn) a nullptr is created instead
-   // S is expected to be a sequence of sizeof...(BranchTypes) integers
-   // Note that here TTypeList only contains one single type
-   TVBVec_t tvb{isTmpBranch[S]
-                   ? nullptr
-                   : ReaderValueOrArray(
-                        r, bl.at(S),
-                        TDFTraitsUtils::TTypeList<BranchTypes>())...}; // "..." expands BranchTypes and S simultaneously
-
-   return tvb;
+   // hack to expand a parameter pack without c++17 fold expressions.
+   // auto defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
+   // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S and BranchTypes.
+   std::initializer_list<int> expander{
+      (isTmpColumn[S] ? std::get<S>(valueTuple).SetTmpColumn(slot, tmpBranches.at(bn.at(S)).get())
+                      : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
+       0)...};
+   (void)expander; // avoid "unused variable" warnings for expander on gcc4.9
+   (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
 }
 
 template <typename Filter>
