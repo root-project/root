@@ -22,6 +22,7 @@
 #include "TInterpreter.h"
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
+#include "TRegexp.h"
 
 #include <initializer_list>
 #include <memory>
@@ -93,7 +94,7 @@ public:
    /// Even if multiple actions or transformations depend on the same filter,
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
-   template <typename F>
+   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const BranchNames_t &bn = {},
                                                                   const std::string &name = "")
    {
@@ -116,9 +117,11 @@ public:
    /// \param[in] name Optional name of this filter. See `Report`.
    ///
    /// Refer to the first overload of this method for the full documentation.
-   template <typename F>
+   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::string &name)
    {
+      // The sfinae is there in order to pick up the overloaded method which accepts two strings
+      // rather than this template method.
       return Filter(f, {}, name);
    }
 
@@ -133,6 +136,129 @@ public:
    TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
    {
       return Filter(f, BranchNames_t{bn});
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Append a filter to the call graph.
+   /// \param[in] expression The filter expression in C++
+   /// \param[in] name Optional name of this filter. See `Report`.
+   ///
+   /// The expression is just in time compiled and used to filter entries. The
+   /// variable names to be used inside are the names of the branches. Only
+   /// valid C++ is accepted.
+   /// Refer to the first overload of this method for the full documentation.
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
+   Filter(const std::string &expression, const std::string& name = "")
+   {
+
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      auto branches = tree->GetListOfBranches();
+
+      // Check what branches and temporary branches are used in the expression
+      // To help matching the regex
+      std::string paddedExpr = " " + expression + " ";
+      int paddedExprLen = paddedExpr.size();
+      static const std::string regexBit("[^a-zA-Z0-9_]");
+      std::vector<const char*> usedBranches;
+      for (auto bro : *branches) {
+         auto brName = bro->GetName();
+         std::string bNameRegexContent = regexBit + brName + regexBit;
+         TRegexp bNameRegex(bNameRegexContent.c_str());
+         if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
+            usedBranches.emplace_back(brName);
+         }
+      }
+      for (auto brName : df->GetTmpBranches()) {
+         std::string bNameRegexContent = regexBit + brName + regexBit;
+         TRegexp bNameRegex(bNameRegexContent.c_str());
+         if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
+            usedBranches.emplace_back(brName.c_str());
+         }
+      }
+
+      auto exprNeedsVariables = !usedBranches.empty();
+
+      // Move to the preparation of the jitting
+      // We put all of the jitted entities in a namespace called
+      // __tdf_filter_N, where N is a monotonically increasing index.
+      TInterpreter::EErrorCode interpErrCode;
+      std::vector<std::string> usedBranchesTypes;
+      std::stringstream ss;
+      static unsigned int iFilter = 0U;
+      ss << "__tdf_filter_" << iFilter++;
+      const auto nsName = ss.str();
+      ss.str("");
+
+      if (exprNeedsVariables) {
+         // Declare a namespace and inside it the variables in the cut expression
+         ss << "namespace " << nsName;
+         ss << " {\n";
+         for (auto brName : usedBranches) {
+            auto brTypeName = ROOT::Internal::ColumnName2ColumnTypeName(brName, *df);
+            ss << brTypeName << " " << brName << ";\n";
+            usedBranchesTypes.emplace_back(brTypeName);
+         }
+         ss << "}";
+         auto variableDeclarations = ss.str();
+         ss.str("");
+         // We need ProcessLine to trigger auto{parsing,loading} where needed
+         gInterpreter->ProcessLine(variableDeclarations.c_str(), &interpErrCode);
+         if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
+            std::string msg = "Cannot declare these variables ";
+            msg += " ";
+            msg += variableDeclarations;
+            if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
+               msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
+            }
+            throw std::runtime_error(msg);
+         }
+      }
+
+      // Declare within the same namespace, the expression to make sure it
+      // is proper C++
+      ss << "namespace "<< nsName << "{ auto res = " << expression << ";}\n";
+      // Headers must have been parsed and libraries loaded: we can use Declare
+      if (!gInterpreter->Declare(ss.str().c_str())) {
+         std::string msg = "Cannot interpret this expression: ";
+         msg += " ";
+         msg += ss.str();
+         throw std::runtime_error(msg);
+      }
+
+
+      // Now we build the lambda and we invoke Filter with it in the jitted world
+      ss.str("");
+      ss << "[](";
+      for (unsigned int i=0 ; i<usedBranchesTypes.size(); ++i) {
+         // We pass by reference to avoid expensive copies
+         ss << usedBranchesTypes[i] << "& " << usedBranches[i] << ", ";
+      }
+      if (!usedBranchesTypes.empty()) ss.seekp(-2,ss.cur);
+      ss << "){ return " << expression << ";}";
+      auto filterLambda = ss.str();
+
+      ss.str("");
+      ss << "((" << GetNodeTypeName() << "*)" << this << ")->Filter(" << filterLambda << ", {";
+      for (auto brName : usedBranches) {
+         ss << "\"" << brName << "\", ";
+      }
+      if (exprNeedsVariables) ss.seekp(-2,ss.cur); // remove the last ",
+      ss << "}, \"" << name << "\");";
+
+      auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
+      if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
+         std::string msg = "Cannot interpret the invocation to Filter: ";
+            msg += " ";
+            msg += ss.str();
+            if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
+               msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
+            }
+            throw std::runtime_error(msg);
+      }
+
+      return *(TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>*) retVal;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -977,8 +1103,8 @@ inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTyp
 }
 
 // Before we had to specialise the GetNodeTypeName method
-extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
+// extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
+// extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 } // end NS Experimental
 } // end NS ROOT
