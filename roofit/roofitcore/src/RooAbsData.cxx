@@ -203,7 +203,7 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   } else {
 
     // Convert to vector store if default is vector
-    _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
+    _dstore = std::unique_ptr<RooAbsDataStore>(other._dstore->clone(_vars,newname?newname:other.GetName())) ;
   }
 
   RooTrace::create(this) ;
@@ -237,8 +237,9 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-  if (dynamic_cast<RooTreeDataStore*>(&*_dstore)) {
-    _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) );
+  auto tmp = dynamic_cast<RooTreeDataStore*>(&*_dstore);
+  if (tmp) {
+    _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(*tmp,_vars,GetName()) );
   }
 }
 
@@ -2349,10 +2350,11 @@ const TTree* RooAbsData::tree() const
 TTree* RooAbsData::GetClonedTree() const
 {
   if (dynamic_cast<RooTreeDataStore*>(&*_dstore)) {
-    return _dstore->tree()->CloneTree();
+    auto tmp = const_cast<TTree*>(_dstore->tree());
+    return tmp->CloneTree();
   } else {
     RooTreeDataStore buffer(GetName(), GetTitle(), *get(), *_dstore);
-    return buffer.tree()->CloneTree();
+    return buffer.tree().CloneTree();
   }
 }
 

@@ -104,9 +104,10 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Initialize datastore
-  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
-                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
-  
+  _dstore = std::unique_ptr<RooAbsDataStore>((defaultStorageType == Tree)
+                                                ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, _vars))
+                                                : ((RooAbsDataStore *)new RooVectorDataStore(name, title, _vars)));
+
   initialize(binningName) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
@@ -142,8 +143,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Initialize datastore
-  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
-                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
+  _dstore = std::unique_ptr<RooAbsDataStore>((defaultStorageType == Tree)
+                                                ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, _vars))
+                                                : ((RooAbsDataStore *)new RooVectorDataStore(name, title, _vars)));
 
   initialize() ;
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
@@ -170,9 +172,10 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Initialize datastore
-  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
-                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
-  
+  _dstore = std::unique_ptr<RooAbsDataStore>((defaultStorageType == Tree)
+                                                ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, _vars))
+                                                : ((RooAbsDataStore *)new RooVectorDataStore(name, title, _vars)));
+
   importTH1Set(vars, indexCat, histMap, wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
@@ -196,9 +199,10 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Initialize datastore
-  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
-                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
-  
+  _dstore = std::unique_ptr<RooAbsDataStore>((defaultStorageType == Tree)
+                                                ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, _vars))
+                                                : ((RooAbsDataStore *)new RooVectorDataStore(name, title, _vars)));
+
   importDHistSet(vars, indexCat, dhistMap, wgt) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
@@ -217,8 +221,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Initialize datastore
-  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
-                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
+  _dstore = std::unique_ptr<RooAbsDataStore>((defaultStorageType == Tree)
+                                                ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, _vars))
+                                                : ((RooAbsDataStore *)new RooVectorDataStore(name, title, _vars)));
 
   // Check consistency in number of dimensions
   if (vars.getSize() != hist->GetDimension()) {
@@ -275,8 +280,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Initialize datastore
-  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
-                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
+  _dstore = std::unique_ptr<RooAbsDataStore>((defaultStorageType == Tree)
+                                                ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, _vars))
+                                                : ((RooAbsDataStore *)new RooVectorDataStore(name, title, _vars)));
 
   // Define configuration for this method
   RooCmdConfig pc(Form("RooDataHist::ctor(%s)",GetName())) ;
@@ -955,8 +961,9 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,*h->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache) ;
-  
+  _dstore = std::unique_ptr<RooAbsDataStore>(
+     new RooTreeDataStore(name, title, *h->_dstore, _vars, cutVar, cutRange, nStart, nStop, copyCache));
+
   initialize(0,kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
@@ -2171,7 +2178,7 @@ void RooDataHist::Streamer(TBuffer &R__b)
 	// --- End of RooTreeData-v1 streamer
 	
 	// Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
-	_dstore = new RooTreeDataStore(X_tree,_vars) ;
+	_dstore = std::unique_ptr<RooAbsDataStore>(new RooTreeDataStore(X_tree,_vars)) ;
 	_dstore->SetName(GetName()) ;
 	_dstore->SetTitle(GetTitle()) ;
 	_dstore->checkInit() ;       
