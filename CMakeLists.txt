@@ -37,8 +37,14 @@ include(MacroEnsureVersion)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
-   find_program(ccache_cmd NAMES ccache ccache-swig HINTS /usr/local/bin/)
+   set(CMAKE_IGNORE_PATH_TMP ${CMAKE_IGNORE_PATH})
+   unset(CMAKE_IGNORE_PATH)
+
+   find_program(ccache_cmd NAMES ccache ccache-swig)
    mark_as_advanced(ccache_cmd ${ccache_cmd})
+
+   set(CMAKE_IGNORE_PATH ${CMAKE_IGNORE_PATH_TMP})
+
    if(ccache_cmd)
       message(STATUS "Using ccache for building")
       set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
