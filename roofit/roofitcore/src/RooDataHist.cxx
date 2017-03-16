@@ -2178,37 +2178,36 @@ void RooDataHist::Streamer(TBuffer &R__b)
 	// --- End of RooTreeData-v1 streamer
 	
 	// Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
-	_dstore = std::unique_ptr<RooAbsDataStore>(new RooTreeDataStore(X_tree,_vars)) ;
-	_dstore->SetName(GetName()) ;
-	_dstore->SetTitle(GetTitle()) ;
-	_dstore->checkInit() ;       
-	
-	RooDirItem::Streamer(R__b);
-	R__b >> _arrSize;
-	delete [] _wgt;
-	_wgt = new Double_t[_arrSize];
-	R__b.ReadFastArray(_wgt,_arrSize);
-	delete [] _errLo;
-	_errLo = new Double_t[_arrSize];
-	R__b.ReadFastArray(_errLo,_arrSize);
-	delete [] _errHi;
-	_errHi = new Double_t[_arrSize];
-	R__b.ReadFastArray(_errHi,_arrSize);
-	delete [] _sumw2;
-	_sumw2 = new Double_t[_arrSize];
-	R__b.ReadFastArray(_sumw2,_arrSize);
-	delete [] _binv;
-	_binv = new Double_t[_arrSize];
-	R__b.ReadFastArray(_binv,_arrSize);
-	_realVars.Streamer(R__b);
-	R__b >> _curWeight;
-	R__b >> _curWgtErrLo;
-	R__b >> _curWgtErrHi;
-	R__b >> _curSumW2;
-	R__b >> _curVolume;
-	R__b >> _curIndex;
-	R__b.CheckByteCount(R__s, R__c, RooDataHist::IsA());
+   _dstore = std::unique_ptr<RooAbsDataStore>(new RooTreeDataStore(X_tree, _vars));
+   _dstore->SetName(GetName());
+   _dstore->SetTitle(GetTitle());
+   _dstore->checkInit();
 
+   RooDirItem::Streamer(R__b);
+   R__b >> _arrSize;
+   delete[] _wgt;
+   _wgt = new Double_t[_arrSize];
+   R__b.ReadFastArray(_wgt, _arrSize);
+   delete[] _errLo;
+   _errLo = new Double_t[_arrSize];
+   R__b.ReadFastArray(_errLo, _arrSize);
+   delete[] _errHi;
+   _errHi = new Double_t[_arrSize];
+   R__b.ReadFastArray(_errHi, _arrSize);
+   delete[] _sumw2;
+   _sumw2 = new Double_t[_arrSize];
+   R__b.ReadFastArray(_sumw2, _arrSize);
+   delete[] _binv;
+   _binv = new Double_t[_arrSize];
+   R__b.ReadFastArray(_binv, _arrSize);
+   _realVars.Streamer(R__b);
+   R__b >> _curWeight;
+   R__b >> _curWgtErrLo;
+   R__b >> _curWgtErrHi;
+   R__b >> _curSumW2;
+   R__b >> _curVolume;
+   R__b >> _curIndex;
+   R__b.CheckByteCount(R__s, R__c, RooDataHist::IsA());
       }
       
    } else {

@@ -374,7 +374,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 
     if (defaultStorageType==Tree) {
       tstore = new RooTreeDataStore(name,title,_vars,wgtVarName) ;
-      _dstore = std::unique_ptr<RooAbsDataStore>(tstore) ;
+      _dstore = std::unique_ptr<RooAbsDataStore>(tstore);
     } else if (defaultStorageType==Vector) {
       if (wgtVarName && newWeight) {
 	RooAbsArg* wgttmp = _vars.find(wgtVarName) ;
@@ -383,7 +383,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	}
       }
       vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
-      _dstore = std::unique_ptr<RooAbsDataStore>(vstore) ;
+      _dstore = std::unique_ptr<RooAbsDataStore>(vstore);
     } else {
       _dstore = 0 ;
     }
@@ -766,13 +766,13 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree,
 
   // Convert to vector datastore if needed
   if (defaultStorageType==Tree) {
-    _dstore = std::unique_ptr<RooAbsDataStore>(tstore) ;
+     _dstore = std::unique_ptr<RooAbsDataStore>(tstore);
   } else if (defaultStorageType==Vector) {
-    _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(name,title,_vars,wgtVarName)) ;
-    _dstore->append(*tstore) ;
-    delete tstore ;
+     _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(name, title, _vars, wgtVarName));
+     _dstore->append(*tstore);
+     delete tstore;
   } else {
-    _dstore = std::unique_ptr<RooAbsDataStore>(nullptr) ;
+     _dstore = std::unique_ptr<RooAbsDataStore>(nullptr);
   }
   
   appendToDir(this,kTRUE) ;
@@ -807,13 +807,13 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree,
 
   // Convert to vector datastore if needed
   if (defaultStorageType==Tree) {
-    _dstore = std::unique_ptr<RooAbsDataStore>(tstore) ;
+     _dstore = std::unique_ptr<RooAbsDataStore>(tstore);
   } else if (defaultStorageType==Vector) {
-    _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(name,title,_vars,wgtVarName)) ;
-    _dstore->append(*tstore) ;
-    delete tstore ;
+     _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(name, title, _vars, wgtVarName));
+     _dstore->append(*tstore);
+     delete tstore;
   } else {
-    _dstore = std::unique_ptr<RooAbsDataStore>(nullptr) ;
+     _dstore = std::unique_ptr<RooAbsDataStore>(nullptr);
   }
 
   appendToDir(this,kTRUE) ;
@@ -845,8 +845,10 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 {
    _dstore = std::unique_ptr<RooAbsDataStore>(
       (defaultStorageType == Tree)
-         ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart, nStop, copyCache, wgtVarName))
-         : ((RooAbsDataStore *)new RooVectorDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart, nStop, copyCache, wgtVarName)));
+         ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart, nStop,
+                                                    copyCache, wgtVarName))
+         : ((RooAbsDataStore *)new RooVectorDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart,
+                                                      nStop, copyCache, wgtVarName)));
 
    _cachedVars.add(_dstore->cachedVars());
 
@@ -1268,7 +1270,7 @@ Bool_t RooDataSet::merge(list<RooDataSet*>dsetList)
   mergedStore->SetTitle(_dstore->GetTitle()) ;
 
   // Replace current data store with merged store
-  _dstore = std::unique_ptr<RooAbsDataStore>(mergedStore) ;
+  _dstore = std::unique_ptr<RooAbsDataStore>(mergedStore);
 
   initialize(_wgtVar?_wgtVar->GetName():0) ;
   return kFALSE ;
@@ -1954,7 +1956,7 @@ void RooDataSet::Streamer(TBuffer &R__b)
        // --- End of RooTreeData-v1 streamer
        
        // Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
-       _dstore = std::unique_ptr<RooAbsDataStore>(new RooTreeDataStore(X_tree,_vars)) ;
+       _dstore = std::unique_ptr<RooAbsDataStore>(new RooTreeDataStore(X_tree, _vars));
        _dstore->SetName(GetName()) ;
        _dstore->SetTitle(GetTitle()) ;
        _dstore->checkInit() ;       
