@@ -31,11 +31,6 @@ TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr
 {
 }
 
-void TDataFrameActionBase::CreateSlots(unsigned int nSlots)
-{
-   fReaderValues.resize(nSlots);
-}
-
 } // end NS Internal
 
 namespace Detail {
@@ -77,19 +72,6 @@ bool TDataFrameFilterBase::HasName() const
 {
    return !fName.empty();
 };
-
-void TDataFrameFilterBase::CreateSlots(unsigned int nSlots)
-{
-   fReaderValues.resize(nSlots);
-   fLastCheckedEntry.resize(nSlots, -1);
-   fLastResult.resize(nSlots);
-   fAccepted.resize(nSlots);
-   fRejected.resize(nSlots);
-   // fAccepted and fRejected could be different than 0 if this is not the
-   // first event-loop run using this filter
-   std::fill(fAccepted.begin(), fAccepted.end(), 0);
-   std::fill(fRejected.begin(), fRejected.end(), 0);
-}
 
 void TDataFrameFilterBase::PrintReport() const
 {
@@ -181,9 +163,11 @@ void TDataFrameImpl::Run()
 /// a particular slot will be using.
 void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
 {
+   // booked branches must be initialized first
+   // because actions and filters might need to point to the values encapsulate
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
    for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
    for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop
@@ -220,11 +204,9 @@ TDataFrameBranchBase *TDataFrameImpl::GetBookedBranch(const std::string &name) c
    return it == fBookedBranches.end() ? nullptr : it->second.get();
 }
 
-void *TDataFrameImpl::GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry)
+void *TDataFrameImpl::GetTmpBranchValue(const std::string &branch, unsigned int slot)
 {
-   auto &tmpBranch = fBookedBranches.at(branch);
-   tmpBranch->Update(slot, entry);
-   return tmpBranch->GetValuePtr(slot);
+   return fBookedBranches.at(branch)->GetValuePtr(slot);
 }
 
 TDirectory *TDataFrameImpl::GetDirectory() const
@@ -237,7 +219,7 @@ std::string TDataFrameImpl::GetTreeName() const
    return fTree->GetName();
 }
 
-void TDataFrameImpl::Book(const ROOT::Internal::ActionBasePtr_t &actionPtr)
+void TDataFrameImpl::Book(const ActionBasePtr_t &actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
 }
