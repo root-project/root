@@ -46,8 +46,10 @@ script:
       echo "clang-format passed."
       exit 0
     else
-      echo "clang-format failed:"
-      echo "To reproduce it locally please run git-clang-format-3.9 --commit $BASE_COMMIT --diff --binary \`which clang-format-3.9\`"
+      echo "clang-format failed."
+      echo "To reproduce it locally please run"
+      echo "\tgit checkout $TRAVIS_BRANCH"
+      echo "\tgit-clang-format --commit $BASE_COMMIT --diff --binary $(which clang-format)"
       echo "$RESULT_OUTPUT"
       exit 1
     fi
