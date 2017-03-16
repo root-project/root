@@ -7,6 +7,10 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_ADD_TEST(test_stringfilter
+                  MACRO test_stringfilter.C+
+                  OUTREF test_stringfilter.ref)
+
 ROOTTEST_ADD_TEST(test_glob
                   MACRO test_glob.C+
                   OUTREF test_glob.ref)

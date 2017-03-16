@@ -1,0 +1,11 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/dataframe/test_stringfilter.C+...
+c1 20
+c2 20
+c3 9
+ok        : pass=20         all=20         --  100.000 %
+c1 20
+c2 20
+c3 9
+ok        : pass=20         all=20         --  100.000 %
+(int) 0
