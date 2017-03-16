@@ -1085,8 +1085,10 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    // writing of the GetMvaValue__ method
    fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
    fout << "{" << std::endl;
-   fout << "   if (inputValues.size() != (unsigned int)" << ((TObjArray*)fNetwork->At(0))->GetEntries()-1 << ") {" << std::endl;
-   fout << "      std::cout << \"Input vector needs to be of size \" << " << ((TObjArray*)fNetwork->At(0))->GetEntries()-1 << " << std::endl;" << std::endl;
+   fout << "   if (inputValues.size() != (unsigned int)" << ((TObjArray *)fNetwork->At(0))->GetEntries() - 1 << ") {"
+        << std::endl;
+   fout << "      std::cout << \"Input vector needs to be of size \" << "
+        << ((TObjArray *)fNetwork->At(0))->GetEntries() - 1 << " << std::endl;" << std::endl;
    fout << "      return 0;" << std::endl;
    fout << "   }" << std::endl;
    fout << std::endl;

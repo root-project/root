@@ -3172,31 +3172,28 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "      }" << std::endl;
    fout << "      else {" << std::endl;
    if (IsNormalised()) {
-     fout << "            // normalise variables" << std::endl;
-     fout << "            std::vector<double> iV;" << std::endl;
-     fout << "            iV.reserve(inputValues.size());" << std::endl;
-     fout << "            int ivar = 0;" << std::endl;
-     fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
-     fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
-     fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << std::endl;
-     fout << "            }" << std::endl;
-     if (GetTransformationHandler().GetTransformationList().GetSize()!=0 &&
-         GetMethodType() != Types::kLikelihood &&
-         GetMethodType() != Types::kHMatrix) {
-       fout << "            Transform( iV, -1 );" << std::endl;
-     }
-     fout << "            retval = GetMvaValue__( iV );" << std::endl;
+      fout << "            // normalise variables" << std::endl;
+      fout << "            std::vector<double> iV;" << std::endl;
+      fout << "            iV.reserve(inputValues.size());" << std::endl;
+      fout << "            int ivar = 0;" << std::endl;
+      fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
+      fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
+      fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << std::endl;
+      fout << "            }" << std::endl;
+      if (GetTransformationHandler().GetTransformationList().GetSize() != 0 && GetMethodType() != Types::kLikelihood &&
+          GetMethodType() != Types::kHMatrix) {
+         fout << "            Transform( iV, -1 );" << std::endl;
+      }
+      fout << "            retval = GetMvaValue__( iV );" << std::endl;
    } else {
-     if (GetTransformationHandler().GetTransformationList().GetSize()!=0 &&
-         GetMethodType() != Types::kLikelihood &&
-         GetMethodType() != Types::kHMatrix) {
-       fout << "            std::vector<double> iV(inputValues);" << std::endl;
-       fout << "            Transform( iV, -1 );" << std::endl;
-       fout << "            retval = GetMvaValue__( iV );" << std::endl;
-     }
-     else {
-       fout << "            retval = GetMvaValue__( inputValues );" << std::endl;
-     }
+      if (GetTransformationHandler().GetTransformationList().GetSize() != 0 && GetMethodType() != Types::kLikelihood &&
+          GetMethodType() != Types::kHMatrix) {
+         fout << "            std::vector<double> iV(inputValues);" << std::endl;
+         fout << "            Transform( iV, -1 );" << std::endl;
+         fout << "            retval = GetMvaValue__( iV );" << std::endl;
+      } else {
+         fout << "            retval = GetMvaValue__( inputValues );" << std::endl;
+      }
    }
    fout << "      }" << std::endl;
    fout << std::endl;
