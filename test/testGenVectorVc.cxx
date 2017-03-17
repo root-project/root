@@ -1,13 +1,11 @@
-
-// Vc. Must be before the ROOT includes for std:: math functions to work...
-#include <Vc/Vc>
-
 // ROOT
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/Plane3D.h"
 #include "Math/GenVector/Transform3D.h"
 #include "TStopwatch.h"
+
+#include <Vc/Vc>
 
 // STL
 #include <random>

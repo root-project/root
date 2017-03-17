@@ -61,18 +61,41 @@ namespace ROOT {
 
 
    namespace Math {
+   // Enable Vc/VecCore template instantiations to replace std math functions via argument dependent lookup (ADL).
+   // The ADL works with unqualified identifiers thus we must implement our functions without prefixing them with
+   // std. For example MyPow(double) { return pow(); } instead of MyPow(double) { return std::pow(); }.
+   //
+   // This allows template instantiations with a Vc/VecCore type, to add to the lookup candidates its vectorized math
+   // functions.
+   //
+   // We don't want to use 'using namespace std' because it would polute the including headers.
+   using std::atan2;
+   using std::cos;
+   using std::cosh;
+   using std::exp;
+   using std::floor;
+   using std::log;
+   using std::pow;
+   using std::sin;
+   using std::sinh;
+   using std::sqrt;
+   using std::tan;
 
-/**
-    Mathematical constants
-*/
-inline double Pi() { return M_PI; }
+   /**
+       Mathematical constants
+   */
+   inline double Pi()
+   {
+      return M_PI;
+   }
 
-/**
-    declarations for functions which are not implemented by some compilers
-*/
+   /**
+       declarations for functions which are not implemented by some compilers
+   */
 
-/// log(1+x) with error cancelatio when x is small
-inline double log1p( double x) {
+   /// log(1+x) with error cancelatio when x is small
+   inline double log1p(double x)
+   {
 #ifndef HAVE_NO_LOG1P
    return ::log1p(x);
 #else
