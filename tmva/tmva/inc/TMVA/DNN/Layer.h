@@ -249,6 +249,7 @@ TLayer<Architecture_t>::TLayer(const TLayer &layer)
 {
    Architecture_t::Copy(fWeights, layer.GetWeights());
    Architecture_t::Copy(fBiases,  layer.GetBiases());
+   fDropoutProbability = 0.;
 }
 
 //______________________________________________________________________________
