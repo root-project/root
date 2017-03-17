@@ -137,6 +137,8 @@ TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
    , fMVAvalues(0)
 {
    fMVAvalues = new std::vector<Float_t>;
+   fDataSetManager = NULL;
+   fHistoricBoolOption = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
