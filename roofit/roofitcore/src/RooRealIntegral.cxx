@@ -51,6 +51,8 @@ integration is performed in the various implemenations of the RooAbsIntegrator b
 #include "RooDouble.h"
 #include "RooTrace.h"
 
+#include <chrono>
+
 using namespace std;
 
 ClassImp(RooRealIntegral) 
@@ -878,6 +880,33 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 }
 
 
+class RooInstantTimer {
+public:
+  RooInstantTimer();
+
+  void stop(bool calc_timing_s = true);
+
+  double get_timing_s();
+
+private:
+  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
+  double timing_s;
+};
+
+RooInstantTimer::RooInstantTimer() {
+  timing_begin = std::chrono::high_resolution_clock::now();
+}
+
+void RooInstantTimer::stop(bool calc_timing_s) {
+  timing_end = std::chrono::high_resolution_clock::now();
+  if (calc_timing_s) {
+    timing_s = get_timing_s();
+  }
+}
+
+double RooInstantTimer::get_timing_s() {
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+}
 
 
 
@@ -885,7 +914,9 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 /// Perform the integration and return the result
 
 Double_t RooRealIntegral::evaluate() const 
-{  
+{
+  RooInstantTimer timer;
+
   Double_t retVal(0) ;
   switch (_intOperMode) {    
     
@@ -989,7 +1020,11 @@ Double_t RooRealIntegral::evaluate() const
 
     ccxcoutD(Tracing) << "raw*fact = " << retVal << endl ;
   }
-  
+
+  timer.stop();
+  // TODO
+  // store timing somewhere!
+  // ... = timer.get_timing_s();
 
   return retVal ;
 }
