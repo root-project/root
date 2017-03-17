@@ -16,6 +16,7 @@ if (CTEST_BUILD_NAME MATCHES aarch64 AND CTEST_BUILD_NAME MATCHES dbg)
        tutorial-tmva-TMVAMulticlass
        tutorial-tmva-TMVAMulticlassApplication
        tutorial-tmva-TMVARegressionApplication
+       tutorial-tmva-TMVAClassificationApplication
        tutorial-roostats-TwoSidedFrequentistUpperLimitWithBands)
 endif()
 
