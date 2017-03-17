@@ -186,12 +186,7 @@ if(cxxmodules)
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
-    add_custom_target(copystlmodulemap
-                    DEPENDS build/unix/module.modulemap
-                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap
-                    )
-
-    add_dependencies(copymodulemap copystlmodulemap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
   endif()
 
   # These vars are useful when we want to compile things without cxxmodules.
