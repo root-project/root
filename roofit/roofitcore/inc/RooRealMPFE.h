@@ -102,6 +102,7 @@ private:
   RooArgSet _numIntSet;
 
   void _initNumIntSet(const RooArgSet& obs);
+  void _setTimingNumIntSet(Bool_t flag = kTRUE);
 
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function 
 };

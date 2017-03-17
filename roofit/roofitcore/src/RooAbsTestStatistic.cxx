@@ -542,7 +542,7 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 /// Initialize multi-processor calculation mode. Create component test statistics in separate
 /// processed that are connected to this process through a RooAbsRealMPFE front-end class.
 
-void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName, bool cpu_affinity)
+void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName, bool cpu_affinity, bool timeNumInts)
 {
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
@@ -565,6 +565,16 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
 
     if (cpu_affinity) {
       _mpfeArray[i]->setCpuAffinity(i);
+    }
+
+    if (timeNumInts) {
+      // FIXME
+      // Seems wasteful to initialize the NumIntSet for each mpfeArray, but it should contain the MPFE-local nodes,
+      // so I'm not sure whether it would be a lot faster to create this list in RATS, because then you would also
+      // have to reinitialize the list in each MPFE but then with the MPFE-local nodes again, meaning you will have to
+      // do name lookups in MPFE...
+      _mpfeArray[i]->_initNumIntSet(*projDeps);
+      _mpfeArray[i]->_setTimingNumIntSet();
     }
   }
   _mpfeArray[_nCPU - 1]->addOwnedComponents(*gof);

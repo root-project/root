@@ -644,6 +644,23 @@ void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Activate timing in all NumIntSet integral nodes
+
+void RooRealMPFE::_setTimingNumIntSet(Bool_t flag) {
+  RooFIter iter = _numIntSet.fwdIterator();
+  if (flag == kTRUE) {
+    while(RooAbsArg* node = iter.next()) {
+      *_pipe << EnableTimingNamedAbsArg << node->GetName();
+    }
+  } else if (flag == kFALSE) {
+    while(RooAbsArg* node = iter.next()) {
+      *_pipe << DisableTimingNamedAbsArg << node->GetName();
+    }
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Client-side function that instructs server process to start
 /// asynchronuous (re)calculation of function value. This function
 /// returns immediately. The calculated value can be retrieved
