@@ -30,7 +30,7 @@ namespace TMVA {
      friend class HyperParameterOptimisation;
    private:
        std::vector<Float_t> fROCs;
-       Float_t              fROCAVG;
+       Float_t              fROCAVG = 0.0;
        std::shared_ptr<TMultiGraph>    fROCCurves;
 
        std::vector<Double_t> fSigs;
