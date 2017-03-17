@@ -182,7 +182,8 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    ds->SetEventCollection(newEventVector, Types::kTraining);
    ds->SetCurrentType( Types::kTraining );
    ds->SetCurrentEvent( 0 );
-
+   
+   delete newEventVector;
    return ds;
 }
 
@@ -1398,7 +1399,8 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       Log() << kERROR << "Dataset " << std::string(dsi.GetName()) << " does not have any testing events, guess that will cause problems later..but for now, I continue " << Endl;
    }
 
-
+   delete trainingEventVector;
+   delete testingEventVector;
    return ds;
 
 }

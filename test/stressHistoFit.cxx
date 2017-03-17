@@ -288,7 +288,8 @@ class fitFunctions {
 public:
    TString name;
    double (*func)(double*, double*);
-   unsigned int npars;
+   func = nullptr;
+   unsigned int npars = 0;
    vector<double> origPars;
    vector<double> fitPars;
    vector<ParLimit> parLimits;

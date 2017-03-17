@@ -32,7 +32,7 @@ void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false )
    const Int_t n = 51;
    Int_t i = 0;
    Float_t xcoord[n], ycoord[n];
-   for ( double xi = 0; xi < 10; xi += 0.2) {
+   for ( double xi = 0; xi < 10.01; xi += 0.2) {
       xcoord[i] = xi;
       ycoord[i] = itp.Eval(xi);
       double dyi = itp.Deriv(xi);

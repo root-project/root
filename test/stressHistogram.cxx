@@ -10239,6 +10239,10 @@ int stressHistogram()
              << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"****************************************************************************\n";
 
+   if (cleanHistos) {
+      delete ht2;
+      delete htp2;
+   }
    return GlobalStatus;
 }
 
@@ -10411,7 +10415,7 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
 
    if (cleanHistos) delete h2;
-
+   delete[] coord;
    return differents;
 }
 

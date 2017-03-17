@@ -149,8 +149,9 @@ public:
                 double x1 = -INF,
                 double x2 = INF ) :
       fPdf(&pdf), fCdf(&cdf), fQuant(&quant),
+      xmin(0.), xmax(0.)
       xlow(x1), xup(x2),
-      fHasLowRange(false), fHasUpRange(false)
+      fHasLowRange(false), fHasUpRange(false), fStartRoot(0.)
    {
       fScaleIg = 10; //scale for integral test
       fScaleDer = 1;  //scale for der test

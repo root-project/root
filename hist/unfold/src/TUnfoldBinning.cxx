@@ -1632,7 +1632,7 @@ Int_t TUnfoldBinning::GetGlobalBinNumber
             "no axes are defined for node %s",
             (char const *)GetName());
    }
-   Int_t iAxisBins[MAXDIM];
+   Int_t iAxisBins[MAXDIM] = {0};
    for(Int_t dim=0;dim<GetDistributionDimension();dim++) {
       TVectorD const *bins=(TVectorD const *) fAxisList->At(dim);
       Int_t i0=0;
