@@ -1916,7 +1916,7 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// ## IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
 ///
 /// When merging many files, it may happen that the resulting file
-/// reaches a size > TTree::fgMaxTreeSize (default = 1.9 GBytes).
+/// reaches a size > TTree::fgMaxTreeSize (default = 100 GBytes).
 /// In this case the current file is automatically closed and a new
 /// file started.  If the name of the merged file was "merged.root",
 /// the subsequent files will be named "merged_1.root", "merged_2.root",
