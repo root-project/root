@@ -149,7 +149,7 @@ public:
                 double x1 = -INF,
                 double x2 = INF ) :
       fPdf(&pdf), fCdf(&cdf), fQuant(&quant),
-      xmin(0.), xmax(0.)
+      xmin(0.), xmax(0.),
       xlow(x1), xup(x2),
       fHasLowRange(false), fHasUpRange(false), fStartRoot(0.)
    {
