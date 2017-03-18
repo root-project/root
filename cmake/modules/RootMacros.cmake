@@ -222,6 +222,9 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   if (gnuinstall)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
   endif()
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY RUN_SERIAL true)
+  endif()
 
 endmacro(ROOTTEST_COMPILE_MACRO)
 
@@ -279,6 +282,10 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   if (gnuinstall)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
   endif()
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY RUN_SERIAL true)
+  endif()
+
 
 endmacro(ROOTTEST_GENERATE_DICTIONARY)
 
@@ -354,6 +361,10 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   if (gnuinstall)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
   endif()
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY RUN_SERIAL true)
+  endif()
+
 
 endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
 
@@ -405,6 +416,9 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
                                     -- ${always-make})
   if (gnuinstall)
     set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
+  endif()
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY RUN_SERIAL true)
   endif()
 
 endmacro()
