@@ -85,32 +85,38 @@ Double_t TMVA::ResultsMulticlass::EstimatorFunction( std::vector<Double_t> & cut
 
    DataSet* ds = GetDataSet();
    ds->SetCurrentType( GetTreeType() );
-   Float_t truePositive = 0;
-   Float_t falsePositive = 0;
-   Float_t sumWeights = 0;
 
-   for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-      const Event* ev = ds->GetEvent(ievt);
-      Float_t w = ev->GetWeight();
-      if(ev->GetClass()==fClassToOptimize)
-         sumWeights += w;
-      bool passed = true;
-      for(UInt_t icls = 0; icls<cutvalues.size(); ++icls){
-         if(cutvalues.at(icls)<0. ? -fMultiClassValues[ievt][icls]<cutvalues.at(icls) : fMultiClassValues[ievt][icls]<=cutvalues.at(icls)){
-            passed = false;
+   // Cache optimisation, count true and false positives with memory access
+   // instead of code branch.
+   Float_t positives[2] = {0, 0};
+
+   for (Int_t ievt = 0; ievt < ds->GetNEvents(); ievt++) {
+      UInt_t  evClass = fEventClasses[ievt];
+      Float_t w       = fEventWeights[ievt];
+
+      Bool_t break_outer_loop = false;
+      for (UInt_t icls = 0; icls < cutvalues.size(); ++icls) {
+         auto value    = fMultiClassValues[ievt][icls];
+         auto cutvalue = cutvalues.at(icls);
+         if (cutvalue < 0. ? (-value < cutvalue) : (+value <= cutvalue)) {
+            break_outer_loop = true;
             break;
          }
       }
-      if(!passed)
+
+      if (break_outer_loop) {
          continue;
-      if(ev->GetClass()==fClassToOptimize)
-         truePositive += w;
-      else
-         falsePositive += w;
+      }
+
+      Bool_t isEvCurrClass = (evClass == fClassToOptimize);
+      positives[isEvCurrClass] += w;
    }
 
-   Float_t eff = truePositive/sumWeights;
-   Float_t pur = truePositive/(truePositive+falsePositive);
+   const Float_t truePositive  = positives[1];
+   const Float_t falsePositive = positives[0];
+
+   Float_t eff         = truePositive / fClassSumWeights[fClassToOptimize];
+   Float_t pur         = truePositive / (truePositive + falsePositive);
    Float_t effTimesPur = eff*pur;
 
    Float_t toMinimize = std::numeric_limits<float>::max();
@@ -135,6 +141,22 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
 
    fClassToOptimize = targetClass;
    std::vector<Interval*> ranges(dsi->GetNClasses(), new Interval(-1,1));
+
+   fClassSumWeights.clear();
+   fEventWeights.clear();
+   fEventClasses.clear();
+
+   for (UInt_t icls = 0; icls < dsi->GetNClasses(); ++icls) {
+      fClassSumWeights.push_back(0);
+   }
+
+   DataSet *ds = GetDataSet();
+   for (Int_t ievt = 0; ievt < ds->GetNEvents(); ievt++) {
+      const Event *ev = ds->GetEvent(ievt);
+      fClassSumWeights[ev->GetClass()] += ev->GetWeight();
+      fEventWeights.push_back(ev->GetWeight());
+      fEventClasses.push_back(ev->GetClass());
+   }
 
    const TString name( "MulticlassGA" );
    const TString opts( "PopSize=100:Steps=30" );
