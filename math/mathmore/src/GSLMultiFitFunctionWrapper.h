@@ -67,7 +67,6 @@ public:
       fFunc.n = 0;
       fFunc.p = 0;
       fFunc.params = 0;
-      fFunc.nevalf = 0;
    }
 
 
