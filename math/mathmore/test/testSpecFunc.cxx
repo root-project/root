@@ -186,7 +186,7 @@ int testSpecFunc() {
 
    iret |= compare("hyperg(8, -8, 1, 0.5) ", hyperg(8, -8, 1, 0.5), 0.13671875);
 
-   iret |= compare("laguerre(4, 1.) ", laguerre(4, 1.), -0.6250); // need to find more precise value
+   iret |= compare("laguerre(4, 1.) ", laguerre(4, 1.), -0.6250, 4); // need to find more precise value
 
    iret |= compare("legendre(10, -0.5) ", legendre(10, -0.5), -0.1882286071777345);
 

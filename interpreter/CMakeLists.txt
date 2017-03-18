@@ -80,13 +80,17 @@ if(cxxmodules)
   endif(libcxx)
 endif(cxxmodules)
 
+if(gcctoolchain)
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
+endif()
+
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")
 endif()
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT LLVM_BUILD_TYPE STREQUAL "Debug")
-  message(WARNING "Selected a 'Debug' build (CMAKE_BUILD_TYPE), be aware that the embedded LLVM will still be built as 'Release'."
-                  " Use the variable LLVM_BUILD_TYPE to control it.")
+  message(STATUS "Selected a 'Debug' build (CMAKE_BUILD_TYPE), be aware that the embedded LLVM will still be built as 'Release'."
+                 " Use the variable LLVM_BUILD_TYPE to control it.")
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(LLVM_ENABLE_ASSERTIONS "YES")

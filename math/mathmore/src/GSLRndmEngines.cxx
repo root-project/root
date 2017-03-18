@@ -33,7 +33,6 @@
 
 // need to be included later
 #include <time.h>
-#include <stdlib.h>
 #include <cassert>
 
 #include "gsl/gsl_rng.h"

@@ -30,6 +30,8 @@
 #include <iostream>
 #endif
 
+#include <cmath>
+
 namespace ROOT {
 
 namespace Math {
@@ -141,22 +143,20 @@ public :
        in this coordinate system it can be negagative if set that way.
    */
    Scalar M()   const { return fM;   }
-   Scalar Mag() const    { return M(); }
+   Scalar Mag() const { return M(); }
 
    Scalar Perp()const { return Pt(); }
    Scalar Rho() const { return Pt(); }
 
    // other coordinate representation
 
-   Scalar Px() const { return fPt*cos(fPhi);}
+   Scalar Px() const { return fPt * std::cos(fPhi); }
    Scalar X () const { return Px();         }
-   Scalar Py() const { return fPt*sin(fPhi);}
+   Scalar Py() const { return fPt * std::sin(fPhi); }
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
-      return fPt >   0 ? fPt*std::sinh(fEta)     :
-         fEta == 0 ? 0                       :
-         fEta >  0 ? fEta - etaMax<Scalar>() :
-         fEta + etaMax<Scalar>() ;
+      return fPt > 0 ? fPt * std::sinh(fEta)
+                     : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<Scalar>() : fEta + etaMax<Scalar>();
    }
    Scalar Z () const { return Pz(); }
 
@@ -164,17 +164,20 @@ public :
        magnitude of momentum
    */
    Scalar P() const {
-      return  fPt  > 0                 ?  fPt*std::cosh(fEta)       :
-         fEta >  etaMax<Scalar>() ?  fEta - etaMax<Scalar>()   :
-         fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>()   :
-         0                         ;
+      return fPt > 0 ? fPt * std::cosh(fEta)
+                     : fEta > etaMax<Scalar>() ? fEta - etaMax<Scalar>()
+                                               : fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>() : 0;
    }
    Scalar R() const { return P(); }
 
    /**
        squared magnitude of spatial components (momentum squared)
    */
-   Scalar P2() const { Scalar p = P(); return p*p; }
+   Scalar P2() const
+   {
+      const Scalar p = P();
+      return p * p;
+   }
 
    /**
        energy squared
@@ -188,7 +191,7 @@ public :
    /**
        Energy (timelike component of momentum-energy 4-vector)
    */
-   Scalar E()   const { return std::sqrt(E2() ); }
+   Scalar E() const { return std::sqrt(E2()); }
 
    Scalar T()   const { return E();  }
 
@@ -216,7 +219,7 @@ public :
       transverse mass - will be negative if Mt2() is negative
    */
    Scalar Mt() const {
-      Scalar mm = Mt2();
+      const Scalar mm = Mt2();
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
@@ -231,32 +234,30 @@ public :
    */
    Scalar Et2() const {
       // a bit faster than et * et
-      return 2. * E2()/ ( std::cosh(2 * fEta) + 1 );
+      return 2. * E2() / (std::cosh(2 * fEta) + 1);
    }
 
    /**
       transverse energy
    */
    Scalar Et() const {
-      return E() / std::cosh(fEta);
+     return E() / std::cosh(fEta);
    }
 
 private:
    inline static Scalar pi() { return M_PI; }
    inline void RestrictPhi() {
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
-      return;
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - std::floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
    // restrict the value of negative mass to avoid unphysical negative E2 values
    // M2 must be less than P2 for the tachionic particles - otherwise use positive values
    inline void RestrictNegMass() {
-      if ( fM >=0 ) return;
-      if ( P2() - fM*fM  < 0 ) {
-         GenVector::Throw ("PtEtaPhiM4D::unphysical value of mass, set to closest physical value");
-         fM = - P();
+      if (fM < 0) {
+         if (P2() - fM * fM < 0) {
+            GenVector::Throw("PtEtaPhiM4D::unphysical value of mass, set to closest physical value");
+            fM = -P();
+         }
       }
-      return;
    }
 
 public:
@@ -265,9 +266,8 @@ public:
       polar angle
    */
    Scalar Theta() const {
-      if (fPt  >  0) return 2* std::atan( exp( - fEta ) );
-      if (fEta >= 0) return 0;
-      return pi();
+     return ( fPt  > 0  ? Scalar(2) * std::atan(std::exp(-fEta)) :
+              fEta >= 0 ? 0 : pi() );
    }
 
    // --------- Set Coordinates of this system  ---------------

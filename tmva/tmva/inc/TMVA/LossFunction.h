@@ -46,7 +46,11 @@ namespace TMVA {
    class LossFunctionEventInfo{
 
    public:
-      LossFunctionEventInfo(){};
+      LossFunctionEventInfo(){
+          trueValue = 0.;
+          predictedValue = 0.;
+          weight = 0.;
+      };
       LossFunctionEventInfo(Double_t trueValue_, Double_t predictedValue_, Double_t weight_){
          trueValue = trueValue_;
          predictedValue = predictedValue_;

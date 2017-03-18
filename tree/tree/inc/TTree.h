@@ -537,7 +537,7 @@ public:
    virtual void            SetImplicitMT(Bool_t enabled) { fIMTEnabled = enabled; }
    virtual void            SetMakeClass(Int_t make);
    virtual void            SetMaxEntryLoop(Long64_t maxev = kMaxEntries) { fMaxEntryLoop = maxev; } // *MENU*
-   static  void            SetMaxTreeSize(Long64_t maxsize = 1900000000);
+   static  void            SetMaxTreeSize(Long64_t maxsize = 100000000000LL);
    virtual void            SetMaxVirtualSize(Long64_t size = 0) { fMaxVirtualSize = size; } // *MENU*
    virtual void            SetName(const char* name); // *MENU*
    virtual void            SetNotify(TObject* obj) { fNotify = obj; }

@@ -94,10 +94,9 @@ Technical details of the algorithm:
 */
 
 #include "TRobustEstimator.h"
+#include "TMatrixDSymEigen.h"
 #include "TRandom.h"
 #include "TMath.h"
-#include "TH1D.h"
-#include "TPaveLabel.h"
 #include "TDecompChol.h"
 
 ClassImp(TRobustEstimator)

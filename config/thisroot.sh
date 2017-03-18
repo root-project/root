@@ -19,9 +19,9 @@ drop_from_path()
    drop=$2
 
    newpath=`echo $p | sed -e "s;:${drop}:;:;g" \
-                          -e "s;:${drop};;g"   \
-                          -e "s;${drop}:;;g"   \
-                          -e "s;${drop};;g"`
+                          -e "s;:${drop}\$;;g"   \
+                          -e "s;^${drop}:;;g"   \
+                          -e "s;^${drop}\$;;g"`
 }
 
 if [ -n "${ROOTSYS}" ] ; then

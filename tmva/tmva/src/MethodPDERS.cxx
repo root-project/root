@@ -126,6 +126,8 @@ ClassImp(TMVA::MethodPDERS)
    fPrinted(0),
    fNormTree(0)
 {
+      fHelpVolume = NULL;
+      fBinaryTree = NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,6 +158,8 @@ TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
    fPrinted(0),
    fNormTree(0)
 {
+      fHelpVolume = NULL;
+      fBinaryTree = NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

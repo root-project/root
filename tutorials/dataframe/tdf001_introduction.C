@@ -67,11 +67,17 @@ int tdf001_introduction() {
    // The `Count` allows to retrieve the number of the entries that passed the
    // filters. Here we show how the automatic selection of the column kicks
    // in in case the user specifies none.
-   auto entries = d.Filter(cutb1) // <- no column name specified here!
+   auto entries1 = d.Filter(cutb1) // <- no column name specified here!
                    .Filter(cutb1b2, {"b2","b1"})
                    .Count();
 
-   std::cout << *entries << " entries passed all filters" << std::endl;
+   std::cout << *entries1 << " entries passed all filters" << std::endl;
+
+   // Filters can be expressed as strings. The content must be C++ code. The
+   // name of the variables must be the name of the branches. The code is
+   // just in time compiled.
+   auto entries2 = d.Filter("b1 < 5.").Count();
+   std::cout << *entries2 << " entries passed the string filter" << std::endl;
 
    // ### `Min`, `Max` and `Mean` actions
    // These actions allow to retrieve statistical information about the entries

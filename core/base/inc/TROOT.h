@@ -89,7 +89,8 @@ namespace ROOT {
    // Enable support for multi-threading within the ROOT code,
    // in particular, enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety();
-   // Manage implicit multi-threading within ROOT
+   /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
+   /// parallelisation mechanism.
    void EnableImplicitMT(UInt_t numthreads = 0);
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();

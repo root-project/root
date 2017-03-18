@@ -896,9 +896,9 @@ public:
 
       llvm::StringRef type = identifier->getName();
 
-      LinkdefReader::Options *options = 0;
+      std::unique_ptr<LinkdefReader::Options> options;
       if (type == "options" || type == "option") {
-         options = new LinkdefReader::Options();
+         options.reset(new LinkdefReader::Options());
          if (!ProcessOptions(*options, PP, tok)) {
             return;
          }
@@ -918,18 +918,17 @@ public:
 
       if (tok.isNot(clang::tok::semi)) {
          Error("Error: missing ; at end of rule", tok, false);
-         delete options;
          return;
       }
 
       if (end.is(clang::tok::unknown)) {
-         if (!fOwner.AddRule(type.data(), "", linkOn, false, options)) {
+         if (!fOwner.AddRule(type.data(), "", linkOn, false, options.get())) {
             Error(type.data(), tok, false);
          }
       } else {
          llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
 
-         if (!fOwner.AddRule(type, identifier, linkOn, false, options)) {
+         if (!fOwner.AddRule(type, identifier, linkOn, false, options.get())) {
             Error(type.data(), tok, false);
          }
       }

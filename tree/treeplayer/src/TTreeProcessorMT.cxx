@@ -95,10 +95,9 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       treeView->SetCurrent(std::get<2>(t));
       auto tr = treeView->GetTreeReader(std::get<0>(t), std::get<1>(t));
       func(*tr);
-      return 0;
    };
 
    // Assume number of threads has been initialized via ROOT::EnableImplicitMT
    TThreadExecutor pool;
-   pool.Map(mapFunction, vTuple);
+   pool.Foreach(mapFunction, vTuple);
 }

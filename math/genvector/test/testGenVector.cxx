@@ -566,7 +566,10 @@ int testTransform3D() {
   iret |= compare( r.Theta(), err2.Theta(),"transf rot theta",1 );
   iret |= compare( r.Psi(), err2.Psi(),"transf rot psi",1 );
 
-  iret |= compare( v == vvv2, 1,"eq transf g vec",1 );
+//iret |= compare( v == vvv2, 1,"eq transf g vec",1 );
+  iret |= compare( v.X(), vvv2.X(),"eq transf g vec",4 );
+  iret |= compare( v.Y(), vvv2.Y(),"eq transf g vec",1 );
+  iret |= compare( v.Z(), vvv2.Z(),"eq transf g vec",1 );
 
   // create from other rotations
   RotationZYX rzyx(r);

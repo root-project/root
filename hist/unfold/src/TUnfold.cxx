@@ -2726,13 +2726,13 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
   Double_t logTauFin=(*i0).first;
   if( ((int)curve.size())<nPoint) {
     // set up splines and determine (x,y) curvature in each point
-    Double_t *cTi=new Double_t[curve.size()-1];
-    Double_t *cCi=new Double_t[curve.size()-1];
+    Double_t *cTi=new Double_t[curve.size()-1]();
+    Double_t *cCi=new Double_t[curve.size()-1]();
     Int_t n=0;
     {
-      Double_t *lXi=new Double_t[curve.size()];
-      Double_t *lYi=new Double_t[curve.size()];
-      Double_t *lTi=new Double_t[curve.size()];
+      Double_t *lXi=new Double_t[curve.size()]();
+      Double_t *lYi=new Double_t[curve.size()]();
+      Double_t *lTi=new Double_t[curve.size()]();
       for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
         lXi[n]=(*i).second.first;
         lYi[n]=(*i).second.second;
@@ -2856,9 +2856,9 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
 
   Int_t bestChoice=-1;
   if(curve.size()>0) {
-    Double_t *x=new Double_t[curve.size()];
-    Double_t *y=new Double_t[curve.size()];
-    Double_t *logT=new Double_t[curve.size()];
+    Double_t *x=new Double_t[curve.size()]();
+    Double_t *y=new Double_t[curve.size()]();
+    Double_t *logT=new Double_t[curve.size()]();
     int n=0;
     for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
       if(logTauFin==(*i).first) {

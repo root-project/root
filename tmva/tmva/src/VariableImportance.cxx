@@ -123,7 +123,7 @@ void TMVA::VariableImportance::Evaluate()
         if(nbits<10)
             Log()<<kERROR<<"Running variable importance with less that 10 varibales in Random mode "<<
                            "can to produce inconsisten results"<<Endl;
-        EvaluateImportanceRandom(pow(2,nbits));
+        EvaluateImportanceRandom(pow(nbits,2));
     }
     fResults.fType = fType;
     TMVA::MsgLogger::EnableOutput();

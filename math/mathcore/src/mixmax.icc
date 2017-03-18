@@ -287,7 +287,7 @@ void read_state(rng_state_t* X, const char filename[] ){
     // a function for reading the state from a file, after J. Apostolakis
     FILE* fin;
     if(  ( fin = fopen(filename, "r") ) ){
-        char l=0;
+        int l=0;
         while ( l != '{' ) { // 0x7B = "{"
             l=fgetc(fin); // proceed until hitting opening bracket
         }

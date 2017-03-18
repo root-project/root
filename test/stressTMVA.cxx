@@ -1781,6 +1781,9 @@ utVariableInfo::utVariableInfo() :
 
    mean       = 42.;
    rms        = 47.11;
+   _varinfoC1 = nullptr;
+   _varinfoC2 = nullptr;
+   _varinfoC3 = nullptr;
 }
 
 
@@ -2018,21 +2021,15 @@ void MethodUnitTestWithROCLimits::run()
   dataloader->AddVariable( _VariableNames->at(3),                "Variable 4", "units", 'F' );
 
   TFile* input(0);
-
   FileStat_t stat;
 
-  TString fname = "../tmva/test/data/toy_sigbkg.root"; //tmva_example.root";
-  const char *fcname = gSystem->ExpandPathName("$ROOTSYS/tmva/test/data/toy_sigbkg.root");
+  TString fname = "./tmva_class_example.root";
   if(!gSystem->GetPathInfo(fname,stat)) {
      input = TFile::Open( fname );
-  } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
-     input = TFile::Open( "../"+fname );
-  } else if(fcname && !gSystem->GetPathInfo(fcname,stat)) {
-     input = TFile::Open( fcname );
   } else {
-     input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" );
+     TFile::SetCacheFileDir(".");
+     input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
   }
-  delete [] fcname;
   if (input == NULL) {
      cerr << "broken/inaccessible input file" << endl;
   }
@@ -2449,14 +2446,12 @@ void RegressionUnitTestWithDeviation::run()
    TFile* input(0);
    FileStat_t stat;
 
-   // FIXME:: give the filename of the sample somewhere else?
-   TString fname = "../tmva/test/tmva_reg_example.root";
+   TString fname = "./tmva_reg_example.root";
    if(!gSystem->GetPathInfo(fname,stat)) {
       input = TFile::Open( fname );
-   } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
-      input = TFile::Open( "../"+fname );
    } else {
-      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" );
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD");
    }
    if (input == NULL) {
       cerr << "broken/inaccessible input file" << endl;
@@ -2655,6 +2650,10 @@ MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString& tree
                                                              const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */) :
    UnitTest(string("ComplexData_")+(string)methodTitle+(string)treestring, __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
 {
+    theTree = nullptr;
+    _theMethod = nullptr;
+    _factory = nullptr;
+    _ROCValue = 0.;
 }
 
 

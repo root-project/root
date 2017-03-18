@@ -18,7 +18,7 @@
 
 #include "TArrayI.h"
 #include "TMatrixDSym.h"
-#include "TMatrixDSymEigen.h"
+#include "TVectorD.h"
 
 class TRobustEstimator : public TObject {
 

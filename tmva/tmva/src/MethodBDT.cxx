@@ -213,6 +213,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 {
    fMonitorNtuple = NULL;
    fSepType = NULL;
+   fRegressionLossFunctionBDTG = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,6 +268,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
 {
    fMonitorNtuple = NULL;
    fSepType = NULL;
+   fRegressionLossFunctionBDTG = nullptr;
    // constructor for calculating BDT-MVA using previously generated decision trees
    // the result of the previous training (the decision trees) are read in via the
    // weight file. Make sure the the variables correspond to the ones used in

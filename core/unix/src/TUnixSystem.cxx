@@ -499,8 +499,8 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    TString lib = _dyld_get_image_name(i++);
 
-   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
-   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
+   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.so";
+   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.dylib";
 
 #ifdef ROOTPREFIX
    if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
@@ -605,7 +605,6 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigSegmentationViolation, SigHandler);
    UnixSignal(kSigIllegalInstruction,    SigHandler);
    UnixSignal(kSigSystem,                SigHandler);
-   UnixSignal(kSigPipe,                  SigHandler);
    UnixSignal(kSigAlarm,                 SigHandler);
    UnixSignal(kSigUrgent,                SigHandler);
    UnixSignal(kSigFloatingException,     SigHandler);

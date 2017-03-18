@@ -40,6 +40,17 @@ namespace ROOT {
       TThreadExecutor(TThreadExecutor &) = delete;
       TThreadExecutor &operator=(TThreadExecutor &) = delete;
 
+      template<class F>
+      void Foreach(F func, unsigned nTimes);
+      template<class F, class INTEGER>
+      void Foreach(F func, ROOT::TSeq<INTEGER> args);
+      /// \cond
+      template<class F, class T>
+      void Foreach(F func, std::initializer_list<T> args);
+      /// \endcond
+      template<class F, class T>
+      void Foreach(F func, std::vector<T> &args);
+
       template<class F, class Cond = noReferenceCond<F>>
       auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
       template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
@@ -56,8 +67,10 @@ namespace ROOT {
       auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type;
       template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
       auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type;
+      /// \cond
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
+      /// \endcond
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
       using TExecutor<TThreadExecutor>::MapReduce;
@@ -88,6 +101,43 @@ namespace ROOT {
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
+
+   //////////////////////////////////////////////////////////////////////////
+   /// Execute func (with no arguments) nTimes in parallel.
+   /// Functions that take more than zero arguments can be executed (with
+   /// fixed arguments) by wrapping them in a lambda or with std::bind.
+   template<class F>
+   void TThreadExecutor::Foreach(F func, unsigned nTimes) {
+       ParallelFor(0U, nTimes, 1, [&](unsigned int){func();});
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   /// Execute func in parallel, taking an element of a
+   /// sequence as argument.
+   template<class F, class INTEGER>
+   void TThreadExecutor::Foreach(F func, ROOT::TSeq<INTEGER> args) {
+       ParallelFor(*args.begin(), *args.end(), 1, [&](unsigned int i){func(i);});
+   }
+   
+   /// \cond
+   //////////////////////////////////////////////////////////////////////////
+   /// Execute func in parallel, taking an element of a
+   /// initializer_list as argument.
+   template<class F, class T>
+   void TThreadExecutor::Foreach(F func, std::initializer_list<T> args) {
+       std::vector<T> vargs(std::move(args));
+       Foreach(func, vargs);
+   }
+   /// \endcond
+
+   //////////////////////////////////////////////////////////////////////////
+   /// Execute func in parallel, taking an element of an
+   /// std::vector as argument.
+   template<class F, class T>
+   void TThreadExecutor::Foreach(F func, std::vector<T> &args) {
+        unsigned int nToProcess = args.size();
+        ParallelFor(0U, nToProcess, 1, [&](unsigned int i){func(args[i]);});
+   }
 
    //////////////////////////////////////////////////////////////////////////
    /// Execute func (with no arguments) nTimes in parallel.
@@ -269,12 +319,12 @@ namespace ROOT {
    auto TThreadExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
       return Reduce(Map(func, args, redfunc, nChunks), redfunc);
    }
-
+   /// \cond
    template<class F, class T, class R, class Cond>
    auto TThreadExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
       return Reduce(Map(func, args, redfunc, nChunks), redfunc);
    }
-
+   /// \endcond
    template<class F, class T, class R, class Cond>
    auto TThreadExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
       return Reduce(Map(func, args, redfunc, nChunks), redfunc);
