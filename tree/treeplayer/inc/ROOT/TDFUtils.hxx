@@ -203,7 +203,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r,
       isTmpColumn[i] = std::find(tmpbn.begin(), tmpbn.end(), bn.at(i)) != tmpbn.end();
 
    // hack to expand a parameter pack without c++17 fold expressions.
-   // auto defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
+   // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
    // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S and BranchTypes.
    std::initializer_list<int> expander{(isTmpColumn[S]
                                            ? std::get<S>(valueTuple).SetTmpColumn(slot, tmpBranches.at(bn.at(S)).get())
