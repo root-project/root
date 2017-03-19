@@ -68,6 +68,7 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    const BranchNames_t                fDefaultBranches;
    const unsigned int                 fNSlots{0};
    bool                               fHasRunAtLeastOnce{false};
+   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
 
 public:
    TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches);
@@ -96,6 +97,7 @@ public:
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
    void SetTree(TTree *tree) { fTree = tree; }
+   void IncrChildrenCount() { ++fNChildren; }
 };
 }
 
@@ -186,6 +188,7 @@ template <typename BranchType>
 using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
 class TDataFrameActionBase {
+   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
 protected:
    ROOT::Detail::TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional
                                            /// graph. It is only guaranteed to contain a valid address during an event
@@ -198,6 +201,7 @@ public:
    virtual void Run(unsigned int slot, Long64_t entry)               = 0;
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
+   void IncrChildrenCount() { ++fNChildren; }
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -246,6 +250,7 @@ public:
 namespace Detail {
 
 class TDataFrameBranchBase {
+   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
 protected:
    TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only
                              /// guaranteed to contain a valid address during an event loop.
@@ -266,6 +271,7 @@ public:
    std::string     GetName() const;
    BranchNames_t   GetTmpBranches() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   void IncrChildrenCount() { ++fNChildren; }
 };
 
 template <typename F, typename PrevData>
@@ -340,6 +346,7 @@ public:
 };
 
 class TDataFrameFilterBase {
+   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
 protected:
    TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only
                              /// guaranteed to contain a valid address during an event loop.
@@ -362,6 +369,7 @@ public:
    bool            HasName() const;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    void PrintReport() const;
+   void IncrChildrenCount() { ++fNChildren; }
 };
 
 template <typename FilterF, typename PrevDataFrame>
