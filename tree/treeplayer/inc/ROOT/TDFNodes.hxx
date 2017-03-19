@@ -158,7 +158,7 @@ public:
    T &Get(Long64_t entry);
 
    template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
-   std::array_view<ProxyParam_t> Get(Long64_t entry)
+   std::array_view<ProxyParam_t> Get(Long64_t)
    {
       auto &readerArray = *fReaderArray;
       if (readerArray.GetSize() > 1 && 1 != (&readerArray[1] - &readerArray[0])) {
