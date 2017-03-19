@@ -145,17 +145,17 @@ struct TIsContainer {
 };
 
 // Extract first of possibly many template parameters. For non-template types, the result is the type itself
-template<typename T>
+template <typename T>
 struct TExtractType {
    using type = T;
 };
 
-template<typename T, template<typename...> class U, typename...Extras>
+template <typename T, template <typename...> class U, typename... Extras>
 struct TExtractType<U<T, Extras...>> {
    using type = T;
 };
 
-template<typename T>
+template <typename T>
 using ExtractType_t = typename TExtractType<T>::type;
 
 } // end NS TDFTraitsUtils
@@ -199,16 +199,16 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r,
    // branch is a temporary branch created with AddColumn, false if they are
    // actual branches present in the TTree.
    std::array<bool, sizeof...(S)> isTmpColumn;
-   for (auto i = 0u; i < isTmpColumn.size(); ++i)
+   for (auto i       = 0u; i < isTmpColumn.size(); ++i)
       isTmpColumn[i] = std::find(tmpbn.begin(), tmpbn.end(), bn.at(i)) != tmpbn.end();
 
    // hack to expand a parameter pack without c++17 fold expressions.
    // auto defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
    // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S and BranchTypes.
-   std::initializer_list<int> expander{
-      (isTmpColumn[S] ? std::get<S>(valueTuple).SetTmpColumn(slot, tmpBranches.at(bn.at(S)).get())
-                      : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
-       0)...};
+   std::initializer_list<int> expander{(isTmpColumn[S]
+                                           ? std::get<S>(valueTuple).SetTmpColumn(slot, tmpBranches.at(bn.at(S)).get())
+                                           : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
+                                        0)...};
    (void)expander; // avoid "unused variable" warnings for expander on gcc4.9
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
 }

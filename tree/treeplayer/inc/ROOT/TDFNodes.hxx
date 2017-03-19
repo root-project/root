@@ -59,8 +59,8 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    };
 
    ROOT::Detail::ActionBaseVec_t fBookedActions;
-   ROOT::Detail::FilterBaseVec_t   fBookedFilters;
-   ROOT::Detail::FilterBaseVec_t   fBookedNamedFilters;
+   ROOT::Detail::FilterBaseVec_t fBookedFilters;
+   ROOT::Detail::FilterBaseVec_t fBookedNamedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *                     fDirPtr{nullptr};
@@ -82,7 +82,7 @@ public:
    const BranchNames_t             GetTmpBranches() const { return {}; };
    TTree *                         GetTree() const;
    TDataFrameBranchBase *GetBookedBranch(const std::string &name) const;
-   const std::map<std::string, TmpBranchBasePtr_t>& GetBookedBranches() const { return fBookedBranches; }
+   const std::map<std::string, TmpBranchBasePtr_t> &GetBookedBranches() const { return fBookedBranches; }
    void *GetTmpBranchValue(const std::string &branch, unsigned int slot);
    ::TDirectory *GetDirectory() const;
    std::string   GetTreeName() const;
@@ -92,8 +92,8 @@ public:
    void Book(const std::shared_ptr<bool> &branchPtr);
    bool         CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const;
-   bool HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
-   void Report() const;
+   bool         HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
+   void         Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
    void SetTree(TTree *tree) { fTree = tree; }
@@ -134,7 +134,7 @@ class TDataFrameValue {
    std::unique_ptr<TTreeReaderArray<ProxyParam_t>> fReaderArray{nullptr}; //< Owning ptr to a TTreeReaderArray. Used for
                                                                           /// non-temporary columsn and
                                                                           /// T == std::array_view<U>.
-   T *fValuePtr{nullptr}; //< Non-owning ptr to the value of a temporary column. 
+   T *                                 fValuePtr{nullptr}; //< Non-owning ptr to the value of a temporary column.
    ROOT::Detail::TDataFrameBranchBase *fTmpColumn{
       nullptr};            //< Non-owning ptr to the node responsible for the temporary column.
    unsigned int fSlot = 0; //< The slot this value belongs to. Only used for temporary columns, not for real branches.
@@ -158,8 +158,9 @@ public:
                                      int>::type = 0>
    T &Get(Long64_t entry);
 
-   template<typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
-   std::array_view<ProxyParam_t> Get(Long64_t entry) {
+   template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
+   std::array_view<ProxyParam_t> Get(Long64_t entry)
+   {
       auto &readerArray = *fReaderArray;
       if (readerArray.GetSize() > 1 && 1 != (&readerArray[1] - &readerArray[0])) {
          std::string exceptionText = "Branch ";
@@ -369,9 +370,9 @@ class TDataFrameFilter final : public TDataFrameFilterBase {
    using BranchTypes_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<FilterF>::Args_t;
    using TypeInd_t     = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
-   FilterF             fFilter;
-   const BranchNames_t fBranches;
-   PrevDataFrame &     fPrevData;
+   FilterF                                                     fFilter;
+   const BranchNames_t                                         fBranches;
+   PrevDataFrame &                                             fPrevData;
    std::vector<ROOT::Internal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
