@@ -12,5 +12,6 @@
 #pragma link C++ class ROOT::Experimental::TDataFrame-;
 #pragma link C++ class ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>-;
 #pragma link C++ class ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>-;
+#pragma link C++ class ROOT::Detail::TDataFrameImpl-;
 
 #endif
