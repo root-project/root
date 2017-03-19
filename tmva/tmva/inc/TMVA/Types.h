@@ -106,7 +106,8 @@ namespace TMVA {
          kRSNNS          ,
          kRSVM           ,
          kRXGB           ,
-         kMaxMethod
+         kMaxMethod      ,
+         kPyRFOneVsRest
       };
 
       // available variable transformations
