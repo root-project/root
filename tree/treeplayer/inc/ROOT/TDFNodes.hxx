@@ -83,7 +83,6 @@ public:
    TTree *                         GetTree() const;
    TDataFrameBranchBase *GetBookedBranch(const std::string &name) const;
    const std::map<std::string, TmpBranchBasePtr_t> &GetBookedBranches() const { return fBookedBranches; }
-   void *GetTmpBranchValue(const std::string &branch, unsigned int slot);
    ::TDirectory *GetDirectory() const;
    std::string   GetTreeName() const;
    void Book(const ActionBasePtr_t &actionPtr);
