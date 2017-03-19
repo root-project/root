@@ -115,8 +115,8 @@ public:
    TDataFrameBranchBase(TDataFrameImpl *df, const BranchNames_t &tmpBranches, const std::string &name);
    virtual ~TDataFrameBranchBase() {}
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
-   virtual void CreateSlots(unsigned int nSlots) = 0;
-   virtual void *GetValue(unsigned int slot, Long64_t entry) = 0;
+   virtual void CreateSlots(unsigned int nSlots)   = 0;
+   virtual void *GetValuePtr(unsigned int slot)    = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    TDataFrameImpl *GetImplPtr() const;
@@ -124,6 +124,7 @@ public:
    virtual void    PartialReport() const = 0;
    std::string     GetName() const;
    BranchNames_t   GetTmpBranches() const;
+   virtual void Update(unsigned int slot, Long64_t entry) = 0;
 };
 using TmpBranchBasePtr_t = std::shared_ptr<TDataFrameBranchBase>;
 
@@ -137,7 +138,7 @@ class TDataFrameBranch final : public TDataFrameBranchBase {
    const BranchNames_t fBranches;
 
    std::vector<ROOT::Internal::TVBVec_t> fReaderValues;
-   std::vector<std::shared_ptr<Ret_t>>   fLastResultPtr;
+   std::vector<std::unique_ptr<Ret_t>>   fLastResultPtr;
    PrevData &                            fPrevData;
    std::vector<Long64_t>                 fLastCheckedEntry = {-1};
 
@@ -156,15 +157,15 @@ public:
       fReaderValues[slot] = ROOT::Internal::BuildReaderValues(r, fBranches, fTmpBranches, BranchTypes_t(), TypeInd_t());
    }
 
-   void *GetValue(unsigned int slot, Long64_t entry) final
+   void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(fLastResultPtr[slot].get()); }
+
+   void Update(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         auto newValuePtr        = GetValueHelper(BranchTypes_t(), TypeInd_t(), slot, entry);
-         fLastResultPtr[slot]    = newValuePtr;
+         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t());
          fLastCheckedEntry[slot] = entry;
       }
-      return static_cast<void *>(fLastResultPtr[slot].get());
    }
 
    const std::type_info &GetTypeId() const { return typeid(Ret_t); }
@@ -174,6 +175,7 @@ public:
       fReaderValues.resize(nSlots);
       fLastCheckedEntry.resize(nSlots, -1);
       fLastResultPtr.resize(nSlots);
+      std::generate(fLastResultPtr.begin(), fLastResultPtr.end(), []() { return std::unique_ptr<Ret_t>(new Ret_t()); });
    }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
@@ -183,14 +185,12 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   std::shared_ptr<Ret_t> GetValueHelper(ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
-                                         ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>, unsigned int slot,
-                                         Long64_t entry)
+   void UpdateHelper(unsigned int slot, Long64_t entry, ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
+                     ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>)
    {
-      auto valuePtr = std::make_shared<Ret_t>(
+      *fLastResultPtr[slot] =
          fExpression(ROOT::Internal::GetBranchValue(fReaderValues[slot][S], slot, entry, fBranches[S], fImplPtr,
-                                                    ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...));
-      return valuePtr;
+                                                    ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes>())...);
    }
 
    // recursive chain of `Report`s

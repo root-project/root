@@ -222,7 +222,9 @@ TDataFrameBranchBase *TDataFrameImpl::GetBookedBranch(const std::string &name) c
 
 void *TDataFrameImpl::GetTmpBranchValue(const std::string &branch, unsigned int slot, Long64_t entry)
 {
-   return fBookedBranches.at(branch)->GetValue(slot, entry);
+   auto &tmpBranch = fBookedBranches.at(branch);
+   tmpBranch->Update(slot, entry);
+   return tmpBranch->GetValuePtr(slot);
 }
 
 TDirectory *TDataFrameImpl::GetDirectory() const
