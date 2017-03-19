@@ -23,6 +23,7 @@
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
 #include "TRegexp.h"
+#include "TROOT.h" // IsImplicitMTEnabled
 
 #include <initializer_list>
 #include <memory>
@@ -295,6 +296,41 @@ public:
       df->Book(BranchPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node that filters entries based on range
+   /// \param[in] start How many entries to discard before resuming processing.
+   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
+   /// \param[in] stride Process one entry every `stride` entries. Must be strictly greater than 0.
+   ///
+   /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
+   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int start, unsigned int stop,
+                                                                unsigned int stride = 1)
+   {
+      // check invariants
+      if (stride == 0 || (stop != 0 && stop < start))
+         throw std::runtime_error("Range: stride must be strictly greater than 0 and stop must be greater than start.");
+      if (ROOT::IsImplicitMTEnabled())
+         throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
+
+      auto df       = GetDataFrameChecked();
+      using Range_t = ROOT::Detail::TDataFrameRange<Proxied>;
+      auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
+      fProxiedPtr->IncrChildrenCount();
+      df->Book(RangePtr);
+      TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> tdf_r(RangePtr, fImplWeakPtr);
+      return tdf_r;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node that filters entries based on range
+   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
+   ///
+   /// See the other Range overload for a detailed description.
+   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int stop)
+   {
+      return Range(0, stop, 1);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1116,6 +1152,12 @@ template <>
 inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName()
 {
    return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>";
+}
+
+template <>
+inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>::GetNodeTypeName()
+{
+   return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>";
 }
 
 // Before we had to specialise the GetNodeTypeName method
