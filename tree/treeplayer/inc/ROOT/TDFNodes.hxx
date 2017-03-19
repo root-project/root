@@ -19,6 +19,7 @@
 
 #include <map>
 #include <numeric> // std::iota for TSlotStack
+#include <string>
 
 namespace ROOT {
 
