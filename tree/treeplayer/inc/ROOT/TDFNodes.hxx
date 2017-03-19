@@ -38,6 +38,9 @@ using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>;
 class TDataFrameFilterBase;
 using FilterBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameFilterBase>;
 using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
+class TDataFrameRangeBase;
+using RangeBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameRangeBase>;
+using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
 class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
 
@@ -62,13 +65,15 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    ROOT::Detail::FilterBaseVec_t fBookedFilters;
    ROOT::Detail::FilterBaseVec_t fBookedNamedFilters;
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
+   ROOT::Detail::RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *                     fDirPtr{nullptr};
    TTree *                            fTree{nullptr};
    const BranchNames_t                fDefaultBranches;
    const unsigned int                 fNSlots{0};
    bool                               fHasRunAtLeastOnce{false};
-   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
+   unsigned int fNChildren      = 0; ///< Number of nodes of the functional graph hanging from this object
+   unsigned int fNStopsReceived = 0; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
    TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches);
@@ -90,6 +95,7 @@ public:
    void Book(const ROOT::Detail::FilterBasePtr_t &filterPtr);
    void Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr);
    void Book(const std::shared_ptr<bool> &branchPtr);
+   void Book(const ROOT::Detail::RangeBasePtr_t &rangePtr);
    bool         CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const;
    bool         HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
@@ -97,7 +103,8 @@ public:
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
    void SetTree(TTree *tree) { fTree = tree; }
-   void IncrChildrenCount() { ++fNChildren; }
+   void                IncrChildrenCount() { ++fNChildren; }
+   void                StopProcessing() { ++fNStopsReceived; }
 };
 }
 
@@ -188,7 +195,6 @@ template <typename BranchType>
 using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
 class TDataFrameActionBase {
-   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
 protected:
    ROOT::Detail::TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional
                                            /// graph. It is only guaranteed to contain a valid address during an event
@@ -201,7 +207,6 @@ public:
    virtual void Run(unsigned int slot, Long64_t entry)               = 0;
    virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
-   void IncrChildrenCount() { ++fNChildren; }
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -250,12 +255,13 @@ public:
 namespace Detail {
 
 class TDataFrameBranchBase {
-   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
 protected:
    TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only
                              /// guaranteed to contain a valid address during an event loop.
    BranchNames_t     fTmpBranches;
    const std::string fName;
+   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
+   unsigned int fNStopsReceived = 0; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
    TDataFrameBranchBase(TDataFrameImpl *df, const BranchNames_t &tmpBranches, const std::string &name);
@@ -272,6 +278,7 @@ public:
    BranchNames_t   GetTmpBranches() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    void IncrChildrenCount() { ++fNChildren; }
+   virtual void StopProcessing() = 0;
 };
 
 template <typename F, typename PrevData>
@@ -343,10 +350,15 @@ public:
    void Report() const final { fPrevData.PartialReport(); }
 
    void PartialReport() const final { fPrevData.PartialReport(); }
+
+   void StopProcessing() {
+      ++fNStopsReceived;
+      if (fNStopsReceived == fNChildren)
+         fPrevData.StopProcessing();
+   }
 };
 
 class TDataFrameFilterBase {
-   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
 protected:
    TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only
                              /// guaranteed to contain a valid address during an event loop.
@@ -356,6 +368,8 @@ protected:
    std::vector<ULong64_t> fAccepted         = {0};
    std::vector<ULong64_t> fRejected         = {0};
    const std::string      fName;
+   unsigned int fNChildren = 0; ///< Number of nodes of the functional graph hanging from this object
+   unsigned int fNStopsReceived = 0; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
    TDataFrameFilterBase(TDataFrameImpl *df, const BranchNames_t &tmpBranches, const std::string &name);
@@ -370,6 +384,7 @@ public:
    virtual void CreateSlots(unsigned int nSlots) = 0;
    void PrintReport() const;
    void IncrChildrenCount() { ++fNChildren; }
+   virtual void StopProcessing() = 0;
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -440,6 +455,86 @@ public:
    {
       fPrevData.PartialReport();
       PrintReport();
+   }
+
+   void StopProcessing() {
+      ++fNStopsReceived;
+      if (fNStopsReceived == fNChildren)
+         fPrevData.StopProcessing();
+   }
+};
+
+class TDataFrameRangeBase {
+protected:
+   TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional graph. It is only
+                             /// guaranteed to contain a valid address during an event loop.
+   BranchNames_t fTmpBranches;
+   unsigned int  fStart;
+   unsigned int  fStop;
+   unsigned int  fStride;
+   Long64_t      fLastCheckedEntry = -1;
+   bool          fLastResult = true;
+   ULong64_t     fNProcessedEntries = 0;
+   unsigned int  fNChildren         = 0; ///< Number of nodes of the functional graph hanging from this object
+   unsigned int  fNStopsReceived    = 0; ///< Number of times that a children node signaled to stop processing entries.
+
+public:
+   TDataFrameRangeBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, unsigned int start, unsigned int stop,
+                       unsigned int stride);
+   virtual ~TDataFrameRangeBase() {}
+   TDataFrameImpl *GetImplPtr() const;
+   BranchNames_t   GetTmpBranches() const;
+   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
+   virtual void Report() const        = 0;
+   virtual void PartialReport() const = 0;
+   void         IncrChildrenCount() { ++fNChildren; }
+   virtual void StopProcessing() = 0;
+};
+
+template <typename PrevData>
+class TDataFrameRange final : public TDataFrameRangeBase {
+   PrevData &fPrevData;
+
+public:
+   TDataFrameRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
+      : TDataFrameRangeBase(pd.GetImplPtr(), pd.GetTmpBranches(), start, stop, stride), fPrevData(pd)
+   {
+   }
+
+   TDataFrameRange(const TDataFrameRange &) = delete;
+
+   /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
+   bool CheckFilters(unsigned int slot, Long64_t entry) final
+   {
+      if (entry != fLastCheckedEntry) {
+         if (!fPrevData.CheckFilters(slot, entry)) {
+            // a filter upstream returned false, cache the result
+            fLastResult = false;
+         } else {
+            // apply range filter logic, cache the result
+            ++fNProcessedEntries;
+            if (fNProcessedEntries <= fStart || (fStop > 0 && fNProcessedEntries > fStop) ||
+                (fStride != 1 && fNProcessedEntries % fStride != 0))
+               fLastResult = false;
+            else
+               fLastResult = true;
+            if (fNProcessedEntries == fStop) fPrevData.StopProcessing();
+         }
+         fLastCheckedEntry = entry;
+      }
+      return fLastResult;
+   }
+
+   // recursive chain of `Report`s
+   // TDataFrameRange simply forwards these calls to the previous node
+   void Report() const final { fPrevData.PartialReport(); }
+
+   void PartialReport() const final { fPrevData.PartialReport(); }
+
+   void StopProcessing()
+   {
+      ++fNStopsReceived;
+      if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
    }
 };
 

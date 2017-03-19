@@ -136,7 +136,8 @@ void TDataFrameImpl::Run()
       BuildAllReaderValues(r, 0);
 
       // recursive call to check filters and conditionally execute actions
-      while (r.Next()) {
+      // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
+      while (r.Next() && fNStopsReceived < fNChildren) {
          const auto currEntry = r.GetCurrentEntry();
          for (auto &actionPtr : fBookedActions) actionPtr->Run(0, currEntry);
          for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(0, currEntry);
@@ -237,6 +238,11 @@ void TDataFrameImpl::Book(const std::shared_ptr<bool> &readinessPtr)
    fResProxyReadiness.emplace_back(readinessPtr);
 }
 
+void TDataFrameImpl::Book(const ROOT::Detail::RangeBasePtr_t &rangePtr)
+{
+   fBookedRanges.emplace_back(rangePtr);
+}
+
 // dummy call, end of recursive chain of calls
 bool TDataFrameImpl::CheckFilters(int, unsigned int)
 {
@@ -252,6 +258,22 @@ unsigned int TDataFrameImpl::GetNSlots() const
 void TDataFrameImpl::Report() const
 {
    for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
+}
+
+TDataFrameRangeBase::TDataFrameRangeBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
+                                         unsigned int start, unsigned int stop, unsigned int stride)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride)
+{
+}
+
+TDataFrameImpl *TDataFrameRangeBase::GetImplPtr() const
+{
+   return fImplPtr;
+}
+
+BranchNames_t TDataFrameRangeBase::GetTmpBranches() const
+{
+   return fTmpBranches;
 }
 
 } // end NS Detail
