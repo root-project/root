@@ -29,6 +29,10 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 class TDirectory;
 class TTree;
 
+#ifndef __ROOTCLING__
+R__LOAD_LIBRARY(libTreePlayer)
+#endif
+
 namespace cling {
 // TDataFrame pretty-printing
 std::string printValue(ROOT::Experimental::TDataFrame *tdf);
