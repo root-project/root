@@ -7,6 +7,12 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_GENERATE_EXECUTABLE(test_ranges test_ranges.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(test_ranges
+                  EXEC test_ranges
+                  OUTREF test_ranges.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_ADD_TEST(test_stringfilter
                   MACRO test_stringfilter.C+
                   OUTREF test_stringfilter.ref)
