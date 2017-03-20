@@ -151,8 +151,6 @@ namespace clang {
              && "Newly created module should not have weakRefRefs");
       Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
 
-      Builder->EmittedDeferredDecls.swap(OldBuilder->EmittedDeferredDecls);
-
       return M.get();
     }
 
@@ -287,27 +285,13 @@ namespace clang {
         }
       }
 
-      if (GV->isWeakForLinker()) {
-        if (!GV->isDeclaration()) {
-          // This is a definition. If if was emitted as deferred, move it
-          // back into deferred state.
-          auto IEmittedDeferredDecl
-            = Builder->EmittedDeferredDecls.find(GV);
-          if (IEmittedDeferredDecl != Builder->EmittedDeferredDecls.end()) {
-            // Use the name of the original GV, not that of our definition
-            // that's soon to be erased.
-            Builder->DeferredDecls[IEmittedDeferredDecl->second.first]
-              = IEmittedDeferredDecl->second.second;
-            Builder->EmittedDeferredDecls.erase(IEmittedDeferredDecl);
-          }
-        } else {
-          // might be an entry in the deferred decls, if so: remove!
-          auto IDeferredDecl = Builder->DeferredDecls.find(GV->getName());
-          if (IDeferredDecl != Builder->DeferredDecls.end()) {
-            // yes, pointer comparison.
-            if (IDeferredDecl->first.data() == GV->getName().data())
-              Builder->DeferredDecls.erase(IDeferredDecl);
-          }
+      if (GV->isWeakForLinker() && GV->isDeclaration()) {
+        // might be an entry in the deferred decls, if so: remove!
+        auto IDeferredDecl = Builder->DeferredDecls.find(GV->getName());
+        if (IDeferredDecl != Builder->DeferredDecls.end()) {
+          // yes, pointer comparison.
+          if (IDeferredDecl->first.data() == GV->getName().data())
+            Builder->DeferredDecls.erase(IDeferredDecl);
         }
       }
     }
