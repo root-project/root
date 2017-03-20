@@ -490,7 +490,7 @@ namespace ROOT {
           //        We should then move the code to a .cpp file.
           const Scalar ee  = E();
           const Scalar ppz = Pz();
-          return Scalar(0.5) * std::log((ee + ppz) / (ee - ppz));
+          return Scalar(0.5) * log((ee + ppz) / (ee - ppz));
        }
 
        /**
@@ -501,7 +501,7 @@ namespace ROOT {
           //        mechanism or at least load a NAN if not.
           const Scalar ee = E();
           const Scalar pp = P();
-          return Scalar(0.5) * std::log((ee + pp) / (ee - pp));
+          return Scalar(0.5) * log((ee + pp) / (ee - pp));
        }
 
        /**
@@ -598,7 +598,7 @@ namespace ROOT {
        */
        Scalar Gamma() const {
           const Scalar v2 = P2();
-          const Scalar t2 = std::pow(E(), 2);
+          const Scalar t2 = pow(E(), 2);
           if (E() == 0) {
              if ( P2() == 0) {
                 return 1;
@@ -614,7 +614,7 @@ namespace ROOT {
           else if ( t2 == v2 ) {
              GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
-          return Scalar(1) / std::sqrt(Scalar(1) - v2 / t2);
+          return Scalar(1) / sqrt(Scalar(1) - v2 / t2);
        } /* gamma */
 
 

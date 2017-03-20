@@ -89,8 +89,8 @@ public :
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}
    Scalar Mag2()  const { return fX*fX + fY*fY; }
-   Scalar R() const { return std::sqrt(Mag2()); }
-   Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : std::atan2(fY, fX); }
+   Scalar R() const { return sqrt(Mag2()); }
+   Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX); }
 
    /**
        set the x coordinate value keeping y constant
@@ -124,8 +124,8 @@ public :
        rotate by an angle
     */
    void Rotate(Scalar angle) {
-      const Scalar s = std::sin(angle);
-      const Scalar c = std::cos(angle);
+      const Scalar s = sin(angle);
+      const Scalar c = cos(angle);
       SetCoordinates(c * fX - s * fY, s * fX + c * fY);
    }
 
@@ -175,8 +175,8 @@ public :
    Cartesian2D & operator = (const Polar2D<T2> & v)
    {
       const Scalar r = v.R();
-      fX             = r * std::cos(v.Phi());
-      fY             = r * std::sin(v.Phi());
+      fX             = r * cos(v.Phi());
+      fY             = r * sin(v.Phi());
       return *this;
    }
 
