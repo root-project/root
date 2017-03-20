@@ -201,9 +201,9 @@ namespace ROOT {
             */
             template <class T> Binding operator=(T var)
             {
-               int size = fDf.size(), i = 0 ;
+               Int_t size = fDf.size(), i = 0 ;
                Rcpp::CharacterVector names = fDf.attr("names");
-               bool found = false;
+               Bool_t found = false;
                while (i < size) {
                   if (names[i] == fName.Data()) {
                      found = true;
@@ -238,9 +238,9 @@ namespace ROOT {
             */
             Binding operator=(Binding obj)
             {
-               int size = fDf.size(), i = 0 ;
+               Int_t size = fDf.size(), i = 0 ;
                Rcpp::CharacterVector names = fDf.attr("names");
-               bool found = false;
+               Bool_t found = false;
                while (i < size) {
                   if (names[i] == fName.Data()) {
                      found = true;
@@ -291,9 +291,9 @@ namespace ROOT {
             */
             template <class T> Binding &operator <<(T var)
             {
-               int size = fDf.size(), i = 0 ;
+               Int_t size = fDf.size(), i = 0 ;
                Rcpp::CharacterVector names = fDf.attr("names");
-               bool found = false;
+               Bool_t found = false;
                while (i < size) {
                   if (names[i] == fName.Data()) {
                      found = true;
@@ -392,7 +392,7 @@ namespace ROOT {
          Method to get the number of colunms
          \return number of cols
          */
-         int GetNcols()
+         Int_t GetNcols()
          {
             return df.size();
          }
@@ -400,7 +400,7 @@ namespace ROOT {
          Method to get the number of rows
          \return number of rows
          */
-         int GetNrows()
+         Int_t GetNrows()
          {
             return df.nrows();
          }
@@ -412,7 +412,7 @@ namespace ROOT {
          {
             Rcpp::CharacterVector names = df.attr("names");
             TVectorString rnames(GetNcols());
-            for (int i = 0; i < GetNcols(); i++)rnames[i] = names[i];
+            for (Int_t i = 0; i < GetNcols(); i++)rnames[i] = names[i];
             return rnames;
          }
 
@@ -431,7 +431,7 @@ namespace ROOT {
          Method to print the dataframe in stdout or a column given the label
          \param label nomber of the column to print
          */
-         void Print(const char* label = "")
+         void Print(const Char_t *label = "")
          {
             TRFunctionImport print("print");
             if (label && !label[0]) {
