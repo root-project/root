@@ -21,17 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 class TH1;
 class TPad;
@@ -152,7 +146,7 @@ protected:
    virtual Bool_t SyncPadMargins();
    void SetPadMargins();
    void CreateGridline();
-   void BuildLowerPlot();
+   Int_t BuildLowerPlot();
 
    void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
 
