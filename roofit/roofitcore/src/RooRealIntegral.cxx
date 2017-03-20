@@ -884,28 +884,26 @@ class RooInstantTimer {
 public:
   RooInstantTimer();
 
-  void stop(bool calc_timing_s = true);
+  void stop();
 
-  double get_timing_s();
+  double timing_s();
 
 private:
-  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
-  double timing_s;
+  std::chrono::time_point<std::chrono::system_clock> _timing_begin, _timing_end;
+  double _timing_s;
 };
 
 RooInstantTimer::RooInstantTimer() {
-  timing_begin = std::chrono::high_resolution_clock::now();
+  _timing_begin = std::chrono::high_resolution_clock::now();
 }
 
-void RooInstantTimer::stop(bool calc_timing_s) {
-  timing_end = std::chrono::high_resolution_clock::now();
-  if (calc_timing_s) {
-    timing_s = get_timing_s();
-  }
+void RooInstantTimer::stop() {
+  _timing_end = std::chrono::high_resolution_clock::now();
+  _timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(_timing_end - _timing_begin).count() / 1.e9;
 }
 
-double RooInstantTimer::get_timing_s() {
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+double RooInstantTimer::timing_s() {
+  return _timing_s;
 }
 
 
@@ -1024,7 +1022,7 @@ Double_t RooRealIntegral::evaluate() const
   timer.stop();
   // TODO
   // store timing somewhere!
-  // ... = timer.get_timing_s();
+  // ... = timer.timing_s();
 
   return retVal ;
 }
