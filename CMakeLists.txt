@@ -174,8 +174,7 @@ if(cxxmodules)
     # We will create the actual overlay later in the configuration.
     file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
     set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__vfs_overlay}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__vfs_overlay}")
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
 
     # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
     get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
