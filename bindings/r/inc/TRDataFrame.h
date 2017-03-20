@@ -201,7 +201,7 @@ namespace ROOT {
             */
             template <class T> Binding operator=(T var)
             {
-               Int_t size = fDf.size(), i = 0 ;
+               Int_t size = fDf.size(), i = 0;
                Rcpp::CharacterVector names = fDf.attr("names");
                Bool_t found = false;
                while (i < size) {
@@ -238,7 +238,7 @@ namespace ROOT {
             */
             Binding operator=(Binding obj)
             {
-               Int_t size = fDf.size(), i = 0 ;
+               Int_t size = fDf.size(), i = 0;
                Rcpp::CharacterVector names = fDf.attr("names");
                Bool_t found = false;
                while (i < size) {
@@ -291,7 +291,7 @@ namespace ROOT {
             */
             template <class T> Binding &operator <<(T var)
             {
-               Int_t size = fDf.size(), i = 0 ;
+               Int_t size = fDf.size(), i = 0;
                Rcpp::CharacterVector names = fDf.attr("names");
                Bool_t found = false;
                while (i < size) {
@@ -392,18 +392,12 @@ namespace ROOT {
          Method to get the number of colunms
          \return number of cols
          */
-         Int_t GetNcols()
-         {
-            return df.size();
-         }
+         Int_t GetNcols() { return df.size(); }
          /**
          Method to get the number of rows
          \return number of rows
          */
-         Int_t GetNrows()
-         {
-            return df.nrows();
-         }
+         Int_t GetNrows() { return df.nrows(); }
          /**
          Method to get labels of dataframe
          \return colunms names
@@ -412,7 +406,7 @@ namespace ROOT {
          {
             Rcpp::CharacterVector names = df.attr("names");
             TVectorString rnames(GetNcols());
-            for (Int_t i = 0; i < GetNcols(); i++)rnames[i] = names[i];
+            for (Int_t i = 0; i < GetNcols(); i++) rnames[i] = names[i];
             return rnames;
          }
 

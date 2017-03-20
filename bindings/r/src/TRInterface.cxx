@@ -22,7 +22,9 @@ ClassImp(TRInterface)
 static ROOT::R::TRInterface *gR = NULL;
 static Bool_t statusEventLoop;
 
-TRInterface::TRInterface(const Int_t argc, const Char_t *argv[], const Bool_t loadRcpp, const Bool_t verbose, const Bool_t interactive): TObject()
+TRInterface::TRInterface(const Int_t argc, const Char_t *argv[], const Bool_t loadRcpp, const Bool_t verbose,
+                         const Bool_t interactive)
+   : TObject()
 {
    if (RInside::instancePtr()) throw std::runtime_error("Can only have one TRInterface instance");
    fR = new RInside(argc, argv, loadRcpp, verbose, interactive);
@@ -153,7 +155,8 @@ void TRInterface::Interactive()
 TRInterface *TRInterface::InstancePtr()
 {
    if (!gR) {
-      const Char_t *R_argv[] = {"rootr", "--gui=none", "--no-save", "--no-readline", "--silent", "--vanilla", "--slave"};
+      const Char_t *R_argv[] = {"rootr",    "--gui=none", "--no-save", "--no-readline",
+                                "--silent", "--vanilla",  "--slave"};
       gR = new TRInterface(7, R_argv, true, false, false);
    }
    gR->ProcessEventsLoop();
@@ -198,7 +201,7 @@ void TRInterface::ProcessEventsLoop()
    if (!statusEventLoop) {
       th = new TThread([](void *args) {
          while (kTRUE) {
-            if (gR) {//in case global object was freed
+            if (gR) { // in case global object was freed
                fd_set *fd;
                Int_t usec = 10000;
                fd = R_checkActivity(usec, 0);
