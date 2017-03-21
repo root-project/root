@@ -830,19 +830,6 @@ template <typename LAYERDATA>
                                     ++output_iterator;
                                 }
                             }
-
-                            /*
-                            //if (output.size () == testPattern.size ())
-                            {
-                                //auto it = begin (testPattern);
-                                auto it = (*itBatch).begin ();
-                                for (double out : output)
-                                {
-                                    settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
-                                    ++it;
-                                }
-                            }
-                            */
                         ++itBatch;
                         }
                     
@@ -870,17 +857,6 @@ template <typename LAYERDATA>
                                 ++output_iterator;
                             }
                         }
-                        
-                        /*
-                        auto it = batch.begin ();
-                        for (double out : output)
-                            {
-                            settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
-                            ++it;
-                            }
-                            //weightSum += fabs (weight);
-                            //testError += testPatternError*weight;
-                        */
                         testError += testPatternError; /// batch.size ();
                         }
                     // testError /= testPattern.size ();
