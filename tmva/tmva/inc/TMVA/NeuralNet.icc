@@ -822,14 +822,14 @@ template <typename LAYERDATA>
                             
                             auto output_iterator = output.begin();
                             for (auto pattern_it = itBatch->begin(); pattern_it != itBatch->end(); ++pattern_it) 
+                            {
+                                for (size_t output_index = 0; output_index < outputSize(); ++output_index)
                                 {
-                                    for (size_t output_index = 0; output_index < outputSize(); ++output_index)
-                                        {
-                                        settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
-                                                                                  (*pattern_it).weight ());
-                                        ++output_iterator;
-                                        }
+                                    settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
+                                                                              (*pattern_it).weight ());
+                                    ++output_iterator;
                                 }
+                            }
 
                             /*
                             //if (output.size () == testPattern.size ())
@@ -862,14 +862,15 @@ template <typename LAYERDATA>
                         
                         auto output_iterator = output.begin();
                         for (auto pattern_it = batch.begin(); pattern_it != batch.end(); ++pattern_it) 
+                        {
+                            for (size_t output_index = 0; output_index < outputSize(); ++output_index)
                             {
-                                for (size_t output_index = 0; output_index < outputSize(); ++output_index)
-                                    {
-                                    settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
+                                settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
                                                                               (*pattern_it).weight ());
-                                    ++output_iterator;
-                                    }
+                                ++output_iterator;
                             }
+                        }
+                        
                         /*
                         auto it = batch.begin ();
                         for (double out : output)
