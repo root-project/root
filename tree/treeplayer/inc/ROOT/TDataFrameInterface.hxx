@@ -185,7 +185,7 @@ public:
       std::vector<std::string> usedBranchesTypes;
       std::stringstream ss;
       static unsigned int iFilter = 0U;
-      ss << "__tdf_filter_" << iFilter++;
+      ss << "__tdf_filter_" << typeid(this).name() << "_" << iFilter++;
       const auto nsName = ss.str();
       ss.str("");
 
