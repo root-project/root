@@ -819,12 +819,12 @@ template <typename LAYERDATA>
                             std::tuple<double,std::vector<double>> result = f.get ();
                             testError += std::get<0>(result) / batches.size ();
                             std::vector<double> output = std::get<1>(result);
-                            if (output.size() == outputSize() * itBatch->size())
+                            if (output.size() == (outputSize() - 1) * itBatch->size())
                             {
                                 auto output_iterator = output.begin();
                                 for (auto pattern_it = itBatch->begin(); pattern_it != itBatch->end(); ++pattern_it) 
                                 {
-                                    for (size_t output_index = 0; output_index < outputSize(); ++output_index)
+                                    for (size_t output_index = 1; output_index < outputSize(); ++output_index)
                                     {
                                         settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
                                                                                   (*pattern_it).weight ());
@@ -848,12 +848,12 @@ template <typename LAYERDATA>
                             output.clear ();
                         pass_through_type passThrough (settings, batch, dropContainerTest);
                             double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
-                        if (output.size() == outputSize() * batch.size())
+                        if (output.size() == (outputSize() - 1) * batch.size())
                         {
                             auto output_iterator = output.begin();
                             for (auto pattern_it = batch.begin(); pattern_it != batch.end(); ++pattern_it) 
                             {
-                                for (size_t output_index = 0; output_index < outputSize(); ++output_index)
+                                for (size_t output_index = 1; output_index < outputSize(); ++output_index)
                                 {
                                     settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
                                                                               (*pattern_it).weight ());
