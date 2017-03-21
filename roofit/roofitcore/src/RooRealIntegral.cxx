@@ -50,8 +50,7 @@ integration is performed in the various implemenations of the RooAbsIntegrator b
 #include "RooConstVar.h"
 #include "RooDouble.h"
 #include "RooTrace.h"
-
-#include <chrono>
+#include "RooTimer.h"
 
 using namespace std;
 
@@ -877,33 +876,6 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
   } 
 
   return _value ;
-}
-
-
-class RooInstantTimer {
-public:
-  RooInstantTimer();
-
-  void stop();
-
-  double timing_s();
-
-private:
-  std::chrono::time_point<std::chrono::system_clock> _timing_begin, _timing_end;
-  double _timing_s;
-};
-
-RooInstantTimer::RooInstantTimer() {
-  _timing_begin = std::chrono::high_resolution_clock::now();
-}
-
-void RooInstantTimer::stop() {
-  _timing_end = std::chrono::high_resolution_clock::now();
-  _timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(_timing_end - _timing_begin).count() / 1.e9;
-}
-
-double RooInstantTimer::timing_s() {
-  return _timing_s;
 }
 
 
