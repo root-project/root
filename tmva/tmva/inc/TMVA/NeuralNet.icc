@@ -819,7 +819,19 @@ template <typename LAYERDATA>
                             std::tuple<double,std::vector<double>> result = f.get ();
                             testError += std::get<0>(result) / batches.size ();
                             std::vector<double> output = std::get<1>(result);
+                            
+                            auto output_iterator = output.begin();
+                            for (auto pattern_it = itBatch->begin(); pattern_it != itBatch->end(); ++pattern_it) 
+                                {
+                                    for (size_t output_index = 0; output_index < outputSize(); ++output_index)
+                                        {
+                                        settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
+                                                                                  (*pattern_it).weight ());
+                                        ++output_iterator;
+                                        }
+                                }
 
+                            /*
                             //if (output.size () == testPattern.size ())
                             {
                                 //auto it = begin (testPattern);
@@ -830,6 +842,7 @@ template <typename LAYERDATA>
                                     ++it;
                                 }
                             }
+                            */
                         ++itBatch;
                         }
                     
@@ -846,7 +859,18 @@ template <typename LAYERDATA>
                             output.clear ();
                         pass_through_type passThrough (settings, batch, dropContainerTest);
                             double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
-
+                        
+                        auto output_iterator = output.begin();
+                        for (auto pattern_it = batch.begin(); pattern_it != batch.end(); ++pattern_it) 
+                            {
+                                for (size_t output_index = 0; output_index < outputSize(); ++output_index)
+                                    {
+                                    settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
+                                                                              (*pattern_it).weight ());
+                                    ++output_iterator;
+                                    }
+                            }
+                        /*
                         auto it = batch.begin ();
                         for (double out : output)
                             {
@@ -855,6 +879,7 @@ template <typename LAYERDATA>
                             }
                             //weightSum += fabs (weight);
                             //testError += testPatternError*weight;
+                        */
                         testError += testPatternError; /// batch.size ();
                         }
                     // testError /= testPattern.size ();
