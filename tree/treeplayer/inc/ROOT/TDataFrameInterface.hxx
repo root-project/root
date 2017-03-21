@@ -159,7 +159,7 @@ public:
       std::string paddedExpr = " " + expression + " ";
       int paddedExprLen = paddedExpr.size();
       static const std::string regexBit("[^a-zA-Z0-9_]");
-      std::vector<const char*> usedBranches;
+      std::vector<std::string> usedBranches;
       for (auto bro : *branches) {
          auto brName = bro->GetName();
          std::string bNameRegexContent = regexBit + brName + regexBit;
