@@ -28,7 +28,7 @@ namespace TMVA {
    private:
        OptionMap              fImportanceValues;
        std::shared_ptr<TH1F>  fImportanceHist;
-       VIType                 fType;
+       VIType                 fType {kShort};
    public:
        VariableImportanceResult();
        VariableImportanceResult(const VariableImportanceResult &);
@@ -44,9 +44,9 @@ namespace TMVA {
 
    class VariableImportance : public Envelope {
    private:
-       UInt_t                    fNumFolds;
+       UInt_t                    fNumFolds = 0;
        VariableImportanceResult  fResults;
-       VIType                    fType;
+       VIType                    fType {kShort};
    public:
        explicit VariableImportance(DataLoader *loader);
        ~VariableImportance();

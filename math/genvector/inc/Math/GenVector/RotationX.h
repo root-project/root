@@ -94,13 +94,13 @@ public:
    /**
       Get the angle
    */
-   void GetAngle(Scalar &angle) const { angle = std::atan2(fSin, fCos); }
+   void GetAngle(Scalar &angle) const { angle = atan2(fSin, fCos); }
    void GetComponents ( Scalar & angle ) const { GetAngle(angle); }
 
    /**
       Angle of rotation
    */
-   Scalar Angle() const { return std::atan2(fSin, fCos); }
+   Scalar Angle() const { return atan2(fSin, fCos); }
 
    /**
       Sine or Cosine of the rotation angle

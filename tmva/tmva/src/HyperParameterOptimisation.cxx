@@ -30,6 +30,7 @@
 
 TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult():fROCCurves(new TMultiGraph())
 {
+    fROCAVG = 0.;
 }
 
 TMVA::HyperParameterOptimisationResult::~HyperParameterOptimisationResult()

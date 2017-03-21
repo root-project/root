@@ -287,8 +287,8 @@ void SetParsLimits(vector<ParLimit>& v, TF1* func)
 class fitFunctions {
 public:
    TString name;
-   double (*func)(double*, double*);
-   unsigned int npars;
+   double (*func)(double*, double*) = nullptr;
+   unsigned int npars = 0;
    vector<double> origPars;
    vector<double> fitPars;
    vector<ParLimit> parLimits;

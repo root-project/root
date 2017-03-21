@@ -247,9 +247,10 @@ ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
 
 #--stressProof-------------------------------------------------------------------------------
 if(NOT WIN32)
-  add_custom_target(TestData ALL COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
+  add_custom_target(TestData COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
   ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-  ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite://
+  ROOT_ADD_TEST(test-stressproof PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TestData
+                                 COMMAND stressProof lite://
                                          -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
                                          -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
                                          ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
@@ -319,6 +320,7 @@ if(ROOT_vc_FOUND)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
   ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
+  ROOT_ADD_CXX_FLAG(vc_flags -Wno-shadow)
   set_source_files_properties(testGenVectorVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
   ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES Physics GenVector ${Vc_LIBRARIES} BUILTINS Vc)
   ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")

@@ -213,8 +213,8 @@ namespace TMVA {
       std::vector<std::vector<TMVA::Event*>>          fTestSigEvents;
       std::vector<std::vector<TMVA::Event*>>          fTestBkgEvents;
 
-      Int_t                                     fATreeType;          // type of event (=classIndex)
-      Float_t                                   fATreeWeight;        // weight of the event
+      Int_t                                     fATreeType = 0;          // type of event (=classIndex)
+      Float_t                                   fATreeWeight = 0.0;        // weight of the event
       std::vector<Float_t>                      fATreeEvent;         // event variables
       
       Types::EAnalysisType                      fAnalysisType;    // the training type

@@ -10215,7 +10215,8 @@ int stressHistogram()
       refFile = TFile::Open(refFileName, "RECREATE");
    }
    else {
-      refFile = TFile::Open(refFileName);
+      TFile::SetCacheFileDir(".");
+      refFile = TFile::Open(refFileName, "CACHEREAD");
    }
 
    if ( refFile != 0 ) {
@@ -10411,7 +10412,7 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
 
    if (cleanHistos) delete h2;
-
+   delete[] coord;
    return differents;
 }
 

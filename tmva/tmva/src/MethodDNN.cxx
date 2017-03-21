@@ -95,6 +95,8 @@ TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
      fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
      fTrainingSettings(), fResume(false), fSettings()
 {
+        fWeightInitialization = DNN::EInitialization::kGauss;
+        fOutputFunction = DNN::EOutputFunction::kSigmoid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +104,8 @@ TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
 
 TMVA::MethodDNN::~MethodDNN()
 {
-   // nothing to be done
+        fWeightInitialization = DNN::EInitialization::kGauss;
+        fOutputFunction = DNN::EOutputFunction::kSigmoid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

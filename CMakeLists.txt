@@ -174,8 +174,7 @@ if(cxxmodules)
     # We will create the actual overlay later in the configuration.
     file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
     set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${__vfs_overlay}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__vfs_overlay}")
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
 
     # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
     get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
@@ -186,12 +185,7 @@ if(cxxmodules)
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
-    add_custom_target(copystlmodulemap
-                    DEPENDS build/unix/module.modulemap
-                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap
-                    )
-
-    add_dependencies(copymodulemap copystlmodulemap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
   endif()
 
   # These vars are useful when we want to compile things without cxxmodules.

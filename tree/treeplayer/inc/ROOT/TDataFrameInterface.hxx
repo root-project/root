@@ -23,6 +23,7 @@
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
 #include "TRegexp.h"
+#include "TROOT.h" // IsImplicitMTEnabled
 
 #include <initializer_list>
 #include <memory>
@@ -39,10 +40,6 @@ struct TDataFrameGuessedType {
 
 namespace Internal {
 
-// TODO move into TDFUtils, for now it would cause a circular dependency on TDataFrameImpl
-std::string ColumnName2ColumnTypeName(const std::string &colName, ROOT::Detail::TDataFrameImpl &df);
-
-// TODO move into TDFUtils, for now it would cause a circular dependency on TActionResultProxy
 template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
 ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNode *node, const BranchNames_t &bl,
                                                                           const std::shared_ptr<ActionResultType> &r,
@@ -50,7 +47,7 @@ ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNod
 {
    return node->template CreateAction<ActionType, BranchType, ActionResultType>(bl, r, nullptr);
 }
-}
+} // namespace Internal
 
 namespace Experimental {
 
@@ -105,6 +102,7 @@ public:
       const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bn, defBl);
       using DFF_t                   = ROOT::Detail::TDataFrameFilter<F, Proxied>;
       auto FilterPtr                = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
+      fProxiedPtr->IncrChildrenCount();
       df->Book(FilterPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
       return tdf_f;
@@ -187,7 +185,7 @@ public:
       std::vector<std::string> usedBranchesTypes;
       std::stringstream ss;
       static unsigned int iFilter = 0U;
-      ss << "__tdf_filter_" << iFilter++;
+      ss << "__tdf_filter_" << typeid(this).name() << "_" << iFilter++;
       const auto nsName = ss.str();
       ss.str("");
 
@@ -196,7 +194,8 @@ public:
          ss << "namespace " << nsName;
          ss << " {\n";
          for (auto brName : usedBranches) {
-            auto brTypeName = ROOT::Internal::ColumnName2ColumnTypeName(brName, *df);
+            auto brTypeName =
+               ROOT::Internal::ColumnName2ColumnTypeName(brName, *df->GetTree(), df->GetBookedBranch(brName));
             ss << brTypeName << " " << brName << ";\n";
             usedBranchesTypes.emplace_back(brTypeName);
          }
@@ -293,9 +292,45 @@ public:
       const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t                   = ROOT::Detail::TDataFrameBranch<F, Proxied>;
       auto BranchPtr                = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
+      fProxiedPtr->IncrChildrenCount();
       df->Book(BranchPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node that filters entries based on range
+   /// \param[in] start How many entries to discard before resuming processing.
+   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
+   /// \param[in] stride Process one entry every `stride` entries. Must be strictly greater than 0.
+   ///
+   /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
+   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int start, unsigned int stop,
+                                                                unsigned int stride = 1)
+   {
+      // check invariants
+      if (stride == 0 || (stop != 0 && stop < start))
+         throw std::runtime_error("Range: stride must be strictly greater than 0 and stop must be greater than start.");
+      if (ROOT::IsImplicitMTEnabled())
+         throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
+
+      auto df       = GetDataFrameChecked();
+      using Range_t = ROOT::Detail::TDataFrameRange<Proxied>;
+      auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
+      fProxiedPtr->IncrChildrenCount();
+      df->Book(RangePtr);
+      TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> tdf_r(RangePtr, fImplWeakPtr);
+      return tdf_r;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node that filters entries based on range
+   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
+   ///
+   /// See the other Range overload for a detailed description.
+   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int stop)
+   {
+      return Range(0, stop, 1);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -344,6 +379,7 @@ public:
       using Op_t                    = ROOT::Internal::Operations::ForeachSlotOperation<F>;
       using DFA_t                   = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, *fProxiedPtr));
+      fProxiedPtr->IncrChildrenCount();
       df->Run();
    }
 
@@ -392,7 +428,8 @@ public:
       using Op_t             = ROOT::Internal::Operations::ReduceOperation<F, T>;
       using DFA_t            = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(redObjPtr);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(redObjPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -408,7 +445,8 @@ public:
       using Op_t          = ROOT::Internal::Operations::CountOperation;
       using DFA_t         = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), BranchNames_t({}), *fProxiedPtr));
-      return df->MakeActionResultProxy(cSPtr);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(cSPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -429,7 +467,8 @@ public:
       using Op_t             = ROOT::Internal::Operations::TakeOperation<T, COLL>;
       using DFA_t            = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(valuesPtr);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(valuesPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -535,7 +574,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -568,7 +608,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -603,7 +644,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -640,7 +682,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -670,7 +713,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -703,7 +747,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -733,7 +778,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -766,7 +812,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -794,7 +841,8 @@ public:
       auto df     = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -914,7 +962,8 @@ private:
          using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X, W>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
-      return df->MakeActionResultProxy(h);
+      fProxiedPtr->IncrChildrenCount();
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    /// \cond HIDDEN_SYMBOLS
@@ -936,7 +985,7 @@ private:
             ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
-      return df->MakeActionResultProxy(h);
+      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    template <typename BranchType>
@@ -948,7 +997,7 @@ private:
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(minV, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(minV);
+      return ROOT::Detail::MakeActionResultProxy(minV, df);
    }
 
    template <typename BranchType>
@@ -960,7 +1009,7 @@ private:
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(maxV, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(maxV);
+      return ROOT::Detail::MakeActionResultProxy(maxV, df);
    }
 
    template <typename BranchType>
@@ -972,7 +1021,7 @@ private:
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(meanV, nSlots), bl, *fProxiedPtr));
-      return df->MakeActionResultProxy(meanV);
+      return ROOT::Detail::MakeActionResultProxy(meanV, df);
    }
    /// \endcond
 
@@ -983,7 +1032,9 @@ private:
    {
       auto         df     = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      return BuildAndBook<BranchType>(bl, r, nSlots, (ActionType *)nullptr);
+      auto resProxy = BuildAndBook<BranchType>(bl, r, nSlots, (ActionType *)nullptr);
+      fProxiedPtr->IncrChildrenCount();
+      return resProxy;
    }
 
    // User did not specify type, do type guessing
@@ -995,7 +1046,8 @@ private:
       gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
       auto        df                   = GetDataFrameChecked();
       const auto &theBranchName        = bl[0];
-      const auto  theBranchTypeName    = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df);
+      const auto  theBranchTypeName =
+         ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df->GetTree(), df->GetBookedBranch(theBranchName));
       if (theBranchTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += theBranchName;
@@ -1100,6 +1152,12 @@ template <>
 inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName()
 {
    return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>";
+}
+
+template <>
+inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>::GetNodeTypeName()
+{
+   return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>";
 }
 
 // Before we had to specialise the GetNodeTypeName method

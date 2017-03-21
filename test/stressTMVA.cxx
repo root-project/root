@@ -1781,6 +1781,9 @@ utVariableInfo::utVariableInfo() :
 
    mean       = 42.;
    rms        = 47.11;
+   _varinfoC1 = nullptr;
+   _varinfoC2 = nullptr;
+   _varinfoC3 = nullptr;
 }
 
 
@@ -2647,6 +2650,10 @@ MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString& tree
                                                              const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */) :
    UnitTest(string("ComplexData_")+(string)methodTitle+(string)treestring, __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
 {
+    theTree = nullptr;
+    _theMethod = nullptr;
+    _factory = nullptr;
+    _ROCValue = 0.;
 }
 
 

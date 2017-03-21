@@ -154,7 +154,7 @@ public :
    /**
       Energy
     */
-   Scalar E() const { return std::sqrt(E2()); }
+   Scalar E() const { return sqrt(E2()); }
 
    Scalar T() const { return E();}
 
@@ -166,7 +166,7 @@ public :
    /**
       magnitude of spatial components (magnitude of 3-momentum)
    */
-   Scalar P() const { return std::sqrt(P2()); }
+   Scalar P() const { return sqrt(P2()); }
    Scalar R() const { return P(); }
 
    /**
@@ -198,7 +198,7 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt() const { return std::sqrt(Perp2()); }
+   Scalar Pt() const { return sqrt(Perp2()); }
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -213,11 +213,11 @@ public :
    Scalar Mt() const {
       const Scalar mm = Mt2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         return sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzM4D::Mt() - Tachyonic:\n"
                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         return -std::sqrt(-mm);
+         return -sqrt(-mm);
       }
    }
 
@@ -235,22 +235,18 @@ public :
    */
    Scalar Et() const {
       const Scalar etet = Et2();
-      return std::sqrt(etet);
+      return sqrt(etet);
    }
 
    /**
       azimuthal angle
    */
-   Scalar Phi() const  {
-      return (fX == 0.0 && fY == 0.0) ? 0.0 : std::atan2(fY, fX);
-   }
+   Scalar Phi() const { return (fX == 0.0 && fY == 0.0) ? 0.0 : atan2(fY, fX); }
 
    /**
       polar angle
    */
-   Scalar Theta() const {
-      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : std::atan2(Pt(), fZ);
-   }
+   Scalar Theta() const { return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : atan2(Pt(), fZ); }
 
    /**
        pseudorapidity

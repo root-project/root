@@ -39,6 +39,7 @@ Delaunay2D::Delaunay2D(int n, const double * x, const double * y, const double *
    fX            = x;
    fY            = y;
    fZ            = z; 
+   fZout         = 0.;
    fNpoints      = n;
    fOffsetX      = 0;
    fOffsetY      = 0;

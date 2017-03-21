@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <math.h>
+#include <cmath>
 
 #include "Riostream.h"
 #include "TROOT.h"

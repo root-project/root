@@ -367,8 +367,8 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
          else (*corrMat)(ivar, ivar) = 1.0;
       }
    }
-   return corrMat;
    Log() << Endl;
+   return corrMat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

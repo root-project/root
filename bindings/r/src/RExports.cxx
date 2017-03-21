@@ -69,7 +69,7 @@ namespace Rcpp {
    template<> TMatrixT<Float_t> as(SEXP m)
    {
       NumericMatrix mat =::Rcpp::as<NumericMatrix>(m);
-      std::vector<float> dat = Rcpp::as<std::vector<float> >(mat);
+      std::vector<Float_t> dat = Rcpp::as<std::vector<Float_t>>(mat);
       return TMatrixT<Float_t>(mat.rows(), mat.cols(), &dat[0], "F");
    }
 

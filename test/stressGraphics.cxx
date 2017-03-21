@@ -1984,7 +1984,8 @@ void th2poly()
    Double_t lat2 = 50;
    TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
 
-   TFile *f = TFile::Open("http://root.cern.ch/files/usa.root");
+   TFile::SetCacheFileDir(".");
+   TFile *f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
 
    if (!f) {
       printf("Cannot access usa.root. Is internet working ?\n");
