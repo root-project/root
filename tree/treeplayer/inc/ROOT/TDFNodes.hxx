@@ -44,23 +44,6 @@ using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
 class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
 
-   // This is an helper class to allow to pick a slot without resorting to a map
-   // indexed by thread ids.
-   // WARNING: this class does not work as a regular stack. The size is
-   // fixed at construction time and no blocking is foreseen.
-   class TSlotStack {
-   private:
-      unsigned int              fCursor;
-      std::vector<unsigned int> fBuf;
-      ROOT::TSpinMutex          fMutex;
-
-   public:
-      TSlotStack() = delete;
-      TSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
-      void Push(unsigned int slotNumber);
-      unsigned int Pop();
-   };
-
    ROOT::Detail::ActionBaseVec_t fBookedActions;
    ROOT::Detail::FilterBaseVec_t fBookedFilters;
    ROOT::Detail::FilterBaseVec_t fBookedNamedFilters;
