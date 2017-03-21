@@ -50,6 +50,7 @@ public:
 
   static void printObjectCounts() ;
 
+  static std::map<std::string,double> objectTiming;
 
 protected:
 
@@ -80,7 +81,7 @@ protected:
   std::map<std::string,int> _specialCount ;
   std::map<std::string,int> _specialSize ;
 
-  ClassDef(RooTrace,0) // Memory tracer utility for RooFit objects
+  ClassDef(RooTrace,1) // Memory tracer utility for RooFit objects
 };
 
 

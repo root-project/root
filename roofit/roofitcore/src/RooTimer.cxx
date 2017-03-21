@@ -1,4 +1,6 @@
 #include "RooTimer.h"
+#include "RooTrace.h"
+
 
 double RooTimer::timing_s() {
   return _timing_s;
@@ -8,8 +10,12 @@ void RooTimer::set_timing_s(double timing_s) {
   _timing_s = timing_s;
 }
 
+void RooTimer::store_timing_in_RooTrace(const std::string &name) {
+  return RooTrace::objectTiming.insert({name, _timing_s});
+}
 
-RooInstantTimer::RooInstantTimer() {
+
+RooInstantTimer::RooInstantTimer(): RooTimer() {
   _timing_begin = std::chrono::high_resolution_clock::now();
 }
 
@@ -19,7 +25,7 @@ void RooInstantTimer::stop() {
 }
 
 
-RooInstantCPUTimer::RooInstantCPUTimer() {
+RooInstantCPUTimer::RooInstantCPUTimer(): RooTimer() {
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &_timing_begin);
 }
 

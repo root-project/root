@@ -991,10 +991,10 @@ Double_t RooRealIntegral::evaluate() const
     ccxcoutD(Tracing) << "raw*fact = " << retVal << endl ;
   }
 
-  timer.stop();
-  // TODO
-  // store timing somewhere!
-  // ... = timer.timing_s();
+  if (getAttribute("timing_on")) {
+    timer.stop();
+    timer.store_timing_in_RooTrace(GetName());
+  }
 
   return retVal ;
 }

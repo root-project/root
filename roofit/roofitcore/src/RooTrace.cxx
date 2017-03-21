@@ -311,3 +311,8 @@ void RooTrace::callgrind_dump()
 {
   ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_dump()" << endl ;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// static map used to store timings of named objects
+
+std::map<std::string,double> RooTrace::objectTiming;
