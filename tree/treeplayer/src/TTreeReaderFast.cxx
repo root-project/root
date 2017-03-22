@@ -31,7 +31,7 @@ TTreeReaderFast::TTreeReaderFast(TTree* tree):
 ////////////////////////////////////////////////////////////////////////////////
 /// Tell all value readers that the tree reader does not exist anymore.
 
-TTreeReader::~TTreeReader()
+TTreeReaderFast::~TTreeReaderFast()
 {
    for (auto &reader : fValues) {
       reader->MarkTreeReaderUnavailable();

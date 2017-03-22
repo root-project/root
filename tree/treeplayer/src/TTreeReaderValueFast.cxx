@@ -34,24 +34,6 @@ Extracts data from a TTree.
 ClassImp(ROOT::Internal::TTreeReaderValueFastBase)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct a tree value reader and register it with the reader object.
-
-ROOT::Internal::TTreeReaderValueFastBase::TTreeReaderValueFastBase(TTreeReader* reader /*= 0*/,
-                                                 const char* branchname /*= 0*/,
-                                                 TDictionary* dict /*= 0*/):
-   fBranchName(branchname),
-   fTreeReader(reader),
-   fDict(dict),
-   fProxy(NULL),
-   fLeaf(NULL),
-   fTreeLastOffset(-1),
-   fSetupStatus(kSetupNotSetup),
-   fReadStatus(kReadNothingYet)
-{
-   if (fTreeReader) fTreeReader->RegisterValueReader(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Unregister from tree reader, cleanup.
 
 ROOT::Internal::TTreeReaderValueFastBase::~TTreeReaderValueFastBase()
@@ -60,101 +42,41 @@ ROOT::Internal::TTreeReaderValueFastBase::~TTreeReaderValueFastBase()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Try to read the value from the TBranchProxy, returns
-/// the status of the read.
+/// Attach this value to the appropriate branch on the tree.  For now, we don't
+/// support the complex branch lookup of the TTreeReader -- only a fixed leaf!
 
-ROOT::Internal::TTreeReaderValueFastBase::EReadStatus
-ROOT::Internal::TTreeReaderValueFastBase::ProxyRead() {
-   if (!fProxy) return kReadNothingYet;
-   if (fProxy->Read()) {
-      fReadStatus = kReadSuccess;
-   } else {
-      fReadStatus = kReadError;
-   }
-   return fReadStatus;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// If we are reading a leaf, return the corresponding TLeaf.
-
-TLeaf* TTreeReaderValueFastBase::GetLeaf() {
-   if (fLeafName.Length() > 0){
+void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
+   if (fLeafName.size() > 0){
 
       Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
 
-      if (newChainOffset != fTreeLastOffset){
-         fTreeLastOffset = newChainOffset;
+      if (newChainOffset != fLastChainOffset){
+         fLastChainOffset = newChainOffset;
 
          TTree *myTree = fTreeReader->GetTree();
 
          if (!myTree) {
-            fReadStatus = kReadError;
+            fReadStatus = TTreeReaderValueBase::kReadError;
             Error("TTreeReaderValueBase::GetLeaf()", "Unable to get the tree from the TTreeReader");
-            return 0;
+            return;
          }
 
-         TBranch *myBranch = myTree->GetBranch(fBranchName);
+         TBranch *myBranch = myTree->GetBranch(fBranchName.c_str());
 
          if (!myBranch) {
-            fReadStatus = kReadError;
+            fReadStatus = TTreeReaderValueBase::kReadError;
             Error("TTreeReaderValueBase::GetLeaf()", "Unable to get the branch from the tree");
-            return 0;
+            return;
          }
 
-         fLeaf = myBranch->GetLeaf(fLeafName);
+         fLeaf = myBranch->GetLeaf(fLeafName.c_str());
          if (!fLeaf) {
             Error("TTreeReaderValueBase::GetLeaf()", "Failed to get the leaf from the branch");
          }
       }
-      return fLeaf;
    }
    else {
       Error("TTreeReaderValueBase::GetLeaf()", "We are not reading a leaf");
-      return 0;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create the proxy object for our branch.
-
-void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
-   TBranch* br = fTreeReader->GetTree()->GetBranch(fBranchName);
-
-
-   TNamedBranchProxy* namedProxy
-      = (TNamedBranchProxy*)fTreeReader->FindObject(fBranchName);
-   if (namedProxy && namedProxy->GetDict() == fDict) {
-      fProxy = namedProxy->GetProxy();
-      return;
-   }
-
-   TBranch* branch = fTreeReader->GetTree()->GetBranch(fBranchName);
-   TLeaf *myLeaf = NULL;
-
-   const char* branchActualTypeName = GetBranchDataType(branch, branchActualType, nullptr);
-
-   if (!branchActualType) {
-      Error("TTreeReaderValueFastBase::CreateProxy()", "The branch %s contains data of type %s, which does not have a dictionary.",
-                                                   fBranchName.Data(), branchActualTypeName ? branchActualTypeName : "{UNDETERMINED TYPE}");
-      return;
-   }
-
-   if (!strcmp(GetTypeName(), branchActualTypeName)) {
-         TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
-         TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
-         if (dictdt && actualdt && dictdt->GetType()>0
-             && dictdt->GetType() == actualdt->GetType()) {
-            // Same numerical type but different TDataType, likely Long64_t
-         } else {
-            Error("TTreeReaderValueFastBase::CreateProxy()",
-                  "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValueFast<%s>",
-                  fBranchName.Data(), branchActualType->GetName(),
-                  fDict->GetName());
-            return;
-         }
-   }
-
-
-   fBranch = branch;
 }
 
