@@ -164,7 +164,7 @@ int tdf001_introduction() {
    // code. The name of the variables must be the name of the branches. The code
    // is just in time compiled.
    auto entries_sum2 = d.AddColumn("sum", "b1 + b2")
-                        .Filter([](double sum) { return sum > 4.2; }, {"sum"})
+                        .Filter("sum > 4.2"})
                         .Count();
    std::cout << *entries_sum2 << std::endl;
 
