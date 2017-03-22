@@ -137,6 +137,7 @@ public:
 
    void MakeProxy(TTreeReader &r, const std::string &bn)
    {
+      Reset();
       bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
       if (useReaderValue)
          fReaderValue.reset(new TTreeReaderValue<T>(r, bn.c_str()));
@@ -162,6 +163,14 @@ public:
       }
 
       return std::array_view<ProxyParam_t>(fReaderArray->begin(), fReaderArray->end());
+   }
+
+   void Reset() {
+      fReaderValue = nullptr;
+      fReaderArray = nullptr;
+      fValuePtr = nullptr;
+      fTmpColumn = nullptr;
+      fSlot = 0;
    }
 };
 
@@ -528,6 +537,7 @@ public:
 template <typename T>
 void ROOT::Internal::TDataFrameValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDataFrameBranchBase *tmpColumn)
 {
+   Reset();
    fTmpColumn = tmpColumn;
    if (tmpColumn->GetTypeId() != typeid(T))
       throw std::runtime_error(std::string("TDataFrameValue: type specified is ") + typeid(T).name() +
