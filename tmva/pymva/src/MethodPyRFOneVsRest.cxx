@@ -190,7 +190,7 @@ void MethodPyRFOneVsRest::ProcessOptions()
       min_weight_fraction_leaf = 0;
    }
    if (max_features == "auto" || max_features == "sqrt" || max_features == "log2")
-      max_features          = Form("'%s'", max_features.Data());
+      max_features = Form("'%s'", max_features.Data());
    PyObject *pomax_features = Eval(max_features);
    if (!pomax_features) {
       Log() << kFATAL << Form(" MaxFeatures = %s... that does not work !! ", max_features.Data())
@@ -247,7 +247,7 @@ void MethodPyRFOneVsRest::Init()
 
    // Import sklearn
    // Convert the file name to a Python string.
-   PyObject *pRFName  = PyUnicode_FromString("sklearn.ensemble");
+   PyObject *pRFName = PyUnicode_FromString("sklearn.ensemble");
    PyObject *pOVRName = PyUnicode_FromString("sklearn.multiclass");
 
    // USING SINGLE fModule VARIABLE --------------------------
@@ -286,18 +286,18 @@ void MethodPyRFOneVsRest::Init()
    // ------------------------------------------------------------------
 
    // Training data
-   UInt_t fNvars         = Data()->GetNVariables();
-   int    fNrowsTraining = Data()->GetNTrainingEvents(); // every row is an event, a class type and a weight
-   int    dims[2];
-   dims[0]          = fNrowsTraining;
-   dims[1]          = fNvars;
-   fTrainData       = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   UInt_t fNvars = Data()->GetNVariables();
+   int fNrowsTraining = Data()->GetNTrainingEvents(); // every row is an event, a class type and a weight
+   int dims[2];
+   dims[0] = fNrowsTraining;
+   dims[1] = fNvars;
+   fTrainData = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
    float *TrainData = (float *)(PyArray_DATA(fTrainData));
 
-   fTrainDataClasses       = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
+   fTrainDataClasses = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
    float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
 
-   fTrainDataWeights       = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
+   fTrainDataWeights = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
    float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
 
    for (int i = 0; i < fNrowsTraining; i++) {
@@ -322,11 +322,11 @@ void MethodPyRFOneVsRest::Train()
    if (max_features == "auto" || max_features == "sqrt" || max_features == "log2") {
       max_features = Form("'%s'", max_features.Data());
    }
-   PyObject *pomax_features   = Eval(max_features);
-   PyObject *pomax_depth      = Eval(max_depth);
+   PyObject *pomax_features = Eval(max_features);
+   PyObject *pomax_depth = Eval(max_depth);
    PyObject *pomax_leaf_nodes = Eval(max_leaf_nodes);
-   PyObject *porandom_state   = Eval(random_state);
-   PyObject *poclass_weight   = Eval(class_weight);
+   PyObject *porandom_state = Eval(random_state);
+   PyObject *poclass_weight = Eval(class_weight);
 
    PyObject *argsRF = Py_BuildValue("(isOiifOOiiiOiiO)", n_estimators, criterion.Data(), pomax_depth, min_samples_split,
                                     min_samples_leaf, min_weight_fraction_leaf, pomax_features, pomax_leaf_nodes,
@@ -337,7 +337,7 @@ void MethodPyRFOneVsRest::Train()
 
    // USING SINGLE fModule VARIABLES FOR RF AND OVR
    // ------------------------------------------------------------------------------------------
-   PyObject *pRFDict            = PyModule_GetDict(fModule);
+   PyObject *pRFDict = PyModule_GetDict(fModule);
    PyObject *fRFClassifierClass = PyDict_GetItemString(pRFDict, "RandomForestClassifier");
    //    Log() << kFATAL <<"Train =" <<n_jobs<<Endl;
 
@@ -354,13 +354,13 @@ void MethodPyRFOneVsRest::Train()
       std::cout << std::endl;
 
       PyObject *pOVRName = PyUnicode_FromString("sklearn.multiclass");
-      fModule            = PyImport_Import(pOVRName);
+      fModule = PyImport_Import(pOVRName);
       if (!fModule) {
          Log() << kFATAL << "Can't import sklearn.multiclass" << Endl;
          Log() << Endl;
       }
       Py_DECREF(pOVRName);
-      PyObject *pOVRDict            = PyModule_GetDict(fModule);
+      PyObject *pOVRDict = PyModule_GetDict(fModule);
       PyObject *fOVRClassifierClass = PyDict_GetItemString(pOVRDict, "OneVsRestClassifier");
 
       if (PyCallable_Check(fOVRClassifierClass)) {
@@ -494,21 +494,21 @@ Double_t MethodPyRFOneVsRest::GetMvaValue(Double_t *errLower, Double_t *errUpper
 
    if (IsModelPersistence()) ReadModelFromFile();
 
-   Double_t           mvaValue;
-   const TMVA::Event *e     = Data()->GetEvent();
-   UInt_t             nvars = e->GetNVariables();
-   int                dims[2];
-   dims[0]               = 1;
-   dims[1]               = nvars;
+   Double_t mvaValue;
+   const TMVA::Event *e = Data()->GetEvent();
+   UInt_t nvars = e->GetNVariables();
+   int dims[2];
+   dims[0] = 1;
+   dims[1] = nvars;
    PyArrayObject *pEvent = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
-   float *        pValue = (float *)(PyArray_DATA(pEvent));
+   float *pValue = (float *)(PyArray_DATA(pEvent));
 
    for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
 
    PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"),
                                                                 const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
-   mvaValue      = proba[0]; // getting signal prob
+   mvaValue = proba[0]; // getting signal prob
    Py_DECREF(result);
    Py_DECREF(pEvent);
    return mvaValue;

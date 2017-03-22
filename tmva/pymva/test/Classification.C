@@ -21,7 +21,7 @@ void Classification()
    TMVA::Tools::Instance();
 
    TString outfileName("TMVA.root");
-   TFile * outputFile = TFile::Open(outfileName, "RECREATE");
+   TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    TMVA::Factory *factory =
       new TMVA::Factory("TMVAClassification", outputFile,
