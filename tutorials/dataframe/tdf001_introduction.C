@@ -160,6 +160,14 @@ int tdf001_introduction() {
                        .Count();
    std::cout << *entries_sum << std::endl;
 
+   // Additional columns can be expressed as strings. The content must be C++
+   // code. The name of the variables must be the name of the branches. The code
+   // is just in time compiled.
+   auto entries_sum2 = d.AddColumn("sum", "b1 + b2")
+                        .Filter([](double sum) { return sum > 4.2; }, {"sum"})
+                        .Count();
+   std::cout << *entries_sum2 << std::endl;
+
    return 0;
 }
 
