@@ -263,8 +263,8 @@ int main(int /*argc*/, char ** /*argv*/)
          // Make transformations from points
          // note warnings about axis not having the same angles expected here...
          // point is to check scalar and vector versions do the same thing
-         ROOT::Math::Impl::Transform3D<double>       st(sp1, sp2, sp3, sp4, sp5, sp6);
-         ROOT::Math::Impl::Transform3D<Vc::double_v> vt(vp1, vp2, vp3, vp4, vp5, vp6);
+         const ROOT::Math::Impl::Transform3D<double> st(sp1, sp2, sp3, sp4, sp5, sp6);
+         const ROOT::Math::Impl::Transform3D<Vc::double_v> vt(vp1, vp2, vp3, vp4, vp5, vp6);
 
          // transform the vectors
          const auto sv = st * sc.direction;
@@ -272,12 +272,12 @@ int main(int /*argc*/, char ** /*argv*/)
          std::cout << "Transformed Direction " << sv << " " << vv << std::endl;
 
          // invert the transformations
-         st.Invert();
-         vt.Invert();
+         const auto st_i = st.Inverse();
+         const auto vt_i = vt.Inverse();
 
          // Move the points back
-         const auto sv_i = st * sv;
-         const auto vv_i = vt * vv;
+         const auto sv_i = st_i * sv;
+         const auto vv_i = vt_i * vv;
          std::cout << "Transformed Back Direction " << sc.direction << " " << sv_i << " " << vv_i << std::endl;
 
          for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
@@ -292,6 +292,33 @@ int main(int /*argc*/, char ** /*argv*/)
          ret |= compare(sc.direction.x(), sv_i.x());
          ret |= compare(sc.direction.y(), sv_i.y());
          ret |= compare(sc.direction.z(), sv_i.z());
+
+         // Make a scalar Plane
+         const double a(p0(gen)), b(p1(gen)), c(p2(gen)), d(p3(gen));
+         Plane<double> sc_plane(a, b, c, d);
+         // make a vector plane
+         Plane<Vc::double_v> vc_plane(a, b, c, d);
+
+         // transform the planes
+         const auto new_sc_plane = st * sc_plane;
+         const auto new_vc_plane = vt * vc_plane;
+         std::cout << "Transformed plane " << new_sc_plane << " " << new_vc_plane << std::endl;
+
+         // now transform the planes back
+         const auto sc_plane_i = st_i * new_sc_plane;
+         const auto vc_plane_i = vt_i * new_vc_plane;
+         std::cout << "Transformed Back plane " << sc_plane_i << " " << vc_plane_i << std::endl;
+
+         for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
+            ret |= compare(vc_plane.A()[j], vc_plane_i.A()[j]);
+            ret |= compare(vc_plane.B()[j], vc_plane_i.B()[j]);
+            ret |= compare(vc_plane.C()[j], vc_plane_i.C()[j]);
+            ret |= compare(vc_plane.D()[j], vc_plane_i.D()[j], "", 10000);
+            ret |= compare(sc_plane_i.A(), vc_plane_i.A()[j]);
+            ret |= compare(sc_plane_i.B(), vc_plane_i.B()[j]);
+            ret |= compare(sc_plane_i.C(), vc_plane_i.C()[j]);
+            ret |= compare(sc_plane_i.D(), vc_plane_i.D()[j]);
+         }
       }
    }
 

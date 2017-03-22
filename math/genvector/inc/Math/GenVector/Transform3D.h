@@ -712,15 +712,23 @@ public:
    /**
       Transformation on a 3D plane
    */
-   Plane3D<T> operator()(const Plane3D<T> &plane) const
+   template <typename TYPE>
+   Plane3D<TYPE> operator()(const Plane3D<TYPE> &plane) const
    {
       // transformations on a 3D plane
-      const Vector n = plane.Normal();
+      const auto n = plane.Normal();
       // take a point on the plane. Use origin projection on the plane
       // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
-      const T d = plane.HesseDistance();
-      Point   p(-d * n.X(), -d * n.Y(), -d * n.Z());
-      return Plane3D<T>(operator()(n), operator()(p));
+      const auto d = plane.HesseDistance();
+      Point p(-d * n.X(), -d * n.Y(), -d * n.Z());
+      return Plane3D<TYPE>(operator()(n), operator()(p));
+   }
+
+   /// Multiplication operator for 3D plane
+   template <typename TYPE>
+   Plane3D<TYPE> operator*(const Plane3D<TYPE> &plane) const
+   {
+      return operator()(plane);
    }
 
    // skip transformation for arbitrary vectors - not really defined if point or displacement vectors
