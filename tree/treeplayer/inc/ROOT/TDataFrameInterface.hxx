@@ -161,7 +161,7 @@ public:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       auto branches = tree->GetListOfBranches();
-      auto tmpBranches = df->GetTmpBranches();
+      auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
       auto retVal = ROOT::Internal::InterpretCall(this, "Filter", GetNodeTypeName(), name, expression, branches, tmpBranches, tmpBookedBranches, tree);
       return *(TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>*) retVal;
@@ -210,7 +210,7 @@ public:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       auto branches = tree->GetListOfBranches();
-      auto tmpBranches = df->GetTmpBranches();
+      auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
       auto retVal = ROOT::Internal::InterpretCall(this, "AddColumn", GetNodeTypeName(), name, expression, branches, tmpBranches, tmpBookedBranches, tree);
       return *(TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>*) retVal;

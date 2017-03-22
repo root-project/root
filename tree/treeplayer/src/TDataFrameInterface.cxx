@@ -36,6 +36,7 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
       }
    }
    for (auto brName : tmpBranches) {
+      std::cout << "TMP B " << brName << std::endl;
       std::string bNameRegexContent = regexBit + brName + regexBit;
       TRegexp bNameRegex(bNameRegexContent.c_str());
       if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
@@ -117,7 +118,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
    // Here we have two cases: filter and column
    ss.str("");
    ss << "((" << nodeTypeName << "*)" << thisPtr << ")->" << methodName << "(";
-   if ("AddColumn" == methodName) {
+   if (methodName == "AddColumn") {
       ss << "\"" << name << "\", ";
    }
    ss << filterLambda << ", {";
@@ -127,7 +128,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
    if (exprNeedsVariables) ss.seekp(-2, ss.cur); // remove the last ",
    ss << "}";
 
-   if ("Filter" == methodName) {
+   if (methodName == "Filter") {
       ss << ", \"" << name << "\"";
    }
 
