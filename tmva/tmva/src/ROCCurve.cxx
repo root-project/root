@@ -96,7 +96,7 @@ Double_t TMVA::ROCCurve::GetROCIntegral()
    fEpsilonSig.push_back(0);
    fEpsilonBgk.push_back(0);
 
-   for (Float_t i = -1.0; i <  1.0; i += (1.0 / ndivisions)) {
+   for (Float_t i = -1.0; i < 1.0; i += (1.0 / ndivisions)) {
       fEpsilonSig.push_back(1 - ComputeSen(i));
       fEpsilonBgk.push_back(ComputeSpe(i));
    }
