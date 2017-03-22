@@ -65,10 +65,10 @@ Float_t TMVA::ROCCurve::ComputeSen(Float_t threshold)
    Float_t true_positives = 0.0;
    Float_t false_negatives = 0.0;
    for (auto signal_res : fMvaS) {
-       if (signal_res > threshold)
-           ++true_positives;
-       else
-           ++false_negatives;
+      if (signal_res > threshold)
+         ++true_positives;
+      else
+         ++false_negatives;
    }
    return true_positives + false_negatives == 0.0 ? 0.0 : true_positives / (true_positives + false_negatives);
 }
@@ -78,10 +78,10 @@ Float_t TMVA::ROCCurve::ComputeSpe(Float_t threshold)
    Float_t true_negatives = 0.0;
    Float_t false_positives = 0.0;
    for (auto background_res : fMvaB) {
-       if (background_res > threshold)
-           ++false_positives;
-       else
-           ++true_negatives;
+      if (background_res > threshold)
+         ++false_positives;
+      else
+         ++true_negatives;
    }
    return true_negatives + false_positives == 0.0 ? 0.0 : true_negatives / (true_negatives + false_positives);
 }
@@ -91,19 +91,19 @@ Float_t TMVA::ROCCurve::ComputeSpe(Float_t threshold)
 
 Double_t TMVA::ROCCurve::GetROCIntegral()
 {
-   Float_t integral=0;
+   Float_t integral = 0;
    int ndivisions = 40;
    fEpsilonSig.push_back(0);
    fEpsilonBgk.push_back(0);
 
-   for (Float_t i=-1.0;i<1.0;i+=(1.0/ndivisions)) {
-       fEpsilonSig.push_back(1 - ComputeSen(i));
-       fEpsilonBgk.push_back(ComputeSpe(i));
+   for (Float_t i = -1.0; i <  1.0; i += (1.0 / ndivisions)) {
+      fEpsilonSig.push_back(1 - ComputeSen(i));
+      fEpsilonBgk.push_back(ComputeSpe(i));
    }
 
    fEpsilonSig.push_back(1.0);
    fEpsilonBgk.push_back(1.0);
-   for (UInt_t i=0;i<fEpsilonSig.size()-1;i++) {
+   for (UInt_t i = 0; i < fEpsilonSig.size() - 1; i++) {
       integral += 0.5*(fEpsilonSig[i+1]-fEpsilonSig[i])*(fEpsilonBgk[i]+fEpsilonBgk[i+1]);
    }
    return integral;
