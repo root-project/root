@@ -57,6 +57,7 @@ public:
    // Deserialize N events from an input buffer.  Since chars are stored unchanged, there
    // is nothing to do here but return true if we don't have variable-length arrays.
    virtual bool    ReadBasketFast(TBuffer&, Long64_t) { return !fLeafCount; }
+   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) { return !fLeafCount; }
 
    ClassDef(TLeafB,1);  //A TLeaf for an 8 bit Integer data type.
 };

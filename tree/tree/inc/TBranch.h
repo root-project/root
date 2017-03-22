@@ -182,6 +182,7 @@ public:
            Int_t     GetCompressionSettings() const;
    TDirectory       *GetDirectory() const {return fDirectory;}
            Int_t     GetEntriesFast(Long64_t, TBuffer&);
+           Int_t     GetEntriesSerialized(Long64_t, TBuffer&);
    virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall = 0);
    virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
            Int_t     GetEntryOffsetLen() const { return fEntryOffsetLen; }
@@ -245,6 +246,7 @@ public:
    virtual void      SetStatus(Bool_t status=1);
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      SetupAddresses();
+   Bool_t            SupportsBulkRead() const;
    virtual void      UpdateAddress() {;}
    virtual void      UpdateFile();
 

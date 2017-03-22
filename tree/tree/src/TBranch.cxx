@@ -1377,6 +1377,17 @@ Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns true if this branch supports bulk IO, false otherwise.
+///
+/// This will return true if all the various preconditions necessary hold true
+/// to perform bulk IO (reasonable type, single TLeaf, etc); the bulk IO may
+/// still fail, depending on the contents of the individual TBaskets loaded.
+Bool_t TBranch::SupportsBulkRead() const {
+   return (fNleaves == 1) &&
+          (static_cast<TLeaf*>(fLeaves.UncheckedAt(0))->GetDeserializeType() != TLeaf::DeserializeType::kDestructive);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read as many events as possible into the given buffer, using zero-copy
 /// mechanisms.
 ///

@@ -130,6 +130,7 @@ public:
    virtual void     ReadBasket(TBuffer &) {}
    virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {}
    virtual bool     ReadBasketFast(TBuffer&, Long64_t) { return false; }
+   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return false; }
    virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }
