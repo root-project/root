@@ -25,6 +25,7 @@
 #pragma link C++ class TTreeDrawArgsParser+;
 #pragma link C++ class TTreePerfStats+;
 #pragma link C++ class TTreeReader+;
+#pragma link C++ class TTreeReaderFast+;
 #pragma link C++ class TTreeTableInterface;
 #pragma link C++ class TSimpleAnalysis+;
 #pragma link C++ class ROOT::TTreeProcessorMT-;
@@ -98,6 +99,7 @@
 #endif
 
 #pragma link C++ class ROOT::Internal::TTreeReaderValueBase+;
+#pragma link C++ class ROOT::Internal::TTreeReaderValueFastBase+;
 #pragma link C++ class ROOT::Internal::TTreeReaderArrayBase+;
 #pragma link C++ class ROOT::Internal::TNamedBranchProxy+;
 

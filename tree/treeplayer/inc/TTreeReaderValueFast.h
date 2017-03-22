@@ -22,7 +22,6 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#include "TDictionary.h"
 #include "TBufferFile.h"
 #include "TTreeReaderFast.h"
 
@@ -43,12 +42,18 @@ class TTreeReaderValueFastBase {
       virtual TTreeReaderValueBase::EReadStatus GetReadStatus() const { return fReadStatus; }
 
    protected:
+
+      //////////////////////////////////////////////////////////////////////////////
+      /// Construct a tree value reader and register it with the reader object.
       TTreeReaderValueFastBase(TTreeReaderFast* reader, const std::string &branchName) :
          fBranchName(branchName),
+         fLeafName(branchName), // TODO: only support single-leaf branches for now.
          fTreeReader(reader),
          fBuffer(TBuffer::kWrite, 32*1024),
          fEvtIndex(reader->GetIndexRef())
-      {}
+      {
+         if (fTreeReader) fTreeReader->RegisterValueReader(this);
+      }
 
       Int_t GetEvents(Long64_t eventNum) {
           if (fRemaining + fEventBase > eventNum) {
@@ -82,6 +87,9 @@ class TTreeReaderValueFastBase {
          fTreeReader = nullptr;
       }
 
+      // Create the linkage between the TTreeReader's current tree and this ReaderValue
+      // object.  After CreateProxy() is invoked, if fSetupStatus doesn't indicate an
+      // error, then we are pointing toward a valid TLeaf in the current tree
       void CreateProxy();
 
       virtual ~TTreeReaderValueFastBase();
@@ -91,11 +99,14 @@ class TTreeReaderValueFastBase {
       virtual const char *BranchTypeName() = 0;
 
       std::string  fBranchName;          // Name of the branch we should read from.
+      std::string  fLeafName;            // The branch's leaf we should read from.  NOTE: currently only support single-leaf branches.
       TTreeReaderFast *fTreeReader{nullptr}; // Reader we belong to
       TBranch *    fBranch{nullptr};     // Actual branch object we are reading.
+      TLeaf *      fLeaf{nullptr};       // Actual leaf we are reading.
       TBufferFile  fBuffer;              // Buffer object holding the current events.
       Int_t        fRemaining{0};        // Number of events remaining in the buffer.
       Int_t       &fEvtIndex;            // Current event index.
+      Long64_t     fLastChainOffset{-1}; // Current chain in the TTree we are pointed at.
       Long64_t     fEventBase{-1};       // Event number of the current buffer position.
 
       TTreeReaderValueBase::ESetupStatus fSetupStatus{TTreeReaderValueBase::kSetupNotSetup}; // setup status of this data access
