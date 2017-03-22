@@ -205,6 +205,15 @@ public:
       return tdf_b;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a temporary branch
+   /// \param[in] name The name of the temporary branch.
+   /// \param[in] expression An expression in C++ which represents the temporary value
+   ///
+   /// The expression is just in time compiled and used to produce new values. The
+   /// variable names to be used inside are the names of the branches. Only
+   /// valid C++ is accepted.
+   /// Refer to the first overload of this method for the full documentation.
    TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> AddColumn(const std::string &name, const std::string &expression)
    {
       auto df = GetDataFrameChecked();
