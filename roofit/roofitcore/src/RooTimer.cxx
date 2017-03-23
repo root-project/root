@@ -11,7 +11,7 @@ void RooTimer::set_timing_s(double timing_s) {
 }
 
 void RooTimer::store_timing_in_RooTrace(const std::string &name) {
-  return RooTrace::objectTiming.insert({name, _timing_s});
+  RooTrace::objectTiming.insert({name, _timing_s});
 }
 
 
