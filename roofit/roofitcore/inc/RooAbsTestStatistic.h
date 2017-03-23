@@ -147,7 +147,7 @@ protected:
   mutable Double_t _evalCarry; //! carry of Kahan sum in evaluatePartition
 
 private:
-  void _collectNumIntSetTimings();
+  void _collectNumIntSetTimings() const;
 
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 };

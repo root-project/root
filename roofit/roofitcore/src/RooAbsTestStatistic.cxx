@@ -827,12 +827,12 @@ Double_t RooAbsTestStatistic::getCarry() const
 { return _evalCarry; }
 
 
-void RooAbsTestStatistic::_collectNumIntSetTimings() {
+void RooAbsTestStatistic::_collectNumIntSetTimings() const {
   ofstream timing_outfile;
   timing_outfile.open("timings_NumIntSet.json", ios::app);
 
   for (Int_t i = 0; i < _nCPU; ++i) {
-    std::map<std::string,double> timings = _mpfeArray[i]->collectTimingsFromServer();
+    auto timings = _mpfeArray[i]->collectTimingsFromServer();
     for (auto it = timings.begin(); it != timings.end(); ++it) {
       std::string name = it->first;
       double timing_s = it->second;
@@ -845,4 +845,5 @@ void RooAbsTestStatistic::_collectNumIntSetTimings() {
   }
 
   timing_outfile.close();
+
 }

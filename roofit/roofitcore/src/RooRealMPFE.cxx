@@ -554,7 +554,9 @@ void RooRealMPFE::serverLoop() {
       }
 
       case RetrieveTimings: {
-        *_pipe << RooTrace::objectTiming.size();
+        std::cout << "RooRealMPFE::serverLoop / RetrieveTimings" << std::endl;
+        *_pipe << static_cast<unsigned long>(RooTrace::objectTiming.size());
+        std::cout << "RooRealMPFE::serverLoop / RetrieveTimings: sent size" << std::endl;
         for (auto it = RooTrace::objectTiming.begin(); it != RooTrace::objectTiming.end(); ++it) {
           std::string name = it->first;
           double timing_s = it->second;
@@ -620,7 +622,7 @@ void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
   // Iterator over branch nodes
   RooFIter iter = blist.fwdIterator();
   RooAbsArg* node;
-  while(node = iter.next()) {
+  while((node = iter.next())) {
     RooAbsPdf* pdfNode = dynamic_cast<RooAbsPdf*>(node);
     if (!pdfNode) continue;
     // Skip self-normalized nodes
@@ -637,7 +639,7 @@ void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
     normint->branchNodeServerList(&bi);
     RooFIter ibiter = bi.fwdIterator();
     RooAbsArg* inode;
-    while(inode = ibiter.next()) {
+    while((inode = ibiter.next())) {
       // If a RooRealIntegal component is found...
       if (inode->IsA()==RooRealIntegral::Class()) {
         // Retrieve the number of real dimensions that is integrated numerically,
@@ -1222,14 +1224,17 @@ void RooRealMPFE::enableOffsetting(Bool_t flag)
   ((RooAbsReal&)_arg.arg()).enableOffsetting(flag) ;
 }
 
-std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() {
+std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
   std::map<std::string, double> server_timings;
+
   *_pipe << RetrieveTimings;
 
-  size_t numTimings;
+  unsigned long numTimings;
   *_pipe >> numTimings;
 
-  for (auto i = 0; i < numTimings; ++i) {
+  std::cout << "RooRealMPFE::collectTimingsFromServer: received numTimings" << std::endl;
+
+  for (unsigned long i = 0; i < numTimings; ++i) {
     std::string name;
     double timing_s;
     *_pipe >> name >> timing_s;

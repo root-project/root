@@ -105,8 +105,9 @@ private:
   void _initNumIntSet(const RooArgSet& obs);
   void _setTimingNumIntSet(Bool_t flag = kTRUE);
 
-  ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function 
-  std::map<std::string, double> collectTimingsFromServer();
+  std::map<std::string, double> collectTimingsFromServer() const;
+
+  ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };
 
 #endif
