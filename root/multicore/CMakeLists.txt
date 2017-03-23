@@ -151,13 +151,13 @@ if(ROOT_imt_FOUND)
                      OUTREF ttree_read_imt.ref
                      DEPENDS generate_imt_tree ${GENERATE_EXECUTABLE_TEST})
 
-   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt_allpar ttree_read_imt_allpar.cpp LIBRARIES Core Thread Tree)
+#   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt_allpar ttree_read_imt_allpar.cpp LIBRARIES Core Thread Tree)
 
-   ROOTTEST_ADD_TEST(ttree_read_imt_allpar
-                     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ttree_read_imt_allpar.sh
-                     FAILREGEX "ERROR"
-                     OUTREF ttree_read_imt_allpar.ref
-                     DEPENDS generate_imt_tree ${GENERATE_EXECUTABLE_TEST})
+#   ROOTTEST_ADD_TEST(ttree_read_imt_allpar
+#                     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ttree_read_imt_allpar.sh
+#                     FAILREGEX "ERROR"
+#                     OUTREF ttree_read_imt_allpar.ref
+#                     DEPENDS generate_imt_tree ${GENERATE_EXECUTABLE_TEST})
 
    ROOTTEST_GENERATE_EXECUTABLE(ttree_write_imt ttree_write_imt.cpp LIBRARIES Core Thread Tree Hist)
 
