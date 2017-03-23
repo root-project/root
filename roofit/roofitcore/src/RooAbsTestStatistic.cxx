@@ -252,7 +252,7 @@ Double_t RooAbsTestStatistic::evaluate() const
   }
 
   if (SimMaster == _gofOpMode) {
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
+    if (RooTrace::timing_flag == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
@@ -284,7 +284,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       _evalCarry /= norm;
     }
 
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
+    if (RooTrace::timing_flag == 2) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -301,12 +301,12 @@ Double_t RooAbsTestStatistic::evaluate() const
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
+    if (RooTrace::timing_flag == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
     std::vector<double> timings;
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
+    if (RooTrace::timing_flag == 3) {
       timings.reserve(_nCPU);
       timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json", ios::app);
     }
@@ -317,7 +317,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     Double_t sum(0), carry = 0.;
 
     for (Int_t i = 0; i < _nCPU; ++i) {
-      if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
+      if (RooTrace::timing_flag == 3) {
         timing_begin = std::chrono::high_resolution_clock::now();
       }
       Double_t y = _mpfeArray[i]->getValV();
@@ -326,13 +326,13 @@ Double_t RooAbsTestStatistic::evaluate() const
       const Double_t t = sum + y;
       carry = (t - sum) - y;
       sum = t;
-      if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
+      if (RooTrace::timing_flag == 3) {
         timing_end = std::chrono::high_resolution_clock::now();
         timings[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
       }
     }
 
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 3) {
+    if (RooTrace::timing_flag == 3) {
 
       for (Int_t i = 0; i < _nCPU; ++i) {
         timing_outfile << "{"
@@ -349,7 +349,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     Double_t ret = sum ;
     _evalCarry = carry;
 
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
+    if (RooTrace::timing_flag == 2) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -368,7 +368,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     return ret ;
 
   } else {
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
+    if (RooTrace::timing_flag == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
       timing_begin = std::chrono::high_resolution_clock::now();
     }
@@ -415,7 +415,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       _evalCarry /= norm;
     }
 
-    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 2) {
+    if (RooTrace::timing_flag == 2) {
       timing_end = std::chrono::high_resolution_clock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
