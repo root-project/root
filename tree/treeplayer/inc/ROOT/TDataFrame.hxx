@@ -87,8 +87,8 @@ TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenam
 namespace cling {
 inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
 {
-   auto df          = tdf->GetDataFrameChecked();
-   auto treeName    = df->GetTreeName();
+   auto df = tdf->GetDataFrameChecked();
+   auto treeName = df->GetTreeName();
    auto defBranches = df->GetDefaultBranches();
    auto tmpBranches = df->GetTmpBranches();
 

@@ -78,8 +78,8 @@ void TDataFrameFilterBase::PrintReport() const
    if (fName.empty()) // PrintReport is no-op for unnamed filters
       return;
    const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
-   const auto all      = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
-   double     perc     = accepted;
+   const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
+   double perc = accepted;
    if (all > 0) perc /= all;
    perc *= 100.;
    Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", fName.c_str(), accepted, all, perc);
@@ -91,9 +91,9 @@ void TDataFrameFilterBase::PrintReport() const
 // fixed at construction time and no blocking is foreseen.
 class TSlotStack {
 private:
-   unsigned int              fCursor;
+   unsigned int fCursor;
    std::vector<unsigned int> fBuf;
-   ROOT::TSpinMutex          fMutex;
+   ROOT::TSpinMutex fMutex;
 
 public:
    TSlotStack() = delete;

@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "RConfigure.h" // R__USE_IMT
+#include "RConfigure.h"      // R__USE_IMT
 #include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TDataFrameBranchBase
 #include "ROOT/TDFUtils.hxx"
 #include "TBranch.h"
@@ -34,7 +34,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
       if (branch->InheritsFrom(tbranchelRef)) {
          return static_cast<TBranchElement *>(branch)->GetClassName();
       } else { // Try the fundamental type
-         auto title    = branch->GetTitle();
+         auto title = branch->GetTitle();
          auto typeCode = title[strlen(title) - 1];
          if (typeCode == 'B')
             return "char";
