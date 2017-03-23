@@ -3077,8 +3077,8 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include \"TROOT.h\"\n"
                << "#include \"TBuffer.h\"\n"
                << "#include \"TMemberInspector.h\"\n"
-               << "#include \"TInterpreter.h\"" << std::endl
-               << "#include \"TVirtualMutex.h\"" << std::endl
+               << "#include \"TInterpreter.h\"\n"
+               << "#include \"TVirtualMutex.h\"\n"
                << "#include \"TError.h\"\n\n"
                << "#ifndef G__ROOT\n"
                << "#define G__ROOT\n"
