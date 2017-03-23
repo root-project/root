@@ -1,5 +1,4 @@
 SUCCESS [IMT] - Bytes sequential1: 232750000 - parallel1: 232750000
 SUCCESS [IMT] - Checked state of global IMT
 SUCCESS [IMT] - Bytes sequential2: 232750000 - parallel2: 232750000
-NUM THREADS: 4
 NUM TASKS: 100000
