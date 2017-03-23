@@ -116,7 +116,7 @@ namespace ROOT {
    /// sequence as argument.
    template<class F, class INTEGER>
    void TThreadExecutor::Foreach(F func, ROOT::TSeq<INTEGER> args) {
-       ParallelFor(*args.begin(), *args.end(), 1, [&](unsigned int i){func(i);});
+       ParallelFor(*args.begin(), *args.end(), args.step(), [&](unsigned int i){func(i);});
    }
    
    /// \cond
@@ -165,6 +165,7 @@ namespace ROOT {
    auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
       unsigned start = *args.begin();
       unsigned end = *args.end();
+      unsigned seqStep = args.step();
 
       using retType = decltype(func(start));
       std::vector<retType> reslist(end - start);
@@ -172,7 +173,7 @@ namespace ROOT {
       {
          reslist[i] = func(i);
       };
-      ParallelFor(start, end, 1, lambda);
+      ParallelFor(start, end, seqStep, lambda);
 
       return reslist;
    }
@@ -241,6 +242,7 @@ namespace ROOT {
 
       unsigned start = *args.begin();
       unsigned end = *args.end();
+      unsigned seqStep = args.step();
       unsigned step = (end - start + nChunks - 1) / nChunks; //ceiling the division
 
       using retType = decltype(func(start));
@@ -248,7 +250,7 @@ namespace ROOT {
       auto lambda = [&](unsigned int i)
       {
          std::vector<retType> partialResults(step);
-         for (unsigned j = 0; j < step && (i + j) < end; j++) {
+         for (unsigned j = 0; j < step && (i + j) < end; j+=seqStep) {
             partialResults[j] = func(i + j);
          }
          reslist[i / step] = redfunc(partialResults);
