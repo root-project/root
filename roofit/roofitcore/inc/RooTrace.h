@@ -51,6 +51,7 @@ public:
   static void printObjectCounts() ;
 
   static std::map<std::string,double> objectTiming;
+  static int timing_flag;
 
 protected:
 

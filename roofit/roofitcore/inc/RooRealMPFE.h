@@ -107,6 +107,8 @@ private:
 
   std::map<std::string, double> collectTimingsFromServer() const;
 
+  void _time_communication_overhead() const;
+
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };
 

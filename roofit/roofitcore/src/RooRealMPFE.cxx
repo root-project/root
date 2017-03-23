@@ -331,6 +331,8 @@ void RooRealMPFE::serverLoop() {
       break;
     }
 
+    std::cout << "RooRealMPFE::serverLoop - before switch" << std::endl;
+
     switch (msg) {
       case SendReal: {
         *_pipe >> idx >> value >> isConst;
@@ -550,6 +552,8 @@ void RooRealMPFE::serverLoop() {
         comm_wallclock_begin = WallClock::now();
         *_pipe << comm_wallclock_begin << BidirMMapPipe::flush;
 
+        std::cout << "RooRealMPFE::serverLoop / MeasureCommunicationTime end" << std::endl;
+
         break;
       }
 
@@ -745,22 +749,16 @@ void RooRealMPFE::calculate() const
       timing_begin = WallClock::now();
     }
 
-    // test communication overhead timing
-    TimePoint comm_wallclock_begin_c2s, comm_wallclock_begin_s2c, comm_wallclock_end_s2c;
-    // ... from client to server
-    comm_wallclock_begin_c2s = WallClock::now();
-    *_pipe << MeasureCommunicationTime << comm_wallclock_begin_c2s << BidirMMapPipe::flush;
-    // ... and from server to client
-    *_pipe >> comm_wallclock_begin_s2c;
-    comm_wallclock_end_s2c = WallClock::now();
 
-    std::cout << "server to client communication overhead timing:" << std::endl;
-    std::cout << "comm_wallclock_begin: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_begin_s2c.time_since_epoch()).count() << std::endl;
-    std::cout << "comm_wallclock_end: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end_s2c.time_since_epoch()).count() << std::endl;
+//    if (static_cast<int>(dynamic_cast<RooConstVar*>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 7) {
+    if (RooTrace::timing_flag == 7) {
+      timing_outfile.open("timing_RRMPFE_calculate_client.json", ios::app);
+      timing_begin = WallClock::now();
+    }
 
-    double comm_wallclock_s = std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end_s2c - comm_wallclock_begin_s2c).count() / 1.e9;
-
-    std::cout << "comm_wallclock (seconds): " << comm_wallclock_s << std::endl;
+    if (RooTrace::timing_flag == 10) {
+      _time_communication_overhead();
+    }
 
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << endl ;
     Int_t i(0) ;
@@ -1242,6 +1240,25 @@ std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
   }
 
   return server_timings;
+}
+
+void RooRealMPFE::_time_communication_overhead() const {
+  // test communication overhead timing
+  TimePoint comm_wallclock_begin_c2s, comm_wallclock_begin_s2c, comm_wallclock_end_s2c;
+  // ... from client to server
+  comm_wallclock_begin_c2s = WallClock::now();
+  *_pipe << MeasureCommunicationTime << comm_wallclock_begin_c2s << BidirMMapPipe::flush;
+  // ... and from server to client
+  *_pipe >> comm_wallclock_begin_s2c;
+  comm_wallclock_end_s2c = WallClock::now();
+
+  std::cout << "server to client communication overhead timing:" << std::endl;
+  std::cout << "comm_wallclock_begin: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_begin_s2c.time_since_epoch()).count() << std::endl;
+  std::cout << "comm_wallclock_end: " << std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end_s2c.time_since_epoch()).count() << std::endl;
+
+  double comm_wallclock_s = std::chrono::duration_cast<std::chrono::nanoseconds>(comm_wallclock_end_s2c - comm_wallclock_begin_s2c).count() / 1.e9;
+
+  std::cout << "comm_wallclock (seconds): " << comm_wallclock_s << std::endl;
 }
 
 
