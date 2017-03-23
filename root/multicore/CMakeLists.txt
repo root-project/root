@@ -151,6 +151,8 @@ if(ROOT_imt_FOUND)
                      OUTREF ttree_read_imt.ref
                      DEPENDS generate_imt_tree ${GENERATE_EXECUTABLE_TEST})
 
+### Keep this test for debugging purposes: even if ttree_read_imt makes it redundant, it can be useful to
+### debug issues that are hard to reproduce locally but can eventually be observed on the test machines.
 #   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt_allpar ttree_read_imt_allpar.cpp LIBRARIES Core Thread Tree)
 
 #   ROOTTEST_ADD_TEST(ttree_read_imt_allpar
