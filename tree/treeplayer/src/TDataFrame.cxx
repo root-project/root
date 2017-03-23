@@ -396,6 +396,17 @@ Use cases include:
 
 An exception is thrown if the `name` of the new branch is already in use for another branch in the `TTree`.
 
+It is also possible to specify the quantity to be stored in the new temporary column as a C++ expression with the method
+`AddColumn(name, expression)`. For example this invocation
+
+~~~{.cpp}
+tdf.AddColumn("pt", "sqrt(px*px + py*py)");
+~~~
+
+will create a new column called "pt" the value of which is calculated starting from the branches px and py. The system
+builds a just in time compiled function starting from the expression after having deduced the list of necessary branches
+from the names of the variables specified by the user.
+
 ##  <a name="actions"></a>Actions
 ### Instant and lazy actions
 Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are
