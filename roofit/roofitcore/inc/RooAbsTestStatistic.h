@@ -146,8 +146,10 @@ protected:
   mutable Double_t _offsetCarry; //! avoids loss of precision
   mutable Double_t _evalCarry; //! carry of Kahan sum in evaluatePartition
 
-  ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
+private:
+  void _collectNumIntSetTimings();
 
+  ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 };
 
 #endif

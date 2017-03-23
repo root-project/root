@@ -60,13 +60,14 @@ public:
   State _state ;
 
   enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate, 
-		 ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset,
-     SetCpuAffinity,
-     EnableTimingRATS, DisableTimingRATS,
-     EnableTimingNamedAbsArg, DisableTimingNamedAbsArg,
-     MeasureCommunicationTime
+    ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset,
+    SetCpuAffinity,
+    EnableTimingRATS, DisableTimingRATS,
+    EnableTimingNamedAbsArg, DisableTimingNamedAbsArg,
+    MeasureCommunicationTime,
+    RetrieveTimings
   };
-  
+
   void initialize() ; 
   void initVars() ;
   void serverLoop() ;
@@ -105,6 +106,7 @@ private:
   void _setTimingNumIntSet(Bool_t flag = kTRUE);
 
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function 
+  std::map<std::string, double> collectTimingsFromServer();
 };
 
 #endif

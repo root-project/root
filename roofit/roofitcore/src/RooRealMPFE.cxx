@@ -553,6 +553,17 @@ void RooRealMPFE::serverLoop() {
         break;
       }
 
+      case RetrieveTimings: {
+        *_pipe << RooTrace::objectTiming.size();
+        for (auto it = RooTrace::objectTiming.begin(); it != RooTrace::objectTiming.end(); ++it) {
+          std::string name = it->first;
+          double timing_s = it->second;
+          *_pipe << name << timing_s;
+        }
+
+        break;
+      }
+
 
       default:
         if (_verboseServer)
@@ -658,6 +669,11 @@ void RooRealMPFE::_setTimingNumIntSet(Bool_t flag) {
     }
   }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1204,6 +1220,23 @@ void RooRealMPFE::enableOffsetting(Bool_t flag)
   }
 #endif // _WIN32
   ((RooAbsReal&)_arg.arg()).enableOffsetting(flag) ;
+}
+
+std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() {
+  std::map<std::string, double> server_timings;
+  *_pipe << RetrieveTimings;
+
+  size_t numTimings;
+  *_pipe >> numTimings;
+
+  for (auto i = 0; i < numTimings; ++i) {
+    std::string name;
+    double timing_s;
+    *_pipe >> name >> timing_s;
+    server_timings.insert({name, timing_s});
+  }
+
+  return server_timings;
 }
 
 

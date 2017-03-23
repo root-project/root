@@ -363,6 +363,8 @@ Double_t RooAbsTestStatistic::evaluate() const
       timing_outfile.close();
     }
 
+    _collectNumIntSetTimings();
+
     return ret ;
 
   } else {
@@ -823,3 +825,24 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
 
 Double_t RooAbsTestStatistic::getCarry() const
 { return _evalCarry; }
+
+
+void RooAbsTestStatistic::_collectNumIntSetTimings() {
+  ofstream timing_outfile;
+  timing_outfile.open("timings_NumIntSet.json", ios::app);
+
+  for (Int_t i = 0; i < _nCPU; ++i) {
+    std::map<std::string,double> timings = _mpfeArray[i]->collectTimingsFromServer();
+    for (auto it = timings.begin(); it != timings.end(); ++it) {
+      std::string name = it->first;
+      double timing_s = it->second;
+      timing_outfile << "{\"wall_s\": \"" << timing_s
+                     << "\", \"name\": \"" << name
+                     << "\", \"ix_cpu\": \"" << i
+                     << "\", \"pid\": \"" << getpid()
+                     << "\"}," << "\n";
+    }
+  }
+
+  timing_outfile.close();
+}
