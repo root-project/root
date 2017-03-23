@@ -331,8 +331,6 @@ void RooRealMPFE::serverLoop() {
       break;
     }
 
-    std::cout << "RooRealMPFE::serverLoop - before switch" << std::endl;
-
     switch (msg) {
       case SendReal: {
         *_pipe >> idx >> value >> isConst;
@@ -552,15 +550,11 @@ void RooRealMPFE::serverLoop() {
         comm_wallclock_begin = WallClock::now();
         *_pipe << comm_wallclock_begin << BidirMMapPipe::flush;
 
-        std::cout << "RooRealMPFE::serverLoop / MeasureCommunicationTime end" << std::endl;
-
         break;
       }
 
       case RetrieveTimings: {
-        std::cout << "RooRealMPFE::serverLoop / RetrieveTimings" << std::endl;
         *_pipe << static_cast<unsigned long>(RooTrace::objectTiming.size()) << BidirMMapPipe::flush;
-        std::cout << "RooRealMPFE::serverLoop / RetrieveTimings: sent size" << std::endl;
         for (auto it = RooTrace::objectTiming.begin(); it != RooTrace::objectTiming.end(); ++it) {
           std::string name = it->first;
           double timing_s = it->second;
@@ -1222,8 +1216,6 @@ std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
 
   unsigned long numTimings;
   *_pipe >> numTimings;
-
-  std::cout << "RooRealMPFE::collectTimingsFromServer: received numTimings" << std::endl;
 
   for (unsigned long i = 0; i < numTimings; ++i) {
     std::string name;
