@@ -1,5 +1,12 @@
 # JSROOT changelog
 
+## Changes in 5.1.1
+1. Fix - invoke callback in JSROOT.draw() at proper time 
+2. Fix - support TGeoHMatrix, produced after GDML conversion
+3. Fix - support also TGeoScale and TGeoGenTrans matrixes 
+4. Fix - update histograms with all provided functions (#125) 
+
+
 ## Changes in 5.1.0
 1. New 'float' browser kind overlays with objects drawing
 2. Browser can be enabled after drawing with 'nobrowser' mode
