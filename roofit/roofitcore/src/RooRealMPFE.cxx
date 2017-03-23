@@ -559,12 +559,12 @@ void RooRealMPFE::serverLoop() {
 
       case RetrieveTimings: {
         std::cout << "RooRealMPFE::serverLoop / RetrieveTimings" << std::endl;
-        *_pipe << static_cast<unsigned long>(RooTrace::objectTiming.size());
+        *_pipe << static_cast<unsigned long>(RooTrace::objectTiming.size()) << BidirMMapPipe::flush;
         std::cout << "RooRealMPFE::serverLoop / RetrieveTimings: sent size" << std::endl;
         for (auto it = RooTrace::objectTiming.begin(); it != RooTrace::objectTiming.end(); ++it) {
           std::string name = it->first;
           double timing_s = it->second;
-          *_pipe << name << timing_s;
+          *_pipe << name << timing_s << BidirMMapPipe::flush;
         }
 
         break;
@@ -744,13 +744,6 @@ void RooRealMPFE::calculate() const
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
     // timing stuff
-    if (RooTrace::timing_flag == 7) {
-      timing_outfile.open("timing_RRMPFE_calculate_client.json", ios::app);
-      timing_begin = WallClock::now();
-    }
-
-
-//    if (RooTrace::timing_flag == 7) {
     if (RooTrace::timing_flag == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_client.json", ios::app);
       timing_begin = WallClock::now();
@@ -1225,7 +1218,7 @@ void RooRealMPFE::enableOffsetting(Bool_t flag)
 std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
   std::map<std::string, double> server_timings;
 
-  *_pipe << RetrieveTimings;
+  *_pipe << RetrieveTimings << BidirMMapPipe::flush;
 
   unsigned long numTimings;
   *_pipe >> numTimings;
