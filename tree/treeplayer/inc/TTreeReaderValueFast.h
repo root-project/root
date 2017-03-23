@@ -41,8 +41,6 @@ class TTreeReaderValueFastBase {
       TTreeReaderValueBase::ESetupStatus GetSetupStatus() const { return fSetupStatus; }
       virtual TTreeReaderValueBase::EReadStatus GetReadStatus() const { return fReadStatus; }
 
-   protected:
-
       //////////////////////////////////////////////////////////////////////////////
       /// Construct a tree value reader and register it with the reader object.
       TTreeReaderValueFastBase(TTreeReaderFast* reader, const std::string &branchName) :
@@ -74,6 +72,8 @@ class TTreeReaderValueFastBase {
 
       virtual const char *GetTypeName() {return "{UNDETERMINED}";}
 
+
+   protected:
 
       // Adjust the current buffer offset forward N events.
       virtual Int_t Adjust(Int_t eventCount) {
@@ -125,7 +125,7 @@ class TTreeReaderValueFast final : public ROOT::Internal::TTreeReaderValueFastBa
        TTreeReaderValueFast(TTreeReaderFast* reader, const std::string &branchname) : ROOT::Internal::TTreeReaderValueFastBase(reader, branchname) {}
 
       T* Get() {
-         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<T*>(fBuffer)[fEvtIndex]));
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<T*>(fBuffer.GetCurrent()) + fEvtIndex));
       }
       T* operator->() { return Get(); }
       T& operator*() { return *Get(); }
@@ -139,6 +139,18 @@ class TTreeReaderValueFast final : public ROOT::Internal::TTreeReaderValueFastBa
 
 template <>
 class TTreeReaderValueFast<float> final : public ROOT::Internal::TTreeReaderValueFastBase {
+
+   public:
+
+      TTreeReaderValueFast(TTreeReaderFast& tr, const std::string &branchname) :
+            TTreeReaderValueFastBase(&tr, branchname) {}
+
+      // TODO: why isn't template specialization working here?
+      float* Get() {
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<float*>(fBuffer.GetCurrent()) + fEvtIndex));
+      }
+      float* operator->() { return Get(); }
+      float& operator*() { return *Get(); }
 
    protected:
       virtual const char *GetTypeName() override {return "float";}
