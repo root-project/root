@@ -97,15 +97,26 @@ public:
    /// Define action at each step for Geane
    virtual void GeaneStepping() {;}
 
-   // New functions for multi-threading applications
+   // Functions for multi-threading applications
    /// Clone MC application on worker
    virtual TVirtualMCApplication* CloneForWorker() const { return 0;}
-   /// Initialize MC application on worker
-   virtual void InitForWorker() const {}
-   /// Define actions at the beginning of the worker run if needed
+
+   /// Const Initialize MC application on worker  - now deprecated
+   /// Use new non-const InitOnWorker()  instead
+   virtual void InitForWorker() const  {}
+   /// Const Define actions at the beginning of the worker run if needed - now deprecated
+   /// Use new non-const BeginRunOnWorker() instead
    virtual void BeginWorkerRun() const {}
-   /// Define actions at the end of the worker run if needed
+   /// Const Define actions at the end of the worker run if needed - now deprecated
+   /// Use new non-const FinishRunOnWorker() instead
    virtual void FinishWorkerRun() const {}
+
+   /// Initialize MC application on worker
+   virtual void InitOnWorker() {}
+   /// Define actions at the beginning of the worker run if needed
+   virtual void BeginRunOnWorker() {}
+   /// Define actions at the end of the worker run if needed
+   virtual void FinishRunOnWorker() {}
    /// Merge the data accumulated on workers to the master if needed
    virtual void Merge(TVirtualMCApplication* /*localMCApplication*/) {}
 
