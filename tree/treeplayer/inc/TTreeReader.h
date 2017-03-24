@@ -130,6 +130,7 @@ public:
       kEntryChainFileError, ///< problem in opening a chain's file
       kEntryDictionaryError, ///< problem reading dictionary info from tree
       kEntryBeyondEnd ///< last entry loop has reached its end
+      kEntryBadReader, ///< One of the readers was not successfully initialized.
    };
 
    static constexpr const char * const fgEntryStatusText[kEntryBeyondEnd + 1] = {

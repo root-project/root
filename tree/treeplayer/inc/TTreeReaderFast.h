@@ -123,6 +123,8 @@ public:
 
    TTree* GetTree() const { return fTree; }
 
+   TTreeReader::EEntryStatus SetEntry(Long64_t);
+
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
       return Iterator_t(*this, 0, this->GetNextRange(0));
@@ -145,7 +147,7 @@ private:
    TTree* fTree{nullptr}; ///< tree that's read
    TDirectory* fDirectory{nullptr}; ///< directory (or current file for chains)
    ROOT::Internal::TBranchProxyDirector* fDirector{nullptr}; ///< proxying director, owned
-   TTreeReader::EEntryStatus fEntryStatus{TTreeReader::kEntryNoTree}; ///< status of most recent read request
+   TTreeReader::EEntryStatus fEntryStatus{TTreeReader::kEntryNotLoaded}; ///< status of most recent read request
    std::deque<ROOT::Internal::TTreeReaderValueFastBase*> fValues; ///< readers that use our director
 
    Int_t    fEvtIndex{-1};

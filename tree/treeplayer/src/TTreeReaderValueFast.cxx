@@ -46,6 +46,8 @@ ROOT::Internal::TTreeReaderValueFastBase::~TTreeReaderValueFastBase()
 /// support the complex branch lookup of the TTreeReader -- only a fixed leaf!
 
 void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
+   fReadStatus = TTreeReaderValueBase::kReadError;
+   fSetupStatus = TTreeReaderValueBase::kSetupMissingBranch;
    if (fLeafName.size() > 0){
 
       Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
@@ -56,7 +58,6 @@ void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
          TTree *myTree = fTreeReader->GetTree();
 
          if (!myTree) {
-            fReadStatus = TTreeReaderValueBase::kReadError;
             Error("TTreeReaderValueBase::GetLeaf()", "Unable to get the tree from the TTreeReader");
             return;
          }
@@ -64,7 +65,6 @@ void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
          TBranch *myBranch = myTree->GetBranch(fBranchName.c_str());
 
          if (!myBranch) {
-            fReadStatus = TTreeReaderValueBase::kReadError;
             Error("TTreeReaderValueBase::GetLeaf()", "Unable to get the branch from the tree");
             return;
          }
@@ -78,5 +78,7 @@ void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
    else {
       Error("TTreeReaderValueBase::GetLeaf()", "We are not reading a leaf");
    }
+   fReadStatus = TTreeReaderValueBase::kReadSuccess;
+   fSetupStatus = TTreeReaderValueBase::kSetupMatch;
 }
 

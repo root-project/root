@@ -8,6 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <climits>
+
 #include "TTreeReader.h"
 #include "TTreeReaderFast.h"
 
@@ -18,14 +20,21 @@
 ClassImp(TTreeReaderFast)
 
 TTreeReaderFast::TTreeReaderFast(TTree* tree):
-   fTree(tree),
-   fEntryStatus(TTreeReader::kEntryNotLoaded)
+   fTree(tree)
 {
    if (!fTree) {
       Error("TTreeReader", "TTree is NULL!");
    } else {
       Initialize();
    }
+}
+
+TTreeReaderFast::TTreeReaderFast(const char* keyname, TDirectory* dir /*= NULL*/):
+   fDirectory(dir)
+{
+   if (!fDirectory) fDirectory = gDirectory;
+   fDirectory->GetObject(keyname, fTree);
+   Initialize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,10 +59,63 @@ void TTreeReaderFast::Initialize()
       fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
    }
 
+   bool IsOK;
    // Tell readers we now have a tree
    for (auto &reader : fValues) {
-         reader->CreateProxy();
+      reader->CreateProxy();
+      if (reader->GetSetupStatus() != ROOT::Internal::TTreeReaderValueBase::kSetupMatch) {
+         IsOK = false;
+      }
    }
+   if (!IsOK) {
+      fEntryStatus = TTreeReader::kEntryBadReader;
+   }
+}
+
+TTreeReader::EEntryStatus
+TTreeReaderFast::SetEntry(Long64_t entry)
+{
+   if (!fTree) {
+      fEntryStatus =TTreeReader::kEntryNoTree;
+      return fEntryStatus;
+   }
+
+   TTree* prevTree = fDirector->GetTree();
+
+   Int_t treeNumInChainBeforeLoad = fTree->GetTreeNumber();
+
+   TTree* treeToCallLoadOn = fTree->GetTree();
+   Long64_t loadResult = treeToCallLoadOn->LoadTree(entry);
+
+   if (loadResult == -2) {
+      fEntryStatus = TTreeReader::kEntryNotFound;
+      return fEntryStatus;
+   }
+
+   if (treeNumInChainBeforeLoad != fTree->GetTreeNumber()) {
+      fDirector->SetTree(fTree->GetTree());
+   }
+
+   if (!prevTree || fDirector->GetReadEntry() == -1)
+   {
+      bool IsOK;
+      // Tell readers we now have a tree
+      for (auto &reader : fValues) {
+         reader->CreateProxy();
+         if (reader->GetSetupStatus() != ROOT::Internal::TTreeReaderValueBase::kSetupMatch) IsOK = false;
+      }
+      fEntryStatus = IsOK ? TTreeReader::kEntryValid : TTreeReader::kEntryBadReader;
+   }
+   return fEntryStatus;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a value reader for this tree.
+
+void TTreeReaderFast::RegisterValueReader(ROOT::Internal::TTreeReaderValueFastBase* reader)
+{
+   fValues.push_back(reader);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,3 +130,23 @@ void TTreeReaderFast::DeregisterValueReader(ROOT::Internal::TTreeReaderValueFast
    }
    fValues.erase(iReader);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Advance to the next range in the file; returns the number of events in the range.
+///
+/// Returned number is the number of events we can process before one of the Value
+/// objects will hit the end of its buffer.
+
+Int_t
+TTreeReaderFast::GetNextRange(Int_t eventNum)
+{
+   Int_t remaining = INT_MAX;
+   for (auto &reader : fValues) {
+      Int_t valueRemaining = reader->GetEvents(eventNum);
+      if (valueRemaining < remaining) {
+          remaining = valueRemaining;
+      }
+   }
+   return remaining;
+}
+
