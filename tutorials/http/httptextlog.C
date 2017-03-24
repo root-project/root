@@ -29,9 +29,9 @@
 /// ~~~
 ///  In last case it could be used in iframe, also it requires less code to load on the page
 ///
-/// \macro_code Sergey Linev
+/// \macro_code
 ///
-/// \author
+/// \author Sergey Linev
 
 
 #include <stdio.h>

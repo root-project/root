@@ -1,3 +1,14 @@
+/// \file
+/// \ingroup tutorial_http
+///  This program demonstrates simultaneous update of histogram and fitted function.
+///  Every second new random entries add and histogram fitted again.
+///  Required at least JSROOT version 5.1.1 to see correct fit function update in browser
+///
+/// \macro_code
+///
+/// \author  Sergey Linev
+
+
 #include "THttpServer.h"
 #include "TH1F.h"
 #include "TCanvas.h"

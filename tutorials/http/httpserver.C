@@ -7,6 +7,10 @@
 ///    - a memory-resident ntuple
 ///
 ///  These objects are filled with some random numbers and saved on a in-memory file.
+///  All objects can be seen in web browser is open url:
+/// ~~~
+///      http://localhost:8080
+/// ~~~
 ///
 /// \macro_code
 ///
