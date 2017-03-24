@@ -10,7 +10,7 @@
 ///
 /// \macro_code
 ///
-/// \author
+/// \author Sergey Linev
 
 #include <TFile.h>
 #include <TMemFile.h>

@@ -4,8 +4,9 @@
 ///  Macro used to demonstrate usage of custom HTML page in custom.htm
 ///  One can use plain JavaScript to assign different actions with HTML buttons
 ///
-/// \author
-///   Sergey Linev
+/// \macro_code
+///
+/// \author Sergey Linev
 
 #include <TH1.h>
 #include <TH2.h>
