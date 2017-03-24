@@ -437,7 +437,7 @@ std::vector<TString> TMVA::TMVAGlob::GetInputVariableNames(TDirectory *dir)
       TClass *cl = gROOT->GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH1")) continue;
       TString name(key->GetName());
-      Int_t   pos = name.Index("__");
+      Int_t pos = name.Index("__");
       if (pos != -1) {
          name.Remove(pos);
       }
