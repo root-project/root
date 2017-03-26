@@ -121,8 +121,10 @@ public:
    virtual Int_t  SetBufferSize(Int_t buffersize);
    void           SetUnzipBufferSize(Long64_t bufferSize);
    static void    SetUnzipRelBufferSize(Float_t relbufferSize);
+   Int_t          UnzipBufferTBB(char **dest, char *src);
    Int_t          UnzipBuffer(char **dest, char *src);
    Int_t          UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&locbuff);
+   Int_t          UnzipCacheTBB();
 
    // Methods to get stats
    Int_t  GetNUnzip() { return fNUnzip; }
