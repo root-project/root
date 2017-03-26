@@ -10215,8 +10215,11 @@ int stressHistogram()
       refFile = TFile::Open(refFileName, "RECREATE");
    }
    else {
+      auto isBatch = gROOT->IsBatch();
+      gROOT->SetBatch();
       TFile::SetCacheFileDir(".");
       refFile = TFile::Open(refFileName, "CACHEREAD");
+      gROOT->SetBatch(isBatch);
    }
 
    if ( refFile != 0 ) {
