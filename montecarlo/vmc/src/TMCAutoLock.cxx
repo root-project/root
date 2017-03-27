@@ -20,7 +20,7 @@
 //-------------------------------------------------
 
 /// \file TMCAutoLock.cxx
-/// \brief Implementation of the TMCAutoLock class 
+/// \brief Implementation of the TMCAutoLock class
 ///
 /// \author I. Hrivnacova; IPN, Orsay
 
@@ -52,6 +52,9 @@
 
 #include "TMCAutoLock.h"
 
-#if ! defined(TMCMULTITHREADED)
-int fake_mutex_lock_unlock( TMCMutex* ) { return 0; }
+#if !defined(TMCMULTITHREADED)
+int fake_mutex_lock_unlock(TMCMutex *)
+{
+   return 0;
+}
 #endif

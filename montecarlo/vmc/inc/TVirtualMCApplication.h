@@ -103,7 +103,7 @@ public:
 
    /// Const Initialize MC application on worker  - now deprecated
    /// Use new non-const InitOnWorker()  instead
-   virtual void InitForWorker() const  {}
+   virtual void InitForWorker() const {}
    /// Const Define actions at the beginning of the worker run if needed - now deprecated
    /// Use new non-const BeginRunOnWorker() instead
    virtual void BeginWorkerRun() const {}
