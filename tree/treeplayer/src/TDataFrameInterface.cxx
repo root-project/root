@@ -8,6 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TClass.h"
 #include "TRegexp.h"
 
 #include "ROOT/TDataFrameInterface.hxx"
@@ -143,6 +144,54 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
          msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
       }
       throw std::runtime_error(msg);
+   }
+   return retVal;
+}
+
+Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
+                           const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                           ROOT::Detail::TDataFrameBranchBase *bbase)
+{
+   gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
+
+   const auto &theBranchName = bl[0];
+   const auto theBranchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *tree, bbase);
+   if (theBranchTypeName.empty()) {
+      std::string exceptionText = "The type of column ";
+      exceptionText += theBranchName;
+      exceptionText += " could not be guessed. Please specify one.";
+      throw std::runtime_error(exceptionText.c_str());
+   }
+   auto actionResultTypeClass = TClass::GetClass(art);
+   if (!actionResultTypeClass) {
+      std::string exceptionText = "An error occurred while inferring the result type of the operation on column ";
+      exceptionText += theBranchName;
+      exceptionText += ".";
+      throw std::runtime_error(exceptionText.c_str());
+   }
+   const auto actionResultTypeName = actionResultTypeClass->GetName();
+   auto actionTypeClass = TClass::GetClass(at);
+   if (!actionTypeClass) {
+      std::string exceptionText = "An error occurred while inferring the action type of the operation on column ";
+      exceptionText += theBranchName;
+      exceptionText += ".";
+      throw std::runtime_error(exceptionText.c_str());
+   }
+   const auto actionTypeName = actionTypeClass->GetName();
+   std::stringstream createAction_str;
+
+   createAction_str << "ROOT::Internal::CallCreateAction<" << nodeTypename << ", " << actionTypeName << ", "
+                    << theBranchTypeName << ", " << actionResultTypeName << "::element_type>("
+                    << "(" << nodeTypename << "*)" << thisPtr << ", "
+                    << "*(ROOT::BranchNames_t*)" << &bl << ", "
+                    << "*(" << actionResultTypeName << "*)" << r << ", "
+                    << "nullptr);";
+   auto retVal = gInterpreter->ProcessLine(createAction_str.str().c_str());
+   if (!retVal) {
+      std::string exceptionText = "An error occurred while jitting this action ";
+      exceptionText += createAction_str.str();
+      exceptionText += ".";
+      throw std::runtime_error(exceptionText.c_str());
    }
    return retVal;
 }

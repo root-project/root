@@ -15,7 +15,6 @@
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "TClass.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
@@ -55,6 +54,10 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
                      const std::string &name, const std::string &expression, TObjArray *branches,
                      const std::vector<std::string> &tmpBranches,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
+
+Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
+                           const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                           ROOT::Detail::TDataFrameBranchBase *bbase);
 
 } // namespace Internal
 
@@ -969,48 +972,12 @@ private:
                                                      const std::shared_ptr<ActionResultType> &r,
                                                      ROOT::Detail::TDataFrameGuessedType *)
    {
-      gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
       auto df = GetDataFrameChecked();
       const auto &theBranchName = bl[0];
-      const auto theBranchTypeName =
-         ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df->GetTree(), df->GetBookedBranch(theBranchName));
-      if (theBranchTypeName.empty()) {
-         std::string exceptionText = "The type of column ";
-         exceptionText += theBranchName;
-         exceptionText += " could not be guessed. Please specify one.";
-         throw std::runtime_error(exceptionText.c_str());
-      }
-      auto actionResultTypeClass = TClass::GetClass(typeid(std::shared_ptr<ActionResultType>));
-      if (!actionResultTypeClass) {
-         std::string exceptionText = "An error occurred while inferring the result type of the operation on column ";
-         exceptionText += theBranchName;
-         exceptionText += ".";
-         throw std::runtime_error(exceptionText.c_str());
-      }
-      const auto actionResultTypeName = actionResultTypeClass->GetName();
-      auto actionTypeClass = TClass::GetClass(typeid(ActionType));
-      if (!actionTypeClass) {
-         std::string exceptionText = "An error occurred while inferring the action type of the operation on column ";
-         exceptionText += theBranchName;
-         exceptionText += ".";
-         throw std::runtime_error(exceptionText.c_str());
-      }
-      const auto actionTypeName = actionTypeClass->GetName();
-      std::stringstream createAction_str;
-
-      createAction_str << "ROOT::Internal::CallCreateAction<" << GetNodeTypeName() << ", " << actionTypeName << ", "
-                       << theBranchTypeName << ", " << actionResultTypeName << "::element_type>("
-                       << "(" << GetNodeTypeName() << "*)" << this << ", "
-                       << "*(ROOT::BranchNames_t*)" << &bl << ", "
-                       << "*(" << actionResultTypeName << "*)" << &r << ", "
-                       << "nullptr);";
-      auto retVal = gInterpreter->ProcessLine(createAction_str.str().c_str());
-      if (!retVal) {
-         std::string exceptionText = "An error occurred while jitting this action ";
-         exceptionText += createAction_str.str();
-         exceptionText += ".";
-         throw std::runtime_error(exceptionText.c_str());
-      }
+      auto bbase = df->GetBookedBranch(theBranchName);
+      auto tree = df->GetTree();
+      auto retVal = ROOT::Internal::CreateActionGuessed(
+         bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), &r, tree, bbase);
       return *(TActionResultProxy<ActionResultType> *)retVal;
    }
 
