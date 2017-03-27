@@ -485,8 +485,23 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
                  || brElement->GetType() == 41) {
          // it's a member, extract from GetClass()'s streamer info
          Error("TTreeReaderValueBase::GetBranchDataType()", "Must use TTreeReaderArray to access a member of an object that is stored in a collection.");
-      }
-      else {
+      } else if (brElement->GetType() == -1 && brElement->GetTypeName()) {
+         dict = TDictionary::GetDictionary(brElement->GetTypeName());
+         if (dict && dict->IsA() == TDataType::Class()) {
+            // Resolve the typedef.
+            dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
+            if (dict->IsA() != TDataType::Class()) {
+               // Might be a class.
+               if (dict != fDict) {
+                  dict = TClass::GetClass(brElement->GetTypeName());
+               }
+               if (dict != fDict) {
+                  dict = brElement->GetCurrentClass();
+               }
+            }
+         }
+         return brElement->GetTypeName();
+      } else {
          Error("TTreeReaderValueBase::GetBranchDataType()", "Unknown type and class combination: %i, %s", brElement->GetType(), brElement->GetClassName());
       }
       return 0;
