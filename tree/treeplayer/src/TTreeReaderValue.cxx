@@ -437,6 +437,23 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;
+
+      auto ResolveTypedef = [&]() -> void {
+         if (dict->IsA() != TDataType::Class())
+            return;
+         // Resolve the typedef.
+         dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
+         if (dict->IsA() != TDataType::Class()) {
+            // Might be a class.
+            if (dict != fDict) {
+               dict = TClass::GetClass(brElement->GetTypeName());
+            }
+            if (dict != fDict) {
+               dict = brElement->GetCurrentClass();
+            }
+         }
+      };
+
       if (brElement->GetType() == TBranchElement::kSTLNode ||
             brElement->GetType() == TBranchElement::kLeafNode ||
             brElement->GetType() == TBranchElement::kObjectNode) {
@@ -460,22 +477,11 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
 
          if (brElement->GetTypeName())
             dict = TDictionary::GetDictionary(brElement->GetTypeName());
-         if (dict && dict->IsA() == TDataType::Class()) {
-            // Resolve the typedef.
-            dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
-            if (dict->IsA() != TDataType::Class()) {
-               // Might be a class.
-               if (dict != fDict) {
-                  dict = TClass::GetClass(brElement->GetTypeName());
-               }
-               if (dict != fDict) {
-                  dict = brElement->GetCurrentClass();
-               }
-            }
-         }
-         else if (!dict) {
+
+         if (dict)
+            ResolveTypedef();
+         else
             dict = brElement->GetCurrentClass();
-         }
 
          return brElement->GetTypeName();
       } else if (brElement->GetType() == TBranchElement::kClonesNode) {
@@ -487,19 +493,7 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
          Error("TTreeReaderValueBase::GetBranchDataType()", "Must use TTreeReaderArray to access a member of an object that is stored in a collection.");
       } else if (brElement->GetType() == -1 && brElement->GetTypeName()) {
          dict = TDictionary::GetDictionary(brElement->GetTypeName());
-         if (dict && dict->IsA() == TDataType::Class()) {
-            // Resolve the typedef.
-            dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
-            if (dict->IsA() != TDataType::Class()) {
-               // Might be a class.
-               if (dict != fDict) {
-                  dict = TClass::GetClass(brElement->GetTypeName());
-               }
-               if (dict != fDict) {
-                  dict = brElement->GetCurrentClass();
-               }
-            }
-         }
+         ResolveTypedef();
          return brElement->GetTypeName();
       } else {
          Error("TTreeReaderValueBase::GetBranchDataType()", "Unknown type and class combination: %i, %s", brElement->GetType(), brElement->GetClassName());
