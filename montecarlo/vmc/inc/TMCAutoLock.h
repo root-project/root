@@ -87,21 +87,21 @@
 #define TMCMULTITHREADED 1
 
 #if defined(TMCMULTITHREADED)
-    
+
 #include <pthread.h>
-    typedef pthread_mutex_t TMCMutex;
-    #define TMCMUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-    #define TMCMUTEXLOCK pthread_mutex_lock
-    #define TMCMUTEXUNLOCK pthread_mutex_unlock
-    typedef int (*thread_lock)(TMCMutex*);
-    typedef int (*thread_unlock)(TMCMutex*);
+typedef pthread_mutex_t TMCMutex;
+#define TMCMUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+#define TMCMUTEXLOCK pthread_mutex_lock
+#define TMCMUTEXUNLOCK pthread_mutex_unlock
+typedef int (*thread_lock)(TMCMutex *);
+typedef int (*thread_unlock)(TMCMutex *);
 #else
-    typedef int TMCMutex;
-    #define TMCMUTEX_INITIALIZER 1
-    #define TMCMUTEXLOCK fake_mutex_lock_unlock
-    #define TMCMUTEXUNLOCK fake_mutex_lock_unlock
-    typedef int (*thread_lock)(TMCMutex*);
-    typedef int (*thread_unlock)(TMCMutex*);
+typedef int TMCMutex;
+#define TMCMUTEX_INITIALIZER 1
+#define TMCMUTEXLOCK fake_mutex_lock_unlock
+#define TMCMUTEXUNLOCK fake_mutex_lock_unlock
+typedef int (*thread_lock)(TMCMutex *);
+typedef int (*thread_unlock)(TMCMutex *);
 #endif
 
 /// \brief Template classe which provides a mechanism to create a mutex and
@@ -111,58 +111,50 @@
 /// Note: Note that G4TemplateAutoLock by itself is not thread-safe and
 ///       cannot be shared among threads due to the locked switch
 
-template<class M, typename L, typename U>
-class TMCTemplateAutoLock
-{
-  public:
+template <class M, typename L, typename U>
+class TMCTemplateAutoLock {
+public:
+   TMCTemplateAutoLock(M *mtx, L l, U u) : locked(false), _m(mtx), _l(l), _u(u) { lock(); }
 
-    TMCTemplateAutoLock(M* mtx, L l, U u) : locked(false), _m(mtx), _l(l), _u(u)
-    {
-        lock();
-    }
+   virtual ~TMCTemplateAutoLock() { unlock(); }
 
-    virtual ~TMCTemplateAutoLock()
-    {
-        unlock();
-    }
+   inline void unlock()
+   {
+      if (!locked) return;
+      _u(_m);
+      locked = false;
+   }
 
-    inline void unlock() {
-        if ( !locked ) return;
-        _u(_m);
-        locked = false;
-    }
+   inline void lock()
+   {
+      if (locked) return;
+      _l(_m);
+      locked = true;
+   }
 
-    inline void lock() {
-        if ( locked ) return;
-        _l(_m);
-        locked = true;
-    }
+private:
+   // Disable copy and assignement operators
+   //
+   TMCTemplateAutoLock(const TMCTemplateAutoLock &rhs);
+   TMCTemplateAutoLock &operator=(const TMCTemplateAutoLock &rhs);
 
-  private:
-
-    // Disable copy and assignement operators
-    //
-    TMCTemplateAutoLock( const TMCTemplateAutoLock& rhs );
-    TMCTemplateAutoLock& operator= ( const TMCTemplateAutoLock& rhs );
-
-  private:
-    bool locked;
-    M* _m;
-    L _l;
-    U _u;
+private:
+   bool locked;
+   M *_m;
+   L _l;
+   U _u;
 };
 
 /// \brief Realization of TMCTemplateAutoLock with TMCMutex
 ///
 /// Extracted from G4AutoLock implementation for Linux
 
-struct TMCImpMutexAutoLock
-  : public TMCTemplateAutoLock<TMCMutex,thread_lock,thread_unlock>
-{
-    TMCImpMutexAutoLock(TMCMutex* mtx)
-      : TMCTemplateAutoLock<TMCMutex, thread_lock, thread_unlock>
-        (mtx, &TMCMUTEXLOCK, &TMCMUTEXUNLOCK) {}
+struct TMCImpMutexAutoLock : public TMCTemplateAutoLock<TMCMutex, thread_lock, thread_unlock> {
+   TMCImpMutexAutoLock(TMCMutex *mtx)
+      : TMCTemplateAutoLock<TMCMutex, thread_lock, thread_unlock>(mtx, &TMCMUTEXLOCK, &TMCMUTEXUNLOCK)
+   {
+   }
 };
 typedef TMCImpMutexAutoLock TMCAutoLock;
 
-#endif //TMCAUTOLOCK_HH
+#endif // TMCAUTOLOCK_HH
