@@ -7,6 +7,7 @@
 #include "TTreeReaderArray.h"
 
 #include "gtest/gtest.h"
+#include <stdlib.h>
 
 TTree* MakeTree() {
    double x[3]{};
@@ -15,25 +16,30 @@ TTree* MakeTree() {
       unsigned int ny;
       int* y = nullptr;
    } yData;
+   std::string str;
 
    TTree* tree = new TTree("T", "test tree");
    tree->Branch("one", &x, "x[3]/D");
    tree->Branch("two", &yData, "ny/i:y[ny]/I");
    tree->Branch("three", &z, "z");
+   tree->Branch("str", &str);
 
    x[1] = 42.;
    yData.ny = 42;
    yData.y = new int[42]{};
    yData.y[0] = 17;
+   str = "first";
    tree->Fill();
 
    x[2] = 43.;
    yData.ny = 5;
    yData.y[4] = 7;
+   str = "";
    tree->Fill();
 
    for (int entry = 2; entry < 20; ++entry) {
       z = entry * (1 - 2 * (entry % 2)); // +entry for even, -entry for odd
+      str = std::string(entry, '*');
       tree->Fill();
    }
 
@@ -51,6 +57,7 @@ TEST(TTreeReaderBasic, Interfaces) {
    TTreeReaderArray<double> x(tr, "one.x");
    TTreeReaderArray<int> y(tr, "two.y");
    TTreeReaderValue<unsigned int> ny(tr, "two.ny");
+   TTreeReaderValue<std::string> nstr(tr, "str");
 
    // Before reading data:
    EXPECT_NE(tr.begin(), tr.end());
