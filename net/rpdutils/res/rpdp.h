@@ -218,7 +218,7 @@ extern "C" {
 // Globus Utility Function prototypes ...
 namespace ROOT {
 
-void  GlbsToolError(char *, int, int, int);
+void  GlbsToolError(const char *, int, int, int);
 int   GlbsToolCheckCert(char **);
 int   GlbsToolCheckContext(int);
 int   GlbsToolCheckProxy(char **);
