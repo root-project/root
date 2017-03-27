@@ -190,6 +190,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - Stop dictionary generation early, during AST scanning, if a union is selected for I/O as this is not supported (triggered by [ROOT-8492](https://sft.its.cern.ch/jira/browse/ROOT-8492))
 - Allow inclusion of headers in linkdef files [ROOT-7765](https://sft.its.cern.ch/jira/browse/ROOT-7765)
 - More expressive error messages when trying to directly select std::arrays
+- rootcling now `#define`s `__PIC__` when parsing input headers [ROOT-8719].
 
 ## I/O Libraries
 - [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary
