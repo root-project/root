@@ -1374,6 +1374,12 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
                      AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
                   }
+               } else {
+                  // We have a top level non split.
+                  AddDescriptor( new TBranchProxyDescriptor( branch->GetName(),
+                                                             type,
+                                                             branch->GetName(),
+                                                             true, false, false ) );
                }
             } else {
 
