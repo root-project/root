@@ -15,8 +15,6 @@
 #ifndef ROOT7_TDirectoryEntry
 #define ROOT7_TDirectoryEntry
 
-#include "TClass.h"
-
 #include <chrono>
 #include <memory>
 #include <typeinfo>
@@ -33,7 +31,7 @@ public:
 
 private:
   time_point_t fDate = clock_t::now(); ///< Time of last change
-  TClass* fType;
+  const std::type_info* fType;
   std::shared_ptr<void> fObj;
 
 public:
@@ -45,7 +43,7 @@ public:
     TDirectoryEntry(std::make_shared<T>(*ptr)) {}
   template<class T>
   explicit TDirectoryEntry(const std::shared_ptr<T>& ptr):
-    fType(TClass::GetClass(typeid(T))),
+    fType(&typeid(T)),
     fObj(ptr) {}
 
   /// Get the last change date of the entry.
@@ -56,10 +54,7 @@ public:
   void SetChanged() { fDate = clock_t::now(); }
 
   /// Type of the object represented by this entry.
-  const std::type_info& GetTypeInfo() const { return *fType->GetTypeInfo(); }
-
-  /// Get the object's type.
-  TClass* GetType() const { return fType; }
+  const std::type_info& GetTypeInfo() const { return *fType; }
 
   /// Retrieve the `shared_ptr` of the referenced object.
   std::shared_ptr<void>& GetPointer() { return fObj; }
@@ -75,7 +70,13 @@ public:
 
 template<class U>
 std::shared_ptr<U> TDirectoryEntry::CastPointer() const {
-  if (auto ptr = fType->DynamicCast(TClass::GetClass(typeid(U)), fObj.get()))
+  using cast_t = bool(const std::type_info*, const std::type_info*, void**, unsigned);
+
+  void* ptr = fObj.get();
+  void** vtbl = reinterpret_cast<void** const*>(&typeid(U))[0];
+  cast_t* cast = reinterpret_cast<cast_t**>(vtbl)[4];
+
+  if (cast(&typeid(U), fType, &ptr, 0))
     return std::shared_ptr<U>(fObj, static_cast<U*>(ptr));
   return std::shared_ptr<U>();
 }
