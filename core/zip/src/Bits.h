@@ -571,6 +571,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   int err;
   int method   = Z_DEFLATED;
 
+  if (*srcsize < 1 + HDRSIZE + 1) {
+    *irep = 0;
+    return;
+  }
+
   if (cxlevel <= 0) {
     *irep = 0;
     return;
