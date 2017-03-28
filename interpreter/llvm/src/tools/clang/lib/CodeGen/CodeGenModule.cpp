@@ -1663,10 +1663,12 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
   if (llvm::GlobalValue *GV = GetGlobalValue(MangledName)) {
     // The value has already been used and should therefore be emitted.
     addDeferredDeclToEmit(GV, GD);
+    DeferredDecls[MangledName] = GD;
   } else if (MustBeEmitted(Global)) {
     // The value must be emitted, but cannot be emitted eagerly.
     assert(!MayBeEmittedEagerly(Global));
     addDeferredDeclToEmit(/*GV=*/nullptr, GD);
+    DeferredDecls[MangledName] = GD;
   } else {
     // Otherwise, remember that we saw a deferred decl with this name.  The
     // first use of the mangled name will cause it to move into
