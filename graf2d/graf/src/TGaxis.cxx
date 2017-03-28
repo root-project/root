@@ -1260,6 +1260,12 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   textaxis->SetTextAlign(12);
                   s = 3;
                }
+               if (autotoff) {
+                  UInt_t w,h;
+                  textaxis->SetText(0.,0., fAxis->GetBinLabel(i));
+                  textaxis->GetBoundingBox(w,h);
+                  toffset = TMath::Max(toffset,(double)w/(double)gPad->GetWw());
+               }
                textaxis->PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
                                     0,
@@ -2074,7 +2080,8 @@ L200:
       }
       if (x1 == x0) {
          if (autotoff) {
-            ylabel = 1.6*toffset;
+            if (toffset) ylabel = 1.6*toffset;
+            else         ylabel = xlside*1.6*charheight;
          } else {
             ylabel = xlside*1.6*charheight*toffset;
          }
