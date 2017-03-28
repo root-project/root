@@ -144,7 +144,6 @@ Begin_Macro(source)
    TGaxis *axis8 = new TGaxis(6.5,0.8,6.499,-0.8,0,90,50510,"-");
    axis8->SetName("axis8");
    axis8->Draw();
-   return c1;
 }
 End_Macro
 
@@ -183,10 +182,7 @@ Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",10,10,700,500);
 
-   gStyle->SetOptStat(0);
-
-   TH2F *h2 = new TH2F("h","Axes",100,0,10,100,-2,2);
-   h2->Draw();
+   gPad->DrawFrame(0.,-2.,10.,2);
 
    TF1 *f1=new TF1("f1","-x",-10,10);
    TGaxis *A1 = new TGaxis(0,2,10,2,"f1",510,"-");
@@ -206,9 +202,8 @@ Begin_Macro(source)
    A3->SetTitle("logarithmic axis");
    A3->SetLabelSize(0.03);
    A3->SetTitleSize(0.03);
-   A3->SetTitleOffset(1.2);
+   A3->SetTitleOffset(0.); // Axis title automatically placed
    A3->Draw();
-   return c2;
 }
 End_Macro
 
