@@ -121,7 +121,6 @@ TStyle::TStyle(const char *name, const char *title)
 
    if (strcmp(style_name,"Modern") == 0) {
       // Modern style
-//      SetPalette(57,0);
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);
@@ -149,6 +148,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetTitleBorderSize(0);
       SetTitleFillColor(0);
       SetTitleStyle(0);
+      SetTitleOffset(0.,"Y");
       SetStatBorderSize(1);
       SetOptStat(1111);
       SetStatY(0.935);
@@ -574,7 +574,6 @@ void TStyle::Reset(Option_t *opt)
 
    if (strcmp(style_name,"Modern") == 0) {
       // Modern style
-//      SetPalette(57,0);
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);
@@ -602,6 +601,7 @@ void TStyle::Reset(Option_t *opt)
       SetTitleBorderSize(0);
       SetTitleFillColor(0);
       SetTitleStyle(0);
+      SetTitleOffset(0.,"Y");
       SetStatBorderSize(1);
       SetOptStat(1111);
       SetStatY(0.935);
