@@ -1201,11 +1201,12 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
       return;
     }
 
-    err = inflate(&stream, Z_FINISH);
-    if (err != Z_STREAM_END) {
-      inflateEnd(&stream);
-      fprintf(stderr,"R__unzip: error %d in inflate (zlib)\n",err);
-      return;
+    while ((err = inflate(&stream, Z_FINISH)) != Z_STREAM_END) {
+      if (err != Z_OK) {
+        inflateEnd(&stream);
+        fprintf(stderr,"R__unzip: error %d in inflate (zlib)\n", err);
+        return;
+      }
     }
 
     inflateEnd(&stream);
