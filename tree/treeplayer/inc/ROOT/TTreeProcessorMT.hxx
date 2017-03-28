@@ -110,10 +110,10 @@ namespace ROOT {
                for (auto& fn : fns)
                   fFileNames.emplace_back(fn);
                Init();
-             }
-             else {
-                ::Error("TreeView constructor", "The provided list of file names is empty, cannot process tree %s", fTreeName.data());
-             }
+            }
+            else {
+               ::Error("TreeView constructor", "The provided list of file names is empty, cannot process tree %s", fTreeName.data());
+            }
          }
 
          //////////////////////////////////////////////////////////////////////////
