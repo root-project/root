@@ -1983,7 +1983,7 @@ void th2poly()
    Double_t lat1 = 24;
    Double_t lat2 = 50;
    TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
-
+   gErrorIgnoreLevel = 9999;
    TFile::SetCacheFileDir(".");
    TFile *f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
 
