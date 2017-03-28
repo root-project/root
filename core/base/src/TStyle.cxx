@@ -148,7 +148,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetTitleBorderSize(0);
       SetTitleFillColor(0);
       SetTitleStyle(0);
-//      SetTitleOffset(0.,"Y");
+      SetTitleOffset(0.,"Y");
       SetStatBorderSize(1);
       SetOptStat(1111);
       SetStatY(0.935);
@@ -601,7 +601,7 @@ void TStyle::Reset(Option_t *opt)
       SetTitleBorderSize(0);
       SetTitleFillColor(0);
       SetTitleStyle(0);
-//      SetTitleOffset(0.,"Y");
+      SetTitleOffset(0.,"Y");
       SetStatBorderSize(1);
       SetOptStat(1111);
       SetStatY(0.935);
