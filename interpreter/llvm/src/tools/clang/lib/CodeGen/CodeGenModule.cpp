@@ -372,6 +372,9 @@ void InstrProfStats::reportDiagnostics(DiagnosticsEngine &Diags,
 
 void CodeGenModule::Release() {
   EmitDeferred();
+  DeferredDecls.insert(EmittedDeferredDecls.begin(),
+                       EmittedDeferredDecls.end());
+  EmittedDeferredDecls.clear();
   applyGlobalValReplacements();
   applyReplacements();
   checkAliases();
@@ -1663,12 +1666,12 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
   if (llvm::GlobalValue *GV = GetGlobalValue(MangledName)) {
     // The value has already been used and should therefore be emitted.
     addDeferredDeclToEmit(GV, GD);
-    DeferredDecls[MangledName] = GD;
+    EmittedDeferredDecls[MangledName] = GD;
   } else if (MustBeEmitted(Global)) {
     // The value must be emitted, but cannot be emitted eagerly.
     assert(!MayBeEmittedEagerly(Global));
     addDeferredDeclToEmit(/*GV=*/nullptr, GD);
-    DeferredDecls[MangledName] = GD;
+    EmittedDeferredDecls[MangledName] = GD;
   } else {
     // Otherwise, remember that we saw a deferred decl with this name.  The
     // first use of the mangled name will cause it to move into
@@ -1972,7 +1975,8 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
       // DeferredDeclsToEmit list, and remove it from DeferredDecls (since we
       // don't need it anymore).
       addDeferredDeclToEmit(F, DDI->second);
-      //DeferredDecls.erase(DDI);
+      EmittedDeferredDecls[DDI->first] = DDI->second;
+      DeferredDecls.erase(DDI);
 
       // Otherwise, there are cases we have to worry about where we're
       // using a declaration for which we must emit a definition but where
@@ -2169,7 +2173,8 @@ CodeGenModule::GetOrCreateLLVMGlobal(StringRef MangledName,
     // Move the potentially referenced deferred decl to the DeferredDeclsToEmit
     // list, and remove it from DeferredDecls (since we don't need it anymore).
     addDeferredDeclToEmit(GV, DDI->second);
-    //DeferredDecls.erase(DDI);
+    EmittedDeferredDecls[DDI->first] = DDI->second;
+    DeferredDecls.erase(DDI);
   }
 
   // Handle things which are present even on external declarations.

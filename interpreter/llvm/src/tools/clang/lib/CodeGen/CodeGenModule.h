@@ -322,6 +322,9 @@ private:
     DeferredDeclsToEmit.emplace_back(GV, GD);
   }
 
+  /// Decls that were DeferredDecls and have now been emitted.
+  std::map<StringRef, GlobalDecl> EmittedDeferredDecls;
+
   /// List of alias we have emitted. Used to make sure that what they point to
   /// is defined once we get to the end of the of the translation unit.
   std::vector<GlobalDecl> Aliases;
