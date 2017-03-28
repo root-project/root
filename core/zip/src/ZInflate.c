@@ -1188,7 +1188,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     int err = 0;
 
     stream.next_in   = (Bytef*)(&src[HDRSIZE]);
-    stream.avail_in  = (uInt)(*srcsize);
+    stream.avail_in  = (uInt)(*srcsize) - HDRSIZE;
     stream.next_out  = (Bytef*)tgt;
     stream.avail_out = (uInt)(*tgtsize);
     stream.zalloc    = (alloc_func)0;
