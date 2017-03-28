@@ -1082,6 +1082,11 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       return;
    }
 
+// Title offset. If 0 it is automatically computed
+   Double_t toffset  = GetTitleOffset();
+   Bool_t   autotoff = kFALSE;
+   if (toffset==0 && x1 == x0) autotoff = kTRUE;
+
 // Return wmin, wmax and the number of primary divisions
    if (optionX) {
       ndiv = n1a;
@@ -1195,48 +1200,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       ypl1 = y0;
       ypl2 = y1;
       PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-   }
-
-// Draw axis title if it exists
-   if (!drawGridOnly && strlen(GetTitle())) {
-      textaxis->SetTextSize (GetTitleSize());
-      charheight = GetTitleSize();
-      if ((GetTextFont() % 10) > 2) {
-         charheight = charheight/gPad->GetWh();
-      }
-      Double_t toffset = GetTitleOffset();
-//////if (toffset < 0.1) toffset = 1; // Negative offset should be allowed
-      if (x1 == x0) ylabel = xlside*1.6*charheight*toffset;
-      else          ylabel = xlside*1.3*charheight*toffset;
-      if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
-      Double_t axispos;
-      if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
-      else                              axispos = axis_length;
-      if (TestBit(TAxis::kRotateTitle)) {
-         if (x1 >= x0) {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-            else                              textaxis->SetTextAlign(12);
-         } else {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-            else                              textaxis->SetTextAlign(32);
-         }
-         phil+=kPI;
-      } else {
-         if (x1 >= x0) {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-            else                              textaxis->SetTextAlign(32);
-         } else {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-            else                              textaxis->SetTextAlign(12);
-         }
-      }
-      Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
-      textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
-                           gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
-                           phil*180/kPI,
-                           GetTitleSize(),
-                           GetTitle());
-
    }
 
 // No bining
@@ -1776,22 +1739,26 @@ L110:
                      if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
+                     if (autotoff) {
+                        UInt_t w,h;
+                        textaxis->SetText(0.,0., typolabel.Data());
+                        textaxis->GetBoundingBox(w,h);
+                        toffset = TMath::Max(toffset,(double)w/(double)gPad->GetWw());
+                     }
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            textaxis->GetTextAngle(),
                            textaxis->GetTextSize(),
                            typolabel.Data());
                      if (fNModLabs) ResetLabelAttributes(textaxis);
-                  }
-                  else  {
+                  } else  {
                      if (optionText == 1) textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                                    gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                                                    0,
                                                    textaxis->GetTextSize(),
                                                    fAxis->GetBinLabel(k+fAxis->GetFirst()));
                   }
-               }
-               else {
+               } else {
 
 // Text alignment is down
                   if (!optionText)     lnlen = last-first+1;
@@ -1978,11 +1945,16 @@ L110:
                }
                typolabel = chtemp;
                typolabel.ReplaceAll("-", "#minus");
+               if (autotoff) {
+                  UInt_t w,h;
+                  textaxis->SetText(0.,0., typolabel.Data());
+                  textaxis->GetBoundingBox(w,h);
+                  toffset = TMath::Max(toffset,(double)w/(double)gPad->GetWw());
+               }
                textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                     gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                                     0, textaxis->GetTextSize(), typolabel.Data());
                if (fNModLabs) ResetLabelAttributes(textaxis);
-
             }
             labelnumber++;
          }
@@ -2098,6 +2070,51 @@ L200:
       Int_t dummy = 0; if (dummy) { }
    }  //endif (optionLog && ndiv)
 
+// Draw axis title if it exists
+   if (!drawGridOnly && strlen(GetTitle())) {
+      textaxis->SetTextSize (GetTitleSize());
+      charheight = GetTitleSize();
+      if ((GetTextFont() % 10) > 2) {
+         charheight = charheight/gPad->GetWh();
+      }
+      if (x1 == x0) {
+         if (autotoff) {
+            ylabel = 1.6*toffset;
+         } else {
+            ylabel = xlside*1.6*charheight*toffset;
+         }
+      } else {
+        ylabel = xlside*1.3*charheight*toffset;
+      }
+      if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
+      Double_t axispos;
+      if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
+      else                              axispos = axis_length;
+      if (TestBit(TAxis::kRotateTitle)) {
+         if (x1 >= x0) {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(12);
+         } else {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(32);
+         }
+         phil+=kPI;
+      } else {
+         if (x1 >= x0) {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(32);
+         } else {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(12);
+         }
+      }
+      Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
+      textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
+                           gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
+                           phil*180/kPI,
+                           GetTitleSize(),
+                           GetTitle());
+   }
 
 L210:
    if (optionGrid) delete linegrid;
