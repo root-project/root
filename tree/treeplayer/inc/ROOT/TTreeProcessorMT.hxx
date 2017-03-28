@@ -72,8 +72,10 @@ namespace ROOT {
                      break;
                   }
                }
-               if (fTreeName.empty())
-                  ::Error("TreeView constructor", "Cannot find any tree in file %s", fFileNames[fCurrentIdx].data());
+               if (fTreeName.empty()) {
+                  auto msg = "Cannot find any tree in file " + fFileNames[fCurrentIdx];
+                  throw std::runtime_error(msg);
+               }
             }
 
             // We cannot use here the template method (TFile::GetObject) because the header will finish
@@ -112,7 +114,8 @@ namespace ROOT {
                Init();
             }
             else {
-               ::Error("TreeView constructor", "The provided list of file names is empty, cannot process tree %s", fTreeName.data());
+               auto msg = "The provided list of file names is empty, cannot process tree " + fTreeName;
+               throw std::runtime_error(msg);
             }
          }
 
@@ -130,12 +133,20 @@ namespace ROOT {
                   Init();
                }
                else {
-                  ::Error("TreeView constructor", "The provided chain of files is empty, cannot process tree %s", fTreeName.data());
+                  auto msg = "The provided chain of files is empty, cannot process tree " + fTreeName;
+                  throw std::runtime_error(msg);
                }
             }
             else {
-               fFileNames.emplace_back(tree.GetCurrentFile()->GetName());
-               Init();
+               TFile *f = tree.GetCurrentFile();
+               if (f) {
+                  fFileNames.emplace_back(f->GetName());
+                  Init();
+               }
+               else {
+                  auto msg = "The specified TTree is not linked to any file, in-memory-only trees are not supported. Cannot process tree " + fTreeName;
+                  throw std::runtime_error(msg);
+               } 
             }
          }
 
