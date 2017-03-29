@@ -1665,13 +1665,11 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
   StringRef MangledName = getMangledName(GD);
   if (llvm::GlobalValue *GV = GetGlobalValue(MangledName)) {
     // The value has already been used and should therefore be emitted.
-    addDeferredDeclToEmit(GV, GD);
-    EmittedDeferredDecls[MangledName] = GD;
+    addDeferredDeclToEmit(GV, GD, MangledName);
   } else if (MustBeEmitted(Global)) {
     // The value must be emitted, but cannot be emitted eagerly.
     assert(!MayBeEmittedEagerly(Global));
-    addDeferredDeclToEmit(/*GV=*/nullptr, GD);
-    EmittedDeferredDecls[MangledName] = GD;
+    addDeferredDeclToEmit(/*GV=*/nullptr, GD, MangledName);
   } else {
     // Otherwise, remember that we saw a deferred decl with this name.  The
     // first use of the mangled name will cause it to move into
@@ -1964,7 +1962,7 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
     if (D && isa<CXXDestructorDecl>(D) &&
         getCXXABI().useThunkForDtorVariant(cast<CXXDestructorDecl>(D),
                                            GD.getDtorType()))
-      addDeferredDeclToEmit(F, GD);
+      addDeferredDeclToEmit(F, GD, MangledName);
 
     // This is the first use or definition of a mangled name.  If there is a
     // deferred decl with this name, remember that we need to emit it at the end
@@ -1974,8 +1972,7 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
       // Move the potentially referenced deferred decl to the
       // DeferredDeclsToEmit list, and remove it from DeferredDecls (since we
       // don't need it anymore).
-      addDeferredDeclToEmit(F, DDI->second);
-      EmittedDeferredDecls[DDI->first] = DDI->second;
+      addDeferredDeclToEmit(F, DDI->second, MangledName);
       DeferredDecls.erase(DDI);
 
       // Otherwise, there are cases we have to worry about where we're
@@ -1995,7 +1992,7 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
            FD = FD->getPreviousDecl()) {
         if (isa<CXXRecordDecl>(FD->getLexicalDeclContext())) {
           if (FD->doesThisDeclarationHaveABody()) {
-            addDeferredDeclToEmit(F, GD.getWithDecl(FD));
+            addDeferredDeclToEmit(F, GD.getWithDecl(FD), MangledName);
             break;
           }
         }
@@ -2172,8 +2169,7 @@ CodeGenModule::GetOrCreateLLVMGlobal(StringRef MangledName,
   if (DDI != DeferredDecls.end()) {
     // Move the potentially referenced deferred decl to the DeferredDeclsToEmit
     // list, and remove it from DeferredDecls (since we don't need it anymore).
-    addDeferredDeclToEmit(GV, DDI->second);
-    EmittedDeferredDecls[DDI->first] = DDI->second;
+    addDeferredDeclToEmit(GV, DDI->second, MangledName);
     DeferredDecls.erase(DDI);
   }
 

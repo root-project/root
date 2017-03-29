@@ -318,7 +318,15 @@ private:
     GlobalDecl GD;
   };
   std::vector<DeferredGlobal> DeferredDeclsToEmit;
-  void addDeferredDeclToEmit(llvm::GlobalValue *GV, GlobalDecl GD) {
+  void addDeferredDeclToEmit(llvm::GlobalValue *GV, GlobalDecl GD,
+                             StringRef MangledName) {
+    if (const ValueDecl* VD = dyn_cast<ValueDecl>(GD.getDecl())) {
+      if (VD->isWeak()) {
+        if (MangledName.empty())
+          MangledName = getMangledName(GD);
+        EmittedDeferredDecls[MangledName] = GD;
+      }
+    }
     DeferredDeclsToEmit.emplace_back(GV, GD);
   }
 
