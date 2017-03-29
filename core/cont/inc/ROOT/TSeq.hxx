@@ -92,33 +92,37 @@ namespace ROOT {
          T operator*() const {
             return fCounter;
          }
+         // equality
+         bool operator==(const iterator &other) const {
+            return fCounter == other.fCounter;
+         }
+         // inequality
+         bool operator!=(const iterator &other) const {
+            return fCounter != other.fCounter;
+         }
+         // sum with integer
+         iterator operator+(difference_type v) const {
+            return iterator(fCounter + v * fStep, fStep);
+         }
+         // difference with integer
+         iterator operator-(difference_type v) const {
+            return iterator(fCounter - v * fStep, fStep);
+         }
+         // distance
+         difference_type operator-(const iterator &other) const {
+            return (fCounter - other.fCounter) / fStep;
+         }
+         // increments
          iterator &operator++() {
             fCounter += fStep;
             return *this;
-         };
+         }
          iterator operator++(int) {
             iterator tmp(*this);
             operator++();
             return tmp;
          }
-         bool operator==(const iterator &other) const {
-            return fCounter == other.fCounter;
-         }
-         bool operator!=(const iterator &other) const {
-            return fCounter != other.fCounter;
-         }
-         T operator+(int v) const {
-            return fCounter + v;
-         }
-         T operator-(int v) const {
-            return fCounter - v;
-         }
-         T operator+(const iterator &other) const {
-            return fCounter + other.fCounter;
-         }
-         T operator-(const iterator &other) const {
-            return fCounter - other.fCounter;
-         }
+         // decrements
          iterator &operator--() {
             fCounter -= fStep;
             return *this;
@@ -128,6 +132,15 @@ namespace ROOT {
             operator--();
             return tmp;
          }
+         // compound assignments
+         iterator &operator+=(const difference_type& v) {
+            *this = *this + v;
+            return *this;
+         }
+         iterator &operator-=(const difference_type& v) {
+            *this = *this - v;
+            return *this;
+         }
       };
 
       iterator begin() const {
@@ -135,7 +148,7 @@ namespace ROOT {
       }
       iterator end() const {
          auto isStepMultiple = (fEnd - fBegin) % fStep == 0;
-         auto theEnd = isStepMultiple ? fEnd : fStep * ((T)((fEnd - fBegin) / fStep) + 1) + fBegin;
+         auto theEnd = isStepMultiple ? fEnd : fStep * (((fEnd - fBegin) / fStep) + 1) + fBegin;
          return iterator(theEnd, fStep);
       }
 
