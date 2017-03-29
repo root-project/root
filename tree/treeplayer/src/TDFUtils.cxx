@@ -76,6 +76,10 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
          return "short";
       else if (type_id == typeid(unsigned short))
          return "unsigned short";
+      else if (type_id == typeid(long))
+         return "long";
+      else if (type_id == typeid(unsigned long))
+         return "unsigned long";
       else if (type_id == typeid(double))
          return "double";
       else if (type_id == typeid(float))
@@ -86,8 +90,20 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
          return "ULong64_t";
       else if (type_id == typeid(bool))
          return "bool";
+      else {
+         std::string msg("Cannot deduce type of temporary column ");
+         msg += colName.c_str();
+         msg += ". The typename is ";
+         msg += tmpBranch->GetTypeId().name();
+         msg += ".";
+         throw std::runtime_error(msg);
+      }
    }
-   return "";
+
+   std::string msg("Cannot deduce type of column ");
+   msg += colName.c_str();
+   msg += ".";
+   throw std::runtime_error(msg);
 }
 
 const char *ToConstCharPtr(const char *s)
