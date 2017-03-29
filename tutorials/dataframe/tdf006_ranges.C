@@ -15,16 +15,17 @@
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
-void fill_tree(const char* filename, const char* treeName) {
-   TFile f(filename,"RECREATE");
-   TTree t(treeName,treeName);
+void fill_tree(const char *filename, const char *treeName)
+{
+   TFile f(filename, "RECREATE");
+   TTree t(treeName, treeName);
    int b1;
    float b2;
    t.Branch("b1", &b1);
    t.Branch("b2", &b2);
-   for(int i = 0; i < 100; ++i) {
+   for (int i = 0; i < 100; ++i) {
       b1 = i;
-      b2 = i*i;
+      b2 = i * i;
       t.Fill();
    }
    t.Write();
@@ -32,12 +33,13 @@ void fill_tree(const char* filename, const char* treeName) {
    return;
 }
 
-int tdf006_ranges() {
+int tdf006_ranges()
+{
 
    // We prepare an input tree to run on
    auto fileName = "tdf006_ranges.root";
    auto treeName = "myTree";
-   fill_tree(fileName,treeName);
+   fill_tree(fileName, treeName);
 
    // We read the tree from the file and create a TDataFrame.
    ROOT::Experimental::TDataFrame d(treeName, fileName);
@@ -66,7 +68,7 @@ int tdf006_ranges() {
    // An important thing to notice is that the counts of a filter are relative to the
    // number of entries a filter "sees". Therefore, if a Range depends on a filter,
    // the Range will act on the entries passing the filter only.
-   auto c_0_3_after_even_b1 = d.Filter("0 == b1 % 2").Range(0,3).Count();
+   auto c_0_3_after_even_b1 = d.Filter("0 == b1 % 2").Range(0, 3).Count();
 
    // Ok, time to wrap up: let's print all counts!
    cout << "Usage of ranges:\n"
@@ -75,9 +77,7 @@ int tdf006_ranges() {
         << " - Entries from 15 onwards: " << *c_15_end << endl
         << " - Entries from 15 onwards in steps of 3: " << *c_15_end_3 << endl
         << " - Entries from 0 to 50, odd only: " << *c_0_50_odd_b1 << endl
-        << " - First three entries of all even entries: " << *c_0_3_after_even_b1 <<endl;
-
-
+        << " - First three entries of all even entries: " << *c_0_3_after_even_b1 << endl;
 
    return 0;
 }
