@@ -159,9 +159,6 @@ if(cxxmodules)
                     DEPENDS build/unix/module.modulemap
                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
                     )
-  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-  file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
   add_custom_command(TARGET copymodulemap POST_BUILD
                      COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> ${CMAKE_BINARY_DIR}/include/module.modulemap
                      VERBATIM
@@ -227,6 +224,14 @@ endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
+
+#---CXX MODULES-----------------------------------------------------------------------------------
+# Take all the modulemap contents we collected from the packages and append them to our modulemap.
+# We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
+# add_subdirectory calls above.
+get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
