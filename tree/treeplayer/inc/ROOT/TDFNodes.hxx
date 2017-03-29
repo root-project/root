@@ -165,7 +165,8 @@ public:
       return std::array_view<ProxyParam_t>(fReaderArray->begin(), fReaderArray->end());
    }
 
-   void Reset() {
+   void Reset()
+   {
       fReaderValue = nullptr;
       fReaderArray = nullptr;
       fValuePtr = nullptr;
