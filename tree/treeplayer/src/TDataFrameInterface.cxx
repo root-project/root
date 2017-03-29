@@ -37,7 +37,6 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
       }
    }
    for (auto brName : tmpBranches) {
-      std::cout << "TMP B " << brName << std::endl;
       std::string bNameRegexContent = regexBit + brName + regexBit;
       TRegexp bNameRegex(bNameRegexContent.c_str());
       if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
