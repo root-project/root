@@ -77,7 +77,7 @@ const char* treeName = "myTree";
 
 void run() {
    // Define data-frame
-   ROOT::Experimental::TDataFrame d(treeName, "test_stringFilter.root");
+   ROOT::Experimental::TDataFrame d(treeName, "test_stringFilterColumn.root");
    auto c1 = d.Count();
 
    auto dd = d.Filter("true", "ok");
@@ -91,11 +91,16 @@ void run() {
    std::cout << "c3 " << *c3 << std::endl;
 
    d.Report();
+
+   auto c4 = d.AddColumn("tracks_size", "tracks.size()").Filter("tracks_size > 3 && abab > 5","All Filters").Count();
+   std::cout << "c4 " << *c4 << std::endl;
+   d.Report();
+
 }
 
-int test_stringfilter() {
+int test_stringfiltercolumn() {
 
-   FillTree("test_stringFilter.root", treeName);
+   FillTree("test_stringFilterColumn.root", treeName);
 
    run();
 #ifdef R__USE_IMT

@@ -13,9 +13,9 @@ ROOTTEST_ADD_TEST(test_ranges
                   OUTREF test_ranges.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_ADD_TEST(test_stringfilter
-                  MACRO test_stringfilter.C+
-                  OUTREF test_stringfilter.ref)
+ROOTTEST_ADD_TEST(test_stringfiltercolumn
+                  MACRO test_stringfiltercolumn.C+
+                  OUTREF test_stringfiltercolumn.ref)
 
 ROOTTEST_ADD_TEST(test_glob
                   MACRO test_glob.C+
