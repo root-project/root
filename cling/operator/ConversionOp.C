@@ -53,14 +53,14 @@ void ConversionOp() {
    REPORTCINTFAILURE("cpab = c") cpab = c;
    REPORTCINTFAILURE("pb = c") pb = c;
    const A<C> & rac(c);
-   if (!&rac) printf("FOO"); // avoid unused var
+   (void)rac; // avoid unused var
    REPORTCINTFAILURE("const A<B> & rab(c);") {
       const A<B> & rab(c);
-      if (!&rab) printf("FOO"); // avoid unused var
+      (void)rab; // avoid unused var
    }
    REPORTCINTFAILURE("const B & rb(c)") {
       const B & rb(c);
-      if (!&rb) printf("FOO"); // avoid unused var
+      (void)rb; // avoid unused var
    }
 
    // D
