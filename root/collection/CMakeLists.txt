@@ -3,6 +3,10 @@ configure_file(HistArray.root . COPYONLY)
 
 ROOTTEST_ADD_AUTOMACROS(EXCLUDE execMissing runTExMap)
 
+ROOTTEST_ADD_TEST(TSeqIterators
+                  MACRO TSeqIterators.C
+                  OUTREF TSeqIterators.ref)
+
 ROOTTEST_ADD_TEST(arrayViewBasic
                   MACRO arrayViewBasic.C
                   OUTREF arrayViewBasic.ref)
