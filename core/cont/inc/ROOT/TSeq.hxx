@@ -141,6 +141,23 @@ namespace ROOT {
             *this = *this - v;
             return *this;
          }
+         // comparison operators
+         bool operator <(const iterator &other) const {
+             return (other - *this) > 0;
+         }
+         bool operator >(const iterator &other) const {
+             return other < *this;
+         }
+         bool operator <=(const iterator &other) const {
+             return !(*this > other);
+         }
+         bool operator >=(const iterator &other) const {
+             return !(other > *this);
+         }
+         // subscript operator
+         const T operator[](const difference_type& v) const{
+             return *(*this + v);
+         }
       };
 
       iterator begin() const {
