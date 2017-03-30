@@ -150,8 +150,19 @@ if(cxxmodules)
 
   # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
   if (APPLE)
-    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
-  endif(APPLE)
+    # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+    # trickery to override the contents of system's OpenGL.
+    # On OSX #include TGLIncludes.h will trigger the creation of the system
+    # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+    # the translation units which it needs to 'rewrite'. The translation units
+    # which need glew support are in graf3d. However, depending on the modulemap
+    # organization we could request it implicitly (eg. one big module for ROOT).
+    # In these cases we need to 'prepend' this include path to the compiler in order
+    # for glew.h to it its trick.
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
+  else()
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility")
+  endif()
 
   configure_file("${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap" COPYONLY)
 
@@ -186,7 +197,7 @@ if(cxxmodules)
   endif()
 
   # These vars are useful when we want to compile things without cxxmodules.
-  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags.")
+  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
   set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
 
 
