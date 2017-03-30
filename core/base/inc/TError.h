@@ -93,14 +93,14 @@ extern void Obsolete(const char *function, const char *asOfVers, const char *rem
 R__EXTERN const char *kAssertMsg;
 R__EXTERN const char *kCheckMsg;
 
-#define R__ASSERT(e) \
-   do { \
+#define R__ASSERT(e)                                                     \
+   do {                                                                  \
       if (!(e)) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
-   } while (0)
-#define R__CHECK(e) \
-   do { \
+   } while (false)
+#define R__CHECK(e)                                                       \
+   do {                                                                   \
       if (!(e)) ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
-   } while (0)
+   } while (false)
 
 R__EXTERN Int_t  gErrorIgnoreLevel;
 R__EXTERN Int_t  gErrorAbortLevel;
