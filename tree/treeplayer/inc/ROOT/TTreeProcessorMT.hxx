@@ -213,18 +213,19 @@ namespace ROOT {
          std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end)
          {
             TTreeReader *reader;
-            if (fEntryLists.size() > 0 && fEntryLists[fCurrentIdx].GetN() > 0) {
+            if (fEntryLists.size() > 0) {
                // TEntryList and SetEntriesRange do not work together (the former has precedence).
                // We need to construct a TEntryList that contains only those entry numbers
                // in our desired range.
                fCurrentEntryList.Reset();
-               Long64_t entry = fEntryLists[fCurrentIdx].GetEntry(0);
-               do {
-                  if (entry >= start && entry < end) fCurrentEntryList.Enter(entry);
-               } while ((entry = fEntryLists[fCurrentIdx].Next()) >= 0);
+               if (fEntryLists[fCurrentIdx].GetN() > 0) {
+                  Long64_t entry = fEntryLists[fCurrentIdx].GetEntry(0);
+                  do {
+                     if (entry >= start && entry < end) fCurrentEntryList.Enter(entry);
+                  } while ((entry = fEntryLists[fCurrentIdx].Next()) >= 0);
+               }
 
                reader = new TTreeReader(fCurrentTree, &fCurrentEntryList);
-
             }
             else {
                // If no TEntryList is involved we can safely set the range in the reader
