@@ -51,6 +51,8 @@ public:
   static void printObjectCounts() ;
 
   static std::map<std::string,double> objectTiming;
+
+  // TODO: for windows version, change to private _timing_flag and use public method that returns its value
   static int timing_flag;
 
 protected:
