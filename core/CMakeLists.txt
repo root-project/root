@@ -16,10 +16,6 @@ add_subdirectory(thread)
 add_subdirectory(zip)
 add_subdirectory(lzma)
 
-if(testing)
-  ROOT_ADD_TEST_SUBDIRECTORY(test)
-endif()
-
 if(NOT WIN32)
   add_subdirectory(newdelete)
 endif()
