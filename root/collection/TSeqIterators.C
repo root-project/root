@@ -17,9 +17,10 @@ int TSeqIterators()
       return 4;
    if (c <= b) // comparison operators
       return 5;
-   if (b >= c) return 6;
+   if (b >= c)
+      return 6;
    if (c[3] != *(seq.begin() + 3)) // subscript operator
-      return 5;
+      return 7;
    return 0;
 }
 
