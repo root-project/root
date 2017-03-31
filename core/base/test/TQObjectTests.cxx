@@ -7,27 +7,11 @@
 
 #include "RQ_OBJECT.h"
 
-// FIXME: We should think of a common place to put the mock objects.
-class TQConnectionMock : public TQConnection {
-public:
-   virtual ~TQConnectionMock() {} // gmock requires it for cleanup on shutdown.
-   MOCK_METHOD1(SetArg, void(Long_t param));
-   MOCK_METHOD1(SetArg, void(ULong_t param));
-   MOCK_METHOD1(SetArg, void(Float_t param));
-   MOCK_METHOD1(SetArg, void(Double_t param));
-   MOCK_METHOD1(SetArg, void(Long64_t param));
-   MOCK_METHOD1(SetArg, void(ULong64_t param));
-   MOCK_METHOD1(SetArg, void(const char *param));
-   MOCK_METHOD2(SetArg, void(const Long_t *params, Int_t nparam /* = -1*/));
-
-   MOCK_METHOD0(SendSignal, void());
-
-   // MOCK_METHOD1(SendSignal, void());
-};
-
 #define Stringify(s) Stringifyx(s)
 #define Stringifyx(s) #s
 
+// The interpreter needs to know about RQ_OBJECTTester and using this trick avoids moving this non-reusable class into
+// its own header file.
 #define DICT_CLASS                                                           \
    class RQ_OBJECTTester : public TQObject {                                 \
       /* This will expand, adding signal/slot support to this class */       \

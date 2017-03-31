@@ -1079,16 +1079,19 @@ function(ROOT_ADD_TEST test)
 endfunction()
 
 #----------------------------------------------------------------------------
-# function ROOT_ADD_GTEST(<testsuite> <name> LIBRARIES)
+# function ROOT_ADD_GTEST(<testsuite> source1 source2... LIBRARIES)
 #
-function(ROOT_ADD_GTEST test_suite test_name)
+function(ROOT_ADD_GTEST test_suite)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
-
   include_directories(${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
 
-  # Note we cannot use ROOT_EXECUTABLE because it requires to pass LIBRARIES to link with.
-  # The test suites should chose this in their specific CMakeLists.txt file.
-  ROOT_EXECUTABLE(${test_suite} ${test_name} LIBRARIES ${ARG_LIBRARIES})
+  set(source_files ${ARG_UNPARSED_ARGUMENTS})
+  # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
+  # The test suites should choose this in their specific CMakeLists.txt file.
+  # FIXME: For better coherence we could restrict the libraries the test suite could link
+  # against. For example, tests in Core should link only against libCore. This could be tricky
+  # to implement because some ROOT components create more than one library.
+  ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
   ROOT_ADD_TEST(gtest-${test_suite} COMMAND ${test_suite})
 endfunction()
