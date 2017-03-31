@@ -959,14 +959,6 @@ void CodeGenModule::SetCommonAttributes(const Decl *D,
 
   if (D && D->hasAttr<UsedAttr>())
     addUsedGlobal(GV);
-  else if (const FunctionDecl* FD = dyn_cast_or_null<FunctionDecl>(D)) {
-     if (FD->isFromASTFile() && GV->hasLinkOnceODRLinkage()) {
-        // An inline function.
-        // Mark them used such that the DeclReverter does not
-        // unload it.
-        addUsedGlobal(GV);
-     }
-  }
 }
 
 void CodeGenModule::setAliasAttributes(const Decl *D,
