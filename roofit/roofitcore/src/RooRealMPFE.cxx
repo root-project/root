@@ -651,6 +651,8 @@ void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
     }
   }
 
+  ccoutD(Generation) << "RooRealMPFE::_initNumIntSet: found " << _numIntSet.getSize() << " numerical integrals." << std::endl;
+
 }
 
 
