@@ -55,7 +55,6 @@ public:
   virtual Double_t evaluate() const ;
   friend class RooAbsTestStatistic ;
   friend class RooTestStatMPDriver ;
-  friend std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value);
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) ;
   virtual Double_t getCarry() const;
 
@@ -70,6 +69,8 @@ public:
     MeasureCommunicationTime,
     RetrieveTimings
   };
+
+  friend std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value);
 
   void initialize() ; 
   void initVars() ;
@@ -115,37 +116,6 @@ private:
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };
 
-std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
-  const char* s = 0;
-#define PROCESS_VAL(p) case(p): s = #p; break;
-  switch(value){
-    PROCESS_VAL(RooRealMPFE::SendReal);
-    PROCESS_VAL(RooRealMPFE::SendCat);
-    PROCESS_VAL(RooRealMPFE::Calculate);
-    PROCESS_VAL(RooRealMPFE::Retrieve);
-    PROCESS_VAL(RooRealMPFE::ReturnValue);
-    PROCESS_VAL(RooRealMPFE::Terminate);
-    PROCESS_VAL(RooRealMPFE::ConstOpt);
-    PROCESS_VAL(RooRealMPFE::Verbose);
-    PROCESS_VAL(RooRealMPFE::LogEvalError);
-    PROCESS_VAL(RooRealMPFE::ApplyNLLW2);
-    PROCESS_VAL(RooRealMPFE::EnableOffset);
-    PROCESS_VAL(RooRealMPFE::CalculateNoOffset);
-    PROCESS_VAL(RooRealMPFE::SetCpuAffinity);
-    PROCESS_VAL(RooRealMPFE::EnableTimingRATS);
-    PROCESS_VAL(RooRealMPFE::DisableTimingRATS);
-    PROCESS_VAL(RooRealMPFE::EnableTimingNamedAbsArg);
-    PROCESS_VAL(RooRealMPFE::DisableTimingNamedAbsArg);
-    PROCESS_VAL(RooRealMPFE::MeasureCommunicationTime);
-    PROCESS_VAL(RooRealMPFE::RetrieveTimings);
-    default: {
-      s = "unknown Message!";
-      break;
-    }
-  }
-#undef PROCESS_VAL
-
-  return out << s;
-}
+std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value);
 
 #endif

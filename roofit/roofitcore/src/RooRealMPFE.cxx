@@ -213,7 +213,7 @@ void RooRealMPFE::initialize()
 
   if (_pipe->isChild()) {
     // Start server loop
-    RooTrace::callgrind_zero() ;
+//    RooTrace::callgrind_zero() ;
     _state = Server ;
     serverLoop();
 
@@ -296,13 +296,13 @@ void RooRealMPFE::serverLoop() {
   ofstream timing_outfile;
   TimePoint timing_begin, timing_end;
 
-  if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
+  if (RooTrace::timing_flag == 9) {
     stringstream filename_ss;
     filename_ss << "timing_RRMPFE_serverloop_while_p" << getpid() << ".json";
     timing_outfile.open(filename_ss.str().c_str(), ios::app);
   }
 
-  if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 8) {
+  if (RooTrace::timing_flag == 8) {
     stringstream filename_ss;
     filename_ss << "timing_RRMPFE_serverloop_p" << getpid() << ".json";
     timing_outfile.open(filename_ss.str().c_str(), ios::app);
@@ -318,7 +318,7 @@ void RooRealMPFE::serverLoop() {
   clearEvalErrorLog();
 
   while (*_pipe && !_pipe->eof()) {
-    if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
+    if (RooTrace::timing_flag == 9) {
       timing_begin = WallClock::now();
     }
     *_pipe >> msg;
@@ -573,7 +573,7 @@ void RooRealMPFE::serverLoop() {
     }
 
     // end timing
-    if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
+    if (RooTrace::timing_flag == 9) {
       timing_end = WallClock::now();
 
       double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -588,7 +588,7 @@ void RooRealMPFE::serverLoop() {
   }
 
   // end timing
-  if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 8) {
+  if (RooTrace::timing_flag == 8) {
     timing_end = WallClock::now();
 
     double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
@@ -601,7 +601,7 @@ void RooRealMPFE::serverLoop() {
     timing_outfile.close();
   }
 
-  if (static_cast<int>(dynamic_cast<RooConstVar *>(*gROOT->GetListOfSpecials()->begin())->getVal()) == 9) {
+  if (RooTrace::timing_flag == 9) {
     timing_outfile.close();
   }
 
@@ -1246,5 +1246,38 @@ void RooRealMPFE::_time_communication_overhead() const {
   std::cout << "comm_wallclock (seconds): " << comm_wallclock_s << std::endl;
 }
 
+
+std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
+  const char* s = 0;
+#define PROCESS_VAL(p) case(p): s = #p; break;
+  switch(value){
+    PROCESS_VAL(RooRealMPFE::SendReal);
+    PROCESS_VAL(RooRealMPFE::SendCat);
+    PROCESS_VAL(RooRealMPFE::Calculate);
+    PROCESS_VAL(RooRealMPFE::Retrieve);
+    PROCESS_VAL(RooRealMPFE::ReturnValue);
+    PROCESS_VAL(RooRealMPFE::Terminate);
+    PROCESS_VAL(RooRealMPFE::ConstOpt);
+    PROCESS_VAL(RooRealMPFE::Verbose);
+    PROCESS_VAL(RooRealMPFE::LogEvalError);
+    PROCESS_VAL(RooRealMPFE::ApplyNLLW2);
+    PROCESS_VAL(RooRealMPFE::EnableOffset);
+    PROCESS_VAL(RooRealMPFE::CalculateNoOffset);
+    PROCESS_VAL(RooRealMPFE::SetCpuAffinity);
+    PROCESS_VAL(RooRealMPFE::EnableTimingRATS);
+    PROCESS_VAL(RooRealMPFE::DisableTimingRATS);
+    PROCESS_VAL(RooRealMPFE::EnableTimingNamedAbsArg);
+    PROCESS_VAL(RooRealMPFE::DisableTimingNamedAbsArg);
+    PROCESS_VAL(RooRealMPFE::MeasureCommunicationTime);
+    PROCESS_VAL(RooRealMPFE::RetrieveTimings);
+    default: {
+      s = "unknown Message!";
+      break;
+    }
+  }
+#undef PROCESS_VAL
+
+  return out << s;
+}
 
 
