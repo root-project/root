@@ -55,6 +55,7 @@ public:
   virtual Double_t evaluate() const ;
   friend class RooAbsTestStatistic ;
   friend class RooTestStatMPDriver ;
+  friend std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value);
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) ;
   virtual Double_t getCarry() const;
 
