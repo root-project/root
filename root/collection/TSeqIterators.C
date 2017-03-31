@@ -23,8 +23,3 @@ int TSeqIterators()
       return 7;
    return 0;
 }
-
-int main()
-{
-   return TSeqIterators();
-}
