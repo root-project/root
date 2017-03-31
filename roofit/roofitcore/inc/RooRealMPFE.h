@@ -22,7 +22,9 @@
 #include "RooArgList.h"
 #include "RooMPSentinel.h"
 #include "TStopwatch.h"
-#include <vector> 
+#include <vector>
+#include <iostream>
+#include <string>
 
 class RooArgSet ;
 namespace RooFit { class BidirMMapPipe; }
@@ -67,6 +69,39 @@ public:
     MeasureCommunicationTime,
     RetrieveTimings
   };
+
+  std::ostream& operator<<(std::ostream& out, const Message value){
+    const char* s = 0;
+#define PROCESS_VAL(p) case(p): s = #p; break;
+    switch(value){
+      PROCESS_VAL(SendReal);
+      PROCESS_VAL(SendCat);
+      PROCESS_VAL(Calculate);
+      PROCESS_VAL(Retrieve);
+      PROCESS_VAL(ReturnValue);
+      PROCESS_VAL(Terminate);
+      PROCESS_VAL(ConstOpt);
+      PROCESS_VAL(Verbose);
+      PROCESS_VAL(LogEvalError);
+      PROCESS_VAL(ApplyNLLW);
+      PROCESS_VAL(EnableOffset);
+      PROCESS_VAL(CalculateNoOffset);
+      PROCESS_VAL(SetCpuAffinity);
+      PROCESS_VAL(EnableTimingRATS);
+      PROCESS_VAL(DisableTimingRATS);
+      PROCESS_VAL(EnableTimingNamedAbsArg);
+      PROCESS_VAL(DisableTimingNamedAbsArg);
+      PROCESS_VAL(MeasureCommunicationTime);
+      PROCESS_VAL(RetrieveTimings);
+      default: {
+        s = "unknown Message!";
+        break;
+      }
+    }
+#undef PROCESS_VAL
+
+    return out << s;
+  }
 
   void initialize() ; 
   void initVars() ;
