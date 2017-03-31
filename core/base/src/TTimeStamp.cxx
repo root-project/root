@@ -38,16 +38,18 @@ NOTE: the use of time_t (and its default implementation as a 32 int)
 */
 
 #include "TTimeStamp.h"
-#include "TString.h"
-#include "TError.h"
 #include "Riostream.h"
+#include "TError.h"
+#include "TMathBase.h"
+#include "TString.h"
+#include "TVirtualMutex.h"
 #ifdef R__WIN32
 #include "Windows4Root.h"
 #else
 #include <unistd.h>
 #include <sys/time.h>
 #endif
-#include "TVirtualMutex.h"
+
 
 ClassImp(TTimeStamp);
 
@@ -190,11 +192,10 @@ Double_t TTimeStamp::AsGMST(Double_t UT1Offset) const
 
 Double_t TTimeStamp::AsGAST(Double_t UT1Offset) const
 {
-   Double_t Pi = 3.14159265358979323846;
    Double_t D = (AsJulianDate() + UT1Offset/86400000.0) - 2451545.0;
-   Double_t epsilon = (23.4393 - 0.0000004 * D) * Pi / 180.0;
-   Double_t L = (280.47 + 0.98565 * D) * Pi / 180.0;
-   Double_t Omega = (125.04 - 0.052954 * D) * Pi / 180.0;
+   Double_t epsilon = (23.4393 - 0.0000004 * D) * TMath::Pi() / 180.0;
+   Double_t L = (280.47 + 0.98565 * D) * TMath::Pi() / 180.0;
+   Double_t Omega = (125.04 - 0.052954 * D) * TMath::Pi() / 180.0;
    Double_t Deltapsi = -0.000319 * std::sin(Omega) - 0.000024 * std::sin(2.0 * L);
    Double_t eqeq = Deltapsi * std::cos(epsilon);
    Double_t rval = fmod(AsGMST(UT1Offset) + eqeq, 24.0);
