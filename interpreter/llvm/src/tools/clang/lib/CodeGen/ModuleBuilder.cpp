@@ -287,35 +287,11 @@ namespace clang {
           break;
         }
       }
-
-      if (GV->isWeakForLinker() && GV->isDeclaration()) {
-        // might be an entry in the deferred decls, if so: remove!
-        auto IDeferredDecl = Builder->DeferredDecls.find(GV->getName());
-        if (IDeferredDecl != Builder->DeferredDecls.end()) {
-          // yes, pointer comparison.
-          if (IDeferredDecl->first.data() == GV->getName().data())
-            Builder->DeferredDecls.erase(IDeferredDecl);
-        }
-      }
     }
 
     void forgetDecl(const GlobalDecl& GD) {
-      if (const auto VD = dyn_cast<VarDecl>(GD.getDecl())) {
-        if (!VD->isWeak() || !VD->isThisDeclarationADefinition())
-          return;
-      } else if (const auto FD = dyn_cast<FunctionDecl>(GD.getDecl())) {
-        if (!FD->isWeak() || !FD->isThisDeclarationADefinition())
-          return;
-      } else {
-        return;
-      }
-      // It's a weak, defined var or function decl.
       StringRef MangledName = Builder->getMangledName(GD);
-      auto IDeferredDecl = Builder->DeferredDecls.find(MangledName);
-      if (IDeferredDecl != Builder->DeferredDecls.end()) {
-        if (IDeferredDecl->second == GD)
-          Builder->DeferredDecls.erase(IDeferredDecl);
-      }
+      Builder->DeferredDecls.erase(MangledName);
     }
 
     void Initialize(ASTContext &Context) override {
