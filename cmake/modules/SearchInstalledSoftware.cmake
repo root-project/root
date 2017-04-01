@@ -1377,6 +1377,15 @@ if (testing)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
   # Add gtest
   # http://stackoverflow.com/questions/9689183/cmake-googletest
+
+  set(_byproduct_binary_dir
+    ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/googlemock/)
+  set(_byproducts
+    ${_byproduct_binary_dir}/gtest/libgtest.a
+    ${_byproduct_binary_dir}/gtest/libgtest_main.a
+    ${_byproduct_binary_dir}/libgmock.a
+    ${_byproduct_binary_dir}/libgmock_main.a
+    )
   ExternalProject_Add(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
@@ -1389,6 +1398,7 @@ if (testing)
     #            -Dgtest_force_shared_crt=ON
     # Disable install step
     INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS ${_byproducts}
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
