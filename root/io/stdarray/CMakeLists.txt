@@ -1,5 +1,10 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# More coverage for ROOT-8736
+ROOTTEST_ADD_TEST(arrTemplMemberWrite
+                  MACRO testArrOfTemplateInst.C+
+                  OUTREF testArrOfTemplateInst.ref)
+
 ROOTTEST_ADD_TEST(colWiseWrite_1
                   MACRO colWiseWrite_1.C+)
 
