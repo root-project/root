@@ -1083,7 +1083,7 @@ endfunction()
 #
 function(ROOT_ADD_GTEST test_suite)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
-  include_directories(${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
+  include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
 
   set(source_files ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
