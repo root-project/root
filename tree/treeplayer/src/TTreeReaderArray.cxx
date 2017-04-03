@@ -190,34 +190,46 @@ namespace {
       }
    };
 
-   class TArrayParameterSizeReader : public TObjectArrayReader {
+   template <class BASE>
+   class TUIntOrIntReader: public BASE {
    private:
       // The index can be of type int or unsigned int.
-      TTreeReaderValue<Int_t>  fIndexReader;
+      TTreeReaderValue<Int_t> fSizeReader;
       bool fIsUnsigned = false;
 
+   protected:
       template <class T>
-      TTreeReaderValue<T>& GetIndexReader() {
-         return reinterpret_cast<TTreeReaderValue<T>&>(fIndexReader);
+      TTreeReaderValue<T>& GetSizeReader() {
+         return reinterpret_cast<TTreeReaderValue<T>&>(fSizeReader);
       }
+
    public:
-      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName)
-         {
-            if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(branchName)) {
-               fIsUnsigned = sizeLeaf->IsUnsigned();
-               if (fIsUnsigned) {
-                  GetIndexReader<UInt_t>() = TTreeReaderValue<UInt_t>(*treeReader, branchName);
-               } else {
-                  GetIndexReader<Int_t>() = TTreeReaderValue<Int_t>(*treeReader, branchName);
-               }
+      template <class... ARGS>
+      TUIntOrIntReader(TTreeReader *treeReader, const char *leafName,
+                       ARGS&&... args):
+         BASE(std::forward<ARGS>(args)...)
+      {
+         if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(leafName)) {
+            fIsUnsigned = sizeLeaf->IsUnsigned();
+            if (fIsUnsigned) {
+               GetSizeReader<UInt_t>() = TTreeReaderValue<UInt_t>(*treeReader, leafName);
+            } else {
+               GetSizeReader<Int_t>() = TTreeReaderValue<Int_t>(*treeReader, leafName);
             }
          }
-
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) {
-         if (fIsUnsigned)
-            return *GetIndexReader<UInt_t>();
-         return *GetIndexReader<Int_t>();
       }
+
+      size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) override {
+         if (fIsUnsigned)
+            return *GetSizeReader<UInt_t>();
+         return *GetSizeReader<Int_t>();
+      }
+   };
+
+   class TArrayParameterSizeReader: public TUIntOrIntReader<TObjectArrayReader> {
+   public:
+      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName):
+         TUIntOrIntReader<TObjectArrayReader>(treeReader, branchName) {}
    };
 
    // Reader interface for fixed size arrays
@@ -300,35 +312,15 @@ namespace {
       }
    };
 
-   class TLeafParameterSizeReader : public TLeafReader {
-   private:
-      // The index can be of type int or unsigned int.
-      TTreeReaderValue<Int_t> fSizeReader;
-      bool fIsUnsigned = false;
-
-      template <class T>
-      TTreeReaderValue<T>& GetSizeReader() {
-         return reinterpret_cast<TTreeReaderValue<T>&>(fSizeReader);
-      }
+   class TLeafParameterSizeReader: public TUIntOrIntReader<TLeafReader> {
    public:
       TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName,
                                TTreeReaderValueBase *valueReaderArg) :
-         TLeafReader(valueReaderArg) {
-         if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(leafName)) {
-            fIsUnsigned = sizeLeaf->IsUnsigned();
-            if (fIsUnsigned) {
-               GetSizeReader<UInt_t>() = TTreeReaderValue<UInt_t>(*treeReader, leafName);
-            } else {
-               GetSizeReader<Int_t>() = TTreeReaderValue<Int_t>(*treeReader, leafName);
-            }
-         }
-      }
+         TUIntOrIntReader<TLeafReader>(treeReader, leafName, valueReaderArg) {}
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          ProxyRead();
-         if (fIsUnsigned)
-            return *GetSizeReader<UInt_t>();
-         return *GetSizeReader<Int_t>();
+         return TUIntOrIntReader<TLeafReader>::GetSize(proxy);
       }
    };
 }
