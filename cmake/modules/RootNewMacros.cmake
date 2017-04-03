@@ -1093,7 +1093,19 @@ function(ROOT_ADD_GTEST test_suite)
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
-  ROOT_ADD_TEST(gtest-${test_suite} COMMAND ${test_suite})
+
+  # Mangle the path to the test name.
+  # FIXME: Copied and modified from ROOTTEST_TARGETNAME_FROM_FILE. We should find a common place for that code.
+  set(filename ${test_suite})
+  get_filename_component(realfp ${filename} ABSOLUTE)
+  get_filename_component(filename_we ${filename} NAME_WE)
+
+  string(REPLACE "${CMAKE_SOURCE_DIR}" "" relativepath ${realfp})
+  string(REPLACE "${filename}" "" relativepath ${relativepath})
+
+  string(REPLACE "/" "-" targetname ${relativepath}${filename_we})
+
+  ROOT_ADD_TEST(gtest${targetname} COMMAND ${test_suite})
 endfunction()
 
 
