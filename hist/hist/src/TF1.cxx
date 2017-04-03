@@ -2669,12 +2669,12 @@ void TF1::Print(Option_t *option) const
       fFormula->Print(option);
    } else if (fType >  0) {
       if (fType == 2)
-         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
+         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNdim(), GetNpar());
       else {
          if (!fFunctor.Empty())
-            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
+            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNdim(), GetNpar());
          else {
-            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n", GetName(), GetNpar(), GetNdim(), int(fSave.size()));
+            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n", GetName(), GetNdim(), GetNpar(), int(fSave.size()));
             if (fSave.empty())
                Warning("Print", "Function %s is based on a list of points but list is empty", GetName());
          }
