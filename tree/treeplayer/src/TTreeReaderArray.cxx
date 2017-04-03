@@ -302,14 +302,33 @@ namespace {
 
    class TLeafParameterSizeReader : public TLeafReader {
    private:
+      // The index can be of type int or unsigned int.
       TTreeReaderValue<Int_t> fSizeReader;
+      bool fIsUnsigned = false;
+
+      template <class T>
+      TTreeReaderValue<T>& GetSizeReader() {
+         return reinterpret_cast<TTreeReaderValue<T>&>(fSizeReader);
+      }
    public:
-      TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName, TTreeReaderValueBase *valueReaderArg) :
-         TLeafReader(valueReaderArg), fSizeReader(*treeReader, leafName) {}
+      TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName,
+                               TTreeReaderValueBase *valueReaderArg) :
+         TLeafReader(valueReaderArg) {
+         if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(leafName)) {
+            fIsUnsigned = sizeLeaf->IsUnsigned();
+            if (fIsUnsigned) {
+               GetSizeReader<UInt_t>() = TTreeReaderValue<UInt_t>(*treeReader, leafName);
+            } else {
+               GetSizeReader<Int_t>() = TTreeReaderValue<Int_t>(*treeReader, leafName);
+            }
+         }
+      }
 
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){
          ProxyRead();
-         return *fSizeReader;
+         if (fIsUnsigned)
+            return *GetSizeReader<UInt_t>();
+         return *GetSizeReader<Int_t>();
       }
    };
 }
