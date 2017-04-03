@@ -672,6 +672,54 @@ public:
    }
 
    /**
+      Directly apply the inverse affine transformation on vectors.
+      Avoids having to calculate the inverse as an intermediate result.
+      This is possible since the inverse of a rotation is its transpose.
+   */
+   Vector ApplyInverse(const Vector &v) const
+   {
+      return Vector(fM[kXX] * v.X() + fM[kYX] * v.Y() + fM[kZX] * v.Z(),
+                    fM[kXY] * v.X() + fM[kYY] * v.Y() + fM[kZY] * v.Z(),
+                    fM[kXZ] * v.X() + fM[kYZ] * v.Y() + fM[kZZ] * v.Z());
+   }
+
+   /**
+      Directly apply the inverse affine transformation on points
+      (first inverse translation then inverse rotation).
+      Avoids having to calculate the inverse as an intermediate result.
+      This is possible since the inverse of a rotation is its transpose.
+   */
+   Point ApplyInverse(const Point &p) const
+   {
+      Point tmp(p.X() - fM[kDX], p.Y() - fM[kDY], p.Z() - fM[kDZ]);
+      return Point(fM[kXX] * tmp.X() + fM[kYX] * tmp.Y() + fM[kZX] * tmp.Z(),
+                   fM[kXY] * tmp.X() + fM[kYY] * tmp.Y() + fM[kZY] * tmp.Z(),
+                   fM[kXZ] * tmp.X() + fM[kYZ] * tmp.Y() + fM[kZZ] * tmp.Z());
+   }
+
+   /**
+      Directly apply the inverse affine transformation on an arbitrary
+      coordinate-system point.
+      Involves casting to Point(p) type.
+   */
+   template <class CoordSystem>
+   PositionVector3D<CoordSystem> ApplyInverse(const PositionVector3D<CoordSystem> &p) const
+   {
+      return PositionVector3D<CoordSystem>(ApplyInverse(Point(p)));
+   }
+
+   /**
+      Directly apply the inverse affine transformation on an arbitrary
+      coordinate-system vector.
+      Involves casting to Vector(p) type.
+   */
+   template <class CoordSystem>
+   DisplacementVector3D<CoordSystem> ApplyInverse(const DisplacementVector3D<CoordSystem> &p) const
+   {
+      return DisplacementVector3D<CoordSystem>(ApplyInverse(Vector(p)));
+   }
+
+   /**
       Transformation operation for points between different coordinate system tags
    */
    template <class CoordSystem, class Tag1, class Tag2>
@@ -712,15 +760,23 @@ public:
    /**
       Transformation on a 3D plane
    */
-   Plane3D<T> operator()(const Plane3D<T> &plane) const
+   template <typename TYPE>
+   Plane3D<TYPE> operator()(const Plane3D<TYPE> &plane) const
    {
       // transformations on a 3D plane
-      const Vector n = plane.Normal();
+      const auto n = plane.Normal();
       // take a point on the plane. Use origin projection on the plane
       // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
-      const T d = plane.HesseDistance();
-      Point   p(-d * n.X(), -d * n.Y(), -d * n.Z());
-      return Plane3D<T>(operator()(n), operator()(p));
+      const auto d = plane.HesseDistance();
+      Point p(-d * n.X(), -d * n.Y(), -d * n.Z());
+      return Plane3D<TYPE>(operator()(n), operator()(p));
+   }
+
+   /// Multiplication operator for 3D plane
+   template <typename TYPE>
+   Plane3D<TYPE> operator*(const Plane3D<TYPE> &plane) const
+   {
+      return operator()(plane);
    }
 
    // skip transformation for arbitrary vectors - not really defined if point or displacement vectors

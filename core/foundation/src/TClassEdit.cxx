@@ -2017,9 +2017,13 @@ bool TClassEdit::GetStdArrayProperties(const char* typeName,
    auto childNodes = node.GetChildNodes();
    for (ndim = 1;ndim <=5 ; ndim++) {
       maxIndices[ndim-1] = std::atoi(childNodes->back()->GetName().c_str());
-      typeNameBuf = childNodes->front()->GetName();
-      if (! IsStdArray(typeNameBuf+"<")) return true;
-      childNodes = childNodes->front()->GetChildNodes();
+      auto& frontNode = childNodes->front();
+      typeNameBuf = frontNode->GetName();
+      if (! IsStdArray(typeNameBuf+"<")) {
+         typeNameBuf = frontNode->ToString();
+         return true;
+      }
+      childNodes = frontNode->GetChildNodes();
    }
 
    return true;

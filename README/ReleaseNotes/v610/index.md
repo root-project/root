@@ -177,6 +177,12 @@ The following interfaces have been removed, after deprecation in v6.08.
   upside-down.
 - Add a protection in TLatex when a string has a syntax error. It was reported
   [here](https://sft.its.cern.ch/jira/browse/ROOT-7424).
+- Implement the automatic placement of the Y axis title. If the title offset is
+  set to 0:
+~~~ {.cpp}
+  h->GetYaxis()->SetTitleOffset(0.);
+~~~
+   the axis title is automatically placed to avoid overlaps with the axis labels.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
@@ -190,6 +196,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - Stop dictionary generation early, during AST scanning, if a union is selected for I/O as this is not supported (triggered by [ROOT-8492](https://sft.its.cern.ch/jira/browse/ROOT-8492))
 - Allow inclusion of headers in linkdef files [ROOT-7765](https://sft.its.cern.ch/jira/browse/ROOT-7765)
 - More expressive error messages when trying to directly select std::arrays
+- rootcling now `#define`s `__PIC__` when parsing input headers [ROOT-8719].
 
 ## I/O Libraries
 - [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Prompt error when building streamer info and a data member is a vector<T> w/o dictionary

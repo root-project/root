@@ -2534,37 +2534,46 @@
    /** @memberOf JSROOT.GEO */
    JSROOT.GEO.createMatrix = function(matrix) {
 
-      if (matrix === null) return null;
+      if (!matrix) return null;
 
-      var translation_matrix = null, rotation_matrix = null;
+      var translation = null, rotation = null, scale = null;
 
-      if (matrix._typename == 'TGeoTranslation') {
-         translation_matrix = matrix.fTranslation;
-      }
-      else if (matrix._typename == 'TGeoRotation') {
-         rotation_matrix = matrix.fRotationMatrix;
-      }
-      else if (matrix._typename == 'TGeoCombiTrans') {
-         translation_matrix = matrix.fTranslation;
-         if (matrix.fRotation !== null)
-            rotation_matrix = matrix.fRotation.fRotationMatrix;
-      }
-      else if (matrix._typename !== 'TGeoIdentity') {
-      //   console.log('unsupported matrix ' + matrix._typename);
+      switch (matrix._typename) {
+         case 'TGeoTranslation': translation = matrix.fTranslation; break;
+         case 'TGeoRotation': rotation = matrix.fRotationMatrix; break;
+         case 'TGeoScale': scale = matrix.fScale; break;
+         case 'TGeoGenTrans':
+            scale = matrix.fScale; // no break, translation and rotation follows
+         case 'TGeoCombiTrans':
+            translation = matrix.fTranslation;
+            if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
+            break;
+         case 'TGeoHMatrix':
+            translation = matrix.fTranslation;
+            rotation = matrix.fRotationMatrix;
+            scale = matrix.fScale;
+            break;
+         case 'TGeoIdentity':
+            break;
+         default:
+            console.warn('unsupported matrix ' + matrix._typename);
       }
 
-      if ((translation_matrix === null) && (rotation_matrix === null)) return null;
+      if (!translation && !rotation && !scale) return null;
 
       var res = new THREE.Matrix4();
 
-      if (rotation_matrix !== null)
-         res.set(rotation_matrix[0], rotation_matrix[1], rotation_matrix[2],   0,
-                 rotation_matrix[3], rotation_matrix[4], rotation_matrix[5],   0,
-                 rotation_matrix[6], rotation_matrix[7], rotation_matrix[8],   0,
-                                  0,                  0,                  0,   1);
+      if (rotation)
+         res.set(rotation[0], rotation[1], rotation[2],  0,
+                 rotation[3], rotation[4], rotation[5],  0,
+                 rotation[6], rotation[7], rotation[8],  0,
+                           0,           0,           0,  1);
 
-      if (translation_matrix !== null)
-         res.setPosition(new THREE.Vector3(translation_matrix[0], translation_matrix[1], translation_matrix[2]));
+      if (translation)
+         res.setPosition(new THREE.Vector3(translation[0], translation[1], translation[2]));
+
+      if (scale)
+         res.scale(new THREE.Vector3(scale[0], scale[1], scale[2]));
 
       return res;
    }

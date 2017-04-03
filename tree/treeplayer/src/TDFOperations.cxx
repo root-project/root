@@ -38,8 +38,8 @@ void FillOperation::UpdateMinMax(unsigned int slot, double v)
 {
    auto &thisMin = fMin[slot];
    auto &thisMax = fMax[slot];
-   thisMin       = std::min(thisMin, v);
-   thisMax       = std::max(thisMax, v);
+   thisMin = std::min(thisMin, v);
+   thisMax = std::max(thisMax, v);
 }
 
 FillOperation::FillOperation(const std::shared_ptr<Hist_t> &h, unsigned int nSlots)
@@ -121,7 +121,7 @@ void MinOperation::Exec(unsigned int slot, double v)
 
 void MinOperation::Finalize()
 {
-   *fResultMin                       = std::numeric_limits<double>::max();
+   *fResultMin = std::numeric_limits<double>::max();
    for (auto &m : fMins) *fResultMin = std::min(m, *fResultMin);
 }
 

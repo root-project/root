@@ -50,7 +50,7 @@ namespace ROOT {
          std::vector<std::string> fFileNames; ///< Names of the files
          std::string fTreeName;               ///< Name of the tree
          std::unique_ptr<TFile> fCurrentFile; ///<! Current file object of this view.
-         std::unique_ptr<TTree> fCurrentTree; ///<! Current tree object of this view.
+         TTree *fCurrentTree;                 ///<! Current tree object of this view.
          unsigned int fCurrentIdx;            ///<! Index of the current file.
          std::vector<TEntryList> fEntryLists; ///< Entry numbers to be processed per tree/file
          TEntryList fCurrentEntryList;        ///< Entry numbers for the current range being processed
@@ -72,15 +72,19 @@ namespace ROOT {
                      break;
                   }
                }
-               if (fTreeName.empty())
-                  ::Error("TreeView constructor", "Cannot find any tree in file %s", fFileNames[fCurrentIdx].data());
+               if (fTreeName.empty()) {
+                  auto msg = "Cannot find any tree in file " + fFileNames[fCurrentIdx];
+                  throw std::runtime_error(msg);
+               }
             }
 
             // We cannot use here the template method (TFile::GetObject) because the header will finish
             // in the PCH and the specialization will be available. PyROOT will not be able to specialize
             // the method for types other that TTree.
-            TTree *tp = (TTree*)fCurrentFile->Get(fTreeName.data());
-            fCurrentTree.reset(tp);
+            fCurrentTree = (TTree*)fCurrentFile->Get(fTreeName.data());
+
+            // Do not remove this tree from list of cleanups (thread unsafe)
+            fCurrentTree->ResetBit(TObject::kMustCleanup);
          }
 
       public:
@@ -108,10 +112,11 @@ namespace ROOT {
                for (auto& fn : fns)
                   fFileNames.emplace_back(fn);
                Init();
-             }
-             else {
-                ::Error("TreeView constructor", "The provided list of file names is empty, cannot process tree %s", fTreeName.data());
-             }
+            }
+            else {
+               auto msg = "The provided list of file names is empty, cannot process tree " + fTreeName;
+               throw std::runtime_error(msg);
+            }
          }
 
          //////////////////////////////////////////////////////////////////////////
@@ -128,12 +133,20 @@ namespace ROOT {
                   Init();
                }
                else {
-                  ::Error("TreeView constructor", "The provided chain of files is empty, cannot process tree %s", fTreeName.data());
+                  auto msg = "The provided chain of files is empty, cannot process tree " + fTreeName;
+                  throw std::runtime_error(msg);
                }
             }
             else {
-               fFileNames.emplace_back(tree.GetCurrentFile()->GetName());
-               Init();
+               TFile *f = tree.GetCurrentFile();
+               if (f) {
+                  fFileNames.emplace_back(f->GetName());
+                  Init();
+               }
+               else {
+                  auto msg = "The specified TTree is not linked to any file, in-memory-only trees are not supported. Cannot process tree " + fTreeName;
+                  throw std::runtime_error(msg);
+               } 
             }
          }
 
@@ -210,12 +223,12 @@ namespace ROOT {
                   if (entry >= start && entry < end) fCurrentEntryList.Enter(entry);
                } while ((entry = fEntryLists[fCurrentIdx].Next()) >= 0);
 
-               reader = new TTreeReader(fCurrentTree.get(), &fCurrentEntryList);
+               reader = new TTreeReader(fCurrentTree, &fCurrentEntryList);
 
             }
             else {
                // If no TEntryList is involved we can safely set the range in the reader
-               reader = new TTreeReader(fCurrentTree.get());
+               reader = new TTreeReader(fCurrentTree);
                reader->SetEntriesRange(start, end);
             }
 
@@ -243,8 +256,8 @@ namespace ROOT {
             if (i != fCurrentIdx) {
                fCurrentIdx = i;
                TFile *f = TFile::Open(fFileNames[fCurrentIdx].data());
-               TTree *t = (TTree*)f->Get(fTreeName.data());
-               fCurrentTree.reset(t);
+               fCurrentTree = (TTree*)f->Get(fTreeName.data());
+               fCurrentTree->ResetBit(TObject::kMustCleanup);
                fCurrentFile.reset(f);
             }
          }

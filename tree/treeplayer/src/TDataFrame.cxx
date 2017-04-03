@@ -360,6 +360,26 @@ Stats are printed in the same order as named filters have been added to the grap
 that has been run using the relevant `TDataFrame`. If `Report` is called before the event-loop has been run at least
 once, a run is triggered.
 
+### Ranges
+When `TDataFrame` is not being used in a multi-thread environment (i.e. no call to `EnableImplicitMT` was made),
+`Range` transformations are available. These act very much like filters but instead of basing their decision on
+a filter expression, they rely on `start`,`stop` and `stride` parameters.
+
+- `start`: number of entries that will be skipped before starting processing again
+- `stop`: maximum number of entries that will be processed
+- `stride`: only process one entry every `stride` entries
+
+The actual number of entries processed downstream of a `Range` node will be `(stop - start)/stride` (or less if less
+entries than that are available).
+
+Note that ranges act "locally", not based on the global entry count: `Range(10,50)` means "skip the first 10 entries
+*that reach this node*, let the next 40 entries pass, then stop processing". If a range node hangs from a filter node,
+and the range has a `start` parameter of 10, that means the range will skip the first 10 entries *that pass the
+preceding filter*.
+
+Ranges allow "early quitting": if all branches of execution of a functional graph reached their `stop` value of
+processed entries, the event-loop is immediately interrupted. This is useful for debugging and initial explorations.
+
 ### Temporary columns
 Temporary columns are created by invoking `AddColumn(name, f, branchList)`. As usual, `f` can be any callable object
 (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of
@@ -375,6 +395,17 @@ Use cases include:
 - branch aliasing, i.e. changing the name of a branch
 
 An exception is thrown if the `name` of the new branch is already in use for another branch in the `TTree`.
+
+It is also possible to specify the quantity to be stored in the new temporary column as a C++ expression with the method
+`AddColumn(name, expression)`. For example this invocation
+
+~~~{.cpp}
+tdf.AddColumn("pt", "sqrt(px*px + py*py)");
+~~~
+
+will create a new column called "pt" the value of which is calculated starting from the branches px and py. The system
+builds a just in time compiled function starting from the expression after having deduced the list of necessary branches
+from the names of the variables specified by the user.
 
 ##  <a name="actions"></a>Actions
 ### Instant and lazy actions

@@ -398,12 +398,14 @@ namespace {
     // the test for C++14 or more (201402L) as previously specified.
     // I would claim that the check should be relaxed to:
 
+    if (Opts.CPlusPlus) {
 #if __cplusplus > 201103L
-    if (Opts.CPlusPlus) Opts.CPlusPlus14 = 1;
+      Opts.CPlusPlus14 = 1;
 #endif
 #if __cplusplus >= 201103L
-    if (Opts.CPlusPlus) Opts.CPlusPlus11 = 1;
+      Opts.CPlusPlus11 = 1;
 #endif
+    }
 
 #ifdef _REENTRANT
     Opts.POSIXThreads = 1;
@@ -924,20 +926,28 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CodeCompleteConsumer* CCC = 0;
     CI->createSema(TU_Complete, CCC);
 
-    // Set CodeGen options
-    // want debug info
+    // Set CodeGen options.
+    CodeGenOptions& CGOpts = CI->getCodeGenOpts();
 #ifdef _MSC_VER
-    CI->getCodeGenOpts().MSVolatile = 1;
-    CI->getCodeGenOpts().RelaxedAliasing = 1;
-    CI->getCodeGenOpts().EmitCodeView = 1;
-    CI->getCodeGenOpts().CXXCtorDtorAliases = 1;
+    CGOpts.MSVolatile = 1;
+    CGOpts.RelaxedAliasing = 1;
+    CGOpts.EmitCodeView = 1;
+    CGOpts.CXXCtorDtorAliases = 1;
 #endif
-    //CI->getCodeGenOpts().setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
-    // CI->getCodeGenOpts().EmitDeclMetadata = 1; // For unloading, for later
-    CI->getCodeGenOpts().CXXCtorDtorAliases = 0; // aliasing the complete
-                                                 // ctor to the base ctor causes
-                                                 // the JIT to crash
-    CI->getCodeGenOpts().VerifyModule = 0; // takes too long
+    // Reduce amount of emitted symbols by optimizing more.
+    CGOpts.OptimizationLevel = 2;
+    // Taken from a -O2 run of clang:
+    CGOpts.DiscardValueNames = 1;
+    CGOpts.OmitLeafFramePointer = 1;
+    CGOpts.UnrollLoops = 1;
+    CGOpts.VectorizeLoop = 1;
+    CGOpts.VectorizeSLP = 1;
+
+    // CGOpts.setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
+    // CGOpts.EmitDeclMetadata = 1; // For unloading, for later
+    // aliasing the complete ctor to the base ctor causes the JIT to crash
+    CGOpts.CXXCtorDtorAliases = 0;
+    CGOpts.VerifyModule = 0; // takes too long
 
     if (!OnlyLex) {
       // -nobuiltininc

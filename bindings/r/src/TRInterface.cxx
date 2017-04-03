@@ -22,7 +22,9 @@ ClassImp(TRInterface)
 static ROOT::R::TRInterface *gR = NULL;
 static Bool_t statusEventLoop;
 
-TRInterface::TRInterface(const int argc, const char *argv[], const bool loadRcpp, const bool verbose, const bool interactive): TObject()
+TRInterface::TRInterface(const Int_t argc, const Char_t *argv[], const Bool_t loadRcpp, const Bool_t verbose,
+                         const Bool_t interactive)
+   : TObject()
 {
    if (RInside::instancePtr()) throw std::runtime_error("Can only have one TRInterface instance");
    fR = new RInside(argc, argv, loadRcpp, verbose, interactive);
@@ -105,7 +107,7 @@ TRObject TRInterface::Eval(const TString &code)
       Error("Eval", "Can execute the requested code: %s", code.Data());
    }
 
-   return TRObject(ans , (rc == 0) ? kTRUE : kFALSE);
+   return TRObject(ans, (rc == 0) ? kTRUE : kFALSE);
 }
 
 
@@ -139,7 +141,7 @@ void TRInterface::Assign(const TRDataFrame &obj, const TString &name)
 void TRInterface::Interactive()
 {
    while (kTRUE) {
-      char *line = readline("[r]:");
+      Char_t *line = readline("[r]:");
       if (!line) continue;
       if (std::string(line) == ".q") break;
       Execute(line);
@@ -153,7 +155,8 @@ void TRInterface::Interactive()
 TRInterface *TRInterface::InstancePtr()
 {
    if (!gR) {
-      const char *R_argv[] = {"rootr", "--gui=none", "--no-save", "--no-readline", "--silent", "--vanilla", "--slave"};
+      const Char_t *R_argv[] = {"rootr",    "--gui=none", "--no-save", "--no-readline",
+                                "--silent", "--vanilla",  "--slave"};
       gR = new TRInterface(7, R_argv, true, false, false);
    }
    gR->ProcessEventsLoop();
@@ -198,11 +201,13 @@ void TRInterface::ProcessEventsLoop()
    if (!statusEventLoop) {
       th = new TThread([](void *args) {
          while (kTRUE) {
-            fd_set *fd;
-            int usec = 10000;
-            fd = R_checkActivity(usec, 0);
-            R_runHandlers(R_InputHandlers, fd);
-            gSystem->Sleep(100);
+            if (gR) { // in case global object was freed
+               fd_set *fd;
+               Int_t usec = 10000;
+               fd = R_checkActivity(usec, 0);
+               R_runHandlers(R_InputHandlers, fd);
+               if (gSystem) gSystem->Sleep(100);
+            }
          }
       });
       th->Run();

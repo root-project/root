@@ -15,21 +15,21 @@
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "TClass.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
 #include "TInterpreter.h"
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
-#include "TRegexp.h"
-#include "TROOT.h" // IsImplicitMTEnabled
+#include "TROOT.h"      // IsImplicitMTEnabled
 
 #include <initializer_list>
 #include <memory>
 #include <string>
 #include <typeinfo>
 #include <type_traits> // is_same, enable_if
+
+using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>;
 
 namespace ROOT {
 
@@ -47,6 +47,18 @@ ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNod
 {
    return node->template CreateAction<ActionType, BranchType, ActionResultType>(bl, r, nullptr);
 }
+
+std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
+
+Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
+                     const std::string &name, const std::string &expression, TObjArray *branches,
+                     const std::vector<std::string> &tmpBranches,
+                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
+
+Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
+                           const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                           ROOT::Detail::TDataFrameBranchBase *bbase);
+
 } // namespace Internal
 
 namespace Experimental {
@@ -96,12 +108,12 @@ public:
                                                                   const std::string &name = "")
    {
       ROOT::Internal::CheckFilter(f);
-      auto                 df       = GetDataFrameChecked();
-      const BranchNames_t &defBl    = df->GetDefaultBranches();
-      auto                 nArgs    = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
+      auto df = GetDataFrameChecked();
+      const BranchNames_t &defBl = df->GetDefaultBranches();
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bn, defBl);
-      using DFF_t                   = ROOT::Detail::TDataFrameFilter<F, Proxied>;
-      auto FilterPtr                = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
+      using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
+      auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
       fProxiedPtr->IncrChildrenCount();
       df->Book(FilterPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
@@ -136,7 +148,6 @@ public:
       return Filter(f, BranchNames_t{bn});
    }
 
-
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
    /// \param[in] expression The filter expression in C++
@@ -146,118 +157,17 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>
-   Filter(const std::string &expression, const std::string& name = "")
+   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(const std::string &expression,
+                                                                  const std::string &name = "")
    {
-
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       auto branches = tree->GetListOfBranches();
-
-      // Check what branches and temporary branches are used in the expression
-      // To help matching the regex
-      std::string paddedExpr = " " + expression + " ";
-      int paddedExprLen = paddedExpr.size();
-      static const std::string regexBit("[^a-zA-Z0-9_]");
-      std::vector<const char*> usedBranches;
-      for (auto bro : *branches) {
-         auto brName = bro->GetName();
-         std::string bNameRegexContent = regexBit + brName + regexBit;
-         TRegexp bNameRegex(bNameRegexContent.c_str());
-         if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
-            usedBranches.emplace_back(brName);
-         }
-      }
-      for (auto brName : df->GetTmpBranches()) {
-         std::string bNameRegexContent = regexBit + brName + regexBit;
-         TRegexp bNameRegex(bNameRegexContent.c_str());
-         if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
-            usedBranches.emplace_back(brName.c_str());
-         }
-      }
-
-      auto exprNeedsVariables = !usedBranches.empty();
-
-      // Move to the preparation of the jitting
-      // We put all of the jitted entities in a namespace called
-      // __tdf_filter_N, where N is a monotonically increasing index.
-      TInterpreter::EErrorCode interpErrCode;
-      std::vector<std::string> usedBranchesTypes;
-      std::stringstream ss;
-      static unsigned int iFilter = 0U;
-      ss << "__tdf_filter_" << iFilter++;
-      const auto nsName = ss.str();
-      ss.str("");
-
-      if (exprNeedsVariables) {
-         // Declare a namespace and inside it the variables in the cut expression
-         ss << "namespace " << nsName;
-         ss << " {\n";
-         for (auto brName : usedBranches) {
-            auto brTypeName =
-               ROOT::Internal::ColumnName2ColumnTypeName(brName, *df->GetTree(), df->GetBookedBranch(brName));
-            ss << brTypeName << " " << brName << ";\n";
-            usedBranchesTypes.emplace_back(brTypeName);
-         }
-         ss << "}";
-         auto variableDeclarations = ss.str();
-         ss.str("");
-         // We need ProcessLine to trigger auto{parsing,loading} where needed
-         gInterpreter->ProcessLine(variableDeclarations.c_str(), &interpErrCode);
-         if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-            std::string msg = "Cannot declare these variables ";
-            msg += " ";
-            msg += variableDeclarations;
-            if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-               msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
-            }
-            throw std::runtime_error(msg);
-         }
-      }
-
-      // Declare within the same namespace, the expression to make sure it
-      // is proper C++
-      ss << "namespace "<< nsName << "{ auto res = " << expression << ";}\n";
-      // Headers must have been parsed and libraries loaded: we can use Declare
-      if (!gInterpreter->Declare(ss.str().c_str())) {
-         std::string msg = "Cannot interpret this expression: ";
-         msg += " ";
-         msg += ss.str();
-         throw std::runtime_error(msg);
-      }
-
-
-      // Now we build the lambda and we invoke Filter with it in the jitted world
-      ss.str("");
-      ss << "[](";
-      for (unsigned int i=0 ; i<usedBranchesTypes.size(); ++i) {
-         // We pass by reference to avoid expensive copies
-         ss << usedBranchesTypes[i] << "& " << usedBranches[i] << ", ";
-      }
-      if (!usedBranchesTypes.empty()) ss.seekp(-2,ss.cur);
-      ss << "){ return " << expression << ";}";
-      auto filterLambda = ss.str();
-
-      ss.str("");
-      ss << "((" << GetNodeTypeName() << "*)" << this << ")->Filter(" << filterLambda << ", {";
-      for (auto brName : usedBranches) {
-         ss << "\"" << brName << "\", ";
-      }
-      if (exprNeedsVariables) ss.seekp(-2,ss.cur); // remove the last ",
-      ss << "}, \"" << name << "\");";
-
-      auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
-      if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
-         std::string msg = "Cannot interpret the invocation to Filter: ";
-            msg += " ";
-            msg += ss.str();
-            if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-               msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
-            }
-            throw std::runtime_error(msg);
-      }
-
-      return *(TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>*) retVal;
+      auto tmpBranches = fProxiedPtr->GetTmpBranches();
+      auto tmpBookedBranches = df->GetBookedBranches();
+      auto retVal = ROOT::Internal::InterpretCall(this, "Filter", GetNodeTypeName(), name, expression, branches,
+                                                  tmpBranches, tmpBookedBranches, tree);
+      return *(TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> *)retVal;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -281,21 +191,43 @@ public:
    ///
    /// An exception is thrown if the name of the new branch is already in use
    /// for another branch in the TTree.
-   template <typename F>
+   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> AddColumn(const std::string &name, F expression,
                                                                      const BranchNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
-      const BranchNames_t &defBl    = df->GetDefaultBranches();
-      auto                 nArgs    = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
+      const BranchNames_t &defBl = df->GetDefaultBranches();
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
-      using DFB_t                   = ROOT::Detail::TDataFrameBranch<F, Proxied>;
-      auto BranchPtr                = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
+      using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
+      auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
       fProxiedPtr->IncrChildrenCount();
       df->Book(BranchPtr);
       TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a temporary branch
+   /// \param[in] name The name of the temporary branch.
+   /// \param[in] expression An expression in C++ which represents the temporary value
+   ///
+   /// The expression is just in time compiled and used to produce new values. The
+   /// variable names to be used inside are the names of the branches. Only
+   /// valid C++ is accepted.
+   /// Refer to the first overload of this method for the full documentation.
+   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> AddColumn(const std::string &name,
+                                                                     const std::string &expression)
+   {
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      auto branches = tree->GetListOfBranches();
+      auto tmpBranches = fProxiedPtr->GetTmpBranches();
+      auto tmpBookedBranches = df->GetBookedBranches();
+      auto retVal = ROOT::Internal::InterpretCall(this, "AddColumn", GetNodeTypeName(), name, expression, branches,
+                                                  tmpBranches, tmpBookedBranches, tree);
+      return *(TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> *)retVal;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -314,7 +246,7 @@ public:
       if (ROOT::IsImplicitMTEnabled())
          throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
 
-      auto df       = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       using Range_t = ROOT::Detail::TDataFrameRange<Proxied>;
       auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
       fProxiedPtr->IncrChildrenCount();
@@ -328,10 +260,7 @@ public:
    /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
    ///
    /// See the other Range overload for a detailed description.
-   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int stop)
-   {
-      return Range(0, stop, 1);
-   }
+   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int stop) { return Range(0, stop, 1); }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function on each entry (*instant action*)
@@ -349,7 +278,7 @@ public:
    {
       namespace IU = ROOT::Internal::TDFTraitsUtils;
       using Args_t = typename IU::TFunctionTraits<decltype(f)>::ArgsNoDecay_t;
-      using Ret_t  = typename IU::TFunctionTraits<decltype(f)>::Ret_t;
+      using Ret_t = typename IU::TFunctionTraits<decltype(f)>::Ret_t;
       ForeachSlot(IU::AddSlotParameter<Ret_t>(f, Args_t()), bl);
    }
 
@@ -372,12 +301,12 @@ public:
    template <typename F>
    void ForeachSlot(F f, const BranchNames_t &bl = {})
    {
-      auto                 df       = GetDataFrameChecked();
-      const BranchNames_t &defBl    = df->GetDefaultBranches();
-      auto                 nArgs    = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
+      auto df = GetDataFrameChecked();
+      const BranchNames_t &defBl = df->GetDefaultBranches();
+      auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs - 1, bl, defBl);
-      using Op_t                    = ROOT::Internal::Operations::ForeachSlotOperation<F>;
-      using DFA_t                   = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      using Op_t = ROOT::Internal::Operations::ForeachSlotOperation<F>;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
       df->Run();
@@ -421,12 +350,12 @@ public:
    {
       using Args_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
       ROOT::Internal::CheckReduce(f, Args_t());
-      auto         df        = GetDataFrameChecked();
-      unsigned int nSlots    = df->GetNSlots();
-      auto         bl        = GetBranchNames<T>({branchName}, "reduce branch values");
-      auto         redObjPtr = std::make_shared<T>(initValue);
-      using Op_t             = ROOT::Internal::Operations::ReduceOperation<F, T>;
-      using DFA_t            = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      auto df = GetDataFrameChecked();
+      unsigned int nSlots = df->GetNSlots();
+      auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
+      auto redObjPtr = std::make_shared<T>(initValue);
+      using Op_t = ROOT::Internal::Operations::ReduceOperation<F, T>;
+      using DFA_t = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
       return ROOT::Detail::MakeActionResultProxy(redObjPtr, df);
@@ -439,11 +368,11 @@ public:
    /// booked but not executed. See TActionResultProxy documentation.
    TActionResultProxy<unsigned int> Count()
    {
-      auto         df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      auto         cSPtr  = std::make_shared<unsigned int>(0);
-      using Op_t          = ROOT::Internal::Operations::CountOperation;
-      using DFA_t         = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      auto cSPtr = std::make_shared<unsigned int>(0);
+      using Op_t = ROOT::Internal::Operations::CountOperation;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), BranchNames_t({}), *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
       return ROOT::Detail::MakeActionResultProxy(cSPtr, df);
@@ -460,12 +389,12 @@ public:
    template <typename T, typename COLL = std::vector<T>>
    TActionResultProxy<COLL> Take(const std::string &branchName = "")
    {
-      auto         df        = GetDataFrameChecked();
-      unsigned int nSlots    = df->GetNSlots();
-      auto         bl        = GetBranchNames<T>({branchName}, "get the values of the branch");
-      auto         valuesPtr = std::make_shared<COLL>();
-      using Op_t             = ROOT::Internal::Operations::TakeOperation<T, COLL>;
-      using DFA_t            = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
+      auto df = GetDataFrameChecked();
+      unsigned int nSlots = df->GetNSlots();
+      auto bl = GetBranchNames<T>({branchName}, "get the values of the branch");
+      auto valuesPtr = std::make_shared<COLL>();
+      using Op_t = ROOT::Internal::Operations::TakeOperation<T, COLL>;
+      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
       return ROOT::Detail::MakeActionResultProxy(valuesPtr, df);
@@ -489,7 +418,7 @@ public:
                                       const std::string &weightBranchName = "")
    {
       auto bl = GetBranchNames<T, W>({valBranchName, weightBranchName}, "fill the histogram");
-      auto h  = std::make_shared<::TH1F>(model);
+      auto h = std::make_shared<::TH1F>(model);
       return Histo1DImpl<T, W>((W *)nullptr, bl, h);
    }
 
@@ -515,8 +444,8 @@ public:
    TActionResultProxy<::TH1F> Histo1D(const std::string &valBranchName = "", int nBins = 128, double minVal = 0.,
                                       double maxVal = 0., const std::string &weightBranchName = "")
    {
-      auto   bl     = GetBranchNames<T, W>({valBranchName, weightBranchName}, "fill the histogram");
-      auto   blSize = bl.size();
+      auto bl = GetBranchNames<T, W>({valBranchName, weightBranchName}, "fill the histogram");
+      auto blSize = bl.size();
       ::TH1F h("", "", nBins, minVal, maxVal);
       if (minVal == maxVal) {
          ROOT::Internal::TDFV7Utils::Histo<::TH1F>::SetCanExtendAllAxes(h);
@@ -568,10 +497,10 @@ public:
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH2F>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto bl     = GetBranchNames<B0, B1>({b0BranchName, b1BranchName}, "fill the histogram");
-      using Op_t  = ROOT::Internal::Operations::FillTOOperation<::TH2F>;
+      auto bl = GetBranchNames<B0, B1>({b0BranchName, b1BranchName}, "fill the histogram");
+      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH2F>;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -601,11 +530,11 @@ public:
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH2F>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto bl    = GetBranchNames<B0, B1, W>({b0BranchName, b1BranchName, wBranchName}, "fill the histogram");
+      auto bl = GetBranchNames<B0, B1, W>({b0BranchName, b1BranchName, wBranchName}, "fill the histogram");
       using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH2F>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, W>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -641,7 +570,7 @@ public:
       using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH3F>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, B2>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -679,7 +608,7 @@ public:
       using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH3F>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, B2, W>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -707,10 +636,10 @@ public:
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
-      auto bl     = GetBranchNames<B0, B1>({b0BranchName, b1BranchName}, "fill the profile");
-      using Op_t  = ROOT::Internal::Operations::FillTOOperation<::TProfile>;
+      auto bl = GetBranchNames<B0, B1>({b0BranchName, b1BranchName}, "fill the profile");
+      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TProfile>;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -740,11 +669,11 @@ public:
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
-      auto bl    = GetBranchNames<B0, B1, W>({b0BranchName, b1BranchName, wBranchName}, "fill the profile");
+      auto bl = GetBranchNames<B0, B1, W>({b0BranchName, b1BranchName, wBranchName}, "fill the profile");
       using Op_t = ROOT::Internal::Operations::FillTOOperation<::TProfile>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, W>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -772,10 +701,10 @@ public:
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto bl     = GetBranchNames<B0, B1>({b0BranchName, b1BranchName}, "fill the profile");
-      using Op_t  = ROOT::Internal::Operations::FillTOOperation<::TProfile2D>;
+      auto bl = GetBranchNames<B0, B1>({b0BranchName, b1BranchName}, "fill the profile");
+      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TProfile2D>;
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -805,11 +734,11 @@ public:
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto bl    = GetBranchNames<B0, B1, W>({b0BranchName, b1BranchName, wBranchName}, "fill the profile");
+      auto bl = GetBranchNames<B0, B1, W>({b0BranchName, b1BranchName, wBranchName}, "fill the profile");
       using Op_t = ROOT::Internal::Operations::FillTOOperation<::TProfile2D>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, W>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -838,7 +767,7 @@ public:
       using Op_t = ROOT::Internal::Operations::FillTOOperation<T>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BRANCHTYPES...>>;
-      auto df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto nSlots = df->GetNSlots();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -857,7 +786,7 @@ public:
    template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<double> Min(const std::string &branchName = "")
    {
-      auto bl   = GetBranchNames<T>({branchName}, "calculate the minimum");
+      auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
       auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
       return CreateAction<ROOT::Internal::ActionTypes::Min>(bl, minV, (T *)(nullptr));
    }
@@ -874,7 +803,7 @@ public:
    template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<double> Max(const std::string &branchName = "")
    {
-      auto bl   = GetBranchNames<T>({branchName}, "calculate the maximum");
+      auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
       auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
       return CreateAction<ROOT::Internal::ActionTypes::Max>(bl, maxV, (T *)(nullptr));
    }
@@ -891,7 +820,7 @@ public:
    template <typename T = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<double> Mean(const std::string &branchName = "")
    {
-      auto bl    = GetBranchNames<T>({branchName}, "calculate the mean");
+      auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
       auto meanV = std::make_shared<double>(0);
       return CreateAction<ROOT::Internal::ActionTypes::Mean>(bl, meanV, (T *)(nullptr));
    }
@@ -950,15 +879,15 @@ private:
    {
       // weighted histograms never need to do type guessing, we can build
       // the action here
-      auto df            = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
-      auto nSlots        = df->GetNSlots();
+      auto nSlots = df->GetNSlots();
       if (hasAxisLimits) {
-         using Op_t  = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
+         using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
          using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X, W>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       } else {
-         using Op_t  = ROOT::Internal::Operations::FillOperation;
+         using Op_t = ROOT::Internal::Operations::FillOperation;
          using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X, W>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
@@ -971,7 +900,7 @@ private:
    TActionResultProxy<::TH1F> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h,
                                            unsigned int nSlots, ROOT::Internal::ActionTypes::Histo1D *)
    {
-      auto df            = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
 
       if (hasAxisLimits) {
@@ -1027,10 +956,10 @@ private:
 
    // Type was specified by the user, no need to guess it
    template <typename ActionType, typename BranchType, typename ActionResultType>
-   TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &                    bl,
+   TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
                                                      const std::shared_ptr<ActionResultType> &r, BranchType *)
    {
-      auto         df     = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       auto resProxy = BuildAndBook<BranchType>(bl, r, nSlots, (ActionType *)nullptr);
       fProxiedPtr->IncrChildrenCount();
@@ -1039,52 +968,16 @@ private:
 
    // User did not specify type, do type guessing
    template <typename ActionType, typename ActionResultType>
-   TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &                    bl,
+   TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
                                                      const std::shared_ptr<ActionResultType> &r,
                                                      ROOT::Detail::TDataFrameGuessedType *)
    {
-      gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
-      auto        df                   = GetDataFrameChecked();
-      const auto &theBranchName        = bl[0];
-      const auto  theBranchTypeName =
-         ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *df->GetTree(), df->GetBookedBranch(theBranchName));
-      if (theBranchTypeName.empty()) {
-         std::string exceptionText = "The type of column ";
-         exceptionText += theBranchName;
-         exceptionText += " could not be guessed. Please specify one.";
-         throw std::runtime_error(exceptionText.c_str());
-      }
-      auto actionResultTypeClass = TClass::GetClass(typeid(std::shared_ptr<ActionResultType>));
-      if (!actionResultTypeClass) {
-         std::string exceptionText = "An error occurred while inferring the result type of the operation on column ";
-         exceptionText += theBranchName;
-         exceptionText += ".";
-         throw std::runtime_error(exceptionText.c_str());
-      }
-      const auto actionResultTypeName = actionResultTypeClass->GetName();
-      auto actionTypeClass = TClass::GetClass(typeid(ActionType));
-      if(!actionTypeClass) {
-         std::string exceptionText = "An error occurred while inferring the action type of the operation on column ";
-         exceptionText += theBranchName;
-         exceptionText += ".";
-         throw std::runtime_error(exceptionText.c_str());
-      }
-      const auto actionTypeName = actionTypeClass->GetName();
-      std::stringstream createAction_str;
-
-      createAction_str << "ROOT::Internal::CallCreateAction<" << GetNodeTypeName() << ", " << actionTypeName << ", "
-                       << theBranchTypeName << ", " << actionResultTypeName << "::element_type>("
-                       << "(" << GetNodeTypeName() << "*)" << this << ", "
-                       << "*(ROOT::BranchNames_t*)" << &bl << ", "
-                       << "*(" << actionResultTypeName << "*)" << &r << ", "
-                       << "nullptr);";
-      auto retVal = gInterpreter->ProcessLine(createAction_str.str().c_str());
-      if (!retVal) {
-         std::string exceptionText = "An error occurred while jitting this action ";
-         exceptionText += createAction_str.str();
-         exceptionText += ".";
-         throw std::runtime_error(exceptionText.c_str());
-      }
+      auto df = GetDataFrameChecked();
+      const auto &theBranchName = bl[0];
+      auto bbase = df->GetBookedBranch(theBranchName);
+      auto tree = df->GetTree();
+      auto retVal = ROOT::Internal::CreateActionGuessed(
+         bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), &r, tree, bbase);
       return *(TActionResultProxy<ActionResultType> *)retVal;
    }
 
@@ -1101,9 +994,9 @@ protected:
 
    const BranchNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, const std::string &actionNameForErr)
    {
-      auto                 df              = GetDataFrameChecked();
+      auto df = GetDataFrameChecked();
       const BranchNames_t &defaultBranches = df->GetDefaultBranches();
-      const auto           dBSize          = defaultBranches.size();
+      const auto dBSize = defaultBranches.size();
       if (nExpectedBranches > dBSize) {
          std::string msg("Trying to deduce the branches from the default list in order to ");
          msg += actionNameForErr;
@@ -1132,7 +1025,7 @@ protected:
    {
    }
 
-   std::shared_ptr<Proxied>                    fProxiedPtr;
+   std::shared_ptr<Proxied> fProxiedPtr;
    std::weak_ptr<ROOT::Detail::TDataFrameImpl> fImplWeakPtr;
 };
 

@@ -118,7 +118,7 @@ ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guideli
 ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GSL (default no)")
 ROOT_BUILD_OPTION(hdfs ON "HDFS support; requires libhdfs from HDFS >= 0.19.1")
 ROOT_BUILD_OPTION(http OFF "HTTP Server support")
-ROOT_BUILD_OPTION(imt OFF "Implicit multi-threading support")
+ROOT_BUILD_OPTION(imt ON "Implicit multi-threading support")
 ROOT_BUILD_OPTION(jemalloc OFF "Using the jemalloc allocator")
 ROOT_BUILD_OPTION(krb5 ON "Kerberos5 support, requires Kerberos libs")
 ROOT_BUILD_OPTION(ldap ON "LDAP support, requires (Open)LDAP libs")

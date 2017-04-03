@@ -1500,24 +1500,6 @@ namespace {
       return 0;
    }
 
-   bool HasScope(const std::string &name)
-   {
-      // return true if the type name has a scope in it.
-
-      for(size_t i = 0, level = 0; i<name.length(); ++i) {
-         switch (name[i]) {
-            case '<': ++level; break;
-            case '>': --level; break;
-            case ':': if (level == 0) {
-               // we encountered a scope not within a template
-               // parameter.
-               return true;
-            }
-         }
-      } // for each in name
-      return false;
-   }
-
    TClass *FixCollectionV5(TClass *context, TClass *oldClass, TClass *newClass)
    {
       assert(oldClass->GetCollectionProxy() && newClass->GetCollectionProxy());
@@ -1564,10 +1546,10 @@ namespace {
             TClass *secondAltCl = secondOldCl;
             std::string firstNewName;
             std::string secondNewName;
-            if (firstNewCl && !HasScope(inside[1])) {
+            if (firstNewCl && !firstOldCl) {
                firstAltCl = FindAlternate(context, inside[1], firstNewName);
             }
-            if (secondNewCl && !HasScope(inside[2])) {
+            if (secondNewCl && !secondOldCl) {
                secondAltCl = FindAlternate(context, inside[2], secondNewName);
             }
             if ((firstNewCl && firstAltCl != firstOldCl) ||
@@ -1601,12 +1583,6 @@ namespace {
          std::vector<std::string> inside;
          int nestedLoc;
          TClassEdit::GetSplit( oldClass->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
-
-         // Does the type already have a scope, in which case,
-         // (at least for now), let's assume it is already fine.
-         if (HasScope(inside[1])) {
-            return oldClass;
-         }
 
          // Now let's if we can find this missing type.
          std::string newName;

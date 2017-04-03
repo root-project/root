@@ -1215,6 +1215,7 @@
          if (!elem) return false;
          if (elem.fName !== match_name) return false;
          if (elem.fType === branch.fStreamerType) return true;
+         if ((elem.fType === JSROOT.IO.kBool) && (branch.fStreamerType === JSROOT.IO.kUChar)) return true;
          if (((branch.fStreamerType===JSROOT.IO.kSTL) || (branch.fStreamerType===JSROOT.IO.kSTL + JSROOT.IO.kOffsetL) ||
               (branch.fStreamerType===JSROOT.IO.kSTLp) || (branch.fStreamerType===JSROOT.IO.kSTLp + JSROOT.IO.kOffsetL))
                  && (elem.fType === JSROOT.IO.kStreamer)) return true;

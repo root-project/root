@@ -18,7 +18,7 @@
             'jqueryui-mousewheel'  : dir+'jquery.mousewheel.min',
             'jqueryui-touch-punch' : dir+'touch-punch.min',
             'rawinflate'           : dir+'rawinflate.min',
-            'MathJax'              : 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
+            'MathJax'              : 'https://root.cern/js/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
             'saveSvgAsPng'         : dir+'saveSvgAsPng.min',
             'dat.gui'              : dir+'dat.gui.min',
             'threejs'              : dir+'three.min',
@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "5.1.0 23/02/2017";
+   JSROOT.version = "5.1.1 23/03/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -1017,7 +1017,7 @@
 
       if (kind.indexOf("mathjax;")>=0) {
          if (typeof MathJax == 'undefined') {
-            mainfiles += (use_bower ? "###MathJax/MathJax.js" : "https://cdn.mathjax.org/mathjax/latest/MathJax.js") +
+            mainfiles += (use_bower ? "###MathJax/MathJax.js" : "https://root.cern/js/mathjax/latest/MathJax.js") +
                          "?config=TeX-AMS-MML_SVG," + jsroot.source_dir + "scripts/mathjax_config.js;";
          }
          if (jsroot.gStyle.MathJax == 0) jsroot.gStyle.MathJax = 1;

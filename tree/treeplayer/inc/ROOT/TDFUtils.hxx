@@ -47,41 +47,41 @@ struct TTypeList {
 // extract parameter types from a callable object
 template <typename T>
 struct TFunctionTraits {
-   using Args_t        = typename TFunctionTraits<decltype(&T::operator())>::Args_t;
+   using Args_t = typename TFunctionTraits<decltype(&T::operator())>::Args_t;
    using ArgsNoDecay_t = typename TFunctionTraits<decltype(&T::operator())>::ArgsNoDecay_t;
-   using Ret_t         = typename TFunctionTraits<decltype(&T::operator())>::Ret_t;
+   using Ret_t = typename TFunctionTraits<decltype(&T::operator())>::Ret_t;
 };
 
 // lambdas and std::function
 template <typename R, typename T, typename... Args>
 struct TFunctionTraits<R (T::*)(Args...) const> {
-   using Args_t        = TTypeList<typename std::decay<Args>::type...>;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
    using ArgsNoDecay_t = TTypeList<Args...>;
-   using Ret_t         = R;
+   using Ret_t = R;
 };
 
 // mutable lambdas and functor classes
 template <typename R, typename T, typename... Args>
 struct TFunctionTraits<R (T::*)(Args...)> {
-   using Args_t        = TTypeList<typename std::decay<Args>::type...>;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
    using ArgsNoDecay_t = TTypeList<Args...>;
-   using Ret_t         = R;
+   using Ret_t = R;
 };
 
 // function pointers
 template <typename R, typename... Args>
 struct TFunctionTraits<R (*)(Args...)> {
-   using Args_t        = TTypeList<typename std::decay<Args>::type...>;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
    using ArgsNoDecay_t = TTypeList<Args...>;
-   using Ret_t         = R;
+   using Ret_t = R;
 };
 
 // free functions
 template <typename R, typename... Args>
 struct TFunctionTraits<R(Args...)> {
-   using Args_t        = TTypeList<typename std::decay<Args>::type...>;
+   using Args_t = TTypeList<typename std::decay<Args>::type...>;
    using ArgsNoDecay_t = TTypeList<Args...>;
-   using Ret_t         = R;
+   using Ret_t = R;
 };
 
 // remove first type from TTypeList
@@ -126,9 +126,9 @@ struct TIsContainer {
                               decltype(cpt->end()) * = nullptr, typename A::iterator *pi = nullptr,
                               typename A::const_iterator *pci = nullptr)
    {
-      using It_t  = typename A::iterator;
+      using It_t = typename A::iterator;
       using CIt_t = typename A::const_iterator;
-      using V_t   = typename A::value_type;
+      using V_t = typename A::value_type;
       return std::is_same<Test_t, std::vector<bool>>::value ||
              (std::is_same<decltype(pt->begin()), It_t>::value && std::is_same<decltype(pt->end()), It_t>::value &&
               std::is_same<decltype(cpt->begin()), CIt_t>::value && std::is_same<decltype(cpt->end()), CIt_t>::value &&
@@ -199,7 +199,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r,
    // branch is a temporary branch created with AddColumn, false if they are
    // actual branches present in the TTree.
    std::array<bool, sizeof...(S)> isTmpColumn;
-   for (auto i       = 0u; i < isTmpColumn.size(); ++i)
+   for (auto i = 0u; i < isTmpColumn.size(); ++i)
       isTmpColumn[i] = std::find(tmpbn.begin(), tmpbn.end(), bn.at(i)) != tmpbn.end();
 
    // hack to expand a parameter pack without c++17 fold expressions.

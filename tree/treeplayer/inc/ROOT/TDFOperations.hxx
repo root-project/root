@@ -31,7 +31,7 @@ namespace Operations {
 
 using namespace Internal::TDFTraitsUtils;
 using Count_t = unsigned long;
-using Hist_t  = ::TH1F;
+using Hist_t = ::TH1F;
 
 template <typename F>
 class ForeachSlotOperation {
@@ -54,7 +54,7 @@ public:
 
 class CountOperation {
    std::shared_ptr<unsigned int> fResultCount;
-   std::vector<Count_t>          fCounts;
+   std::vector<Count_t> fCounts;
 
 public:
    using BranchTypes_t = TTypeList<>;
@@ -66,16 +66,16 @@ public:
 class FillOperation {
    // this sets a total initial size of 16 MB for the buffers (can increase)
    static constexpr unsigned int fgTotalBufSize = 2097152;
-   using BufEl_t                                = double;
-   using Buf_t                                  = std::vector<BufEl_t>;
+   using BufEl_t = double;
+   using Buf_t = std::vector<BufEl_t>;
 
-   std::vector<Buf_t>      fBuffers;
-   std::vector<Buf_t>      fWBuffers;
+   std::vector<Buf_t> fBuffers;
+   std::vector<Buf_t> fWBuffers;
    std::shared_ptr<Hist_t> fResultHist;
-   unsigned int            fNSlots;
-   unsigned int            fBufSize;
-   Buf_t                   fMin;
-   Buf_t                   fMax;
+   unsigned int fNSlots;
+   unsigned int fBufSize;
+   Buf_t fMin;
+   Buf_t fMax;
 
    void UpdateMinMax(unsigned int slot, double v);
 
@@ -178,9 +178,9 @@ public:
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
-      auto       x0sIt  = std::begin(x0s);
+      auto x0sIt = std::begin(x0s);
       const auto x0sEnd = std::end(x0s);
-      auto       x1sIt  = std::begin(x1s);
+      auto x1sIt = std::begin(x1s);
       for (; x0sIt != x0sEnd; x0sIt++, x1sIt++) {
          thisSlotH->Fill(*x0sIt, *x1sIt); // TODO: Can be optimised in case T == vector<double>
       }
@@ -195,10 +195,10 @@ public:
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
-      auto       x0sIt  = std::begin(x0s);
+      auto x0sIt = std::begin(x0s);
       const auto x0sEnd = std::end(x0s);
-      auto       x1sIt  = std::begin(x1s);
-      auto       x2sIt  = std::begin(x2s);
+      auto x1sIt = std::begin(x1s);
+      auto x2sIt = std::begin(x2s);
       for (; x0sIt != x0sEnd; x0sIt++, x1sIt++, x2sIt++) {
          thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt); // TODO: Can be optimised in case T == vector<double>
       }
@@ -213,11 +213,11 @@ public:
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size() && x1s.size() == x3s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
-      auto       x0sIt  = std::begin(x0s);
+      auto x0sIt = std::begin(x0s);
       const auto x0sEnd = std::end(x0s);
-      auto       x1sIt  = std::begin(x1s);
-      auto       x2sIt  = std::begin(x2s);
-      auto       x3sIt  = std::begin(x3s);
+      auto x1sIt = std::begin(x1s);
+      auto x2sIt = std::begin(x2s);
+      auto x3sIt = std::begin(x3s);
       for (; x0sIt != x0sEnd; x0sIt++, x1sIt++, x2sIt++, x3sIt++) {
          thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt, *x3sIt); // TODO: Can be optimised in case T == vector<double>
       }
@@ -299,7 +299,7 @@ public:
    {
       ULong64_t totSize = 0;
       for (auto &coll : fColls) totSize += coll->size();
-      auto       rColl = fColls[0];
+      auto rColl = fColls[0];
       rColl->reserve(totSize);
       for (unsigned int i = 1; i < fColls.size(); ++i) {
          auto &coll = fColls[i];
@@ -310,9 +310,9 @@ public:
 
 template <typename F, typename T>
 class ReduceOperation {
-   F                  fReduceFun;
+   F fReduceFun;
    std::shared_ptr<T> fReduceRes;
-   std::vector<T>     fReduceObjs;
+   std::vector<T> fReduceObjs;
 
 public:
    using BranchTypes_t = TTypeList<T>;
@@ -331,7 +331,7 @@ public:
 
 class MinOperation {
    std::shared_ptr<double> fResultMin;
-   std::vector<double>     fMins;
+   std::vector<double> fMins;
 
 public:
    MinOperation(const std::shared_ptr<double> &minVPtr, unsigned int nSlots);
@@ -354,7 +354,7 @@ extern template void MinOperation::Exec(unsigned int, const std::vector<unsigned
 
 class MaxOperation {
    std::shared_ptr<double> fResultMax;
-   std::vector<double>     fMaxs;
+   std::vector<double> fMaxs;
 
 public:
    MaxOperation(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots);
@@ -377,8 +377,8 @@ extern template void MaxOperation::Exec(unsigned int, const std::vector<unsigned
 
 class MeanOperation {
    std::shared_ptr<double> fResultMean;
-   std::vector<Count_t>    fCounts;
-   std::vector<double>     fSums;
+   std::vector<Count_t> fCounts;
+   std::vector<double> fSums;
 
 public:
    MeanOperation(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots);

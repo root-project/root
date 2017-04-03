@@ -1,9 +1,10 @@
 /// \file
 /// \ingroup tutorial_http
+/// JavaScript code for drawing TMsgList class from httptextlog.C macro
 ///
 /// \macro_code
 ///
-/// \author
+/// \author  Sergey Linev
 
 (function(){
 
@@ -87,6 +88,7 @@
       return painter.DrawingReady();
    }
 
+   // register draw function to JSROOT
    JSROOT.addDrawFunc({name:"TMsgList", icon:"img_text", make_request:MakeMsgListRequest, after_request:AfterMsgListRequest, func:DrawMsgList, opt:"list"});
 
 })();
