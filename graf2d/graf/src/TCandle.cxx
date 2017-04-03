@@ -283,8 +283,12 @@ void TCandle::Calculate() {
 
    // Check if the quantiles are valid, seems the under- and overflow is taken
    // into account as well, we need to ignore this!
-   if (quantiles[0] >= quantiles[4]) { delete [] quantiles; return;}
-   if (quantiles[1] >= quantiles[3]) { delete [] quantiles; return;}
+   if (quantiles[0] >= quantiles[4] ||
+       quantiles[1] >= quantiles[3]) {
+      delete [] prob;
+      delete [] quantiles;
+      return;
+   }
 
    // Definition of the candle in the standard case
    fBoxUp = quantiles[3];
