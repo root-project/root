@@ -2451,6 +2451,9 @@ void tgraph2d2()
 
    TestReport2();
    delete dt;
+   delete [] rx;
+   delete [] ry;
+   delete [] rz;
 }
 
 
@@ -2494,7 +2497,6 @@ void tgraph2d3()
    delete [] rx;
    delete [] ry;
    delete [] rz;
-
 }
 
 
