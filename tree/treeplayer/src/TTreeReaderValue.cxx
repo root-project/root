@@ -379,14 +379,19 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       if (fDict != branchActualType) {
          TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
          TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
-         if (dictdt && actualdt && dictdt->GetType()>0
-             && dictdt->GetType() == actualdt->GetType()) {
-            // Same numerical type but different TDataType, likely Long64_t
-         } else if ((actualdt->GetType() == kDouble32_t && dictdt->GetType() == kDouble_t)
-                    || (actualdt->GetType() == kFloat16_t && dictdt->GetType() == kFloat_t)) {
-            // Double32_t and Float16_t never "decay" to their underlying type;
-            // we need to identify them manually here (ROOT-8731).
-         } else {
+         bool complainAboutMismatch = true;
+         if (dictdt && actualdt) {
+            if (dictdt->GetType() > 0 && dictdt->GetType() == actualdt->GetType()) {
+               // Same numerical type but different TDataType, likely Long64_t
+               complainAboutMismatch = false;
+            } else if ((actualdt->GetType() == kDouble32_t && dictdt->GetType() == kDouble_t)
+                       || (actualdt->GetType() == kFloat16_t && dictdt->GetType() == kFloat_t)) {
+               // Double32_t and Float16_t never "decay" to their underlying type;
+               // we need to identify them manually here (ROOT-8731).
+               complainAboutMismatch = false;
+            }
+         }
+         if (complainAboutMismatch) {
             Error("TTreeReaderValueBase::CreateProxy()",
                   "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValue<%s>",
                   fBranchName.Data(), branchActualType->GetName(),
