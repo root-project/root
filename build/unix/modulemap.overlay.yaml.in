@@ -8,6 +8,13 @@
           'external-contents': '@CMAKE_BINARY_DIR@/include/stl.cppmap'
         }
       ]
+    },
+    { 'name': '/usr/include/', 'type': 'directory',
+      'contents': [
+        { 'name': 'module.modulemap', 'type': 'file',
+          'external-contents': '@CMAKE_BINARY_DIR@/include/libc.modulemap'
+        }
+      ]
     }
   ]
 }
