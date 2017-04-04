@@ -309,7 +309,6 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
 
    ymouse   = gPad->AbsPixeltoY(gPad->GetEventY());
    Double_t yspace   = (fY2 - fY1)/Double_t(nlines);
-   Double_t textsize = GetTextSize();
    Double_t y1,y,dy;
    Double_t ytext = fY2 + 0.5*yspace;
    Int_t valign;
