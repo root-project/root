@@ -183,7 +183,7 @@
 // tyoedef for floating types
 
 #pragma link C++ typedef ROOT::Math::XYVectorF;
-#pragma link C++ typedef ROOT::Math::Polar2DVectorF
+#pragma link C++ typedef ROOT::Math::Polar2DVectorF;
 
 #pragma link C++ typedef ROOT::Math::XYPointF;
 #pragma link C++ typedef ROOT::Math::Polar2DPointF;
