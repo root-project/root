@@ -514,6 +514,7 @@ Int_t AnalysePS(const TString &filename)
    }
    if (gVerbose==1) printf(">>>>>>>>> Number of characters found in %s: %d\n",filename.Data(),count);
    fclose(fp);
+   delete [] line;
    return count;
 }
 
