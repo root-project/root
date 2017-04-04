@@ -19,7 +19,7 @@ extern "C"
 using namespace ROOT::R;
 ClassImp(TRInterface)
 
-static ROOT::R::TRInterface *gR = NULL;
+static ROOT::R::TRInterface *gR = nullptr;
 static Bool_t statusEventLoop;
 
 TRInterface::TRInterface(const Int_t argc, const Char_t *argv[], const Bool_t loadRcpp, const Bool_t verbose,
@@ -55,6 +55,8 @@ TRInterface::~TRInterface()
 {
    statusEventLoop = kFALSE;
    if (th) delete th;
+   if (fR) delete fR;
+   if (gR == this) gR = nullptr;
 }
 
 //______________________________________________________________________________
