@@ -54,6 +54,9 @@ TCandle::TCandle()
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
+   fOption        = kNoOption;
+   fProj          = NULL;
+   fDatapoints    = NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
