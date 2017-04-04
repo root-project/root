@@ -483,8 +483,11 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
 Int_t FileSize (char *filename)
 {
    FileStat_t fs;
-   gSystem->GetPathInfo(filename, fs);
-   return (Int_t)fs.fSize;
+   if (!gSystem->GetPathInfo(filename, fs)) {
+      return (Int_t)fs.fSize;
+   } else {
+      return 0;
+   }
 }
 
 
