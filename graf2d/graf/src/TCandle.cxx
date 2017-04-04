@@ -56,7 +56,7 @@ TCandle::TCandle()
    fAxisMax       = 0.;
    fOption        = kNoOption;
    fProj          = NULL;
-   fDatapoints    = NULL;
+   fDatapoints    = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,8 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fLogY          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
-
+   fAxisMin       = 0.;
+   fAxisMax       = 0.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
