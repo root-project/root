@@ -90,6 +90,8 @@ std::unique_ptr<TTree> CreateTree() {
    data.fUArray = new float[2]{42., 43.};
    data.fUSize = 2;
    data.fVec = { 17., 18., 19., 20., 21., 22.};
+   data.fDouble32 = 17.;
+   data.fFloat16 = 44.;
    tree->Fill();
    tree->Fill();
    tree->ResetBranchAddresses();
@@ -104,6 +106,8 @@ TEST(TTreeReaderLeafs, LeafList) {
    TTreeReaderArray<double> arr(tr, "fArray");
    TTreeReaderArray<float> arrU(tr, "fUArray");
    TTreeReaderArray<double> vec(tr, "fVec");
+   TTreeReaderValue<Double32_t> d32(tr, "fDouble32");
+   TTreeReaderValue<Float16_t> f16(tr, "fFloat16");
 
    tr.Next();
    EXPECT_EQ(4u, arr.GetSize());
@@ -114,4 +118,7 @@ TEST(TTreeReaderLeafs, LeafList) {
    EXPECT_DOUBLE_EQ(19., vec[2]);
    EXPECT_DOUBLE_EQ(17., vec[0]);
    // T->Scan("fUArray") claims fUArray only has one instance per row.
+
+   EXPECT_FLOAT_EQ(17, *d32);
+   EXPECT_FLOAT_EQ(44, *f16);
 }
