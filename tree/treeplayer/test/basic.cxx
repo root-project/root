@@ -17,12 +17,17 @@ TTree* MakeTree() {
       int* y = nullptr;
    } yData;
    std::string str;
+   Double32_t Double32 = 12.;
+   Float16_t Float16 = -12.;
+
 
    TTree* tree = new TTree("T", "test tree");
    tree->Branch("one", &x, "x[3]/D");
    tree->Branch("two", &yData, "ny/i:y[ny]/I");
    tree->Branch("three", &z, "z");
    tree->Branch("str", &str);
+   tree->Branch("d32", &Double32);
+   tree->Branch("f16", &Float16);
 
    x[1] = 42.;
    yData.ny = 42;
@@ -266,4 +271,27 @@ TEST(TTreeReaderBasic, EntryListBeyondEnd) {
    EXPECT_FALSE(aReader.Next());
    EXPECT_EQ(1, aReader.GetCurrentEntry());
    EXPECT_EQ(TTreeReader::kEntryNotFound, aReader.GetEntryStatus());
+}
+
+
+TEST(TTreeReaderBasic, Values) {
+   TTree* tree = MakeTree();
+   TTreeReader tr(tree);
+   TTreeReaderArray<double> x(tr, "one.x");
+   TTreeReaderArray<int> y(tr, "two.y");
+   TTreeReaderValue<unsigned int> ny(tr, "two.ny");
+   TTreeReaderValue<std::string> str(tr, "str");
+   TTreeReaderValue<Double32_t> d32(tr, "d32");
+   TTreeReaderValue<Float16_t> f16(tr, "f16");
+
+   // Check values for first entry.
+   EXPECT_TRUE(tr.Next());
+
+   EXPECT_DOUBLE_EQ(42, x[1]);
+   EXPECT_EQ(42u, *ny);
+   // FAILS! Already in TLeafI, fNData == 42 (good!) but GetValue(0) == 0.
+   // EXPECT_EQ(17, y[0]);
+   EXPECT_STREQ("first", str->c_str());
+   EXPECT_FLOAT_EQ(12, *d32);
+   EXPECT_FLOAT_EQ(-12, *f16);
 }
