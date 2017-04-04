@@ -76,12 +76,14 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
 
 
 
-void WriteData() {
-   gInterpreter->ProcessLine("#include \"data.h\"");
+std::unique_ptr<TTree> CreateTree() {
+   TInterpreter::EErrorCode error = TInterpreter::kNoError;
+   gInterpreter->ProcessLine("#include \"data.h\"", &error);
+   if (error != TInterpreter::kNoError)
+      return {};
 
-   TFile fout("data.root", "RECREATE");
    Data data;
-   TTree* tree = new TTree("T", "test tree");
+   std::unique_ptr<TTree> tree(new TTree("T", "test tree"));
    tree->Branch("Data", &data);
    data.fArray = new double[4]{12., 13., 14., 15.};
    data.fSize = 4;
@@ -90,16 +92,15 @@ void WriteData() {
    data.fVec = { 17., 18., 19., 20., 21., 22.};
    tree->Fill();
    tree->Fill();
-   tree->Write();
+   tree->ResetBranchAddresses();
+   return tree;
 }
 
 TEST(TTreeReaderLeafs, LeafList) {
-   WriteData();
+   auto tree = CreateTree();
+   ASSERT_NE(nullptr, tree.get());
 
-   TFile fin("data.root");
-   TTree* tree = 0;
-   fin.GetObject("T", tree);
-   TTreeReader tr(tree);
+   TTreeReader tr(tree.get());
    TTreeReaderArray<double> arr(tr, "fArray");
    TTreeReaderArray<float> arrU(tr, "fUArray");
    TTreeReaderArray<double> vec(tr, "fVec");
