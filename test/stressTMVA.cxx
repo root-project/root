@@ -1646,7 +1646,7 @@ bool utFactory::operateSingleFactory(const char* factoryname, const char* opt)
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
    double ROCValue(0.);
-   if (auto theMethod = dynamic_cast<TMVA::MethodBase *>(factory->GetMethod(dataloader->GetName(), _methodTitle))){
+   if (auto theMethod = dynamic_cast<TMVA::MethodBase *>(factory->GetMethod(dataloader->GetName(), _methodTitle))) {
       ROCValue = theMethod->GetROCIntegral();
    }
    delete tree;
