@@ -389,10 +389,11 @@ Bool_t TH1Merger::BufferMerge() {
                h2->Fill(hist->fBuffer[3*i + 2], hist->fBuffer[3*i + 3],hist->fBuffer[3*i + 1] );
          }
          if (fH0->fDimension == 3) {
-            auto h3 = dynamic_cast<TH3*>(fH0);
-            R__ASSERT(h3); 
-            for (Int_t i = 0; i < nbentries; i++)
-               h3->Fill(hist->fBuffer[4*i + 2], hist->fBuffer[4*i + 3],hist->fBuffer[4*i + 4], hist->fBuffer[4*i + 1] );
+            if (auto h3 = dynamic_cast<TH3*>(fH0)){
+                  R__ASSERT(h3); 
+                  for (Int_t i = 0; i < nbentries; i++)
+                   h3->Fill(hist->fBuffer[4*i + 2], hist->fBuffer[4*i + 3],hist->fBuffer[4*i + 4], hist->fBuffer[4*i + 1] );
+            }
          }
          fInputList.Remove(hist);
       }
