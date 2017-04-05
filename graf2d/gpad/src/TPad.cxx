@@ -4514,10 +4514,12 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
 
       // Create a new SVG file
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname);
-      gVirtualPS->SetBit(kPrintingPS);
-      gVirtualPS->NewPage();
+      if (!gVirtualPS) {
+         gVirtualPS->SetName(psname);
+         gVirtualPS->Open(psname);
+         gVirtualPS->SetBit(kPrintingPS);
+         gVirtualPS->NewPage();
+      }
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
@@ -4553,13 +4555,14 @@ void TPad::Print(const char *filenam, Option_t *option)
          }
       }
 
-      // Create a new SVG file
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname);
-      gVirtualPS->SetBit(kPrintingPS);
-      gVirtualPS->NewPage();
+      // Create a new TeX file
+      if (!gVirtualPS) {
+         gVirtualPS->SetName(psname);
+         gVirtualPS->Open(psname);
+         gVirtualPS->SetBit(kPrintingPS);
+         gVirtualPS->NewPage();
+      }
       Paint();
-
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
       if (!gSystem->AccessPathName(psname)) Info("Print", "TeX file %s has been created", psname.Data());
