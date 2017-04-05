@@ -199,7 +199,7 @@ Bool_t TRInterface::Install(TString pkg, TString repos)
 void TRInterface::ProcessEventsLoop()
 {
    if (!statusEventLoop) {
-      th = new TThread([](void *args) {
+      th = new TThread([](void */*args*/) {
          while (kTRUE) {
             if (gR) { // in case global object was freed
                fd_set *fd;
