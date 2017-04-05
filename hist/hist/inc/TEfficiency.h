@@ -14,6 +14,9 @@
 
 #include "TAttMarker.h"
 
+#include "TFitResultPtr.h"
+
+
 class TCollection;
 class TF1;
 class TGraphAsymmErrors;
@@ -98,7 +101,7 @@ public:
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       void          FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
-      Int_t         Fit(TF1* f1,Option_t* opt="");
+      TFitResultPtr Fit(TF1* f1,Option_t* opt="");
       // use trick of -1 to return global parameters
       Double_t      GetBetaAlpha(Int_t bin = -1) const {return (fBeta_bin_params.size() > (UInt_t)bin) ? fBeta_bin_params[bin].first : fBeta_alpha;}
       Double_t      GetBetaBeta(Int_t bin =  -1) const {return (fBeta_bin_params.size() > (UInt_t)bin) ? fBeta_bin_params[bin].second : fBeta_beta;}

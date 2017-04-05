@@ -3902,6 +3902,8 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// file for reading through the file cache. The file will be downloaded to
 /// the cache and opened from there. If the download fails, it will be opened remotely.
 /// The file will be downloaded to the directory specified by SetCacheFileDir().
+///
+/// *The caller is responsible for deleting the pointer.*
 
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)

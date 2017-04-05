@@ -18,4 +18,10 @@
 #pragma link C++ class std::vector<ROOT::Math::RhoEtaPhiVector >+;
 #pragma link C++ class std::vector<ROOT::Math::RhoEtaPhiPoint >+;
 
+// for floating types 
+
+#pragma link C++ class std::vector<ROOT::Math::XYZVectorF >+;
+#pragma link C++ class std::vector<ROOT::Math::XYZPointF >+;
+#pragma link C++ class std::vector<ROOT::Math::XYZTVectorF >+;
+
 #endif       // endif Win32

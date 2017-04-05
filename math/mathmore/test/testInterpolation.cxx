@@ -33,6 +33,7 @@ void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false )
    Int_t i = 0;
    double xi =0.;
    Float_t xcoord[n], ycoord[n];
+
    for ( i = 0; i < 50; ++i) { 
       xi = 0.2*i;
       xcoord[i] = xi;

@@ -211,7 +211,9 @@ namespace ROOT {
          \param verbose default false
          \param interactive default true
          */
-         TRInterface(const int argc = 0, const char *argv[] = NULL, const bool loadRcpp = true, const bool verbose = false, const bool interactive = true);
+         TRInterface(const Int_t argc = 0, const Char_t *argv[] = NULL, const Bool_t loadRcpp = true,
+                     const Bool_t verbose = false, const Bool_t interactive = true);
+
       public:
          ~TRInterface();
 

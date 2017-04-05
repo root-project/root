@@ -432,9 +432,6 @@ if(python OR python3)
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
                     OUTPUT_VARIABLE PYTHON_VERSION)
     message(STATUS "Found Python interpreter version ${PYTHON_VERSION}")
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"
-                    OUTPUT_VARIABLE PYTHON_PREFIX)
-    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_PREFIX})
   endif()
   set(Python_ADDITIONAL_VERSIONS ${PYTHON_VERSION})
   find_package(PythonLibs)

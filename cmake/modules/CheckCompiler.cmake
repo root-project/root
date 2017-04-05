@@ -166,6 +166,18 @@ if(gnuinstall)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
 endif()
 
+#---Check if we use the new libstdc++ CXX11 ABI-----------------------------------------------------
+# Necessary to compile check_cxx_source_compiles this early
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(
+"
+#include <string>
+#if _GLIBCXX_USE_CXX11_ABI == 0
+  #error NOCXX11
+#endif
+int main() {}
+" GLIBCXX_USE_CXX11_ABI)
+
 #---Print the final compiler flags--------------------------------------------------------------------
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")

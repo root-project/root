@@ -114,7 +114,7 @@ Double_t TMVA::ResultsMulticlass::EstimatorFunction( std::vector<Double_t> & cut
    Float_t effTimesPur = eff*pur;
 
    Float_t toMinimize = std::numeric_limits<float>::max();
-   if( effTimesPur > 0 )
+   if (effTimesPur > std::numeric_limits<float>::min())
       toMinimize = 1./(effTimesPur); // we want to minimize 1/efficiency*purity
 
    fAchievableEff.at(fClassToOptimize) = eff;

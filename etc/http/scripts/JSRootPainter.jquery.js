@@ -1048,7 +1048,7 @@
             +'<input type="file" class="gui_localFile" accept=".root" style="display:none"/><output id="list" style="display:none"></output>'
             +'<input type="button" value="..." class="gui_fileBtn" style="min-width:3em;padding:3px;margin-left:5px;margin-right:5px;" title="select local file for reading"/><br/>'
             +'</div>'
-            +'<p id="gui_fileCORS"><small><a href="https://github.com/linev/jsroot/blob/master/docs/JSROOT.md#reading-root-files-from-other-servers">Read docu</a>'
+            +'<p id="gui_fileCORS"><small><a href="https://github.com/root-project/jsroot/blob/master/docs/JSROOT.md#reading-root-files-from-other-servers">Read docu</a>'
             +' how to open files from other servers.</small></p>'
             +'<div style="display:flex;flex-direction:row">'
             +'<input style="padding:3px;margin-right:5px;"'
@@ -1784,9 +1784,9 @@
          } else
          if (drag_ui && drag_ui.offset) {
             if (handle.vertical)
-               pos = (drag_ui.offset.top+2-$(this).parent().offset().top)/$(this).parent().innerHeight()*100;
+               pos = Math.round((drag_ui.offset.top+2-$(this).parent().offset().top)/$(this).parent().innerHeight()*100);
             else
-               pos = (drag_ui.offset.left+2-$(this).parent().offset().left)/$(this).parent().innerWidth()*100;
+               pos = Math.round((drag_ui.offset.left+2-$(this).parent().offset().left)/$(this).parent().innerWidth()*100);
          }
 
          var diff = handle.groups[id].position - pos;
@@ -1794,7 +1794,7 @@
          if (Math.abs(diff)<0.3) return; // if no significant change, do nothing
 
          // do not change if size too small
-         if (Math.min(handle.groups[id-1].size-diff, handle.groups[id].size + diff) < 5) return;
+         if (Math.min(handle.groups[id-1].size-diff, handle.groups[id].size+diff) < 5) return;
 
          handle.groups[id-1].size -= diff;
          handle.groups[id].size += diff;
@@ -1802,12 +1802,12 @@
 
          function SetGroupSize(prnt, grid) {
             var name = handle.vertical ? 'height' : 'width',
-                size = handle.groups[grid].size.toFixed(1)+'%';
+                size = handle.groups[grid].size+'%';
             prnt.children("[groupid='"+grid+"']").css(name, size)
                 .children(".jsroot_separator").css(name, size);
          }
 
-         $(this).css(handle.vertical ? 'top' : 'left', "calc("+pos.toFixed(1)+"% - 2px)");
+         $(this).css(handle.vertical ? 'top' : 'left', "calc("+pos+"% - 2px)");
 
          SetGroupSize($(this).parent(), id-1);
          SetGroupSize($(this).parent(), id);

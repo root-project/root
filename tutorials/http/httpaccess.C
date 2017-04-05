@@ -21,7 +21,7 @@
 ///
 /// \macro_code
 ///
-/// \author
+/// \author Sergey Linev
 
 #include "TH1.h"
 #include "TH2.h"

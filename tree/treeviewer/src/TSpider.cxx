@@ -1389,11 +1389,11 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
    }
    fPolyList->Delete();
 
-   Color_t lc;
-   Style_t lt;
-   Width_t lw;
-   Color_t fc;
-   Style_t fs;
+   Color_t lc = 1;
+   Style_t lt = 1;
+   Width_t lw = 1;
+   Color_t fc = 1;
+   Style_t fs = 0;
    if(fAverageSlices){
       lc = fAverageSlices[0]->GetLineColor();
       lt = fAverageSlices[0]->GetLineStyle();
@@ -1401,12 +1401,15 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
       fc = fAverageSlices[0]->GetFillColor();
       fs = fAverageSlices[0]->GetFillStyle();
    } else {
-      lc = fAveragePoly->GetLineColor();
-      lt = fAveragePoly->GetLineStyle();
-      lw = fAveragePoly->GetLineWidth();
-      fc = fAveragePoly->GetFillColor();
-      fs = fAveragePoly->GetFillStyle();
+      if (fAveragePoly) {
+         lc = fAveragePoly->GetLineColor();
+         lt = fAveragePoly->GetLineStyle();
+         lw = fAveragePoly->GetLineWidth();
+         fc = fAveragePoly->GetFillColor();
+         fs = fAveragePoly->GetFillStyle();
+      }
    }
+
    delete fPolyList;
    fPolyList = NULL;
    if(fAverageSlices){
@@ -1447,11 +1450,13 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
          fAverageSlices[ui]->SetFillStyle(fs);
       }
    } else {
-      fAveragePoly->SetLineColor(lc);
-      fAveragePoly->SetLineStyle(lt);
-      fAveragePoly->SetLineWidth(lw);
-      fAveragePoly->SetFillColor(fc);
-      fAveragePoly->SetFillStyle(fs);
+      if (fAveragePoly) {
+        fAveragePoly->SetLineColor(lc);
+        fAveragePoly->SetLineStyle(lt);
+        fAveragePoly->SetLineWidth(lw);
+        fAveragePoly->SetFillColor(fc);
+        fAveragePoly->SetFillStyle(fs);
+     }
    }
    if (fCanvas) {
       fCanvas->Modified();

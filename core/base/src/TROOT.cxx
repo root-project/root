@@ -503,8 +503,6 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
-   /// parallelisation mechanism.
    /// @param[in] numthreads Number of threads to use. If not specified or
    ///                       set to zero, the number of threads is automatically
    ///                       decided by the implementation. Any other value is

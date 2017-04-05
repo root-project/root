@@ -139,7 +139,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
       return -1;
    }
    if (gDebug > 3)
-      Info("GlobusAuthenticate", " Credential Handle is 0x%x",
+      Info("GlobusAuthenticate", " Credential Handle is %p",
            gGlbCredHandle);
 
    // Inquire credentials for subject name and convert it in human readable form ...
@@ -193,7 +193,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
          if (gDebug > 0)
             Error("GlobusAuthenticate",
                   "Length of Issuer name not send correctly: bytes sent: %d (tot len: %d)",
-                  bsnd - 1, strlen(buf));
+                  bsnd - 1, (int) strlen(buf));
          return 0;
       }
       // Now we send it to the server daemon
@@ -240,7 +240,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
                   "recv host subj: did not receive all the bytes"
                   " (recv: %d, due >%d)", brcv, retval);
                Error("GlobusAuthenticate", "recv host subj: (%d) %s",
-                  strlen(host_subj), host_subj);
+                  (int) strlen(host_subj), host_subj);
             }
             if (host_subj) delete[] host_subj;
             return 0;
@@ -262,7 +262,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
        0 ? (GSS_C_DELEG_FLAG | GSS_C_MUTUAL_FLAG) : GSS_C_MUTUAL_FLAG;
    if (gDebug > 3)
       Info("GlobusAuthenticate",
-           " gssReqFlags: %p, GlbCredentials: %p", gssReqFlags, gGlbCredHandle);
+           " gssReqFlags: 0x%x, GlbCredentials: %p", gssReqFlags, gGlbCredHandle);
 
    // Now we are ready to start negotiating with the Server
    if ((majStat =
@@ -417,7 +417,7 @@ int GlobusGetDelCred()
       return 1;
    } else if (gDebug > 3)
       Info("GlobusGetDelCred:",
-           "Globus Credentials successfully imported (0x%x)",
+           "Globus Credentials successfully imported (%p)",
            gGlbDelCredHandle);
 
    if (credential) delete[] credential;
@@ -494,7 +494,7 @@ Int_t GlobusGetLocalEnv(Int_t *localEnv, TString protocol)
             Info("GlobusGetLocalEnv",
                  "PROOF environment, called by the MASTER/SLAVE");
             Info("GlobusGetLocalEnv",
-                 "string with pointer to del cred is 0x%x",
+                 "string with pointer to del cred is %p",
                  gGlbDelCredHandle);
          }
          *localEnv = 2;
@@ -542,7 +542,7 @@ Int_t GlobusGetLocalEnv(Int_t *localEnv, TString protocol)
 Int_t GlobusNameFromCred(gss_cred_id_t cred, TString &subjName)
 {
    if (gDebug > 2)
-      Info("GlobusNamesFromCred", "Enter: Handle: 0x%p", cred);
+      Info("GlobusNamesFromCred", "Enter: Handle: %p", cred);
 
    // Inquire credentials for Subject name and convert it in human readable form ...
    OM_uint32 majStat = 0;
@@ -662,7 +662,7 @@ void GlobusCleanupShm()
             if ((rc == EINVAL) || (rc == EIDRM)) {
                if (gDebug > 3)
                   Info("GlobusCleanupShm:",
-                       "credentials shared memory segment %s"
+                       "credentials shared memory segment "
                        "already marked as destroyed");
             } else {
                Warning("GlobusCleanupShm:",
@@ -730,7 +730,7 @@ Int_t GlobusCheckSecContext(const char *subjName, gss_ctx_id_t ctx)
             theName[nameBuffer.length]= '\0';
             if (gDebug > 2)
                Info("GlobusCheckSecContext","with subject name: %s (%d)",
-                                             theName, nameBuffer.length);
+                                             theName, (int) nameBuffer.length);
             if (!strcmp(theName, subjName)) {
                if (gDebug > 2)
                   Info("GlobusCheckSecContext",
@@ -1010,7 +1010,7 @@ Int_t GlobusIssuerName(TString &issuerName)
          fn = Form("%s/.globus/usercert.pem",gSystem->HomeDirectory());
       if (gSystem->AccessPathName(fn, kReadPermission)) {
          emsg += fn;
-         Error("GlobusIssuerName", emsg.Data());
+         Error("GlobusIssuerName", "%s", emsg.Data());
          return 1;
       }
    }

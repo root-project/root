@@ -66,8 +66,8 @@ namespace TMVA {
       virtual void     MakeClass(const TString &classFileName = TString("")) const;  //required for model persistence
       using MethodBase::ReadWeightsFromStream;
       // the actual "weights"
-      virtual void AddWeightsXMLTo(void *parent) const {}        // = 0;
-      virtual void ReadWeightsFromXML(void *wghtnode) {}    // = 0;
+      virtual void AddWeightsXMLTo(void * /*parent*/) const {} // = 0;
+      virtual void ReadWeightsFromXML(void * /*weight*/) {} // = 0;
       virtual void ReadWeightsFromStream(std::istream &) {} //= 0;       // backward compatibility
 
       // signal/background classification response for all current set of data 

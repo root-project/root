@@ -1,7 +1,3 @@
-// SMatrix example of usage
-
-/**
-
 \page SMatrixDoc SMatrix Class Properties
 
 The template ROOT::Math::SMatrix class has 4 template parameters which define, at compile time, its properties. These are:
@@ -26,7 +22,8 @@ The following constructors are available to create a matrix:
 
 Here are some examples on how to create a matrix. We use _typedef's_ in the following examples to avoid the full C++ names for the matrix classes. Notice that for a general matrix the representation has the default value, ROOT::Math::MatRepStd, and it is not needed to be specified. Furtheremore, for a general square matrix, the number of column may be as well omitted.
 
-<pre>_// typedef definitions used in the following declarations_
+~~~ {.cpp}
+// typedef definitions used in the following declarations
 typedef ROOT::Math::SMatrix<double,3>                                       SMatrix33;
 typedef ROOT::Math::SMatrix<double,2>                                       SMatrix22;
 typedef ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<double,3> >    SMatrixSym3;
@@ -34,34 +31,38 @@ typedef ROOT::Math::SVector>double,2>                                       SVec
 typedef ROOT::Math::SVector>double,3>                                       SVector3;
 typedef ROOT::Math::SVector>double,6>                                       SVector6;
 
-SMatrix33   m0;                         _// create a zero 3x3 matrix_
-_// create an 3x3 identity matrix_
+SMatrix33   m0;                         // create a zero 3x3 matrix
+// create an 3x3 identity matrix
 SMatrix33   i = ROOT::Math::SMatrixIdentity();
-double   a[9] = {1,2,3,4,5,6,7,8,9};    _// input matrix data_
-SMatrix33   m(a,9);                     _// create a matrix using the a[] data_
-_// this will produce the 3x3 matrix
+double   a[9] = {1,2,3,4,5,6,7,8,9};    // input matrix data
+SMatrix33   m(a,9);                     // create a matrix using the a[] data
+// this will produce the 3x3 matrix
 //    (  1    2    3
 //       4    5    6
-//       7    8    9  )_
-</pre>
+//       7    8    9  )
+~~~
+
 
 Example to create a symmetric matrix from an _std::vector_:
 
-<pre>std::vector<double> v(6);
+~~~ {.cpp}
+std::vector<double> v(6);
 for (int i = 0; i<6; ++i) v[i] = double(i+1);
 SMatrixSym3  s(v.begin(),v.end())
-_// this will produce the symmetric  matrix
+// this will produce the symmetric  matrix
 //    (  1    2    4
 //       2    3    5
-//       4    5    6  )_
+//       4    5    6  )
 
-_// create a a general matrix from a symmetric matrix. The opposite will not compile_
+// create a a general matrix from a symmetric matrix. The opposite will not compile
 SMatrix33    m2 = s;
-</pre>
+~~~
+
 
 Example to create a symmetric matrix from a ROOT::Math::SVector contining the lower/upper data block:
 
-<pre>ROOT::Math::SVectorr<double, 6> v(1,2,3,4,5,6);
+~~~ {.cpp}
+ROOT::Math::SVectorr<double, 6> v(1,2,3,4,5,6);
 SMatrixSym3 s1(v);  // lower block (default)
 // this will produce the symmetric  matrix
 //    (  1    2    4
@@ -73,62 +74,70 @@ SMatrixSym3 s2(v,false);  // upper block
 //    (  1    2    3
 //       2    4    5
 //       3    5    6  )
-</pre>
+~~~
+
 
 ### Accessing and Setting Methods
 
 The matrix elements can be set using the _operator()(irow,icol)_, where irow and icol are the row and column indexes or by using the iterator interface. Notice that the indexes start from zero and not from one as in FORTRAN. All the matrix elements can be set also by using the ROOT::Math::SetElements function passing a generic iterator.
 The elements can be accessed by these same methods and also by using the ROOT::Math::SMatrix::apply function. The _apply(i)_ function has exactly the same behavior for general and symmetric matrices, in contrast to the iterator access methods which behave differently (it follows the data order).
 
-<pre>SMatrix33   m;
-m(0,0)  = 1;                          _ // set the element in first row and first column_
-*(m.**begin**()+1) = 2;                    _// set the second element (0,1)_
+~~~ {.cpp}
+SMatrix33   m;
+m(0,0)  = 1;                          // set the element in first row and first column
+*(m.**begin**()+1) = 2;                    // set the second element (0,1)
 double d[9]={1,2,3,4,5,6,7,8,9};
-m.SetElements(d,d+9);                  _// set the d[] values in m_
+m.SetElements(d,d+9);                  // set the d[] values in m
 
-double x = m(2,1);                     _// return the element in third row and first column_
-x = m.**apply**(7);                        _// return the 8-th element (row=2,col=1)_
-x = *(m.**begin**()+7);                    _// return the 8-th element (row=2,col=1)_
-_// symmetric matrices (note the difference in behavior between apply and the iterators)_
-x = *(m.**begin**()+4)                     _// return the element (row=2,col=1)._
-x = m.**apply**(7);                        _// returns again the (row=2,col=1) element_
-</pre>
+double x = m(2,1);                     // return the element in third row and first column
+x = m.**apply**(7);                        // return the 8-th element (row=2,col=1)
+x = *(m.**begin**()+7);                    // return the 8-th element (row=2,col=1)
+// symmetric matrices (note the difference in behavior between apply and the iterators)
+x = *(m.**begin**()+4)                     // return the element (row=2,col=1).
+x = m.**apply**(7);                        // returns again the (row=2,col=1) element
+~~~
+
 
 There are methods to place and/or retrieve ROOT::Math::SVector objects as rows or columns in (from) a matrix. In addition one can put (get) a sub-matrix as another ROOT::Math::SMatrix object in a matrix. If the size of the the sub-vector or sub-matrix are larger than the matrix size a static assert ( a compilation error) is produced. The non-const methods are:
 
-<pre>
+~~~ {.cpp}
+
 
 SMatrix33            m;
 SVector2       v2(1,2);
-_// place a vector of size 2 in the first row starting from element (0,1) : m(0,1) = v2[0]_
+// place a vector of size 2 in the first row starting from element (0,1) : m(0,1) = v2[0]
 m.**Place_in_row**(v2,0,1);
-_// place the vector in the second column from (0,1) : m(0,1) = v2[0]   _
+// place the vector in the second column from (0,1) : m(0,1) = v2[0]
 m.**Place in_col**(v2,0,1);
 SMatrix22           m2;
-_// place the sub-matrix m2 in m starting from the element (1,1) : m(1,1) = m2(0,0)  _
+// place the sub-matrix m2 in m starting from the element (1,1) : m(1,1) = m2(0,0)
 m.**Place_at**(m2,1,1);
 SVector3     v3(1,2,3);
-_// set v3 as the diagonal elements of m  : m(i,i) = v3[i] for i=0,1,2_
-m.**SetDiagonal**(v3)                    </pre>
+// set v3 as the diagonal elements of m  : m(i,i) = v3[i] for i=0,1,2
+m.**SetDiagonal**(v3)
+~~~
+
 
 The const methods retrieving contents (getting slices of a matrix) are:
 
-<pre>a = {1,2,3,4,5,6,7,8,9};
+~~~ {.cpp}
+a = {1,2,3,4,5,6,7,8,9};
 SMatrix33       m(a,a+9);
-SVector3 irow = m.**Row**(0);             _// return as vector the first matrix row_
-SVector3 jcol = m.**Col**(1);            _// return as vector the second matrix column_
-_// return a slice of the first row from element (0,1) : r2[0] = m(0,1); r2[1] = m(0,2)_
+SVector3 irow = m.**Row**(0);             // return as vector the first matrix row
+SVector3 jcol = m.**Col**(1);            // return as vector the second matrix column
+// return a slice of the first row from element (0,1) : r2[0] = m(0,1); r2[1] = m(0,2)
 SVector2 r2   =  m.**SubRow**<SVector2> (0,1);
-_// return a slice of the second column from element (0,1) : c2[0] = m(0,1); c2[1] = m(1,1);_
+// return a slice of the second column from element (0,1) : c2[0] = m(0,1); c2[1] = m(1,1);
 SVector2 c2   =  m.**SubCol**<SVector2> (1,0);
-_// return a sub-matrix 2x2 with the upper left corner at the values (1,1)_
+// return a sub-matrix 2x2 with the upper left corner at the values (1,1)
 SMatrix22 subM = m.**Sub**<SMatrix22>   (1,1);
-_// return the diagonal element in a SVector_
+// return the diagonal element in a SVector
 SVector3  diag = m.**Diagonal**();
-_// return the upper(lower) block of the matrix m_
-SVector6 vub = m.**UpperBlock**();        _//  vub = [ 1, 2, 3, 5, 6, 9 ]_
-SVector6 vlb = m.**LowerBlock**();       _//  vlb = [ 1, 4, 5, 7, 8, 9 ]_
-</pre>
+// return the upper(lower) block of the matrix m
+SVector6 vub = m.**UpperBlock**();        //  vub = [ 1, 2, 3, 5, 6, 9 ]
+SVector6 vlb = m.**LowerBlock**();       //  vlb = [ 1, 4, 5, 7, 8, 9 ]
+~~~
+
 
 ### Linear Algebra Functions
 
@@ -141,22 +150,25 @@ is used while for a large (N > 6) general matrix an LU factorization is performe
 using the same algorithm as in the CERNLIB routine
 [dinv](https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/f010/top.html).
 
-<pre>_//  Invert a NxN matrix. The inverted matrix replace the existing one and returns if the result is successful_
+~~~ {.cpp}
+//  Invert a NxN matrix. The inverted matrix replace the existing one and returns if the result is successful
 bool ret = m.**Invert**()
-_// return the inverse matrix of m. If the inversion fails ifail is different than zero_
+// return the inverse matrix of m. If the inversion fails ifail is different than zero
 int ifail = 0;
 mInv = m.**Inverse**(ifail);
-</pre>
+~~~
+
 
 The determinant of a square matrix can be obtained as follows:
 
-<pre>double det;
-_// calculate the determinant modifying the matrix content. Returns if the calculation was successful_
+~~~ {.cpp}
+double det;
+// calculate the determinant modifying the matrix content. Returns if the calculation was successful
 bool ret = m.**Det**(det);
-_// calculate the determinant using a temporary matrix but preserving the matrix content_
+// calculate the determinant using a temporary matrix but preserving the matrix content
 bool ret = n.**Det2**(det);
-</pre>
+~~~
+
 
 For additional Matrix functionality see the \ref MatVecFunctions page
 
-*/

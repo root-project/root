@@ -154,11 +154,13 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
    fXq2 = 0.;
    fYq1 = 0.;
    fYq2 = 0.;
+   fF   = 0;
+   fY0  = 0;
 
    nx<=ny ? fNpoints=nx : fNpoints=ny;
 
    if (!CtorAllocate()) return;
-   fF=0;
+
    Int_t *index = new Int_t[TMath::Max(nx, ny)];
    TMath::Sort(nx, x, index, kFALSE);
    if (nx <=ny){

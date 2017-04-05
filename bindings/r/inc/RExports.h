@@ -138,11 +138,12 @@ namespace ROOT {
       extern  VARIABLE_IS_NOT_USED SEXP ModuleSymRef;
       template<class T> class class_: public Rcpp::class_<T> {
       public:
-         class_(const char *name_, const char *doc = 0): Rcpp::class_<T>(name_, doc) {}
+         class_(const Char_t *name_, const Char_t *doc = 0) : Rcpp::class_<T>(name_, doc) {}
       };
 
       //________________________________________________________________________________________________________
-      template<class T> void function(const char *name_, T fun, const char *docstring = 0)
+      template <class T>
+      void function(const Char_t *name_, T fun, const Char_t *docstring = 0)
       {
          //template function required to create modules using the macro ROOTR_MODULE
          Rcpp::function(name_, fun, docstring);

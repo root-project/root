@@ -4128,6 +4128,7 @@ int RootClingMain(int argc,
       clingArgs.push_back("-D__ROOTCLING__");
    }
    clingArgs.push_back("-fsyntax-only");
+   clingArgs.push_back("-fPIC");
    clingArgs.push_back("-Xclang");
    clingArgs.push_back("-main-file-name");
    clingArgs.push_back("-Xclang");

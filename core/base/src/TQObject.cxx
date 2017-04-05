@@ -110,7 +110,7 @@ TString TQObject::CompressName(const char *method_name)
       static TPMERegexp *constRe = 0, *wspaceRe = 0;
       if (constRe == 0) {
          constRe  = new TPMERegexp("(?<=\\(|\\s|,|&|\\*)const(?=\\s|,|\\)|&|\\*)", "go");
-         wspaceRe = new TPMERegexp("\\s+", "go");
+         wspaceRe = new TPMERegexp("\\s+(?=([^\"]*\"[^\"]*\")*[^\"]*$)", "go");
       }
       constRe ->Substitute(res, "");
       wspaceRe->Substitute(res, "");
