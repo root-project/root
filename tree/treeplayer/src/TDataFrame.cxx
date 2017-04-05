@@ -429,25 +429,16 @@ note that all actions are only executed for events that pass all preceding filte
 | Mean | Return the mean of processed branch values. |
 | Min | Return the minimum of processed branch values. |
 | Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
-| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function
-must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An
-optional parameter allows initialization of the result object to non-default values. |
+| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
 
 | **Instant actions** | **Description** |
 |---------------------|-----------------|
-| Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda
-when executing with implicit multi-threading enabled. |
-| ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first
-parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a
-helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot`
-works just as well with single-thread execution: in that case `slot` will always be `0`. |
+| Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
+| ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
 
 | **Queries** | **Description** |
 |-----------|-----------------|
-| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed
-on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many
-entries have been accepted and rejected by the filters. See the section on [named
-filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
+| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `TDataFrame` can transparently perform multi-threaded event loops to speed up
