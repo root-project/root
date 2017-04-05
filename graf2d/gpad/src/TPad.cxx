@@ -1367,7 +1367,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
-               snprintf(&dname[ldname],256,"[%d]",d->GetMaxIndex(indx));
+               snprintf(&dname[ldname],256-ldname,"[%d]",d->GetMaxIndex(indx));
                indx++;
             }
             pt->AddText(x,(y-v1)/dv,dname);
