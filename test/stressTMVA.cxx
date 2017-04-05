@@ -1583,8 +1583,10 @@ bool utFactory::addEventsToFactoryByHand(const char* factoryname, const char* op
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
-   MethodBase* theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle));
-   double ROCValue = theMethod->GetROCIntegral();
+   double ROCValue(0.);
+   if (auto theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle))) {
+       ROCValue = theMethod->GetROCIntegral();
+   }
    //cout << "ROC="<<ROCValue<<endl;
    delete dataloader; 
    delete factory;
@@ -1643,8 +1645,10 @@ bool utFactory::operateSingleFactory(const char* factoryname, const char* opt)
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
-   MethodBase* theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle));
-   double ROCValue = theMethod->GetROCIntegral();
+   double ROCValue(0.);
+   if (auto theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle))){
+      ROCValue = theMethod->GetROCIntegral();
+   }
    delete tree;
    delete dataloader; 
    delete factory;
