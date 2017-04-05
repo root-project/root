@@ -19,6 +19,8 @@
 namespace ROOT {
 
 namespace Internal {
+// Match expression against names of branches passed as parameter
+// Return vector of names of the branches used in the expression
 std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObjArray *branches,
                                               const std::vector<std::string> &tmpBranches)
 {
@@ -46,6 +48,8 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
    return usedBranches;
 }
 
+// Jit a string filter or a string temporary column, call this->AddColumn or this->Filter as needed
+// Return pointer to the new functional chain node returned by the call, cast to Long_t
 Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
                      const std::string &name, const std::string &expression, TObjArray *branches,
                      const std::vector<std::string> &tmpBranches,
@@ -147,6 +151,8 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
    return retVal;
 }
 
+// Jit and call "this->Action(params...)" for all actions that support branch type inference
+// Return pointer to corresponding TActionResultProxy, cast to Long_t
 Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
                            const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
                            ROOT::Detail::TDataFrameBranchBase *bbase)
@@ -194,7 +200,7 @@ Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypen
    }
    return retVal;
 }
-}
+} // namespace Internal
 
 namespace Experimental {
 

@@ -164,12 +164,13 @@ void TDataFrameImpl::Run()
 #endif // R__USE_IMT
 
    fHasRunAtLeastOnce = true;
-   // forget actions and "detach" the action result pointers marking them ready
-   // and forget them too
+   // forget actions
    fBookedActions.clear();
+   // make all TActionResultProxies ready
    for (auto readiness : fResProxyReadiness) {
       *readiness.get() = true;
    }
+   // forget TActionResultProxies
    fResProxyReadiness.clear();
 }
 

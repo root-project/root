@@ -874,6 +874,7 @@ private:
    }
 
    // W != void: histogram w/ weights
+   // the case in which X has to be guessed but W was explicitly specified is not supported
    template <typename X, typename W>
    TActionResultProxy<::TH1F> Histo1DImpl(W *, const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h)
    {
