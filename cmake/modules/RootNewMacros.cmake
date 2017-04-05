@@ -1079,6 +1079,43 @@ function(ROOT_ADD_TEST test)
 endfunction()
 
 #----------------------------------------------------------------------------
+# ROOT_PATH_TO_STRING( <variable> path PATH_SEPARATOR_REPLACEMENT replacement )
+#
+# Mangle the path to a string.
+#----------------------------------------------------------------------------
+function(ROOT_PATH_TO_STRING resultvar path)
+  # FIXME: Copied and modified from ROOTTEST_TARGETNAME_FROM_FILE. We should find a common place for that code.
+  # FIXME: ROOTTEST_TARGETNAME_FROM_FILE could be replaced by just a call to string(MAKE_C_IDENTIFIER)...
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "PATH_SEPARATOR_REPLACEMENT" ${ARGN})
+
+  set(sep_replacement "")
+  if (ARG_PATH_SEPARATOR_REPLACEMENT)
+    set(sep_replacement ${ARG_PATH_SEPARATOR_REPLACEMENT})
+  endif()
+
+  get_filename_component(realfp ${path} ABSOLUTE)
+  get_filename_component(filename_we ${path} NAME_WE)
+
+  string(REPLACE "${CMAKE_SOURCE_DIR}" "" relativepath ${realfp})
+  string(REPLACE "${path}" "" relativepath ${relativepath})
+
+  string(MAKE_C_IDENTIFIER ${relativepath}${filename_we} mangledname)
+  string(REPLACE "_" "${sep_replacement}" mangledname ${mangledname})
+
+  set(${resultvar} "${mangledname}" PARENT_SCOPE)
+endfunction(ROOT_PATH_TO_STRING)
+
+#----------------------------------------------------------------------------
+# ROOT_ADD_UNITTEST_SUBDIRECTORY( <name> LIBRARIES)
+#----------------------------------------------------------------------------
+function(ROOT_ADD_UNITTEST_SUBDIRECTORY subdir)
+  ROOT_GLOB_FILES(test_files ${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/*.cxx)
+  # Get the component from the path. Eg. core to form coreTests test suite name.
+  ROOT_PATH_TO_STRING(test_name ${CMAKE_CURRENT_SOURCE_DIR}/Tests/)
+  ROOT_ADD_GTEST(${test_name} ${test_files} ${ARGN})
+endfunction()
+
+#----------------------------------------------------------------------------
 # function ROOT_ADD_GTEST(<testsuite> source1 source2... LIBRARIES)
 #
 function(ROOT_ADD_GTEST test_suite)
@@ -1091,21 +1128,11 @@ function(ROOT_ADD_GTEST test_suite)
   # FIXME: For better coherence we could restrict the libraries the test suite could link
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
-  ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  ROOT_EXECUTABLE(${test_suite} NOINSTALL ${source_files} LIBRARIES ${ARG_LIBRARIES})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
 
-  # Mangle the path to the test name.
-  # FIXME: Copied and modified from ROOTTEST_TARGETNAME_FROM_FILE. We should find a common place for that code.
-  set(filename ${test_suite})
-  get_filename_component(realfp ${filename} ABSOLUTE)
-  get_filename_component(filename_we ${filename} NAME_WE)
-
-  string(REPLACE "${CMAKE_SOURCE_DIR}" "" relativepath ${realfp})
-  string(REPLACE "${filename}" "" relativepath ${relativepath})
-
-  string(REPLACE "/" "-" targetname ${relativepath}${filename_we})
-
-  ROOT_ADD_TEST(gtest${targetname} COMMAND ${test_suite})
+  ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${test_suite})
 endfunction()
 
 
