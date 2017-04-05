@@ -33,36 +33,6 @@ endif()
 
 set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
-#---Protect against warnings clang/gcc would fire----------------------------------------------------
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-comment)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-misleading-indentation)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-missing-field-initializers)
-if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-private-field)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-local-typedef)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-parentheses-equality)
-  ROOT_ADD_C_FLAG(INTERP_ADDITIONAL_C_FLAGS -Wno-parentheses-equality)
-endif()
-if(APPLE)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-deprecated-declarations)
-endif()
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-overloaded-virtual)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-maybe-uninitialized)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-parameter)
-ROOT_ADD_C_FLAG(INTERP_ADDITIONAL_C_FLAGS -Wno-unused-parameter)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-variable)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-but-set-variable)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-function)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-range-loop-analysis)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_CXX_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_C_FLAGS}")
-
-#---Do not transform warnings in errors-------------------------------------------------------------
-string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-string(REPLACE "-Wshadow " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 if(NOT CLING_INCLUDE_TESTS)
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
