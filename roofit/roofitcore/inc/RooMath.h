@@ -179,9 +179,6 @@ public:
   { return TMath::Erfc(x); }
 
 private:
-  // deprecation warnings
-  static void warn(const char* oldfun, const char* newfun = 0);
-
   ClassDef(RooMath,0) // math utility routines
 };
 
