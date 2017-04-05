@@ -501,14 +501,15 @@ Int_t AnalysePS(const TString &filename)
    Bool_t counting = kFALSE;
    Int_t count = 0;
 
-   char *line = new char[251];
-   TString l;
    FILE *fp;
    Int_t status;
    if ((fp=fopen(filename.Data(), "r"))==NULL) {
       printf("ERROR1 : File can not open !..\n");
       return 0;
    }
+
+   char *line = new char[251];
+   TString l;
    while((status=fscanf(fp, "%s", line)) != EOF) {
       l = line;
       if (l.Contains("%!PS-Adobe"))  counting = kFALSE;
