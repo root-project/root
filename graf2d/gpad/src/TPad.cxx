@@ -4538,7 +4538,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
 
       // Create a new SVG file
-      if (!gVirtualPS) {
+      if (gVirtualPS) {
          gVirtualPS->SetName(psname);
          gVirtualPS->Open(psname);
          gVirtualPS->SetBit(kPrintingPS);
@@ -4580,7 +4580,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
 
       // Create a new TeX file
-      if (!gVirtualPS) {
+      if (gVirtualPS) {
          gVirtualPS->SetName(psname);
          gVirtualPS->Open(psname);
          gVirtualPS->SetBit(kPrintingPS);
