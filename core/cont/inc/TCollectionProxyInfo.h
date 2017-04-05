@@ -675,7 +675,6 @@ namespace Detail {
       //typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
 
       struct Iterators {
-         typedef Cont_t *PCont_t;
          typedef Cont_t::iterator iterator;
 
          static void create(void *coll, void **begin_arena, void **end_arena, TVirtualCollectionProxy*) {
@@ -803,7 +802,6 @@ namespace Detail {
       //typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
 
       struct Iterators {
-         typedef Cont_t *PCont_t;
          union PtrSize_t { size_t fIndex; void *fAddress; };
          typedef std::pair<PtrSize_t,Bool_t> iterator;
          // In the end iterator we store the bitset pointer
