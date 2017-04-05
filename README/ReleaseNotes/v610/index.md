@@ -76,6 +76,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## RooFit Libraries
 
+- Remove deprecated `RooComplex` superseded by `std::complex`.
 
 ## TTree Libraries
 
