@@ -32,10 +32,6 @@
 
 using namespace std;
 
-ClassImp(RooMath)
-;
-
-
 namespace faddeeva_impl {
     static inline void cexp(double& re, double& im)
     {

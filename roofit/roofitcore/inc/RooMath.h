@@ -178,8 +178,6 @@ public:
   static inline Double_t erfc(Double_t x)
   { return TMath::Erfc(x); }
 
-private:
-  ClassDef(RooMath,0) // math utility routines
 };
 
 #endif
