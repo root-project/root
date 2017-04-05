@@ -383,10 +383,11 @@ Bool_t TH1Merger::BufferMerge() {
                fH0->Fill(hist->fBuffer[2*i + 2], hist->fBuffer[2*i + 1]);
          }
          if (fH0->fDimension == 2) {
-            auto h2 = dynamic_cast<TH2*>(fH0);
-            R__ASSERT(h2); 
-            for (Int_t i = 0; i < nbentries; i++)
-               h2->Fill(hist->fBuffer[3*i + 2], hist->fBuffer[3*i + 3],hist->fBuffer[3*i + 1] );
+            if (auto h2 = dynamic_cast<TH2*>(fH0)){
+                  R__ASSERT(h2); 
+                  for (Int_t i = 0; i < nbentries; i++)
+                     h2->Fill(hist->fBuffer[3*i + 2], hist->fBuffer[3*i + 3],hist->fBuffer[3*i + 1] );
+            }
          }
          if (fH0->fDimension == 3) {
             if (auto h3 = dynamic_cast<TH3*>(fH0)){
