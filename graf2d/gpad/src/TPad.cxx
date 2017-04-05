@@ -271,6 +271,30 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fCrosshair  = 0;
    fCrosshairPos = 0;
 
+   fVtoAbsPixelk = 0.;
+   fVtoPixelk    = 0.;
+   fVtoPixel     = 0.;
+   fAbsPixeltoXk = 0.;
+   fPixeltoXk    = 0.;
+   fPixeltoX     = 0;
+   fAbsPixeltoYk = 0.;
+   fPixeltoYk    = 0.;
+   fPixeltoY     = 0.;
+   fXlowNDC      = 0;
+   fYlowNDC      = 0;
+   fWNDC         = 1;
+   fHNDC         = 1;
+   fXUpNDC       = 0.;
+   fYUpNDC       = 0.;
+   fAbsXlowNDC   = 0.;
+   fAbsYlowNDC   = 0.;
+   fAbsWNDC      = 0.;
+   fAbsHNDC      = 0.;
+   fUxmin = fUymin = fUxmax = fUymax = 0;
+   fLogx = gStyle->GetOptLogx();
+   fLogy = gStyle->GetOptLogy();
+   fLogz = gStyle->GetOptLogz();
+
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
 
