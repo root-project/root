@@ -24,10 +24,9 @@
 #include "Math/Math.h"
 
 #include <limits>
-
+#include <cmath>
 
 #include "Math/GenVector/eta.h"
-
 
 namespace ROOT {
 
@@ -84,7 +83,6 @@ public :
       return *this;
    }
 
-
    /**
       Set internal data based on an array of 3 Scalar numbers
    */
@@ -111,15 +109,17 @@ public :
    Scalar Z()     const { return fZ;}
    Scalar Mag2()  const { return fX*fX + fY*fY + fZ*fZ;}
    Scalar Perp2() const { return fX*fX + fY*fY ;}
-   Scalar Rho()   const { return std::sqrt( Perp2());}
-   Scalar R()     const { return std::sqrt( Mag2());}
-   Scalar Theta() const { return (fX==0 && fY==0 && fZ==0) ?
-                             0 : atan2(Rho(),Z());}
-   Scalar Phi()   const { return (fX==0 && fY==0) ? 0 : atan2(fY,fX);}
+   Scalar Rho() const { return sqrt(Perp2()); }
+   Scalar R() const { return sqrt(Mag2()); }
+   Scalar Theta() const
+   {
+      return (fX == Scalar(0) && fY == Scalar(0) && fZ == Scalar(0)) ? Scalar(0) : atan2(Rho(), Z());
+   }
+   Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : atan2(fY, fX); }
 
    // pseudorapidity
    Scalar Eta() const {
-      return Impl::Eta_FromRhoZ ( Rho(),fZ);
+      return Impl::Eta_FromRhoZ( Rho(), fZ );
    }
 
    /**
@@ -149,7 +149,12 @@ public :
    /**
       scale the vector by a scalar quantity a
    */
-   void Scale(Scalar a) { fX *= a; fY *= a;  fZ *= a; }
+   void Scale(Scalar a)
+   {
+      fX *= a;
+      fY *= a;
+      fZ *= a;
+   }
 
    /**
       negate the vector
@@ -190,7 +195,8 @@ public :
    template <class T2>
    explicit Cartesian3D( const Polar3D<T2> & v ) : fZ (v.Z())
    {
-      T rho = v.Rho(); // re-using this instead of calling v.X() and v.Y()
+      const T rho = v.Rho();
+      // re-using this instead of calling v.X() and v.Y()
       // is the speed improvement
       fX = rho * std::cos(v.Phi());
       fY = rho * std::sin(v.Phi());
@@ -203,9 +209,9 @@ public :
    template <class T2>
    Cartesian3D & operator = (const Polar3D<T2> & v)
    {
-      T rho = v.Rho();
-      fX = rho * std::cos(v.Phi());
-      fY = rho * std::sin(v.Phi());
+      const T rho = v.Rho();
+      fX          = rho * cos(v.Phi());
+      fY          = rho * sin(v.Phi());
       fZ = v.Z();
       return *this;
    }

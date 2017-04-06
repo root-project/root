@@ -51,7 +51,6 @@
 #pragma link C++ class RooClassFactory+ ;
 #pragma link C++ class RooCmdArg+ ;
 #pragma link C++ class RooCmdConfig+ ;
-#pragma link C++ class RooComplex+ ;
 #pragma link C++ class RooConstVar+ ;
 #pragma link C++ class RooConvCoefVar+ ;
 #pragma link C++ class RooConvGenContext+ ;

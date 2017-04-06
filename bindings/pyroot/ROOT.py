@@ -612,7 +612,8 @@ if _is_ipython:
    ip = get_ipython()
    if hasattr(ip,"kernel"):
       import JupyROOT
-      import JsMVA
+# Comment out to prevent freezes upon ROOT import
+#      import JsMVA
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit

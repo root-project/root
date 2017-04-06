@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Macro illustrating automatic dictionary generation and I/O with Lorentz Vectors of floats
+/// Macro illustrating  I/O with Lorentz Vectors of floats
 /// The dictionary for LorentzVector of float is not in the libMathCore, therefore
 /// is generated when parsed the file with CINT.
 ///
@@ -31,11 +31,15 @@
 #include "Math/Vector4D.h"
 
 
-#ifdef __MAKECINT__
-#pragma link C++ class ROOT::Math::PxPyPzE4D<float>+;
-#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >+;
-#pragma link C++ typedef ROOT::Math::XYZTVectorF;
-#endif
+// Now the dictionary contains the vector's with float types
+// No need to force dictionary generation
+// You need to run ACLIC with old ROOT version
+// and uncomment these lines below 
+// #ifdef __MAKECINT__
+// #pragma link C++ class ROOT::Math::PxPyPzE4D<float>+;
+// #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >+;
+// #pragma link C++ typedef ROOT::Math::XYZTVectorF;
+// #endif
 
 using namespace ROOT::Math;
 

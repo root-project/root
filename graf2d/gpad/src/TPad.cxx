@@ -271,6 +271,30 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fCrosshair  = 0;
    fCrosshairPos = 0;
 
+   fVtoAbsPixelk = 0.;
+   fVtoPixelk    = 0.;
+   fVtoPixel     = 0.;
+   fAbsPixeltoXk = 0.;
+   fPixeltoXk    = 0.;
+   fPixeltoX     = 0;
+   fAbsPixeltoYk = 0.;
+   fPixeltoYk    = 0.;
+   fPixeltoY     = 0.;
+   fXlowNDC      = 0;
+   fYlowNDC      = 0;
+   fWNDC         = 1;
+   fHNDC         = 1;
+   fXUpNDC       = 0.;
+   fYUpNDC       = 0.;
+   fAbsXlowNDC   = 0.;
+   fAbsYlowNDC   = 0.;
+   fAbsWNDC      = 0.;
+   fAbsHNDC      = 0.;
+   fUxmin = fUymin = fUxmax = fUymax = 0;
+   fLogx = gStyle->GetOptLogx();
+   fLogy = gStyle->GetOptLogy();
+   fLogz = gStyle->GetOptLogz();
+
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
 
@@ -1367,7 +1391,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
-               snprintf(&dname[ldname],256,"[%d]",d->GetMaxIndex(indx));
+               snprintf(&dname[ldname],256-ldname,"[%d]",d->GetMaxIndex(indx));
                indx++;
             }
             pt->AddText(x,(y-v1)/dv,dname);
@@ -4514,10 +4538,12 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
 
       // Create a new SVG file
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname);
-      gVirtualPS->SetBit(kPrintingPS);
-      gVirtualPS->NewPage();
+      if (gVirtualPS) {
+         gVirtualPS->SetName(psname);
+         gVirtualPS->Open(psname);
+         gVirtualPS->SetBit(kPrintingPS);
+         gVirtualPS->NewPage();
+      }
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
@@ -4553,13 +4579,14 @@ void TPad::Print(const char *filenam, Option_t *option)
          }
       }
 
-      // Create a new SVG file
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname);
-      gVirtualPS->SetBit(kPrintingPS);
-      gVirtualPS->NewPage();
+      // Create a new TeX file
+      if (gVirtualPS) {
+         gVirtualPS->SetName(psname);
+         gVirtualPS->Open(psname);
+         gVirtualPS->SetBit(kPrintingPS);
+         gVirtualPS->NewPage();
+      }
       Paint();
-
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
       if (!gSystem->AccessPathName(psname)) Info("Print", "TeX file %s has been created", psname.Data());

@@ -8223,11 +8223,11 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
             if (print_ferrors) {
                snprintf(textstats,50,"= %s%s #pm %s ", "%",stats->GetFitFormat(),
                        GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
-               snprintf(&t[a],100,textstats,(Float_t)fit->GetParameter(ipar)
+               snprintf(&t[a],100-a,textstats,(Float_t)fit->GetParameter(ipar)
                                ,(Float_t)fit->GetParError(ipar));
             } else {
                snprintf(textstats,50,"= %s%s ","%",stats->GetFitFormat());
-               snprintf(&t[a],100,textstats,(Float_t)fit->GetParameter(ipar));
+               snprintf(&t[a],100-a,textstats,(Float_t)fit->GetParameter(ipar));
             }
             t[63] = 0;
             stats->AddText(t);

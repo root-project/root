@@ -11,7 +11,7 @@ set(headers1 Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h RooAbsCat
              RooAbsRealLValue.h RooAbsRootFinder.h RooAbsString.h RooAcceptReject.h RooAdaptiveGaussKronrodIntegrator1D.h
              RooAddGenContext.h RooAddition.h RooAddModel.h RooAICRegistry.h RooArgList.h RooArgProxy.h RooArgSet.h 
              RooBanner.h RooBinning.h RooBinnedGenContext.h RooBrentRootFinder.h  RooCategory.h RooCategoryProxy.h RooCategorySharedProperties.h
-             RooCatType.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooComplex.h RooConstVar.h RooConvCoefVar.h
+             RooCatType.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooConstVar.h RooConvCoefVar.h
              RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h RooDataHist.h RooDataProjBinding.h RooDataSet.h
              RooDirItem.h RooDLLSignificanceMCSModule.h RooAbsAnaConvPdf.h RooAddPdf.h RooEfficiency.h RooEffProd.h RooExtendPdf.h )
 set(headers2 RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooFit.h RooFitResult.h RooFormula.h

@@ -430,7 +430,7 @@ One can set `fFileNumber` to a different value via
 `TTree::SetFileNumber()`. In case a file named "`_N`" already exists,
 the function will try a file named "`__N`", then "`___N`", etc. The
 maximum tree size can be set via the static function
-`TTree::SetMaxTreeSize()`. The default value of `fgMaxTreeSize` is 1.9
+`TTree::SetMaxTreeSize()`. The default value of `fgMaxTreeSize` is 100
 GB. If the current file contains other objects (like **`TH1`** and
 **`TTree`**), these objects are automatically moved to the new file.
 

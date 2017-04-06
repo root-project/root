@@ -48,7 +48,7 @@
   (i.e. direct copy of the raw byte on disk). The "fast" mode is typically
   5 times faster than the mode unzipping and unstreaming the baskets.
 
-  If the option -cachedsize is used, hadd will resize (or disable if 0) the
+  If the option -cachesize is used, hadd will resize (or disable if 0) the
   prefetching cache use to speed up I/O operations.
 
   For options that takes a size as argument, a decimal number of bytes is expected.
@@ -106,7 +106,7 @@ int main( int argc, char **argv )
                    "   0 request no output, 99 is the default" <<std::endl;
       std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0\n"
                    "   to request to use the system maximum." << std::endl;
-      std::cout << "If the option -cachedsize is used, hadd will resize (or disable if 0) the\n"
+      std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
                    "   prefetching cache use to speed up I/O operations." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
                    "   the target file.  By default the compression level is 1." <<std::endl;

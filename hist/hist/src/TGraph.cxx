@@ -869,7 +869,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    if (fNpoints == 0) return 0;
    if (fNpoints == 1) return fY[0];
 
-   if (option) {
+   if (option && *option) {
       TString opt = option;
       opt.ToLower();
       // create a TSpline every time when using option "s" and no spline pointer is given

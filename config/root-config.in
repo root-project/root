@@ -247,6 +247,18 @@ linuxarm64)
    auxcflags="${cxxversionflag} -fsigned-char"
    auxlibs="-lm -ldl -rdynamic"
    ;;
+linuxs390gcc)
+   # s390 (31 bit mode) Linux with gcc
+   auxcflags="${cxxversionflag} -m31 -fsigned-char"
+   auxldflags="-m31"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxs390xgcc)
+   # s390x (64 bit mode) Linux with gcc
+   auxcflags="${cxxversionflag} -m64 -fsigned-char"
+   auxldflags="-m64"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 freebsd)
    # FreeBSD with libc5
    auxcflags="${cxxversionflag}"

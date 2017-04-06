@@ -708,11 +708,15 @@ void TTeXDump::SetMarkerColor( Color_t cindex)
 void TTeXDump::SetColor(Int_t color)
 {
    if (color < 0) color = 0;
-
    TColor *col = gROOT->GetColor(color);
-   if (col) SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
-   else     SetColor(1., 1., 1.);
-   fCurrentAlpha = col->GetAlpha();
+
+   if (col) {
+      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
+      fCurrentAlpha = col->GetAlpha();
+   } else {
+      SetColor(1., 1., 1.);
+      fCurrentAlpha = 1.;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

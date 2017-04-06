@@ -22,6 +22,8 @@ ClassImp(MethodPyKeras)
 
 MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle, DataSetInfo &dsi, const TString &theOption)
    : PyMethodBase(jobName, Types::kPyKeras, methodTitle, dsi, theOption) {
+   fNumEpochs = 10;
+   fBatchSize = 100;
    fVerbose = 1;
    fContinueTraining = false;
    fSaveBestOnly = true;
@@ -32,12 +34,14 @@ MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle,
 
 MethodPyKeras::MethodPyKeras(DataSetInfo &theData, const TString &theWeightFile)
     : PyMethodBase(Types::kPyKeras, theData, theWeightFile) {
-    fVerbose = 1;
-    fContinueTraining = false;
-    fSaveBestOnly = true;
-    fTriesEarlyStopping = -1;
-    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
-    fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
+   fNumEpochs = 10;
+   fBatchSize = 100;
+   fVerbose = 1;
+   fContinueTraining = false;
+   fSaveBestOnly = true;
+   fTriesEarlyStopping = -1;
+   fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
+   fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
 }
 
 MethodPyKeras::~MethodPyKeras() {
@@ -49,6 +53,8 @@ Bool_t MethodPyKeras::HasAnalysisType(Types::EAnalysisType type, UInt_t numberCl
    if (type == Types::kMulticlass && numberClasses >= 2) return kTRUE;
    return kFALSE;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fFilenameModel, "FilenameModel", "Filename of the initial Keras model");

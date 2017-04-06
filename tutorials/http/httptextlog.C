@@ -31,7 +31,7 @@
 ///
 /// \macro_code
 ///
-/// \author
+/// \author Sergey Linev
 
 
 #include <stdio.h>
