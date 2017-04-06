@@ -37,7 +37,7 @@ int main() {
    auto fromAFilter = d.Filter([](int b) { return b > 95; }).Range(10).Count(); // 4
 
    auto fromAColumn =
-      d.Filter([](int) { return true; }).AddColumn("dummy", [](int) { return 42; }).Range(10).Count(); // 10
+      d.Filter([](int) { return true; }).Define("dummy", [](int) { return 42; }).Range(10).Count(); // 10
 
    std::cout << *fromARange << "\n" << *fromAFilter << "\n" << *fromAColumn << "\n";
 
@@ -45,7 +45,7 @@ int main() {
    unsigned int count = 0;
    auto b1 = d.Range(10).Count();
 
-   auto b2 = d.AddColumn("counter",
+   auto b2 = d.Define("counter",
                          [&count](int) {
                             ++count;
                             return 42;

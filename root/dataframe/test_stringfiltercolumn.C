@@ -92,7 +92,7 @@ void run() {
 
    d.Report();
 
-   auto c4 = d.AddColumn("tracks_size", "tracks.size()").Filter("tracks_size > 3 && abab > 5","All Filters").Count();
+   auto c4 = d.Define("tracks_size", "tracks.size()").Filter("tracks_size > 3 && abab > 5","All Filters").Count();
    std::cout << "c4 " << *c4 << std::endl;
    d.Report();
 

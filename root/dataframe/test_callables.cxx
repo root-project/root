@@ -71,14 +71,14 @@ int main(int argc, char** argv) {
 
    // free function
    d.Filter(freeFilter)
-    .AddColumn("a", freeBranch, {})
+    .Define("a", freeBranch, {})
     .Foreach(freeForeach); // this in turn calls ForeachSlot
 
    // functor
    FunctorFilter ff;
    FunctorForeach fff;
    d.Filter(ff)
-    .AddColumn("c", FunctorBranch())
+    .Define("c", FunctorBranch())
     .ForeachSlot(std::move(fff));
 
    // lambda
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
    std::atomic_int counter(0);
    auto foreach = [&counter](double b) { ++counter; };
    d.Filter(filt)
-    .AddColumn("d", std::move(branch), {})
+    .Define("d", std::move(branch), {})
     .Foreach(foreach);
 
    // std::function
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
    std::function<int(void)> stdbranch = branch;
    std::function<void(double)> stdforeach = foreach;
    d.Filter(std::move(stdfilt))
-    .AddColumn("e", std::move(stdbranch), {})
+    .Define("e", std::move(stdbranch), {})
     .Foreach(foreach);
 
    if (freeCounter == fff.GetCounter() && freeCounter*2 == counter

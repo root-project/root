@@ -25,12 +25,12 @@ void test_ctors() {
    FillTree(fileName,treeName);
    std::cout << "done\n";
 
-   // Filter, AddColumn, Count and Foreach. We want one printout
+   // Filter, Define, Count and Foreach. We want one printout
    std::cout << "building dataframe...\n";
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"obj"});
    std::cout << "done\nbuilding chain...\n";
    auto dd = d.Filter([](const Sentinel& o) { std::cout << "filter\n"; return o.get() > 0; })
-              .AddColumn("ox", [](const Sentinel& o) { std::cout << "addbranch\n"; return o.get(); });
+              .Define("ox", [](const Sentinel& o) { std::cout << "addbranch\n"; return o.get(); });
    auto r = dd.Count();
    std::cout << "done\n";
    std::cout << "running chain...\n";

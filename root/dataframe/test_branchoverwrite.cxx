@@ -18,9 +18,9 @@ int main() {
    }
 
    ROOT::Experimental::TDataFrame d("emptyTree", filename, {"a"});
-   d.AddColumn("b", []() { return 8; });
+   d.Define("b", []() { return 8; });
    try {
-      auto c = d.AddColumn("a", []() { return 42; });
+      auto c = d.Define("a", []() { return 42; });
    } catch (const std::runtime_error& e) {
       std::cout << "Exception caught: " << e.what() << std::endl;
    }

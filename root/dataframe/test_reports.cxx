@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
    ROOT::Experimental::TDataFrame df("reportsTree", fileName, {"b"});
    auto f1 = df.Filter(cut1, {}, "mtf");
 
-   auto ac1 = df.AddColumn("foo", []() { return 42; });
+   auto ac1 = df.Define("foo", []() { return 42; });
    auto f2 = ac1.Filter(noopb);
    auto f3 = f2.Filter(cut2, "mtf2");
 
