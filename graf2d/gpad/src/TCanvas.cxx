@@ -109,25 +109,32 @@ and in the batch mode simply do:
 
 TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
 {
-   fPainter         = 0;
-   fWindowTopX      = 0;
-   fWindowTopY      = 0;
-   fWindowWidth     = 0;
-   fWindowHeight    = 0;
-   fCw              = 0;
-   fCh              = 0;
-   fXsizeUser       = 0;
-   fYsizeUser       = 0;
-   fXsizeReal       = kDefaultCanvasSize;
-   fYsizeReal       = kDefaultCanvasSize;
-   fHighLightColor  = gEnv->GetValue("Canvas.HighLightColor", kRed);
-   fEvent           = -1;
-   fEventX          = -1;
-   fEventY          = -1;
-   fSelectedX       = 0;
-   fSelectedY       = 0;
-   fRetained        = kTRUE;
-   fDrawn           = kFALSE;
+   fPainter          = 0;
+   fWindowTopX       = 0;
+   fWindowTopY       = 0;
+   fWindowWidth      = 0;
+   fWindowHeight     = 0;
+   fCw               = 0;
+   fCh               = 0;
+   fXsizeUser        = 0;
+   fYsizeUser        = 0;
+   fXsizeReal        = kDefaultCanvasSize;
+   fYsizeReal        = kDefaultCanvasSize;
+   fHighLightColor   = gEnv->GetValue("Canvas.HighLightColor", kRed);
+   fEvent            = -1;
+   fEventX           = -1;
+   fEventY           = -1;
+   fSelectedX        = 0;
+   fSelectedY        = 0;
+   fRetained         = kTRUE;
+   fDrawn            = kFALSE;
+   fSelected         = 0;
+   fClickSelected    = 0;
+   fSelectedPad      = 0;
+   fClickSelectedPad = 0;
+   fPadSave          = 0;
+   fCanvasImp        = 0;
+   fContextMenu      = 0;
 
    fUseGL = gStyle->GetCanvasPreferGL();
 
