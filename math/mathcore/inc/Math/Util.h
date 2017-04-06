@@ -92,21 +92,21 @@ namespace ROOT {
          fSum = t;
       }
 
-      /// Iterate over an iterable container of values and accumulate on the exising result 
-      template<class Container>
-      void Add(const Container &elements)
-      {
-         static_assert(!std::is_same<decltype(++(elements.begin()), elements.end(), elements.front()), T>::value, "argument is not a container of the same type as the KahanSum class");
-         for (auto e : elements) this->Add(e);
+      /// Iterate over a datastructure referenced by a pointer and accumulate on the exising result
+      template<class Iterator>
+      void Add(const Iterator begin, const Iterator end)
+      {     
+            static_assert(!std::is_same<decltype(*begin), T>::value, "Iterator points to an element of the different type than the KahanSum class");
+            for( auto it = begin; it!=end; it++ ) this->Add(*it);
       }
 
-      /// Iterate over an iterable and return the result of its accumulation
-      template<class Container>
-      static T Accumulate(const Container &elements)
+      /// Iterate over a datastructure referenced by a pointer and return the result of its accumulation
+      template<class Iterator>
+      static T Accumulate(const Iterator begin, const Iterator end)
       {
-         static_assert(!std::is_same<decltype(++(elements.begin()), elements.end(), elements.front()), T>::value, "argument is not a container of the same type as the KahanSum class");
+         static_assert(!std::is_same<decltype(*begin), T>::value, "Iterator points to an element of the different type than the KahanSum class");
          KahanSum init;
-         init.Add(elements);
+         init.Add(begin, end);
          return init.fSum;
       }
 

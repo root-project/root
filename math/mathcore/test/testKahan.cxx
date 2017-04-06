@@ -5,8 +5,8 @@ int KahanTest()
 {
    std::vector<double> numbers = {0.01, 0.001, 0.0001, 0.000001, 0.00000000001};
    ROOT::Math::KahanSum<double> k;
-   k.Add(numbers);
-   auto result = ROOT::Math::KahanSum<double>::Accumulate(numbers);
+   k.Add(numbers.begin(), numbers.end());
+   auto result = ROOT::Math::KahanSum<double>::Accumulate(numbers.begin(), numbers.end());
    if (k.Result() != result) return 1;
    return 0;
 }
