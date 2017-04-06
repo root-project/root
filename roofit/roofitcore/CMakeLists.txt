@@ -48,7 +48,14 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
 
 ROOT_GENERATE_DICTIONARY(G__RooFitCore MODULE RooFitCore ${headers1} ${headers2} ${headers3} ${headers4} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore.cxx LIBRARIES Core
-                    DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam rt)
+if(UNIX AND NOT APPLE)
+    # for Linux, BSD, Solaris, Minix: add rt library for timing in RooCPUTimer
+    ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore.cxx LIBRARIES Core
+                        DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam rt)
+else()
+    ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore.cxx LIBRARIES Core
+                        DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam)
+endif()
+
 ROOT_INSTALL_HEADERS()
 

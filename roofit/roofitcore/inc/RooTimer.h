@@ -8,7 +8,6 @@
 
 class RooTimer {
 public:
-  RooTimer();
   virtual void start() = 0;
   virtual void stop() = 0;
   double timing_s();
@@ -21,6 +20,7 @@ private:
 
 class RooWallTimer: public RooTimer {
 public:
+  RooWallTimer();
   virtual void start();
   virtual void stop();
 
@@ -31,6 +31,7 @@ private:
 
 class RooCPUTimer: public RooTimer {
 public:
+  RooCPUTimer();
   virtual void start();
   virtual void stop();
 

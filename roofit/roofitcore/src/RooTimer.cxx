@@ -2,10 +2,6 @@
 #include "RooTrace.h"
 
 
-RooTimer::RooTimer() {
-  start();
-}
-
 double RooTimer::timing_s() {
   return _timing_s;
 }
@@ -19,6 +15,10 @@ void RooTimer::store_timing_in_RooTrace(const std::string &name) {
 }
 
 
+RooWallTimer::RooWallTimer() {
+  start();
+}
+
 void RooWallTimer::start() {
   _timing_begin = std::chrono::high_resolution_clock::now();
 }
@@ -28,6 +28,10 @@ void RooWallTimer::stop() {
   set_timing_s(std::chrono::duration_cast<std::chrono::nanoseconds>(_timing_end - _timing_begin).count() / 1.e9);
 }
 
+
+RooCPUTimer::RooCPUTimer() {
+  start();
+}
 
 void RooCPUTimer::start() {
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &_timing_begin);
