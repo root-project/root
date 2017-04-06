@@ -113,6 +113,11 @@ namespace ROOT {
             return fFunc->GetNpar();
          }
 
+         /// return parameter name (from TF1)
+         std::string ParameterName(unsigned int i) const {
+            return std::string(fFunc->GetParName(i));
+         }
+         
          // evaluate the derivative of the function with respect to the parameters
          void  ParameterGradient(const double *x, const double *par, double *grad) const;
 
