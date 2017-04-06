@@ -1113,6 +1113,8 @@ function(ROOT_ADD_UNITTEST_SUBDIRECTORY subdir)
   # Get the component from the path. Eg. core to form coreTests test suite name.
   ROOT_PATH_TO_STRING(test_name ${CMAKE_CURRENT_SOURCE_DIR}/Tests/)
   ROOT_ADD_GTEST(${test_name} ${test_files} ${ARGN})
+  # Override the target output folder for to put the binaries in the ${subdir}.
+  set_property(TARGET ${test_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${subdir}/)
 endfunction()
 
 #----------------------------------------------------------------------------
@@ -1128,11 +1130,12 @@ function(ROOT_ADD_GTEST test_suite)
   # FIXME: For better coherence we could restrict the libraries the test suite could link
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
-  ROOT_EXECUTABLE(${test_suite} NOINSTALL ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  set_property(TARGET ${test_suite} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
-  ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${test_suite})
+  ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${test_suite})
 endfunction()
 
 
