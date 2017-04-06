@@ -53,44 +53,43 @@
 
 namespace ROOT {
 
-   /**
-   \namespace Math
-   Namespace for new Math classes and functions.
-   See the \ref Math "Math Libraries" page for a detailed description.
- */
+/**
+\namespace Math
+Namespace for new Math classes and functions.
+See the \ref Math "Math Libraries" page for a detailed description.
+*/
 
+namespace Math {
+// Enable Vc/VecCore template instantiations to replace std math functions.
+//
+// Vc declares `std::sqrt(Vc-type)`. To use this for Vc-`SCALAR`s, the call
+// to `sqrt()` must only be resolved at the template instantiation time, when
+// the Vc headers are guaranteed to be included, and thus its `sqrt()`
+// overloads have been declared.
+// The trick is to keep sqrt() dependent (on its argument type) by making it
+// an unqualified name. The `std::` of `std::sqrt()` makes it a qualified
+// name, so the code here has to use `sqrt()`, not `std::sqrt()`. To still
+// find `std::sqrt()` we pull `std::sqrt()` into the surrounding namespace.
+//
+// We don't want to use 'using namespace std' because it would polute the including headers.
+using std::atan2;
+using std::cos;
+using std::cosh;
+using std::exp;
+using std::floor;
+using std::log;
+using std::pow;
+using std::sin;
+using std::sinh;
+using std::sqrt;
+using std::tan;
 
-   namespace Math {
-   // Enable Vc/VecCore template instantiations to replace std math functions.
-   //
-   // Vc declares `std::sqrt(Vc-type)`. To use this for Vc-`SCALAR`s, the call
-   // to `sqrt()` must only be resolved at the template instantiation time, when
-   // the Vc headers are guaranteed to be included, and thus its `sqrt()`
-   // overloads have been declared.
-   // The trick is to keep sqrt() dependent (on its argument type) by making it
-   // an unqualified name. The `std::` of `std::sqrt()` makes it a qualified
-   // name, so the code here has to use `sqrt()`, not `std::sqrt()`. To still
-   // find `std::sqrt()` we pull `std::sqrt()` into the surrounding namespace.
-   //
-   // We don't want to use 'using namespace std' because it would polute the including headers.
-   using std::atan2;
-   using std::cos;
-   using std::cosh;
-   using std::exp;
-   using std::floor;
-   using std::log;
-   using std::pow;
-   using std::sin;
-   using std::sinh;
-   using std::sqrt;
-   using std::tan;
-
-   /**
-       Mathematical constants
-   */
-   inline double Pi()
-   {
-      return M_PI;
+/**
+    Mathematical constants
+*/
+inline double Pi()
+{
+   return M_PI;
    }
 
    /**
