@@ -968,6 +968,8 @@ bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
    ROOT::TMetaUtils::Info(0, "Class %s: Do not generate operator>>()\n",
                           fullname.c_str());
 
+   delete [] proto;
+
    // We do want to call both CheckInputOperator all the times.
    bool has_input_error = CheckInputOperator("operator>>", proto, fullname, cl, interp);
    has_input_error = CheckInputOperator("operator<<", proto, fullname, cl, interp) || has_input_error;
