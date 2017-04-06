@@ -929,8 +929,8 @@ int testFit(Test t, std::string name) {
 int main() {
 
    int iret = 0;
-  //  iret |= testFit( testHisto1DFit, "Histogram1D Fit");
-  //  iret |= testFit( testHisto1DPolFit, "Histogram1D Polynomial Fit");
+   iret |= testFit( testHisto1DFit, "Histogram1D Fit");
+   iret |= testFit( testHisto1DPolFit, "Histogram1D Polynomial Fit");
    iret |= testFit( testHisto2DFit, "Histogram2D Gradient Fit");
    iret |= testFit( testUnBin1DFit, "Unbin 1D Fit");
    iret |= testFit( testGraphFit, "Graph 1D Fit");
