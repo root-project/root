@@ -95,19 +95,12 @@ bool DistSampler::IsInitialized()  {
 bool DistSampler::Generate(unsigned int nevt, ROOT::Fit::UnBinData & data) {
    // generate a un-binned data sets (fill the given data set)
    // if dataset has already data append to it
-   int n0 = data.DataSize();
-   if (n0 > 0 ) {
-      if (data.PointSize() != NDim() ) {
-         MATH_ERROR_MSG("DistSampler::Generate","unbin data not consistent with distribution");
-         return false;
-      }
-   }
    if (!IsInitialized()) {
          MATH_WARN_MSG("DistSampler::Generate","sampler has not been initialized correctly");
          return false;
    }
 
-   data.Initialize( n0 + nevt, NDim() );
+   data.Append( nevt, NDim() );
    for (unsigned int i = 0; i < nevt; ++i) {
       const double * x = Sample();
       data.Add( x );
@@ -131,7 +124,7 @@ bool DistSampler::Generate(unsigned int nevt, ROOT::Fit::UnBinData & data) {
       ntotbins *= nbins[j];
    }
 
-   data.Initialize(ntotbins, NDim(), ROOT::Fit::BinData::kValueError);    // store always the error
+   data.Append(ntotbins, NDim(), ROOT::Fit::BinData::kValueError);    // store always the error
    // use for the moment bin center (should use bin integral)
    std::vector<double> dx(NDim() );
    std::vector<double> x(NDim() );

@@ -196,7 +196,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r,
                    ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
-   // branch is a temporary branch created with AddColumn, false if they are
+   // branch is a temporary branch created with Define, false if they are
    // actual branches present in the TTree.
    std::array<bool, sizeof...(S)> isTmpColumn;
    for (auto i = 0u; i < isTmpColumn.size(); ++i)

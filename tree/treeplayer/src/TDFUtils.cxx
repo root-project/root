@@ -24,7 +24,7 @@ namespace ROOT {
 namespace Internal {
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
-/// column created by AddColumn.
+/// column created by Define.
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
                                       ROOT::Detail::TDataFrameBranchBase *tmpBranch)
 {

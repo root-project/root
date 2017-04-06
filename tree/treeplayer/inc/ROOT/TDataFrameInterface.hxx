@@ -192,8 +192,8 @@ public:
    /// An exception is thrown if the name of the new branch is already in use
    /// for another branch in the TTree.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> AddColumn(const std::string &name, F expression,
-                                                                     const BranchNames_t &bl = {})
+   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name, F expression,
+                                                                  const BranchNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
@@ -217,15 +217,15 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> AddColumn(const std::string &name,
-                                                                     const std::string &expression)
+   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name,
+                                                                  const std::string &expression)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       auto branches = tree->GetListOfBranches();
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
-      auto retVal = ROOT::Internal::InterpretCall(this, "AddColumn", GetNodeTypeName(), name, expression, branches,
+      auto retVal = ROOT::Internal::InterpretCall(this, "Define", GetNodeTypeName(), name, expression, branches,
                                                   tmpBranches, tmpBookedBranches, tree);
       return *(TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> *)retVal;
    }

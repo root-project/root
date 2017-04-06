@@ -64,7 +64,7 @@ void tdf004_cutFlowReport()
    auto filtered1 = d.Filter(cut1, {"b1"}, "Cut1");
    auto filtered2 = d.Filter(cut2, {"b2"}, "Cut2");
 
-   auto augmented1 = filtered2.AddColumn("b3", [](double b1, int b2) { return b1 / b2; });
+   auto augmented1 = filtered2.Define("b3", [](double b1, int b2) { return b1 / b2; });
    auto cut3 = [](double x) { return x < .5; };
    auto filtered3 = augmented1.Filter(cut3, {"b3"}, "Cut3");
 
