@@ -18,7 +18,6 @@
 
 #include <cmath>
 #include <limits>
-#include <vector>
 
 // for defining unused variables in the interfaces
 //  and have still them in the documentation
@@ -66,35 +65,57 @@ namespace ROOT {
 
    } // end namespace Util
 
+   ///\class KahanSum
+   /// The Kahan compensate summation algorithm significantly reduces the numerical error in the total obtained
+   /// by adding a sequence of finite precision floating point numbers.
+   /// This is done by keeping a separate running compensation (a variable to accumulate small errors).\n
+   ///
+   /// The intial values of the result and the correction are set to the default value of the type it hass been instantiated with.\n
+   /// ####Examples:
+   /// ~~~{.cpp}
+   /// std::vector<double> numbers = {0.01, 0.001, 0.0001, 0.000001, 0.00000000001};
+   /// ROOT::Math::KahanSum<double> k;
+   /// k.Add(numbers);
+   /// ~~~
+   /// ~~~{.cpp}
+   /// auto result = ROOT::Math::KahanSum<double>::Accumulate(numbers);
+   /// ~~~
    template <class T>
    class KahanSum {
    public:
+      /// Single element accumulated addition.
       void Add(const T &x)
       {
-         auto y = x - correction;
-         auto t = sum + y;
-         correction = (t - sum) - y;
-         sum = t;
+         auto y = x - fCorrection;
+         auto t = fSum + y;
+         fCorrection = (t - fSum) - y;
+         fSum = t;
       }
 
-      void Add(const std::vector<T> &elements)
+      /// Iterate over an iterable container of values and accumulate on the exising result 
+      template<class Container>
+      void Add(const Container &elements)
       {
+         static_assert(!std::is_same<decltype(++(elements.begin()), elements.end(), elements.front()), T>::value, "argument is not a container of the same type as the KahanSum class");
          for (auto e : elements) this->Add(e);
       }
 
-      static T Accumulate(const std::vector<T> &elements)
+      /// Iterate over an iterable and return the result of its accumulation
+      template<class Container>
+      static T Accumulate(const Container &elements)
       {
-
+         static_assert(!std::is_same<decltype(++(elements.begin()), elements.end(), elements.front()), T>::value, "argument is not a container of the same type as the KahanSum class");
          KahanSum init;
          init.Add(elements);
-         return init.sum;
+         return init.fSum;
       }
 
-      T Result() { return sum; }
+      /// Return the result
+      T Result() { return fSum; }
 
    private:
-      T sum{};
-      T correction{};
+      T fSum{};
+      T fCorrection{};
    };
 
    } // end namespace Math
