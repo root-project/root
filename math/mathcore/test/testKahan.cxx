@@ -8,6 +8,14 @@ int KahanTest()
    k.Add(numbers.begin(), numbers.end());
    auto result = ROOT::Math::KahanSum<double>::Accumulate(numbers.begin(), numbers.end());
    if (k.Result() != result) return 1;
+
+   ROOT::Math::KahanSum<double> k2;
+   ROOT::Math::KahanSum<double> k3(1);
+   k2.Add(1);
+   k2.Add(numbers.begin(), numbers.end());
+   k3.Add(numbers.begin(), numbers.end());
+   if (k2.Result() != k3.Result()) return 2;
+
    return 0;
 }
 
