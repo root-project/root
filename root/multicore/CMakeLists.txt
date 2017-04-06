@@ -5,6 +5,13 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
+ROOTTEST_GENERATE_EXECUTABLE(testSetAddress testSetAddress.cpp LIBRARIES Core RIO Tree)
+
+ROOTTEST_ADD_TEST(testSetAddressLoop
+                  EXEC testSetAddressLoop.sh
+                  COPY_TO_BUILDDIR just1entry.root
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_ADD_TEST(checkTThreadedObjectCopies
                   MACRO checkTThreadedObjectCopies.C)
 
@@ -41,7 +48,7 @@ if(ROOT_imt_FOUND)
                     EXEC poolManager
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
-                  
+
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
 
 ROOTTEST_ADD_TEST(current_dir
