@@ -29,6 +29,7 @@ protected:
    Long_t fPostDataLength;       //! length of binary data
 
    TNamed *fWSHandle;            //!  web-socket handle, derived from TNamed class
+   void   *fWSId;                //! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; //! condition used to wait for processing
 
@@ -106,6 +107,21 @@ public:
    void SetWSHandle(TNamed* handle);
 
    TNamed* TakeWSHandle();
+
+   void SetWSId(void* id)
+   {
+      // set web-socket id
+
+      fWSId = id;
+   }
+
+   void* GetWSId() const
+   {
+      // get web-socket id
+
+      return fWSId;
+   }
+
 
    void SetRequestHeader(const char* h)
    {

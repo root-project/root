@@ -63,13 +63,15 @@ protected:
 public:
    virtual ~THttpWSEngine();
 
+   virtual void* GetId() const = 0;
+
    virtual void ClearHandle() = 0;
 
    virtual void Send(const void* buf, int len) = 0;
 
    virtual void ProcessData(THttpCallArg* arg);
 
-   // --------- method to work with
+   // --------- method to work with Canvas (temporary solution)
 
    virtual void AssignCanvas(TCanvas* canv);
 

@@ -32,6 +32,7 @@ THttpCallArg::THttpCallArg() :
    fPostData(0),
    fPostDataLength(0),
    fWSHandle(0),
+   fWSId(0),
    fContentType(),
    fRequestHeader(),
    fHeader(),
