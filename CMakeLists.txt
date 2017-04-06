@@ -54,7 +54,7 @@ if(ccache)
 endif()
 
 #---Enable test coverage -----------------------------------------------------------------------
-if(testcoverage)
+if(coverage)
   set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
   set(GCC_COVERAGE_LINK_FLAGS    "-fprofile-arcs")
   set(CMAKE_CXX_FLAGS            "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
