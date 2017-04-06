@@ -435,6 +435,7 @@ namespace Math {
   // [5.2.1.15] exponential integral
 
   double expint(double x);
+  double expint_n(int n, double x);
 
 
 
