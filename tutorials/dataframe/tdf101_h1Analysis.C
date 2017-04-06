@@ -121,7 +121,7 @@ void tdf101_h1Analysis()
    auto selected = Select(dataFrame);
 
    auto hdmdARP = selected.Histo1D(TH1F("hdmd", "Dm_d", 40, 0.13, 0.17), "dm_d");
-   auto selectedAddedBranch = selected.AddColumn(
+   auto selectedAddedBranch = selected.Define(
       "h2_y", [](float rpd0_t, float ptd0_d) { return rpd0_t / 0.029979f * 1.8646f / ptd0_d; }, {"rpd0_t", "ptd0_d"});
    auto h2ARP = selectedAddedBranch.Histo2D<float, float>(TH2F("h2", "ptD0 vs Dm_d", 30, 0.135, 0.165, 30, -3, 6),
                                                           "dm_d", "h2_y");

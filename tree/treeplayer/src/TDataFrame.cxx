@@ -158,20 +158,20 @@ calls can be chained one after another.
 ### Creating a temporary column
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived
 quantity `z = sqrt(x*x + y*y)`.
-Using the `AddColumn` transformation, we can create a new column in the data-set containing the variable "z":
+Using the `Define` transformation, we can create a new column in the data-set containing the variable "z":
 ~~~{.cpp}
 auto sqrtSum = [](double x, double y) { return sqrt(x*x + y*y); };
 auto zCut = [](double z) { return z > 0.; }
 
 ROOT::Experimental::TDataFrame d(treeName, filePtr);
-auto zMean = d.AddColumn("z", sqrtSum, {"x","y"})
+auto zMean = d.Define("z", sqrtSum, {"x","y"})
               .Filter(zCut, {"z"})
               .Mean("z");
 std::cout << *zMean << std::endl;
 ~~~
-`AddColumn` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to
-variables created with `AddColumn` as if they were actual tree branches, but they are evaluated on the fly, once per
-event. As with filters, `AddColumn` calls can be chained with other transformations to create multiple temporary
+`Define` creates the variable "z" by applying `sqrtSum` to "x" and "y". Later in the chain of calls we refer to
+variables created with `Define` as if they were actual tree branches, but they are evaluated on the fly, once per
+event. As with filters, `Define` calls can be chained with other transformations to create multiple temporary
 columns.
 
 ### Executing multiple actions
@@ -213,7 +213,7 @@ When constructing a `TDataFrame` object, it is possible to specify a **default b
 usual form of a list of strings representing branch names. The default branch list will be used as fallback whenever one
 specific to the transformation/action is not present.
 ~~~{.cpp}
-// use "b1" and "b2" as default branches for `Filter`, `AddColumn` and actions
+// use "b1" and "b2" as default branches for `Filter`, `Define` and actions
 ROOT::Experimental::TDataFrame d1(treeName, &file, {"b1","b2"});
 // filter acts on default branch list, no need to specify it
 auto h = d1.Filter([](int b1, int b2) { return b1 > b2; }).Histo1D("otherVar");
@@ -314,7 +314,7 @@ auto h1 = filtered.Histo1D("var1");
 
 // create a new branch "vec" with a vector extracted from a complex object (only for filtered entries)
 // and save the state of the chain
-auto newBranchFiltered = filtered.AddColumn("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
+auto newBranchFiltered = filtered.Define("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
 
 // apply a cut and fill a histogram with "vec"
 auto h2 = newBranchFiltered.Filter(cut1).Histo1D("vec");
@@ -381,7 +381,7 @@ Ranges allow "early quitting": if all branches of execution of a functional grap
 processed entries, the event-loop is immediately interrupted. This is useful for debugging and initial explorations.
 
 ### Temporary columns
-Temporary columns are created by invoking `AddColumn(name, f, branchList)`. As usual, `f` can be any callable object
+Temporary columns are created by invoking `Define(name, f, branchList)`. As usual, `f` can be any callable object
 (function, lambda expression, functor class...); it takes the values of the branches listed in `branchList` (a list of
 strings) as parameters, in the same order as they are listed in `branchList`. `f` must return the value that will be
 assigned to the temporary column.
@@ -397,10 +397,10 @@ Use cases include:
 An exception is thrown if the `name` of the new branch is already in use for another branch in the `TTree`.
 
 It is also possible to specify the quantity to be stored in the new temporary column as a C++ expression with the method
-`AddColumn(name, expression)`. For example this invocation
+`Define(name, expression)`. For example this invocation
 
 ~~~{.cpp}
-tdf.AddColumn("pt", "sqrt(px*px + py*py)");
+tdf.Define("pt", "sqrt(px*px + py*py)");
 ~~~
 
 will create a new column called "pt" the value of which is calculated starting from the branches px and py. The system
@@ -447,9 +447,9 @@ object to indicate that it should take advantage of a pool of worker threads. **
 subset of entries**, and their partial results are merged before returning the final values to the user.
 
 ### Thread safety
-`Filter` and `AddColumn` transformations should be inherently thread-safe: they have no side-effects and are not
+`Filter` and `Define` transformations should be inherently thread-safe: they have no side-effects and are not
 dependent on global state.
-Most `Filter`/`AddColumn` functions will in fact be pure in the functional programming sense.
+Most `Filter`/`Define` functions will in fact be pure in the functional programming sense.
 All actions are built to be thread-safe with the exception of `Foreach`, in which case users are responsible of
 thread-safety, see [here](#generic-actions).
 
