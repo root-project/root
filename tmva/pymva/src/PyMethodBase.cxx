@@ -48,8 +48,11 @@ PyObject *PyMethodBase::fGlobalNS = NULL;
 class PyGILRAII {
    PyGILState_STATE m_GILState;
 public:
-   PyGILRAII():m_GILState(PyGILState_Ensure()){}
-   ~PyGILRAII(){PyGILState_Release(m_GILState);}
+   PyGILRAII(): m_GILState(PyGILState_Ensure()) {}
+   ~PyGILRAII()
+   {
+      PyGILState_Release(m_GILState);
+   }
 };
 
 //_______________________________________________________________________
@@ -57,7 +60,7 @@ PyMethodBase::PyMethodBase(const TString &jobName,
                            Types::EMVA methodType,
                            const TString &methodTitle,
                            DataSetInfo &dsi,
-                           const TString &theOption ): MethodBase(jobName, methodType, methodTitle, dsi, theOption),
+                           const TString &theOption): MethodBase(jobName, methodType, methodTitle, dsi, theOption),
    fClassifier(NULL)
 {
    if (!PyIsInitialized()) {
@@ -96,7 +99,7 @@ PyMethodBase::~PyMethodBase()
 //_______________________________________________________________________
 PyObject *PyMethodBase::Eval(TString code)
 {
-   if(!PyIsInitialized()) PyInitialize();
+   if (!PyIsInitialized()) PyInitialize();
    PyObject *pycode = Py_BuildValue("(sOO)", code.Data(), fGlobalNS, fLocalNS);
    PyObject *result = PyObject_CallObject(fEval, pycode);
    Py_DECREF(pycode);
@@ -117,7 +120,7 @@ void PyMethodBase::PyInitialize()
       Py_Initialize();
    }
 
-    PyGILRAII thePyGILRAII;
+   PyGILRAII thePyGILRAII;
 
    if (!pyIsInitialized) {
       _import_array();
@@ -135,7 +138,7 @@ void PyMethodBase::PyInitialize()
       Log << Endl;
    }
 
-   #if PY_MAJOR_VERSION < 3
+#if PY_MAJOR_VERSION < 3
    //preparing objects for eval
    PyObject *bName =  PyUnicode_FromString("__builtin__");
    // Import the file as a Python module.
@@ -144,7 +147,7 @@ void PyMethodBase::PyInitialize()
       Log << kFATAL << "Can't import __builtin__" << Endl;
       Log << Endl;
    }
-   #else
+#else
    //preparing objects for eval
    PyObject *bName =  PyUnicode_FromString("builtins");
    // Import the file as a Python module.
@@ -153,7 +156,7 @@ void PyMethodBase::PyInitialize()
       Log << kFATAL << "Can't import builtins" << Endl;
       Log << Endl;
    }
-   #endif
+#endif
 
    PyObject *mDict = PyModule_GetDict(fModuleBuiltin);
    fEval = PyDict_GetItemString(mDict, "eval");
@@ -185,26 +188,26 @@ void PyMethodBase::PyFinalize()
    if (fModuleBuiltin) Py_DECREF(fModuleBuiltin);
    if (fPickleDumps) Py_DECREF(fPickleDumps);
    if (fPickleLoads) Py_DECREF(fPickleLoads);
-   if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
+   if (fMain) Py_DECREF(fMain); //objects fGlobalNS and fLocalNS will be free here
 }
 void PyMethodBase::PySetProgramName(TString name)
 {
-   #if PY_MAJOR_VERSION < 3
-   Py_SetProgramName(const_cast<char*>(name.Data()));
-   #else
+#if PY_MAJOR_VERSION < 3
+   Py_SetProgramName(const_cast<Char_t *>(name.Data()));
+#else
    Py_SetProgramName((wchar_t *)name.Data());
-   #endif
+#endif
 }
-
-size_t mystrlen(const char* s) { return strlen(s); }
+size_t mystrlen(const Char_t* s) { return strlen(s); }
 size_t mystrlen(const wchar_t* s) { return wcslen(s); }
 
 //_______________________________________________________________________
 TString PyMethodBase::Py_GetProgramName()
 {
-auto progName = ::Py_GetProgramName();
-return std::string(progName, progName + mystrlen(progName));
+   auto progName = ::Py_GetProgramName();
+   return std::string(progName, progName + mystrlen(progName));
 }
+
 //_______________________________________________________________________
 int  PyMethodBase::PyIsInitialized()
 {
@@ -216,31 +219,62 @@ int  PyMethodBase::PyIsInitialized()
    return kTRUE;
 }
 
-void PyMethodBase::Serialize(TString path,PyObject *obj)
+//_______________________________________________________________________
+void PyMethodBase::Serialize(TString path, PyObject *obj)
 {
- if(!PyIsInitialized()) PyInitialize();
- PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"wb");
- PyObject *file = PyObject_CallObject(fOpen,file_arg);
- PyObject *model_arg = Py_BuildValue("(OO)", obj,file);
- PyObject *model_data = PyObject_CallObject(fPickleDumps , model_arg);
+   if (!PyIsInitialized()) PyInitialize();
+   PyObject *file_arg = Py_BuildValue("(ss)", path.Data(), "wb");
+   PyObject *file = PyObject_CallObject(fOpen, file_arg);
+   PyObject *model_arg = Py_BuildValue("(OO)", obj, file);
+   PyObject *model_data = PyObject_CallObject(fPickleDumps, model_arg);
 
- Py_DECREF(file_arg);
- Py_DECREF(file);
- Py_DECREF(model_arg);
- Py_DECREF(model_data);
+   Py_DECREF(file_arg);
+   Py_DECREF(file);
+   Py_DECREF(model_arg);
+   Py_DECREF(model_data);
 }
 
-void PyMethodBase::UnSerialize(TString path,PyObject **obj)
+//_______________________________________________________________________
+void PyMethodBase::UnSerialize(TString path, PyObject **obj)
 {
- PyObject *file_arg = Py_BuildValue("(ss)", path.Data(),"rb");
- PyObject *file = PyObject_CallObject(fOpen,file_arg);
+   PyObject *file_arg = Py_BuildValue("(ss)", path.Data(), "rb");
+   PyObject *file = PyObject_CallObject(fOpen, file_arg);
 
- PyObject *model_arg = Py_BuildValue("(O)", file);
- *obj = PyObject_CallObject(fPickleLoads , model_arg);
+   PyObject *model_arg = Py_BuildValue("(O)", file);
+   *obj = PyObject_CallObject(fPickleLoads, model_arg);
 
- Py_DECREF(file_arg);
- Py_DECREF(file);
- Py_DECREF(model_arg);
+   Py_DECREF(file_arg);
+   Py_DECREF(file);
+   Py_DECREF(model_arg);
+}
+
+//_______________________________________________________________________
+//method to load SciKit-Learn version
+void PyMethodBase::LoadSKVersion()
+{
+   PyObject *pSklearnString  = PyUnicode_FromString("sklearn");
+   PyObject *pModuleSkModule = PyImport_Import(pSklearnString);
+   if (!pModuleSkModule) {
+      Log() << kFATAL << "Can't import sklearn" << Endl;
+      Log() << Endl;
+   }
+
+   PyObject *pSklearnVersion = PyObject_GetAttrString(pModuleSkModule, "__version__");
+   
+   #if PY_MAJOR_VERSION < 3
+   std::istringstream sVersion(std::string(PyBytes_AS_STRING(pSklearnVersion)));
+   #else
+   std::istringstream sVersion(std::string(PyUnicode_AsUTF8(pSklearnVersion)));
+   #endif
+   std::string  sVersionMayor;
+   std::string  sVersionMinor;
+   std::getline(sVersion, sVersionMayor, '.');
+   std::getline(sVersion, sVersionMinor, '.');
+   fSkVersionMinor = std::stoi(sVersionMinor);
+   fSkVersionMayor = std::stoi(sVersionMayor);
+   Py_DECREF(pSklearnString);
+   Py_DECREF(pModuleSkModule);
+   Py_DECREF(pSklearnVersion);
 }
 
 
@@ -254,53 +288,47 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
    Long64_t nEvents = Data()->GetNEvents();
    if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
    if (firstEvt < 0) firstEvt = 0;
-   std::vector<Double_t> values(lastEvt-firstEvt);
+   std::vector<Double_t> values(lastEvt - firstEvt);
 
    nEvents = values.size();
 
    UInt_t nvars = Data()->GetNVariables();
 
-   int dims[2];
+   Int_t dims[2];
    dims[0] = nEvents;
    dims[1] = nvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
-   float *pValue = (float *)(PyArray_DATA(pEvent));
-
-//    int dims2[2];
-//    dims2[0] = 1;
-//    dims2[1] = nvars;
+   PyArrayObject *pEvent = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   Float_t *pValue = (Float_t *)(PyArray_DATA(pEvent));
 
    // use timer
-   Timer timer( nEvents, GetName(), kTRUE );
+   Timer timer(nEvents, GetName(), kTRUE);
    if (logProgress)
-      Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
-            << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
+      Log() << kINFO << Form("Dataset[%s] : ", DataInfo().GetName()) << "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing") << " sample (" << nEvents << " events)" << Endl;
 
 
    // fill numpy array with events data
-   for (Int_t ievt=0; ievt<nEvents; ievt++) {
-     Data()->SetCurrentEvent(ievt);
+   for (Int_t ievt = 0; ievt < nEvents; ievt++) {
+      Data()->SetCurrentEvent(ievt);
       const TMVA::Event *e = Data()->GetEvent();
       assert(nvars == e->GetNVariables());
       for (UInt_t i = 0; i < nvars; i++) {
          pValue[ievt * nvars + i] = e->GetValue(i);
       }
-      // if (ievt%100 == 0)
-      //    std::cout << "Event " << ievt << "  type" << DataInfo().IsSignal(e) << " : " << pValue[ievt*nvars] << "  " << pValue[ievt*nvars+1] << "  " << pValue[ievt*nvars+2] << std::endl;
    }
 
    // pass all the events to Scikit and evaluate the probabilities
-   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
-   double *proba = (double *)(PyArray_DATA(result));
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<Char_t *>("predict_proba"), const_cast<Char_t *>("(O)"), pEvent);
+   Double_t *proba = (Double_t *)(PyArray_DATA(result));
 
    // the return probabilities is a vector of pairs of (p_sig,p_backg)
    // we ar einterested only in the signal probability
-   std::vector<double> mvaValues(nEvents);
+   std::vector<Double_t> mvaValues(nEvents);
    for (int i = 0; i < nEvents; ++i)
-      mvaValues[i] = proba[2*i];
+      mvaValues[i] = proba[2 * i];
 
    if (logProgress) {
-      Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
+      Log() << kINFO << Form("Dataset[%s] : ", DataInfo().GetName()) << "Elapsed time for evaluation of " << nEvents <<  " events: "
             << timer.GetElapsedTime() << "       " << Endl;
    }
 
@@ -315,7 +343,8 @@ std::vector<Double_t> PyMethodBase::GetMvaValues(Long64_t firstEvt, Long64_t las
 // error handling
 // `start` defines the start symbol defined in PyRun_String (Py_eval_input,
 // Py_single_input, Py_file_input)
-void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
+void PyMethodBase::PyRunString(TString code, TString errorMessage, int start)
+{
    fPyReturn = PyRun_String(code, start, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
       Log() << kWARNING << "Failed to run python code: " << code << Endl;

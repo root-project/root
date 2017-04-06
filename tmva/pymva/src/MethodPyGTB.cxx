@@ -53,8 +53,6 @@ using namespace TMVA;
 
 REGISTER_METHOD(PyGTB)
 
-ClassImp(MethodPyGTB)
-
 //_______________________________________________________________________
 MethodPyGTB::MethodPyGTB(const TString &jobName,
                          const TString &methodTitle,
@@ -65,6 +63,7 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
    learning_rate(0.1),
    n_estimators(100),
    subsample(1.0),
+   criterion("friedman_mse"),
    min_samples_split(2),
    min_samples_leaf(1),
    min_weight_fraction_leaf(0.0),
@@ -74,6 +73,7 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
    max_features("None"),
    verbose(0),
    max_leaf_nodes("None"),
+   min_impurity_split(1e-7),
    warm_start(kFALSE)
 {
 }
@@ -85,6 +85,7 @@ MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile)
      learning_rate(0.1),
      n_estimators(100),
      subsample(1.0),
+     criterion("friedman_mse"),
      min_samples_split(2),
      min_samples_leaf(1),
      min_weight_fraction_leaf(0.0),
@@ -94,6 +95,7 @@ MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile)
      max_features("None"),
      verbose(0),
      max_leaf_nodes("None"),
+     min_impurity_split(1e-7),
      warm_start(kFALSE)
 {
 }
@@ -123,7 +125,7 @@ void MethodPyGTB::DeclareOptions()
     with probabilistic outputs. For loss 'exponential' gradient\
     boosting recovers the AdaBoost algorithm.");
 
-   DeclareOptionRef(learning_rate, "LearningRate", "float, optional (default=0.1)\
+   DeclareOptionRef(learning_rate, "LearningRate", "Float_t, optional (default=0.1)\
     learning rate shrinks the contribution of each tree by `learning_rate`.\
     There is a trade-off between learning_rate and n_estimators.");
 
@@ -132,12 +134,19 @@ void MethodPyGTB::DeclareOptions()
     is fairly robust to over-fitting so a large number usually\
     results in better performance.");
 
-   DeclareOptionRef(subsample, "Subsample", "float, optional (default=1.0)\
+   DeclareOptionRef(subsample, "Subsample", "Float_t, optional (default=1.0)\
     The fraction of samples to be used for fitting the individual base\
     learners. If smaller than 1.0 this results in Stochastic Gradient\
     Boosting. `subsample` interacts with the parameter `n_estimators`.\
     Choosing `subsample < 1.0` leads to a reduction of variance\
     and an increase in bias.");
+
+   DeclareOptionRef(criterion, "Criterion", "string, optional (default=”friedman_mse”)\
+    The function to measure the quality of a split. \
+    Supported criteria are “friedman_mse” for the mean squared error with improvement score by Friedman, \
+    “mse” for mean squared error, and “mae” for the mean absolute error. \
+    The default value of “friedman_mse” is generally the best as it can provide a better approximation in some cases. \
+    New in version 0.18.");
 
    DeclareOptionRef(min_samples_split, "MinSamplesSplit", "integer, optional (default=2)\
     The minimum number of samples required to split an internal node.");
@@ -175,6 +184,12 @@ void MethodPyGTB::DeclareOptions()
     Best nodes are defined as relative reduction in impurity.\
     If None then unlimited number of leaf nodes.\
     If not None then ``max_depth`` will be ignored.");
+
+   DeclareOptionRef(min_impurity_split, "MinImpuritySplit", "Float_t, optional (default=1e-7)\
+    Threshold for early stopping in tree growth. A node will split \
+    if its impurity is above the threshold, otherwise it is a leaf. \
+    .. versionadded:: 0.18");
+
    DeclareOptionRef(warm_start, "WarmStart", "bool, optional (default=False)\
     When set to ``True``, reuse the solution of the previous call to fit\
     and add more estimators to the ensemble, otherwise, just fit a whole\
@@ -314,6 +329,7 @@ void  MethodPyGTB::Init()
       Log() << Endl;
    }
 
+   LoadSKVersion();
 
    //Training data
    UInt_t fNvars = Data()->GetNVariables();
@@ -322,14 +338,14 @@ void  MethodPyGTB::Init()
    dims[0] = fNrowsTraining;
    dims[1] = fNvars;
    fTrainData = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
-   float *TrainData = (float *)(PyArray_DATA(fTrainData));
+   Float_t *TrainData = (Float_t *)(PyArray_DATA(fTrainData));
 
 
    fTrainDataClasses = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
-   float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
+   Float_t *TrainDataClasses = (Float_t *)(PyArray_DATA(fTrainDataClasses));
 
    fTrainDataWeights = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
-   float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
+   Float_t *TrainDataWeights = (Float_t *)(PyArray_DATA(fTrainDataWeights));
 
    for (int i = 0; i < fNrowsTraining; i++) {
       const TMVA::Event *e = Data()->GetTrainingEvent(i);
@@ -345,41 +361,43 @@ void  MethodPyGTB::Init()
 
 void MethodPyGTB::Train()
 {
-   //NOTE: max_features must have 3 defferents variables int, float and string
+   //NOTE: max_features must have 3 defferents variables int, Float_t and string
    //search a solution with PyObject
    PyObject *poinit = Eval(init);
    PyObject *porandom_state = Eval(random_state);
    PyObject *pomax_features = Eval(max_features);
    PyObject *pomax_leaf_nodes = Eval(max_leaf_nodes);
 
-   PyObject *args = Py_BuildValue("(sfifiifiOOOiOi)", loss.Data(), \
-                                  learning_rate, n_estimators, subsample, min_samples_split, min_samples_leaf, min_weight_fraction_leaf, \
-                                  max_depth, poinit, porandom_state, pomax_features, verbose, pomax_leaf_nodes, warm_start);
-
+   PyObject *args;
+   if (fSkVersionMinor == 17) {
+      args = Py_BuildValue("(sfifiifiOOOiOi)", loss.Data(), \
+                           learning_rate, n_estimators, subsample, min_samples_split, min_samples_leaf, min_weight_fraction_leaf, \
+                           max_depth, poinit, porandom_state, pomax_features, verbose, pomax_leaf_nodes, warm_start);
+   } else {
+      args = Py_BuildValue("(sfifsiififOOOiOi)", loss.Data(), \
+                           learning_rate, n_estimators, subsample, criterion.Data(), min_samples_split, min_samples_leaf, min_weight_fraction_leaf, \
+                           max_depth, min_impurity_split, poinit, porandom_state, pomax_features, verbose, pomax_leaf_nodes, warm_start);
+   }
    PyObject_Print(args, stdout, 0);
    std::cout << std::endl;
 
    PyObject *pDict = PyModule_GetDict(fModule);
    PyObject *fClassifierClass = PyDict_GetItemString(pDict, "GradientBoostingClassifier");
 
+   Py_DECREF(poinit);
+   Py_DECREF(porandom_state);
+   Py_DECREF(pomax_features);
+   Py_DECREF(pomax_leaf_nodes);
+
    // Create an instance of the class
    if (PyCallable_Check(fClassifierClass)) {
       //instance
-      fClassifier = PyObject_CallObject(fClassifierClass , args);
+      fClassifier = PyObject_CallObject(fClassifierClass, args);
       PyObject_Print(fClassifier, stdout, 0);
       std::cout << std::endl;
 
-      Py_DECREF(poinit);
-      Py_DECREF(porandom_state);
-      Py_DECREF(pomax_features);
-      Py_DECREF(pomax_leaf_nodes);
-      Py_DECREF(args);
    } else {
       PyErr_Print();
-      Py_DECREF(poinit);
-      Py_DECREF(porandom_state);
-      Py_DECREF(pomax_features);
-      Py_DECREF(pomax_leaf_nodes);
       Py_DECREF(args);
       Py_DECREF(pDict);
       Py_DECREF(fClassifierClass);
@@ -388,18 +406,20 @@ void MethodPyGTB::Train()
 
    }
 
-   fClassifier = PyObject_CallMethod(fClassifier, (char *)"fit", (char *)"(OOO)", fTrainData, fTrainDataClasses, fTrainDataWeights);
-//     PyObject_Print(fClassifier, stdout, 0);
-//     std::cout<<std::endl;
-   //     pValue =PyObject_CallObject(fClassifier, PyUnicode_FromString("classes_"));
-   //     PyObject_Print(pValue, stdout, 0);
-   if (IsModelPersistence())
-   {
-        TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
-        Log() << Endl;
-        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-        Log() << Endl;
-        Serialize(path,fClassifier);
+   fClassifier = PyObject_CallMethod(fClassifier, (Char_t *)"fit", (Char_t *)"(OOO)", fTrainData, fTrainDataClasses, fTrainDataWeights);
+
+   if (!fClassifier) {
+      PyErr_Print();
+      Log() << kFATAL << "Can't fit classifier with object GradientBoostingClassifier" << Endl;
+      Log() << Endl;
+   }
+
+   if (IsModelPersistence()) {
+      TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
+      Log() << Endl;
+      Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
+      Log() << Endl;
+      Serialize(path, fClassifier);
    }
 }
 
@@ -425,12 +445,12 @@ Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    int dims[2];
    dims[0] = 1;
    dims[1] = nvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
-   float *pValue = (float *)(PyArray_DATA(pEvent));
+   PyArrayObject *pEvent = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   Float_t *pValue = (Float_t *)(PyArray_DATA(pEvent));
 
    for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
-   
-   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
+
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<Char_t *>("predict_proba"), const_cast<Char_t *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
    mvaValue = proba[0]; //getting signal prob
    Py_DECREF(result);
@@ -452,7 +472,7 @@ void MethodPyGTB::ReadModelFromFile()
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;
-   UnSerialize(path,&fClassifier);
+   UnSerialize(path, &fClassifier);
 }
 
 //_______________________________________________________________________
