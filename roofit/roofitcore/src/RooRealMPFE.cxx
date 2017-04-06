@@ -68,7 +68,9 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "TSystem.h"
 
 // for cpu affinity
+#if !defined(__APPLE__) && !defined(_WIN32)
 #include <sched.h>
+#endif
 
 #include <chrono>
 #include <fstream>
@@ -481,6 +483,11 @@ void RooRealMPFE::serverLoop() {
         int cpu;
         *_pipe >> cpu;
 
+        #if defined(__APPLE__)
+        std::cout << "WARNING: CPU affinity cannot be set on macOS, continuing..." << std::endl;
+        #elif defined(_WIN32)
+        std::cout << "WARNING: CPU affinity setting not implemented on Windows, continuing..." << std::endl;
+        #else
         cpu_set_t mask;
         // zero all bits in mask
         CPU_ZERO(&mask);
@@ -493,6 +500,7 @@ void RooRealMPFE::serverLoop() {
         } else {
           std::cout << "CPU affinity set to cpu " << cpu << " in server process " << getpid() << std::endl;
         }
+        #endif
 
         break;
       }
