@@ -8,6 +8,8 @@
 
 class RooTimer {
 public:
+  RooTimer();
+  virtual void start() = 0;
   virtual void stop() = 0;
   double timing_s();
   void set_timing_s(double timing_s);
@@ -17,19 +19,19 @@ private:
   double _timing_s;
 };
 
-class RooInstantTimer: public RooTimer {
+class RooWallTimer: public RooTimer {
 public:
-  RooInstantTimer();
+  virtual void start();
   virtual void stop();
 
 private:
-  std::chrono::time_point<std::chrono::system_clock> _timing_begin, _timing_end;
+  std::chrono::time_point<std::chrono::high_resolution_clock> _timing_begin, _timing_end;
 };
 
 
-class RooInstantCPUTimer: public RooTimer {
+class RooCPUTimer: public RooTimer {
 public:
-  RooInstantCPUTimer();
+  virtual void start();
   virtual void stop();
 
 private:

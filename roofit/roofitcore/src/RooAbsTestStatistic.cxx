@@ -54,14 +54,13 @@ combined in the main thread.
 #include "RooConstVar.h"
 
 #include <string>
-#include <chrono>
 #include <fstream>
 #include <sstream>
 
-// EGP: for gROOT, which contains timing_flag
-#include "TROOT.h"
 // timing
 #include "RooTimer.h"
+// getpid and getppid:
+#include "unistd.h"
 
 using namespace std;
 
@@ -244,7 +243,7 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 Double_t RooAbsTestStatistic::evaluate() const
 {
   ofstream timing_outfile;
-  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
+  RooWallTimer timer;
 
     // One-time Initialization
   if (!_init) {
@@ -254,7 +253,7 @@ Double_t RooAbsTestStatistic::evaluate() const
   if (SimMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
-      timing_begin = std::chrono::high_resolution_clock::now();
+      timer.start();
     }
     // Evaluate array of owned GOF objects
     Double_t ret = 0.;
@@ -285,11 +284,9 @@ Double_t RooAbsTestStatistic::evaluate() const
     }
 
     if (RooTrace::timing_flag == 2) {
-      timing_end = std::chrono::high_resolution_clock::now();
-
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
+      timer.stop();
+      
+      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timer.timing_s()
           << "\", \"pid\": \"" << getpid()
           << "\", \"ppid\": \"" << getppid()
           << "\", \"mode\": \"SimMaster"
@@ -303,7 +300,7 @@ Double_t RooAbsTestStatistic::evaluate() const
   } else if (MPMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
-      timing_begin = std::chrono::high_resolution_clock::now();
+      timer.start();
     }
     std::vector<double> timings;
     if (RooTrace::timing_flag == 3) {
@@ -318,7 +315,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     for (Int_t i = 0; i < _nCPU; ++i) {
       if (RooTrace::timing_flag == 3) {
-        timing_begin = std::chrono::high_resolution_clock::now();
+        timer.start();
       }
       Double_t y = _mpfeArray[i]->getValV();
       carry += _mpfeArray[i]->getCarry();
@@ -327,8 +324,8 @@ Double_t RooAbsTestStatistic::evaluate() const
       carry = (t - sum) - y;
       sum = t;
       if (RooTrace::timing_flag == 3) {
-        timing_end = std::chrono::high_resolution_clock::now();
-        timings[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
+        timer.stop();
+        timings[i] = timer.timing_s();
       }
     }
 
@@ -350,11 +347,9 @@ Double_t RooAbsTestStatistic::evaluate() const
     _evalCarry = carry;
 
     if (RooTrace::timing_flag == 2) {
-      timing_end = std::chrono::high_resolution_clock::now();
+      timer.stop();
 
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
+      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timer.timing_s()
           << "\", \"pid\": \"" << getpid()
           << "\", \"ppid\": \"" << getppid()
           << "\", \"mode\": \"MPMaster"
@@ -370,7 +365,7 @@ Double_t RooAbsTestStatistic::evaluate() const
   } else {
     if (RooTrace::timing_flag == 2) {
       timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
-      timing_begin = std::chrono::high_resolution_clock::now();
+      timer.start();
     }
 
     // Evaluate as straight FUNC
@@ -400,7 +395,6 @@ Double_t RooAbsTestStatistic::evaluate() const
       break ;
     }
 
-    RooInstantTimer timer;
     Double_t ret = evaluatePartition(nFirst,nLast,nStep);
     if (getAttribute("timing_on")) {
       timer.stop();
@@ -416,11 +410,9 @@ Double_t RooAbsTestStatistic::evaluate() const
     }
 
     if (RooTrace::timing_flag == 2) {
-      timing_end = std::chrono::high_resolution_clock::now();
+      timer.stop();
 
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timing_s
+      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timer.timing_s()
           << "\", \"pid\": \"" << getpid()
           << "\", \"ppid\": \"" << getppid()
           << "\", \"mode\": \"other"

@@ -72,13 +72,16 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 
 #include <chrono>
 #include <fstream>
-#include <ctime>
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 
-// EGP: for gROOT, which contains timing_flag
-#include "TROOT.h"
+// FIXME: remove this include?
 #include "../../../graf3d/ftgl/inc/FTGL.h"
+
+// timing
+#include "RooTimer.h"
+// getpid and getppid:
+#include "unistd.h"
 
 using namespace std;
 using namespace RooFit;
@@ -294,7 +297,7 @@ RooAbsArg* RooRealMPFE::_findComponent(std::string name) {
 void RooRealMPFE::serverLoop() {
 #ifndef _WIN32
   ofstream timing_outfile;
-  TimePoint timing_begin, timing_end;
+  RooWallTimer timer;
 
   if (RooTrace::timing_flag == 9) {
     stringstream filename_ss;
@@ -306,7 +309,7 @@ void RooRealMPFE::serverLoop() {
     stringstream filename_ss;
     filename_ss << "timing_RRMPFE_serverloop_p" << getpid() << ".json";
     timing_outfile.open(filename_ss.str().c_str(), ios::app);
-    timing_begin = WallClock::now();
+    timer.start();
   }
 
   int msg;
@@ -319,7 +322,7 @@ void RooRealMPFE::serverLoop() {
 
   while (*_pipe && !_pipe->eof()) {
     if (RooTrace::timing_flag == 9) {
-      timing_begin = WallClock::now();
+      timer.start();
     }
     *_pipe >> msg;
     if (Terminate == msg) {
@@ -574,11 +577,9 @@ void RooRealMPFE::serverLoop() {
 
     // end timing
     if (RooTrace::timing_flag == 9) {
-      timing_end = WallClock::now();
-
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"RRMPFE_serverloop_while_wall_s\": \"" << timing_s
+      timer.stop();
+      
+      timing_outfile << "{\"RRMPFE_serverloop_while_wall_s\": \"" << timer.timing_s()
                      << "\", \"pid\": \"" << getpid()
                      << "\", \"ppid\": \"" << getppid()
                      << "\"}," << "\n";
@@ -589,11 +590,9 @@ void RooRealMPFE::serverLoop() {
 
   // end timing
   if (RooTrace::timing_flag == 8) {
-    timing_end = WallClock::now();
-
-    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-    timing_outfile << "{\"RRMPFE_serverloop_wall_s\": \"" << timing_s
+    timer.stop();
+    
+    timing_outfile << "{\"RRMPFE_serverloop_wall_s\": \"" << timer.timing_s()
                    << "\", \"pid\": \"" << getpid()
                    << "\", \"ppid\": \"" << getppid()
                    << "\"}," << "\n";
@@ -687,24 +686,22 @@ void RooRealMPFE::_setTimingNumIntSet(Bool_t flag) {
 void RooRealMPFE::calculate() const
 {
   ofstream timing_outfile;
-  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end;
+  RooWallTimer timer;
 
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << endl ;
     if (RooTrace::timing_flag == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_initialize.json", ios::app);
-      timing_begin = WallClock::now();
+      timer.start();
     }
 
     const_cast<RooRealMPFE*>(this)->initialize() ;
 
     if (RooTrace::timing_flag == 7) {
-      timing_end = WallClock::now();
+      timer.stop();
 
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"RRMPFE_calculate_initialize_wall_s\": \"" << timing_s
+      timing_outfile << "{\"RRMPFE_calculate_initialize_wall_s\": \"" << timer.timing_s()
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
@@ -717,18 +714,16 @@ void RooRealMPFE::calculate() const
     //     cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
     if (RooTrace::timing_flag == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_inline.json", ios::app);
-      timing_begin = WallClock::now();
+      timer.start();
     }
 
     _value = _arg ;
     clearValueDirty() ;
 
     if (RooTrace::timing_flag == 7) {
-      timing_end = WallClock::now();
+      timer.stop();
 
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"RRMPFE_calculate_inline_wall_s\": \"" << timing_s
+      timing_outfile << "{\"RRMPFE_calculate_inline_wall_s\": \"" << timer.timing_s()
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
@@ -742,7 +737,7 @@ void RooRealMPFE::calculate() const
     // timing stuff
     if (RooTrace::timing_flag == 7) {
       timing_outfile.open("timing_RRMPFE_calculate_client.json", ios::app);
-      timing_begin = WallClock::now();
+      timer.start();
     }
 
     if (RooTrace::timing_flag == 10) {
@@ -818,11 +813,9 @@ void RooRealMPFE::calculate() const
 
     // end timing
     if (RooTrace::timing_flag == 7) {
-      timing_end = std::chrono::high_resolution_clock::now();
+      timer.stop();
 
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"RRMPFE_calculate_client_wall_s\": \"" << timing_s
+      timing_outfile << "{\"RRMPFE_calculate_client_wall_s\": \"" << timer.timing_s()
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
@@ -878,13 +871,12 @@ Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 Double_t RooRealMPFE::evaluate() const
 {
   ofstream timing_outfile;
-  std::chrono::time_point<std::chrono::system_clock> timing_begin, timing_end,
-                                                     timing_before_retrieve, timing_after_retrieve;
-  struct timespec c_timing_begin, c_timing_end, c_timing_before_retrieve, c_timing_after_retrieve;
+  RooWallTimer wtimer, wtimer_before, wtimer_retrieve, wtimer_after;
+  RooCPUTimer ctimer, ctimer_before, ctimer_retrieve, ctimer_after;
 
   if (RooTrace::timing_flag == 4) {
     timing_outfile.open("timing_RRMPFE_evaluate_full.json", ios::app);
-    timing_begin = std::chrono::high_resolution_clock::now();
+    wtimer.start();
   }
 
   // Retrieve value of arg
@@ -895,11 +887,13 @@ Double_t RooRealMPFE::evaluate() const
 #ifndef _WIN32
     if (RooTrace::timing_flag == 5) {
       timing_outfile.open("timing_wall_RRMPFE_evaluate_client.json", ios::app);
-      timing_begin = std::chrono::high_resolution_clock::now();
+      wtimer.start();
+      wtimer_before.start();
     }
     if (RooTrace::timing_flag == 6) {
       timing_outfile.open("timing_cpu_RRMPFE_evaluate_client.json", ios::app);
-      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_begin);
+      ctimer.start();
+      ctimer_before.start();
     }
 
     bool needflush = false;
@@ -930,19 +924,23 @@ Double_t RooRealMPFE::evaluate() const
     Int_t numError;
 
     if (RooTrace::timing_flag == 5) {
-      timing_before_retrieve = std::chrono::high_resolution_clock::now();
+      wtimer_before.stop();
+      wtimer_retrieve.start();
     }
     if (RooTrace::timing_flag == 6) {
-      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_before_retrieve);
+      ctimer_before.stop();
+      ctimer_retrieve.start();
     }
 
     *_pipe >> msg >> value >> _evalCarry >> numError;
 
     if (RooTrace::timing_flag == 5) {
-      timing_after_retrieve = std::chrono::high_resolution_clock::now();
+      wtimer_retrieve.stop();
+      wtimer_after.start();
     }
     if (RooTrace::timing_flag == 6) {
-      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_after_retrieve);
+      ctimer_retrieve.stop();
+      ctimer_after.start();
     }
 
     if (msg!=ReturnValue) {
@@ -978,44 +976,34 @@ Double_t RooRealMPFE::evaluate() const
     return_value = value ;
 
     if (RooTrace::timing_flag == 5) {
-      timing_end = std::chrono::high_resolution_clock::now();
+      wtimer_after.stop();
+      wtimer.stop();
     }
     if (RooTrace::timing_flag == 6) {
-      clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &c_timing_end);
+      ctimer_after.stop();
+      ctimer.stop();
     }
 
     if (RooTrace::timing_flag == 5) {
-      // total
-      double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"time s\": \"" << timing_s
+      timing_outfile << "{\"time s\": \"" << wtimer.timing_s()
                      << "\", \"cpu/wall\": \"wall"
                      << "\", \"segment\": \"all"
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
-      // before retrieve
-      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_before_retrieve - timing_begin).count() / 1.e9;
-
-      timing_outfile << "{\"time s\": \"" << timing_s
+      timing_outfile << "{\"time s\": \"" << wtimer_before.timing_s()
                      << "\", \"cpu/wall\": \"wall"
                      << "\", \"segment\": \"before_retrieve"
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
-      // retrieve
-      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_after_retrieve - timing_before_retrieve).count() / 1.e9;
-
-      timing_outfile << "{\"time s\": \"" << timing_s
+      timing_outfile << "{\"time s\": \"" << wtimer_retrieve.timing_s()
                      << "\", \"cpu/wall\": \"wall"
                      << "\", \"segment\": \"retrieve"
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
-      // after retrieve
-      timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_after_retrieve).count() / 1.e9;
-
-      timing_outfile << "{\"time s\": \"" << timing_s
+      timing_outfile << "{\"time s\": \"" << wtimer_after.timing_s()
                      << "\", \"cpu/wall\": \"wall"
                      << "\", \"segment\": \"after_retrieve"
                      << "\", \"pid\": \"" << getpid()
@@ -1025,32 +1013,25 @@ Double_t RooRealMPFE::evaluate() const
     }
 
     if (RooTrace::timing_flag == 6) {
-      // total
-      double c_timing_s = (c_timing_end.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
-
-      timing_outfile << "{\"time s\": \"" << c_timing_s
+      timing_outfile << "{\"time s\": \"" << ctimer.timing_s()
                      << "\", \"cpu/wall\": \"cpu"
                      << "\", \"segment\": \"all"
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
-      c_timing_s = (c_timing_before_retrieve.tv_nsec - c_timing_begin.tv_nsec) / 1.e9;
-
-      timing_outfile << "{\"time s\": \"" << c_timing_s
+      timing_outfile << "{\"time s\": \"" << ctimer_before.timing_s()
                      << "\", \"cpu/wall\": \"cpu"
                      << "\", \"segment\": \"before_retrieve"
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
-      c_timing_s = (c_timing_after_retrieve.tv_nsec - c_timing_before_retrieve.tv_nsec) / 1.e9;
-
-      timing_outfile << "{\"time s\": \"" << c_timing_s
+      timing_outfile << "{\"time s\": \"" << ctimer_retrieve.timing_s()
                      << "\", \"cpu/wall\": \"cpu"
                      << "\", \"segment\": \"retrieve"
                      << "\", \"pid\": \"" << getpid()
                      << "\"}," << "\n";
 
-      timing_outfile << "{\"time s\": \"" << c_timing_s
+      timing_outfile << "{\"time s\": \"" << ctimer_after.timing_s()
                      << "\", \"cpu/wall\": \"cpu"
                      << "\", \"segment\": \"after_retrieve"
                      << "\", \"pid\": \"" << getpid()
@@ -1064,11 +1045,9 @@ Double_t RooRealMPFE::evaluate() const
   }
 
   if (RooTrace::timing_flag == 4) {
-    timing_end = std::chrono::high_resolution_clock::now();
-
-    double timing_s = std::chrono::duration_cast<std::chrono::nanoseconds>(timing_end - timing_begin).count() / 1.e9;
-
-    timing_outfile << "{\"RRMPFE_evaluate_wall_s\": \"" << timing_s
+    wtimer.stop();
+    
+    timing_outfile << "{\"RRMPFE_evaluate_wall_s\": \"" << wtimer.timing_s()
                    << "\", \"pid\": \"" << getpid()
                    << "\"}," << "\n";
 

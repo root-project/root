@@ -885,7 +885,7 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 
 Double_t RooRealIntegral::evaluate() const 
 {
-  RooInstantTimer timer;
+  RooWallTimer timer;
 
   Double_t retVal(0) ;
   switch (_intOperMode) {    
