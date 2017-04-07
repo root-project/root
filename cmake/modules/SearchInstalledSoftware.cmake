@@ -1268,7 +1268,7 @@ elseif(vc)
   endif()
 endif()
 
-if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
+if(vc AND NOT Vc_FOUND)
   set(Vc_VERSION "1.3.0")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
@@ -1313,90 +1313,6 @@ endif()
 if(Vc_FOUND)
   # Missing from VcConfig.cmake
   set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
-endif()
-
-#---Check for VecCore--------------------------------------------------------------------
-if(veccore AND builtin_vc)
-  message(WARNING "Vc is not relocatable, so 'builtin_vc' requires 'builtin_veccore' to set up Vc properly.")
-  set(builtin_veccore ON CACHE BOOL "" FORCE)
-endif()
-
-if(builtin_veccore)
-  unset(VecCore_FOUND)
-  unset(VecCore_FOUND CACHE)
-  set(veccore ON CACHE BOOL "" FORCE)
-elseif(veccore)
-  if(fail-on-missing)
-    find_package(VecCore 0.4.0 CONFIG QUIET REQUIRED)
-  else()
-    find_package(VecCore 0.4.0 CONFIG QUIET)
-    if(NOT VecCore_FOUND)
-      message(STATUS "VecCore not found, support for it disabled.")
-      message(STATUS "Please enable the option 'builtin_veccore' to build VecCore internally.")
-      set(veccore OFF CACHE BOOL "" FORCE)
-    endif()
-  endif()
-endif()
-
-if(veccore AND NOT VecCore_FOUND)
-  set(VecCore_VERSION "0.4.0")
-  set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
-  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/${VecCore_PROJECT}")
-  set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
-
-  if(builtin_vc)
-    set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(Vc_LIBRARY "${VecCore_ROOTDIR}/${_LIBDIR_DEFAULT}/${Vc_LIBNAME}")
-  endif()
-
-  ExternalProject_Add(${VecCore_PROJECT}
-    GIT_REPOSITORY https://gitlab.cern.ch/VecGeom/VecCore.git
-    GIT_TAG v${VecCore_VERSION}
-    BUILD_IN_SOURCE 0
-    BUILD_BYPRODUCTS ${Vc_LIBRARY}
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
-               -DBUILD_TESTING=OFF -DVC=${vc} -DBUILD_VC=${builtin_vc}
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
-  )
-
-  if(builtin_vc)
-    add_library(Vc STATIC IMPORTED)
-    set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-    add_dependencies(Vc ${VecCore_PROJECT})
-
-    set(Vc_LIBRARIES Vc)
-    set(Vc_INCLUDE_DIR ${VecCore_ROOTDIR}/include)
-    set(Vc_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
-    set(Vc_CMAKE_MODULES_DIR "${VecCore_ROOTDIR}/${_LIBDIR_DEFAULT}/cmake/Vc")
-
-    find_package_handle_standard_args(Vc
-      FOUND_VAR Vc_FOUND
-      REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
-      VERSION_VAR Vc_VERSION)
-  endif()
-
-  if (vc OR builtin_vc)
-    set(VecCore_ENABLE_VC True)
-    set(VecCore_INCLUDE_DIRS ${Vc_INCLUDE_DIRS})
-    set(VecCore_LIBRARIES ${Vc_LIBRARIES})
-  endif()
-
-  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
-
-  find_package_handle_standard_args(VecCore
-    FOUND_VAR VecCore_FOUND
-    REQUIRED_VARS VecCore_INCLUDE_DIRS
-    VERSION_VAR VecCore_VERSION)
-
-  install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
 
 #---Check for Vdt--------------------------------------------------------------------
