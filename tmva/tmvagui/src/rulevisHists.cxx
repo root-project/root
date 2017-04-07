@@ -174,7 +174,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
          if (bgd == NULL) {
             cout << "ERROR!!! couldn't find backgroung histo for" << hname << endl;
             //exit(1);
-            delete c;
+            delete [] c;
             return;
          }
 
