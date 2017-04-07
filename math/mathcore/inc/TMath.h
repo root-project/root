@@ -37,89 +37,89 @@ namespace TMath {
    /* * Fundamental constants * */
    /* ************************* */
 
-   inline Double_t Pi()       { return 3.14159265358979323846; }
-   inline Double_t TwoPi()    { return 2.0 * Pi(); }
-   inline Double_t PiOver2()  { return Pi() / 2.0; }
-   inline Double_t PiOver4()  { return Pi() / 4.0; }
-   inline Double_t InvPi()    { return 1.0 / Pi(); }
-   inline Double_t RadToDeg() { return 180.0 / Pi(); }
-   inline Double_t DegToRad() { return Pi() / 180.0; }
-   inline Double_t Sqrt2()    { return 1.4142135623730950488016887242097; }
+   constexpr Double_t Pi()       { return 3.14159265358979323846; }
+   constexpr Double_t TwoPi()    { return 2.0 * Pi(); }
+   constexpr Double_t PiOver2()  { return Pi() / 2.0; }
+   constexpr Double_t PiOver4()  { return Pi() / 4.0; }
+   constexpr Double_t InvPi()    { return 1.0 / Pi(); }
+   constexpr Double_t RadToDeg() { return 180.0 / Pi(); }
+   constexpr Double_t DegToRad() { return Pi() / 180.0; }
+   constexpr Double_t Sqrt2()    { return 1.4142135623730950488016887242097; }
 
    // e (base of natural log)
-   inline Double_t E()        { return 2.71828182845904523536; }
+   constexpr Double_t E()        { return 2.71828182845904523536; }
 
    // natural log of 10 (to convert log to ln)
-   inline Double_t Ln10()     { return 2.30258509299404568402; }
+   constexpr Double_t Ln10()     { return 2.30258509299404568402; }
 
    // base-10 log of e  (to convert ln to log)
-   inline Double_t LogE()     { return 0.43429448190325182765; }
+   constexpr Double_t LogE()     { return 0.43429448190325182765; }
 
    // velocity of light
-   inline Double_t C()        { return 2.99792458e8; }        // m s^-1
-   inline Double_t Ccgs()     { return 100.0 * C(); }         // cm s^-1
-   inline Double_t CUncertainty() { return 0.0; }             // exact
+   constexpr Double_t C()        { return 2.99792458e8; }        // m s^-1
+   constexpr Double_t Ccgs()     { return 100.0 * C(); }         // cm s^-1
+   constexpr Double_t CUncertainty() { return 0.0; }             // exact
 
    // gravitational constant
-   inline Double_t G()        { return 6.673e-11; }           // m^3 kg^-1 s^-2
-   inline Double_t Gcgs()     { return G() / 1000.0; }        // cm^3 g^-1 s^-2
-   inline Double_t GUncertainty() { return 0.010e-11; }
+   constexpr Double_t G()        { return 6.673e-11; }           // m^3 kg^-1 s^-2
+   constexpr Double_t Gcgs()     { return G() / 1000.0; }        // cm^3 g^-1 s^-2
+   constexpr Double_t GUncertainty() { return 0.010e-11; }
 
    // G over h-bar C
-   inline Double_t GhbarC()   { return 6.707e-39; }           // (GeV/c^2)^-2
-   inline Double_t GhbarCUncertainty() { return 0.010e-39; }
+   constexpr Double_t GhbarC()   { return 6.707e-39; }           // (GeV/c^2)^-2
+   constexpr Double_t GhbarCUncertainty() { return 0.010e-39; }
 
    // standard acceleration of gravity
-   inline Double_t Gn()       { return 9.80665; }             // m s^-2
-   inline Double_t GnUncertainty() { return 0.0; }            // exact
+   constexpr Double_t Gn()       { return 9.80665; }             // m s^-2
+   constexpr Double_t GnUncertainty() { return 0.0; }            // exact
 
    // Planck's constant
-   inline Double_t H()        { return 6.62606876e-34; }      // J s
-   inline Double_t Hcgs()     { return 1.0e7 * H(); }         // erg s
-   inline Double_t HUncertainty() { return 0.00000052e-34; }
+   constexpr Double_t H()        { return 6.62606876e-34; }      // J s
+   constexpr Double_t Hcgs()     { return 1.0e7 * H(); }         // erg s
+   constexpr Double_t HUncertainty() { return 0.00000052e-34; }
 
    // h-bar (h over 2 pi)
-   inline Double_t Hbar()     { return 1.054571596e-34; }     // J s
-   inline Double_t Hbarcgs()  { return 1.0e7 * Hbar(); }      // erg s
-   inline Double_t HbarUncertainty() { return 0.000000082e-34; }
+   constexpr Double_t Hbar()     { return 1.054571596e-34; }     // J s
+   constexpr Double_t Hbarcgs()  { return 1.0e7 * Hbar(); }      // erg s
+   constexpr Double_t HbarUncertainty() { return 0.000000082e-34; }
 
    // hc (h * c)
-   inline Double_t HC()       { return H() * C(); }           // J m
-   inline Double_t HCcgs()    { return Hcgs() * Ccgs(); }     // erg cm
+   constexpr Double_t HC()       { return H() * C(); }           // J m
+   constexpr Double_t HCcgs()    { return Hcgs() * Ccgs(); }     // erg cm
 
    // Boltzmann's constant
-   inline Double_t K()        { return 1.3806503e-23; }       // J K^-1
-   inline Double_t Kcgs()     { return 1.0e7 * K(); }         // erg K^-1
-   inline Double_t KUncertainty() { return 0.0000024e-23; }
+   constexpr Double_t K()        { return 1.3806503e-23; }       // J K^-1
+   constexpr Double_t Kcgs()     { return 1.0e7 * K(); }         // erg K^-1
+   constexpr Double_t KUncertainty() { return 0.0000024e-23; }
 
    // Stefan-Boltzmann constant
-   inline Double_t Sigma()    { return 5.6704e-8; }           // W m^-2 K^-4
-   inline Double_t SigmaUncertainty() { return 0.000040e-8; }
+   constexpr Double_t Sigma()    { return 5.6704e-8; }           // W m^-2 K^-4
+   constexpr Double_t SigmaUncertainty() { return 0.000040e-8; }
 
    // Avogadro constant (Avogadro's Number)
-   inline Double_t Na()       { return 6.02214199e+23; }      // mol^-1
-   inline Double_t NaUncertainty() { return 0.00000047e+23; }
+   constexpr Double_t Na()       { return 6.02214199e+23; }      // mol^-1
+   constexpr Double_t NaUncertainty() { return 0.00000047e+23; }
 
    // universal gas constant (Na * K)
    // http://scienceworld.wolfram.com/physics/UniversalGasConstant.html
-   inline Double_t R()        { return K() * Na(); }          // J K^-1 mol^-1
-   inline Double_t RUncertainty() { return R()*((KUncertainty()/K()) + (NaUncertainty()/Na())); }
+   constexpr Double_t R()        { return K() * Na(); }          // J K^-1 mol^-1
+   constexpr Double_t RUncertainty() { return R()*((KUncertainty()/K()) + (NaUncertainty()/Na())); }
 
    // Molecular weight of dry air
    // 1976 US Standard Atmosphere,
    // also see http://atmos.nmsu.edu/jsdap/encyclopediawork.html
-   inline Double_t MWair()    { return 28.9644; }             // kg kmol^-1 (or gm mol^-1)
+   constexpr Double_t MWair()    { return 28.9644; }             // kg kmol^-1 (or gm mol^-1)
 
    // Dry Air Gas Constant (R / MWair)
    // http://atmos.nmsu.edu/education_and_outreach/encyclopedia/gas_constant.htm
-   inline Double_t Rgair()    { return (1000.0 * R()) / MWair(); }  // J kg^-1 K^-1
+   constexpr Double_t Rgair()    { return (1000.0 * R()) / MWair(); }  // J kg^-1 K^-1
 
    // Euler-Mascheroni Constant
-   inline Double_t EulerGamma() { return 0.577215664901532860606512090082402431042; }
+   constexpr Double_t EulerGamma() { return 0.577215664901532860606512090082402431042; }
 
    // Elementary charge
-   inline Double_t Qe()       { return 1.602176462e-19; }     // C
-   inline Double_t QeUncertainty() { return 0.000000063e-19; }
+   constexpr Double_t Qe()       { return 1.602176462e-19; }     // C
+   constexpr Double_t QeUncertainty() { return 0.000000063e-19; }
 
    /* ************************** */
    /* * Mathematical Functions * */
