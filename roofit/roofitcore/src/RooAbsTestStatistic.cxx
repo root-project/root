@@ -577,7 +577,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
       // so I'm not sure whether it would be a lot faster to create this list in RATS, because then you would also
       // have to reinitialize the list in each MPFE but then with the MPFE-local nodes again, meaning you will have to
       // do name lookups in MPFE...
-      _mpfeArray[i]->_initNumIntSet(*projDeps);
+      _mpfeArray[i]->_initNumIntSet(*(data->get()));
       _mpfeArray[i]->_setTimingNumIntSet();
     }
   }

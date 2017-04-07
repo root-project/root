@@ -65,6 +65,9 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooConstVar.h"
 #include "RooRealIntegral.h"
 
+// for _initNumIntSet
+#include "RooAbsData.h"
+
 #include "TSystem.h"
 
 // for cpu affinity
@@ -622,7 +625,10 @@ void RooRealMPFE::serverLoop() {
 void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
   // Get list of branch nodes in expression
   RooArgSet blist;
-  _arg.arg().branchNodeServerList(&blist);
+
+  // TODO: rewrite _initNumIntSet signature to take function ('real' in RATS::initMPMode where _initNumIntSet is called), so we don't have to assume RooAbsOptTestStatistic
+  // TODO: then replace ((RooAbsOptTestStatistic&)_arg.arg()).function() with that function.
+  ((RooAbsOptTestStatistic&)_arg.arg()).function().branchNodeServerList(&blist);
 
   // Iterator over branch nodes
   RooFIter iter = blist.fwdIterator();
@@ -639,7 +645,6 @@ void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
     // Integral expressions can be composite objects (in case of disjoint normalization ranges)
     // Therefore: retrieve list of branch nodes of integral expression
     if (!normint) continue;
-
     RooArgList bi;
     normint->branchNodeServerList(&bi);
     RooFIter ibiter = bi.fwdIterator();
@@ -1203,8 +1208,13 @@ std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
 
   *_pipe << RetrieveTimings << BidirMMapPipe::flush;
 
+  std::cout << "hier? 1" << std::endl;
+
   unsigned long numTimings;
   *_pipe >> numTimings;
+
+  std::cout << "hier? 2" << std::endl;
+
 
   for (unsigned long i = 0; i < numTimings; ++i) {
     std::string name;
@@ -1212,6 +1222,9 @@ std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
     *_pipe >> name >> timing_s;
     server_timings.insert({name, timing_s});
   }
+
+  std::cout << "hier? 3" << std::endl;
+
 
   return server_timings;
 }
